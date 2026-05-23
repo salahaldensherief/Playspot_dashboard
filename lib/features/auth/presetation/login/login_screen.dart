@@ -187,25 +187,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                 );
                               },
                             ),
-                            const SizedBox(height: 32),
-                            
-                            // Demo Credentials
-                            const Divider(color: AppColors.divider),
-                            const SizedBox(height: 24),
-                            const Text(
-                              'Demo Credentials:',
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            _buildDemoRow('Super Admin:', 'super@playspot.com', AppColors.neonBlue),
-                            const SizedBox(height: 8),
-                            _buildDemoRow('Lounge Admin:', 'lounge@playspot.com', AppColors.neonPurple),
-                            const SizedBox(height: 8),
-                            _buildDemoRow('Password:', 'admin123', AppColors.textSecondary),
                           ],
                         ),
                       ),

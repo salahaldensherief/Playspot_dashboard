@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../../data/entities/admin_entity.dart';
 
-enum LoginStatus { initial, loading, success, failure }
+enum LoginStatus { initial, loading, success, failure, authenticated }
 
 class LoginState extends Equatable {
   final LoginStatus status;
@@ -30,4 +30,5 @@ class LoginState extends Equatable {
 
   @override
   List<Object?> get props => [status, admin, errorMessage];
+
 }

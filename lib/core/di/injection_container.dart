@@ -1,16 +1,16 @@
 import 'package:get_it/get_it.dart';
+import 'package:play_spot_dashboard/features/auth/presetation/login/login_cubit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/data/sources/auth_remote_source.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
-import '../../features/auth/presentation/cubit/auth_cubit.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
   // Features - Auth
   // Cubit
-  sl.registerFactory(() => AuthCubit(sl()));
+  sl.registerFactory(() => LoginCubit(sl()));
   
   // Repository
   sl.registerLazySingleton<AuthRepository>(

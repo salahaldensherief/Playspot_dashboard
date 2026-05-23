@@ -2,16 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:play_spot_dashboard/features/auth/presetation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/auth/presetation/login/login_state.dart';
+import '../../features/auth/presetation/login/login_screen.dart';
 import 'router_keys.dart';
-import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/dashboard/presentation/screens/super_admin_dashboard.dart';
 import '../../features/dashboard/presentation/screens/lounge_admin_dashboard.dart';
-import '../../features/auth/presentation/cubit/auth_cubit.dart';
-import '../../features/auth/presentation/cubit/auth_state.dart';
 import '../../features/auth/domain/entities/admin_entity.dart';
 
 class AppRouter {
-  final AuthCubit authCubit;
+  final LoginCubit authCubit;
 
   AppRouter(this.authCubit);
 
@@ -22,11 +22,11 @@ class AppRouter {
       final authState = authCubit.state;
       final bool loggingIn = state.matchedLocation == RouterKeys.login;
 
-      if (authState.status == AuthStatus.initial || authState.status == AuthStatus.loading) {
+      if (authState.status == LoginStatus.loading) {
         return null;
       }
 
-      if (authState.status != AuthStatus.authenticated) {
+      if (authState.status != LoginStatus.authenticated) {
         return loggingIn ? null : RouterKeys.login;
       }
 
