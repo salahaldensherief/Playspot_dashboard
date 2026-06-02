@@ -2,12 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:play_spot_dashboard/features/auth/presetation/login/login_cubit.dart';
-import 'package:play_spot_dashboard/features/auth/presetation/login/login_state.dart';
-import '../../features/auth/presetation/login/login_screen.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
+import '../../features/auth/presentation/login/login_screen.dart';
 import 'router_keys.dart';
-import '../../features/dashboard/presentation/screens/super_admin_dashboard.dart';
-import '../../features/dashboard/presentation/screens/lounge_admin_dashboard.dart';
+import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/auth/domain/entities/admin_entity.dart';
 
 class AppRouter {
@@ -45,20 +44,8 @@ class AppRouter {
         path: RouterKeys.dashboard,
         builder: (context, state) {
           final admin = authCubit.state.admin;
-          if (admin?.role == AdminRole.superAdmin) {
-            return const SuperAdminDashboard();
-          } else {
-            return const LoungeAdminDashboard();
-          }
+          return DashboardScreen(role: admin?.role ?? AdminRole.loungeAdmin);
         },
-      ),
-      GoRoute(
-        path: RouterKeys.superAdminDashboard,
-        builder: (context, state) => const SuperAdminDashboard(),
-      ),
-      GoRoute(
-        path: RouterKeys.loungeAdminDashboard,
-        builder: (context, state) => const LoungeAdminDashboard(),
       ),
     ],
   );
@@ -80,4 +67,3 @@ class GoRouterRefreshStream extends ChangeNotifier {
     super.dispose();
   }
 }
-
