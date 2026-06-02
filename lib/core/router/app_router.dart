@@ -6,7 +6,7 @@ import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
 import '../../features/auth/presentation/login/login_screen.dart';
 import 'router_keys.dart';
-import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
+import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/auth/domain/entities/admin_entity.dart';
 
 class AppRouter {

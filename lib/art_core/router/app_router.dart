@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'router_keys.dart';
 import '../../features/auth/presentation/login/login_screen.dart';
-import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
+import '../../features/dashboard/presentation/dashboard_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';

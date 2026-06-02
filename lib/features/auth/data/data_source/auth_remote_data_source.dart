@@ -53,6 +53,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         .eq('user_id', userId)
         .single();
 
+    print(data);
+
     return AdminModel.fromJson(data);
   }
 }
