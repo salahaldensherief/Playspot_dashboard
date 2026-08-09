@@ -1,7 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../../../../art_core/exceptions/app_exceptions.dart';
-import '../models/admin_model.dart';
+import 'package:play_spot_dashboard/art_core/exceptions/app_exceptions.dart';
+import 'package:play_spot_dashboard/features/auth/data/models/admin_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<AdminModel> login(String email, String password);
@@ -49,11 +48,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<AdminModel> _getAdminData(String userId) async {
     final data = await _supabase
         .from('admins')
-        .select('*, users(*)')
+        .select('*')
         .eq('user_id', userId)
         .single();
 
-    print(data);
+    final user = _supabase.auth.currentUser;
+    if (user != null) {
+      data['users'] = {
+        'email': user.email,
+        'name': user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? 'Admin',
+        'avatar_url': user.userMetadata?['avatar_url'],
+      };
+    }
 
     return AdminModel.fromJson(data);
   }

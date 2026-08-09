@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../art_core/theme/app_colors.dart';
-import '../../../../art_core/widgets/app_text_field.dart';
-import '../../../../art_core/widgets/app_gradient_button.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_gradient_button.dart';
 import 'login_cubit.dart';
 import 'login_state.dart';
 
@@ -33,11 +34,11 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           // Background Glows (Simplified)
           Positioned(
-            top: -100,
-            left: -100,
+            top: -100.h,
+            left: -100.w,
             child: Container(
-              width: 300,
-              height: 300,
+              width: 300.r,
+              height: 300.r,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.neonBlue.withOpacity(0.05),
@@ -45,11 +46,11 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
           Positioned(
-            bottom: -100,
-            right: -100,
+            bottom: -100.h,
+            right: -100.w,
             child: Container(
-              width: 300,
-              height: 300,
+              width: 300.r,
+              height: 300.r,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.neonPurple.withOpacity(0.05),
@@ -59,56 +60,57 @@ class _LoginScreenState extends State<LoginScreen> {
           Center(
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Logo Section
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(16.r),
                       decoration: BoxDecoration(
                         color: AppColors.cardBackground,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(16.r),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.neonBlue.withOpacity(0.2),
-                            blurRadius: 20,
-                            spreadRadius: 2,
+                            blurRadius: 20.r,
+                            spreadRadius: 2.r,
                           ),
                         ],
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.sports_esports_outlined,
                         color: AppColors.textPrimary,
-                        size: 40,
+                        size: 40.r,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const Text(
+                    SizedBox(height: 16.h),
+                    Text(
                       'PlaySpot',
                       style: TextStyle(
-                        fontSize: 32,
+                        fontSize: 32.sp,
                         fontWeight: FontWeight.bold,
                         color: AppColors.neonBlue,
                         letterSpacing: 1.5,
+                        fontFamily: 'Orbitron',
                       ),
                     ),
-                    const Text(
+                    Text(
                       'Gaming Lounge Management',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 14.sp,
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 48),
+                    SizedBox(height: 48.h),
                     
                     // Login Card
                     Container(
-                      width: 450,
-                      padding: const EdgeInsets.all(32),
+                      width: 450.w,
+                      padding: EdgeInsets.all(32.r),
                       decoration: BoxDecoration(
                         color: AppColors.cardBackground,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(16.r),
                         border: Border.all(color: AppColors.borderDefault),
                       ),
                       child: Form(
@@ -116,27 +118,27 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Center(
+                            Center(
                               child: Text(
                                 'Welcome Back',
                                 style: TextStyle(
-                                  fontSize: 24,
+                                  fontSize: 24.sp,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textPrimary,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            const Center(
+                            SizedBox(height: 8.h),
+                            Center(
                               child: Text(
                                 'Sign in to your account',
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 14.sp,
                                   color: AppColors.textSecondary,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 32),
+                            SizedBox(height: 32.h),
                             AppTextField(
                               label: 'Email',
                               hintText: 'Enter your email',
@@ -149,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 return null;
                               },
                             ),
-                            const SizedBox(height: 24),
+                            SizedBox(height: 24.h),
                             AppTextField(
                               label: 'Password',
                               hintText: 'Enter your password',
@@ -163,10 +165,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                 return null;
                               },
                             ),
-                            const SizedBox(height: 32),
+                            SizedBox(height: 32.h),
                             BlocConsumer<LoginCubit, LoginState>(
                               listener: (context, state) {
-                                if (state.status == LoginStatus.failure) {
+                                if (state.status == LoginStatus.success || state.status == LoginStatus.authenticated) {
+                                  // GoRouter will handle redirection
+                                } else if (state.status == LoginStatus.failure) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(content: Text(state.errorMessage ?? 'Login Failed')),
                                   );
@@ -198,22 +202,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDemoRow(String label, String value, Color valueColor) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-        ),
-        Text(
-          value,
-          style: TextStyle(color: valueColor, fontSize: 12, fontWeight: FontWeight.w500),
-        ),
-      ],
     );
   }
 }

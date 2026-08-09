@@ -1,13 +1,14 @@
 import 'package:dartz/dartz.dart';
-import '../../../../art_core/exceptions/app_exceptions.dart';
-import '../../data/data_source/auth_remote_data_source.dart';
-import '../entities/admin_entity.dart';
+import 'package:play_spot_dashboard/art_core/exceptions/app_exceptions.dart';
+import 'package:play_spot_dashboard/features/auth/data/data_source/auth_remote_data_source.dart';
+import 'package:play_spot_dashboard/features/auth/domain/entities/admin_entity.dart';
 
 abstract class AuthRepository {
   Future<Either<String, AdminEntity>> login(String email, String password);
   Future<Either<String, void>> logout();
   Future<Either<String, AdminEntity?>> getCurrentUser();
 }
+
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remoteSource;
 
@@ -17,7 +18,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<String, AdminEntity>> login(String email, String password) async {
     try {
       final admin = await _remoteSource.login(email, password);
-      return Right(admin as AdminEntity);
+      return Right(admin);
     } on AppException catch (e) {
       return Left(e.message);
     } catch (e) {
@@ -39,7 +40,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<String, AdminEntity?>> getCurrentUser() async {
     try {
       final admin = await _remoteSource.getCurrentAdmin();
-      return Right(admin as AdminEntity?);
+      return Right(admin);
     } catch (e) {
       return Left(e.toString());
     }

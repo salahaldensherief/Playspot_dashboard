@@ -9,6 +9,7 @@ class AppStrings {
   static const String users = 'Users';
   static const String bookings = 'Bookings';
   static const String payments = 'Payments';
+  static const String marketing = 'Marketing';
   static const String settings = 'Settings';
   static const String search = 'Search...';
   

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_colors.dart';
 
 class DataTableWidget extends StatelessWidget {
@@ -17,23 +18,33 @@ class DataTableWidget extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: AppColors.borderDefault),
       ),
-      child: DataTable(
-        headingRowColor: MaterialStateProperty.all(AppColors.mutedBackground),
-        columns: columns
-            .map((col) => DataColumn(
-                  label: Text(
-                    col,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: AppColors.divider,
+        ),
+        child: DataTable(
+          headingRowColor: MaterialStateProperty.all(AppColors.mutedBackground),
+          horizontalMargin: 24.w,
+          columnSpacing: 20.w,
+          headingRowHeight: 56.h,
+          dataRowHeight: 64.h,
+          columns: columns
+              .map((col) => DataColumn(
+                    label: Text(
+                      col,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.sp,
+                      ),
                     ),
-                  ),
-                ))
-            .toList(),
-        rows: rows,
+                  ))
+              .toList(),
+          rows: rows,
+        ),
       ),
     );
   }

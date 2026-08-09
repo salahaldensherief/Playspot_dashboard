@@ -1,82 +1,91 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_colors.dart';
 
 class StatCard extends StatelessWidget {
   final String title;
   final String value;
-  final String change;
-  final bool isPositive;
+  final String trend;
   final IconData icon;
+  final Color iconColor;
 
   const StatCard({
     super.key,
     required this.title,
     required this.value,
-    required this.change,
-    required this.isPositive,
+    required this.trend,
     required this.icon,
+    required this.iconColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(24.r),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.borderDefault),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-              Icon(icon, color: AppColors.neonBlue, size: 20),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+                SizedBox(height: 8.h),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 28.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Row(
+                  children: [
+                    Text(
+                      trend,
+                      style: TextStyle(
+                        color: trend.startsWith('+') ? AppColors.success : AppColors.danger,
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(width: 4.w),
+                    Flexible(
+                      child: Text(
+                        'vs last month',
+                        style: TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 12.sp,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(
-                isPositive ? Icons.trending_up : Icons.trending_down,
-                color: isPositive ? AppColors.success : AppColors.danger,
-                size: 16,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                change,
-                style: TextStyle(
-                  color: isPositive ? AppColors.success : AppColors.danger,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Text(
-                'vs last month',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                ),
-              ),
-            ],
+          Container(
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: iconColor.withOpacity(0.2)),
+            ),
+            child: Icon(icon, color: iconColor, size: 24.r),
           ),
         ],
       ),

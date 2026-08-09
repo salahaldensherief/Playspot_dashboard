@@ -1,55 +1,101 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'router_keys.dart';
-import '../../features/auth/presentation/login/login_screen.dart';
-import '../../features/dashboard/presentation/dashboard_screen.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/di/di.dart';
 import '../../features/auth/presentation/login/login_cubit.dart';
+import '../../features/auth/presentation/login/login_state.dart';
 import '../../features/auth/domain/entities/admin_entity.dart';
+import '../../features/auth/presentation/login/login_screen.dart';
+import '../../features/super_admin/analytics/presentation/dashboard_screen.dart' as super_dashboard;
+import '../../features/super_admin/lounge_management/presentation/pages/lounges_page.dart' as super_lounges;
+import '../../features/lounge_admin/live_operations/presentation/pages/bookings_page.dart' as lounge_live;
+import 'router_keys.dart';
 
 class AppRouter {
-  static final router = GoRouter(
-    initialLocation: RouterKeys.root,
-    redirect: (context, state) {
-      final session = Supabase.instance.client.auth.currentSession;
-      final bool loggingIn = state.matchedLocation == RouterKeys.login;
+  static GoRouter router(BuildContext context) {
+    final authCubit = context.read<LoginCubit>();
 
-      if (session == null) {
-        return loggingIn ? null : RouterKeys.login;
-      }
+    return GoRouter(
+      initialLocation: RouterKeys.root,
+      refreshListenable: GoRouterRefreshStream(authCubit.stream),
+      redirect: (context, state) {
+        final authState = authCubit.state;
+        final bool isLoggingIn = state.matchedLocation == RouterKeys.login;
 
-      if (loggingIn) {
-        return RouterKeys.root;
-      }
+        // If not authenticated, force login
+        if (authState.status != LoginStatus.authenticated && 
+            authState.status != LoginStatus.success) {
+          return isLoggingIn ? null : RouterKeys.login;
+        }
 
-      return null;
-    },
-    routes: [
-      GoRoute(
-        path: RouterKeys.login,
-        builder: (context, state) => BlocProvider(
-          create: (context) => sl<LoginCubit>(),
-          child: const LoginScreen(),
+        // If authenticated, prevent going back to login
+        if (isLoggingIn) {
+          if (authState.admin?.role == AdminRole.superAdmin) {
+            return RouterKeys.superAdminDashboard;
+          } else {
+            return RouterKeys.loungeAdminLiveOps;
+          }
+        }
+
+        // Root redirection based on role
+        if (state.matchedLocation == RouterKeys.root) {
+          if (authState.admin?.role == AdminRole.superAdmin) {
+            return RouterKeys.superAdminDashboard;
+          } else {
+            return RouterKeys.loungeAdminLiveOps;
+          }
+        }
+
+        // Role-based route guards
+        final bool isSuperAdminRoute = state.matchedLocation.startsWith('/super-admin');
+        final bool isLoungeAdminRoute = state.matchedLocation.startsWith('/lounge-admin');
+
+        if (isSuperAdminRoute && authState.admin?.role != AdminRole.superAdmin) {
+          return RouterKeys.loungeAdminLiveOps;
+        }
+
+        if (isLoungeAdminRoute && authState.admin?.role != AdminRole.loungeAdmin) {
+          return RouterKeys.superAdminDashboard;
+        }
+
+        return null;
+      },
+      routes: [
+        GoRoute(
+          path: RouterKeys.login,
+          builder: (context, state) => const LoginScreen(),
         ),
-      ),
-      GoRoute(
-        path: RouterKeys.root,
-        builder: (context, state) {
-          // In a real app, you'd get the admin from a Cubit/Provider
-          // For now, we'll default to loungeAdmin or get it from state if available
-          return const DashboardScreen(role: AdminRole.loungeAdmin);
-        },
-      ),
-      GoRoute(
-        path: RouterKeys.superAdminDashboard,
-        builder: (context, state) => const DashboardScreen(role: AdminRole.superAdmin),
-      ),
-      GoRoute(
-        path: RouterKeys.loungeAdminDashboard,
-        builder: (context, state) => const DashboardScreen(role: AdminRole.loungeAdmin),
-      ),
-    ],
-  );
+        // Super Admin Routes
+        GoRoute(
+          path: RouterKeys.superAdminDashboard,
+          builder: (context, state) => const super_dashboard.DashboardScreen(role: AdminRole.superAdmin),
+        ),
+        GoRoute(
+          path: RouterKeys.superAdminLounges,
+          builder: (context, state) => const super_lounges.LoungesPage(),
+        ),
+        // Lounge Admin Routes
+        GoRoute(
+          path: RouterKeys.loungeAdminLiveOps,
+          builder: (context, state) => const lounge_live.BookingsPage(),
+        ),
+      ],
+    );
+  }
+}
+
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+          (dynamic _) => notifyListeners(),
+        );
+  }
+
+  late final dynamic _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
 }
