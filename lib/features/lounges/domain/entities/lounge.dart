@@ -21,7 +21,7 @@ class Lounge extends Equatable {
   final double? lat;
   final double? lng;
   final List<String> categoryIcons;
-  final String categoryId;
+  final String? categoryId;
   final String? ownerName;
   final String? ownerEmail;
 
@@ -46,7 +46,7 @@ class Lounge extends Equatable {
     this.lat,
     this.lng,
     this.categoryIcons = const [],
-    required this.categoryId,
+    this.categoryId,
     this.ownerName,
     this.ownerEmail,
   });

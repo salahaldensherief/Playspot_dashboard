@@ -23,9 +23,9 @@ class LoungeRepositoryImpl implements LoungeRepository {
   }
 
   @override
-  Future<Either<Failure, void>> createLounge(Lounge lounge) async {
+  Future<Either<Failure, String>> createLounge(Lounge lounge) async {
     try {
-      await remoteDataSource.createLounge(LoungeModel(
+      final id = await remoteDataSource.createLounge(LoungeModel(
         id: lounge.id,
         name: lounge.name,
         location: lounge.location,
@@ -37,6 +37,26 @@ class LoungeRepositoryImpl implements LoungeRepository {
         opensAt: lounge.opensAt,
         closesAt: lounge.closesAt,
       ));
+      return Right(id);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> createLoungeAdmin({
+    required String email,
+    required String password,
+    required String name,
+    required String loungeId,
+  }) async {
+    try {
+      await remoteDataSource.createLoungeAdmin(
+        email: email,
+        password: password,
+        name: name,
+        loungeId: loungeId,
+      );
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

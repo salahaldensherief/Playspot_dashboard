@@ -21,14 +21,22 @@ class BookingsDataTable extends StatelessWidget {
         final bookings = state is BookingLoaded ? state.bookings : [];
         
         return DataTableWidget(
-          columns: const ['ID', 'Customer', 'Room', 'Activity', 'Schedule', 'Status', 'Confirm Payment'],
+          columns: [
+            'ID', 
+            AppStrings.userLabel, 
+            AppStrings.roomLabel, 
+            AppStrings.gaming, 
+            'Schedule', // Could add to strings if needed
+            AppStrings.status, 
+            AppStrings.confirmCash
+          ],
           rows: bookings.map((b) => DataRow(
             cells: [
               DataCell(Text(b.id.substring(0, 8), style: const TextStyle(color: AppColors.textPrimary))),
               DataCell(Text('${AppStrings.userLabel} ${b.userId.substring(0, 5)}', style: const TextStyle(color: AppColors.textPrimary))),
               DataCell(Text('${AppStrings.roomLabel} ${b.roomId.substring(0, 3)}', style: const TextStyle(color: AppColors.textSecondary))),
               DataCell(Text(AppStrings.gaming, style: const TextStyle(color: AppColors.textSecondary))),
-              DataCell(Text('Today 14:00', style: const TextStyle(color: AppColors.textSecondary))),
+              DataCell(Text('14:30', style: const TextStyle(color: AppColors.textSecondary))),
               DataCell(_getStatusBadge(b.status.name)),
               DataCell(
                 AppButton(

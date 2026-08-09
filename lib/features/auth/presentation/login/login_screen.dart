@@ -192,14 +192,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                         }
                                       },
                                     ),
-                                    SizedBox(height: 16.h),
-                                    TextButton(
-                                      onPressed: () => context.read<LoginCubit>().loginAsMockLoungeAdmin(),
-                                      child: Text(
-                                        'Login as Lounge Admin (Dev Mode)',
-                                        style: TextStyle(color: AppColors.neonPurple, fontSize: 13.sp),
-                                      ),
-                                    ),
                                   ],
                                 );
                               },

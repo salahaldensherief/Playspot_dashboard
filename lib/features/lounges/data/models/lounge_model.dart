@@ -22,7 +22,7 @@ class LoungeModel extends Lounge {
     super.lat,
     super.lng,
     super.categoryIcons = const [],
-    required super.categoryId,
+    super.categoryId,
     super.ownerName,
     super.ownerEmail,
   });
@@ -56,7 +56,7 @@ class LoungeModel extends Lounge {
       lat: (json['lat'] as num?)?.toDouble(),
       lng: (json['lng'] as num?)?.toDouble(),
       categoryIcons: json['category_icons'] != null ? List<String>.from(json['category_icons']) : [],
-      categoryId: json['category_id']?.toString() ?? '',
+      categoryId: json['category_id']?.toString(),
       ownerName: json['owner_name']?.toString(),
       ownerEmail: json['owner_email']?.toString(),
     );
@@ -64,17 +64,11 @@ class LoungeModel extends Lounge {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
       'name': name,
       'image_url': imageUrl,
-      'rating': rating,
-      'distance': distance,
-      'price_per_hour': pricePerHour,
       'is_open': isOpen,
       'location': location,
       'city': city,
-      'total_reviews': totalReviews,
-      'available_rooms': availableRooms,
       'description_ar': descriptionAr,
       'description_en': descriptionEn,
       'images': images,
@@ -83,9 +77,7 @@ class LoungeModel extends Lounge {
       'maps_link': mapsLink,
       'lat': lat,
       'lng': lng,
-      'category_id': categoryId,
-      'owner_name': ownerName,
-      'owner_email': ownerEmail,
+      if (categoryId != null) 'category_id': categoryId,
     };
   }
 }

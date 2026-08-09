@@ -1,14 +1,20 @@
 import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
-import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
-import 'package:play_spot_dashboard/features/lounges/domain/entities/room.dart';
-import 'package:play_spot_dashboard/features/lounges/domain/entities/activity.dart';
+import '../entities/lounge.dart';
+import '../entities/room.dart';
+import '../entities/activity.dart';
 
 abstract class LoungeRepository {
   Future<Either<Failure, List<Lounge>>> getLounges();
   Future<Either<Failure, List<Room>>> getRooms(String loungeId);
   Future<Either<Failure, List<Activity>>> getActivities(String roomId);
-  Future<Either<Failure, void>> createLounge(Lounge lounge);
+  Future<Either<Failure, String>> createLounge(Lounge lounge);
+  Future<Either<Failure, void>> createLoungeAdmin({
+    required String email,
+    required String password,
+    required String name,
+    required String loungeId,
+  });
   Future<Either<Failure, void>> updateLounge(Lounge lounge);
   Future<Either<Failure, void>> deleteLounge(String id);
 }

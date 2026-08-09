@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import '../cubit/lounge_cubit.dart';
 import 'add_lounge_dialog.dart';
 
 class LoungesHeader extends StatelessWidget {
@@ -36,16 +38,21 @@ class LoungesHeader extends StatelessWidget {
           ],
         ),
         AppButton(
-          text: 'Add New Lounge',
+          text: AppStrings.addNewLounge,
           icon: Icons.add,
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (diagContext) => const AddLoungeDialog(),
-            );
-          },
+          onPressed: () => _showAddLoungeDialog(context),
         ),
       ],
+    );
+  }
+
+  void _showAddLoungeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (diagContext) => BlocProvider.value(
+        value: context.read<LoungeCubit>(),
+        child: const AddLoungeDialog(),
+      ),
     );
   }
 }

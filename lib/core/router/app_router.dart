@@ -12,8 +12,8 @@ import 'package:play_spot_dashboard/features/bookings/presentation/pages/booking
 import 'package:play_spot_dashboard/features/rooms/presentation/pages/room_management_page.dart' as rooms;
 import 'package:play_spot_dashboard/features/onboarding/presentation/pages/lounge_setup_page.dart' as onboarding;
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_shell.dart';
-import '../../art_core/app_strings.dart';
-import '../../art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'router_keys.dart';
 
 class AppRouter {
@@ -26,46 +26,50 @@ class AppRouter {
       redirect: (context, state) {
         final authState = authCubit.state;
         final bool isLoggingIn = state.matchedLocation == RouterKeys.login;
+        final admin = authState.admin;
 
+        // 1. Auth Guard
         if (authState.status != LoginStatus.authenticated && 
             authState.status != LoginStatus.success) {
           return isLoggingIn ? null : RouterKeys.login;
         }
 
-        if (isLoggingIn) {
-          if (authState.admin?.role == AdminRole.superAdmin) {
-            return RouterKeys.superAdminDashboard;
-          } else {
-            return RouterKeys.loungeAdminLiveOps;
+        // 2. Wait for admin data
+        if (admin == null) return isLoggingIn ? null : null;
+
+        debugPrint('--- ROUTER DEBUG ---');
+        debugPrint('Path: ${state.matchedLocation}');
+        debugPrint('Role: ${admin.role}');
+        debugPrint('LoungeID: "${admin.loungeId}"');
+
+        final bool isLoungeAdmin = admin.role == AdminRole.loungeAdmin;
+        final bool hasNoLounge = admin.loungeId == null || admin.loungeId!.trim().isEmpty;
+        final bool isOnboardingPath = state.matchedLocation == RouterKeys.loungeOnboarding;
+
+        // 3. Forced Onboarding Logic
+        if (isLoungeAdmin && hasNoLounge) {
+          if (!isOnboardingPath) {
+            debugPrint('FORCING ONBOARDING');
+            return RouterKeys.loungeOnboarding;
           }
+          return null;
         }
 
-        if (state.matchedLocation == RouterKeys.root) {
-          if (authState.admin?.role == AdminRole.superAdmin) {
-            return RouterKeys.superAdminDashboard;
-          } else {
-            if (authState.admin?.loungeId == null) {
-              return RouterKeys.loungeOnboarding;
-            }
-            return RouterKeys.loungeAdminLiveOps;
-          }
+        // 4. Handle redirections from Login or Root
+        if (isLoggingIn || state.matchedLocation == RouterKeys.root) {
+          if (admin.role == AdminRole.superAdmin) return RouterKeys.superAdminDashboard;
+          if (isLoungeAdmin) return RouterKeys.loungeAdminLiveOps;
         }
 
+        // 5. Protect Super Admin Routes
         final bool isSuperAdminRoute = state.matchedLocation.startsWith('/super-admin');
-        final bool isLoungeAdminRoute = state.matchedLocation.startsWith('/lounge-admin');
-
-        if (isSuperAdminRoute && authState.admin?.role != AdminRole.superAdmin) {
+        if (isSuperAdminRoute && admin.role != AdminRole.superAdmin) {
           return RouterKeys.loungeAdminLiveOps;
         }
 
-        if (isLoungeAdminRoute) {
-          if (authState.admin?.role != AdminRole.loungeAdmin) {
-            return RouterKeys.superAdminDashboard;
-          }
-          if (authState.admin?.loungeId == null && 
-              state.matchedLocation != RouterKeys.loungeOnboarding) {
-            return RouterKeys.loungeOnboarding;
-          }
+        // 6. Prevent onboarding if already has a lounge
+        if (isOnboardingPath && !hasNoLounge) {
+          return RouterKeys.loungeAdminLiveOps;
         }
 
         return null;
@@ -80,7 +84,6 @@ class AppRouter {
           pageBuilder: (context, state) => const NoTransitionPage(child: onboarding.LoungeSetupPage()),
         ),
         
-        // Shell route for the dashboard
         ShellRoute(
           builder: (context, state, child) {
             return DashboardShell(
@@ -89,7 +92,6 @@ class AppRouter {
             );
           },
           routes: [
-            // Super Admin Routes
             GoRoute(
               path: RouterKeys.superAdminDashboard,
               pageBuilder: (context, state) => NoTransitionPage(
@@ -108,7 +110,6 @@ class AppRouter {
                 child: users.UsersPage(),
               ),
             ),
-            // Lounge Admin Routes
             GoRoute(
               path: RouterKeys.loungeAdminLiveOps,
               pageBuilder: (context, state) => const NoTransitionPage(

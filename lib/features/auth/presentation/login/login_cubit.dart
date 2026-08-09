@@ -22,21 +22,6 @@ class LoginCubit extends Cubit<LoginState> {
     );
   }
 
-  // دخول سريع للمطورين
-  void loginAsMockLoungeAdmin() {
-    emit(state.copyWith(
-      status: LoginStatus.authenticated,
-      admin: const AdminEntity(
-        id: 'mock-admin-id',
-        userId: 'mock-user-id',
-        loungeId: 'lounge-nexus-001', // ID وهمي للصالة
-        role: AdminRole.loungeAdmin,
-        name: 'Nexus Manager',
-        email: 'lounge@playspot.com',
-      ),
-    ));
-  }
-
   Future<void> login(String email, String password) async {
     emit(state.copyWith(status: LoginStatus.loading));
     final result = await _repository.login(email, password);

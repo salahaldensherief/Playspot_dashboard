@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'dashboard_sidebar.dart';
 import 'dashboard_top_bar.dart';
-import 'package:play_spot_dashboard/art_core/app_strings.dart';
 
 class DashboardShell extends StatelessWidget {
   final Widget child;
@@ -16,25 +15,24 @@ class DashboardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Logic to determine active route for the sidebar
     String activeRoute = '';
-    String title = 'Dashboard';
+    String title = AppStrings.dashboard;
 
     if (location.contains('dashboard')) {
       activeRoute = AppStrings.dashboard;
-      title = 'Command & Control';
+      title = AppStrings.systemOverview;
     } else if (location.contains('lounges')) {
       activeRoute = AppStrings.lounges;
-      title = 'Lounge Management';
+      title = AppStrings.lounges;
     } else if (location.contains('rooms')) {
-      activeRoute = 'Rooms';
-      title = 'Room Management';
+      activeRoute = AppStrings.rooms;
+      title = AppStrings.manageRoomsDesc;
     } else if (location.contains('live-operations')) {
       activeRoute = AppStrings.bookings;
-      title = 'Live Operations';
+      title = AppStrings.liveBookingsFeed;
     } else if (location.contains('users')) {
-      activeRoute = 'Users';
-      title = 'User Management';
+      activeRoute = AppStrings.users;
+      title = AppStrings.loungeAdministrators;
     }
 
     return Scaffold(
@@ -46,7 +44,7 @@ class DashboardShell extends StatelessWidget {
               children: [
                 DashboardTopBar(title: title),
                 Expanded(
-                  child: child, // child is the page content
+                  child: child,
                 ),
               ],
             ),

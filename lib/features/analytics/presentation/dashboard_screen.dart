@@ -9,6 +9,7 @@ import 'package:play_spot_dashboard/features/auth/domain/entities/admin_entity.d
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/widgets/room_status_card.dart';
+import 'dashboard_cubit.dart';
 import 'widgets/dashboard_header.dart';
 import 'widgets/dashboard_stats_grid.dart';
 import 'widgets/dashboard_charts_row.dart';
@@ -33,6 +34,7 @@ class DashboardScreen extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (context) => sl<BookingCubit>()..startWatchingBookings(loungeId: loungeId)),
+        BlocProvider(create: (context) => sl<DashboardCubit>()..loadDashboardData(loungeId: loungeId)),
       ],
       child: DashboardLayout(
         title: isSuperAdmin ? AppStrings.globalOverview : AppStrings.loungePerformance,

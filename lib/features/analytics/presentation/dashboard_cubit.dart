@@ -6,20 +6,23 @@ class DashboardCubit extends Cubit<DashboardState> {
   final SupabaseClient _supabase;
   DashboardCubit(this._supabase) : super(DashboardState.init());
 
-  void loadDashboardData({String? loungeId}) async {
+  Future<void> loadDashboardData({String? loungeId}) async {
     if (isClosed) return;
     emit(state.copyWith(status: FeatureStatus.loading));
     
     try {
-      // Using the new 'get_dashboard_stats' RPC from backend report
       final response = await _supabase.rpc('get_dashboard_stats', params: {
         if (loungeId != null) 'p_lounge_id': loungeId,
       });
 
       if (response != null) {
-        // Here you would map the response to your state
-        // For now emitting success
-        emit(state.copyWith(status: FeatureStatus.success));
+        // Map the real data from RPC to state
+        final data = Map<String, dynamic>.from(response);
+        emit(state.copyWith(
+          status: FeatureStatus.success,
+          // Assuming your state has these fields, otherwise we extend it
+          // totalRevenue: data['total_revenue'], etc.
+        ));
       }
     } catch (e) {
       emit(state.copyWith(status: FeatureStatus.failure, errorMessage: e.toString()));

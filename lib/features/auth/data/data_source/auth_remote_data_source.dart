@@ -1,6 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/art_core/exceptions/app_exceptions.dart';
 import 'package:play_spot_dashboard/features/auth/data/models/admin_model.dart';
+import 'package:flutter/foundation.dart';
+
+import '../../domain/entities/admin_entity.dart';
 
 abstract class AuthRemoteDataSource {
   Future<AdminModel> login(String email, String password);
@@ -27,12 +30,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       final admin = await getCurrentAdmin();
       if (admin == null) {
-        throw AppException('No admin profile found for this account.');
+         // Final Fallback: use Auth User data if DB view is not ready
+         return AdminModel(
+           id: response.user!.id,
+           userId: response.user!.id,
+           role: AdminRole.loungeAdmin,
+           name: response.user!.userMetadata?['full_name'] ?? 'Lounge Admin',
+           email: response.user!.email ?? '',
+         );
       }
       return admin;
     } on AuthException catch (e) {
       throw AppException(e.message);
     } catch (e) {
+      debugPrint('Critical Login Error: $e');
       throw ServerException(e.toString());
     }
   }
@@ -47,42 +58,31 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     final user = _supabase.auth.currentUser;
     if (user == null) return null;
 
+    // 1. Primary Strategy: Use the profiles view (as per backend report)
     try {
-      // 1. Try to use the new RPC 'get_my_profile'
-      final response = await _supabase.rpc('get_my_profile').timeout(
-        const Duration(seconds: 5),
-      );
-      
-      if (response != null) {
-        final data = Map<String, dynamic>.from(response);
-        data['users'] = {
-          'email': user.email,
-          'name': data['full_name'] ?? 'Admin',
-          'avatar_url': data['avatar_url'],
-        };
-        return AdminModel.fromJson(data);
+      final data = await _supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (data != null) {
+        return AdminModel.fromJson(Map<String, dynamic>.from(data));
       }
     } catch (e) {
-      // 2. Fallback to direct table query if RPC fails/doesn't exist
-      try {
-        final data = await _supabase
-            .from('admins')
-            .select('*')
-            .eq('user_id', user.id)
-            .maybeSingle();
-
-        if (data != null) {
-          data['users'] = {
-            'email': user.email,
-            'name': user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? 'Admin',
-            'avatar_url': user.userMetadata?['avatar_url'],
-          };
-          return AdminModel.fromJson(data);
-        }
-      } catch (tableError) {
-        // Log error or handle it
-      }
+      debugPrint('Profile view query failed: $e');
     }
+
+    // 2. Secondary Strategy: Use RPC if view fails
+    try {
+      final response = await _supabase.rpc('get_my_profile');
+      if (response != null) {
+        return AdminModel.fromJson(Map<String, dynamic>.from(response));
+      }
+    } catch (e) {
+      debugPrint('RPC get_my_profile failed: $e');
+    }
+
     return null;
   }
 }

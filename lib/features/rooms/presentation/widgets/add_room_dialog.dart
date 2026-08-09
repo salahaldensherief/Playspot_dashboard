@@ -4,12 +4,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_image_picker.dart';
+import 'package:play_spot_dashboard/core/di/di.dart';
+import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:uuid/uuid.dart';
 import '../cubit/room_cubit.dart';
 import '../../domain/entities/room_entity.dart';
+import 'room_basic_info_form.dart';
+import 'room_specs_form.dart';
 
 class AddRoomDialog extends StatefulWidget {
   final String loungeId;
@@ -20,16 +23,78 @@ class AddRoomDialog extends StatefulWidget {
 }
 
 class _AddRoomDialogState extends State<AddRoomDialog> {
+  final _formKey = GlobalKey<FormState>();
+  
+  // Controllers
   final _nameArController = TextEditingController();
   final _nameEnController = TextEditingController();
   final _priceController = TextEditingController();
   final _capacityController = TextEditingController();
   final _controllersController = TextEditingController(text: '2');
   final _screenSizeController = TextEditingController(text: '43"');
-  final _formKey = GlobalKey<FormState>();
   
   Uint8List? _roomImageBytes;
   String? _roomImageName;
+  bool _isUploading = false;
+
+  @override
+  void dispose() {
+    _nameArController.dispose();
+    _nameEnController.dispose();
+    _priceController.dispose();
+    _capacityController.dispose();
+    _controllersController.dispose();
+    _screenSizeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isUploading = true);
+      
+      try {
+        List<String> images = [];
+        if (_roomImageBytes != null && _roomImageName != null) {
+          final imageUrl = await sl<StorageService>().uploadRoomImage(
+            _roomImageBytes!, 
+            _roomImageName!,
+            widget.loungeId,
+          );
+          images.add(imageUrl);
+        }
+
+        if (mounted) {
+          final room = RoomEntity(
+            id: const Uuid().v4(),
+            loungeId: widget.loungeId,
+            nameAr: _nameArController.text,
+            nameEn: _nameEnController.text,
+            pricePerHour: double.tryParse(_priceController.text) ?? 0,
+            capacity: int.tryParse(_capacityController.text) ?? 1,
+            controllersCount: int.tryParse(_controllersController.text) ?? 2,
+            screenSize: _screenSizeController.text,
+            activityNames: const ['PS5'],
+            featuresAr: const [],
+            featuresEn: const [],
+            images: images,
+            isAvailable: true,
+            status: RoomStatus.available,
+          );
+
+          await context.read<RoomCubit>().addNewRoom(room);
+          if (mounted) Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.danger),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isUploading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,15 +111,7 @@ class _AddRoomDialogState extends State<AddRoomDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  AppStrings.addNewRoom,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Orbitron',
-                  ),
-                ),
+                _buildHeader(),
                 SizedBox(height: 32.h),
                 AppImagePicker(
                   label: AppStrings.roomStationImage,
@@ -65,88 +122,19 @@ class _AddRoomDialogState extends State<AddRoomDialog> {
                   },
                 ),
                 SizedBox(height: 24.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextField(
-                        label: AppStrings.nameAr,
-                        hintText: 'مثال: غرفة VIP 1',
-                        controller: _nameArController,
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      child: AppTextField(
-                        label: AppStrings.nameEn,
-                        hintText: 'e.g. VIP Room 01',
-                        controller: _nameEnController,
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
-                      ),
-                    ),
-                  ],
+                RoomBasicInfoForm(
+                  nameArController: _nameArController,
+                  nameEnController: _nameEnController,
+                  priceController: _priceController,
                 ),
                 SizedBox(height: 20.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextField(
-                        label: AppStrings.pricePerHour,
-                        hintText: '0.00',
-                        controller: _priceController,
-                        keyboardType: TextInputType.number,
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      child: AppTextField(
-                        label: AppStrings.capacity,
-                        hintText: 'Persons',
-                        controller: _capacityController,
-                        keyboardType: TextInputType.number,
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextField(
-                        label: AppStrings.controllers,
-                        hintText: 'e.g. 2',
-                        controller: _controllersController,
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      child: AppTextField(
-                        label: AppStrings.specs,
-                        hintText: 'e.g. 55"',
-                        controller: _screenSizeController,
-                      ),
-                    ),
-                  ],
+                RoomSpecsForm(
+                  capacityController: _capacityController,
+                  controllersController: _controllersController,
+                  screenSizeController: _screenSizeController,
                 ),
                 SizedBox(height: 32.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    AppButton(
-                      text: AppStrings.cancel,
-                      variant: AppButtonVariant.outlined,
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    SizedBox(width: 16.w),
-                    AppButton(
-                      text: AppStrings.createStation,
-                      onPressed: _submit,
-                    ),
-                  ],
-                ),
+                _buildActions(),
               ],
             ),
           ),
@@ -155,26 +143,43 @@ class _AddRoomDialogState extends State<AddRoomDialog> {
     );
   }
 
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      final room = RoomEntity(
-        id: const Uuid().v4(),
-        loungeId: widget.loungeId,
-        nameAr: _nameArController.text,
-        nameEn: _nameEnController.text,
-        pricePerHour: double.tryParse(_priceController.text) ?? 0,
-        capacity: int.tryParse(_capacityController.text) ?? 1,
-        controllersCount: int.tryParse(_controllersController.text) ?? 2,
-        screenSize: _screenSizeController.text,
-        activityNames: const ['PS5'],
-        featuresAr: const [],
-        featuresEn: const [],
-        images: const [],
-        isAvailable: true,
-        status: RoomStatus.available,
-      );
-      context.read<RoomCubit>().addNewRoom(room);
-      Navigator.pop(context);
-    }
+  Widget _buildHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          AppStrings.addNewRoom,
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 24.sp,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Orbitron',
+          ),
+        ),
+        IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.close, color: AppColors.textSecondary),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActions() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.outlined,
+          onPressed: () => Navigator.pop(context),
+        ),
+        SizedBox(width: 16.w),
+        AppButton(
+          text: AppStrings.createStation,
+          isLoading: _isUploading,
+          onPressed: _submit,
+        ),
+      ],
+    );
   }
 }

@@ -21,11 +21,19 @@ class AdminModel extends AdminEntity {
 
   factory AdminModel.fromJson(Map<String, dynamic> json) {
     final userData = json['users'] as Map<String, dynamic>?;
+    
+    // Explicitly handle lounge_id to ensure it's null if not present or empty or the string 'null'
+    final dynamic rawLoungeId = json['lounge_id'];
+    final String? loungeId = (rawLoungeId == null || 
+                              rawLoungeId.toString().isEmpty || 
+                              rawLoungeId.toString().toLowerCase() == 'null')
+        ? null 
+        : rawLoungeId.toString();
 
     return AdminModel(
       id: json['id'] as String,
       userId: json['user_id'] as String,
-      loungeId: json['lounge_id'] as String?,
+      loungeId: loungeId,
       role: json['role'] == 'super_admin' ? AdminRole.superAdmin : AdminRole.loungeAdmin,
       name: userData?['name'] as String? ?? json['name'] as String? ?? 'Unknown',
       email: userData?['email'] as String? ?? json['email'] as String? ?? '',
