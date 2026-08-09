@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../app_strings.dart';
 import '../theme/app_colors.dart';
 
 class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
@@ -94,7 +95,7 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
       child: TextField(
         style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
         decoration: InputDecoration(
-          hintText: 'Search...',
+          hintText: AppStrings.searchHint,
           hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
           prefixIcon: Icon(Icons.search, color: AppColors.textSecondary, size: 20.sp),
           border: InputBorder.none,

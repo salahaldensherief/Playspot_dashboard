@@ -1,54 +1,146 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../features/auth/presentation/login/login_cubit.dart';
-import '../../features/auth/presentation/login/login_state.dart';
-import '../../features/auth/presentation/login/login_screen.dart';
-import '../../features/super_admin/analytics/presentation/dashboard_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
+import 'package:play_spot_dashboard/features/auth/domain/entities/admin_entity.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_screen.dart';
+import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_screen.dart' as dashboard;
+import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounges_page.dart' as lounges;
+import 'package:play_spot_dashboard/features/users/presentation/pages/users_page.dart' as users;
+import 'package:play_spot_dashboard/features/bookings/presentation/pages/bookings_page.dart' as bookings;
+import 'package:play_spot_dashboard/features/rooms/presentation/pages/room_management_page.dart' as rooms;
+import 'package:play_spot_dashboard/features/onboarding/presentation/pages/lounge_setup_page.dart' as onboarding;
+import 'package:play_spot_dashboard/art_core/layouts/dashboard_shell.dart';
+import '../../art_core/app_strings.dart';
+import '../../art_core/widgets/app_button.dart';
 import 'router_keys.dart';
-import '../../features/auth/domain/entities/admin_entity.dart';
 
 class AppRouter {
-  final LoginCubit authCubit;
+  static GoRouter router(BuildContext context) {
+    final authCubit = context.read<LoginCubit>();
 
-  AppRouter(this.authCubit);
+    return GoRouter(
+      initialLocation: RouterKeys.root,
+      refreshListenable: GoRouterRefreshStream(authCubit.stream),
+      redirect: (context, state) {
+        final authState = authCubit.state;
+        final bool isLoggingIn = state.matchedLocation == RouterKeys.login;
 
-  late final router = GoRouter(
-    initialLocation: RouterKeys.dashboard,
-    refreshListenable: GoRouterRefreshStream(authCubit.stream),
-    redirect: (context, state) {
-      final authState = authCubit.state;
-      final bool loggingIn = state.matchedLocation == RouterKeys.login;
+        if (authState.status != LoginStatus.authenticated && 
+            authState.status != LoginStatus.success) {
+          return isLoggingIn ? null : RouterKeys.login;
+        }
 
-      if (authState.status == LoginStatus.loading) {
+        if (isLoggingIn) {
+          if (authState.admin?.role == AdminRole.superAdmin) {
+            return RouterKeys.superAdminDashboard;
+          } else {
+            return RouterKeys.loungeAdminLiveOps;
+          }
+        }
+
+        if (state.matchedLocation == RouterKeys.root) {
+          if (authState.admin?.role == AdminRole.superAdmin) {
+            return RouterKeys.superAdminDashboard;
+          } else {
+            if (authState.admin?.loungeId == null) {
+              return RouterKeys.loungeOnboarding;
+            }
+            return RouterKeys.loungeAdminLiveOps;
+          }
+        }
+
+        final bool isSuperAdminRoute = state.matchedLocation.startsWith('/super-admin');
+        final bool isLoungeAdminRoute = state.matchedLocation.startsWith('/lounge-admin');
+
+        if (isSuperAdminRoute && authState.admin?.role != AdminRole.superAdmin) {
+          return RouterKeys.loungeAdminLiveOps;
+        }
+
+        if (isLoungeAdminRoute) {
+          if (authState.admin?.role != AdminRole.loungeAdmin) {
+            return RouterKeys.superAdminDashboard;
+          }
+          if (authState.admin?.loungeId == null && 
+              state.matchedLocation != RouterKeys.loungeOnboarding) {
+            return RouterKeys.loungeOnboarding;
+          }
+        }
+
         return null;
-      }
-
-      if (authState.status != LoginStatus.authenticated) {
-        return loggingIn ? null : RouterKeys.login;
-      }
-
-      if (loggingIn) {
-        return RouterKeys.dashboard;
-      }
-
-      return null;
-    },
-    routes: [
-      GoRoute(
-        path: RouterKeys.login,
-        builder: (context, state) => const LoginScreen(),
+      },
+      routes: [
+        GoRoute(
+          path: RouterKeys.login,
+          pageBuilder: (context, state) => const NoTransitionPage(child: LoginScreen()),
+        ),
+        GoRoute(
+          path: RouterKeys.loungeOnboarding,
+          pageBuilder: (context, state) => const NoTransitionPage(child: onboarding.LoungeSetupPage()),
+        ),
+        
+        // Shell route for the dashboard
+        ShellRoute(
+          builder: (context, state, child) {
+            return DashboardShell(
+              location: state.matchedLocation,
+              child: child,
+            );
+          },
+          routes: [
+            // Super Admin Routes
+            GoRoute(
+              path: RouterKeys.superAdminDashboard,
+              pageBuilder: (context, state) => NoTransitionPage(
+                child: dashboard.DashboardScreen(role: AdminRole.superAdmin),
+              ),
+            ),
+            GoRoute(
+              path: RouterKeys.superAdminLounges,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: lounges.LoungesPage(),
+              ),
+            ),
+            GoRoute(
+              path: RouterKeys.superAdminUsers,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: users.UsersPage(),
+              ),
+            ),
+            // Lounge Admin Routes
+            GoRoute(
+              path: RouterKeys.loungeAdminLiveOps,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: bookings.BookingsPage(),
+              ),
+            ),
+            GoRoute(
+              path: RouterKeys.loungeAdminRooms,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: rooms.RoomManagementPage(),
+              ),
+            ),
+          ],
+        ),
+      ],
+      errorBuilder: (context, state) => Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(AppStrings.pageNotFound, style: const TextStyle(color: Colors.white, fontSize: 24)),
+              const SizedBox(height: 16),
+              AppButton(
+                onPressed: () => context.go(RouterKeys.root),
+                text: AppStrings.goHome,
+              ),
+            ],
+          ),
+        ),
       ),
-      GoRoute(
-        path: RouterKeys.dashboard,
-        builder: (context, state) {
-          final admin = authCubit.state.admin;
-          return DashboardScreen(role: admin?.role ?? AdminRole.loungeAdmin);
-        },
-      ),
-    ],
-  );
+    );
+  }
 }
 
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -59,7 +151,7 @@ class GoRouterRefreshStream extends ChangeNotifier {
         );
   }
 
-  late final StreamSubscription<dynamic> _subscription;
+  late final dynamic _subscription;
 
   @override
   void dispose() {

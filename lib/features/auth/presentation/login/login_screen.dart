@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_gradient_button.dart';
@@ -120,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             Center(
                               child: Text(
-                                'Welcome Back',
+                                AppStrings.welcomeBack,
                                 style: TextStyle(
                                   fontSize: 24.sp,
                                   fontWeight: FontWeight.bold,
@@ -131,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             SizedBox(height: 8.h),
                             Center(
                               child: Text(
-                                'Sign in to your account',
+                                AppStrings.signInAccount,
                                 style: TextStyle(
                                   fontSize: 14.sp,
                                   color: AppColors.textSecondary,
@@ -140,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             SizedBox(height: 32.h),
                             AppTextField(
-                              label: 'Email',
+                              label: AppStrings.email,
                               hintText: 'Enter your email',
                               controller: _emailController,
                               prefixIcon: Icons.email_outlined,
@@ -153,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             SizedBox(height: 24.h),
                             AppTextField(
-                              label: 'Password',
+                              label: AppStrings.password,
                               hintText: 'Enter your password',
                               controller: _passwordController,
                               isPassword: true,
@@ -168,8 +169,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             SizedBox(height: 32.h),
                             BlocConsumer<LoginCubit, LoginState>(
                               listener: (context, state) {
-                                if (state.status == LoginStatus.success || state.status == LoginStatus.authenticated) {
-                                  // GoRouter will handle redirection
+                                if (state.status == LoginStatus.authenticated) {
+                                  // GoRouter logic in app.dart handles this
                                 } else if (state.status == LoginStatus.failure) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(content: Text(state.errorMessage ?? 'Login Failed')),
@@ -177,17 +178,29 @@ class _LoginScreenState extends State<LoginScreen> {
                                 }
                               },
                               builder: (context, state) {
-                                return AppGradientButton(
-                                  text: 'Sign In',
-                                  isLoading: state.status == LoginStatus.loading,
-                                  onPressed: () {
-                                    if (_formKey.currentState!.validate()) {
-                                      context.read<LoginCubit>().login(
-                                        _emailController.text.trim(),
-                                        _passwordController.text.trim(),
-                                      );
-                                    }
-                                  },
+                                return Column(
+                                  children: [
+                                    AppGradientButton(
+                                      text: AppStrings.signIn,
+                                      isLoading: state.status == LoginStatus.loading,
+                                      onPressed: () {
+                                        if (_formKey.currentState!.validate()) {
+                                          context.read<LoginCubit>().login(
+                                            _emailController.text.trim(),
+                                            _passwordController.text.trim(),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                    SizedBox(height: 16.h),
+                                    TextButton(
+                                      onPressed: () => context.read<LoginCubit>().loginAsMockLoungeAdmin(),
+                                      child: Text(
+                                        'Login as Lounge Admin (Dev Mode)',
+                                        style: TextStyle(color: AppColors.neonPurple, fontSize: 13.sp),
+                                      ),
+                                    ),
+                                  ],
                                 );
                               },
                             ),

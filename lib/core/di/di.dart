@@ -4,18 +4,34 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/features/auth/data/data_source/auth_remote_data_source.dart';
 import 'package:play_spot_dashboard/features/auth/domain/repositories/auth_repository.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
-import 'package:play_spot_dashboard/features/lounge_admin/live_operations/data/datasources/booking_remote_data_source.dart';
-import 'package:play_spot_dashboard/features/lounge_admin/live_operations/data/datasources/booking_realtime_datasource.dart';
-import 'package:play_spot_dashboard/features/lounge_admin/live_operations/data/repositories/booking_repository_impl.dart';
-import 'package:play_spot_dashboard/features/lounge_admin/live_operations/domain/repositories/booking_repository.dart';
-import 'package:play_spot_dashboard/features/lounge_admin/live_operations/domain/usecases/watch_bookings.dart';
-import 'package:play_spot_dashboard/features/lounge_admin/live_operations/domain/usecases/update_booking_status.dart';
-import 'package:play_spot_dashboard/features/lounge_admin/live_operations/presentation/cubit/booking_cubit.dart';
-import 'package:play_spot_dashboard/features/super_admin/lounge_management/presentation/cubit/lounge_cubit.dart';
-import 'package:play_spot_dashboard/features/super_admin/lounge_management/data/datasources/lounge_remote_data_source.dart';
-import 'package:play_spot_dashboard/features/super_admin/lounge_management/data/repositories/lounge_repository_impl.dart';
-import 'package:play_spot_dashboard/features/super_admin/lounge_management/domain/repositories/lounge_repository.dart';
+import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_remote_data_source.dart';
+import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_realtime_datasource.dart';
+import 'package:play_spot_dashboard/features/bookings/data/repositories/booking_repository_impl.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/repositories/booking_repository.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/usecases/watch_bookings.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/usecases/update_booking_status.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
+import 'package:play_spot_dashboard/features/lounges/data/datasources/lounge_remote_data_source.dart';
+import 'package:play_spot_dashboard/features/lounges/data/repositories/lounge_repository_impl.dart';
+import 'package:play_spot_dashboard/features/lounges/domain/repositories/lounge_repository.dart';
+import 'package:play_spot_dashboard/features/rooms/data/datasources/room_remote_data_source.dart';
+import 'package:play_spot_dashboard/features/rooms/data/repositories/room_repository_impl.dart';
+import 'package:play_spot_dashboard/features/rooms/domain/repositories/room_repository.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
+import 'package:play_spot_dashboard/features/onboarding/data/datasources/onboarding_remote_data_source.dart';
+import 'package:play_spot_dashboard/features/onboarding/data/repositories/onboarding_repository_impl.dart';
+import 'package:play_spot_dashboard/features/onboarding/domain/repositories/onboarding_repository.dart';
+import 'package:play_spot_dashboard/features/onboarding/domain/usecases/setup_lounge_usecase.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_cubit.dart';
+import 'package:play_spot_dashboard/features/users/data/datasources/admin_management_remote_data_source.dart';
+import 'package:play_spot_dashboard/features/users/data/repositories/admin_management_repository_impl.dart';
+import 'package:play_spot_dashboard/features/users/domain/repositories/admin_management_repository.dart';
+import 'package:play_spot_dashboard/features/users/domain/usecases/create_lounge_admin_usecase.dart';
+import 'package:play_spot_dashboard/features/users/presentation/cubit/admin_management_cubit.dart';
 import 'package:play_spot_dashboard/core/audio/audio_service.dart';
+import 'package:play_spot_dashboard/core/services/storage_service.dart';
+import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -33,6 +49,7 @@ Future<void> setupInjection() async {
 
   // Core
   sl.registerLazySingleton<AudioService>(() => AudioServiceImpl());
+  sl.registerLazySingleton<StorageService>(() => StorageServiceImpl(sl()));
 
   // Data Sources
   sl.registerLazySingleton<AuthRemoteDataSource>(
@@ -47,6 +64,15 @@ Future<void> setupInjection() async {
   sl.registerLazySingleton<LoungeRemoteDataSource>(
     () => LoungeRemoteDataSourceImpl(sl()),
   );
+  sl.registerLazySingleton<RoomRemoteDataSource>(
+    () => RoomRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<OnboardingRemoteDataSource>(
+    () => OnboardingRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<AdminManagementRemoteDataSource>(
+    () => AdminManagementRemoteDataSourceImpl(sl()),
+  );
 
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
@@ -58,10 +84,21 @@ Future<void> setupInjection() async {
   sl.registerLazySingleton<LoungeRepository>(
     () => LoungeRepositoryImpl(sl()),
   );
+  sl.registerLazySingleton<RoomRepository>(
+    () => RoomRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<OnboardingRepository>(
+    () => OnboardingRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<AdminManagementRepository>(
+    () => AdminManagementRepositoryImpl(sl()),
+  );
 
   // Use Cases
   sl.registerLazySingleton(() => WatchBookings(sl()));
   sl.registerLazySingleton(() => UpdateBookingStatus(sl()));
+  sl.registerLazySingleton(() => SetupLoungeUseCase(sl()));
+  sl.registerLazySingleton(() => CreateLoungeAdminUseCase(sl()));
 
   // Cubits
   sl.registerFactory<LoginCubit>(
@@ -75,5 +112,17 @@ Future<void> setupInjection() async {
   );
   sl.registerFactory<LoungeCubit>(
     () => LoungeCubit(sl()),
+  );
+  sl.registerFactory<DashboardCubit>(
+    () => DashboardCubit(sl()),
+  );
+  sl.registerFactory<RoomCubit>(
+    () => RoomCubit(sl()),
+  );
+  sl.registerFactory<OnboardingCubit>(
+    () => OnboardingCubit(sl()),
+  );
+  sl.registerFactory<AdminManagementCubit>(
+    () => AdminManagementCubit(sl()),
   );
 }

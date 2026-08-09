@@ -1,10 +1,11 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/router/router_keys.dart';
 import '../app_strings.dart';
 import '../theme/app_colors.dart';
-import '../router/router_keys.dart';
 import '../../features/auth/domain/entities/admin_entity.dart';
 import '../../features/auth/presentation/login/login_cubit.dart';
 
@@ -31,8 +32,20 @@ class DashboardSidebar extends StatelessWidget {
           if (isSuperAdmin) ..._buildSuperAdminItems(context) else ..._buildLoungeAdminItems(context),
           const Spacer(),
           _SidebarItem(
+            icon: Icons.language,
+            label: context.locale.languageCode == 'en' ? 'العربية' : 'English',
+            isActive: false,
+            onTap: () {
+              if (context.locale.languageCode == 'en') {
+                context.setLocale(const Locale('ar'));
+              } else {
+                context.setLocale(const Locale('en'));
+              }
+            },
+          ),
+          _SidebarItem(
             icon: Icons.logout,
-            label: 'Logout',
+            label: AppStrings.logout,
             isActive: false,
             onTap: () => context.read<LoginCubit>().logout(),
           ),
@@ -70,7 +83,7 @@ class DashboardSidebar extends StatelessWidget {
                 ),
               ),
               Text(
-                admin?.role == AdminRole.superAdmin ? 'Super Admin' : 'Lounge Manager',
+                admin?.role == AdminRole.superAdmin ? AppStrings.superAdmin : AppStrings.loungeManager,
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
               ),
             ],
@@ -84,25 +97,25 @@ class DashboardSidebar extends StatelessWidget {
     return [
       _SidebarItem(
         icon: Icons.analytics_outlined,
-        label: 'Analytics',
+        label: AppStrings.analytics,
         isActive: activeRoute == AppStrings.dashboard,
         onTap: () => context.go(RouterKeys.superAdminDashboard),
       ),
       _SidebarItem(
         icon: Icons.business_outlined,
-        label: 'Lounges',
+        label: AppStrings.lounges,
         isActive: activeRoute == AppStrings.lounges,
         onTap: () => context.go(RouterKeys.superAdminLounges),
       ),
       _SidebarItem(
         icon: Icons.category_outlined,
-        label: 'Categories',
+        label: AppStrings.categories,
         isActive: activeRoute == 'Categories',
         onTap: () {},
       ),
       _SidebarItem(
         icon: Icons.campaign_outlined,
-        label: 'Marketing',
+        label: AppStrings.marketing,
         isActive: activeRoute == AppStrings.marketing,
         onTap: () {},
       ),
@@ -113,19 +126,19 @@ class DashboardSidebar extends StatelessWidget {
     return [
       _SidebarItem(
         icon: Icons.sensors,
-        label: 'Live Operations',
+        label: AppStrings.bookings,
         isActive: activeRoute == AppStrings.bookings,
         onTap: () => context.go(RouterKeys.loungeAdminLiveOps),
       ),
       _SidebarItem(
         icon: Icons.meeting_room_outlined,
-        label: 'Rooms',
+        label: AppStrings.rooms,
         isActive: activeRoute == 'Rooms',
-        onTap: () {},
+        onTap: () => context.go(RouterKeys.loungeAdminRooms),
       ),
       _SidebarItem(
         icon: Icons.restaurant_menu,
-        label: 'Extras & Menu',
+        label: AppStrings.extras,
         isActive: activeRoute == 'Extras',
         onTap: () {},
       ),

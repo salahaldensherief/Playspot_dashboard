@@ -1,11 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/entities/admin_entity.dart';
 import 'login_state.dart';
 
 class LoginCubit extends Cubit<LoginState> {
   final AuthRepository _repository;
 
-  LoginCubit(this._repository) : super(LoginState.init());
+  LoginCubit(this._repository) : super(const LoginState());
 
   Future<void> checkInitialAuth() async {
     final result = await _repository.getCurrentUser();
@@ -21,19 +22,36 @@ class LoginCubit extends Cubit<LoginState> {
     );
   }
 
+  // دخول سريع للمطورين
+  void loginAsMockLoungeAdmin() {
+    emit(state.copyWith(
+      status: LoginStatus.authenticated,
+      admin: const AdminEntity(
+        id: 'mock-admin-id',
+        userId: 'mock-user-id',
+        loungeId: 'lounge-nexus-001', // ID وهمي للصالة
+        role: AdminRole.loungeAdmin,
+        name: 'Nexus Manager',
+        email: 'lounge@playspot.com',
+      ),
+    ));
+  }
+
   Future<void> login(String email, String password) async {
-    if (isClosed) return;
     emit(state.copyWith(status: LoginStatus.loading));
     final result = await _repository.login(email, password);
-    if (isClosed) return;
     result.fold(
       (error) => emit(state.copyWith(status: LoginStatus.failure, errorMessage: error)),
-      (admin) => emit(state.copyWith(status: LoginStatus.success, admin: admin)),
+      (admin) => emit(state.copyWith(status: LoginStatus.authenticated, admin: admin)),
     );
+  }
+
+  void updateAdmin(AdminEntity admin) {
+    emit(state.copyWith(admin: admin));
   }
 
   Future<void> logout() async {
     await _repository.logout();
-    emit(LoginState.init());
+    emit(const LoginState());
   }
 }

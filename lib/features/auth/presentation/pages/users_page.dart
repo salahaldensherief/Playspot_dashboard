@@ -13,13 +13,13 @@ class UsersPage extends StatelessWidget {
       backgroundColor: AppColors.scaffoldBackground,
       body: Row(
         children: [
-          const DashboardSidebar(activeRoute: AppStrings.users),
-          const Expanded(
+          DashboardSidebar(activeRoute: AppStrings.users),
+          Expanded(
             child: Column(
               children: [
-                DashboardTopBar(title: 'User Management'),
+                DashboardTopBar(title: AppStrings.loungeAdministrators),
                 Center(
-                  child: Text('Users Management Page - Under Construction', style: TextStyle(color: Colors.white)),
+                  child: Text('${AppStrings.users} - ${AppStrings.underConstruction}', style: const TextStyle(color: Colors.white)),
                 ),
               ],
             ),

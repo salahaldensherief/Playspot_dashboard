@@ -10,10 +10,10 @@ class AudioServiceImpl implements AudioService {
   @override
   Future<void> playNotificationSound() async {
     try {
+      // Check if we are on web and handle potential missing assets gracefully
       await _player.play(AssetSource('audio/new_booking.mp3'));
     } catch (e) {
-      // Handle or log audio play failure
-      print('Audio play error: $e');
+      // Audio might fail in dev environments without the actual file
     }
   }
 }

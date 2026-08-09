@@ -1,38 +1,23 @@
 import 'package:flutter/material.dart';
-import 'dashboard_sidebar.dart';
-import 'dashboard_top_bar.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class DashboardLayout extends StatelessWidget {
-  final String title;
   final Widget child;
+  final String? title; // Keep for backward compatibility or remove later
+  final String? activeRoute;
 
   const DashboardLayout({
     super.key,
-    required this.title,
     required this.child,
+    this.title,
+    this.activeRoute,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Row(
-        children: [
-           DashboardSidebar(activeRoute: '',),
-          Expanded(
-            child: Column(
-              children: [
-                DashboardTopBar(title: title),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: child,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(32.r),
+      child: child,
     );
   }
 }

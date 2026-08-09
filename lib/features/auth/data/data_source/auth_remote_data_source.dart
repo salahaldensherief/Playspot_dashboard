@@ -25,7 +25,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw AppException('Login failed: User is null');
       }
 
-      return await _getAdminData(response.user!.id);
+      final admin = await getCurrentAdmin();
+      if (admin == null) {
+        throw AppException('No admin profile found for this account.');
+      }
+      return admin;
     } on AuthException catch (e) {
       throw AppException(e.message);
     } catch (e) {
@@ -42,25 +46,43 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<AdminModel?> getCurrentAdmin() async {
     final user = _supabase.auth.currentUser;
     if (user == null) return null;
-    return await _getAdminData(user.id);
-  }
 
-  Future<AdminModel> _getAdminData(String userId) async {
-    final data = await _supabase
-        .from('admins')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+    try {
+      // 1. Try to use the new RPC 'get_my_profile'
+      final response = await _supabase.rpc('get_my_profile').timeout(
+        const Duration(seconds: 5),
+      );
+      
+      if (response != null) {
+        final data = Map<String, dynamic>.from(response);
+        data['users'] = {
+          'email': user.email,
+          'name': data['full_name'] ?? 'Admin',
+          'avatar_url': data['avatar_url'],
+        };
+        return AdminModel.fromJson(data);
+      }
+    } catch (e) {
+      // 2. Fallback to direct table query if RPC fails/doesn't exist
+      try {
+        final data = await _supabase
+            .from('admins')
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle();
 
-    final user = _supabase.auth.currentUser;
-    if (user != null) {
-      data['users'] = {
-        'email': user.email,
-        'name': user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? 'Admin',
-        'avatar_url': user.userMetadata?['avatar_url'],
-      };
+        if (data != null) {
+          data['users'] = {
+            'email': user.email,
+            'name': user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? 'Admin',
+            'avatar_url': user.userMetadata?['avatar_url'],
+          };
+          return AdminModel.fromJson(data);
+        }
+      } catch (tableError) {
+        // Log error or handle it
+      }
     }
-
-    return AdminModel.fromJson(data);
+    return null;
   }
 }
