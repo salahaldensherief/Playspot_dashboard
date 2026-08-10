@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:play_spot_dashboard/features/auth/domain/entities/admin_entity.dart';
+import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 
 abstract class AdminManagementState extends Equatable {
   const AdminManagementState();
@@ -12,8 +12,16 @@ class AdminManagementInitial extends AdminManagementState {}
 
 class AdminManagementLoading extends AdminManagementState {}
 
+class AdminManagementLoaded extends AdminManagementState {
+  final List<UserEntity> admins;
+  const AdminManagementLoaded(this.admins);
+
+  @override
+  List<Object?> get props => [admins];
+}
+
 class AdminManagementSuccess extends AdminManagementState {
-  final AdminEntity admin;
+  final UserEntity admin;
   const AdminManagementSuccess(this.admin);
 
   @override

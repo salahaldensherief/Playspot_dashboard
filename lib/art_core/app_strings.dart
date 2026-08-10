@@ -63,6 +63,9 @@ class AppStrings {
   static String get noLoungesFound => 'no_lounges_found'.tr();
   static String get loungeSetup => 'lounge_setup'.tr();
   static String get loungeName => 'lounge_name'.tr();
+  static String get loungeNameHint => 'lounge_name_hint'.tr();
+  static String get description => 'description'.tr();
+  static String get descriptionHint => 'description_hint'.tr();
   static String get city => 'city'.tr();
 
   // User Management
@@ -112,6 +115,55 @@ class AppStrings {
   static String get ownerNameHint => 'owner_name_hint'.tr();
   static String get ownerEmailHint => 'owner_email_hint'.tr();
   static String get passwordHint => 'password_hint'.tr();
+  
+  // Marketplace
+  static String get marketplace => 'marketplace'.tr();
+  static String get marketplaceSubtitle => 'marketplace_subtitle'.tr();
+  static String get assets => 'assets'.tr();
+  static String get assetsSubtitle => 'assets_subtitle'.tr();
+  static String get noItemsAdded => 'no_items_added'.tr();
+  static String get noRoomsAdded => 'no_rooms_added'.tr();
+  static String get addRoomStation => 'add_room_station'.tr();
+  static String get addExtraItem => 'add_extra_item'.tr();
+  static String get itemName => 'item_name'.tr();
+  static String get priceEgp => 'price_egp'.tr();
+  static String get category => 'category'.tr();
+  static String get addItem => 'add_item'.tr();
+  static String get addItemHint => 'add_item_hint'.tr();
+  static String get priceHint => 'price_hint'.tr();
+  static String get drinks => 'drinks'.tr();
+  static String get snacks => 'snacks'.tr();
+  static String get services => 'services'.tr();
+  static String get others => 'others'.tr();
+  static String get menuManagement => 'menu_management'.tr();
+  static String get menuManagementSubtitle => 'menu_management_subtitle'.tr();
+
+  // Profile
+  static String get myProfile => 'my_profile'.tr();
+  static String get changePassword => 'change_password'.tr();
+  static String get fullNameLabel => 'full_name_label'.tr();
+  static String get emailAddressLabel => 'email_address_label'.tr();
+  static String get roleLabel => 'role_label'.tr();
+  
+  // Booking Details
+  static String get bookingDetails => 'booking_details'.tr();
+  static String get customerName => 'customer_name'.tr();
+  static String get schedule => 'schedule'.tr();
+  static String get date => 'date'.tr();
+  static String get totalPrice => 'total_price'.tr();
+  static String get payment => 'payment'.tr();
+  static String get consoleSpecs => 'console_specs'.tr();
+  static String get cancelBooking => 'cancel_booking'.tr();
+  static String get anonymous => 'anonymous'.tr();
+  static String get pending => 'pending'.tr();
+  static String get paid => 'paid'.tr();
+  static String get upcoming => 'upcoming'.tr();
+  static String get completed => 'completed'.tr();
+  static String get cancelled => 'cancelled'.tr();
+  static String get approve => 'approve'.tr();
+  static String get reject => 'reject'.tr();
+  static String get pendingRequests => 'pending_requests'.tr();
+  static String get activeBookings => 'active_bookings'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

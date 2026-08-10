@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../../art_core/widgets/app_text_field.dart';
+import '../../../../art_core/app_strings.dart';
+import '../../../../art_core/widgets/app_text_field.dart';
 
 class BasicInfoStep extends StatelessWidget {
   final TextEditingController nameController;
@@ -17,14 +18,14 @@ class BasicInfoStep extends StatelessWidget {
     return Column(
       children: [
         AppTextField(
-          label: 'Lounge Name',
-          hintText: 'Enter your lounge name',
+          label: AppStrings.loungeName,
+          hintText: AppStrings.loungeNameHint,
           controller: nameController,
         ),
         SizedBox(height: 20.h),
         AppTextField(
-          label: 'Description',
-          hintText: 'Tell players about your lounge',
+          label: AppStrings.description,
+          hintText: AppStrings.descriptionHint,
           controller: descriptionController,
         ),
       ],

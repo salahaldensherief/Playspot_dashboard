@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../../art_core/widgets/app_text_field.dart';
+import '../../../../art_core/app_strings.dart';
+import '../../../../art_core/widgets/app_text_field.dart';
 
 class OperatingHoursStep extends StatelessWidget {
   final TextEditingController opensAtController;
@@ -20,7 +21,7 @@ class OperatingHoursStep extends StatelessWidget {
           children: [
             Expanded(
               child: AppTextField(
-                label: 'Opens At',
+                label: AppStrings.opensAt,
                 hintText: 'e.g. 10:00 AM',
                 controller: opensAtController,
               ),
@@ -28,7 +29,7 @@ class OperatingHoursStep extends StatelessWidget {
             SizedBox(width: 20.w),
             Expanded(
               child: AppTextField(
-                label: 'Closes At',
+                label: AppStrings.closesAt,
                 hintText: 'e.g. 02:00 AM',
                 controller: closesAtController,
               ),

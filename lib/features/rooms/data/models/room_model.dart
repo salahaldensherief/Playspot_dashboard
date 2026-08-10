@@ -8,6 +8,7 @@ class RoomModel extends RoomEntity {
     required super.nameEn,
     required super.activityNames,
     super.spaceType,
+    super.spaceTypeId,
     required super.capacity,
     required super.pricePerHour,
     required super.isAvailable,
@@ -20,7 +21,6 @@ class RoomModel extends RoomEntity {
   });
 
   factory RoomModel.fromJson(Map<String, dynamic> json) {
-    // Logic from your provided models
     final List? roomCats = json['room_categories'] as List?;
     final List<String> activities = [];
     if (roomCats != null) {
@@ -31,35 +31,48 @@ class RoomModel extends RoomEntity {
       }
     }
 
+    // Helper to parse double safely
+    double parseDouble(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is num) return value.toDouble();
+      return double.tryParse(value.toString()) ?? 0.0;
+    }
+
+    // Helper to parse int safely
+    int parseInt(dynamic value, int defaultValue) {
+      if (value == null) return defaultValue;
+      if (value is num) return value.toInt();
+      return int.tryParse(value.toString()) ?? defaultValue;
+    }
+
     return RoomModel(
       id: json['id']?.toString() ?? '',
       loungeId: json['lounge_id']?.toString() ?? '',
-      nameAr: json['name_ar']?.toString() ?? '',
-      nameEn: json['name_en']?.toString() ?? '',
+      nameAr: (json['name_ar'] ?? json['name'])?.toString() ?? '',
+      nameEn: (json['name_en'] ?? json['name'])?.toString() ?? '',
       activityNames: activities.isNotEmpty
           ? activities
           : (json['activity_names'] != null ? List<String>.from(json['activity_names']) : []),
       spaceType: json['space_types']?['label'] ?? json['space_type_name']?.toString(),
-      capacity: (json['capacity'] as num?)?.toInt() ?? 4,
-      pricePerHour: (json['price_per_hour'] as num?)?.toDouble() ?? 0.0,
+      spaceTypeId: json['space_type_id']?.toString(),
+      capacity: parseInt(json['capacity'], 4),
+      pricePerHour: parseDouble(json['price_per_hour']),
       isAvailable: json['is_available'] ?? true,
       images: json['images'] != null ? List<String>.from(json['images']) : [],
       featuresAr: json['features_ar'] != null ? List<String>.from(json['features_ar']) : [],
       featuresEn: json['features_en'] != null ? List<String>.from(json['features_en']) : [],
-      controllersCount: (json['controllers_count'] as num?)?.toInt() ?? 2,
+      controllersCount: parseInt(json['controllers_count'], 2),
       screenSize: json['screen_size']?.toString() ?? '43"',
       status: json['status'] == 'maintenance' ? RoomStatus.maintenance : RoomStatus.available,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
+    final Map<String, dynamic> data = {
       'lounge_id': loungeId,
+      'name': nameEn.isEmpty ? 'Unnamed Room' : nameEn,
       'name_ar': nameAr,
       'name_en': nameEn,
-      'activity_names': activityNames,
-      'space_type_name': spaceType,
       'capacity': capacity,
       'price_per_hour': pricePerHour,
       'is_available': isAvailable,
@@ -70,5 +83,9 @@ class RoomModel extends RoomEntity {
       'screen_size': screenSize,
       'status': status == RoomStatus.maintenance ? 'maintenance' : 'available',
     };
+    if (spaceTypeId != null) {
+      data['space_type_id'] = spaceTypeId;
+    }
+    return data;
   }
 }

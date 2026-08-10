@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 
 class RecentActivityCard extends StatelessWidget {
   const RecentActivityCard({super.key});
@@ -21,19 +22,16 @@ class RecentActivityCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              AppText.heading(
                 AppStrings.recentActivity,
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                ),
+                fontSize: 18.sp,
               ),
               TextButton(
                 onPressed: () {},
-                child: Text(
+                child: AppText.body(
                   AppStrings.viewAll,
-                  style: TextStyle(color: AppColors.neonBlue, fontSize: 13.sp),
+                  color: AppColors.neonBlue,
+                  fontSize: 13.sp,
                 ),
               ),
             ],
@@ -119,6 +117,7 @@ class _ActivityItem extends StatelessWidget {
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13.sp,
+                      fontFamily: 'Inter',
                     ),
                     children: [
                       TextSpan(
@@ -140,12 +139,10 @@ class _ActivityItem extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 4.h),
-                Text(
+                AppText.body(
                   time,
-                  style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 11.sp,
-                  ),
+                  color: AppColors.textMuted,
+                  fontSize: 11.sp,
                 ),
               ],
             ),

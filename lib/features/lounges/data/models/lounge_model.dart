@@ -25,45 +25,61 @@ class LoungeModel extends Lounge {
     super.categoryId,
     super.ownerName,
     super.ownerEmail,
+    super.status = 'active',
   });
 
   factory LoungeModel.fromJson(Map<String, dynamic> json) {
+    // Helper to parse double safely
+    double parseDouble(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is num) return value.toDouble();
+      return double.tryParse(value.toString()) ?? 0.0;
+    }
+
+    // Helper to parse int safely
+    int? parseInt(dynamic value) {
+      if (value == null) return null;
+      if (value is num) return value.toInt();
+      return int.tryParse(value.toString());
+    }
+
     double calculatedDistance = 0.0;
     if (json['dist_meters'] != null) {
-      calculatedDistance = (json['dist_meters'] as num).toDouble() / 1000.0;
+      calculatedDistance = parseDouble(json['dist_meters']) / 1000.0;
     } else if (json['distance'] != null) {
-      calculatedDistance = (json['distance'] as num).toDouble();
+      calculatedDistance = parseDouble(json['distance']);
     }
 
     return LoungeModel(
-      id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
+      id: (json['id'] ?? json['lounge_id'])?.toString() ?? '',
+      name: (json['name'] ?? json['lounge_name'])?.toString() ?? '',
       imageUrl: json['image_url']?.toString() ?? '',
-      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      rating: parseDouble(json['rating']),
       distance: calculatedDistance,
-      pricePerHour: (json['price_per_hour'] as num?)?.toDouble() ?? 0.0,
+      pricePerHour: parseDouble(json['price_per_hour']),
       isOpen: json['is_open'] ?? true,
       location: json['location']?.toString(),
       city: json['city']?.toString(),
-      totalReviews: (json['total_reviews'] as num?)?.toInt(),
-      availableRooms: (json['available_rooms'] as num?)?.toInt(),
+      totalReviews: parseInt(json['total_reviews']),
+      availableRooms: parseInt(json['available_rooms'] ?? json['rooms_count']),
       descriptionAr: json['description_ar']?.toString(),
       descriptionEn: json['description_en']?.toString(),
       images: json['images'] != null ? List<String>.from(json['images']) : null,
       opensAt: json['opens_at']?.toString() ?? '',
       closesAt: json['closes_at']?.toString() ?? '',
       mapsLink: json['maps_link']?.toString(),
-      lat: (json['lat'] as num?)?.toDouble(),
-      lng: (json['lng'] as num?)?.toDouble(),
+      lat: (json['lat'] != null) ? parseDouble(json['lat']) : null,
+      lng: (json['lng'] != null) ? parseDouble(json['lng']) : null,
       categoryIcons: json['category_icons'] != null ? List<String>.from(json['category_icons']) : [],
       categoryId: json['category_id']?.toString(),
       ownerName: json['owner_name']?.toString(),
       ownerEmail: json['owner_email']?.toString(),
+      status: json['status']?.toString() ?? 'active',
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    return <String, dynamic>{
       'name': name,
       'image_url': imageUrl,
       'is_open': isOpen,
@@ -77,6 +93,7 @@ class LoungeModel extends Lounge {
       'maps_link': mapsLink,
       'lat': lat,
       'lng': lng,
+      'status': status,
       if (categoryId != null) 'category_id': categoryId,
     };
   }

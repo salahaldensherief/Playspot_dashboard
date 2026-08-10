@@ -1,34 +1,37 @@
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/admin_entity.dart';
+import '../../domain/entities/user_entity.dart';
 
 enum LoginStatus { initial, loading, success, failure, authenticated }
 
 class LoginState extends Equatable {
   final LoginStatus status;
-  final AdminEntity? admin;
+  final UserEntity? user;
   final String? errorMessage;
+  final bool isSetupCompleted;
 
   const LoginState({
     this.status = LoginStatus.initial,
-    this.admin,
+    this.user,
     this.errorMessage,
+    this.isSetupCompleted = false,
   });
 
   factory LoginState.init() => const LoginState();
 
   LoginState copyWith({
     LoginStatus? status,
-    AdminEntity? admin,
+    UserEntity? user,
     String? errorMessage,
+    bool? isSetupCompleted,
   }) {
     return LoginState(
       status: status ?? this.status,
-      admin: admin ?? this.admin,
+      user: user ?? this.user,
       errorMessage: errorMessage ?? this.errorMessage,
+      isSetupCompleted: isSetupCompleted ?? this.isSetupCompleted,
     );
   }
 
   @override
-  List<Object?> get props => [status, admin, errorMessage];
-
+  List<Object?> get props => [status, user, errorMessage, isSetupCompleted];
 }

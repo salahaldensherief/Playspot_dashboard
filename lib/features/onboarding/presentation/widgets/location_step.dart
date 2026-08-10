@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../../art_core/widgets/app_text_field.dart';
+import '../../../../art_core/app_strings.dart';
+import '../../../../art_core/widgets/app_text_field.dart';
 
 class LocationStep extends StatelessWidget {
   final TextEditingController cityController;
@@ -17,13 +18,13 @@ class LocationStep extends StatelessWidget {
     return Column(
       children: [
         AppTextField(
-          label: 'City',
+          label: AppStrings.city,
           hintText: 'e.g. Cairo',
           controller: cityController,
         ),
         SizedBox(height: 20.h),
         AppTextField(
-          label: 'Address',
+          label: AppStrings.address,
           hintText: 'Detailed address',
           controller: addressController,
         ),

@@ -12,9 +12,19 @@ class BookingRepositoryImpl implements BookingRepository {
   BookingRepositoryImpl(this.remoteDataSource, this.realtimeDataSource);
 
   @override
-  Future<Either<Failure, List<Booking>>> getBookings({String? loungeId}) async {
+  Future<Either<Failure, List<Booking>>> getBookings({
+    String? loungeId,
+    String? status,
+    int limit = 50,
+    int offset = 0,
+  }) async {
     try {
-      final bookings = await remoteDataSource.getBookings(loungeId: loungeId);
+      final bookings = await remoteDataSource.getBookings(
+        loungeId: loungeId,
+        status: status,
+        limit: limit,
+        offset: offset,
+      );
       return Right(bookings);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -29,7 +39,17 @@ class BookingRepositoryImpl implements BookingRepository {
   @override
   Future<Either<Failure, void>> updateBookingStatus(String id, BookingStatus status) async {
     try {
-      await remoteDataSource.updateBookingStatus(id, status.name);
+      await remoteDataSource.updateBookingStatus(id, status.toString().split('.').last);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> confirmCashPayment(String bookingId) async {
+    try {
+      await remoteDataSource.confirmCashPayment(bookingId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

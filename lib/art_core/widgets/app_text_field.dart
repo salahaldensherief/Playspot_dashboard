@@ -9,7 +9,7 @@ class AppTextField extends StatelessWidget {
   final bool isPassword;
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
-
+  final bool readOnly;
   final IconData? prefixIcon;
 
   const AppTextField({
@@ -20,6 +20,7 @@ class AppTextField extends StatelessWidget {
     this.isPassword = false,
     this.keyboardType = TextInputType.text,
     this.validator,
+    this.readOnly = false,
     this.prefixIcon,
   });
 
@@ -42,6 +43,7 @@ class AppTextField extends StatelessWidget {
           obscureText: isPassword,
           keyboardType: keyboardType,
           validator: validator,
+          readOnly: readOnly,
           style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
           decoration: InputDecoration(
             hintText: hintText,

@@ -24,6 +24,7 @@ class Lounge extends Equatable {
   final String? categoryId;
   final String? ownerName;
   final String? ownerEmail;
+  final String status;
 
   const Lounge({
     required this.id,
@@ -49,6 +50,7 @@ class Lounge extends Equatable {
     this.categoryId,
     this.ownerName,
     this.ownerEmail,
+    this.status = 'active',
   });
 
   @override
@@ -76,5 +78,6 @@ class Lounge extends Equatable {
         categoryId,
         ownerName,
         ownerEmail,
+        status,
       ];
 }

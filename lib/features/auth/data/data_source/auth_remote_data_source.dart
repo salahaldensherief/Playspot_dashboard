@@ -1,88 +1,93 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:play_spot_dashboard/art_core/exceptions/app_exceptions.dart';
-import 'package:play_spot_dashboard/features/auth/data/models/admin_model.dart';
-import 'package:flutter/foundation.dart';
-
-import '../../domain/entities/admin_entity.dart';
+import '../../domain/entities/user_entity.dart';
+import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<AdminModel> login(String email, String password);
+  Future<UserModel> login({
+    required String email,
+    required String password,
+  });
+  
   Future<void> logout();
-  Future<AdminModel?> getCurrentAdmin();
+  
+  Future<UserModel?> getCurrentUser();
+  
+  Future<bool> checkSetupStatus(String loungeId);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  final SupabaseClient _supabase;
+  final SupabaseClient supabaseClient;
 
-  AuthRemoteDataSourceImpl(this._supabase);
+  AuthRemoteDataSourceImpl(this.supabaseClient);
 
   @override
-  Future<AdminModel> login(String email, String password) async {
-    try {
-      final response = await _supabase.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
-
-      if (response.user == null) {
-        throw AppException('Login failed: User is null');
-      }
-
-      final admin = await getCurrentAdmin();
-      if (admin == null) {
-         // Final Fallback: use Auth User data if DB view is not ready
-         return AdminModel(
-           id: response.user!.id,
-           userId: response.user!.id,
-           role: AdminRole.loungeAdmin,
-           name: response.user!.userMetadata?['full_name'] ?? 'Lounge Admin',
-           email: response.user!.email ?? '',
-         );
-      }
-      return admin;
-    } on AuthException catch (e) {
-      throw AppException(e.message);
-    } catch (e) {
-      debugPrint('Critical Login Error: $e');
-      throw ServerException(e.toString());
+  Future<UserModel> login({
+    required String email,
+    required String password,
+  }) async {
+    final response = await supabaseClient.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+    
+    if (response.user == null) {
+      throw Exception('User not found');
     }
+    
+    final profile = await _getUserProfile(response.user!.id);
+    return profile ?? UserModel(
+      id: response.user!.id,
+      email: response.user!.email!,
+      name: response.user!.userMetadata?['full_name'] ?? 'Unknown',
+      role: (response.user!.userMetadata?['role'] == 'super_admin') 
+          ? UserRole.superAdmin 
+          : UserRole.loungeAdmin,
+    );
   }
 
   @override
   Future<void> logout() async {
-    await _supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
   }
 
   @override
-  Future<AdminModel?> getCurrentAdmin() async {
-    final user = _supabase.auth.currentUser;
+  Future<UserModel?> getCurrentUser() async {
+    final user = supabaseClient.auth.currentUser;
     if (user == null) return null;
+    return await _getUserProfile(user.id);
+  }
 
-    // 1. Primary Strategy: Use the profiles view (as per backend report)
+  @override
+  Future<bool> checkSetupStatus(String loungeId) async {
+    final response = await supabaseClient
+        .from('lounges')
+        .select('status')
+        .eq('id', loungeId)
+        .single();
+    
+    return response['status'] == 'active';
+  }
+  
+  Future<UserModel?> _getUserProfile(String userId) async {
     try {
-      final data = await _supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
-
-      if (data != null) {
-        return AdminModel.fromJson(Map<String, dynamic>.from(data));
-      }
-    } catch (e) {
-      debugPrint('Profile view query failed: $e');
-    }
-
-    // 2. Secondary Strategy: Use RPC if view fails
-    try {
-      final response = await _supabase.rpc('get_my_profile');
+      final response = await supabaseClient.rpc('get_my_profile');
       if (response != null) {
-        return AdminModel.fromJson(Map<String, dynamic>.from(response));
+        return UserModel.fromJson(Map<String, dynamic>.from(response));
+      }
+      
+      // Fallback to profiles table
+      final profile = await supabaseClient
+          .from('profiles')
+          .select()
+          .eq('id', userId)
+          .maybeSingle();
+      
+      if (profile != null) {
+        return UserModel.fromJson(Map<String, dynamic>.from(profile));
       }
     } catch (e) {
-      debugPrint('RPC get_my_profile failed: $e');
+      // Handle error or log
     }
-
     return null;
   }
 }

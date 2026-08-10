@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 
 abstract class AudioService {
   Future<void> playNotificationSound();
@@ -10,10 +11,10 @@ class AudioServiceImpl implements AudioService {
   @override
   Future<void> playNotificationSound() async {
     try {
-      // Check if we are on web and handle potential missing assets gracefully
+      // Audio file might not exist in all environments
       await _player.play(AssetSource('audio/new_booking.mp3'));
     } catch (e) {
-      // Audio might fail in dev environments without the actual file
+      debugPrint('Audio playback failed: $e');
     }
   }
 }

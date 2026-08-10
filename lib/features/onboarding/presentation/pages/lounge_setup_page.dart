@@ -5,16 +5,18 @@ import 'package:go_router/go_router.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
-import 'package:play_spot_dashboard/features/auth/domain/entities/admin_entity.dart';
+import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
 import '../cubit/onboarding_cubit.dart';
-import '../cubit/onboarding_state.dart';
 import '../widgets/basic_info_step.dart';
 import '../widgets/location_step.dart';
 import '../widgets/operating_hours_step.dart';
+import '../widgets/assets_step.dart';
+import '../widgets/marketplace_step.dart';
 
 class LoungeSetupPage extends StatelessWidget {
   const LoungeSetupPage({super.key});
@@ -37,6 +39,7 @@ class LoungeSetupView extends StatefulWidget {
 
 class _LoungeSetupViewState extends State<LoungeSetupView> {
   int _currentStep = 0;
+  final int _totalSteps = 5;
   
   // Controllers
   final _nameController = TextEditingController();
@@ -58,7 +61,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
   }
 
   void _onNext() {
-    if (_currentStep < 2) {
+    if (_currentStep < _totalSteps - 1) {
       setState(() => _currentStep++);
     } else {
       _submit();
@@ -73,14 +76,14 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
 
   void _submit() {
     final lounge = Lounge(
-      id: '', // Backend will generate
+      id: '', 
       name: _nameController.text,
       descriptionEn: _descriptionController.text,
       city: _cityController.text,
       location: _addressController.text,
       opensAt: _opensAtController.text,
       closesAt: _closesAtController.text,
-      imageUrl: '', // Should handle image upload later
+      imageUrl: '', 
       categoryId: 'default',
     );
 
@@ -93,24 +96,15 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
       backgroundColor: AppColors.scaffoldBackground,
       body: BlocListener<OnboardingCubit, OnboardingState>(
         listener: (context, state) {
-          if (state is OnboardingSuccess) {
+          if (state.status == OnboardingStatus.success) {
             final authCubit = context.read<LoginCubit>();
-            final currentAdmin = authCubit.state.admin;
-            if (currentAdmin != null) {
-              authCubit.updateAdmin(AdminEntity(
-                id: currentAdmin.id,
-                userId: currentAdmin.userId,
-                role: currentAdmin.role,
-                name: currentAdmin.name,
-                email: currentAdmin.email,
-                loungeId: state.lounge.id,
-                avatarUrl: currentAdmin.avatarUrl,
-              ));
-            }
-            context.go(RouterKeys.loungeAdminLiveOps);
-          } else if (state is OnboardingError) {
+            // Re-fetch profile to update is_setup_completed and other details
+            authCubit.checkInitialAuth().then((_) {
+              context.go(RouterKeys.loungeAdminLiveOps);
+            });
+          } else if (state.status == OnboardingStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: AppColors.danger),
+              SnackBar(content: AppText.body(state.errorMessage ?? 'Error', color: Colors.white), backgroundColor: AppColors.danger),
             );
           }
         },
@@ -130,6 +124,8 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildHeader(),
+                SizedBox(height: 20.h),
+                _buildProgressIndicator(),
                 SizedBox(height: 40.h),
                 _buildStepContent(),
                 SizedBox(height: 40.h),
@@ -146,28 +142,34 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          AppStrings.loungeSetupWelcome,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 32.sp,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Orbitron',
-          ),
-        ),
+        AppText.heading(AppStrings.loungeSetupWelcome, fontSize: 32.sp),
         SizedBox(height: 8.h),
-        Text(
-          AppStrings.loungeSetupSubtitle,
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 16.sp,
-          ),
-        ),
+        AppText.body(AppStrings.loungeSetupSubtitle, fontSize: 16.sp),
       ],
     );
   }
 
+  Widget _buildProgressIndicator() {
+    return Row(
+      children: List.generate(_totalSteps, (index) {
+        return Expanded(
+          child: Container(
+            height: 4.h,
+            margin: EdgeInsets.symmetric(horizontal: 2.w),
+            decoration: BoxDecoration(
+              color: index <= _currentStep ? AppColors.neonBlue : AppColors.divider,
+              borderRadius: BorderRadius.circular(2.r),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
   Widget _buildStepContent() {
+    final admin = context.read<LoginCubit>().state.user;
+    final loungeId = admin?.loungeId ?? 'temp-id';
+
     switch (_currentStep) {
       case 0:
         return BasicInfoStep(
@@ -184,6 +186,10 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
           opensAtController: _opensAtController,
           closesAtController: _closesAtController,
         );
+      case 3:
+        return AssetsStep(loungeId: loungeId);
+      case 4:
+        return MarketplaceStep(loungeId: loungeId);
       default:
         return const SizedBox.shrink();
     }
@@ -192,7 +198,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
   Widget _buildActions() {
     return BlocBuilder<OnboardingCubit, OnboardingState>(
       builder: (context, state) {
-        final isLoading = state is OnboardingLoading;
+        final isLoading = state.status == OnboardingStatus.loading;
         
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -206,7 +212,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
             else
               const SizedBox.shrink(),
             AppButton(
-              text: _currentStep == 2 ? AppStrings.completeSetup : AppStrings.next,
+              text: _currentStep == _totalSteps - 1 ? AppStrings.completeSetup : AppStrings.next,
               isLoading: isLoading,
               onPressed: _onNext,
             ),

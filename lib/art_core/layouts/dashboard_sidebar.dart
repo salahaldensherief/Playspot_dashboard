@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/router/router_keys.dart';
 import '../app_strings.dart';
 import '../theme/app_colors.dart';
-import '../../features/auth/domain/entities/admin_entity.dart';
+import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/login/login_cubit.dart';
 
 class DashboardSidebar extends StatelessWidget {
@@ -15,8 +15,8 @@ class DashboardSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final admin = context.read<LoginCubit>().state.admin;
-    final isSuperAdmin = admin?.role == AdminRole.superAdmin;
+    final user = context.read<LoginCubit>().state.user;
+    final isSuperAdmin = user?.role == UserRole.superAdmin;
 
     return Container(
       width: 260.w,
@@ -27,7 +27,7 @@ class DashboardSidebar extends StatelessWidget {
       child: Column(
         children: [
           SizedBox(height: 32.h),
-          _buildLogo(admin),
+          _buildLogo(user),
           SizedBox(height: 40.h),
           if (isSuperAdmin) ..._buildSuperAdminItems(context) else ..._buildLoungeAdminItems(context),
           const Spacer(),
@@ -55,7 +55,7 @@ class DashboardSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildLogo(AdminEntity? admin) {
+  Widget _buildLogo(UserEntity? user) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Row(
@@ -83,7 +83,7 @@ class DashboardSidebar extends StatelessWidget {
                 ),
               ),
               Text(
-                admin?.role == AdminRole.superAdmin ? AppStrings.superAdmin : AppStrings.loungeManager,
+                user?.role == UserRole.superAdmin ? AppStrings.superAdmin : AppStrings.loungeManager,
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
               ),
             ],
@@ -106,6 +106,12 @@ class DashboardSidebar extends StatelessWidget {
         label: AppStrings.lounges,
         isActive: activeRoute == AppStrings.lounges,
         onTap: () => context.go(RouterKeys.superAdminLounges),
+      ),
+      _SidebarItem(
+        icon: Icons.people_outline,
+        label: AppStrings.userLabel,
+        isActive: activeRoute == 'Users',
+        onTap: () => context.go(RouterKeys.superAdminUsers),
       ),
       _SidebarItem(
         icon: Icons.category_outlined,
@@ -140,7 +146,7 @@ class DashboardSidebar extends StatelessWidget {
         icon: Icons.restaurant_menu,
         label: AppStrings.extras,
         isActive: activeRoute == 'Extras',
-        onTap: () {},
+        onTap: () => context.go(RouterKeys.loungeAdminExtras),
       ),
     ];
   }

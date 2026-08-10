@@ -1,8 +1,28 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/lounge_model.dart';
+import '../models/extra_model.dart';
 
 abstract class LoungeRemoteDataSource {
   Future<List<LoungeModel>> getLounges();
+  Future<Map<String, dynamic>> createLoungeWithOwner({
+    required String email,
+    required String password,
+    required String ownerName,
+    required String loungeName,
+    String? city,
+  });
+  Future<void> updateLounge(String id, Map<String, dynamic> data);
+  Future<Map<String, dynamic>> getDashboardStats(String? loungeId);
+  Future<Map<String, dynamic>> getDashboardOverview();
+  Future<List<Map<String, dynamic>>> getRevenueOverTime(int daysBack);
+  Future<List<Map<String, dynamic>>> getTopLoungesByRevenue(int limitCount);
+  
+  // Extras
+  Future<List<ExtraModel>> getExtras(String loungeId);
+  Future<void> addExtra(ExtraModel extra);
+  Future<void> toggleExtraStock(String extraId, bool isOutOfStock);
+  
+  // Legacy methods - kept for compatibility if needed
   Future<String> createLounge(LoungeModel lounge);
   Future<void> createLoungeAdmin({
     required String email,
@@ -20,19 +40,89 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   @override
   Future<List<LoungeModel>> getLounges() async {
     try {
-      // The most basic select to pinpoint the source of "invalid uuid: lounges"
-      final response = await client.from('lounges').select();
-      
+      final response = await client.rpc('get_all_lounges_with_owners');
       return (response as List).map((json) {
-        final data = Map<String, dynamic>.from(json);
-        // Ensure we don't process owner info if the join isn't active
-        return LoungeModel.fromJson(data);
+        return LoungeModel.fromJson(Map<String, dynamic>.from(json));
       }).toList();
     } catch (e) {
-      // If this still fails with "invalid uuid: lounges", then 'lounges' is likely a reserved word 
-      // or there is a schema conflict in the project.
-      rethrow;
+      final response = await client.from('lounges').select();
+      return (response as List).map((json) {
+        return LoungeModel.fromJson(Map<String, dynamic>.from(json));
+      }).toList();
     }
+  }
+
+  @override
+  Future<Map<String, dynamic>> createLoungeWithOwner({
+    required String email,
+    required String password,
+    required String ownerName,
+    required String loungeName,
+    String? city,
+  }) async {
+    final response = await client.rpc('super_admin_create_lounge_with_owner', params: {
+      'p_owner_email': email,
+      'p_owner_password': password,
+      'p_owner_name': ownerName,
+      'p_lounge_name': loungeName,
+      'p_city': city,
+    });
+    return Map<String, dynamic>.from(response);
+  }
+
+  @override
+  Future<void> updateLounge(String id, Map<String, dynamic> data) async {
+    await client.from('lounges').update(data).eq('id', id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getDashboardStats(String? loungeId) async {
+    final response = await client.rpc('get_dashboard_stats', params: {
+      'p_lounge_id': loungeId,
+    });
+    return Map<String, dynamic>.from(response);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getDashboardOverview() async {
+    final response = await client.rpc('get_dashboard_overview');
+    return Map<String, dynamic>.from(response);
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getRevenueOverTime(int daysBack) async {
+    final response = await client.rpc('get_revenue_over_time', params: {
+      'days_back': daysBack,
+    });
+    return (response as List).map((e) => Map<String, dynamic>.from(e)).toList();
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getTopLoungesByRevenue(int limitCount) async {
+    final response = await client.rpc('get_top_lounges_by_revenue', params: {
+      'limit_count': limitCount,
+    });
+    return (response as List).map((e) => Map<String, dynamic>.from(e)).toList();
+  }
+
+  @override
+  Future<List<ExtraModel>> getExtras(String loungeId) async {
+    // Explicitly select columns to avoid PGRST204 error if schema cache is stale
+    final response = await client
+        .from('extras')
+        .select('id, lounge_id, name, price, category, is_available')
+        .eq('lounge_id', loungeId);
+    return (response as List).map((e) => ExtraModel.fromJson(e)).toList();
+  }
+
+  @override
+  Future<void> addExtra(ExtraModel extra) async {
+    await client.from('extras').insert(extra.toJson());
+  }
+
+  @override
+  Future<void> toggleExtraStock(String extraId, bool isOutOfStock) async {
+    await client.from('extras').update({'is_available': !isOutOfStock}).eq('id', extraId);
   }
 
   @override

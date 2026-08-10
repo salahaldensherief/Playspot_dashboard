@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import '../dashboard_cubit.dart';
+import '../dashboard_state.dart';
 
 class TopLoungesCard extends StatelessWidget {
   const TopLoungesCard({super.key});
@@ -15,33 +19,43 @@ class TopLoungesCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.borderDefault),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppStrings.topPerformingLounges,
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            AppStrings.topPerformingLoungesSubtitle,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 13.sp,
-            ),
-          ),
-          SizedBox(height: 24.h),
-          // Simplified table/list for now
-          const _LoungeItem(name: 'Nexus Gaming Zone', bookings: 1240, revenue: '\$15,200', trend: '+12%'),
-          Divider(color: AppColors.borderDefault, height: 24.h),
-          const _LoungeItem(name: 'The Arena', bookings: 980, revenue: '\$12,800', trend: '+8%'),
-          Divider(color: AppColors.borderDefault, height: 24.h),
-          const _LoungeItem(name: 'Cyber Pulse', bookings: 850, revenue: '\$10,500', trend: '+15%'),
-        ],
+      child: BlocBuilder<DashboardCubit, DashboardState>(
+        builder: (context, state) {
+          if (state.topLounges.isEmpty) {
+            return Center(child: AppText.body('No data yet'));
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppText.heading(
+                AppStrings.topPerformingLounges,
+                fontSize: 18.sp,
+              ),
+              SizedBox(height: 4.h),
+              AppText.body(
+                AppStrings.topPerformingLoungesSubtitle,
+                fontSize: 13.sp,
+              ),
+              SizedBox(height: 24.h),
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: state.topLounges.length > 5 ? 5 : state.topLounges.length,
+                separatorBuilder: (context, index) => Divider(color: AppColors.borderDefault, height: 24.h),
+                itemBuilder: (context, index) {
+                  final lounge = state.topLounges[index];
+                  return _LoungeItem(
+                    name: lounge['lounge_name']?.toString() ?? 'Unknown',
+                    bookings: (lounge['bookings_count'] as num?)?.toInt() ?? 0,
+                    revenue: '${(lounge['total_revenue'] as num?)?.toDouble().toStringAsFixed(0) ?? '0'} ${AppStrings.priceEgp}',
+                    trend: '', 
+                  );
+                },
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -76,9 +90,9 @@ class _LoungeItem extends StatelessWidget {
         SizedBox(width: 16.w),
         Expanded(
           flex: 3,
-          child: Text(
+          child: AppText.subHeading(
             name,
-            style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14.sp),
+            fontSize: 14.sp,
           ),
         ),
         Expanded(
@@ -86,8 +100,8 @@ class _LoungeItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Bookings', style: TextStyle(color: AppColors.textMuted, fontSize: 11.sp)),
-              Text('$bookings', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
+              AppText.body('Bookings', fontSize: 11.sp, color: AppColors.textMuted),
+              AppText.body('$bookings', fontSize: 13.sp),
             ],
           ),
         ),
@@ -96,15 +110,17 @@ class _LoungeItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Revenue', style: TextStyle(color: AppColors.textMuted, fontSize: 11.sp)),
-              Text(revenue, style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
+              AppText.body('Revenue', fontSize: 11.sp, color: AppColors.textMuted),
+              AppText.body(revenue, fontSize: 13.sp),
             ],
           ),
         ),
-        Text(
-          trend,
-          style: TextStyle(color: AppColors.success, fontWeight: FontWeight.bold, fontSize: 13.sp),
-        ),
+        if (trend.isNotEmpty)
+          AppText.subHeading(
+            trend,
+            color: AppColors.success,
+            fontSize: 13.sp,
+          ),
       ],
     );
   }

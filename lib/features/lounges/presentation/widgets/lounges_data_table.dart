@@ -65,7 +65,13 @@ class LoungesDataTable extends StatelessWidget {
               ),
               DataCell(Text(lounge.city ?? lounge.location ?? 'N/A', style: const TextStyle(color: AppColors.textSecondary))),
               DataCell(Text('\$${lounge.pricePerHour.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary))),
-              DataCell(lounge.isOpen ? StatusBadge.success('Open') : StatusBadge.danger('Closed')),
+              DataCell(
+                lounge.status == 'pending' 
+                  ? StatusBadge.warning('Pending') 
+                  : lounge.isOpen 
+                    ? StatusBadge.success('Active') 
+                    : StatusBadge.danger('Inactive')
+              ),
               DataCell(
                 Row(
                   children: [

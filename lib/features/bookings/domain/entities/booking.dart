@@ -1,10 +1,12 @@
 import 'package:equatable/equatable.dart';
 
-enum BookingStatus { upcoming, completed, cancelled, past }
+enum BookingStatus { pending, upcoming, completed, cancelled, past }
 
 class Booking extends Equatable {
   final String id;
   final String userId;
+  final String? userName;
+  final String? userEmail;
   final String loungeId;
   final String roomId;
   final String loungeName;
@@ -16,6 +18,7 @@ class Booking extends Equatable {
   final String startTime;
   final String endTime;
   final BookingStatus status;
+  final String? paymentStatus;
   final double totalPrice;
   final String? mapsLink;
   final double? lat;
@@ -24,6 +27,8 @@ class Booking extends Equatable {
   const Booking({
     required this.id,
     required this.userId,
+    this.userName,
+    this.userEmail,
     required this.loungeId,
     required this.roomId,
     this.loungeName = '',
@@ -35,6 +40,7 @@ class Booking extends Equatable {
     required this.startTime,
     required this.endTime,
     required this.status,
+    this.paymentStatus,
     required this.totalPrice,
     this.mapsLink,
     this.lat,
@@ -45,6 +51,8 @@ class Booking extends Equatable {
   List<Object?> get props => [
         id,
         userId,
+        userName,
+        userEmail,
         loungeId,
         roomId,
         loungeName,
@@ -56,6 +64,7 @@ class Booking extends Equatable {
         startTime,
         endTime,
         status,
+        paymentStatus,
         totalPrice,
         mapsLink,
         lat,

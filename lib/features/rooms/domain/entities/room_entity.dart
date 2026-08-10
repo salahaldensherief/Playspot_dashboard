@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum RoomStatus { available, maintenance }
+enum RoomStatus { available, maintenance, occupied }
 
 class RoomEntity extends Equatable {
   final String id;
@@ -9,6 +9,7 @@ class RoomEntity extends Equatable {
   final String nameEn;
   final List<String> activityNames;
   final String? spaceType;
+  final String? spaceTypeId;
   final int capacity;
   final double pricePerHour;
   final bool isAvailable;
@@ -26,6 +27,7 @@ class RoomEntity extends Equatable {
     required this.nameEn,
     required this.activityNames,
     this.spaceType,
+    this.spaceTypeId,
     required this.capacity,
     required this.pricePerHour,
     required this.isAvailable,
@@ -45,6 +47,7 @@ class RoomEntity extends Equatable {
         nameEn,
         activityNames,
         spaceType,
+        spaceTypeId,
         capacity,
         pricePerHour,
         isAvailable,

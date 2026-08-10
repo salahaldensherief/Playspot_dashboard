@@ -9,6 +9,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_image_picker.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:uuid/uuid.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import '../cubit/room_cubit.dart';
 import '../../domain/entities/room_entity.dart';
 import 'room_basic_info_form.dart';
@@ -81,7 +82,13 @@ class _AddRoomDialogState extends State<AddRoomDialog> {
             status: RoomStatus.available,
           );
 
-          await context.read<RoomCubit>().addNewRoom(room);
+          try {
+            await context.read<RoomCubit>().addNewRoom(room);
+          } catch (e) {
+            // Fallback for Onboarding flow
+            await context.read<OnboardingCubit>().addNewRoom(room);
+          }
+
           if (mounted) Navigator.pop(context);
         }
       } catch (e) {

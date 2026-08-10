@@ -1,29 +1,42 @@
-import 'package:equatable/equatable.dart';
-import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
+part of 'onboarding_cubit.dart';
 
-abstract class OnboardingState extends Equatable {
-  const OnboardingState();
+enum OnboardingStatus { initial, loading, success, failure }
+
+class OnboardingState extends Equatable {
+  final int currentStep;
+  final OnboardingStatus status;
+  final List<RoomEntity> rooms;
+  final List<ExtraEntity> extras;
+  final Lounge? lounge;
+  final String? errorMessage;
+
+  const OnboardingState({
+    this.currentStep = 1,
+    this.status = OnboardingStatus.initial,
+    this.rooms = const [],
+    this.extras = const [],
+    this.lounge,
+    this.errorMessage,
+  });
+
+  OnboardingState copyWith({
+    int? currentStep,
+    OnboardingStatus? status,
+    List<RoomEntity>? rooms,
+    List<ExtraEntity>? extras,
+    Lounge? lounge,
+    String? errorMessage,
+  }) {
+    return OnboardingState(
+      currentStep: currentStep ?? this.currentStep,
+      status: status ?? this.status,
+      rooms: rooms ?? this.rooms,
+      extras: extras ?? this.extras,
+      lounge: lounge ?? this.lounge,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
 
   @override
-  List<Object?> get props => [];
-}
-
-class OnboardingInitial extends OnboardingState {}
-
-class OnboardingLoading extends OnboardingState {}
-
-class OnboardingSuccess extends OnboardingState {
-  final Lounge lounge;
-  const OnboardingSuccess(this.lounge);
-
-  @override
-  List<Object?> get props => [lounge];
-}
-
-class OnboardingError extends OnboardingState {
-  final String message;
-  const OnboardingError(this.message);
-
-  @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [currentStep, status, rooms, extras, lounge, errorMessage];
 }

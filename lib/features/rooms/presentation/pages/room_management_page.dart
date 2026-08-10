@@ -15,8 +15,8 @@ class RoomManagementPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final admin = context.read<LoginCubit>().state.admin;
-    final loungeId = admin?.loungeId ?? '';
+    final user = context.read<LoginCubit>().state.user;
+    final loungeId = user?.loungeId ?? '';
 
     return BlocProvider(
       create: (context) => sl<RoomCubit>()..watchRooms(loungeId),

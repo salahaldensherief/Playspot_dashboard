@@ -16,15 +16,17 @@ class DashboardStatsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<DashboardCubit, DashboardState>(
       builder: (context, state) {
-        // Here we use the actual data from state once mapped
-        // For now using placeholders but structured to reactive state
+        if (state.status == FeatureStatus.loading && state.totalRevenue == 0) {
+           return const Center(child: CircularProgressIndicator());
+        }
+
         return Row(
           children: [
             Expanded(
               child: StatCard(
                 title: isSuperAdmin ? 'Global Revenue' : AppStrings.dailyRevenue,
-                value: state.status == FeatureStatus.loading ? '...' : (isSuperAdmin ? '\$12,450' : '\$1,240'),
-                trend: '+12%',
+                value: '\$${state.totalRevenue.toStringAsFixed(0)}',
+                trend: isSuperAdmin ? '\$${state.pendingRevenue.toStringAsFixed(0)} pending' : '',
                 icon: Icons.payments_outlined,
                 iconColor: AppColors.neonGreen,
               ),
@@ -32,9 +34,9 @@ class DashboardStatsGrid extends StatelessWidget {
             SizedBox(width: 24.w),
             Expanded(
               child: StatCard(
-                title: AppStrings.activeSessions,
-                value: state.status == FeatureStatus.loading ? '...' : (isSuperAdmin ? '184' : '42'),
-                trend: '+5',
+                title: isSuperAdmin ? 'Total Bookings' : AppStrings.activeSessions,
+                value: isSuperAdmin ? state.totalBookings.toString() : state.activeSessions.toString(),
+                trend: isSuperAdmin ? '+${state.bookingsToday} today' : '',
                 icon: Icons.sports_esports_outlined,
                 iconColor: AppColors.neonBlue,
               ),
@@ -43,8 +45,8 @@ class DashboardStatsGrid extends StatelessWidget {
             Expanded(
               child: StatCard(
                 title: AppStrings.loungeOccupancy,
-                value: state.status == FeatureStatus.loading ? '...' : '84%',
-                trend: '+2.4%',
+                value: '${(state.occupancyRate * 100).toStringAsFixed(0)}%',
+                trend: '',
                 icon: Icons.meeting_room_outlined,
                 iconColor: AppColors.neonPurple,
               ),
@@ -53,7 +55,9 @@ class DashboardStatsGrid extends StatelessWidget {
             Expanded(
               child: StatCard(
                 title: isSuperAdmin ? 'Lounges Online' : 'Active Rooms',
-                value: state.status == FeatureStatus.loading ? '...' : (isSuperAdmin ? '12/12' : '8/10'),
+                value: isSuperAdmin 
+                  ? '${state.activeLounges}/${state.totalLounges}' 
+                  : '${state.activeRoomsCount}',
                 trend: AppStrings.systemHealth,
                 icon: isSuperAdmin ? Icons.business : Icons.door_front_door,
                 iconColor: AppColors.neonCyan,

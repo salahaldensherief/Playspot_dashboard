@@ -5,7 +5,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
-import 'package:play_spot_dashboard/features/auth/domain/entities/admin_entity.dart';
+import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/widgets/room_status_card.dart';
@@ -18,7 +18,7 @@ import 'widgets/top_lounges_card.dart';
 import 'widgets/live_bookings_feed.dart';
 
 class DashboardScreen extends StatelessWidget {
-  final AdminRole role;
+  final UserRole role;
   
   const DashboardScreen({
     super.key,
@@ -27,9 +27,9 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final admin = context.read<LoginCubit>().state.admin;
-    final loungeId = admin?.loungeId;
-    final isSuperAdmin = role == AdminRole.superAdmin;
+    final user = context.read<LoginCubit>().state.user;
+    final loungeId = user?.loungeId;
+    final isSuperAdmin = role == UserRole.superAdmin;
 
     return MultiBlocProvider(
       providers: [

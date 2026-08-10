@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
+import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import '../app_strings.dart';
 import '../theme/app_colors.dart';
 
@@ -34,50 +38,33 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
             leading!,
             SizedBox(width: 16.w),
           ],
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-              fontFamily: 'Orbitron',
+          Flexible(
+            child: Text(
+              title,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+                fontFamily: 'Orbitron',
+              ),
             ),
           ),
           const Spacer(),
-          _buildSearchField(),
+          Flexible(
+            flex: 2,
+            child: _buildSearchField(),
+          ),
           SizedBox(width: 24.w),
           if (actions != null) ...[
             ...actions!,
             SizedBox(width: 24.w),
           ] else ...[
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(Icons.notifications_outlined, color: AppColors.textSecondary, size: 24.r),
-                Positioned(
-                  top: -2,
-                  right: -2,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: AppColors.danger,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '3',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 8.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            _buildNotificationIcon(),
             SizedBox(width: 24.w),
           ],
-          _buildUserAvatar(),
+          _buildUserInfo(),
         ],
       ),
     );
@@ -85,7 +72,7 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
 
   Widget _buildSearchField() {
     return Container(
-      width: 300.w,
+      constraints: BoxConstraints(maxWidth: 300.w),
       height: 40.h,
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
@@ -99,13 +86,98 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
           hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
           prefixIcon: Icon(Icons.search, color: AppColors.textSecondary, size: 20.sp),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.only(bottom: 10.h), // Adjust alignment
+          contentPadding: EdgeInsets.only(bottom: 10.h), 
         ),
       ),
     );
   }
 
-  Widget _buildUserAvatar() {
+  Widget _buildNotificationIcon() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Icon(Icons.notifications_outlined, color: AppColors.textSecondary, size: 24.r),
+        Positioned(
+          top: -2,
+          right: -2,
+          child: Container(
+            padding: const EdgeInsets.all(4),
+            decoration: const BoxDecoration(
+              color: AppColors.danger,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '3',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 8.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUserInfo() {
+    return BlocBuilder<LoginCubit, LoginState>(
+      builder: (context, state) {
+        final user = state.user;
+        if (user == null) return _buildDefaultAvatar();
+
+        return Container(
+          constraints: BoxConstraints(maxWidth: 200.w),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Flexible(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      user.name,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      user.role == UserRole.superAdmin ? AppStrings.superAdmin : AppStrings.loungeManager,
+                      style: TextStyle(
+                        color: AppColors.neonPurple,
+                        fontSize: 11.sp,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 12.w),
+              _buildAvatar(user.avatarUrl),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAvatar(String? url) {
+    return CircleAvatar(
+      radius: 18.r,
+      backgroundColor: AppColors.neonPurple.withOpacity(0.2),
+      backgroundImage: url != null ? NetworkImage(url) : null,
+      child: url == null 
+        ? Icon(Icons.person, color: AppColors.neonPurple, size: 20.sp)
+        : null,
+    );
+  }
+
+  Widget _buildDefaultAvatar() {
     return CircleAvatar(
       radius: 18.r,
       backgroundColor: AppColors.neonPurple,

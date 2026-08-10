@@ -39,6 +39,11 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
 
   @override
   Future<void> addRoom(RoomModel room) async {
-    await _supabase.from('rooms').insert(room.toJson());
+    final data = room.toJson();
+    // Ensure name is never null for the database constraint
+    if (data['name'] == null || data['name'].toString().isEmpty) {
+      data['name'] = room.nameEn.isEmpty ? 'Room' : room.nameEn;
+    }
+    await _supabase.from('rooms').insert(data);
   }
 }
