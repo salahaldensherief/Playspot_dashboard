@@ -94,15 +94,58 @@ class _UsersDataTable extends StatelessWidget {
           ),
           DataCell(StatusBadge.success(AppStrings.active)),
           DataCell(
-            IconButton(
+            PopupMenuButton(
               icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
-              onPressed: () {
-                // TODO: User actions menu
+              color: AppColors.cardBackground,
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit_outlined, size: 18, color: AppColors.textPrimary),
+                      SizedBox(width: 12),
+                      Text('Edit Admin', style: TextStyle(color: AppColors.textPrimary)),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, size: 18, color: AppColors.danger),
+                      SizedBox(width: 12),
+                      Text('Delete Account', style: TextStyle(color: AppColors.danger)),
+                    ],
+                  ),
+                ),
+              ],
+              onSelected: (value) {
+                if (value == 'delete') {
+                  _confirmDelete(context, admin.name);
+                }
               },
             ),
           ),
         ],
       )).toList(),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, String name) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        title: Text('Delete Administrator', style: TextStyle(color: AppColors.textPrimary)),
+        content: Text('Are you sure you want to delete "$name"? This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(AppStrings.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context), 
+            child: const Text('Delete', style: TextStyle(color: AppColors.danger))
+          ),
+        ],
+      ),
     );
   }
 }

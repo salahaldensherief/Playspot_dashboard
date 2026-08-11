@@ -109,7 +109,7 @@ class MarketplaceStep extends StatelessWidget {
       context: context,
       builder: (_) => BlocProvider.value(
         value: context.read<OnboardingCubit>(),
-        child: AddExtraDialog(loungeId: loungeId),
+        child: ExtraDialog(loungeId: loungeId),
       ),
     );
   }

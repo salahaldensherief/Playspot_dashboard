@@ -50,7 +50,7 @@ class RoomManagementHeader extends StatelessWidget {
       context: context,
       builder: (diagContext) => BlocProvider.value(
         value: context.read<RoomCubit>(),
-        child: AddRoomDialog(loungeId: loungeId),
+        child: RoomDialog(loungeId: loungeId),
       ),
     );
   }

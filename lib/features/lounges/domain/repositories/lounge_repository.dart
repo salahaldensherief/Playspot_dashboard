@@ -8,6 +8,7 @@ import '../entities/extra_entity.dart';
 
 abstract class LoungeRepository {
   Future<Either<Failure, List<Lounge>>> getLounges();
+  Future<Either<Failure, Lounge?>> getLoungeById(String id);
   Future<Either<Failure, List<Room>>> getRooms(String loungeId);
   Future<Either<Failure, List<Activity>>> getActivities(String roomId);
   Future<Either<Failure, String>> createLounge(Lounge lounge);
@@ -18,6 +19,7 @@ abstract class LoungeRepository {
     required String loungeId,
   });
   Future<Either<Failure, void>> updateLounge(Lounge lounge);
+  Future<Either<Failure, void>> updateLoungeLocation(String loungeId, double lat, double lng);
   Future<Either<Failure, void>> deleteLounge(String id);
   Future<Either<Failure, String>> createLoungeWithOwner({
     required String email,

@@ -6,24 +6,35 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
+import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
+import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import 'package:uuid/uuid.dart';
 import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import '../cubit/extras_cubit.dart';
 import '../../domain/entities/extra_entity.dart';
 
-class AddExtraDialog extends StatefulWidget {
+class ExtraDialog extends StatefulWidget {
   final String loungeId;
-  const AddExtraDialog({super.key, required this.loungeId});
+  final ExtraEntity? extra;
+  const ExtraDialog({super.key, required this.loungeId, this.extra});
 
   @override
-  State<AddExtraDialog> createState() => _AddExtraDialogState();
+  State<ExtraDialog> createState() => _ExtraDialogState();
 }
 
-class _AddExtraDialogState extends State<AddExtraDialog> {
+class _ExtraDialogState extends State<ExtraDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _priceController = TextEditingController();
+  late TextEditingController _nameController;
+  late TextEditingController _priceController;
   String _selectedCategory = 'Drinks';
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.extra?.name);
+    _priceController = TextEditingController(text: widget.extra?.price.toString());
+    _selectedCategory = widget.extra?.category ?? 'Drinks';
+  }
 
   @override
   void dispose() {
@@ -35,18 +46,23 @@ class _AddExtraDialogState extends State<AddExtraDialog> {
   void _submit() {
     if (_formKey.currentState!.validate()) {
       final extra = ExtraEntity(
-        id: const Uuid().v4(),
+        id: widget.extra?.id ?? const Uuid().v4(),
         loungeId: widget.loungeId,
         name: _nameController.text,
         price: double.tryParse(_priceController.text) ?? 0,
         category: _selectedCategory,
-        isOutOfStock: false,
+        isOutOfStock: widget.extra?.isOutOfStock ?? false,
       );
 
-      try {
-        context.read<ExtrasCubit>().addExtra(extra);
-      } catch (e) {
-        context.read<OnboardingCubit>().addNewExtra(extra);
+      if (widget.extra == null) {
+        try {
+          context.read<ExtrasCubit>().addExtra(extra);
+        } catch (e) {
+          context.read<OnboardingCubit>().addNewExtra(extra);
+        }
+      } else {
+        // TODO: Implement updateExtra in Cubit
+        // context.read<ExtrasCubit>().updateExtra(extra);
       }
       
       Navigator.pop(context);
@@ -67,13 +83,16 @@ class _AddExtraDialogState extends State<AddExtraDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText.heading(AppStrings.addExtraItem, fontSize: 24.sp),
+              AppText.heading(
+                widget.extra == null ? AppStrings.addExtraItem : 'Edit Item', 
+                fontSize: 24.sp
+              ),
               SizedBox(height: 24.h),
               AppTextField(
                 label: AppStrings.itemName,
                 hintText: AppStrings.addItemHint,
                 controller: _nameController,
-                validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                validator: AppValidator.validateRequired,
               ),
               SizedBox(height: 16.h),
               AppTextField(
@@ -81,12 +100,25 @@ class _AddExtraDialogState extends State<AddExtraDialog> {
                 hintText: AppStrings.priceHint,
                 controller: _priceController,
                 keyboardType: TextInputType.number,
-                validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                validator: AppValidator.validateNumber,
               ),
               SizedBox(height: 16.h),
-              AppText.body(AppStrings.category, fontSize: 12.sp),
-              SizedBox(height: 8.h),
-              _buildCategoryDropdown(),
+              CustomDropdown<String>(
+                label: AppStrings.category,
+                value: _selectedCategory,
+                items: const ['Drinks', 'Snacks', 'Services', 'Others'],
+                itemLabel: (s) {
+                  switch (s) {
+                    case 'Drinks': return AppStrings.drinks;
+                    case 'Snacks': return AppStrings.snacks;
+                    case 'Services': return AppStrings.services;
+                    default: return AppStrings.others;
+                  }
+                },
+                onChanged: (val) {
+                  if (val != null) setState(() => _selectedCategory = val);
+                },
+              ),
               SizedBox(height: 32.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -98,41 +130,13 @@ class _AddExtraDialogState extends State<AddExtraDialog> {
                   ),
                   SizedBox(width: 16.w),
                   AppButton(
-                    text: AppStrings.addItem,
+                    text: widget.extra == null ? AppStrings.addItem : 'Update Item',
                     onPressed: _submit,
                   ),
                 ],
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryDropdown() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
-      decoration: BoxDecoration(
-        color: AppColors.divider.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: AppColors.borderDefault),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedCategory,
-          isExpanded: true,
-          dropdownColor: AppColors.cardBackground,
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
-          items: [
-            DropdownMenuItem(value: 'Drinks', child: Text(AppStrings.drinks)),
-            DropdownMenuItem(value: 'Snacks', child: Text(AppStrings.snacks)),
-            DropdownMenuItem(value: 'Services', child: Text(AppStrings.services)),
-            DropdownMenuItem(value: 'Others', child: Text(AppStrings.others)),
-          ],
-          onChanged: (val) {
-            if (val != null) setState(() => _selectedCategory = val);
-          },
         ),
       ),
     );

@@ -110,20 +110,20 @@ class DashboardSidebar extends StatelessWidget {
       _SidebarItem(
         icon: Icons.people_outline,
         label: AppStrings.userLabel,
-        isActive: activeRoute == 'Users',
+        isActive: activeRoute == AppStrings.users,
         onTap: () => context.go(RouterKeys.superAdminUsers),
       ),
       _SidebarItem(
         icon: Icons.category_outlined,
         label: AppStrings.categories,
-        isActive: activeRoute == 'Categories',
-        onTap: () {},
+        isActive: activeRoute == AppStrings.categories,
+        onTap: () => context.go(RouterKeys.superAdminCategories),
       ),
       _SidebarItem(
         icon: Icons.campaign_outlined,
         label: AppStrings.marketing,
         isActive: activeRoute == AppStrings.marketing,
-        onTap: () {},
+        onTap: () => context.go(RouterKeys.superAdminMarketing),
       ),
     ];
   }
@@ -139,14 +139,26 @@ class DashboardSidebar extends StatelessWidget {
       _SidebarItem(
         icon: Icons.meeting_room_outlined,
         label: AppStrings.rooms,
-        isActive: activeRoute == 'Rooms',
+        isActive: activeRoute == AppStrings.rooms,
         onTap: () => context.go(RouterKeys.loungeAdminRooms),
       ),
       _SidebarItem(
         icon: Icons.restaurant_menu,
         label: AppStrings.extras,
-        isActive: activeRoute == 'Extras',
+        isActive: activeRoute == AppStrings.extras,
         onTap: () => context.go(RouterKeys.loungeAdminExtras),
+      ),
+      _SidebarItem(
+        icon: Icons.campaign_outlined,
+        label: AppStrings.marketing,
+        isActive: activeRoute == AppStrings.marketing,
+        onTap: () => context.go(RouterKeys.loungeAdminMarketing),
+      ),
+      _SidebarItem(
+        icon: Icons.person_outline,
+        label: AppStrings.myProfile,
+        isActive: activeRoute == AppStrings.myProfile,
+        onTap: () => context.go(RouterKeys.loungeAdminProfile),
       ),
     ];
   }

@@ -21,11 +21,14 @@ class BookingsPage extends StatefulWidget {
 
 class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late BookingCubit _bookingCubit;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    final user = context.read<LoginCubit>().state.user;
+    _bookingCubit = sl<BookingCubit>()..startWatchingBookings(loungeId: user?.loungeId);
   }
 
   @override
@@ -36,13 +39,10 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<LoginCubit>().state.user;
-    
-    return BlocProvider(
-      create: (context) => sl<BookingCubit>()..startWatchingBookings(loungeId: user?.loungeId),
-      child: DashboardLayout(
-        title: 'Live Operations',
-        activeRoute: AppStrings.bookings,
+    return BlocProvider.value(
+      value: _bookingCubit,
+      child: Padding(
+        padding: EdgeInsets.all(24.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -58,13 +58,17 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                   }
                   
                   final allBookings = state is BookingLoaded ? state.bookings : <Booking>[];
-                  final pendingBookings = allBookings.where((b) => b.status == BookingStatus.pending).toList();
+                  
+                  // طلبات الحجز الجديدة فقط
+                  final pendingRequests = allBookings.where((b) => b.status == BookingStatus.pending).toList();
+                  
+                  // الحجوزات المقبولة (Active)
                   final activeBookings = allBookings.where((b) => b.status == BookingStatus.upcoming).toList();
 
                   return TabBarView(
                     controller: _tabController,
                     children: [
-                      SingleChildScrollView(child: BookingsDataTable(filteredBookings: pendingBookings)),
+                      SingleChildScrollView(child: BookingsDataTable(filteredBookings: pendingRequests)),
                       SingleChildScrollView(child: BookingsDataTable(filteredBookings: activeBookings)),
                     ],
                   );

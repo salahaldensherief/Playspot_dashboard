@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
+import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 
 class OwnerInfoForm extends StatelessWidget {
   final TextEditingController nameController;
@@ -37,16 +38,16 @@ class OwnerInfoForm extends StatelessWidget {
                 label: AppStrings.ownerName,
                 hintText: AppStrings.ownerNameHint,
                 controller: nameController,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
+                validator: AppValidator.validateRequired,
               ),
             ),
             SizedBox(width: 16.w),
             Expanded(
               child: AppTextField(
                 label: AppStrings.ownerEmail,
-                hintText: AppStrings.ownerEmailHint,
+                hintText: AppStrings.emailHint,
                 controller: emailController,
-                validator: (v) => v!.isEmpty || !v.contains('@') ? 'Invalid' : null,
+                validator: AppValidator.validateEmail,
               ),
             ),
             SizedBox(width: 16.w),
@@ -56,7 +57,7 @@ class OwnerInfoForm extends StatelessWidget {
                 hintText: AppStrings.passwordHint,
                 controller: passwordController,
                 isPassword: true,
-                validator: (v) => v!.length < 6 ? 'Too short' : null,
+                validator: AppValidator.validatePassword,
               ),
             ),
           ],

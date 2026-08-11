@@ -5,6 +5,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_gradient_button.dart';
+import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import 'login_cubit.dart';
 import 'login_state.dart';
 
@@ -145,12 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               hintText: 'Enter your email',
                               controller: _emailController,
                               prefixIcon: Icons.email_outlined,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your email';
-                                }
-                                return null;
-                              },
+                              validator: AppValidator.validateEmail,
                             ),
                             SizedBox(height: 24.h),
                             AppTextField(
@@ -159,12 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               controller: _passwordController,
                               isPassword: true,
                               prefixIcon: Icons.lock_outline,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your password';
-                                }
-                                return null;
-                              },
+                              validator: AppValidator.validatePassword,
                             ),
                             SizedBox(height: 32.h),
                             BlocConsumer<LoginCubit, LoginState>(
@@ -192,6 +183,25 @@ class _LoginScreenState extends State<LoginScreen> {
                                         }
                                       },
                                     ),
+                                    SizedBox(height: 32.h),
+                                    const Divider(color: AppColors.divider),
+                                    SizedBox(height: 24.h),
+                                    const Text(
+                                      'Demo Credentials:',
+                                      style: TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 12.h),
+                                    _buildDemoRow('Super Admin:', 'admin@playspot.app', AppColors.neonBlue),
+                                    SizedBox(height: 8.h),
+                                    _buildDemoRow('Lounge Admin:', 'lounge.owner@playspot.app', AppColors.neonPurple),
+                                    SizedBox(height: 8.h),
+                                    _buildDemoRow('Password (SA):', 'Admin@12345', AppColors.textSecondary),
+                                    SizedBox(height: 8.h),
+                                    _buildDemoRow('Password (LA):', 'LoungeOwner@123', AppColors.textSecondary),
                                   ],
                                 );
                               },
@@ -207,6 +217,22 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDemoRow(String label, String value, Color valueColor) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+        ),
+        Text(
+          value,
+          style: TextStyle(color: valueColor, fontSize: 12.sp, fontWeight: FontWeight.w500),
+        ),
+      ],
     );
   }
 }

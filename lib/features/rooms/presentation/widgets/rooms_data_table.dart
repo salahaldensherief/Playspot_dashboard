@@ -5,8 +5,11 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import '../../domain/entities/room_entity.dart';
 import '../cubit/room_cubit.dart';
+
+import 'add_room_dialog.dart';
 
 class RoomsDataTable extends StatelessWidget {
   final List<RoomEntity> rooms;
@@ -15,6 +18,8 @@ class RoomsDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loungeId = context.read<LoginCubit>().state.user?.loungeId ?? '';
+
     return DataTableWidget(
       columns: [
         AppStrings.roomName,
@@ -54,11 +59,21 @@ class RoomsDataTable extends StatelessWidget {
           DataCell(
             IconButton(
               icon: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20.r),
-              onPressed: () {},
+              onPressed: () => _showEditDialog(context, loungeId, room),
             ),
           ),
         ],
       )).toList(),
+    );
+  }
+
+  void _showEditDialog(BuildContext context, String loungeId, RoomEntity room) {
+    showDialog(
+      context: context,
+      builder: (_) => BlocProvider.value(
+        value: context.read<RoomCubit>(),
+        child: RoomDialog(loungeId: loungeId, room: room),
+      ),
     );
   }
 

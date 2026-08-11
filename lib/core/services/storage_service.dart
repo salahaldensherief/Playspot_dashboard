@@ -4,7 +4,9 @@ import 'package:uuid/uuid.dart';
 
 abstract class StorageService {
   Future<String> uploadLoungeImage(Uint8List fileBytes, String fileName);
+  Future<List<String>> uploadLoungeImages(List<Uint8List> filesBytes, List<String> fileNames);
   Future<String> uploadRoomImage(Uint8List fileBytes, String fileName, String loungeId);
+  Future<List<String>> uploadRoomImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId);
 }
 
 class StorageServiceImpl implements StorageService {
@@ -29,6 +31,16 @@ class StorageServiceImpl implements StorageService {
   }
 
   @override
+  Future<List<String>> uploadLoungeImages(List<Uint8List> filesBytes, List<String> fileNames) async {
+    final List<String> urls = [];
+    for (int i = 0; i < filesBytes.length; i++) {
+      final url = await uploadLoungeImage(filesBytes[i], fileNames[i]);
+      urls.add(url);
+    }
+    return urls;
+  }
+
+  @override
   Future<String> uploadRoomImage(Uint8List fileBytes, String fileName, String loungeId) async {
     final fileId = const Uuid().v4();
     final extension = fileName.split('.').last;
@@ -36,5 +48,15 @@ class StorageServiceImpl implements StorageService {
 
     await _supabase.storage.from('room-assets').uploadBinary(path, fileBytes);
     return _supabase.storage.from('room-assets').getPublicUrl(path);
+  }
+
+  @override
+  Future<List<String>> uploadRoomImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId) async {
+    final List<String> urls = [];
+    for (int i = 0; i < filesBytes.length; i++) {
+      final url = await uploadRoomImage(filesBytes[i], fileNames[i], loungeId);
+      urls.add(url);
+    }
+    return urls;
   }
 }

@@ -25,6 +25,16 @@ class LoungeRepositoryImpl implements LoungeRepository {
   }
 
   @override
+  Future<Either<Failure, Lounge?>> getLoungeById(String id) async {
+    try {
+      final lounge = await remoteDataSource.getLoungeById(id);
+      return Right(lounge);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, String>> createLounge(Lounge lounge) async {
     try {
       final id = await remoteDataSource.createLounge(LoungeModel(
@@ -103,6 +113,19 @@ class LoungeRepositoryImpl implements LoungeRepository {
         'image_url': lounge.imageUrl,
         'images': lounge.images,
         'is_open': lounge.isOpen,
+      });
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateLoungeLocation(String loungeId, double lat, double lng) async {
+    try {
+      await remoteDataSource.updateLounge(loungeId, {
+        'lat': lat,
+        'lng': lng,
       });
       return const Right(null);
     } catch (e) {

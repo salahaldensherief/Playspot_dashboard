@@ -36,9 +36,8 @@ class DashboardScreen extends StatelessWidget {
         BlocProvider(create: (context) => sl<BookingCubit>()..startWatchingBookings(loungeId: loungeId)),
         BlocProvider(create: (context) => sl<DashboardCubit>()..loadDashboardData(loungeId: loungeId)),
       ],
-      child: DashboardLayout(
-        title: isSuperAdmin ? AppStrings.globalOverview : AppStrings.loungePerformance,
-        activeRoute: AppStrings.dashboard,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(24.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

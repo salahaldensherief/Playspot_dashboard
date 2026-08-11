@@ -23,6 +23,9 @@ class DashboardCubit extends Cubit<DashboardState> {
             activeSessions: (stats['active_sessions'] as num?)?.toInt() ?? 0,
             occupancyRate: (stats['occupancy_rate'] as num?)?.toDouble() ?? 0.0,
             activeRoomsCount: (stats['active_rooms_count'] as num?)?.toInt() ?? 0,
+            revenueTrend: (stats['revenue_trend'] as num?)?.toDouble() ?? 0.0,
+            bookingsTrend: (stats['bookings_trend'] as num?)?.toDouble() ?? 0.0,
+            occupancyTrend: (stats['occupancy_trend'] as num?)?.toDouble() ?? 0.0,
           );
 
           // If Super Admin (no loungeId), fetch overview and charts

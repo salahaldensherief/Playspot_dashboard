@@ -61,7 +61,7 @@ class ExtrasManagementPage extends StatelessWidget {
               context: context,
               builder: (_) => BlocProvider.value(
                 value: context.read<ExtrasCubit>(),
-                child: AddExtraDialog(loungeId: loungeId),
+                child: ExtraDialog(loungeId: loungeId),
               ),
             );
           },
@@ -172,10 +172,17 @@ class _ExtraCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    AppText.body(
-                      extra.isOutOfStock ? 'Out of Stock' : 'Available',
-                      color: extra.isOutOfStock ? AppColors.danger : AppColors.success,
-                      fontSize: 12.sp,
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20.r),
+                          onPressed: () => _showEditDialog(context, loungeId),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
+                          onPressed: () {},
+                        ),
+                      ],
                     ),
                     Switch(
                       value: !extra.isOutOfStock,
@@ -190,6 +197,16 @@ class _ExtraCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showEditDialog(BuildContext context, String loungeId) {
+    showDialog(
+      context: context,
+      builder: (_) => BlocProvider.value(
+        value: context.read<ExtrasCubit>(),
+        child: ExtraDialog(loungeId: loungeId, extra: extra),
       ),
     );
   }

@@ -5,21 +5,26 @@ import '../theme/app_colors.dart';
 class StatCard extends StatelessWidget {
   final String title;
   final String value;
-  final String trend;
+  final double trendValue;
   final IconData icon;
   final Color iconColor;
+  final String? subtitle;
 
   const StatCard({
     super.key,
     required this.title,
     required this.value,
-    required this.trend,
+    required this.trendValue,
     required this.icon,
     required this.iconColor,
+    this.subtitle,
   });
 
   @override
   Widget build(BuildContext context) {
+    final bool isPositive = trendValue >= 0;
+    final String trendText = '${isPositive ? '+' : ''}${trendValue.toStringAsFixed(1)}%';
+
     return Container(
       padding: EdgeInsets.all(24.r),
       decoration: BoxDecoration(
@@ -52,29 +57,42 @@ class StatCard extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 8.h),
-                Row(
-                  children: [
-                    Text(
-                      trend,
-                      style: TextStyle(
-                        color: trend.startsWith('+') ? AppColors.success : AppColors.danger,
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w600,
+                if (subtitle != null) ...[
+                  Text(
+                    subtitle!,
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
+                  ),
+                ] else ...[
+                  Row(
+                    children: [
+                      Icon(
+                        isPositive ? Icons.trending_up : Icons.trending_down,
+                        color: isPositive ? AppColors.success : AppColors.danger,
+                        size: 16.r,
                       ),
-                    ),
-                    SizedBox(width: 4.w),
-                    Flexible(
-                      child: Text(
-                        'vs last month',
+                      SizedBox(width: 4.w),
+                      Text(
+                        trendText,
                         style: TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 12.sp,
+                          color: isPositive ? AppColors.success : AppColors.danger,
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
-                ),
+                      SizedBox(width: 4.w),
+                      Flexible(
+                        child: Text(
+                          'vs last month',
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 12.sp,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

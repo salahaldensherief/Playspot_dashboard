@@ -12,12 +12,23 @@ class BookingRealtimeDataSourceImpl implements BookingRealtimeDataSource {
 
   @override
   Stream<List<BookingModel>> watchBookings({String? loungeId}) {
-    final stream = loungeId != null
-        ? client.from('bookings').stream(primaryKey: ['id']).eq('lounge_id', loungeId)
-        : client.from('bookings').stream(primaryKey: ['id']);
+    // We can use both Postgres Changes (Stream) and Broadcast
+    // For now, staying with Stream as it handles Initial data + changes
+    // But adding broadcast capability if needed.
+    
+    final query = client.from('bookings').stream(primaryKey: ['id']);
+    final stream = loungeId != null ? query.eq('lounge_id', loungeId) : query;
 
     return stream.map((event) {
       return event.map((json) => BookingModel.fromJson(json)).toList();
     });
+  }
+
+  void listenToBroadcast(String? loungeId, Function(Map<String, dynamic>) callback) {
+    if (loungeId == null) return;
+    client.channel('lounge_bookings_$loungeId')
+      .onBroadcast(event: 'INSERT', callback: (payload) => callback(payload))
+      .onBroadcast(event: 'UPDATE', callback: (payload) => callback(payload))
+      .subscribe();
   }
 }

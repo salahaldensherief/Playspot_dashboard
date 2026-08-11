@@ -6,6 +6,7 @@ class ExtraEntity extends Equatable {
   final String name;
   final double price;
   final String category; // e.g., Drinks, Snacks
+  final String? iconKey;
   final bool isOutOfStock;
   final String? imageUrl;
 
@@ -15,10 +16,11 @@ class ExtraEntity extends Equatable {
     required this.name,
     required this.price,
     required this.category,
+    this.iconKey,
     this.isOutOfStock = false,
     this.imageUrl,
   });
 
   @override
-  List<Object?> get props => [id, loungeId, name, price, category, isOutOfStock, imageUrl];
+  List<Object?> get props => [id, loungeId, name, price, category, iconKey, isOutOfStock, imageUrl];
 }

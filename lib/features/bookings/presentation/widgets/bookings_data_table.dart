@@ -53,6 +53,7 @@ class BookingsDataTable extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context, Booking booking) {
+    // إذا كان الحجز ينتظر الموافقة، نعرض أزرار القبول والرفض
     if (booking.status == BookingStatus.pending) {
       return Row(
         mainAxisSize: MainAxisSize.min,
@@ -72,14 +73,20 @@ class BookingsDataTable extends StatelessWidget {
       );
     }
 
+    // إذا تم قبول الحجز (Active)، نعرض زر تأكيد الدفع إذا لم يتم الدفع بعد
     if (booking.status == BookingStatus.upcoming) {
-      return booking.paymentStatus == 'paid'
+      return booking.paymentStatus == 'completed'
         ? const Icon(Icons.check_circle, color: AppColors.success)
         : AppButton(
             text: AppStrings.confirmCash,
             variant: AppButtonVariant.primary,
             onPressed: () => context.read<BookingCubit>().confirmCashPayment(booking.id),
           );
+    }
+
+    // إذا اكتمل الحجز تماماً
+    if (booking.status == BookingStatus.completed) {
+      return const Icon(Icons.verified, color: AppColors.success);
     }
 
     return const SizedBox.shrink();

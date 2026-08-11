@@ -95,13 +95,15 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
       body: BlocListener<OnboardingCubit, OnboardingState>(
-        listener: (context, state) {
+        listener: (context, state) async {
           if (state.status == OnboardingStatus.success) {
-            final authCubit = context.read<LoginCubit>();
-            // Re-fetch profile to update is_setup_completed and other details
-            authCubit.checkInitialAuth().then((_) {
-              context.go(RouterKeys.loungeAdminLiveOps);
-            });
+            // Give the UI a moment to breathe before triggering navigation
+            // to avoid Flutter Web gesture/rendering collisions.
+            await Future.delayed(const Duration(milliseconds: 500));
+            if (mounted) {
+              final authCubit = context.read<LoginCubit>();
+              authCubit.checkInitialAuth();
+            }
           } else if (state.status == OnboardingStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: AppText.body(state.errorMessage ?? 'Error', color: Colors.white), backgroundColor: AppColors.danger),

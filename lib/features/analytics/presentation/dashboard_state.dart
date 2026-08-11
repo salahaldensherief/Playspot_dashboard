@@ -28,6 +28,12 @@ class DashboardState extends Equatable {
   final int cancelledBookings;
   final double pendingRevenue;
   final double totalPlatformCommission;
+  
+  // Trends (Percentages)
+  final double revenueTrend;
+  final double bookingsTrend;
+  final double occupancyTrend;
+  final double loungesTrend;
 
   // Chart Data
   final List<Map<String, dynamic>> revenueChart;
@@ -50,6 +56,10 @@ class DashboardState extends Equatable {
     this.cancelledBookings = 0,
     this.pendingRevenue = 0,
     this.totalPlatformCommission = 0,
+    this.revenueTrend = 0,
+    this.bookingsTrend = 0,
+    this.occupancyTrend = 0,
+    this.loungesTrend = 0,
     this.revenueChart = const [],
     this.topLounges = const [],
   });
@@ -73,6 +83,10 @@ class DashboardState extends Equatable {
     int? cancelledBookings,
     double? pendingRevenue,
     double? totalPlatformCommission,
+    double? revenueTrend,
+    double? bookingsTrend,
+    double? occupancyTrend,
+    double? loungesTrend,
     List<Map<String, dynamic>>? revenueChart,
     List<Map<String, dynamic>>? topLounges,
   }) => DashboardState(
@@ -92,6 +106,10 @@ class DashboardState extends Equatable {
     cancelledBookings: cancelledBookings ?? this.cancelledBookings,
     pendingRevenue: pendingRevenue ?? this.pendingRevenue,
     totalPlatformCommission: totalPlatformCommission ?? this.totalPlatformCommission,
+    revenueTrend: revenueTrend ?? this.revenueTrend,
+    bookingsTrend: bookingsTrend ?? this.bookingsTrend,
+    occupancyTrend: occupancyTrend ?? this.occupancyTrend,
+    loungesTrend: loungesTrend ?? this.loungesTrend,
     revenueChart: revenueChart ?? this.revenueChart,
     topLounges: topLounges ?? this.topLounges,
   );
@@ -114,6 +132,10 @@ class DashboardState extends Equatable {
     cancelledBookings,
     pendingRevenue,
     totalPlatformCommission,
+    revenueTrend,
+    bookingsTrend,
+    occupancyTrend,
+    loungesTrend,
     revenueChart,
     topLounges,
   ];

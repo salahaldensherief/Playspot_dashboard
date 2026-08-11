@@ -123,6 +123,7 @@ Future<void> setupInjection() async {
           loginUseCase: sl(),
           logoutUseCase: sl(),
           getCurrentUserUseCase: sl(),
+          loungeRepository: sl(),
         ),
   );
   sl.registerFactory<BookingCubit>(

@@ -50,4 +50,8 @@ class LoungeCubit extends Cubit<LoungeState> {
       },
     );
   }
+
+  Future<void> updateLoungeLocation(String loungeId, double lat, double lng) async {
+    await repository.updateLoungeLocation(loungeId, lat, lng);
+  }
 }

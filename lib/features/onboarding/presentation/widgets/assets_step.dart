@@ -118,7 +118,7 @@ class AssetsStep extends StatelessWidget {
       context: context,
       builder: (_) => BlocProvider.value(
         value: context.read<OnboardingCubit>(),
-        child: AddRoomDialog(loungeId: loungeId),
+        child: RoomDialog(loungeId: loungeId),
       ),
     );
   }

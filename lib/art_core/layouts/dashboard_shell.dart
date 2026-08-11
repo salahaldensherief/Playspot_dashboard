@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import '../../core/theme/app_colors.dart';
 import 'dashboard_sidebar.dart';
 import 'dashboard_top_bar.dart';
+
+import '../widgets/geolocation_handler.dart';
 
 class DashboardShell extends StatelessWidget {
   final Widget child;
@@ -33,23 +36,34 @@ class DashboardShell extends StatelessWidget {
     } else if (location.contains('users')) {
       activeRoute = AppStrings.users;
       title = AppStrings.loungeAdministrators;
+    } else if (location.contains('marketing')) {
+      activeRoute = AppStrings.marketing;
+      title = AppStrings.marketing;
+    } else if (location.contains('profile')) {
+      activeRoute = AppStrings.myProfile;
+      title = AppStrings.myProfile;
     }
 
-    return Scaffold(
-      body: Row(
-        children: [
-          DashboardSidebar(activeRoute: activeRoute),
-          Expanded(
-            child: Column(
-              children: [
-                DashboardTopBar(title: title),
-                Expanded(
-                  child: child,
-                ),
-              ],
+    return GeolocationHandler(
+      child: Scaffold(
+        backgroundColor: AppColors.scaffoldBackground,
+        body: Row(
+          children: [
+            DashboardSidebar(activeRoute: activeRoute),
+            Expanded(
+              child: Column(
+                children: [
+                  DashboardTopBar(title: title),
+                  Expanded(
+                    child: RepaintBoundary(
+                      child: child,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

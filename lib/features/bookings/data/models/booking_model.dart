@@ -42,7 +42,15 @@ class BookingModel extends Booking {
     final loungeData = json['lounges'] as Map<String, dynamic>?;
     final roomData = json['rooms'] as Map<String, dynamic>?;
 
-    String statusStr = json['status'] ?? 'pending';
+    // التأكد من قراءة حالة الحجز بدقة من العمود الصحيح في الـ RPC أو الجدول
+    String statusStr = (json['status'] ?? 'pending').toString().trim().toLowerCase();
+    
+    // إذا كانت القيمة قادمة من الـ Realtime Payload لجدول الحجز
+    // Supabase يرسل أحياناً اسم العمود بالكامل
+    if (json.containsKey('booking_status')) {
+      statusStr = json['booking_status'].toString().trim().toLowerCase();
+    }
+
     BookingStatus status;
     switch (statusStr) {
       case 'pending':
@@ -57,17 +65,15 @@ class BookingModel extends Booking {
       case 'cancelled':
         status = BookingStatus.cancelled;
         break;
-      case 'past':
-        status = BookingStatus.past;
-        break;
       default:
+        // إذا لم تطابق أي حالة، نعتبرها pending كافتراضي للطلبات الجديدة
         status = BookingStatus.pending;
     }
 
     return BookingModel(
       id: json['id'].toString(),
       userId: json['user_id']?.toString() ?? '',
-      userName: json['user_name']?.toString(),
+      userName: (json['user_name'] ?? json['full_name'])?.toString(),
       userEmail: json['user_email']?.toString(),
       loungeId: json['lounge_id']?.toString() ?? '',
       roomId: json['room_id']?.toString() ?? '',

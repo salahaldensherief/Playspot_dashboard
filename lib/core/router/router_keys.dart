@@ -14,5 +14,7 @@ class RouterKeys {
   static const String loungeAdminLiveOps = '/lounge-admin/live-operations';
   static const String loungeAdminRooms = '/lounge-admin/rooms';
   static const String loungeAdminExtras = '/lounge-admin/extras';
+  static const String loungeAdminMarketing = '/lounge-admin/marketing';
+  static const String loungeAdminProfile = '/lounge-admin/profile';
   static const String profile = '/profile';
 }

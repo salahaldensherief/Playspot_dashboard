@@ -4,6 +4,7 @@ import '../models/extra_model.dart';
 
 abstract class LoungeRemoteDataSource {
   Future<List<LoungeModel>> getLounges();
+  Future<LoungeModel?> getLoungeById(String id);
   Future<Map<String, dynamic>> createLoungeWithOwner({
     required String email,
     required String password,
@@ -50,6 +51,13 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
         return LoungeModel.fromJson(Map<String, dynamic>.from(json));
       }).toList();
     }
+  }
+
+  @override
+  Future<LoungeModel?> getLoungeById(String id) async {
+    final response = await client.from('lounges').select().eq('id', id).maybeSingle();
+    if (response == null) return null;
+    return LoungeModel.fromJson(Map<String, dynamic>.from(response));
   }
 
   @override

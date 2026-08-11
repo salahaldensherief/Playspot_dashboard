@@ -17,7 +17,6 @@ class Lounge extends Equatable {
   final List<String>? images;
   final String opensAt;
   final String closesAt;
-  final String? mapsLink;
   final double? lat;
   final double? lng;
   final List<String> categoryIcons;
@@ -43,7 +42,6 @@ class Lounge extends Equatable {
     this.images,
     required this.opensAt,
     required this.closesAt,
-    this.mapsLink,
     this.lat,
     this.lng,
     this.categoryIcons = const [],
@@ -71,7 +69,6 @@ class Lounge extends Equatable {
         images,
         opensAt,
         closesAt,
-        mapsLink,
         lat,
         lng,
         categoryIcons,

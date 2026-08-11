@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_image_picker.dart';
+import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import 'dart:typed_data';
 
 class LoungeInfoForm extends StatelessWidget {
@@ -28,16 +29,16 @@ class LoungeInfoForm extends StatelessWidget {
         SizedBox(height: 20.h),
         AppTextField(
           label: AppStrings.loungeName,
-          hintText: 'e.g. Nexus Gaming',
+          hintText: AppStrings.loungeNameHint,
           controller: nameController,
-          validator: (v) => v!.isEmpty ? 'Required' : null,
+          validator: AppValidator.validateRequired,
         ),
         SizedBox(height: 20.h),
         AppTextField(
           label: AppStrings.city,
-          hintText: 'e.g. Cairo',
+          hintText: AppStrings.cityHint,
           controller: cityController,
-          validator: (v) => v!.isEmpty ? 'Required' : null,
+          validator: AppValidator.validateRequired,
         ),
       ],
     );

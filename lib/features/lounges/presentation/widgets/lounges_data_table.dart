@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
@@ -77,11 +78,11 @@ class LoungesDataTable extends StatelessWidget {
                   children: [
                     IconButton(
                       icon: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20.r),
-                      onPressed: () {},
+                      onPressed: () => _showEditDialog(context, lounge),
                     ),
                     IconButton(
-                      icon: Icon(Icons.settings_outlined, color: AppColors.textSecondary, size: 20.r),
-                      onPressed: () {},
+                      icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
+                      onPressed: () => _confirmDelete(context, lounge.name),
                     ),
                   ],
                 ),
@@ -90,6 +91,29 @@ class LoungesDataTable extends StatelessWidget {
           )).toList(),
         );
       },
+    );
+  }
+
+  void _showEditDialog(BuildContext context, dynamic lounge) {
+    // Placeholder: Super Admin Lounge Edit Dialog
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Editing Lounge: ${lounge.name}')));
+  }
+
+  void _confirmDelete(BuildContext context, String name) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        title: Text('Delete Lounge', style: TextStyle(color: AppColors.textPrimary)),
+        content: Text('Are you sure you want to delete "$name"? All associated rooms and data will be removed.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(AppStrings.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context), 
+            child: const Text('Delete', style: TextStyle(color: AppColors.danger))
+          ),
+        ],
+      ),
     );
   }
 }

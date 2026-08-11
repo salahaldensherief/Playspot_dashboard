@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
+import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 
 class RoomBasicInfoForm extends StatelessWidget {
   final TextEditingController nameArController;
@@ -24,18 +25,18 @@ class RoomBasicInfoForm extends StatelessWidget {
             Expanded(
               child: AppTextField(
                 label: AppStrings.nameAr,
-                hintText: 'مثال: غرفة VIP 1',
+                hintText: AppStrings.nameAr,
                 controller: nameArController,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
+                validator: AppValidator.validateRequired,
               ),
             ),
             SizedBox(width: 16.w),
             Expanded(
               child: AppTextField(
                 label: AppStrings.nameEn,
-                hintText: 'e.g. VIP Room 01',
+                hintText: AppStrings.nameEn,
                 controller: nameEnController,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
+                validator: AppValidator.validateRequired,
               ),
             ),
           ],
@@ -43,10 +44,10 @@ class RoomBasicInfoForm extends StatelessWidget {
         SizedBox(height: 20.h),
         AppTextField(
           label: AppStrings.pricePerHour,
-          hintText: '0.00',
+          hintText: AppStrings.pricePerHourHint,
           controller: priceController,
           keyboardType: TextInputType.number,
-          validator: (v) => v!.isEmpty ? 'Required' : null,
+          validator: AppValidator.validateNumber,
         ),
       ],
     );

@@ -26,7 +26,7 @@ class DashboardStatsGrid extends StatelessWidget {
               child: StatCard(
                 title: isSuperAdmin ? 'Global Revenue' : AppStrings.dailyRevenue,
                 value: '\$${state.totalRevenue.toStringAsFixed(0)}',
-                trend: isSuperAdmin ? '\$${state.pendingRevenue.toStringAsFixed(0)} pending' : '',
+                trendValue: state.revenueTrend,
                 icon: Icons.payments_outlined,
                 iconColor: AppColors.neonGreen,
               ),
@@ -36,7 +36,7 @@ class DashboardStatsGrid extends StatelessWidget {
               child: StatCard(
                 title: isSuperAdmin ? 'Total Bookings' : AppStrings.activeSessions,
                 value: isSuperAdmin ? state.totalBookings.toString() : state.activeSessions.toString(),
-                trend: isSuperAdmin ? '+${state.bookingsToday} today' : '',
+                trendValue: state.bookingsTrend,
                 icon: Icons.sports_esports_outlined,
                 iconColor: AppColors.neonBlue,
               ),
@@ -46,7 +46,7 @@ class DashboardStatsGrid extends StatelessWidget {
               child: StatCard(
                 title: AppStrings.loungeOccupancy,
                 value: '${(state.occupancyRate * 100).toStringAsFixed(0)}%',
-                trend: '',
+                trendValue: state.occupancyTrend,
                 icon: Icons.meeting_room_outlined,
                 iconColor: AppColors.neonPurple,
               ),
@@ -58,7 +58,8 @@ class DashboardStatsGrid extends StatelessWidget {
                 value: isSuperAdmin 
                   ? '${state.activeLounges}/${state.totalLounges}' 
                   : '${state.activeRoomsCount}',
-                trend: AppStrings.systemHealth,
+                trendValue: state.loungesTrend,
+                subtitle: isSuperAdmin ? '${state.totalUsers} Total Users' : AppStrings.systemHealth,
                 icon: isSuperAdmin ? Icons.business : Icons.door_front_door,
                 iconColor: AppColors.neonCyan,
               ),

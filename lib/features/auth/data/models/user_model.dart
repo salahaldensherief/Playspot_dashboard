@@ -8,18 +8,30 @@ class UserModel extends UserEntity {
     required super.role,
     super.loungeId,
     super.avatarUrl,
-    super.isSetupCompleted,
+    super.isSetupCompleted = false,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    UserRole role;
+    switch (json['role']) {
+      case 'super_admin':
+        role = UserRole.superAdmin;
+        break;
+      case 'lounge_admin':
+        role = UserRole.loungeAdmin;
+        break;
+      default:
+        role = UserRole.user;
+    }
+
     return UserModel(
-      id: json['id']?.toString() ?? '',
-      email: json['email']?.toString() ?? '',
-      name: json['full_name']?.toString() ?? json['name']?.toString() ?? 'Unknown',
-      role: json['role'] == 'super_admin' ? UserRole.superAdmin : UserRole.loungeAdmin,
-      loungeId: json['lounge_id']?.toString(),
-      avatarUrl: json['avatar_url']?.toString(),
-      isSetupCompleted: json['is_setup_completed'] ?? false,
+      id: json['id'] as String,
+      email: json['email'] as String,
+      name: json['full_name'] as String? ?? 'Unknown',
+      role: role,
+      loungeId: json['lounge_id'] as String?,
+      avatarUrl: json['avatar_url'] as String?,
+      isSetupCompleted: json['is_setup_completed'] as bool? ?? false,
     );
   }
 
@@ -28,7 +40,7 @@ class UserModel extends UserEntity {
       'id': id,
       'email': email,
       'full_name': name,
-      'role': role.toString().split('.').last == 'superAdmin' ? 'super_admin' : 'lounge_admin',
+      'role': role.name,
       'lounge_id': loungeId,
       'avatar_url': avatarUrl,
       'is_setup_completed': isSetupCompleted,

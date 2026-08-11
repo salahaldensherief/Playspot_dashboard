@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
@@ -8,10 +10,14 @@ import 'package:play_spot_dashboard/features/auth/presentation/login/login_scree
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_screen.dart' as dashboard;
 import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounges_page.dart' as lounges;
 import 'package:play_spot_dashboard/features/users/presentation/pages/users_page.dart' as users;
+import 'package:play_spot_dashboard/features/categories/presentation/pages/categories_page.dart' as categories;
+import 'package:play_spot_dashboard/features/marketing/presentation/pages/marketing_page.dart' as marketing;
 import 'package:play_spot_dashboard/features/bookings/presentation/pages/bookings_page.dart' as bookings;
 import 'package:play_spot_dashboard/features/rooms/presentation/pages/room_management_page.dart' as rooms;
 import 'package:play_spot_dashboard/features/onboarding/presentation/pages/lounge_setup_page.dart' as onboarding;
 import 'package:play_spot_dashboard/features/lounges/presentation/pages/extras_management_page.dart' as extras;
+import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounge_profile_page.dart' as lounge_profile;
+import 'package:play_spot_dashboard/features/marketing/presentation/pages/marketing_page.dart' as marketing;
 import 'package:play_spot_dashboard/features/auth/presentation/profile/profile_page.dart' as profile;
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_shell.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -19,13 +25,14 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'router_keys.dart';
 
 class AppRouter {
-  static GoRouter router(BuildContext context) {
-    final authCubit = context.read<LoginCubit>();
+  final LoginCubit authCubit;
 
-    return GoRouter(
-      initialLocation: RouterKeys.root,
-      refreshListenable: GoRouterRefreshStream(authCubit.stream),
-      redirect: (context, state) {
+  AppRouter(this.authCubit);
+
+  late final router = GoRouter(
+    initialLocation: RouterKeys.root,
+    refreshListenable: GoRouterRefreshStream(authCubit.stream),
+    redirect: (context, state) {
         final authState = authCubit.state;
         final bool isLoggingIn = state.matchedLocation == RouterKeys.login;
         final user = authState.user;
@@ -46,12 +53,12 @@ class AppRouter {
         debugPrint('Setup Completed: ${user.isSetupCompleted}');
 
         final bool isLoungeAdmin = user.role == UserRole.loungeAdmin;
+        final bool isSuperAdmin = user.role == UserRole.superAdmin;
         final bool isOnboardingPath = state.matchedLocation == RouterKeys.loungeOnboarding;
 
-        // 3. Forced Onboarding Logic (Source of truth is user.isSetupCompleted)
+        // 3. Forced Onboarding Logic
         if (isLoungeAdmin && !user.isSetupCompleted) {
           if (!isOnboardingPath) {
-            debugPrint('FORCING ONBOARDING - Setup not completed');
             return RouterKeys.loungeOnboarding;
           }
           return null;
@@ -59,13 +66,13 @@ class AppRouter {
 
         // 4. Handle redirections from Login or Root
         if (isLoggingIn || state.matchedLocation == RouterKeys.root) {
-          if (user.role == UserRole.superAdmin) return RouterKeys.superAdminDashboard;
+          if (isSuperAdmin) return RouterKeys.superAdminDashboard;
           if (isLoungeAdmin) return RouterKeys.loungeAdminLiveOps;
         }
 
         // 5. Protect Super Admin Routes
         final bool isSuperAdminRoute = state.matchedLocation.startsWith('/super-admin');
-        if (isSuperAdminRoute && user.role != UserRole.superAdmin) {
+        if (isSuperAdminRoute && !isSuperAdmin) {
           return RouterKeys.loungeAdminLiveOps;
         }
 
@@ -113,6 +120,18 @@ class AppRouter {
               ),
             ),
             GoRoute(
+              path: RouterKeys.superAdminCategories,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: categories.CategoriesPage(),
+              ),
+            ),
+            GoRoute(
+              path: RouterKeys.superAdminMarketing,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: marketing.MarketingPage(),
+              ),
+            ),
+            GoRoute(
               path: RouterKeys.loungeAdminLiveOps,
               pageBuilder: (context, state) => const NoTransitionPage(
                 child: bookings.BookingsPage(),
@@ -128,6 +147,18 @@ class AppRouter {
               path: RouterKeys.loungeAdminExtras,
               pageBuilder: (context, state) => const NoTransitionPage(
                 child: extras.ExtrasManagementPage(),
+              ),
+            ),
+            GoRoute(
+              path: RouterKeys.loungeAdminMarketing,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: marketing.MarketingPage(),
+              ),
+            ),
+            GoRoute(
+              path: RouterKeys.loungeAdminProfile,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: lounge_profile.LoungeProfilePage(),
               ),
             ),
             GoRoute(
@@ -155,18 +186,26 @@ class AppRouter {
         ),
       ),
     );
-  }
 }
 
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
-    notifyListeners();
     _subscription = stream.asBroadcastStream().listen(
-          (dynamic _) => notifyListeners(),
+          (dynamic _) {
+            // Using PostFrameCallback is the most stable way to handle navigation
+            // triggers in Flutter Web to avoid "debugDuringDeviceUpdate" errors.
+            if (WidgetsBinding.instance.schedulerPhase != SchedulerPhase.persistentCallbacks) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (hasListeners) {
+                  notifyListeners();
+                }
+              });
+            }
+          },
         );
   }
 
-  late final dynamic _subscription;
+  late final StreamSubscription<dynamic> _subscription;
 
   @override
   void dispose() {

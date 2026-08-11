@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../app_strings.dart';
 import '../theme/app_colors.dart';
 
 class AppImagePicker extends StatefulWidget {
@@ -86,7 +87,7 @@ class _AppImagePickerState extends State<AppImagePicker> {
                       Icon(Icons.add_a_photo_outlined, color: AppColors.textSecondary, size: 32.r),
                       SizedBox(height: 8.h),
                       Text(
-                        'Click to upload image',
+                        AppStrings.uploadInstruction,
                         style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
                       ),
                     ],

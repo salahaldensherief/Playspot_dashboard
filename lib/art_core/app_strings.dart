@@ -165,5 +165,50 @@ class AppStrings {
   static String get pendingRequests => 'pending_requests'.tr();
   static String get activeBookings => 'active_bookings'.tr();
 
+  // Validation
+  static String get fieldRequired => 'field_required'.tr();
+  static String get invalidEmail => 'invalid_email'.tr();
+  static String get passwordTooShort => 'password_too_short'.tr();
+  static String get invalidNumber => 'invalid_number'.tr();
+  static String get cannotBeNegative => 'cannot_be_negative'.tr();
+
+  // Marketing & Promo
+  static String get promotionsMarketing => 'promotions_marketing'.tr();
+  static String get promoTitleAr => 'promo_title_ar'.tr();
+  static String get promoTitleEn => 'promo_title_en'.tr();
+  static String get tagAr => 'tag_ar'.tr();
+  static String get tagEn => 'tag_en'.tr();
+  static String get deepLinkDest => 'deep_link_dest'.tr();
+  static String get designStyle => 'design_style'.tr();
+  static String get colorTemplate => 'color_template'.tr();
+  static String get promoIcon => 'promo_icon'.tr();
+  static String get createPromotion => 'create_promotion'.tr();
+
+  // Lounge Profile
+  static String get loungeProfile => 'lounge_profile'.tr();
+  static String get coreInfo => 'core_info'.tr();
+  static String get mainImage => 'main_image'.tr();
+  static String get saveChanges => 'save_changes'.tr();
+  static String get uploadInstruction => 'upload_instruction'.tr();
+  static String get descriptionArLabel => 'description_ar_label'.tr();
+  static String get descriptionEnLabel => 'description_en_label'.tr();
+  static String get descriptionArHint => 'description_ar_hint'.tr();
+  static String get descriptionEnHint => 'description_en_hint'.tr();
+  static String get cityHint => 'city_hint'.tr();
+  static String get addressHint => 'address_hint'.tr();
+  static String get promoTitleArHint => 'promo_title_ar_hint'.tr();
+  static String get promoTitleEnHint => 'promo_title_en_hint'.tr();
+  static String get tagArHint => 'tag_ar_hint'.tr();
+  static String get tagEnHint => 'tag_en_hint'.tr();
+  static String get capacityHint => 'capacity_hint'.tr();
+  static String get controllersHint => 'controllers_hint'.tr();
+  static String get screenSizeHint => 'screen_size_hint'.tr();
+  static String get pricePerHourHint => 'price_per_hour_hint'.tr();
+  static String get emailHint => 'email_hint'.tr();
+  static String get imagesCount => 'images_count'.tr();
+  static String get galleryImages => 'gallery_images'.tr();
+  static String get minImagesError => 'min_images_error'.tr();
+  static String get maxImagesError => 'max_images_error'.tr();
+
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

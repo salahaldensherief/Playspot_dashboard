@@ -16,11 +16,13 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late final LoginCubit _loginCubit;
+  late final AppRouter _appRouter;
 
   @override
   void initState() {
     super.initState();
     _loginCubit = sl<LoginCubit>()..checkInitialAuth();
+    _appRouter = AppRouter(_loginCubit);
   }
 
   @override
@@ -47,7 +49,7 @@ class _MyAppState extends State<MyApp> {
               useMaterial3: true,
               fontFamily: 'Orbitron',
             ),
-            routerConfig: AppRouter.router(context),
+            routerConfig: _appRouter.router,
           );
         },
       ),

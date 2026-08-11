@@ -7,6 +7,7 @@ class ExtraModel extends ExtraEntity {
     required super.name,
     required super.price,
     required super.category,
+    super.iconKey,
     super.isOutOfStock,
   });
 
@@ -17,6 +18,7 @@ class ExtraModel extends ExtraEntity {
       name: json['name']?.toString() ?? '',
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       category: json['category']?.toString() ?? 'Others',
+      iconKey: json['icon_key']?.toString(),
       // The backend uses 'is_available', so we invert it for 'isOutOfStock'
       isOutOfStock: json['is_available'] == false,
     );
@@ -28,6 +30,7 @@ class ExtraModel extends ExtraEntity {
       'name': name,
       'price': price,
       'category': category,
+      'icon_key': iconKey,
       'is_available': !isOutOfStock,
     };
   }
