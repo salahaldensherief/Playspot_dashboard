@@ -24,6 +24,7 @@ class MarketplaceStep extends StatelessWidget {
         AppText.body(AppStrings.marketplaceSubtitle),
         SizedBox(height: 24.h),
         BlocBuilder<OnboardingCubit, OnboardingState>(
+          buildWhen: (previous, current) => previous.extras != current.extras,
           builder: (context, state) {
             if (state.extras.isEmpty) {
               return _buildEmptyState(context);
@@ -106,11 +107,12 @@ class MarketplaceStep extends StatelessWidget {
   }
 
   void _showAddExtraDialog(BuildContext context) {
+    final onboardingCubit = context.read<OnboardingCubit>();
     showDialog(
       context: context,
       builder: (diagContext) => ExtraDialog(
         loungeId: loungeId,
-        onSave: (newExtra) => context.read<OnboardingCubit>().addNewExtra(newExtra),
+        onSave: (newExtra) => onboardingCubit.addNewExtra(newExtra),
       ),
     );
   }

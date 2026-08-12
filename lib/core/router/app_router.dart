@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
@@ -34,9 +33,9 @@ import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit
 import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/extras_cubit.dart';
 import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_cubit.dart';
-import '../../features/bookings/presentation/cubit/booking_cubit.dart';
-import '../di/di.dart';
-import 'router_keys.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/core/di/di.dart';
+import 'package:play_spot_dashboard/core/router/router_keys.dart';
 
 class AppRouter {
   final LoginCubit authCubit;
@@ -85,10 +84,12 @@ class AppRouter {
       },
       routes: [
         ShellRoute(
-          builder: (context, state, child) => BlocProvider.value(
-            value: sl<LoginCubit>()..checkInitialAuth(),
-            child: child,
-          ),
+          builder: (BuildContext context, GoRouterState state, Widget child) {
+            return BlocProvider(
+              create: (context) => sl<LoginCubit>(),
+              child: child,
+            );
+          },
           routes: [
             GoRoute(
               path: RouterKeys.login,
@@ -111,13 +112,10 @@ class AppRouter {
             ),
             
             ShellRoute(
-              pageBuilder: (context, state, child) => NoTransitionPage(
-                child: BlocProvider(
-                  create: (context) => sl<LoungeCubit>(),
-                  child: DashboardShell(
-                    location: state.matchedLocation,
-                    child: child,
-                  ),
+              pageBuilder: (BuildContext context, GoRouterState state, Widget child) => NoTransitionPage(
+                child: DashboardShell(
+                  location: state.matchedLocation,
+                  child: child,
                 ),
               ),
               routes: [
@@ -137,7 +135,7 @@ class AppRouter {
                   path: RouterKeys.superAdminLounges,
                   pageBuilder: (context, state) => NoTransitionPage(
                     child: BlocProvider(
-                      create: (context) => context.read<LoungeCubit>()..fetchLounges(),
+                      create: (context) => sl<LoungeCubit>()..fetchLounges(),
                       child: const lounges.LoungesPage(),
                     ),
                   ),
@@ -190,7 +188,7 @@ class AppRouter {
                     child: BlocProvider(
                       create: (context) => sl<BookingCubit>()..startWatchingBookings(loungeId: context.read<LoginCubit>().state.user?.loungeId),
                       child: BlocProvider(
-                        create: (context) => context.read<LoungeCubit>()..fetchLounges(),
+                        create: (context) => sl<LoungeCubit>()..fetchLounges(),
                         child: const bookings.BookingsPage(),
                       ),
                     ),
@@ -244,7 +242,10 @@ class AppRouter {
                 GoRoute(
                   path: RouterKeys.loungeAdminProfile,
                   pageBuilder: (context, state) => NoTransitionPage(
-                    child: const lounge_profile.LoungeProfilePage(),
+                    child: BlocProvider(
+                      create: (context) => sl<LoungeCubit>(),
+                      child: const lounge_profile.LoungeProfilePage(),
+                    ),
                   ),
                 ),
                 GoRoute(
@@ -280,7 +281,7 @@ class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
     _subscription = stream.asBroadcastStream().listen(
           (dynamic _) {
-            if (WidgetsBinding.instance.schedulerPhase != SchedulerPhase.persistentCallbacks) {
+            if (hasListeners) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (hasListeners) {
                   notifyListeners();

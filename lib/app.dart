@@ -19,8 +19,8 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    // LoginCubit is now a LazySingleton, checkInitialAuth will be called in router or first provider
     final loginCubit = sl<LoginCubit>();
+    loginCubit.checkInitialAuth();
     _appRouter = AppRouter(loginCubit);
   }
 

@@ -272,6 +272,19 @@ class AppStrings {
   static String get reviewNotes => 'review_notes'.tr();
   static String get kycSuccess => 'kyc_success'.tr();
   static String get viewDocument => 'view_document'.tr();
+  static String get actionFailed => 'action_failed'.tr();
+  static String get loungeIsOpen => 'lounge_is_open'.tr();
+  static String get loungeIsClosed => 'lounge_is_closed'.tr();
+  static String get usersCanBookNow => 'users_can_book_now'.tr();
+  static String get loungeIsHidden => 'lounge_is_hidden'.tr();
+  static String get closeLounge => 'close_lounge'.tr();
+  static String get openLounge => 'open_lounge'.tr();
+  static String get orderDetails => 'order_details'.tr();
+  static String get additionalItems => 'additional_items'.tr();
+  static String get phoneNumber => 'phone_number'.tr();
+  static String get noFinishedBookings => 'no_finished_bookings'.tr();
+  static String get noNewRequests => 'no_new_requests'.tr();
+  static String get noActiveBookings => 'no_active_bookings'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

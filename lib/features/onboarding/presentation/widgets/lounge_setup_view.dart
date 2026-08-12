@@ -120,6 +120,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
       body: MultiBlocListener(
         listeners: [
           BlocListener<OnboardingCubit, OnboardingState>(
+            listenWhen: (previous, current) => previous.status != current.status,
             listener: (context, state) async {
               if (state.status == OnboardingStatus.success) {
                 await Future.delayed(const Duration(milliseconds: 500));
@@ -128,12 +129,13 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
                 }
               } else if (state.status == OnboardingStatus.failure) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: AppText.body(state.errorMessage ?? 'Error', color: Colors.white), backgroundColor: AppColors.danger),
+                  SnackBar(content: AppText.body(state.errorMessage ?? AppStrings.actionFailed, color: Colors.white), backgroundColor: AppColors.danger),
                 );
               }
             },
           ),
           BlocListener<KycCubit, KycState>(
+            listenWhen: (previous, current) => previous.status != current.status,
             listener: (context, state) {
               if (state.status == KycStatus.failure) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -257,9 +259,11 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
 
     return BlocBuilder<OnboardingCubit, OnboardingState>(
       bloc: onboardingCubit,
+      buildWhen: (previous, current) => previous.status != current.status,
       builder: (context, onboardingState) {
         return BlocBuilder<KycCubit, KycState>(
           bloc: kycCubit,
+          buildWhen: (previous, current) => previous.status != current.status,
           builder: (context, kycState) {
             final isLoading = onboardingState.status == OnboardingStatus.loading || 
                               kycState.status == KycStatus.loading;

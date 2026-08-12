@@ -37,10 +37,12 @@ class _GeolocationHandlerState extends State<GeolocationHandler> {
       // Using browser geolocation API directly for Web as requested
       if (html.window.navigator.geolocation != null) {
         html.window.navigator.geolocation.getCurrentPosition().then((pos) {
-          final lat = pos.coords?.latitude?.toDouble();
-          final lng = pos.coords?.longitude?.toDouble();
+          // Use dynamic access to avoid JS interop type casting issues on Web
+          final dynamic coords = pos.coords;
+          final double? lat = coords?.latitude?.toDouble();
+          final double? lng = coords?.longitude?.toDouble();
           
-          if (lat != null && lng != null) {
+          if (lat != null && lng != null && mounted) {
             context.read<LoungeCubit>().updateLoungeLocation(loungeId, lat, lng);
             setState(() => _locationCaptured = true);
             debugPrint('Successfully captured and updated lounge location: $lat, $lng');

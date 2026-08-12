@@ -29,65 +29,68 @@ class BookingsPage extends StatelessWidget {
       child: MultiBlocListener(
         listeners: [
           BlocListener<BookingCubit, BookingState>(
+            listenWhen: (previous, current) => previous.status != current.status,
             listener: (context, state) {
               if (state.status == BookingStatusState.failure) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.errorMessage ?? 'Action Failed'), backgroundColor: AppColors.danger),
+                  SnackBar(content: Text(state.errorMessage ?? AppStrings.actionFailed), backgroundColor: AppColors.danger),
                 );
               }
             },
           ),
         ],
-        child: BlocBuilder<BookingCubit, BookingState>(
-          builder: (context, bookingState) {
-            if (bookingState.status == BookingStatusState.loading && bookingState.bookings.isEmpty) {
-              return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
-            }
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTopToolbar(context, loungeId),
+            SizedBox(height: 24.h),
+            BlocBuilder<BookingCubit, BookingState>(
+              buildWhen: (previous, current) => 
+                  previous.status != current.status || 
+                  previous.bookings != current.bookings,
+              builder: (context, bookingState) {
+                if (bookingState.status == BookingStatusState.loading && bookingState.bookings.isEmpty) {
+                  return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
+                }
 
-            final pendingBookings = bookingState.bookings.where((b) => b.status == BookingStatus.pending).toList();
-            final activeBookings = bookingState.bookings.where((b) => b.status == BookingStatus.upcoming).toList();
-            final finishedToday = bookingState.bookings.where((b) => b.status == BookingStatus.completed).toList();
+                final pendingBookings = bookingState.bookings.where((b) => b.status == BookingStatus.pending).toList();
+                final activeBookings = bookingState.bookings.where((b) => b.status == BookingStatus.upcoming).toList();
+                final finishedToday = bookingState.bookings.where((b) => b.status == BookingStatus.completed).toList();
 
-            double totalRevenueToday = 0;
-            for (var b in finishedToday) {
-              totalRevenueToday += b.totalPrice;
-            }
+                double totalRevenueToday = 0;
+                for (var b in finishedToday) {
+                  totalRevenueToday += b.totalPrice;
+                }
 
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildTopToolbar(context, loungeId),
-                  SizedBox(height: 24.h),
-                  
-                  // 1. Pending Section
-                  _buildSectionHeader(AppStrings.pendingRequests, pendingBookings.length, AppColors.neonPurple),
-                  SizedBox(height: 16.h),
-                  _buildBookingGrid(context, bookingCubit, pendingBookings, isPending: true),
-                  
-                  SizedBox(height: 40.h),
-                  
-                  // 2. Active Section
-                  _buildSectionHeader(AppStrings.activeBookings, activeBookings.length, AppColors.neonBlue),
-                  SizedBox(height: 16.h),
-                  _buildBookingGrid(context, bookingCubit, activeBookings, isPending: false),
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionHeader(AppStrings.pendingRequests, pendingBookings.length, AppColors.neonPurple),
+                    SizedBox(height: 16.h),
+                    _buildBookingGrid(context, bookingCubit, pendingBookings, isPending: true),
+                    
+                    SizedBox(height: 40.h),
+                    
+                    _buildSectionHeader(AppStrings.activeBookings, activeBookings.length, AppColors.neonBlue),
+                    SizedBox(height: 16.h),
+                    _buildBookingGrid(context, bookingCubit, activeBookings, isPending: false),
 
-                  SizedBox(height: 40.h),
+                    SizedBox(height: 40.h),
 
-                  // 3. Today's Audit Log
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildSectionHeader(AppStrings.finishedToday, finishedToday.length, AppColors.success),
-                      _buildRevenueCard(totalRevenueToday),
-                    ],
-                  ),
-                  SizedBox(height: 16.h),
-                  _buildBookingGrid(context, bookingCubit, finishedToday, isPending: false, isAudit: true),
-                ],
-              ),
-            );
-          },
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildSectionHeader(AppStrings.finishedToday, finishedToday.length, AppColors.success),
+                        _buildRevenueCard(totalRevenueToday),
+                      ],
+                    ),
+                    SizedBox(height: 16.h),
+                    _buildBookingGrid(context, bookingCubit, finishedToday, isPending: false, isAudit: true),
+                  ],
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -114,6 +117,7 @@ class BookingsPage extends StatelessWidget {
 
   Widget _buildTopToolbar(BuildContext context, String loungeId) {
     return BlocBuilder<LoungeCubit, LoungeState>(
+      buildWhen: (previous, current) => previous.lounges != current.lounges,
       builder: (context, state) {
         Lounge? currentLounge;
         if (state.lounges.isNotEmpty) {
@@ -123,7 +127,11 @@ class BookingsPage extends StatelessWidget {
         final isOpen = currentLounge?.isOpen ?? true;
         return Container(
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-          decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(12.r), border: Border.all(color: AppColors.borderDefault)),
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground, 
+            borderRadius: BorderRadius.circular(12.r), 
+            border: Border.all(color: AppColors.borderDefault),
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -134,13 +142,30 @@ class BookingsPage extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      AppText.subHeading(isOpen ? "Lounge is OPEN" : "Lounge is CLOSED", color: isOpen ? AppColors.success : AppColors.danger, fontSize: 16.sp),
-                      AppText.body(isOpen ? "Users can book now" : "Lounge is hidden", fontSize: 12.sp),
+                      AppText.subHeading(
+                        isOpen ? AppStrings.loungeIsOpen : AppStrings.loungeIsClosed, 
+                        color: isOpen ? AppColors.success : AppColors.danger, 
+                        fontSize: 16.sp,
+                      ),
+                      AppText.body(
+                        isOpen ? AppStrings.usersCanBookNow : AppStrings.loungeIsHidden, 
+                        fontSize: 12.sp,
+                      ),
                     ],
                   ),
                 ],
               ),
-              Switch(value: isOpen, activeColor: AppColors.success, onChanged: (val) => context.read<LoungeCubit>().toggleLoungeStatus(loungeId, val)),
+              Row(
+                children: [
+                  AppText.body(isOpen ? AppStrings.closeLounge : AppStrings.openLounge, fontWeight: FontWeight.bold),
+                  SizedBox(width: 8.w),
+                  Switch(
+                    value: isOpen, 
+                    activeColor: AppColors.success, 
+                    onChanged: (val) => context.read<LoungeCubit>().toggleLoungeStatus(loungeId, val),
+                  ),
+                ],
+              ),
             ],
           ),
         );
@@ -170,7 +195,7 @@ class BookingsPage extends StatelessWidget {
         width: double.infinity,
         padding: EdgeInsets.all(24.r),
         decoration: BoxDecoration(color: AppColors.cardBackground.withOpacity(0.5), borderRadius: BorderRadius.circular(12.r), border: Border.all(color: AppColors.borderDefault)),
-        child: Center(child: AppText.body(isAudit ? "No finished bookings yet" : (isPending ? "No new requests" : "No active bookings"), color: AppColors.textSecondary)),
+        child: Center(child: AppText.body(isAudit ? AppStrings.noFinishedBookings : (isPending ? AppStrings.noNewRequests : AppStrings.noActiveBookings), color: AppColors.textSecondary)),
       );
     }
 
@@ -187,7 +212,7 @@ class BookingsPage extends StatelessWidget {
       itemBuilder: (context, index) {
         final booking = bookings[index];
         return BookingCard(
-          key: ValueKey('booking_${booking.id}_${booking.status}'),
+          key: ValueKey('booking_${booking.id}'),
           booking: booking,
           onApprove: isPending ? () => cubit.approveBooking(booking.id) : null,
           onReject: isPending ? () => cubit.rejectBooking(booking.id) : null,

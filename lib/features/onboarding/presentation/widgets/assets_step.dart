@@ -25,6 +25,7 @@ class AssetsStep extends StatelessWidget {
         AppText.body(AppStrings.assetsSubtitle),
         SizedBox(height: 24.h),
         BlocBuilder<OnboardingCubit, OnboardingState>(
+          buildWhen: (previous, current) => previous.rooms != current.rooms,
           builder: (context, state) {
             if (state.rooms.isEmpty) {
               return _buildEmptyState(context);

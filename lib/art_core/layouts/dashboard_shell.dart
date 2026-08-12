@@ -69,9 +69,7 @@ class DashboardShell extends StatelessWidget {
                 children: [
                   DashboardTopBar(title: title),
                   Expanded(
-                    child: RepaintBoundary(
-                      child: child,
-                    ),
+                    child: child,
                   ),
                 ],
               ),

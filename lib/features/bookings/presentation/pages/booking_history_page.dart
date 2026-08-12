@@ -28,6 +28,9 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
       title: AppStrings.monthlyReports,
       activeRoute: 'Reports',
       child: BlocBuilder<BookingCubit, BookingState>(
+        buildWhen: (previous, current) => 
+            previous.status != current.status || 
+            previous.bookings != current.bookings,
         builder: (context, state) {
           final monthlyBookings = state.bookings.where((b) => 
             b.date.month == _selectedDate.month && 
@@ -120,7 +123,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
     );
   }
 
-  Widget _buildHistoryTable(List<dynamic> bookings) {
+  Widget _buildHistoryTable(List<Booking> bookings) {
     return DataTableWidget(
       columns: [AppStrings.date, AppStrings.customerName, AppStrings.roomLabel, AppStrings.totalPrice, AppStrings.status],
       rows: bookings.map((b) => DataRow(
