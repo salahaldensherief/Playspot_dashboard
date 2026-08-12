@@ -60,6 +60,7 @@ class AppStrings {
   // Lounge Management
   static String get addNewLounge => 'add_new_lounge'.tr();
   static String get manageLoungesDesc => 'manage_lounges_desc'.tr();
+  static String get loungesHeaderSubtitle => 'lounges_header_subtitle'.tr();
   static String get noLoungesFound => 'no_lounges_found'.tr();
   static String get loungeSetup => 'lounge_setup'.tr();
   static String get loungeName => 'lounge_name'.tr();
@@ -72,6 +73,9 @@ class AppStrings {
   static String get addLoungeAdmin => 'add_lounge_admin'.tr();
   static String get loungeAdministrators => 'lounge_administrators'.tr();
   static String get manageAccountsDesc => 'manage_accounts_desc'.tr();
+  static String get manageAdminsDesc => 'manage_admins_desc'.tr();
+  static String get addLoungeAdminBtn => 'add_lounge_admin_btn'.tr();
+  static String get adminCreatedSuccess => 'admin_created_success'.tr();
 
   static String get users => 'users'.tr();
   static String get payments => 'payments'.tr();
@@ -103,7 +107,6 @@ class AppStrings {
   static String get addLounge => 'add_lounge'.tr();
   static String get createPromo => 'create_promo'.tr();
   static String get exportReport => 'export_report'.tr();
-  static String get adminCreatedSuccess => 'admin_created_success'.tr();
   static String get active => 'active'.tr();
   static String get onlineToggle => 'online_toggle'.tr();
   static String get ownerName => 'owner_name'.tr();
@@ -182,6 +185,7 @@ class AppStrings {
   static String get designStyle => 'design_style'.tr();
   static String get colorTemplate => 'color_template'.tr();
   static String get promoIcon => 'promo_icon'.tr();
+  static String get iconKey => 'icon_key'.tr();
   static String get createPromotion => 'create_promotion'.tr();
 
   // Lounge Profile
@@ -204,11 +208,45 @@ class AppStrings {
   static String get controllersHint => 'controllers_hint'.tr();
   static String get screenSizeHint => 'screen_size_hint'.tr();
   static String get pricePerHourHint => 'price_per_hour_hint'.tr();
+  static String get timeHint => 'time_hint'.tr();
   static String get emailHint => 'email_hint'.tr();
   static String get imagesCount => 'images_count'.tr();
   static String get galleryImages => 'gallery_images'.tr();
   static String get minImagesError => 'min_images_error'.tr();
   static String get maxImagesError => 'max_images_error'.tr();
+
+  // Payouts
+  static String get payouts => 'payouts'.tr();
+  static String get loungePayouts => 'lounge_payouts'.tr();
+  static String get myPayouts => 'my_payouts'.tr();
+  static String get payoutHistory => 'payout_history'.tr();
+  static String get pendingAmount => 'pending_amount'.tr();
+  static String get paymentsCount => 'payments_count'.tr();
+  static String get createPayout => 'create_payout'.tr();
+  static String get noPendingPayouts => 'no_pending_payouts'.tr();
+  static String get myPayoutsHistory => 'my_payouts_history'.tr();
+  static String get noPayoutHistoryFound => 'no_payout_history_found'.tr();
+  static String get period => 'period'.tr();
+  static String get notes => 'notes'.tr();
+
+  // Common Actions
+  static String get edit => 'edit'.tr();
+  static String get delete => 'delete'.tr();
+  static String get editRoom => 'edit_room'.tr();
+  static String get updateStation => 'update_station'.tr();
+  static String get editItem => 'edit_item'.tr();
+  static String get updateItem => 'update_item'.tr();
+  static String get addCategory => 'add_category'.tr();
+  static String get editCategory => 'edit_category'.tr();
+  static String get saveCategory => 'save_category'.tr();
+  static String get createGlobalPromo => 'create_global_promo'.tr();
+  static String get activePromotions => 'active_promotions'.tr();
+  static String get global => 'global'.tr();
+  static String get paused => 'paused'.tr();
+  static String get deleteConfirmation => 'delete_confirmation'.tr();
+  static String get deleteWarning => 'delete_warning'.tr();
+  static String get deleteLoungeWarning => 'delete_lounge_warning'.tr();
+  static String get vsLastMonth => 'vs_last_month'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

@@ -12,6 +12,7 @@ abstract class AdminManagementRemoteDataSource {
   });
   
   Future<List<UserEntity>> getAdmins();
+  Future<void> deleteAdmin(String adminId);
 }
 
 class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSource {
@@ -60,5 +61,12 @@ class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSo
         loungeId: json['lounge_id']?.toString(),
       );
     }).toList();
+  }
+
+  @override
+  Future<void> deleteAdmin(String adminId) async {
+    // Soft delete profile/admin record if possible or hard delete from auth if allowed
+    // For now, let's assume we delete from the public schema profiles/admins table
+    await supabaseClient.from('profiles').delete().eq('id', adminId);
   }
 }

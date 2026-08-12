@@ -1,42 +1,77 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
 import '../../domain/entities/room_entity.dart';
 import '../../domain/repositories/room_repository.dart';
-
-part 'room_state.dart';
 
 class RoomCubit extends Cubit<RoomState> {
   final RoomRepository _repository;
   StreamSubscription? _subscription;
 
-  RoomCubit(this._repository) : super(RoomInitial());
+  RoomCubit(this._repository) : super(const RoomState());
 
   void watchRooms(String loungeId) {
-    emit(RoomLoading());
+    emit(state.copyWith(status: RoomStatus.loading));
     _subscription?.cancel();
     _subscription = _repository.watchRooms(loungeId).listen(
-      (rooms) => emit(RoomLoaded(rooms)),
-      onError: (e) => emit(RoomError(e.toString())),
+      (rooms) => emit(state.copyWith(
+        status: RoomStatus.success,
+        rooms: rooms,
+      )),
+      onError: (e) => emit(state.copyWith(
+        status: RoomStatus.failure,
+        errorMessage: e.toString(),
+      )),
     );
   }
 
-  Future<void> toggleRoomStatus(String roomId, RoomStatus currentStatus) async {
-    final newStatus = currentStatus == RoomStatus.available 
-        ? RoomStatus.maintenance 
-        : RoomStatus.available;
+  Future<void> toggleRoomStatus(String roomId, RoomStatusEnum currentStatus) async {
+    final newStatus = currentStatus == RoomStatusEnum.available 
+        ? RoomStatusEnum.maintenance 
+        : RoomStatusEnum.available;
     
     final result = await _repository.updateRoomStatus(roomId, newStatus);
     result.fold(
-      (failure) => emit(RoomError(failure.message)),
+      (failure) => emit(state.copyWith(
+        status: RoomStatus.failure,
+        errorMessage: failure.message,
+      )),
       (_) => null, // Real-time subscription will update UI
     );
   }
 
   Future<void> addNewRoom(RoomEntity room) async {
+    emit(state.copyWith(status: RoomStatus.loading));
     final result = await _repository.addRoom(room);
     result.fold(
-      (failure) => emit(RoomError(failure.message)),
+      (failure) => emit(state.copyWith(
+        status: RoomStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) => null,
+    );
+  }
+
+  Future<void> updateRoom(RoomEntity room) async {
+    emit(state.copyWith(status: RoomStatus.loading));
+    final result = await _repository.updateRoom(room);
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: RoomStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) => null,
+    );
+  }
+
+  Future<void> deleteRoom(String roomId) async {
+    emit(state.copyWith(status: RoomStatus.loading));
+    final result = await _repository.deleteRoom(roomId);
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: RoomStatus.failure,
+        errorMessage: failure.message,
+      )),
       (_) => null,
     );
   }

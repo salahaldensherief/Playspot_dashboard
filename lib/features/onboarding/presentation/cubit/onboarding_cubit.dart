@@ -7,6 +7,11 @@ import '../../../rooms/domain/entities/room_entity.dart';
 import '../../../lounges/domain/entities/extra_entity.dart';
 import '../../../lounges/domain/entities/lounge.dart';
 
+import 'dart:typed_data';
+import 'package:play_spot_dashboard/core/di/di.dart';
+import 'package:play_spot_dashboard/core/services/storage_service.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_multi_image_picker.dart';
+
 part 'onboarding_state.dart';
 
 class OnboardingCubit extends Cubit<OnboardingState> {
@@ -62,18 +67,51 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     );
   }
 
-  Future<void> submitLounge(Lounge lounge) async {
+  Future<void> submitLounge({
+    required Lounge lounge,
+    Uint8List? mainImageBytes,
+    String? mainImageName,
+    List<SelectedImage>? galleryImages,
+    required String loungeId,
+  }) async {
     emit(state.copyWith(status: OnboardingStatus.loading));
-    final result = await setupLoungeUseCase(lounge);
-    result.fold(
-      (failure) => emit(state.copyWith(
+    
+    try {
+      String mainImageUrl = '';
+      if (mainImageBytes != null && mainImageName != null) {
+        mainImageUrl = await sl<StorageService>().uploadLoungeImage(mainImageBytes, mainImageName, loungeId);
+      }
+
+      List<String> galleryUrls = [];
+      if (galleryImages != null && galleryImages.isNotEmpty) {
+        galleryUrls = await sl<StorageService>().uploadLoungeImages(
+          galleryImages.map((e) => e.bytes).toList(),
+          galleryImages.map((e) => e.name).toList(),
+          loungeId,
+        );
+      }
+
+      final result = await setupLoungeUseCase(lounge.copyWith(
+        id: loungeId,
+        imageUrl: mainImageUrl,
+        images: galleryUrls,
+      ));
+
+      result.fold(
+        (failure) => emit(state.copyWith(
+          status: OnboardingStatus.failure,
+          errorMessage: failure.message,
+        )),
+        (newLounge) => emit(state.copyWith(
+          status: OnboardingStatus.success,
+          lounge: newLounge,
+        )),
+      );
+    } catch (e) {
+      emit(state.copyWith(
         status: OnboardingStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (newLounge) => emit(state.copyWith(
-        status: OnboardingStatus.success,
-        lounge: newLounge,
-      )),
-    );
+        errorMessage: e.toString(),
+      ));
+    }
   }
 }

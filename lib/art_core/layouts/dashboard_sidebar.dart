@@ -125,6 +125,12 @@ class DashboardSidebar extends StatelessWidget {
         isActive: activeRoute == AppStrings.marketing,
         onTap: () => context.go(RouterKeys.superAdminMarketing),
       ),
+      _SidebarItem(
+        icon: Icons.account_balance_wallet_outlined,
+        label: AppStrings.payouts,
+        isActive: activeRoute == AppStrings.payouts,
+        onTap: () => context.go(RouterKeys.superAdminPayouts),
+      ),
     ];
   }
 
@@ -153,6 +159,12 @@ class DashboardSidebar extends StatelessWidget {
         label: AppStrings.marketing,
         isActive: activeRoute == AppStrings.marketing,
         onTap: () => context.go(RouterKeys.loungeAdminMarketing),
+      ),
+      _SidebarItem(
+        icon: Icons.account_balance_wallet_outlined,
+        label: AppStrings.myPayouts,
+        isActive: activeRoute == AppStrings.myPayouts,
+        onTap: () => context.go('/lounge-admin/payouts'),
       ),
       _SidebarItem(
         icon: Icons.person_outline,

@@ -30,193 +30,210 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
-      body: Stack(
-        children: [
-          // Background Glows (Simplified)
-          Positioned(
-            top: -100.h,
-            left: -100.w,
-            child: Container(
-              width: 300.r,
-              height: 300.r,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.neonBlue.withOpacity(0.05),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -100.h,
-            right: -100.w,
-            child: Container(
-              width: 300.r,
-              height: 300.r,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.neonPurple.withOpacity(0.05),
-              ),
-            ),
-          ),
-          Center(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Logo Section
-                    Container(
-                      padding: EdgeInsets.all(16.r),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardBackground,
-                        borderRadius: BorderRadius.circular(16.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.neonBlue.withOpacity(0.2),
-                            blurRadius: 20.r,
-                            spreadRadius: 2.r,
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.sports_esports_outlined,
-                        color: AppColors.textPrimary,
-                        size: 40.r,
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      'PlaySpot',
-                      style: TextStyle(
-                        fontSize: 32.sp,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.neonBlue,
-                        letterSpacing: 1.5,
-                        fontFamily: 'Orbitron',
-                      ),
-                    ),
-                    Text(
-                      'Gaming Lounge Management',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    SizedBox(height: 48.h),
-                    
-                    // Login Card
-                    Container(
-                      width: 450.w,
-                      padding: EdgeInsets.all(32.r),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardBackground,
-                        borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(color: AppColors.borderDefault),
-                      ),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Center(
-                              child: Text(
-                                AppStrings.welcomeBack,
-                                style: TextStyle(
-                                  fontSize: 24.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 8.h),
-                            Center(
-                              child: Text(
-                                AppStrings.signInAccount,
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 32.h),
-                            AppTextField(
-                              label: AppStrings.email,
-                              hintText: 'Enter your email',
-                              controller: _emailController,
-                              prefixIcon: Icons.email_outlined,
-                              validator: AppValidator.validateEmail,
-                            ),
-                            SizedBox(height: 24.h),
-                            AppTextField(
-                              label: AppStrings.password,
-                              hintText: 'Enter your password',
-                              controller: _passwordController,
-                              isPassword: true,
-                              prefixIcon: Icons.lock_outline,
-                              validator: AppValidator.validatePassword,
-                            ),
-                            SizedBox(height: 32.h),
-                            BlocConsumer<LoginCubit, LoginState>(
-                              listener: (context, state) {
-                                if (state.status == LoginStatus.authenticated) {
-                                  // GoRouter logic in app.dart handles this
-                                } else if (state.status == LoginStatus.failure) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(state.errorMessage ?? 'Login Failed')),
-                                  );
-                                }
-                              },
-                              builder: (context, state) {
-                                return Column(
-                                  children: [
-                                    AppGradientButton(
-                                      text: AppStrings.signIn,
-                                      isLoading: state.status == LoginStatus.loading,
-                                      onPressed: () {
-                                        if (_formKey.currentState!.validate()) {
-                                          context.read<LoginCubit>().login(
-                                            _emailController.text.trim(),
-                                            _passwordController.text.trim(),
-                                          );
-                                        }
-                                      },
-                                    ),
-                                    SizedBox(height: 32.h),
-                                    const Divider(color: AppColors.divider),
-                                    SizedBox(height: 24.h),
-                                    const Text(
-                                      'Demo Credentials:',
-                                      style: TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    SizedBox(height: 12.h),
-                                    _buildDemoRow('Super Admin:', 'admin@playspot.app', AppColors.neonBlue),
-                                    SizedBox(height: 8.h),
-                                    _buildDemoRow('Lounge Admin:', 'lounge.owner@playspot.app', AppColors.neonPurple),
-                                    SizedBox(height: 8.h),
-                                    _buildDemoRow('Password (SA):', 'Admin@12345', AppColors.textSecondary),
-                                    SizedBox(height: 8.h),
-                                    _buildDemoRow('Password (LA):', 'LoungeOwner@123', AppColors.textSecondary),
-                                  ],
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+    return BlocListener<LoginCubit, LoginState>(
+      listener: (context, state) {
+        if (state.status == LoginStatus.failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.errorMessage ?? 'Login Failed')),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.scaffoldBackground,
+        body: Stack(
+          children: [
+            _buildBackgroundGlows(),
+            Center(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildLogo(),
+                      SizedBox(height: 48.h),
+                      _buildLoginCard(),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildBackgroundGlows() {
+    return Stack(
+      children: [
+        Positioned(
+          top: -100.h,
+          left: -100.w,
+          child: Container(
+            width: 300.r,
+            height: 300.r,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.neonBlue.withOpacity(0.05),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: -100.h,
+          right: -100.w,
+          child: Container(
+            width: 300.r,
+            height: 300.r,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.neonPurple.withOpacity(0.05),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLogo() {
+    return Column(
+      children: [
+        Container(
+          padding: EdgeInsets.all(16.r),
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.neonBlue.withOpacity(0.2),
+                blurRadius: 20.r,
+                spreadRadius: 2.r,
+              ),
+            ],
+          ),
+          child: Icon(
+            Icons.sports_esports_outlined,
+            color: AppColors.textPrimary,
+            size: 40.r,
+          ),
+        ),
+        SizedBox(height: 16.h),
+        Text(
+          'PlaySpot',
+          style: TextStyle(
+            fontSize: 32.sp,
+            fontWeight: FontWeight.bold,
+            color: AppColors.neonBlue,
+            letterSpacing: 1.5,
+            fontFamily: 'Orbitron',
+          ),
+        ),
+        Text(
+          'Gaming Lounge Management',
+          style: TextStyle(
+            fontSize: 14.sp,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoginCard() {
+    return Container(
+      width: 450.w,
+      padding: EdgeInsets.all(32.r),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Text(
+                AppStrings.welcomeBack,
+                style: TextStyle(
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Center(
+              child: Text(
+                AppStrings.signInAccount,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            SizedBox(height: 32.h),
+            AppTextField(
+              label: AppStrings.email,
+              hintText: 'Enter your email',
+              controller: _emailController,
+              prefixIcon: Icons.email_outlined,
+              validator: AppValidator.validateEmail,
+            ),
+            SizedBox(height: 24.h),
+            AppTextField(
+              label: AppStrings.password,
+              hintText: 'Enter your password',
+              controller: _passwordController,
+              isPassword: true,
+              prefixIcon: Icons.lock_outline,
+              validator: AppValidator.validatePassword,
+            ),
+            SizedBox(height: 32.h),
+            _buildLoginButton(),
+            SizedBox(height: 32.h),
+            const Divider(color: AppColors.divider),
+            SizedBox(height: 24.h),
+            const Text(
+              'Demo Credentials:',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 12.h),
+            _buildDemoRow('Super Admin:', 'admin@playspot.app', AppColors.neonBlue),
+            SizedBox(height: 8.h),
+            _buildDemoRow('Lounge Admin:', 'lounge.owner@playspot.app', AppColors.neonPurple),
+            SizedBox(height: 8.h),
+            _buildDemoRow('Password (SA):', 'Admin@12345', AppColors.textSecondary),
+            SizedBox(height: 8.h),
+            _buildDemoRow('Password (LA):', 'LoungeOwner@123', AppColors.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoginButton() {
+    return BlocSelector<LoginCubit, LoginState, bool>(
+      selector: (state) => state.status == LoginStatus.loading,
+      builder: (context, isLoading) {
+        return AppGradientButton(
+          text: AppStrings.signIn,
+          isLoading: isLoading,
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              context.read<LoginCubit>().login(
+                _emailController.text.trim(),
+                _passwordController.text.trim(),
+              );
+            }
+          },
+        );
+      },
     );
   }
 

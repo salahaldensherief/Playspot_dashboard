@@ -6,6 +6,8 @@ abstract class RoomRemoteDataSource {
   Stream<List<RoomModel>> watchRooms(String loungeId);
   Future<void> updateRoomStatus(String roomId, String status);
   Future<void> addRoom(RoomModel room);
+  Future<void> updateRoom(RoomModel room);
+  Future<void> deleteRoom(String roomId);
 }
 
 class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
@@ -45,5 +47,15 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
       data['name'] = room.nameEn.isEmpty ? 'Room' : room.nameEn;
     }
     await _supabase.from('rooms').insert(data);
+  }
+
+  @override
+  Future<void> updateRoom(RoomModel room) async {
+    await _supabase.from('rooms').update(room.toJson()).eq('id', room.id);
+  }
+
+  @override
+  Future<void> deleteRoom(String roomId) async {
+    await _supabase.from('rooms').update({'status': 'deleted'}).eq('id', roomId);
   }
 }

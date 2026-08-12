@@ -1,30 +1,31 @@
-part of 'booking_cubit.dart';
+import 'package:equatable/equatable.dart';
+import '../../domain/entities/booking.dart';
 
-abstract class BookingState extends Equatable {
-  const BookingState();
+enum BookingStatusState { initial, loading, success, failure }
 
-  @override
-  List<Object?> get props => [];
-}
-
-class BookingInitial extends BookingState {}
-
-class BookingLoading extends BookingState {}
-
-class BookingLoaded extends BookingState {
+class BookingState extends Equatable {
+  final BookingStatusState status;
   final List<Booking> bookings;
+  final String? errorMessage;
 
-  const BookingLoaded(this.bookings);
+  const BookingState({
+    this.status = BookingStatusState.initial,
+    this.bookings = const [],
+    this.errorMessage,
+  });
+
+  BookingState copyWith({
+    BookingStatusState? status,
+    List<Booking>? bookings,
+    String? errorMessage,
+  }) {
+    return BookingState(
+      status: status ?? this.status,
+      bookings: bookings ?? this.bookings,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
 
   @override
-  List<Object?> get props => [bookings];
-}
-
-class BookingError extends BookingState {
-  final String message;
-
-  const BookingError(this.message);
-
-  @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [status, bookings, errorMessage];
 }

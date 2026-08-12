@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import '../theme/app_colors.dart';
 
 class StatCard extends StatelessWidget {
@@ -82,7 +83,7 @@ class StatCard extends StatelessWidget {
                       SizedBox(width: 4.w),
                       Flexible(
                         child: Text(
-                          'vs last month',
+                          AppStrings.vsLastMonth,
                           style: TextStyle(
                             color: AppColors.textMuted,
                             fontSize: 12.sp,

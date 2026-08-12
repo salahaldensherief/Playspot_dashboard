@@ -63,7 +63,7 @@ class RoomModel extends RoomEntity {
       featuresEn: json['features_en'] != null ? List<String>.from(json['features_en']) : [],
       controllersCount: parseInt(json['controllers_count'], 2),
       screenSize: json['screen_size']?.toString() ?? '43"',
-      status: json['status'] == 'maintenance' ? RoomStatus.maintenance : RoomStatus.available,
+      status: json['status'] == 'maintenance' ? RoomStatusEnum.maintenance : RoomStatusEnum.available,
     );
   }
 
@@ -81,7 +81,7 @@ class RoomModel extends RoomEntity {
       'features_en': featuresEn,
       'controllers_count': controllersCount,
       'screen_size': screenSize,
-      'status': status == RoomStatus.maintenance ? 'maintenance' : 'available',
+      'status': status == RoomStatusEnum.maintenance ? 'maintenance' : 'available',
     };
     if (spaceTypeId != null) {
       data['space_type_id'] = spaceTypeId;

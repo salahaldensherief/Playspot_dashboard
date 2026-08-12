@@ -113,6 +113,7 @@ class LoungeRepositoryImpl implements LoungeRepository {
         'image_url': lounge.imageUrl,
         'images': lounge.images,
         'is_open': lounge.isOpen,
+        'status': lounge.status,
       });
       return const Right(null);
     } catch (e) {
@@ -193,7 +194,36 @@ class LoungeRepositoryImpl implements LoungeRepository {
         price: extra.price,
         category: extra.category,
         isOutOfStock: extra.isOutOfStock,
+        iconKey: extra.iconKey,
       ));
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateExtra(ExtraEntity extra) async {
+    try {
+      await remoteDataSource.updateExtra(ExtraModel(
+        id: extra.id,
+        loungeId: extra.loungeId,
+        name: extra.name,
+        price: extra.price,
+        category: extra.category,
+        isOutOfStock: extra.isOutOfStock,
+        iconKey: extra.iconKey,
+      ));
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteExtra(String extraId) async {
+    try {
+      await remoteDataSource.deleteExtra(extraId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -215,5 +245,12 @@ class LoungeRepositoryImpl implements LoungeRepository {
   @override
   Future<Either<Failure, List<Room>>> getRooms(String loungeId) => throw UnimplementedError();
   @override
-  Future<Either<Failure, void>> deleteLounge(String id) => throw UnimplementedError();
+  Future<Either<Failure, void>> deleteLounge(String id) async {
+    try {
+      await remoteDataSource.updateLounge(id, {'status': 'deleted'});
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

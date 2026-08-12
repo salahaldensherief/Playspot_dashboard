@@ -1,37 +1,35 @@
 import 'package:equatable/equatable.dart';
-import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
+import '../../../auth/domain/entities/user_entity.dart';
 
-abstract class AdminManagementState extends Equatable {
-  const AdminManagementState();
+enum AdminManagementStatus { initial, loading, success, failure }
 
-  @override
-  List<Object?> get props => [];
-}
-
-class AdminManagementInitial extends AdminManagementState {}
-
-class AdminManagementLoading extends AdminManagementState {}
-
-class AdminManagementLoaded extends AdminManagementState {
+class AdminManagementState extends Equatable {
+  final AdminManagementStatus status;
   final List<UserEntity> admins;
-  const AdminManagementLoaded(this.admins);
+  final UserEntity? lastCreatedAdmin;
+  final String? errorMessage;
+
+  const AdminManagementState({
+    this.status = AdminManagementStatus.initial,
+    this.admins = const [],
+    this.lastCreatedAdmin,
+    this.errorMessage,
+  });
+
+  AdminManagementState copyWith({
+    AdminManagementStatus? status,
+    List<UserEntity>? admins,
+    UserEntity? lastCreatedAdmin,
+    String? errorMessage,
+  }) {
+    return AdminManagementState(
+      status: status ?? this.status,
+      admins: admins ?? this.admins,
+      lastCreatedAdmin: lastCreatedAdmin ?? this.lastCreatedAdmin,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
 
   @override
-  List<Object?> get props => [admins];
-}
-
-class AdminManagementSuccess extends AdminManagementState {
-  final UserEntity admin;
-  const AdminManagementSuccess(this.admin);
-
-  @override
-  List<Object?> get props => [admin];
-}
-
-class AdminManagementError extends AdminManagementState {
-  final String message;
-  const AdminManagementError(this.message);
-
-  @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [status, admins, lastCreatedAdmin, errorMessage];
 }

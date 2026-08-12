@@ -9,6 +9,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import '../cubit/booking_cubit.dart';
 import '../../domain/entities/booking.dart';
+import '../cubit/booking_state.dart';
 import 'booking_details_dialog.dart';
 
 class BookingsDataTable extends StatelessWidget {
@@ -19,11 +20,11 @@ class BookingsDataTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<BookingCubit, BookingState>(
       builder: (context, state) {
-        if (state is BookingLoading) {
+        if (state.status == BookingStatusState.loading && state.bookings.isEmpty) {
           return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
         }
         
-        final bookings = filteredBookings ?? (state is BookingLoaded ? state.bookings : []);
+        final bookings = filteredBookings ?? state.bookings;
         
         return DataTableWidget(
           columns: [

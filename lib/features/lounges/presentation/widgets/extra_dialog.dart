@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -9,14 +8,19 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import 'package:uuid/uuid.dart';
-import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_cubit.dart';
-import '../cubit/extras_cubit.dart';
 import '../../domain/entities/extra_entity.dart';
 
 class ExtraDialog extends StatefulWidget {
   final String loungeId;
   final ExtraEntity? extra;
-  const ExtraDialog({super.key, required this.loungeId, this.extra});
+  final Function(ExtraEntity)? onSave;
+
+  const ExtraDialog({
+    super.key, 
+    required this.loungeId, 
+    this.extra,
+    this.onSave,
+  });
 
   @override
   State<ExtraDialog> createState() => _ExtraDialogState();
@@ -54,15 +58,8 @@ class _ExtraDialogState extends State<ExtraDialog> {
         isOutOfStock: widget.extra?.isOutOfStock ?? false,
       );
 
-      if (widget.extra == null) {
-        try {
-          context.read<ExtrasCubit>().addExtra(extra);
-        } catch (e) {
-          context.read<OnboardingCubit>().addNewExtra(extra);
-        }
-      } else {
-        // TODO: Implement updateExtra in Cubit
-        // context.read<ExtrasCubit>().updateExtra(extra);
+      if (widget.onSave != null) {
+        widget.onSave!(extra);
       }
       
       Navigator.pop(context);
@@ -84,7 +81,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AppText.heading(
-                widget.extra == null ? AppStrings.addExtraItem : 'Edit Item', 
+                widget.extra == null ? AppStrings.addExtraItem : AppStrings.editItem, 
                 fontSize: 24.sp
               ),
               SizedBox(height: 24.h),
@@ -130,7 +127,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
                   ),
                   SizedBox(width: 16.w),
                   AppButton(
-                    text: widget.extra == null ? AppStrings.addItem : 'Update Item',
+                    text: widget.extra == null ? AppStrings.addItem : AppStrings.updateItem,
                     onPressed: _submit,
                   ),
                 ],

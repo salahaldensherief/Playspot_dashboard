@@ -1,21 +1,25 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
-import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
-import 'package:play_spot_dashboard/features/lounges/domain/repositories/lounge_repository.dart';
-
-part 'lounge_state.dart';
+import '../../domain/entities/lounge.dart';
+import '../../domain/repositories/lounge_repository.dart';
+import 'lounge_state.dart';
 
 class LoungeCubit extends Cubit<LoungeState> {
   final LoungeRepository repository;
 
-  LoungeCubit(this.repository) : super(LoungeInitial());
+  LoungeCubit(this.repository) : super(const LoungeState());
 
   Future<void> fetchLounges() async {
-    emit(LoungeLoading());
+    emit(state.copyWith(status: LoungeStatus.loading));
     final result = await repository.getLounges();
     result.fold(
-      (failure) => emit(LoungeError(failure.message)),
-      (lounges) => emit(LoungeLoaded(lounges)),
+      (failure) => emit(state.copyWith(
+        status: LoungeStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (lounges) => emit(state.copyWith(
+        status: LoungeStatus.success,
+        lounges: lounges,
+      )),
     );
   }
 
@@ -25,13 +29,16 @@ class LoungeCubit extends Cubit<LoungeState> {
     required String ownerEmail,
     required String ownerPassword,
   }) async {
-    emit(LoungeLoading());
+    emit(state.copyWith(status: LoungeStatus.loading));
     
     // 1. Create Lounge
     final loungeResult = await repository.createLounge(lounge);
     
     await loungeResult.fold(
-      (failure) async => emit(LoungeError(failure.message)),
+      (failure) async => emit(state.copyWith(
+        status: LoungeStatus.failure,
+        errorMessage: failure.message,
+      )),
       (loungeId) async {
         // 2. Create Admin linked to this Lounge
         final adminResult = await repository.createLoungeAdmin(
@@ -42,7 +49,10 @@ class LoungeCubit extends Cubit<LoungeState> {
         );
         
         adminResult.fold(
-          (failure) => emit(LoungeError('Lounge created but admin failed: ${failure.message}')),
+          (failure) => emit(state.copyWith(
+            status: LoungeStatus.failure,
+            errorMessage: 'Lounge created but admin failed: ${failure.message}',
+          )),
           (_) {
             fetchLounges(); // Refresh the list
           },
@@ -53,5 +63,29 @@ class LoungeCubit extends Cubit<LoungeState> {
 
   Future<void> updateLoungeLocation(String loungeId, double lat, double lng) async {
     await repository.updateLoungeLocation(loungeId, lat, lng);
+  }
+
+  Future<void> updateLounge(Lounge lounge) async {
+    emit(state.copyWith(status: LoungeStatus.loading));
+    final result = await repository.updateLounge(lounge);
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: LoungeStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) => fetchLounges(),
+    );
+  }
+
+  Future<void> deleteLounge(String id) async {
+    emit(state.copyWith(status: LoungeStatus.loading));
+    final result = await repository.deleteLounge(id);
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: LoungeStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) => fetchLounges(),
+    );
   }
 }

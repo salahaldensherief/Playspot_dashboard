@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -9,13 +8,20 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/map_location_picker.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
-import '../cubit/lounge_cubit.dart';
+import 'package:uuid/uuid.dart';
 import '../../domain/entities/lounge.dart';
 import 'lounge_info_form.dart';
 import 'owner_info_form.dart';
 
 class AddLoungeDialog extends StatefulWidget {
-  const AddLoungeDialog({super.key});
+  final bool isLoading;
+  final Function(Lounge lounge, String ownerName, String ownerEmail, String ownerPassword)? onSave;
+
+  const AddLoungeDialog({
+    super.key, 
+    this.isLoading = false,
+    this.onSave,
+  });
 
   @override
   State<AddLoungeDialog> createState() => _AddLoungeDialogState();
@@ -23,6 +29,7 @@ class AddLoungeDialog extends StatefulWidget {
 
 class _AddLoungeDialogState extends State<AddLoungeDialog> {
   final _formKey = GlobalKey<FormState>();
+  final String _loungeId = const Uuid().v4();
   
   // Controllers
   final _nameController = TextEditingController();
@@ -35,7 +42,7 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
   Uint8List? _loungeImageBytes;
   String? _loungeImageName;
 
-  bool _isUploading = false;
+  bool _isLocalUploading = false;
 
   @override
   void dispose() {
@@ -49,17 +56,17 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
 
   Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
-      setState(() => _isUploading = true);
+      setState(() => _isLocalUploading = true);
       
       try {
         String imageUrl = '';
         if (_loungeImageBytes != null && _loungeImageName != null) {
-          imageUrl = await sl<StorageService>().uploadLoungeImage(_loungeImageBytes!, _loungeImageName!);
+          imageUrl = await sl<StorageService>().uploadLoungeImage(_loungeImageBytes!, _loungeImageName!, _loungeId);
         }
 
         if (mounted) {
           final lounge = Lounge(
-            id: '',
+            id: _loungeId,
             name: _nameController.text,
             imageUrl: imageUrl,
             location: 'Address placeholder',
@@ -71,12 +78,14 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
             categoryId: null,
           );
 
-          await context.read<LoungeCubit>().createLoungeAndAdmin(
-            lounge: lounge,
-            ownerName: _ownerNameController.text,
-            ownerEmail: _ownerEmailController.text,
-            ownerPassword: _ownerPasswordController.text,
-          );
+          if (widget.onSave != null) {
+             await widget.onSave!(
+               lounge,
+               _ownerNameController.text,
+               _ownerEmailController.text,
+               _ownerPasswordController.text,
+             );
+          }
           
           if (mounted) Navigator.pop(context);
         }
@@ -87,7 +96,7 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
           );
         }
       } finally {
-        if (mounted) setState(() => _isUploading = false);
+        if (mounted) setState(() => _isLocalUploading = false);
       }
     }
   }
@@ -197,14 +206,10 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
           onPressed: () => Navigator.pop(context),
         ),
         SizedBox(width: 16.w),
-        BlocBuilder<LoungeCubit, LoungeState>(
-          builder: (context, state) {
-            return AppButton(
-              text: AppStrings.createLoungeAdmin,
-              isLoading: state is LoungeLoading || _isUploading,
-              onPressed: _submit,
-            );
-          },
+        AppButton(
+          text: AppStrings.createLoungeAdmin,
+          isLoading: widget.isLoading || _isLocalUploading,
+          onPressed: _submit,
         ),
       ],
     );

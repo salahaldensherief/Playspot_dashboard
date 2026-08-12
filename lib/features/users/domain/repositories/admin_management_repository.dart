@@ -12,4 +12,5 @@ abstract class AdminManagementRepository {
   });
   
   Future<Either<Failure, List<UserEntity>>> getAdmins();
+  Future<Either<Failure, void>> deleteAdmin(String adminId);
 }

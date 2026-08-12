@@ -4,6 +4,9 @@ import '../../core/theme/app_colors.dart';
 import 'dashboard_sidebar.dart';
 import 'dashboard_top_bar.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../features/auth/domain/entities/user_entity.dart';
+import '../../features/auth/presentation/login/login_cubit.dart';
 import '../widgets/geolocation_handler.dart';
 
 class DashboardShell extends StatelessWidget {
@@ -18,6 +21,8 @@ class DashboardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.read<LoginCubit>().state.user;
+    final isSuperAdmin = user?.role == UserRole.superAdmin;
     String activeRoute = '';
     String title = AppStrings.dashboard;
 
@@ -39,6 +44,9 @@ class DashboardShell extends StatelessWidget {
     } else if (location.contains('marketing')) {
       activeRoute = AppStrings.marketing;
       title = AppStrings.marketing;
+    } else if (location.contains('payouts')) {
+      activeRoute = isSuperAdmin ? AppStrings.payouts : AppStrings.myPayouts;
+      title = isSuperAdmin ? AppStrings.loungePayouts : AppStrings.payoutHistory;
     } else if (location.contains('profile')) {
       activeRoute = AppStrings.myProfile;
       title = AppStrings.myProfile;

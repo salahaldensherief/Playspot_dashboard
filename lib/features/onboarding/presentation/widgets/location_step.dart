@@ -19,13 +19,13 @@ class LocationStep extends StatelessWidget {
       children: [
         AppTextField(
           label: AppStrings.city,
-          hintText: 'e.g. Cairo',
+          hintText: AppStrings.cityHint,
           controller: cityController,
         ),
         SizedBox(height: 20.h),
         AppTextField(
           label: AppStrings.address,
-          hintText: 'Detailed address',
+          hintText: AppStrings.addressHint,
           controller: addressController,
         ),
       ],

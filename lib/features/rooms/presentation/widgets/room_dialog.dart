@@ -9,8 +9,8 @@ import 'package:play_spot_dashboard/art_core/widgets/app_multi_image_picker.dart
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:uuid/uuid.dart';
-import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_cubit.dart';
-import '../cubit/room_cubit.dart';
+import '../../../categories/presentation/cubit/category_cubit.dart';
+import '../../../categories/presentation/cubit/category_state.dart';
 import '../../domain/entities/room_entity.dart';
 import 'room_basic_info_form.dart';
 import 'room_specs_form.dart';
@@ -18,7 +18,14 @@ import 'room_specs_form.dart';
 class RoomDialog extends StatefulWidget {
   final String loungeId;
   final RoomEntity? room;
-  const RoomDialog({super.key, required this.loungeId, this.room});
+  final Future<void> Function(RoomEntity)? onSave;
+
+  const RoomDialog({
+    super.key, 
+    required this.loungeId, 
+    this.room,
+    this.onSave,
+  });
 
   @override
   State<RoomDialog> createState() => _RoomDialogState();
@@ -27,7 +34,6 @@ class RoomDialog extends StatefulWidget {
 class _RoomDialogState extends State<RoomDialog> {
   final _formKey = GlobalKey<FormState>();
   
-  // Controllers
   late TextEditingController _nameArController;
   late TextEditingController _nameEnController;
   late TextEditingController _priceController;
@@ -107,18 +113,11 @@ class _RoomDialogState extends State<RoomDialog> {
             featuresEn: widget.room?.featuresEn ?? const [],
             images: images,
             isAvailable: widget.room?.isAvailable ?? true,
-            status: widget.room?.status ?? RoomStatus.available,
+            status: widget.room?.status ?? RoomStatusEnum.available,
           );
 
-          if (widget.room == null) {
-            try {
-              await context.read<RoomCubit>().addNewRoom(room);
-            } catch (e) {
-              await context.read<OnboardingCubit>().addNewRoom(room);
-            }
-          } else {
-             // TODO: Implement updateRoom in Cubit
-             // await context.read<RoomCubit>().updateRoom(room);
+          if (widget.onSave != null) {
+            await widget.onSave!(room);
           }
 
           if (mounted) Navigator.pop(context);
@@ -186,48 +185,56 @@ class _RoomDialogState extends State<RoomDialog> {
   }
 
   Widget _buildActivitySelection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Activities',
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.w500),
-        ),
-        SizedBox(height: 12.h),
-        Wrap(
-          spacing: 12.w,
-          runSpacing: 12.h,
-          children: _predefinedActivities.map((activity) {
-            final isSelected = _selectedActivities.contains(activity);
-            return FilterChip(
-              label: Text(activity),
-              selected: isSelected,
-              onSelected: (selected) {
-                setState(() {
-                  if (selected) {
-                    _selectedActivities.add(activity);
-                  } else {
-                    _selectedActivities.remove(activity);
-                  }
-                });
-              },
-              backgroundColor: AppColors.mutedBackground,
-              selectedColor: AppColors.neonBlue.withOpacity(0.2),
-              labelStyle: TextStyle(
-                color: isSelected ? AppColors.neonBlue : AppColors.textSecondary,
-                fontSize: 12.sp,
-              ),
-              checkmarkColor: AppColors.neonBlue,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                side: BorderSide(
-                  color: isSelected ? AppColors.neonBlue : AppColors.borderDefault,
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+    return BlocBuilder<CategoryCubit, CategoryState>(
+      builder: (context, state) {
+        final List<String> activities = state.status == CategoryStatus.success
+            ? state.categories.map((e) => e.nameEn).toList()
+            : _predefinedActivities;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppStrings.categories,
+              style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.w500),
+            ),
+            SizedBox(height: 12.h),
+            Wrap(
+              spacing: 12.w,
+              runSpacing: 12.h,
+              children: activities.map((activity) {
+                final isSelected = _selectedActivities.contains(activity);
+                return FilterChip(
+                  label: Text(activity),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    setState(() {
+                      if (selected) {
+                        _selectedActivities.add(activity);
+                      } else {
+                        _selectedActivities.remove(activity);
+                      }
+                    });
+                  },
+                  backgroundColor: AppColors.mutedBackground,
+                  selectedColor: AppColors.neonBlue.withOpacity(0.2),
+                  labelStyle: TextStyle(
+                    color: isSelected ? AppColors.neonBlue : AppColors.textSecondary,
+                    fontSize: 12.sp,
+                  ),
+                  checkmarkColor: AppColors.neonBlue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                    side: BorderSide(
+                      color: isSelected ? AppColors.neonBlue : AppColors.borderDefault,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -236,7 +243,7 @@ class _RoomDialogState extends State<RoomDialog> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          widget.room == null ? AppStrings.addNewRoom : 'Edit Room / Station',
+          widget.room == null ? AppStrings.addNewRoom : AppStrings.editRoom,
           style: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 24.sp,
@@ -263,7 +270,7 @@ class _RoomDialogState extends State<RoomDialog> {
         ),
         SizedBox(width: 16.w),
         AppButton(
-          text: widget.room == null ? AppStrings.createStation : 'Update Station',
+          text: widget.room == null ? AppStrings.createStation : AppStrings.updateStation,
           isLoading: _isUploading,
           onPressed: _submit,
         ),

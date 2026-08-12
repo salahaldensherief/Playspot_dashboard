@@ -12,16 +12,27 @@ import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounges_
 import 'package:play_spot_dashboard/features/users/presentation/pages/users_page.dart' as users;
 import 'package:play_spot_dashboard/features/categories/presentation/pages/categories_page.dart' as categories;
 import 'package:play_spot_dashboard/features/marketing/presentation/pages/marketing_page.dart' as marketing;
+import 'package:play_spot_dashboard/features/payouts/presentation/pages/super_admin_payouts_page.dart' as payouts;
+import 'package:play_spot_dashboard/features/payouts/presentation/pages/lounge_admin_payouts_page.dart' as lounge_payouts;
 import 'package:play_spot_dashboard/features/bookings/presentation/pages/bookings_page.dart' as bookings;
 import 'package:play_spot_dashboard/features/rooms/presentation/pages/room_management_page.dart' as rooms;
 import 'package:play_spot_dashboard/features/onboarding/presentation/pages/lounge_setup_page.dart' as onboarding;
 import 'package:play_spot_dashboard/features/lounges/presentation/pages/extras_management_page.dart' as extras;
 import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounge_profile_page.dart' as lounge_profile;
-import 'package:play_spot_dashboard/features/marketing/presentation/pages/marketing_page.dart' as marketing;
 import 'package:play_spot_dashboard/features/auth/presentation/profile/profile_page.dart' as profile;
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_shell.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
+import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
+import 'package:play_spot_dashboard/features/users/presentation/cubit/admin_management_cubit.dart';
+import 'package:play_spot_dashboard/features/categories/presentation/cubit/category_cubit.dart';
+import 'package:play_spot_dashboard/features/marketing/presentation/cubit/marketing_cubit.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_cubit.dart';
+import 'package:play_spot_dashboard/features/lounges/presentation/cubit/extras_cubit.dart';
+import '../../features/bookings/presentation/cubit/booking_cubit.dart';
+import '../di/di.dart';
 import 'router_keys.dart';
 
 class AppRouter {
@@ -46,12 +57,6 @@ class AppRouter {
         // 2. Wait for user data
         if (user == null) return isLoggingIn ? null : null;
 
-        debugPrint('--- ROUTER DEBUG ---');
-        debugPrint('Path: ${state.matchedLocation}');
-        debugPrint('Role: ${user.role}');
-        debugPrint('LoungeID: "${user.loungeId}"');
-        debugPrint('Setup Completed: ${user.isSetupCompleted}');
-
         final bool isLoungeAdmin = user.role == UserRole.loungeAdmin;
         final bool isSuperAdmin = user.role == UserRole.superAdmin;
         final bool isOnboardingPath = state.matchedLocation == RouterKeys.loungeOnboarding;
@@ -64,108 +69,144 @@ class AppRouter {
           return null;
         }
 
-        // 4. Handle redirections from Login or Root
+        // 4. Prevent onboarding if already completed
+        if (isOnboardingPath && user.isSetupCompleted) {
+          return RouterKeys.loungeAdminLiveOps;
+        }
+
+        // 5. Handle redirections from Login or Root
         if (isLoggingIn || state.matchedLocation == RouterKeys.root) {
           if (isSuperAdmin) return RouterKeys.superAdminDashboard;
           if (isLoungeAdmin) return RouterKeys.loungeAdminLiveOps;
         }
 
-        // 5. Protect Super Admin Routes
+        // 6. Protect Super Admin Routes
         final bool isSuperAdminRoute = state.matchedLocation.startsWith('/super-admin');
         if (isSuperAdminRoute && !isSuperAdmin) {
-          return RouterKeys.loungeAdminLiveOps;
-        }
-
-        // 6. Prevent onboarding if already completed
-        if (isOnboardingPath && user.isSetupCompleted) {
           return RouterKeys.loungeAdminLiveOps;
         }
 
         return null;
       },
       routes: [
-        GoRoute(
-          path: RouterKeys.login,
-          pageBuilder: (context, state) => const NoTransitionPage(child: LoginScreen()),
-        ),
-        GoRoute(
-          path: RouterKeys.loungeOnboarding,
-          pageBuilder: (context, state) => const NoTransitionPage(child: onboarding.LoungeSetupPage()),
-        ),
-        
         ShellRoute(
-          builder: (context, state, child) {
-            return DashboardShell(
-              location: state.matchedLocation,
-              child: child,
-            );
-          },
+          builder: (context, state, child) => BlocProvider(
+            create: (context) => sl<LoginCubit>()..checkInitialAuth(),
+            child: child,
+          ),
           routes: [
             GoRoute(
-              path: RouterKeys.superAdminDashboard,
-              pageBuilder: (context, state) => NoTransitionPage(
-                child: dashboard.DashboardScreen(role: UserRole.superAdmin),
-              ),
+              path: RouterKeys.login,
+              builder: (context, state) => const LoginScreen(),
             ),
             GoRoute(
-              path: RouterKeys.superAdminLounges,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: lounges.LoungesPage(),
+              path: RouterKeys.loungeOnboarding,
+              builder: (context, state) => BlocProvider(
+                create: (context) => sl<OnboardingCubit>(),
+                child: BlocProvider(
+                  create: (context) => sl<CategoryCubit>()..loadCategories(),
+                  child: const onboarding.LoungeSetupPage(),
+                ),
               ),
             ),
-            GoRoute(
-              path: RouterKeys.superAdminUsers,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: users.UsersPage(),
-              ),
-            ),
-            GoRoute(
-              path: RouterKeys.superAdminCategories,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: categories.CategoriesPage(),
-              ),
-            ),
-            GoRoute(
-              path: RouterKeys.superAdminMarketing,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: marketing.MarketingPage(),
-              ),
-            ),
-            GoRoute(
-              path: RouterKeys.loungeAdminLiveOps,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: bookings.BookingsPage(),
-              ),
-            ),
-            GoRoute(
-              path: RouterKeys.loungeAdminRooms,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: rooms.RoomManagementPage(),
-              ),
-            ),
-            GoRoute(
-              path: RouterKeys.loungeAdminExtras,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: extras.ExtrasManagementPage(),
-              ),
-            ),
-            GoRoute(
-              path: RouterKeys.loungeAdminMarketing,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: marketing.MarketingPage(),
-              ),
-            ),
-            GoRoute(
-              path: RouterKeys.loungeAdminProfile,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: lounge_profile.LoungeProfilePage(),
-              ),
-            ),
-            GoRoute(
-              path: RouterKeys.profile,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: profile.ProfilePage(),
-              ),
+            
+            ShellRoute(
+              builder: (context, state, child) {
+                return DashboardShell(
+                  location: state.matchedLocation,
+                  child: child,
+                );
+              },
+              routes: [
+                GoRoute(
+                  path: RouterKeys.superAdminDashboard,
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => sl<BookingCubit>()..startWatchingBookings(),
+                    child: BlocProvider(
+                      create: (context) => sl<DashboardCubit>()..loadDashboardData(),
+                      child: const dashboard.DashboardScreen(role: UserRole.superAdmin),
+                    ),
+                  ),
+                ),
+                GoRoute(
+                  path: RouterKeys.superAdminLounges,
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => sl<LoungeCubit>()..fetchLounges(),
+                    child: const lounges.LoungesPage(),
+                  ),
+                ),
+                GoRoute(
+                  path: RouterKeys.superAdminUsers,
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => sl<AdminManagementCubit>()..fetchAdmins(),
+                    child: const users.UsersPage(),
+                  ),
+                ),
+                GoRoute(
+                  path: RouterKeys.superAdminCategories,
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => sl<CategoryCubit>()..loadCategories(),
+                    child: const categories.CategoriesPage(),
+                  ),
+                ),
+                GoRoute(
+                  path: RouterKeys.superAdminMarketing,
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => sl<MarketingCubit>()..loadPromotions(),
+                    child: const marketing.MarketingPage(),
+                  ),
+                ),
+                GoRoute(
+                  path: RouterKeys.superAdminPayouts,
+                  builder: (context, state) => const payouts.SuperAdminPayoutsPage(),
+                ),
+                GoRoute(
+                  path: RouterKeys.loungeAdminLiveOps,
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => sl<BookingCubit>()..startWatchingBookings(loungeId: context.read<LoginCubit>().state.user?.loungeId),
+                    child: const bookings.BookingsPage(),
+                  ),
+                ),
+                GoRoute(
+                  path: RouterKeys.loungeAdminRooms,
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => sl<RoomCubit>()..watchRooms(context.read<LoginCubit>().state.user?.loungeId ?? ''),
+                    child: BlocProvider(
+                      create: (context) => sl<CategoryCubit>()..loadCategories(),
+                      child: const rooms.RoomManagementPage(),
+                    ),
+                  ),
+                ),
+                GoRoute(
+                  path: RouterKeys.loungeAdminExtras,
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => sl<ExtrasCubit>()..loadExtras(context.read<LoginCubit>().state.user?.loungeId ?? ''),
+                    child: const extras.ExtrasManagementPage(),
+                  ),
+                ),
+                GoRoute(
+                  path: RouterKeys.loungeAdminMarketing,
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => sl<MarketingCubit>()..loadPromotions(loungeId: context.read<LoginCubit>().state.user?.loungeId),
+                    child: const marketing.MarketingPage(),
+                  ),
+                ),
+                GoRoute(
+                  path: RouterKeys.loungeAdminPayouts,
+                  builder: (context, state) => const lounge_payouts.LoungeAdminPayoutsPage(),
+                ),
+                GoRoute(
+                  path: RouterKeys.loungeAdminProfile,
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => sl<LoungeCubit>(),
+                    child: const lounge_profile.LoungeProfilePage(),
+                  ),
+                ),
+                GoRoute(
+                  path: RouterKeys.profile,
+                  builder: (context, state) => const profile.ProfilePage(),
+                ),
+              ],
             ),
           ],
         ),
@@ -192,8 +233,6 @@ class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
     _subscription = stream.asBroadcastStream().listen(
           (dynamic _) {
-            // Using PostFrameCallback is the most stable way to handle navigation
-            // triggers in Flutter Web to avoid "debugDuringDeviceUpdate" errors.
             if (WidgetsBinding.instance.schedulerPhase != SchedulerPhase.persistentCallbacks) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (hasListeners) {

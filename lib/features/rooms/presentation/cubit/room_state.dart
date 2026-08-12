@@ -1,30 +1,31 @@
-part of 'room_cubit.dart';
+import 'package:equatable/equatable.dart';
+import '../../domain/entities/room_entity.dart';
 
-abstract class RoomState extends Equatable {
-  const RoomState();
+enum RoomStatus { initial, loading, success, failure }
 
-  @override
-  List<Object?> get props => [];
-}
-
-class RoomInitial extends RoomState {}
-
-class RoomLoading extends RoomState {}
-
-class RoomLoaded extends RoomState {
+class RoomState extends Equatable {
+  final RoomStatus status;
   final List<RoomEntity> rooms;
+  final String? errorMessage;
 
-  const RoomLoaded(this.rooms);
+  const RoomState({
+    this.status = RoomStatus.initial,
+    this.rooms = const [],
+    this.errorMessage,
+  });
+
+  RoomState copyWith({
+    RoomStatus? status,
+    List<RoomEntity>? rooms,
+    String? errorMessage,
+  }) {
+    return RoomState(
+      status: status ?? this.status,
+      rooms: rooms ?? this.rooms,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
 
   @override
-  List<Object?> get props => [rooms];
-}
-
-class RoomError extends RoomState {
-  final String message;
-
-  const RoomError(this.message);
-
-  @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [status, rooms, errorMessage];
 }

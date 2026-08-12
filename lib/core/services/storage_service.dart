@@ -3,8 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class StorageService {
-  Future<String> uploadLoungeImage(Uint8List fileBytes, String fileName);
-  Future<List<String>> uploadLoungeImages(List<Uint8List> filesBytes, List<String> fileNames);
+  Future<String> uploadLoungeImage(Uint8List fileBytes, String fileName, String loungeId);
+  Future<List<String>> uploadLoungeImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId);
   Future<String> uploadRoomImage(Uint8List fileBytes, String fileName, String loungeId);
   Future<List<String>> uploadRoomImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId);
 }
@@ -15,11 +15,10 @@ class StorageServiceImpl implements StorageService {
   StorageServiceImpl(this._supabase);
 
   @override
-  Future<String> uploadLoungeImage(Uint8List fileBytes, String fileName) async {
-    // Changed path: removed "lounges/" prefix which caused UUID casting error in RLS
+  Future<String> uploadLoungeImage(Uint8List fileBytes, String fileName, String loungeId) async {
     final fileId = const Uuid().v4();
     final extension = fileName.split('.').last;
-    final path = '$fileId.$extension';
+    final path = '$loungeId/$fileId.$extension';
     
     await _supabase.storage.from('lounge-assets').uploadBinary(
       path, 
@@ -31,10 +30,10 @@ class StorageServiceImpl implements StorageService {
   }
 
   @override
-  Future<List<String>> uploadLoungeImages(List<Uint8List> filesBytes, List<String> fileNames) async {
+  Future<List<String>> uploadLoungeImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId) async {
     final List<String> urls = [];
     for (int i = 0; i < filesBytes.length; i++) {
-      final url = await uploadLoungeImage(filesBytes[i], fileNames[i]);
+      final url = await uploadLoungeImage(filesBytes[i], fileNames[i], loungeId);
       urls.add(url);
     }
     return urls;

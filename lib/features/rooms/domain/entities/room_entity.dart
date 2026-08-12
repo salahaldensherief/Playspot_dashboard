@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum RoomStatus { available, maintenance, occupied }
+enum RoomStatusEnum { available, maintenance, occupied }
 
 class RoomEntity extends Equatable {
   final String id;
@@ -18,7 +18,7 @@ class RoomEntity extends Equatable {
   final List<String> featuresEn;
   final int controllersCount;
   final String screenSize;
-  final RoomStatus status;
+  final RoomStatusEnum status;
 
   const RoomEntity({
     required this.id,
@@ -36,7 +36,7 @@ class RoomEntity extends Equatable {
     required this.featuresEn,
     this.controllersCount = 2,
     this.screenSize = '43"',
-    this.status = RoomStatus.available,
+    this.status = RoomStatusEnum.available,
   });
 
   @override

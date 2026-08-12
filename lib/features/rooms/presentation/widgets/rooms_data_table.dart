@@ -6,10 +6,11 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/widgets/room_dialog.dart';
+import '../../../../core/di/di.dart';
 import '../../domain/entities/room_entity.dart';
 import '../cubit/room_cubit.dart';
 
-import 'add_room_dialog.dart';
 
 class RoomsDataTable extends StatelessWidget {
   final List<RoomEntity> rooms;
@@ -51,15 +52,23 @@ class RoomsDataTable extends StatelessWidget {
           DataCell(_getStatusBadge(room.status)),
           DataCell(
             Switch(
-              value: room.status == RoomStatus.available,
+              value: room.status == RoomStatusEnum.available,
               activeColor: AppColors.neonBlue,
               onChanged: (val) => context.read<RoomCubit>().toggleRoomStatus(room.id, room.status),
             ),
           ),
           DataCell(
-            IconButton(
-              icon: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20.r),
-              onPressed: () => _showEditDialog(context, loungeId, room),
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20.r),
+                  onPressed: () => _showEditDialog(context, loungeId, room),
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
+                  onPressed: () => _confirmDelete(context, room),
+                ),
+              ],
             ),
           ),
         ],
@@ -70,15 +79,37 @@ class RoomsDataTable extends StatelessWidget {
   void _showEditDialog(BuildContext context, String loungeId, RoomEntity room) {
     showDialog(
       context: context,
-      builder: (_) => BlocProvider.value(
-        value: context.read<RoomCubit>(),
-        child: RoomDialog(loungeId: loungeId, room: room),
+      builder: (_) => RoomDialog(
+        loungeId: loungeId, 
+        room: room,
+        onSave: (updatedRoom) => context.read<RoomCubit>().updateRoom(updatedRoom),
       ),
     );
   }
 
-  Widget _getStatusBadge(RoomStatus status) {
-    return status == RoomStatus.available
+  void _confirmDelete(BuildContext context, RoomEntity room) {
+    showDialog(
+      context: context,
+      builder: (diagContext) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),
+        content: Text('${AppStrings.deleteWarning} "${room.nameEn}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
+          TextButton(
+            onPressed: () {
+              context.read<RoomCubit>().deleteRoom(room.id);
+              Navigator.pop(diagContext);
+            }, 
+            child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger))
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _getStatusBadge(RoomStatusEnum status) {
+    return status == RoomStatusEnum.available
         ? StatusBadge.success('Available')
         : StatusBadge.warning('Maintenance');
   }

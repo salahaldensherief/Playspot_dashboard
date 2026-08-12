@@ -1,30 +1,31 @@
-part of 'lounge_cubit.dart';
+import 'package:equatable/equatable.dart';
+import '../../domain/entities/lounge.dart';
 
-abstract class LoungeState extends Equatable {
-  const LoungeState();
+enum LoungeStatus { initial, loading, success, failure }
 
-  @override
-  List<Object?> get props => [];
-}
-
-class LoungeInitial extends LoungeState {}
-
-class LoungeLoading extends LoungeState {}
-
-class LoungeLoaded extends LoungeState {
+class LoungeState extends Equatable {
+  final LoungeStatus status;
   final List<Lounge> lounges;
+  final String? errorMessage;
 
-  const LoungeLoaded(this.lounges);
+  const LoungeState({
+    this.status = LoungeStatus.initial,
+    this.lounges = const [],
+    this.errorMessage,
+  });
+
+  LoungeState copyWith({
+    LoungeStatus? status,
+    List<Lounge>? lounges,
+    String? errorMessage,
+  }) {
+    return LoungeState(
+      status: status ?? this.status,
+      lounges: lounges ?? this.lounges,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
 
   @override
-  List<Object?> get props => [lounges];
-}
-
-class LoungeError extends LoungeState {
-  final String message;
-
-  const LoungeError(this.message);
-
-  @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [status, lounges, errorMessage];
 }

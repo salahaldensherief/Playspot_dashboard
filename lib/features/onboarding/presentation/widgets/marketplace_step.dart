@@ -5,7 +5,7 @@ import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_text.dart';
-import '../../../lounges/presentation/widgets/add_extra_dialog.dart';
+import '../../../lounges/presentation/widgets/extra_dialog.dart';
 import '../cubit/onboarding_cubit.dart';
 
 class MarketplaceStep extends StatelessWidget {
@@ -107,9 +107,9 @@ class MarketplaceStep extends StatelessWidget {
   void _showAddExtraDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => BlocProvider.value(
-        value: context.read<OnboardingCubit>(),
-        child: ExtraDialog(loungeId: loungeId),
+      builder: (diagContext) => ExtraDialog(
+        loungeId: loungeId,
+        onSave: (newExtra) => context.read<OnboardingCubit>().addNewExtra(newExtra),
       ),
     );
   }

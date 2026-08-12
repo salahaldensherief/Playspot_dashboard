@@ -36,5 +36,7 @@ abstract class LoungeRepository {
   // Extras
   Future<Either<Failure, List<ExtraEntity>>> getExtras(String loungeId);
   Future<Either<Failure, void>> addExtra(ExtraEntity extra);
+  Future<Either<Failure, void>> updateExtra(ExtraEntity extra);
+  Future<Either<Failure, void>> deleteExtra(String extraId);
   Future<Either<Failure, void>> toggleExtraStock(String extraId, bool isOutOfStock);
 }

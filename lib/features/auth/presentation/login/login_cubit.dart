@@ -26,6 +26,8 @@ class LoginCubit extends Cubit<LoginState> {
       (failure) => emit(state.copyWith(status: LoginStatus.initial)),
       (user) async {
         if (user != null) {
+          // If setup is not completed, we stay in authenticated but with isSetupCompleted = false
+          // The router will handle the redirection to onboarding
           emit(state.copyWith(
             status: LoginStatus.authenticated,
             user: user,
@@ -64,6 +66,22 @@ class LoginCubit extends Cubit<LoginState> {
             (_) => null,
             (lounge) => emit(state.copyWith(userLounge: lounge)),
           );
+        }
+      },
+    );
+  }
+
+  /// Reloads profile to refresh isSetupCompleted status
+  Future<void> refreshProfile() async {
+    final result = await getCurrentUserUseCase(NoParams());
+    result.fold(
+      (_) => null,
+      (user) {
+        if (user != null) {
+          emit(state.copyWith(
+            user: user,
+            isSetupCompleted: user.isSetupCompleted,
+          ));
         }
       },
     );

@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import '../cubit/lounge_cubit.dart';
+import '../cubit/lounge_state.dart';
 
 class LoungesDataTable extends StatelessWidget {
   const LoungesDataTable({super.key});
@@ -14,11 +15,11 @@ class LoungesDataTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<LoungeCubit, LoungeState>(
       builder: (context, state) {
-        if (state is LoungeLoading) {
+        if (state.status == LoungeStatus.loading && state.lounges.isEmpty) {
           return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
         }
 
-        final lounges = state is LoungeLoaded ? state.lounges : [];
+        final lounges = state.lounges;
 
         if (lounges.isEmpty) {
           return Center(
@@ -82,7 +83,7 @@ class LoungesDataTable extends StatelessWidget {
                     ),
                     IconButton(
                       icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
-                      onPressed: () => _confirmDelete(context, lounge.name),
+                      onPressed: () => _confirmDelete(context, lounge.id, lounge.name),
                     ),
                   ],
                 ),
@@ -99,17 +100,20 @@ class LoungesDataTable extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Editing Lounge: ${lounge.name}')));
   }
 
-  void _confirmDelete(BuildContext context, String name) {
+  void _confirmDelete(BuildContext context, String loungeId, String name) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
         title: Text('Delete Lounge', style: TextStyle(color: AppColors.textPrimary)),
         content: Text('Are you sure you want to delete "$name"? All associated rooms and data will be removed.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(AppStrings.cancel)),
+          TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
           TextButton(
-            onPressed: () => Navigator.pop(context), 
+            onPressed: () {
+              context.read<LoungeCubit>().deleteLounge(loungeId);
+              Navigator.pop(diagContext);
+            },
             child: const Text('Delete', style: TextStyle(color: AppColors.danger))
           ),
         ],

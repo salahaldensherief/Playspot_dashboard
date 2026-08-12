@@ -26,9 +26,9 @@ class RoomRepositoryImpl implements RoomRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateRoomStatus(String roomId, RoomStatus status) async {
+  Future<Either<Failure, void>> updateRoomStatus(String roomId, RoomStatusEnum status) async {
     try {
-      await _remoteSource.updateRoomStatus(roomId, status == RoomStatus.maintenance ? 'maintenance' : 'available');
+      await _remoteSource.updateRoomStatus(roomId, status == RoomStatusEnum.maintenance ? 'maintenance' : 'available');
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -54,6 +54,41 @@ class RoomRepositoryImpl implements RoomRepository {
         controllersCount: room.controllersCount,
         screenSize: room.screenSize,
       ));
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateRoom(RoomEntity room) async {
+    try {
+      await _remoteSource.updateRoom(RoomModel(
+        id: room.id,
+        loungeId: room.loungeId,
+        nameAr: room.nameAr,
+        nameEn: room.nameEn,
+        activityNames: room.activityNames,
+        pricePerHour: room.pricePerHour,
+        isAvailable: room.isAvailable,
+        status: room.status,
+        capacity: room.capacity,
+        featuresAr: room.featuresAr,
+        featuresEn: room.featuresEn,
+        images: room.images,
+        controllersCount: room.controllersCount,
+        screenSize: room.screenSize,
+      ));
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteRoom(String roomId) async {
+    try {
+      await _remoteSource.deleteRoom(roomId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

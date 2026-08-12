@@ -21,6 +21,8 @@ abstract class LoungeRemoteDataSource {
   // Extras
   Future<List<ExtraModel>> getExtras(String loungeId);
   Future<void> addExtra(ExtraModel extra);
+  Future<void> updateExtra(ExtraModel extra);
+  Future<void> deleteExtra(String extraId);
   Future<void> toggleExtraStock(String extraId, bool isOutOfStock);
   
   // Legacy methods - kept for compatibility if needed
@@ -126,6 +128,16 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   @override
   Future<void> addExtra(ExtraModel extra) async {
     await client.from('extras').insert(extra.toJson());
+  }
+
+  @override
+  Future<void> updateExtra(ExtraModel extra) async {
+    await client.from('extras').update(extra.toJson()).eq('id', extra.id);
+  }
+
+  @override
+  Future<void> deleteExtra(String extraId) async {
+    await client.from('extras').delete().eq('id', extraId);
   }
 
   @override

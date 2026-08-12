@@ -40,4 +40,14 @@ class AdminManagementRepositoryImpl implements AdminManagementRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> deleteAdmin(String adminId) async {
+    try {
+      await remoteDataSource.deleteAdmin(adminId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

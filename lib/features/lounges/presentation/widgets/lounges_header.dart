@@ -5,6 +5,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import '../cubit/lounge_cubit.dart';
+import '../cubit/lounge_state.dart';
 import 'add_lounge_dialog.dart';
 
 class LoungesHeader extends StatelessWidget {
@@ -27,9 +28,9 @@ class LoungesHeader extends StatelessWidget {
                 fontFamily: 'Orbitron',
               ),
             ),
-            SizedBox(height: 8.h),
+            const SizedBox(height: 8),
             Text(
-              'Unified view of gaming locations and their assigned administrators',
+              AppStrings.loungesHeaderSubtitle,
               style: TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 14.sp,
@@ -49,9 +50,21 @@ class LoungesHeader extends StatelessWidget {
   void _showAddLoungeDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (diagContext) => BlocProvider.value(
-        value: context.read<LoungeCubit>(),
-        child: const AddLoungeDialog(),
+      builder: (diagContext) => BlocBuilder<LoungeCubit, LoungeState>(
+        bloc: context.read<LoungeCubit>(),
+        builder: (context, state) {
+          return AddLoungeDialog(
+            isLoading: state.status == LoungeStatus.loading,
+            onSave: (lounge, ownerName, ownerEmail, ownerPassword) {
+              context.read<LoungeCubit>().createLoungeAndAdmin(
+                lounge: lounge,
+                ownerName: ownerName,
+                ownerEmail: ownerEmail,
+                ownerPassword: ownerPassword,
+              );
+            },
+          );
+        },
       ),
     );
   }

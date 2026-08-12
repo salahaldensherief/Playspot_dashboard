@@ -22,7 +22,7 @@ class OperatingHoursStep extends StatelessWidget {
             Expanded(
               child: AppTextField(
                 label: AppStrings.opensAt,
-                hintText: 'e.g. 10:00 AM',
+                hintText: AppStrings.timeHint,
                 controller: opensAtController,
               ),
             ),
@@ -30,7 +30,7 @@ class OperatingHoursStep extends StatelessWidget {
             Expanded(
               child: AppTextField(
                 label: AppStrings.closesAt,
-                hintText: 'e.g. 02:00 AM',
+                hintText: AppStrings.timeHint,
                 controller: closesAtController,
               ),
             ),
