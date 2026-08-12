@@ -1,18 +1,15 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
-import '../../domain/usecases/add_room_usecase.dart';
-import '../../domain/usecases/add_extra_usecase.dart';
-import '../../domain/usecases/setup_lounge_usecase.dart';
-import '../../../rooms/domain/entities/room_entity.dart';
-import '../../../lounges/domain/entities/extra_entity.dart';
-import '../../../lounges/domain/entities/lounge.dart';
-
 import 'dart:typed_data';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_multi_image_picker.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_multi_image_picker.dart';
-
-part 'onboarding_state.dart';
+import '../../../lounges/domain/entities/extra_entity.dart';
+import '../../../lounges/domain/entities/lounge.dart';
+import '../../../rooms/domain/entities/room_entity.dart';
+import '../../domain/usecases/add_extra_usecase.dart';
+import '../../domain/usecases/add_room_usecase.dart';
+import '../../domain/usecases/setup_lounge_usecase.dart';
+import 'onboarding_state.dart';
 
 class OnboardingCubit extends Cubit<OnboardingState> {
   final AddRoomUseCase addRoomUseCase;
@@ -40,6 +37,9 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   Future<void> addNewRoom(RoomEntity room) async {
     emit(state.copyWith(status: OnboardingStatus.loading));
     final result = await addRoomUseCase(room);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: OnboardingStatus.failure,
@@ -55,6 +55,9 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   Future<void> addNewExtra(ExtraEntity extra) async {
     emit(state.copyWith(status: OnboardingStatus.loading));
     final result = await addExtraUseCase(extra);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: OnboardingStatus.failure,
@@ -97,6 +100,8 @@ class OnboardingCubit extends Cubit<OnboardingState> {
         images: galleryUrls,
       ));
 
+      if (isClosed) return;
+
       result.fold(
         (failure) => emit(state.copyWith(
           status: OnboardingStatus.failure,
@@ -108,6 +113,7 @@ class OnboardingCubit extends Cubit<OnboardingState> {
         )),
       );
     } catch (e) {
+      if (isClosed) return;
       emit(state.copyWith(
         status: OnboardingStatus.failure,
         errorMessage: e.toString(),

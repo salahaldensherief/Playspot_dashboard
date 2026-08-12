@@ -45,10 +45,11 @@ class UsersHeader extends StatelessWidget {
   }
 
   void _showAddAdminDialog(BuildContext context) {
+    final cubit = context.read<AdminManagementCubit>();
     showDialog(
       context: context,
       builder: (diagContext) => BlocConsumer<AdminManagementCubit, AdminManagementState>(
-        bloc: context.read<AdminManagementCubit>(),
+        bloc: cubit,
         listener: (context, state) {
           if (state.status == AdminManagementStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -65,7 +66,7 @@ class UsersHeader extends StatelessWidget {
           return AddLoungeAdminDialog(
             isLoading: state.status == AdminManagementStatus.loading,
             onSave: (email, password, name, loungeName, city) {
-              context.read<AdminManagementCubit>().createLoungeAdmin(
+              cubit.createLoungeAdmin(
                 email: email,
                 password: password,
                 name: name,

@@ -13,16 +13,16 @@ import 'category_dialog.dart';
 class CategoriesView extends StatelessWidget {
   const CategoriesView({super.key});
 
-  void _showCategoryDialog(BuildContext context, {CategoryEntity? category}) {
+  void _showCategoryDialog(BuildContext context, CategoryCubit cubit, {CategoryEntity? category}) {
     showDialog(
       context: context,
       builder: (diagContext) => CategoryDialog(
         category: category,
         onSave: (cat) {
           if (category == null) {
-            context.read<CategoryCubit>().addCategory(cat);
+            cubit.addCategory(cat);
           } else {
-            context.read<CategoryCubit>().updateCategory(cat);
+            cubit.updateCategory(cat);
           }
         },
       ),
@@ -31,6 +31,8 @@ class CategoriesView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final categoryCubit = context.read<CategoryCubit>();
+
     return Padding(
       padding: EdgeInsets.all(24.r),
       child: Column(
@@ -50,7 +52,7 @@ class CategoriesView extends StatelessWidget {
               ),
               AppButton(
                 text: AppStrings.addCategory,
-                onPressed: () => _showCategoryDialog(context),
+                onPressed: () => _showCategoryDialog(context, categoryCubit),
                 icon: Icons.add,
               ),
             ],
@@ -78,8 +80,8 @@ class CategoriesView extends StatelessWidget {
                       final category = state.categories[index];
                       return CategoryCard(
                         category: category,
-                        onEdit: () => _showCategoryDialog(context, category: category),
-                        onDelete: () => _confirmDelete(context, category),
+                        onEdit: () => _showCategoryDialog(context, categoryCubit, category: category),
+                        onDelete: () => _confirmDelete(context, categoryCubit, category),
                       );
                     },
                   );
@@ -96,7 +98,7 @@ class CategoriesView extends StatelessWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, CategoryEntity category) {
+  void _confirmDelete(BuildContext context, CategoryCubit cubit, CategoryEntity category) {
     showDialog(
       context: context,
       builder: (diagContext) => AlertDialog(
@@ -107,7 +109,7 @@ class CategoriesView extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
           TextButton(
             onPressed: () {
-              context.read<CategoryCubit>().deleteCategory(category.id);
+              cubit.deleteCategory(category.id);
               Navigator.pop(diagContext);
             }, 
             child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger)),

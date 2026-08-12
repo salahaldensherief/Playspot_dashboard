@@ -39,4 +39,5 @@ abstract class LoungeRepository {
   Future<Either<Failure, void>> updateExtra(ExtraEntity extra);
   Future<Either<Failure, void>> deleteExtra(String extraId);
   Future<Either<Failure, void>> toggleExtraStock(String extraId, bool isOutOfStock);
+  Future<Either<Failure, void>> toggleLoungeOpenStatus(String loungeId, bool isOpen);
 }

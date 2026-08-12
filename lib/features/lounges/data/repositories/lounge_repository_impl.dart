@@ -18,7 +18,8 @@ class LoungeRepositoryImpl implements LoungeRepository {
   Future<Either<Failure, List<Lounge>>> getLounges() async {
     try {
       final lounges = await remoteDataSource.getLounges();
-      return Right(lounges);
+      // تحويل الصريح إلى List<Lounge> لتجنب مشاكل الـ Runtime Type في Dart
+      return Right(lounges.map((e) => e as Lounge).toList());
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -234,6 +235,16 @@ class LoungeRepositoryImpl implements LoungeRepository {
   Future<Either<Failure, void>> toggleExtraStock(String extraId, bool isOutOfStock) async {
     try {
       await remoteDataSource.toggleExtraStock(extraId, isOutOfStock);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> toggleLoungeOpenStatus(String loungeId, bool isOpen) async {
+    try {
+      await remoteDataSource.toggleLoungeOpenStatus(loungeId, isOpen);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

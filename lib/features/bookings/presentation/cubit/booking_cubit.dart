@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/entities/booking.dart';
-import '../../domain/usecases/watch_bookings.dart';
-import '../../domain/usecases/update_booking_status.dart';
-import '../../domain/usecases/confirm_cash_payment.dart';
 import '../../../../core/audio/audio_service.dart';
+import '../../domain/entities/booking.dart';
+import '../../domain/usecases/confirm_cash_payment.dart';
+import '../../domain/usecases/update_booking_status.dart';
+import '../../domain/usecases/watch_bookings.dart';
 import 'booking_state.dart';
 
 class BookingCubit extends Cubit<BookingState> {
@@ -27,6 +27,7 @@ class BookingCubit extends Cubit<BookingState> {
     _subscription?.cancel();
     _subscription = watchBookings(loungeId: loungeId).listen(
       (bookings) {
+        if (isClosed) return;
         if (bookings.length > _lastBookingCount) {
           audioService.playNotificationSound();
         }
@@ -37,6 +38,7 @@ class BookingCubit extends Cubit<BookingState> {
         ));
       },
       onError: (error) {
+        if (isClosed) return;
         emit(state.copyWith(
           status: BookingStatusState.failure,
           errorMessage: error.toString(),
@@ -47,6 +49,9 @@ class BookingCubit extends Cubit<BookingState> {
 
   Future<void> approveBooking(String id) async {
     final result = await updateBookingStatus(id, BookingStatus.upcoming);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: BookingStatusState.failure,
@@ -58,6 +63,9 @@ class BookingCubit extends Cubit<BookingState> {
 
   Future<void> rejectBooking(String id) async {
     final result = await updateBookingStatus(id, BookingStatus.cancelled);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: BookingStatusState.failure,
@@ -69,6 +77,9 @@ class BookingCubit extends Cubit<BookingState> {
 
   Future<void> confirmCashPayment(String id) async {
     final result = await confirmCashPaymentUseCase(id);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: BookingStatusState.failure,

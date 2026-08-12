@@ -10,6 +10,7 @@ class AppButton extends StatelessWidget {
   final bool isLoading;
   final IconData? icon;
   final double? width;
+  final double? height;
 
   const AppButton({
     super.key,
@@ -19,6 +20,7 @@ class AppButton extends StatelessWidget {
     this.isLoading = false,
     this.icon,
     this.width,
+    this.height,
   });
 
   @override
@@ -28,6 +30,7 @@ class AppButton extends StatelessWidget {
 
     return SizedBox(
       width: width,
+      height: height,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
@@ -37,7 +40,8 @@ class AppButton extends StatelessWidget {
                   ? AppColors.danger
                   : Colors.transparent,
           foregroundColor: isPrimary || isDanger ? Colors.black : AppColors.textPrimary,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: height != null ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          minimumSize: Size(width ?? 0, height ?? 0),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
             side: variant == AppButtonVariant.outlined

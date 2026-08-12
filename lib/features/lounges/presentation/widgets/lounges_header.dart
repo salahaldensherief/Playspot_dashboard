@@ -48,15 +48,16 @@ class LoungesHeader extends StatelessWidget {
   }
 
   void _showAddLoungeDialog(BuildContext context) {
+    final cubit = context.read<LoungeCubit>();
     showDialog(
       context: context,
       builder: (diagContext) => BlocBuilder<LoungeCubit, LoungeState>(
-        bloc: context.read<LoungeCubit>(),
+        bloc: cubit,
         builder: (context, state) {
           return AddLoungeDialog(
             isLoading: state.status == LoungeStatus.loading,
             onSave: (lounge, ownerName, ownerEmail, ownerPassword) {
-              context.read<LoungeCubit>().createLoungeAndAdmin(
+              cubit.createLoungeAndAdmin(
                 lounge: lounge,
                 ownerName: ownerName,
                 ownerEmail: ownerEmail,

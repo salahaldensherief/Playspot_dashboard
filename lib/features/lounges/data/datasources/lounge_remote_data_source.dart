@@ -24,6 +24,7 @@ abstract class LoungeRemoteDataSource {
   Future<void> updateExtra(ExtraModel extra);
   Future<void> deleteExtra(String extraId);
   Future<void> toggleExtraStock(String extraId, bool isOutOfStock);
+  Future<void> toggleLoungeOpenStatus(String loungeId, bool isOpen);
   
   // Legacy methods - kept for compatibility if needed
   Future<String> createLounge(LoungeModel lounge);
@@ -143,6 +144,11 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   @override
   Future<void> toggleExtraStock(String extraId, bool isOutOfStock) async {
     await client.from('extras').update({'is_available': !isOutOfStock}).eq('id', extraId);
+  }
+
+  @override
+  Future<void> toggleLoungeOpenStatus(String loungeId, bool isOpen) async {
+    await client.from('lounges').update({'is_open': isOpen}).eq('id', loungeId);
   }
 
   @override

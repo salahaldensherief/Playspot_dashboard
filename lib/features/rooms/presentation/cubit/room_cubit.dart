@@ -14,14 +14,20 @@ class RoomCubit extends Cubit<RoomState> {
     emit(state.copyWith(status: RoomStatus.loading));
     _subscription?.cancel();
     _subscription = _repository.watchRooms(loungeId).listen(
-      (rooms) => emit(state.copyWith(
-        status: RoomStatus.success,
-        rooms: rooms,
-      )),
-      onError: (e) => emit(state.copyWith(
-        status: RoomStatus.failure,
-        errorMessage: e.toString(),
-      )),
+      (rooms) {
+        if (isClosed) return;
+        emit(state.copyWith(
+          status: RoomStatus.success,
+          rooms: rooms,
+        ));
+      },
+      onError: (e) {
+        if (isClosed) return;
+        emit(state.copyWith(
+          status: RoomStatus.failure,
+          errorMessage: e.toString(),
+        ));
+      },
     );
   }
 
@@ -31,18 +37,24 @@ class RoomCubit extends Cubit<RoomState> {
         : RoomStatusEnum.available;
     
     final result = await _repository.updateRoomStatus(roomId, newStatus);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: RoomStatus.failure,
         errorMessage: failure.message,
       )),
-      (_) => null, // Real-time subscription will update UI
+      (_) => null,
     );
   }
 
   Future<void> addNewRoom(RoomEntity room) async {
     emit(state.copyWith(status: RoomStatus.loading));
     final result = await _repository.addRoom(room);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: RoomStatus.failure,
@@ -55,6 +67,9 @@ class RoomCubit extends Cubit<RoomState> {
   Future<void> updateRoom(RoomEntity room) async {
     emit(state.copyWith(status: RoomStatus.loading));
     final result = await _repository.updateRoom(room);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: RoomStatus.failure,
@@ -67,6 +82,9 @@ class RoomCubit extends Cubit<RoomState> {
   Future<void> deleteRoom(String roomId) async {
     emit(state.copyWith(status: RoomStatus.loading));
     final result = await _repository.deleteRoom(roomId);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: RoomStatus.failure,

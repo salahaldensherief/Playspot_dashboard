@@ -6,8 +6,8 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/categories/presentation/cubit/category_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/widgets/room_dialog.dart';
-import '../../../../core/di/di.dart';
 import '../../domain/entities/room_entity.dart';
 import '../cubit/room_cubit.dart';
 
@@ -20,6 +20,8 @@ class RoomsDataTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loungeId = context.read<LoginCubit>().state.user?.loungeId ?? '';
+    final roomCubit = context.read<RoomCubit>();
+    final categoryCubit = context.read<CategoryCubit>();
 
     return DataTableWidget(
       columns: [
@@ -54,7 +56,7 @@ class RoomsDataTable extends StatelessWidget {
             Switch(
               value: room.status == RoomStatusEnum.available,
               activeColor: AppColors.neonBlue,
-              onChanged: (val) => context.read<RoomCubit>().toggleRoomStatus(room.id, room.status),
+              onChanged: (val) => roomCubit.toggleRoomStatus(room.id, room.status),
             ),
           ),
           DataCell(
@@ -62,11 +64,11 @@ class RoomsDataTable extends StatelessWidget {
               children: [
                 IconButton(
                   icon: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20.r),
-                  onPressed: () => _showEditDialog(context, loungeId, room),
+                  onPressed: () => _showEditDialog(context, roomCubit, categoryCubit, loungeId, room),
                 ),
                 IconButton(
                   icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
-                  onPressed: () => _confirmDelete(context, room),
+                  onPressed: () => _confirmDelete(context, roomCubit, room),
                 ),
               ],
             ),
@@ -76,18 +78,19 @@ class RoomsDataTable extends StatelessWidget {
     );
   }
 
-  void _showEditDialog(BuildContext context, String loungeId, RoomEntity room) {
+  void _showEditDialog(BuildContext context, RoomCubit cubit, CategoryCubit categoryCubit, String loungeId, RoomEntity room) {
     showDialog(
       context: context,
       builder: (_) => RoomDialog(
         loungeId: loungeId, 
         room: room,
-        onSave: (updatedRoom) => context.read<RoomCubit>().updateRoom(updatedRoom),
+        categoryCubit: categoryCubit,
+        onSave: (updatedRoom) => cubit.updateRoom(updatedRoom),
       ),
     );
   }
 
-  void _confirmDelete(BuildContext context, RoomEntity room) {
+  void _confirmDelete(BuildContext context, RoomCubit cubit, RoomEntity room) {
     showDialog(
       context: context,
       builder: (diagContext) => AlertDialog(
@@ -98,10 +101,10 @@ class RoomsDataTable extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
           TextButton(
             onPressed: () {
-              context.read<RoomCubit>().deleteRoom(room.id);
+              cubit.deleteRoom(room.id);
               Navigator.pop(diagContext);
             }, 
-            child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger))
+            child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger)),
           ),
         ],
       ),

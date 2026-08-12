@@ -25,6 +25,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     int offset = 0,
   }) async {
     try {
+      // المحاولة الأساسية عبر الـ RPC
       final response = await client.rpc('get_all_bookings_admin', params: {
         'p_status': status,
         'p_lounge_id': loungeId,
@@ -36,14 +37,20 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         return BookingModel.fromJson(Map<String, dynamic>.from(json));
       }).toList();
     } catch (e) {
-      // Fallback if RPC is not available or fails
-      var query = client.from('bookings').select();
-      if (loungeId != null) {
-        query = query.eq('lounge_id', loungeId);
-      }
-      if (status != null) {
-        query = query.eq('status', status);
-      }
+      // خطة بديلة (Fallback) في حالة فشل الـ RPC أو وجود نقص في أعمدة الجداول
+      print('Booking Fetch Alert: RPC skipped or failed, using safe select. Error: $e');
+      
+      // نختار فقط الأعمدة التي نضمن وجودها
+      var query = client.from('bookings').select('''
+        *,
+        profiles:user_id(full_name, email),
+        rooms:room_id(name_en),
+        lounges:lounge_id(name)
+      ''');
+
+      if (loungeId != null) query = query.eq('lounge_id', loungeId);
+      if (status != null) query = query.eq('status', status);
+      
       final response = await query
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
@@ -54,11 +61,19 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   @override
   Future<void> updateBookingStatus(String id, String status) async {
-    await client.from('bookings').update({'status': status}).eq('id', id);
+    // التحديث المباشر للجدول مع التأكد من مطابقة الـ ID
+    await client.from('bookings').update({
+      'status': status,
+    }).eq('id', id);
   }
 
   @override
   Future<void> confirmCashPayment(String bookingId) async {
-    await client.rpc('confirm_cash_payment', params: {'p_booking_id': bookingId});
+    try {
+      await client.rpc('confirm_cash_payment', params: {'p_booking_id': bookingId});
+    } catch (e) {
+      // تحديث الجدول يدوياً إذا فشلت الـ RPC
+      await client.from('payments').update({'status': 'paid'}).eq('booking_id', bookingId);
+    }
   }
 }

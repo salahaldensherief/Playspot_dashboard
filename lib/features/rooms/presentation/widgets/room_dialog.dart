@@ -18,11 +18,13 @@ import 'room_specs_form.dart';
 class RoomDialog extends StatefulWidget {
   final String loungeId;
   final RoomEntity? room;
+  final CategoryCubit categoryCubit;
   final Future<void> Function(RoomEntity)? onSave;
 
   const RoomDialog({
     super.key, 
     required this.loungeId, 
+    required this.categoryCubit,
     this.room,
     this.onSave,
   });
@@ -186,6 +188,7 @@ class _RoomDialogState extends State<RoomDialog> {
 
   Widget _buildActivitySelection() {
     return BlocBuilder<CategoryCubit, CategoryState>(
+      bloc: widget.categoryCubit,
       builder: (context, state) {
         final List<String> activities = state.status == CategoryStatus.success
             ? state.categories.map((e) => e.nameEn).toList()

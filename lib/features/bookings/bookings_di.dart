@@ -14,7 +14,7 @@ void initBookingsDI(GetIt sl) {
     () => BookingRemoteDataSourceImpl(sl()),
   );
   sl.registerLazySingleton<BookingRealtimeDataSource>(
-    () => BookingRealtimeDataSourceImpl(sl()),
+    () => BookingRealtimeDataSourceImpl(sl(), sl()),
   );
 
   // Repositories

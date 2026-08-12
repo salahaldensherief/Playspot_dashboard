@@ -9,7 +9,11 @@ import 'package:play_spot_dashboard/art_core/widgets/app_multi_image_picker.dart
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
+import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_cubit.dart';
+import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_state.dart';
+import 'package:play_spot_dashboard/features/kyc/presentation/widgets/kyc_step.dart';
 import '../cubit/onboarding_cubit.dart';
+import '../cubit/onboarding_state.dart';
 import 'basic_info_step.dart';
 import 'location_step.dart';
 import 'operating_hours_step.dart';
@@ -25,7 +29,7 @@ class LoungeSetupView extends StatefulWidget {
 
 class _LoungeSetupViewState extends State<LoungeSetupView> {
   int _currentStep = 0;
-  final int _totalSteps = 5;
+  final int _totalSteps = 6;
   
   // Controllers
   final _nameController = TextEditingController();
@@ -38,6 +42,12 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
   Uint8List? _mainImageBytes;
   String? _mainImageName;
   List<SelectedImage> _galleryImages = [];
+
+  // KYC Data
+  Uint8List? _idCardBytes;
+  String? _idCardName;
+  Uint8List? _businessDocBytes;
+  String? _businessDocName;
 
   @override
   void dispose() {
@@ -64,9 +74,23 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
     }
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final user = context.read<LoginCubit>().state.user;
+    final kycCubit = context.read<KycCubit>();
+    final onboardingCubit = context.read<OnboardingCubit>();
+    
     final loungeId = user?.loungeId ?? '';
+    final userId = user?.id ?? '';
+
+    if (_idCardBytes != null) {
+      await kycCubit.submitKyc(
+        userId: userId,
+        idCardBytes: _idCardBytes!,
+        idCardName: _idCardName!,
+        businessDocBytes: _businessDocBytes,
+        businessDocName: _businessDocName,
+      );
+    }
 
     final lounge = Lounge(
       id: loungeId, 
@@ -80,7 +104,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
       categoryId: null,
     );
 
-    context.read<OnboardingCubit>().submitLounge(
+    onboardingCubit.submitLounge(
       lounge: lounge,
       mainImageBytes: _mainImageBytes,
       mainImageName: _mainImageName,
@@ -93,25 +117,37 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
-      body: BlocListener<OnboardingCubit, OnboardingState>(
-        listener: (context, state) async {
-          if (state.status == OnboardingStatus.success) {
-            await Future.delayed(const Duration(milliseconds: 500));
-            if (mounted) {
-              final authCubit = context.read<LoginCubit>();
-              authCubit.checkInitialAuth();
-            }
-          } else if (state.status == OnboardingStatus.failure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: AppText.body(state.errorMessage ?? 'Error', color: Colors.white), backgroundColor: AppColors.danger),
-            );
-          }
-        },
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<OnboardingCubit, OnboardingState>(
+            listener: (context, state) async {
+              if (state.status == OnboardingStatus.success) {
+                await Future.delayed(const Duration(milliseconds: 500));
+                if (mounted) {
+                  context.read<LoginCubit>().checkInitialAuth();
+                }
+              } else if (state.status == OnboardingStatus.failure) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: AppText.body(state.errorMessage ?? 'Error', color: Colors.white), backgroundColor: AppColors.danger),
+                );
+              }
+            },
+          ),
+          BlocListener<KycCubit, KycState>(
+            listener: (context, state) {
+              if (state.status == KycStatus.failure) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: AppText.body('KYC Error: ${state.errorMessage}', color: Colors.white), backgroundColor: AppColors.danger),
+                );
+              }
+            },
+          ),
+        ],
         child: Center(
           child: Container(
             width: 800.w,
-            constraints: BoxConstraints(minHeight: 500.h),
-            margin: EdgeInsets.symmetric(vertical: 40.h),
+            height: 850.h,
+            margin: EdgeInsets.symmetric(vertical: 24.h),
             padding: EdgeInsets.all(40.r),
             decoration: BoxDecoration(
               color: AppColors.cardBackground,
@@ -120,14 +156,17 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
               children: [
                 _buildHeader(),
                 SizedBox(height: 20.h),
                 _buildProgressIndicator(),
-                SizedBox(height: 40.h),
-                _buildStepContent(),
-                SizedBox(height: 40.h),
+                SizedBox(height: 32.h),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: _buildStepContent(),
+                  ),
+                ),
+                SizedBox(height: 32.h),
                 _buildActions(),
               ],
             ),
@@ -196,33 +235,54 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
         return AssetsStep(loungeId: loungeId);
       case 4:
         return MarketplaceStep(loungeId: loungeId);
+      case 5:
+        return KycStep(
+          onIdCardSelected: (bytes, name) {
+            _idCardBytes = bytes;
+            _idCardName = name;
+          },
+          onBusinessDocSelected: (bytes, name) {
+            _businessDocBytes = bytes;
+            _businessDocName = name;
+          },
+        );
       default:
         return const SizedBox.shrink();
     }
   }
 
   Widget _buildActions() {
+    final onboardingCubit = context.read<OnboardingCubit>();
+    final kycCubit = context.read<KycCubit>();
+
     return BlocBuilder<OnboardingCubit, OnboardingState>(
-      builder: (context, state) {
-        final isLoading = state.status == OnboardingStatus.loading;
-        
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            if (_currentStep > 0)
-              AppButton(
-                text: AppStrings.back,
-                variant: AppButtonVariant.outlined,
-                onPressed: _onPrevious,
-              )
-            else
-              const SizedBox.shrink(),
-            AppButton(
-              text: _currentStep == _totalSteps - 1 ? AppStrings.completeSetup : AppStrings.next,
-              isLoading: isLoading,
-              onPressed: _onNext,
-            ),
-          ],
+      bloc: onboardingCubit,
+      builder: (context, onboardingState) {
+        return BlocBuilder<KycCubit, KycState>(
+          bloc: kycCubit,
+          builder: (context, kycState) {
+            final isLoading = onboardingState.status == OnboardingStatus.loading || 
+                              kycState.status == KycStatus.loading;
+            
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                if (_currentStep > 0)
+                  AppButton(
+                    text: AppStrings.back,
+                    variant: AppButtonVariant.outlined,
+                    onPressed: _onPrevious,
+                  )
+                else
+                  const SizedBox.shrink(),
+                AppButton(
+                  text: _currentStep == _totalSteps - 1 ? AppStrings.completeSetup : AppStrings.next,
+                  isLoading: isLoading,
+                  onPressed: _onNext,
+                ),
+              ],
+            );
+          },
         );
       },
     );

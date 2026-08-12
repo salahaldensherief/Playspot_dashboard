@@ -18,6 +18,9 @@ class AdminManagementCubit extends Cubit<AdminManagementState> {
   Future<void> fetchAdmins() async {
     emit(state.copyWith(status: AdminManagementStatus.loading));
     final result = await getAdminsUseCase();
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: AdminManagementStatus.failure,
@@ -46,6 +49,8 @@ class AdminManagementCubit extends Cubit<AdminManagementState> {
       city: city,
     );
     
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: AdminManagementStatus.failure,
@@ -64,6 +69,9 @@ class AdminManagementCubit extends Cubit<AdminManagementState> {
   Future<void> deleteAdmin(String adminId) async {
     emit(state.copyWith(status: AdminManagementStatus.loading));
     final result = await repository.deleteAdmin(adminId);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: AdminManagementStatus.failure,

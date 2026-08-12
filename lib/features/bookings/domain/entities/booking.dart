@@ -7,6 +7,7 @@ class Booking extends Equatable {
   final String userId;
   final String? userName;
   final String? userEmail;
+  final String? userPhone;
   final String loungeId;
   final String roomId;
   final String loungeName;
@@ -20,6 +21,7 @@ class Booking extends Equatable {
   final BookingStatus status;
   final String? paymentStatus;
   final double totalPrice;
+  final List<Map<String, dynamic>> extras;
   final String? mapsLink;
   final double? lat;
   final double? lng;
@@ -29,6 +31,7 @@ class Booking extends Equatable {
     required this.userId,
     this.userName,
     this.userEmail,
+    this.userPhone,
     required this.loungeId,
     required this.roomId,
     this.loungeName = '',
@@ -42,6 +45,7 @@ class Booking extends Equatable {
     required this.status,
     this.paymentStatus,
     required this.totalPrice,
+    this.extras = const [],
     this.mapsLink,
     this.lat,
     this.lng,
@@ -53,6 +57,7 @@ class Booking extends Equatable {
         userId,
         userName,
         userEmail,
+        userPhone,
         loungeId,
         roomId,
         loungeName,
@@ -66,6 +71,7 @@ class Booking extends Equatable {
         status,
         paymentStatus,
         totalPrice,
+        extras,
         mapsLink,
         lat,
         lng,

@@ -1,4 +1,7 @@
-part of 'onboarding_cubit.dart';
+import 'package:equatable/equatable.dart';
+import '../../../lounges/domain/entities/extra_entity.dart';
+import '../../../lounges/domain/entities/lounge.dart';
+import '../../../rooms/domain/entities/room_entity.dart';
 
 enum OnboardingStatus { initial, loading, success, failure }
 

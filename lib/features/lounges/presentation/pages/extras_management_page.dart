@@ -33,6 +33,7 @@ class ExtrasManagementPage extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, String loungeId) {
+    final cubit = context.read<ExtrasCubit>();
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -51,7 +52,7 @@ class ExtrasManagementPage extends StatelessWidget {
               context: context,
               builder: (diagContext) => ExtraDialog(
                 loungeId: loungeId,
-                onSave: (newExtra) => context.read<ExtrasCubit>().addExtra(newExtra),
+                onSave: (newExtra) => cubit.addExtra(newExtra),
               ),
             );
           },

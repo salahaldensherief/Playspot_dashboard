@@ -36,6 +36,7 @@ class _MarketingViewState extends State<MarketingView> {
   Widget build(BuildContext context) {
     final user = context.read<LoginCubit>().state.user;
     final isSuperAdmin = user?.isSuperAdmin ?? false;
+    final marketingCubit = context.read<MarketingCubit>();
 
     return Padding(
       padding: EdgeInsets.all(24.r),
@@ -58,14 +59,14 @@ class _MarketingViewState extends State<MarketingView> {
                 if (isSuperAdmin)
                   AppButton(
                     text: AppStrings.createGlobalPromo,
-                    onPressed: () => _showEditPromoDialog(context, const PromoEntity(id: '', titleAr: '', titleEn: '', tagAr: '', tagEn: '', hexColors: [], iconKey: '')),
+                    onPressed: () => _showEditPromoDialog(context, marketingCubit, const PromoEntity(id: '', titleAr: '', titleEn: '', tagAr: '', tagEn: '', hexColors: [], iconKey: '')),
                     icon: Icons.add,
                   ),
               ],
             ),
             SizedBox(height: 32.h),
             if (isSuperAdmin) 
-              _buildPromotionsList()
+              _buildPromotionsList(marketingCubit)
             else 
               _buildLoungeAdminForm(),
           ],
@@ -107,8 +108,9 @@ class _MarketingViewState extends State<MarketingView> {
     );
   }
 
-  Widget _buildPromotionsList() {
+  Widget _buildPromotionsList(MarketingCubit cubit) {
     return BlocBuilder<MarketingCubit, MarketingState>(
+      bloc: cubit,
       builder: (context, state) {
         if (state is MarketingLoading) {
            return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
@@ -142,7 +144,7 @@ class _MarketingViewState extends State<MarketingView> {
                       DataColumn(label: Text(AppStrings.status)),
                       DataColumn(label: Text(AppStrings.actions)),
                     ],
-                    rows: state.promotions.map((p) => _buildPromoRow(context, p)).toList(),
+                    rows: state.promotions.map((p) => _buildPromoRow(context, cubit, p)).toList(),
                   ),
               ],
             ),
@@ -153,7 +155,7 @@ class _MarketingViewState extends State<MarketingView> {
     );
   }
 
-  DataRow _buildPromoRow(BuildContext context, PromoEntity promo) {
+  DataRow _buildPromoRow(BuildContext context, MarketingCubit cubit, PromoEntity promo) {
     return DataRow(cells: [
       DataCell(Text(promo.titleEn, style: const TextStyle(color: AppColors.textPrimary))),
       DataCell(Container(
@@ -167,18 +169,18 @@ class _MarketingViewState extends State<MarketingView> {
         children: [
           IconButton(
             icon: const Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20), 
-            onPressed: () => _showEditPromoDialog(context, promo),
+            onPressed: () => _showEditPromoDialog(context, cubit, promo),
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline, color: AppColors.danger, size: 20), 
-            onPressed: () => _confirmDelete(context, promo),
+            onPressed: () => _confirmDelete(context, cubit, promo),
           ),
         ],
       )),
     ]);
   }
 
-  void _showEditPromoDialog(BuildContext context, PromoEntity promo) {
+  void _showEditPromoDialog(BuildContext context, MarketingCubit cubit, PromoEntity promo) {
     showDialog(
       context: context,
       builder: (diagContext) => PromoDialog(
@@ -190,7 +192,7 @@ class _MarketingViewState extends State<MarketingView> {
     );
   }
 
-  void _confirmDelete(BuildContext context, PromoEntity promo) {
+  void _confirmDelete(BuildContext context, MarketingCubit cubit, PromoEntity promo) {
     showDialog(
       context: context,
       builder: (diagContext) => AlertDialog(
@@ -201,7 +203,7 @@ class _MarketingViewState extends State<MarketingView> {
           TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
           TextButton(
             onPressed: () {
-              context.read<MarketingCubit>().deletePromotion(promo.id);
+              cubit.deletePromotion(promo.id);
               Navigator.pop(diagContext);
             }, 
             child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger)),

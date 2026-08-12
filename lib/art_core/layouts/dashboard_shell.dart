@@ -47,6 +47,12 @@ class DashboardShell extends StatelessWidget {
     } else if (location.contains('payouts')) {
       activeRoute = isSuperAdmin ? AppStrings.payouts : AppStrings.myPayouts;
       title = isSuperAdmin ? AppStrings.loungePayouts : AppStrings.payoutHistory;
+    } else if (location.contains('kyc')) {
+      activeRoute = AppStrings.kycReviews;
+      title = AppStrings.kycReviews;
+    } else if (location.contains('reports')) {
+      activeRoute = AppStrings.monthlyReports;
+      title = AppStrings.monthlyReports;
     } else if (location.contains('profile')) {
       activeRoute = AppStrings.myProfile;
       title = AppStrings.myProfile;

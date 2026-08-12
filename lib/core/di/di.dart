@@ -13,6 +13,7 @@ import 'package:play_spot_dashboard/features/categories/categories_di.dart';
 import 'package:play_spot_dashboard/features/analytics/analytics_di.dart';
 import 'package:play_spot_dashboard/features/marketing/marketing_di.dart';
 import 'package:play_spot_dashboard/features/payouts/payouts_di.dart';
+import 'package:play_spot_dashboard/features/kyc/kyc_di.dart';
 
 final sl = GetIt.instance;
 
@@ -43,4 +44,5 @@ Future<void> setupInjection() async {
   initAnalyticsDI(sl);
   initMarketingDI(sl);
   initPayoutsDI(sl);
+  initKycDI(sl);
 }

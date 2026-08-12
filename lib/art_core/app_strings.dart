@@ -160,6 +160,8 @@ class AppStrings {
   static String get anonymous => 'anonymous'.tr();
   static String get pending => 'pending'.tr();
   static String get paid => 'paid'.tr();
+  static String get unpaid => 'unpaid'.tr();
+  static String get egp => 'EGP';
   static String get upcoming => 'upcoming'.tr();
   static String get completed => 'completed'.tr();
   static String get cancelled => 'cancelled'.tr();
@@ -167,6 +169,13 @@ class AppStrings {
   static String get reject => 'reject'.tr();
   static String get pendingRequests => 'pending_requests'.tr();
   static String get activeBookings => 'active_bookings'.tr();
+  static String get finishedToday => 'finished_today'.tr();
+  static String get dailyTotal => 'daily_total'.tr();
+  static String get cashInHand => 'cash_in_hand'.tr();
+  static String get monthlyReports => 'monthly_reports'.tr();
+  static String get totalRevenue => 'total_revenue'.tr();
+  static String get totalBookings => 'total_bookings'.tr();
+  static String get selectMonth => 'select_month'.tr();
 
   // Validation
   static String get fieldRequired => 'field_required'.tr();
@@ -247,6 +256,22 @@ class AppStrings {
   static String get deleteWarning => 'delete_warning'.tr();
   static String get deleteLoungeWarning => 'delete_lounge_warning'.tr();
   static String get vsLastMonth => 'vs_last_month'.tr();
+
+  // KYC
+  static String get verifyIdentity => 'verify_identity'.tr();
+  static String get kycSubtitle => 'kyc_subtitle'.tr();
+  static String get idCardImage => 'id_card_image'.tr();
+  static String get businessDocImage => 'business_doc_image'.tr();
+  static String get submitDocuments => 'submit_documents'.tr();
+  static String get kycPendingReview => 'kyc_pending_review'.tr();
+  static String get kycApproved => 'kyc_approved'.tr();
+  static String get kycRejected => 'kyc_rejected'.tr();
+  static String get kycReviews => 'kyc_reviews'.tr();
+  static String get approveKyc => 'approve_kyc'.tr();
+  static String get rejectKyc => 'reject_kyc'.tr();
+  static String get reviewNotes => 'review_notes'.tr();
+  static String get kycSuccess => 'kyc_success'.tr();
+  static String get viewDocument => 'view_document'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

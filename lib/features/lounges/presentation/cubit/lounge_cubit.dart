@@ -11,6 +11,9 @@ class LoungeCubit extends Cubit<LoungeState> {
   Future<void> fetchLounges() async {
     emit(state.copyWith(status: LoungeStatus.loading));
     final result = await repository.getLounges();
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: LoungeStatus.failure,
@@ -31,16 +34,16 @@ class LoungeCubit extends Cubit<LoungeState> {
   }) async {
     emit(state.copyWith(status: LoungeStatus.loading));
     
-    // 1. Create Lounge
     final loungeResult = await repository.createLounge(lounge);
     
+    if (isClosed) return;
+
     await loungeResult.fold(
       (failure) async => emit(state.copyWith(
         status: LoungeStatus.failure,
         errorMessage: failure.message,
       )),
       (loungeId) async {
-        // 2. Create Admin linked to this Lounge
         final adminResult = await repository.createLoungeAdmin(
           email: ownerEmail,
           password: ownerPassword,
@@ -48,13 +51,15 @@ class LoungeCubit extends Cubit<LoungeState> {
           loungeId: loungeId,
         );
         
+        if (isClosed) return;
+
         adminResult.fold(
           (failure) => emit(state.copyWith(
             status: LoungeStatus.failure,
             errorMessage: 'Lounge created but admin failed: ${failure.message}',
           )),
           (_) {
-            fetchLounges(); // Refresh the list
+            fetchLounges();
           },
         );
       },
@@ -65,9 +70,33 @@ class LoungeCubit extends Cubit<LoungeState> {
     await repository.updateLoungeLocation(loungeId, lat, lng);
   }
 
+  Future<void> toggleLoungeStatus(String loungeId, bool isOpen) async {
+    // تحديث تفاؤلي للواجهة (Optimistic UI)
+    final currentState = state;
+    if (currentState.lounges.isNotEmpty) {
+      final updatedLounges = currentState.lounges.map((l) {
+        if (l.id == loungeId) return l.copyWith(isOpen: isOpen);
+        return l;
+      }).toList();
+      emit(state.copyWith(lounges: updatedLounges));
+    }
+
+    final result = await repository.toggleLoungeOpenStatus(loungeId, isOpen);
+    result.fold(
+      (failure) {
+        emit(state.copyWith(status: LoungeStatus.failure, errorMessage: failure.message));
+        fetchLounges(); // إعادة الجلب في حالة الخطأ لاستعادة الحالة الصحيحة
+      },
+      (_) => null,
+    );
+  }
+
   Future<void> updateLounge(Lounge lounge) async {
     emit(state.copyWith(status: LoungeStatus.loading));
     final result = await repository.updateLounge(lounge);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: LoungeStatus.failure,
@@ -80,6 +109,9 @@ class LoungeCubit extends Cubit<LoungeState> {
   Future<void> deleteLounge(String id) async {
     emit(state.copyWith(status: LoungeStatus.loading));
     final result = await repository.deleteLounge(id);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: LoungeStatus.failure,

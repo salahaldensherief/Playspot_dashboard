@@ -6,6 +6,7 @@ class BookingModel extends Booking {
     required super.userId,
     super.userName,
     super.userEmail,
+    super.userPhone,
     required super.loungeId,
     required super.roomId,
     super.loungeName = '',
@@ -19,92 +20,93 @@ class BookingModel extends Booking {
     required super.status,
     super.paymentStatus,
     required super.totalPrice,
+    super.extras = const [],
     super.mapsLink,
     super.lat,
     super.lng,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
-    // Helper to parse double safely
     double parseDouble(dynamic value) {
       if (value == null) return 0.0;
       if (value is num) return value.toDouble();
       return double.tryParse(value.toString()) ?? 0.0;
     }
 
-    // Helper to parse int safely
     int parseInt(dynamic value, int defaultValue) {
       if (value == null) return defaultValue;
       if (value is num) return value.toInt();
       return int.tryParse(value.toString()) ?? defaultValue;
     }
 
-    final loungeData = json['lounges'] as Map<String, dynamic>?;
+    // جلب البيانات مع دعم مسميات الـ RPC الجديدة (out_) والمسميات القديمة
+    final profileData = json['profiles'] as Map<String, dynamic>?;
     final roomData = json['rooms'] as Map<String, dynamic>?;
+    final loungeData = json['lounges'] as Map<String, dynamic>?;
 
-    // التأكد من قراءة حالة الحجز بدقة من العمود الصحيح في الـ RPC أو الجدول
-    String statusStr = (json['status'] ?? 'pending').toString().trim().toLowerCase();
-    
-    // إذا كانت القيمة قادمة من الـ Realtime Payload لجدول الحجز
-    // Supabase يرسل أحياناً اسم العمود بالكامل
-    if (json.containsKey('booking_status')) {
-      statusStr = json['booking_status'].toString().trim().toLowerCase();
-    }
+    final String userName = (
+      json['out_user_name'] ?? 
+      json['user_name'] ?? 
+      profileData?['full_name'] ?? 
+      json['full_name'] ?? 
+      'Client'
+    ).toString();
+
+    final String roomName = (
+      json['out_room_name'] ?? 
+      json['room_name'] ?? 
+      roomData?['name_en'] ?? 
+      roomData?['name'] ?? 
+      'Gaming Station'
+    ).toString();
+
+    final String userPhone = (
+      json['out_user_phone'] ?? 
+      json['user_phone'] ?? 
+      json['phone'] ?? 
+      profileData?['phone'] ?? 
+      'No Phone'
+    ).toString();
+
+    String statusStr = (
+      json['out_booking_status'] ?? 
+      json['status'] ?? 
+      json['booking_status'] ?? 
+      'pending'
+    ).toString().trim().toLowerCase();
 
     BookingStatus status;
     switch (statusStr) {
-      case 'pending':
-        status = BookingStatus.pending;
-        break;
-      case 'upcoming':
-        status = BookingStatus.upcoming;
-        break;
-      case 'completed':
-        status = BookingStatus.completed;
-        break;
-      case 'cancelled':
-        status = BookingStatus.cancelled;
-        break;
-      default:
-        // إذا لم تطابق أي حالة، نعتبرها pending كافتراضي للطلبات الجديدة
-        status = BookingStatus.pending;
+      case 'pending': status = BookingStatus.pending; break;
+      case 'upcoming': status = BookingStatus.upcoming; break;
+      case 'completed': status = BookingStatus.completed; break;
+      case 'cancelled': status = BookingStatus.cancelled; break;
+      default: status = BookingStatus.pending;
     }
 
     return BookingModel(
-      id: json['id'].toString(),
+      id: (json['out_booking_id'] ?? json['id']).toString(),
       userId: json['user_id']?.toString() ?? '',
-      userName: (json['user_name'] ?? json['full_name'])?.toString(),
-      userEmail: json['user_email']?.toString(),
+      userName: userName,
+      userEmail: (json['out_user_email'] ?? json['user_email'] ?? profileData?['email'])?.toString(),
+      userPhone: userPhone,
       loungeId: json['lounge_id']?.toString() ?? '',
       roomId: json['room_id']?.toString() ?? '',
-      loungeName: (json['lounge_name'] ?? loungeData?['name']) ?? '',
+      loungeName: (json['out_lounge_name'] ?? json['lounge_name'] ?? loungeData?['name']) ?? '',
       loungeLocation: (json['lounge_location'] ?? loungeData?['location']) ?? '',
-      roomName: (json['room_name'] ?? roomData?['name_en'] ?? roomData?['name']) ?? '',
+      roomName: roomName,
       controllersCount: parseInt(json['controllers_count'] ?? roomData?['controllers_count'], 0),
       screenSize: (json['screen_size'] ?? roomData?['screen_size'])?.toString() ?? '',
-      date: DateTime.parse(json['date'] ?? DateTime.now().toIso8601String()),
-      startTime: json['start_time'] ?? '',
-      endTime: json['end_time'] ?? '',
+      date: DateTime.parse(json['out_booking_date'] ?? json['date'] ?? DateTime.now().toIso8601String()),
+      startTime: json['out_start_time'] ?? json['start_time'] ?? '',
+      endTime: json['out_end_time'] ?? json['end_time'] ?? '',
       status: status,
-      paymentStatus: json['payment_status']?.toString(),
-      totalPrice: parseDouble(json['total_price']),
+      paymentStatus: (json['out_payment_status'] ?? json['payment_status'])?.toString(),
+      totalPrice: parseDouble(json['out_total_price'] ?? json['total_price']),
+      extras: List<Map<String, dynamic>>.from(json['out_booking_extras'] ?? json['booking_extras'] ?? json['extras'] ?? []),
       mapsLink: (json['maps_link'] ?? loungeData?['maps_link'])?.toString(),
       lat: (json['lat'] ?? loungeData?['lat']) != null ? parseDouble(json['lat'] ?? loungeData?['lat']) : null,
       lng: (json['lng'] ?? loungeData?['lng']) != null ? parseDouble(json['lng'] ?? loungeData?['lng']) : null,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'user_id': userId,
-      'lounge_id': loungeId,
-      'room_id': roomId,
-      'date': date.toIso8601String(),
-      'start_time': startTime,
-      'end_time': endTime,
-      'status': status.toString().split('.').last,
-      'total_price': totalPrice,
-    };
   }
 }

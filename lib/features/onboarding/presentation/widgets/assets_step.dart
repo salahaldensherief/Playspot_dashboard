@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:play_spot_dashboard/features/categories/presentation/cubit/category_cubit.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_text.dart';
 import '../../../rooms/presentation/widgets/room_dialog.dart';
 import '../cubit/onboarding_cubit.dart';
+import '../cubit/onboarding_state.dart';
 
 class AssetsStep extends StatelessWidget {
   final String loungeId;
@@ -114,11 +116,15 @@ class AssetsStep extends StatelessWidget {
   }
 
   void _showAddRoomDialog(BuildContext context) {
+    final onboardingCubit = context.read<OnboardingCubit>();
+    final categoryCubit = context.read<CategoryCubit>();
+
     showDialog(
       context: context,
       builder: (diagContext) => RoomDialog(
         loungeId: loungeId,
-        onSave: (newRoom) => context.read<OnboardingCubit>().addNewRoom(newRoom),
+        categoryCubit: categoryCubit,
+        onSave: (newRoom) => onboardingCubit.addNewRoom(newRoom),
       ),
     );
   }

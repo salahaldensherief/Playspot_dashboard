@@ -1,34 +1,48 @@
+import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/booking_model.dart';
+import 'booking_remote_data_source.dart';
 
 abstract class BookingRealtimeDataSource {
   Stream<List<BookingModel>> watchBookings({String? loungeId});
 }
 
 class BookingRealtimeDataSourceImpl implements BookingRealtimeDataSource {
-  final SupabaseClient client;
+  final SupabaseClient _client;
+  final BookingRemoteDataSource _remoteDataSource;
 
-  BookingRealtimeDataSourceImpl(this.client);
+  BookingRealtimeDataSourceImpl(this._client, this._remoteDataSource);
 
   @override
   Stream<List<BookingModel>> watchBookings({String? loungeId}) {
-    // We can use both Postgres Changes (Stream) and Broadcast
-    // For now, staying with Stream as it handles Initial data + changes
-    // But adding broadcast capability if needed.
-    
-    final query = client.from('bookings').stream(primaryKey: ['id']);
-    final stream = loungeId != null ? query.eq('lounge_id', loungeId) : query;
+    final controller = StreamController<List<BookingModel>>();
 
-    return stream.map((event) {
-      return event.map((json) => BookingModel.fromJson(json)).toList();
-    });
+    // 1. جلب البيانات الأولية فوراً عند فتح الصفحة
+    _fetchAndEmit(controller, loungeId);
+
+    // 2. الاشتراك في التغييرات اللحظية
+    _client
+        .from('bookings')
+        .stream(primaryKey: ['id'])
+        .order('created_at')
+        .listen((_) {
+          // فور حدوث أي تغيير (إضافة، تعديل، حذف)، نعيد جلب البيانات كاملة من الـ RPC
+          _fetchAndEmit(controller, loungeId);
+        });
+
+    return controller.stream;
   }
 
-  void listenToBroadcast(String? loungeId, Function(Map<String, dynamic>) callback) {
-    if (loungeId == null) return;
-    client.channel('lounge_bookings_$loungeId')
-      .onBroadcast(event: 'INSERT', callback: (payload) => callback(payload))
-      .onBroadcast(event: 'UPDATE', callback: (payload) => callback(payload))
-      .subscribe();
+  Future<void> _fetchAndEmit(StreamController<List<BookingModel>> controller, String? loungeId) async {
+    try {
+      final bookings = await _remoteDataSource.getBookings(loungeId: loungeId);
+      if (!controller.isClosed) {
+        controller.add(bookings);
+      }
+    } catch (e) {
+      if (!controller.isClosed) {
+        controller.addError(e);
+      }
+    }
   }
 }

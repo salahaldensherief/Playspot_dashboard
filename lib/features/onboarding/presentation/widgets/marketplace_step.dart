@@ -7,6 +7,7 @@ import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_text.dart';
 import '../../../lounges/presentation/widgets/extra_dialog.dart';
 import '../cubit/onboarding_cubit.dart';
+import '../cubit/onboarding_state.dart';
 
 class MarketplaceStep extends StatelessWidget {
   final String loungeId;

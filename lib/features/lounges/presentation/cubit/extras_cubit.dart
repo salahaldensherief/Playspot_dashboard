@@ -11,6 +11,9 @@ class ExtrasCubit extends Cubit<ExtrasState> {
   Future<void> loadExtras(String loungeId) async {
     emit(state.copyWith(status: ExtrasStatus.loading));
     final result = await repository.getExtras(loungeId);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: ExtrasStatus.failure,
@@ -25,6 +28,9 @@ class ExtrasCubit extends Cubit<ExtrasState> {
 
   Future<void> toggleStock(String extraId, bool isOutOfStock, String loungeId) async {
     final result = await repository.toggleExtraStock(extraId, isOutOfStock);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: ExtrasStatus.failure,
@@ -36,6 +42,9 @@ class ExtrasCubit extends Cubit<ExtrasState> {
 
   Future<void> addExtra(ExtraEntity extra) async {
     final result = await repository.addExtra(extra);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: ExtrasStatus.failure,
@@ -47,6 +56,9 @@ class ExtrasCubit extends Cubit<ExtrasState> {
 
   Future<void> updateExtra(ExtraEntity extra) async {
     final result = await repository.updateExtra(extra);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: ExtrasStatus.failure,
@@ -58,6 +70,9 @@ class ExtrasCubit extends Cubit<ExtrasState> {
 
   Future<void> deleteExtra(String extraId, String loungeId) async {
     final result = await repository.deleteExtra(extraId);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: ExtrasStatus.failure,

@@ -11,6 +11,9 @@ class CategoryCubit extends Cubit<CategoryState> {
   Future<void> loadCategories() async {
     emit(state.copyWith(status: CategoryStatus.loading));
     final result = await repository.getCategories();
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: CategoryStatus.failure,
@@ -26,6 +29,9 @@ class CategoryCubit extends Cubit<CategoryState> {
   Future<void> addCategory(CategoryEntity category) async {
     emit(state.copyWith(status: CategoryStatus.loading));
     final result = await repository.addCategory(category);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: CategoryStatus.failure,
@@ -38,6 +44,9 @@ class CategoryCubit extends Cubit<CategoryState> {
   Future<void> updateCategory(CategoryEntity category) async {
     emit(state.copyWith(status: CategoryStatus.loading));
     final result = await repository.updateCategory(category);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: CategoryStatus.failure,
@@ -50,6 +59,9 @@ class CategoryCubit extends Cubit<CategoryState> {
   Future<void> deleteCategory(String id) async {
     emit(state.copyWith(status: CategoryStatus.loading));
     final result = await repository.deleteCategory(id);
+    
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(state.copyWith(
         status: CategoryStatus.failure,

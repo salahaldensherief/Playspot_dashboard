@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
-import 'package:play_spot_dashboard/core/di/di.dart';
+import 'package:play_spot_dashboard/features/categories/presentation/cubit/category_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/widgets/room_dialog.dart';
 import '../cubit/room_cubit.dart';
 
@@ -47,11 +47,15 @@ class RoomManagementHeader extends StatelessWidget {
   }
 
   void _showAddRoomDialog(BuildContext context, String loungeId) {
+    final roomCubit = context.read<RoomCubit>();
+    final categoryCubit = context.read<CategoryCubit>();
+    
     showDialog(
       context: context,
       builder: (diagContext) => RoomDialog(
         loungeId: loungeId,
-        onSave: (newRoom) => context.read<RoomCubit>().addNewRoom(newRoom),
+        categoryCubit: categoryCubit,
+        onSave: (newRoom) => roomCubit.addNewRoom(newRoom),
       ),
     );
   }
