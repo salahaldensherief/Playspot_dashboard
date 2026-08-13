@@ -9,9 +9,11 @@ class RoomModel extends RoomEntity {
     super.activityNames = const [],
     super.activityIds = const [],
     super.spaceType,
-    super.spaceTypeId,
+    required super.spaceTypeId,
     required super.capacity,
-    required super.pricePerHour,
+    required super.pricePerHourSingle,
+    required super.pricePerHourMulti,
+    super.pricePerHour,
     required super.isAvailable,
     required super.images,
     required super.featuresAr,
@@ -68,8 +70,10 @@ class RoomModel extends RoomEntity {
           ? activityIds
           : (json['activity_ids'] != null ? List<String>.from(json['activity_ids']) : []),
       spaceType: json['space_types']?['label'] ?? json['space_type_name']?.toString(),
-      spaceTypeId: json['space_type_id']?.toString(),
+      spaceTypeId: json['space_type_id']?.toString() ?? '',
       capacity: parseInt(json['capacity'], 4),
+      pricePerHourSingle: parseDouble(json['price_per_hour_single'] ?? json['price_per_hour']),
+      pricePerHourMulti: parseDouble(json['price_per_hour_multi'] ?? json['price_per_hour']),
       pricePerHour: parseDouble(json['price_per_hour']),
       isAvailable: json['is_available'] ?? true,
       images: json['images'] != null ? List<String>.from(json['images']) : [],
@@ -81,6 +85,7 @@ class RoomModel extends RoomEntity {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {
       'lounge_id': loungeId,
@@ -88,7 +93,9 @@ class RoomModel extends RoomEntity {
       'name_ar': nameAr,
       'name_en': nameEn,
       'capacity': capacity,
-      'price_per_hour': pricePerHour,
+      'price_per_hour_single': pricePerHourSingle,
+      'price_per_hour_multi': pricePerHourMulti,
+      'price_per_hour': pricePerHourSingle, // Default for compatibility
       'is_available': isAvailable,
       'images': images,
       'features_ar': featuresAr,
@@ -97,7 +104,7 @@ class RoomModel extends RoomEntity {
       'screen_size': screenSize,
       'status': status == RoomStatusEnum.maintenance ? 'maintenance' : 'available',
     };
-    if (spaceTypeId != null) {
+    if (spaceTypeId != null && spaceTypeId!.isNotEmpty) {
       data['space_type_id'] = spaceTypeId;
     }
     return data;

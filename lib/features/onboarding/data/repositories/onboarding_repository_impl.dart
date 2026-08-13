@@ -68,17 +68,22 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
   Future<Either<Failure, RoomEntity>> addRoom(RoomEntity room) async {
     try {
       final roomModel = RoomModel(
-        
         id: room.id,
         loungeId: room.loungeId,
         nameAr: room.nameAr,
         nameEn: room.nameEn,
         activityNames: room.activityNames,
+        activityIds: room.activityIds,
+        spaceType: room.spaceType,
+        spaceTypeId: room.spaceTypeId ?? '',
+        pricePerHourSingle: room.pricePerHourSingle,
+        pricePerHourMulti: room.pricePerHourMulti,
         pricePerHour: room.pricePerHour,
         capacity: room.capacity,
         images: room.images,
         featuresAr: room.featuresAr,
-        featuresEn: room.featuresEn, isAvailable: room.isAvailable,
+        featuresEn: room.featuresEn,
+        isAvailable: room.isAvailable,
       );
       final result = await remoteDataSource.addRoom(roomModel);
       return Right(result);

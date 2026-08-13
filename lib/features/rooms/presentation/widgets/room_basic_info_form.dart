@@ -7,13 +7,15 @@ import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 class RoomBasicInfoForm extends StatelessWidget {
   final TextEditingController nameArController;
   final TextEditingController nameEnController;
-  final TextEditingController priceController;
+  final TextEditingController priceSingleController;
+  final TextEditingController priceMultiController;
 
   const RoomBasicInfoForm({
     super.key,
     required this.nameArController,
     required this.nameEnController,
-    required this.priceController,
+    required this.priceSingleController,
+    required this.priceMultiController,
   });
 
   @override
@@ -42,12 +44,28 @@ class RoomBasicInfoForm extends StatelessWidget {
           ],
         ),
         SizedBox(height: 20.h),
-        AppTextField(
-          label: AppStrings.pricePerHour,
-          hintText: AppStrings.pricePerHourHint,
-          controller: priceController,
-          keyboardType: TextInputType.number,
-          validator: AppValidator.validateNumber,
+        Row(
+          children: [
+            Expanded(
+              child: AppTextField(
+                label: 'سعر الساعة (فردي / Single)',
+                hintText: AppStrings.pricePerHourHint,
+                controller: priceSingleController,
+                keyboardType: TextInputType.number,
+                validator: AppValidator.validateNumber,
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: AppTextField(
+                label: 'سعر الساعة (زوجي / Multi)',
+                hintText: AppStrings.pricePerHourHint,
+                controller: priceMultiController,
+                keyboardType: TextInputType.number,
+                validator: AppValidator.validateNumber,
+              ),
+            ),
+          ],
         ),
       ],
     );

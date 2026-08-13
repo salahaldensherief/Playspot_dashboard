@@ -38,7 +38,8 @@ class _RoomDialogState extends State<RoomDialog> {
   
   late TextEditingController _nameArController;
   late TextEditingController _nameEnController;
-  late TextEditingController _priceController;
+  late TextEditingController _priceSingleController;
+  late TextEditingController _priceMultiController;
   late TextEditingController _capacityController;
   late TextEditingController _controllersController;
   late TextEditingController _screenSizeController;
@@ -61,7 +62,8 @@ class _RoomDialogState extends State<RoomDialog> {
     final r = widget.room;
     _nameArController = TextEditingController(text: r?.nameAr);
     _nameEnController = TextEditingController(text: r?.nameEn);
-    _priceController = TextEditingController(text: r?.pricePerHour.toString());
+    _priceSingleController = TextEditingController(text: r?.pricePerHourSingle.toString() ?? '0.0');
+    _priceMultiController = TextEditingController(text: r?.pricePerHourMulti.toString() ?? '0.0');
     _capacityController = TextEditingController(text: r?.capacity.toString());
     _controllersController = TextEditingController(text: r?.controllersCount.toString() ?? '2');
     _screenSizeController = TextEditingController(text: r?.screenSize ?? '43"');
@@ -78,7 +80,8 @@ class _RoomDialogState extends State<RoomDialog> {
   void dispose() {
     _nameArController.dispose();
     _nameEnController.dispose();
-    _priceController.dispose();
+    _priceSingleController.dispose();
+    _priceMultiController.dispose();
     _capacityController.dispose();
     _controllersController.dispose();
     _screenSizeController.dispose();
@@ -116,7 +119,10 @@ class _RoomDialogState extends State<RoomDialog> {
             nameAr: _nameArController.text,
             nameEn: _nameEnController.text,
             spaceType: _selectedSpaceType,
-            pricePerHour: double.tryParse(_priceController.text) ?? 0,
+            spaceTypeId: widget.room?.spaceTypeId ?? '',
+            pricePerHourSingle: double.tryParse(_priceSingleController.text) ?? 0,
+            pricePerHourMulti: double.tryParse(_priceMultiController.text) ?? 0,
+            pricePerHour: double.tryParse(_priceSingleController.text) ?? 0,
             capacity: int.tryParse(_capacityController.text) ?? 1,
             controllersCount: int.tryParse(_controllersController.text) ?? 2,
             screenSize: _screenSizeController.text,
@@ -174,7 +180,8 @@ class _RoomDialogState extends State<RoomDialog> {
                 RoomBasicInfoForm(
                   nameArController: _nameArController,
                   nameEnController: _nameEnController,
-                  priceController: _priceController,
+                  priceSingleController: _priceSingleController,
+                  priceMultiController: _priceMultiController,
                 ),
                 SizedBox(height: 20.h),
                 RoomSpecsForm(

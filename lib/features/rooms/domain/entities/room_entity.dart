@@ -12,7 +12,9 @@ class RoomEntity extends Equatable {
   final String? spaceType;
   final String? spaceTypeId;
   final int capacity;
-  final double pricePerHour;
+  final double pricePerHourSingle;
+  final double pricePerHourMulti;
+  final double pricePerHour; // Kept for backward compatibility if needed
   final bool isAvailable;
   final List<String> images;
   final List<String> featuresAr;
@@ -31,7 +33,9 @@ class RoomEntity extends Equatable {
     this.spaceType,
     this.spaceTypeId,
     required this.capacity,
-    required this.pricePerHour,
+    required this.pricePerHourSingle,
+    required this.pricePerHourMulti,
+    this.pricePerHour = 0.0,
     required this.isAvailable,
     required this.images,
     required this.featuresAr,
@@ -52,6 +56,8 @@ class RoomEntity extends Equatable {
         spaceType,
         spaceTypeId,
         capacity,
+        pricePerHourSingle,
+        pricePerHourMulti,
         pricePerHour,
         isAvailable,
         images,

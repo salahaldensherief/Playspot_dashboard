@@ -28,7 +28,7 @@ class RoomsDataTable extends StatelessWidget {
         AppStrings.roomName,
         AppStrings.specs,
         AppStrings.capacity,
-        AppStrings.pricePerHour,
+        'Price (Single/Multi)',
         AppStrings.status,
         'Online Toggle',
         AppStrings.actions
@@ -50,7 +50,7 @@ class RoomsDataTable extends StatelessWidget {
             style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp))
           ),
           DataCell(Text('${room.capacity} ${AppStrings.persons}', style: const TextStyle(color: AppColors.textSecondary))),
-          DataCell(Text('\$${room.pricePerHour.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary))),
+          DataCell(Text('${room.pricePerHourSingle.toStringAsFixed(0)} / ${room.pricePerHourMulti.toStringAsFixed(0)} EGP', style: const TextStyle(color: AppColors.textPrimary))),
           DataCell(_getStatusBadge(room.status)),
           DataCell(
             Switch(
