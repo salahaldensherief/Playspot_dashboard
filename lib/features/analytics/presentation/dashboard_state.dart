@@ -16,6 +16,7 @@ class DashboardState extends Equatable {
   final int activeSessions;
   final double occupancyRate;
   final int activeRoomsCount;
+  final double totalPlayHours;
   
   // Super Admin Overview
   final int totalLounges;
@@ -46,6 +47,7 @@ class DashboardState extends Equatable {
     this.activeSessions = 0,
     this.occupancyRate = 0,
     this.activeRoomsCount = 0,
+    this.totalPlayHours = 0,
     this.totalLounges = 0,
     this.activeLounges = 0,
     this.totalUsers = 0,
@@ -73,6 +75,7 @@ class DashboardState extends Equatable {
     int? activeSessions,
     double? occupancyRate,
     int? activeRoomsCount,
+    double? totalPlayHours,
     int? totalLounges,
     int? activeLounges,
     int? totalUsers,
@@ -96,6 +99,7 @@ class DashboardState extends Equatable {
     activeSessions: activeSessions ?? this.activeSessions,
     occupancyRate: occupancyRate ?? this.occupancyRate,
     activeRoomsCount: activeRoomsCount ?? this.activeRoomsCount,
+    totalPlayHours: totalPlayHours ?? this.totalPlayHours,
     totalLounges: totalLounges ?? this.totalLounges,
     activeLounges: activeLounges ?? this.activeLounges,
     totalUsers: totalUsers ?? this.totalUsers,
@@ -122,6 +126,7 @@ class DashboardState extends Equatable {
     activeSessions,
     occupancyRate,
     activeRoomsCount,
+    totalPlayHours,
     totalLounges,
     activeLounges,
     totalUsers,

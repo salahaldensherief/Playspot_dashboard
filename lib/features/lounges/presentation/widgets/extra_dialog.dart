@@ -28,21 +28,24 @@ class ExtraDialog extends StatefulWidget {
 
 class _ExtraDialogState extends State<ExtraDialog> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
+  late TextEditingController _nameArController;
+  late TextEditingController _nameEnController;
   late TextEditingController _priceController;
   String _selectedCategory = 'Drinks';
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.extra?.name);
+    _nameArController = TextEditingController(text: widget.extra?.nameAr);
+    _nameEnController = TextEditingController(text: widget.extra?.nameEn);
     _priceController = TextEditingController(text: widget.extra?.price.toString());
     _selectedCategory = widget.extra?.category ?? 'Drinks';
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _nameArController.dispose();
+    _nameEnController.dispose();
     _priceController.dispose();
     super.dispose();
   }
@@ -52,7 +55,9 @@ class _ExtraDialogState extends State<ExtraDialog> {
       final extra = ExtraEntity(
         id: widget.extra?.id ?? const Uuid().v4(),
         loungeId: widget.loungeId,
-        name: _nameController.text,
+        nameAr: _nameArController.text,
+        nameEn: _nameEnController.text,
+        name: _nameEnController.text, // For compatibility
         price: double.tryParse(_priceController.text) ?? 0,
         category: _selectedCategory,
         isOutOfStock: widget.extra?.isOutOfStock ?? false,
@@ -86,9 +91,16 @@ class _ExtraDialogState extends State<ExtraDialog> {
               ),
               SizedBox(height: 24.h),
               AppTextField(
-                label: AppStrings.itemName,
-                hintText: AppStrings.addItemHint,
-                controller: _nameController,
+                label: AppStrings.nameAr,
+                hintText: "الاسم بالعربية",
+                controller: _nameArController,
+                validator: AppValidator.validateRequired,
+              ),
+              SizedBox(height: 16.h),
+              AppTextField(
+                label: AppStrings.nameEn,
+                hintText: "Item Name (English)",
+                controller: _nameEnController,
                 validator: AppValidator.validateRequired,
               ),
               SizedBox(height: 16.h),

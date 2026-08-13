@@ -4,6 +4,8 @@ import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.da
 import 'package:play_spot_dashboard/features/bookings/domain/repositories/booking_repository.dart';
 import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_remote_data_source.dart';
 import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_realtime_datasource.dart';
+import 'package:play_spot_dashboard/features/bookings/data/models/booking_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class BookingRepositoryImpl implements BookingRepository {
   final BookingRemoteDataSource remoteDataSource;
@@ -41,6 +43,11 @@ class BookingRepositoryImpl implements BookingRepository {
     try {
       await remoteDataSource.updateBookingStatus(id, status.toString().split('.').last);
       return const Right(null);
+    } on PostgrestException catch (e) {
+      if (e.code == '23P01') {
+        return const Left(ServerFailure('الوقت المحدد تم حجزه بالفعل، يرجى اختيار وقت آخر'));
+      }
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -51,6 +58,46 @@ class BookingRepositoryImpl implements BookingRepository {
     try {
       await remoteDataSource.confirmCashPayment(bookingId);
       return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> createBooking(Booking booking) async {
+    try {
+      final model = BookingModel(
+        id: booking.id,
+        userId: booking.userId,
+        userName: booking.userName,
+        userEmail: booking.userEmail,
+        userPhone: booking.userPhone,
+        loungeId: booking.loungeId,
+        roomId: booking.roomId,
+        loungeName: booking.loungeName,
+        loungeLocation: booking.loungeLocation,
+        roomName: booking.roomName,
+        controllersCount: booking.controllersCount,
+        screenSize: booking.screenSize,
+        date: booking.date,
+        startTime: booking.startTime,
+        endTime: booking.endTime,
+        status: booking.status,
+        paymentStatus: booking.paymentStatus,
+        totalPrice: booking.totalPrice,
+        voucherDiscount: booking.voucherDiscount,
+        extras: booking.extras,
+        mapsLink: booking.mapsLink,
+        lat: booking.lat,
+        lng: booking.lng,
+      );
+      await remoteDataSource.createBooking(model);
+      return const Right(null);
+    } on PostgrestException catch (e) {
+      if (e.code == '23P01') {
+        return const Left(ServerFailure('الوقت المحدد تم حجزه بالفعل، يرجى اختيار وقت آخر'));
+      }
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

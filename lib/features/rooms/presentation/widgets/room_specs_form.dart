@@ -6,12 +6,16 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 
+import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
+
 class RoomSpecsForm extends StatelessWidget {
   final TextEditingController capacityController;
   final TextEditingController controllersController;
   final TextEditingController screenSizeController;
   final String? selectedSpaceType;
   final Function(String?)? onSpaceTypeChanged;
+  final RoomStatusEnum status;
+  final Function(RoomStatusEnum?)? onStatusChanged;
 
   const RoomSpecsForm({
     super.key,
@@ -20,6 +24,8 @@ class RoomSpecsForm extends StatelessWidget {
     required this.screenSizeController,
     this.selectedSpaceType,
     this.onSpaceTypeChanged,
+    required this.status,
+    this.onStatusChanged,
   });
 
   @override
@@ -39,6 +45,20 @@ class RoomSpecsForm extends StatelessWidget {
             ),
             SizedBox(width: 16.w),
             Expanded(
+              child: CustomDropdown<RoomStatusEnum>(
+                label: AppStrings.status,
+                value: status,
+                items: RoomStatusEnum.values,
+                itemLabel: (s) => s.name.toUpperCase(),
+                onChanged: onStatusChanged!,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 20.h),
+        Row(
+          children: [
+            Expanded(
               child: AppTextField(
                 label: AppStrings.capacity,
                 hintText: AppStrings.capacityHint,
@@ -57,13 +77,15 @@ class RoomSpecsForm extends StatelessWidget {
                 validator: AppValidator.validateOptionalNumber,
               ),
             ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: AppTextField(
+                label: AppStrings.specs,
+                hintText: AppStrings.screenSizeHint,
+                controller: screenSizeController,
+              ),
+            ),
           ],
-        ),
-        SizedBox(height: 20.h),
-        AppTextField(
-          label: AppStrings.specs,
-          hintText: AppStrings.screenSizeHint,
-          controller: screenSizeController,
         ),
       ],
     );

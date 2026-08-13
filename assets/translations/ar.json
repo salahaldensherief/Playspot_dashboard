@@ -262,6 +262,7 @@
   "monthly_reports": "تقارير شهرية",
   "total_revenue": "إجمالي الإيرادات",
   "total_bookings": "إجمالي الحجوزات",
+  "play_hours": "ساعات اللعب",
   "select_month": "اختر الشهر",
   "manage_admins_desc": "إنشاء وإدارة حسابات مديري الصالات",
   "add_lounge_admin_btn": "إضافة مدير صالة"

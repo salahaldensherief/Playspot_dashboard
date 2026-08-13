@@ -80,6 +80,21 @@ class DashboardStatsGrid extends StatelessWidget {
             },
           ),
         ),
+        SizedBox(width: 24.w),
+        Expanded(
+          child: BlocSelector<DashboardCubit, DashboardState, double>(
+            selector: (state) => state.totalPlayHours,
+            builder: (context, hours) {
+              return StatCard(
+                title: AppStrings.playHours,
+                value: '${hours.toStringAsFixed(0)}h',
+                trendValue: 0.0, // Added missing required parameter
+                icon: Icons.timer_outlined,
+                iconColor: Colors.orangeAccent,
+              );
+            },
+          ),
+        ),
       ],
     );
   }

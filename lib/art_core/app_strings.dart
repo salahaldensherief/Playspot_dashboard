@@ -188,6 +188,7 @@ class AppStrings {
   static String get monthlyReports => 'monthly_reports'.tr();
   static String get totalRevenue => 'total_revenue'.tr();
   static String get totalBookings => 'total_bookings'.tr();
+  static String get playHours => 'play_hours'.tr();
   static String get selectMonth => 'select_month'.tr();
 
   // Validation

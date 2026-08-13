@@ -191,6 +191,8 @@ class LoungeRepositoryImpl implements LoungeRepository {
       await remoteDataSource.addExtra(ExtraModel(
         id: extra.id,
         loungeId: extra.loungeId,
+        nameAr: extra.nameAr,
+        nameEn: extra.nameEn,
         name: extra.name,
         price: extra.price,
         category: extra.category,
@@ -209,6 +211,8 @@ class LoungeRepositoryImpl implements LoungeRepository {
       await remoteDataSource.updateExtra(ExtraModel(
         id: extra.id,
         loungeId: extra.loungeId,
+        nameAr: extra.nameAr,
+        nameEn: extra.nameEn,
         name: extra.name,
         price: extra.price,
         category: extra.category,

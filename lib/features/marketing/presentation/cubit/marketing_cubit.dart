@@ -1,44 +1,69 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
 import '../../domain/entities/promo_entity.dart';
-import 'package:play_spot_dashboard/features/lounges/domain/repositories/lounge_repository.dart'; // Assume it handles promos or create a new one
-
-abstract class MarketingState extends Equatable {
-  const MarketingState();
-  @override
-  List<Object?> get props => [];
-}
-
-class MarketingInitial extends MarketingState {}
-class MarketingLoading extends MarketingState {}
-class MarketingLoaded extends MarketingState {
-  final List<PromoEntity> promotions;
-  const MarketingLoaded(this.promotions);
-  @override
-  List<Object?> get props => [promotions];
-}
-class MarketingError extends MarketingState {
-  final String message;
-  const MarketingError(this.message);
-  @override
-  List<Object?> get props => [message];
-}
+import '../../domain/entities/notification_entity.dart';
+import '../../domain/repositories/marketing_repository.dart';
+import 'marketing_state.dart';
 
 class MarketingCubit extends Cubit<MarketingState> {
-  // For simplicity, let's use a repository that handles promotions
-  // In a real scenario, this would be MarketingRepository
-  MarketingCubit() : super(MarketingInitial());
+  final MarketingRepository repository;
+
+  MarketingCubit(this.repository) : super(const MarketingState());
 
   Future<void> loadPromotions({String? loungeId}) async {
-    emit(MarketingLoading());
-    // In a real implementation, you'd call a repository here
-    // For now, let's keep it empty or emit an empty list
-    emit(const MarketingLoaded([]));
+    emit(state.copyWith(status: MarketingStatus.loading));
+    final result = await repository.getPromotions(loungeId: loungeId);
+    
+    if (isClosed) return;
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: MarketingStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (promos) => emit(state.copyWith(
+        status: MarketingStatus.success,
+        promotions: promos,
+      )),
+    );
   }
 
-  Future<void> deletePromotion(String id) async {
-    // Implementation for deleting
-    // After success, reload
-    loadPromotions();
+  Future<void> deletePromotion(String id, {String? loungeId}) async {
+    final result = await repository.deletePromotion(id);
+    if (isClosed) return;
+    result.fold(
+      (failure) => emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message)),
+      (_) => loadPromotions(loungeId: loungeId),
+    );
+  }
+
+  Future<void> createPromotion(PromoEntity promo) async {
+    emit(state.copyWith(status: MarketingStatus.loading));
+    final result = await repository.createPromotion(promo);
+    if (isClosed) return;
+    result.fold(
+      (failure) => emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message)),
+      (_) => loadPromotions(loungeId: promo.loungeId),
+    );
+  }
+
+  // Notifications
+  Future<void> loadNotifications() async {
+    emit(state.copyWith(status: MarketingStatus.loading));
+    final result = await repository.getNotifications();
+    if (isClosed) return;
+    result.fold(
+      (failure) => emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message)),
+      (notifications) => emit(state.copyWith(status: MarketingStatus.success, notifications: notifications)),
+    );
+  }
+
+  Future<void> sendNotification(NotificationEntity notification) async {
+    emit(state.copyWith(status: MarketingStatus.loading));
+    final result = await repository.sendNotification(notification);
+    if (isClosed) return;
+    result.fold(
+      (failure) => emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message)),
+      (_) => loadNotifications(),
+    );
   }
 }

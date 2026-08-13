@@ -6,7 +6,8 @@ class RoomModel extends RoomEntity {
     required super.loungeId,
     required super.nameAr,
     required super.nameEn,
-    required super.activityNames,
+    super.activityNames = const [],
+    super.activityIds = const [],
     super.spaceType,
     super.spaceTypeId,
     required super.capacity,
@@ -21,12 +22,22 @@ class RoomModel extends RoomEntity {
   });
 
   factory RoomModel.fromJson(Map<String, dynamic> json) {
-    final List? roomCats = json['room_categories'] as List?;
+    final List? activitiesJoin = json['room_activities'] as List?;
     final List<String> activities = [];
-    if (roomCats != null) {
-      for (var cat in roomCats) {
-        if (cat['categories'] != null && cat['categories']['name_en'] != null) {
-          activities.add(cat['categories']['name_en']);
+    final List<String> activityIds = [];
+    if (activitiesJoin != null) {
+      for (var item in activitiesJoin) {
+        if (item['activity_types'] != null) {
+          final type = item['activity_types'];
+          if (type['label'] != null) {
+            activities.add(type['label']);
+          } else if (type['name_en'] != null) {
+            activities.add(type['name_en']);
+          }
+          
+          if (type['id'] != null) {
+            activityIds.add(type['id'].toString());
+          }
         }
       }
     }
@@ -53,6 +64,9 @@ class RoomModel extends RoomEntity {
       activityNames: activities.isNotEmpty
           ? activities
           : (json['activity_names'] != null ? List<String>.from(json['activity_names']) : []),
+      activityIds: activityIds.isNotEmpty
+          ? activityIds
+          : (json['activity_ids'] != null ? List<String>.from(json['activity_ids']) : []),
       spaceType: json['space_types']?['label'] ?? json['space_type_name']?.toString(),
       spaceTypeId: json['space_type_id']?.toString(),
       capacity: parseInt(json['capacity'], 4),

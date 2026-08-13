@@ -3,7 +3,9 @@ import 'package:equatable/equatable.dart';
 class ExtraEntity extends Equatable {
   final String id;
   final String loungeId;
-  final String name;
+  final String nameAr;
+  final String nameEn;
+  final String name; // Keeping for compatibility
   final double price;
   final String category; // e.g., Drinks, Snacks
   final String? iconKey;
@@ -13,7 +15,9 @@ class ExtraEntity extends Equatable {
   const ExtraEntity({
     required this.id,
     required this.loungeId,
-    required this.name,
+    required this.nameAr,
+    required this.nameEn,
+    this.name = '',
     required this.price,
     required this.category,
     this.iconKey,
@@ -22,5 +26,5 @@ class ExtraEntity extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, loungeId, name, price, category, iconKey, isOutOfStock, imageUrl];
+  List<Object?> get props => [id, loungeId, nameAr, nameEn, name, price, category, iconKey, isOutOfStock, imageUrl];
 }

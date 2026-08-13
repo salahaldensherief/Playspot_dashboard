@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import '../../domain/entities/promo_entity.dart';
+import '../../domain/entities/notification_entity.dart';
 import '../cubit/marketing_cubit.dart';
+import '../cubit/marketing_state.dart';
 import 'promo_form_section.dart';
 import 'design_style_section.dart';
 import 'promo_dialog.dart';
+import 'notification_dialog.dart';
 
 class MarketingView extends StatefulWidget {
   const MarketingView({super.key});
@@ -18,7 +22,8 @@ class MarketingView extends StatefulWidget {
   State<MarketingView> createState() => _MarketingViewState();
 }
 
-class _MarketingViewState extends State<MarketingView> {
+class _MarketingViewState extends State<MarketingView> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   final _formKey = GlobalKey<FormState>();
   
   final List<List<Color>> _colorTemplates = [
@@ -33,44 +38,84 @@ class _MarketingViewState extends State<MarketingView> {
   String _selectedDeepLink = 'Specific Room';
 
   @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final user = context.read<LoginCubit>().state.user;
-    final isSuperAdmin = user?.isSuperAdmin ?? false;
+    final isSuperAdmin = user?.role.name == 'superAdmin';
     final marketingCubit = context.read<MarketingCubit>();
 
     return Padding(
       padding: EdgeInsets.all(24.r),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  AppStrings.marketing,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 28.sp,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Orbitron',
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                AppStrings.marketing,
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 28.sp,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Orbitron',
                 ),
-                if (isSuperAdmin)
-                  AppButton(
-                    text: AppStrings.createGlobalPromo,
-                    onPressed: () => _showEditPromoDialog(context, marketingCubit, const PromoEntity(id: '', titleAr: '', titleEn: '', tagAr: '', tagEn: '', hexColors: [], iconKey: '')),
-                    icon: Icons.add,
-                  ),
+              ),
+              if (isSuperAdmin)
+                Row(
+                  children: [
+                    AppButton(
+                      text: 'New Notification',
+                      onPressed: () => _showNotificationDialog(context, marketingCubit),
+                      icon: Icons.notifications_active_outlined,
+                      variant: AppButtonVariant.outlined,
+                    ),
+                    SizedBox(width: 16.w),
+                    AppButton(
+                      text: AppStrings.createGlobalPromo,
+                      onPressed: () => _showEditPromoDialog(context, marketingCubit, const PromoEntity(id: '', titleAr: '', titleEn: '', tagAr: '', tagEn: '', hexColors: [], iconKey: '')),
+                      icon: Icons.add,
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          SizedBox(height: 32.h),
+          if (isSuperAdmin) ...[
+            TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              labelColor: AppColors.neonBlue,
+              indicatorColor: AppColors.neonBlue,
+              tabs: const [
+                Tab(text: 'Promotions'),
+                Tab(text: 'Notifications History'),
               ],
             ),
-            SizedBox(height: 32.h),
-            if (isSuperAdmin) 
-              _buildPromotionsList(marketingCubit)
-            else 
-              _buildLoungeAdminForm(),
-          ],
-        ),
+            SizedBox(height: 24.h),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildPromotionsList(marketingCubit),
+                  _buildNotificationsList(marketingCubit),
+                ],
+              ),
+            ),
+          ] else 
+            Expanded(child: SingleChildScrollView(child: _buildLoungeAdminForm())),
+        ],
       ),
     );
   }
@@ -110,49 +155,72 @@ class _MarketingViewState extends State<MarketingView> {
 
   Widget _buildPromotionsList(MarketingCubit cubit) {
     return BlocBuilder<MarketingCubit, MarketingState>(
-      bloc: cubit,
       builder: (context, state) {
-        if (state is MarketingLoading) {
+        if (state.status == MarketingStatus.loading) {
            return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
         }
-        if (state is MarketingLoaded) {
-          return Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(24.r),
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: AppColors.borderDefault),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppStrings.activePromotions,
-                  style: TextStyle(color: AppColors.neonBlue, fontSize: 18.sp, fontWeight: FontWeight.bold),
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(24.r),
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: AppColors.borderDefault),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (state.promotions.isEmpty)
+                const Center(child: Text('No promotions found', style: TextStyle(color: AppColors.textSecondary)))
+              else
+                DataTable(
+                  headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
+                  columns: [
+                    DataColumn(label: Text(AppStrings.promoTitleEn)),
+                    DataColumn(label: Text(AppStrings.tagEn)),
+                    DataColumn(label: Text(AppStrings.userLabel)),
+                    DataColumn(label: Text(AppStrings.status)),
+                    DataColumn(label: Text(AppStrings.actions)),
+                  ],
+                  rows: state.promotions.map((p) => _buildPromoRow(context, cubit, p)).toList(),
                 ),
-                SizedBox(height: 24.h),
-                if (state.promotions.isEmpty)
-                  const Center(child: Text('No promotions found', style: TextStyle(color: AppColors.textSecondary)))
-                else
-                  DataTable(
-                    headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
-                    columns: [
-                      DataColumn(label: Text(AppStrings.promoTitleEn)),
-                      DataColumn(label: Text(AppStrings.tagEn)),
-                      DataColumn(label: Text(AppStrings.userLabel)),
-                      DataColumn(label: Text(AppStrings.status)),
-                      DataColumn(label: Text(AppStrings.actions)),
-                    ],
-                    rows: state.promotions.map((p) => _buildPromoRow(context, cubit, p)).toList(),
-                  ),
-              ],
-            ),
-          );
-        }
-        return const SizedBox.shrink();
+            ],
+          ),
+        );
       },
     );
+  }
+
+  Widget _buildNotificationsList(MarketingCubit cubit) {
+    return BlocBuilder<MarketingCubit, MarketingState>(
+      builder: (context, state) {
+        if (state.status == MarketingStatus.loading) return const Center(child: CircularProgressIndicator());
+        if (state.notifications.isEmpty) return const Center(child: Text('No notification history', style: TextStyle(color: AppColors.textSecondary)));
+
+        return ListView.separated(
+          itemCount: state.notifications.length,
+          separatorBuilder: (_, __) => Divider(color: AppColors.borderDefault),
+          itemBuilder: (context, index) {
+            final n = state.notifications[index];
+            return ListTile(
+              leading: Icon(_getNotifyIcon(n.type), color: AppColors.neonBlue),
+              title: Text(n.titleEn, style: const TextStyle(color: AppColors.textPrimary)),
+              subtitle: Text(n.bodyEn, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary)),
+              trailing: Text(DateFormat('yyyy-MM-dd HH:mm').format(n.createdAt), style: TextStyle(color: AppColors.textMuted, fontSize: 12.sp)),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  IconData _getNotifyIcon(NotificationType type) {
+    switch (type) {
+      case NotificationType.offer: return Icons.local_offer_outlined;
+      case NotificationType.booking: return Icons.event_available;
+      case NotificationType.loyalty: return Icons.card_giftcard;
+      default: return Icons.info_outline;
+    }
   }
 
   DataRow _buildPromoRow(BuildContext context, MarketingCubit cubit, PromoEntity promo) {
@@ -186,8 +254,17 @@ class _MarketingViewState extends State<MarketingView> {
       builder: (diagContext) => PromoDialog(
         promo: promo,
         onSave: (updatedPromo) {
-          // Implementation for save
+          cubit.createPromotion(updatedPromo);
         },
+      ),
+    );
+  }
+
+  void _showNotificationDialog(BuildContext context, MarketingCubit cubit) {
+    showDialog(
+      context: context,
+      builder: (diagContext) => NotificationDialog(
+        onSend: (n) => cubit.sendNotification(n),
       ),
     );
   }

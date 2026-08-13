@@ -112,8 +112,13 @@ class RoomsDataTable extends StatelessWidget {
   }
 
   Widget _getStatusBadge(RoomStatusEnum status) {
-    return status == RoomStatusEnum.available
-        ? StatusBadge.success('Available')
-        : StatusBadge.warning('Maintenance');
+    switch (status) {
+      case RoomStatusEnum.available:
+        return StatusBadge.success('Available');
+      case RoomStatusEnum.maintenance:
+        return StatusBadge.warning('Maintenance');
+      case RoomStatusEnum.occupied:
+        return StatusBadge.danger('Occupied');
+    }
   }
 }

@@ -8,6 +8,7 @@ class RoomEntity extends Equatable {
   final String nameAr;
   final String nameEn;
   final List<String> activityNames;
+  final List<String> activityIds;
   final String? spaceType;
   final String? spaceTypeId;
   final int capacity;
@@ -25,7 +26,8 @@ class RoomEntity extends Equatable {
     required this.loungeId,
     required this.nameAr,
     required this.nameEn,
-    required this.activityNames,
+    this.activityNames = const [],
+    this.activityIds = const [],
     this.spaceType,
     this.spaceTypeId,
     required this.capacity,
@@ -46,6 +48,7 @@ class RoomEntity extends Equatable {
         nameAr,
         nameEn,
         activityNames,
+        activityIds,
         spaceType,
         spaceTypeId,
         capacity,

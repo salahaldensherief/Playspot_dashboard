@@ -11,6 +11,7 @@ class PromoModel extends PromoEntity {
     required super.iconKey,
     super.imageUrl,
     super.deepLink,
+    super.loungeId,
   });
 
   factory PromoModel.fromJson(Map<String, dynamic> json) {
@@ -24,6 +25,7 @@ class PromoModel extends PromoEntity {
       iconKey: json['icon_key']?.toString() ?? '',
       imageUrl: json['image_url'],
       deepLink: json['deep_link'],
+      loungeId: json['lounge_id']?.toString(),
     );
   }
 
@@ -38,6 +40,7 @@ class PromoModel extends PromoEntity {
       'icon_key': iconKey,
       'image_url': imageUrl,
       'deep_link': deepLink,
+      'lounge_id': loungeId,
     };
   }
 }

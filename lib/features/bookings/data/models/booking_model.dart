@@ -17,6 +17,7 @@ class BookingModel extends Booking {
     required super.date,
     required super.startTime,
     required super.endTime,
+    super.durationHours = 0.0,
     required super.status,
     super.paymentStatus,
     required super.totalPrice,
@@ -101,6 +102,7 @@ class BookingModel extends Booking {
       date: DateTime.parse(json['out_booking_date'] ?? json['date'] ?? DateTime.now().toIso8601String()),
       startTime: json['out_start_time'] ?? json['start_time'] ?? '',
       endTime: json['out_end_time'] ?? json['end_time'] ?? '',
+      durationHours: parseDouble(json['duration_hours']),
       status: status,
       paymentStatus: (json['out_payment_status'] ?? json['payment_status'])?.toString(),
       totalPrice: parseDouble(json['out_total_price'] ?? json['total_price']),
@@ -110,5 +112,22 @@ class BookingModel extends Booking {
       lat: (json['lat'] ?? loungeData?['lat']) != null ? parseDouble(json['lat'] ?? loungeData?['lat']) : null,
       lng: (json['lng'] ?? loungeData?['lng']) != null ? parseDouble(json['lng'] ?? loungeData?['lng']) : null,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'user_id': userId,
+      'room_id': roomId,
+      'lounge_id': loungeId,
+      'date': date.toIso8601String().split('T')[0],
+      'start_time': startTime,
+      'end_time': endTime,
+      'total_price': totalPrice,
+      'booking_status': status.name,
+      'user_name': userName,
+      'user_phone': userPhone,
+      'room_name': roomName,
+      'booking_extras': extras,
+    };
   }
 }

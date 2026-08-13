@@ -74,8 +74,15 @@ class _LoungeAdminPayoutsPageState extends State<LoungeAdminPayoutsPage> {
                     cells: [
                       DataCell(Text(DateFormat('MMM dd, yyyy').format(DateTime.parse(p['created_at'])), style: const TextStyle(color: AppColors.textPrimary))),
                       DataCell(Text('${p['period_start']} ${AppStrings.back} ${p['period_end']}', style: const TextStyle(color: AppColors.textSecondary))),
-                      DataCell(Text('\$${(p['amount'] as num).toStringAsFixed(2)}', style: const TextStyle(color: AppColors.neonGreen, fontWeight: FontWeight.bold))),
                       DataCell(
+                        Text(
+                          '\$${((p['amount'] as num?) ?? 0).toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            color: AppColors.neonGreen,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),                      DataCell(
                         p['status'] == 'paid' 
                           ? StatusBadge.success(AppStrings.paid.toUpperCase())
                           : StatusBadge.warning(AppStrings.pending.toUpperCase())

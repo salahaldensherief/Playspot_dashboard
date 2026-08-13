@@ -10,6 +10,7 @@ abstract class BookingRemoteDataSource {
   });
   Future<void> updateBookingStatus(String id, String status);
   Future<void> confirmCashPayment(String bookingId);
+  Future<void> createBooking(BookingModel booking);
 }
 
 class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
@@ -77,5 +78,10 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       // تحديث الجدول يدوياً إذا فشلت الـ RPC
       await client.from('payments').update({'status': 'paid'}).eq('booking_id', bookingId);
     }
+  }
+
+  @override
+  Future<void> createBooking(BookingModel booking) async {
+    await client.from('bookings').insert(booking.toJson());
   }
 }

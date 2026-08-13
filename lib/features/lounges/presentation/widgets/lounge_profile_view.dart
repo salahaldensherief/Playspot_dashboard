@@ -35,6 +35,8 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
   Uint8List? _mainImageBytes;
   String? _mainImageName;
   List<SelectedImage> _galleryImages = [];
+  double? _lat;
+  double? _lng;
   bool _isSaving = false;
 
   @override
@@ -48,6 +50,8 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     _addressController = TextEditingController(text: lounge?.location);
     _opensAtController = TextEditingController(text: lounge?.opensAt);
     _closesAtController = TextEditingController(text: lounge?.closesAt);
+    _lat = lounge?.lat;
+    _lng = lounge?.lng;
   }
 
   @override
@@ -102,6 +106,8 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
             closesAt: _closesAtController.text,
             imageUrl: mainImageUrl,
             images: galleryUrls,
+            lat: _lat,
+            lng: _lng,
           );
 
           await context.read<LoungeCubit>().repository.updateLounge(updatedLounge);
@@ -159,6 +165,12 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
               LocationInfoSection(
                 cityController: _cityController,
                 addressController: _addressController,
+                lat: _lat,
+                lng: _lng,
+                onLocationChanged: (lat, lng) => setState(() {
+                  _lat = lat;
+                  _lng = lng;
+                }),
               ),
               SizedBox(height: 32.h),
               WorkingHoursSection(

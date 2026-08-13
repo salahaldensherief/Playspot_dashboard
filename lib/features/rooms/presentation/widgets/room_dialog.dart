@@ -43,12 +43,17 @@ class _RoomDialogState extends State<RoomDialog> {
   late TextEditingController _controllersController;
   late TextEditingController _screenSizeController;
   
-  final List<String> _selectedActivities = [];
-  final List<String> _predefinedActivities = ['PS5', 'PC', 'VR', 'Billiards'];
+  final List<String> _selectedActivityIds = [];
+  final List<String> _featuresAr = [];
+  final List<String> _featuresEn = [];
   
+  RoomStatusEnum _selectedStatus = RoomStatusEnum.available;
   String? _selectedSpaceType;
   List<SelectedImage> _roomImages = [];
   bool _isUploading = false;
+
+  final TextEditingController _featureArController = TextEditingController();
+  final TextEditingController _featureEnController = TextEditingController();
 
   @override
   void initState() {
@@ -61,8 +66,11 @@ class _RoomDialogState extends State<RoomDialog> {
     _controllersController = TextEditingController(text: r?.controllersCount.toString() ?? '2');
     _screenSizeController = TextEditingController(text: r?.screenSize ?? '43"');
     _selectedSpaceType = r?.spaceType ?? 'Private';
+    _selectedStatus = r?.status ?? RoomStatusEnum.available;
     if (r != null) {
-      _selectedActivities.addAll(r.activityNames);
+      _selectedActivityIds.addAll(r.activityIds);
+      _featuresAr.addAll(r.featuresAr);
+      _featuresEn.addAll(r.featuresEn);
     }
   }
 
@@ -74,6 +82,8 @@ class _RoomDialogState extends State<RoomDialog> {
     _capacityController.dispose();
     _controllersController.dispose();
     _screenSizeController.dispose();
+    _featureArController.dispose();
+    _featureEnController.dispose();
     super.dispose();
   }
 
@@ -110,12 +120,12 @@ class _RoomDialogState extends State<RoomDialog> {
             capacity: int.tryParse(_capacityController.text) ?? 1,
             controllersCount: int.tryParse(_controllersController.text) ?? 2,
             screenSize: _screenSizeController.text,
-            activityNames: _selectedActivities.isEmpty ? const ['PS5'] : _selectedActivities,
-            featuresAr: widget.room?.featuresAr ?? const [],
-            featuresEn: widget.room?.featuresEn ?? const [],
+            activityIds: _selectedActivityIds,
+            featuresAr: _featuresAr,
+            featuresEn: _featuresEn,
             images: images,
-            isAvailable: widget.room?.isAvailable ?? true,
-            status: widget.room?.status ?? RoomStatusEnum.available,
+            isAvailable: _selectedStatus == RoomStatusEnum.available,
+            status: _selectedStatus,
           );
 
           if (widget.onSave != null) {
@@ -142,7 +152,7 @@ class _RoomDialogState extends State<RoomDialog> {
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Container(
-        width: 700.w,
+        width: 800.w,
         padding: EdgeInsets.all(32.r),
         child: SingleChildScrollView(
           child: Form(
@@ -173,7 +183,11 @@ class _RoomDialogState extends State<RoomDialog> {
                   screenSizeController: _screenSizeController,
                   selectedSpaceType: _selectedSpaceType,
                   onSpaceTypeChanged: (v) => setState(() => _selectedSpaceType = v),
+                  status: _selectedStatus,
+                  onStatusChanged: (v) => setState(() => _selectedStatus = v!),
                 ),
+                SizedBox(height: 24.h),
+                _buildFeaturesSection(),
                 SizedBox(height: 24.h),
                 _buildActivitySelection(),
                 SizedBox(height: 32.h),
@@ -186,13 +200,83 @@ class _RoomDialogState extends State<RoomDialog> {
     );
   }
 
+  Widget _buildFeaturesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(AppStrings.specs, style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.w500)),
+        SizedBox(height: 12.h),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _featureArController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'المميزات (عربي)',
+                  hintStyle: const TextStyle(color: AppColors.textSecondary),
+                  filled: true,
+                  fillColor: AppColors.mutedBackground,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: BorderSide.none),
+                ),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: TextFormField(
+                controller: _featureEnController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Features (English)',
+                  hintStyle: const TextStyle(color: AppColors.textSecondary),
+                  filled: true,
+                  fillColor: AppColors.mutedBackground,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: BorderSide.none),
+                ),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            IconButton(
+              onPressed: () {
+                if (_featureArController.text.isNotEmpty && _featureEnController.text.isNotEmpty) {
+                  setState(() {
+                    _featuresAr.add(_featureArController.text);
+                    _featuresEn.add(_featureEnController.text);
+                    _featureArController.clear();
+                    _featureEnController.clear();
+                  });
+                }
+              },
+              icon: const Icon(Icons.add_circle, color: AppColors.neonBlue),
+            ),
+          ],
+        ),
+        SizedBox(height: 12.h),
+        Wrap(
+          spacing: 8.w,
+          runSpacing: 8.h,
+          children: List.generate(_featuresEn.length, (index) {
+            return Chip(
+              label: Text('${_featuresEn[index]} | ${_featuresAr[index]}', style: TextStyle(fontSize: 11.sp)),
+              backgroundColor: AppColors.mutedBackground,
+              deleteIcon: Icon(Icons.close, size: 14.r, color: AppColors.danger),
+              onDeleted: () => setState(() {
+                _featuresAr.removeAt(index);
+                _featuresEn.removeAt(index);
+              }),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.r), side: BorderSide(color: AppColors.borderDefault)),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
   Widget _buildActivitySelection() {
     return BlocBuilder<CategoryCubit, CategoryState>(
       bloc: widget.categoryCubit,
       builder: (context, state) {
-        final List<String> activities = state.status == CategoryStatus.success
-            ? state.categories.map((e) => e.nameEn).toList()
-            : _predefinedActivities;
+        final categories = state.categories;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,17 +289,17 @@ class _RoomDialogState extends State<RoomDialog> {
             Wrap(
               spacing: 12.w,
               runSpacing: 12.h,
-              children: activities.map((activity) {
-                final isSelected = _selectedActivities.contains(activity);
+              children: categories.map((cat) {
+                final isSelected = _selectedActivityIds.contains(cat.id);
                 return FilterChip(
-                  label: Text(activity),
+                  label: Text(cat.nameEn),
                   selected: isSelected,
                   onSelected: (selected) {
                     setState(() {
                       if (selected) {
-                        _selectedActivities.add(activity);
+                        _selectedActivityIds.add(cat.id);
                       } else {
-                        _selectedActivities.remove(activity);
+                        _selectedActivityIds.remove(cat.id);
                       }
                     });
                   },

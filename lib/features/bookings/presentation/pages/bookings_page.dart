@@ -8,11 +8,13 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_state.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import '../../../lounges/domain/entities/lounge.dart';
 import '../../domain/entities/booking.dart';
 import '../cubit/booking_cubit.dart';
 import '../cubit/booking_state.dart';
 import '../widgets/booking_card.dart';
+import '../widgets/add_booking_dialog.dart';
 
 class BookingsPage extends StatelessWidget {
   const BookingsPage({super.key});
@@ -157,6 +159,23 @@ class BookingsPage extends StatelessWidget {
               ),
               Row(
                 children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.read<RoomCubit>().watchRooms(loungeId);
+                      showDialog(
+                        context: context,
+                        builder: (context) => AddBookingDialog(loungeId: loungeId),
+                      );
+                    },
+                    icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+                    label: AppText.body(AppStrings.newBooking, color: Colors.white, fontWeight: FontWeight.bold),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.neonBlue,
+                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                    ),
+                  ),
+                  SizedBox(width: 24.w),
                   AppText.body(isOpen ? AppStrings.closeLounge : AppStrings.openLounge, fontWeight: FontWeight.bold),
                   SizedBox(width: 8.w),
                   Switch(

@@ -5,12 +5,14 @@ import '../../domain/entities/booking.dart';
 import '../../domain/usecases/confirm_cash_payment.dart';
 import '../../domain/usecases/update_booking_status.dart';
 import '../../domain/usecases/watch_bookings.dart';
+import '../../domain/usecases/create_booking.dart';
 import 'booking_state.dart';
 
 class BookingCubit extends Cubit<BookingState> {
   final WatchBookings watchBookings;
   final UpdateBookingStatus updateBookingStatus;
   final ConfirmCashPayment confirmCashPaymentUseCase;
+  final CreateBooking createBookingUseCase;
   final AudioService audioService;
   StreamSubscription? _subscription;
   int _lastBookingCount = 0;
@@ -19,6 +21,7 @@ class BookingCubit extends Cubit<BookingState> {
     required this.watchBookings,
     required this.updateBookingStatus,
     required this.confirmCashPaymentUseCase,
+    required this.createBookingUseCase,
     required this.audioService,
   }) : super(const BookingState());
 
@@ -86,6 +89,24 @@ class BookingCubit extends Cubit<BookingState> {
         errorMessage: failure.message,
       )),
       (_) => null,
+    );
+  }
+
+  Future<void> createManualBooking(Booking booking) async {
+    emit(state.copyWith(status: BookingStatusState.loading));
+    
+    final result = await createBookingUseCase(booking);
+    
+    if (isClosed) return;
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: BookingStatusState.failure,
+        errorMessage: failure.message,
+      )),
+      (_) => emit(state.copyWith(
+        status: BookingStatusState.success,
+      )),
     );
   }
 

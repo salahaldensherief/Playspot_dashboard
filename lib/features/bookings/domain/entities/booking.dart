@@ -18,6 +18,7 @@ class Booking extends Equatable {
   final DateTime date;
   final String startTime;
   final String endTime;
+  final double durationHours;
   final BookingStatus status;
   final String? paymentStatus;
   final double totalPrice;
@@ -43,6 +44,7 @@ class Booking extends Equatable {
     required this.date,
     required this.startTime,
     required this.endTime,
+    this.durationHours = 0.0,
     required this.status,
     this.paymentStatus,
     required this.totalPrice,
@@ -70,6 +72,7 @@ class Booking extends Equatable {
         date,
         startTime,
         endTime,
+        durationHours,
         status,
         paymentStatus,
         totalPrice,

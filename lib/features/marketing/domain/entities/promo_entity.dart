@@ -10,6 +10,7 @@ class PromoEntity extends Equatable {
   final String iconKey;
   final String? imageUrl;
   final String? deepLink;
+  final String? loungeId;
 
   const PromoEntity({
     required this.id,
@@ -21,8 +22,9 @@ class PromoEntity extends Equatable {
     required this.iconKey,
     this.imageUrl,
     this.deepLink,
+    this.loungeId,
   });
 
   @override
-  List<Object?> get props => [id, titleAr, titleEn, tagAr, tagEn, hexColors, iconKey, imageUrl, deepLink];
+  List<Object?> get props => [id, titleAr, titleEn, tagAr, tagEn, hexColors, iconKey, imageUrl, deepLink, loungeId];
 }

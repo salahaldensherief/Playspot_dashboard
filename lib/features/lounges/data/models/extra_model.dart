@@ -4,7 +4,9 @@ class ExtraModel extends ExtraEntity {
   const ExtraModel({
     required super.id,
     required super.loungeId,
-    required super.name,
+    required super.nameAr,
+    required super.nameEn,
+    super.name,
     required super.price,
     required super.category,
     super.iconKey,
@@ -15,6 +17,8 @@ class ExtraModel extends ExtraEntity {
     return ExtraModel(
       id: json['id']?.toString() ?? '',
       loungeId: json['lounge_id']?.toString() ?? '',
+      nameAr: (json['name_ar'] ?? json['name'])?.toString() ?? '',
+      nameEn: (json['name_en'] ?? json['name'])?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       category: json['category']?.toString() ?? 'Others',
@@ -27,7 +31,9 @@ class ExtraModel extends ExtraEntity {
   Map<String, dynamic> toJson() {
     return {
       'lounge_id': loungeId,
-      'name': name,
+      'name': nameEn,
+      'name_ar': nameAr,
+      'name_en': nameEn,
       'price': price,
       'category': category,
       'icon_key': iconKey,
