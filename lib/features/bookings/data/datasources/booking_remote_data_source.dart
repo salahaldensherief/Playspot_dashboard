@@ -37,33 +37,35 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         return BookingModel.fromJson(Map<String, dynamic>.from(json));
       }).toList();
     } catch (e) {
-      // خطة بديلة (Fallback) في حالة فشل الـ RPC أو وجود نقص في أعمدة الجداول
+      // خطة بديلة (Fallback) في حالة فشل الـ RPC
       print('Booking Fetch Alert: RPC skipped or failed, using safe select. Error: $e');
       
-      // نختار فقط الأعمدة التي نضمن وجودها
-      var query = client.from('bookings').select('''
-        *,
-        profiles:user_id(full_name, email),
-        rooms:room_id(name_en),
-        lounges:lounge_id(name)
-      ''');
+      try {
+        // نستخدم أبسط استعلام ممكن لتجنب أخطاء العلاقات (Joins) مؤقتاً حتى حل مشكلة السيرفر
+        var query = client.from('bookings').select();
 
-      if (loungeId != null) query = query.eq('lounge_id', loungeId);
-      if (status != null) query = query.eq('status', status);
-      
-      final response = await query
-          .order('created_at', ascending: false)
-          .range(offset, offset + limit - 1);
-      
-      return (response as List).map((json) => BookingModel.fromJson(Map<String, dynamic>.from(json))).toList();
+        if (loungeId != null) query = query.eq('lounge_id', loungeId);
+        if (status != null) {
+          query = query.eq('booking_status', status);
+        }
+        
+        final response = await query
+            .order('created_at', ascending: false)
+            .range(offset, offset + limit - 1);
+        
+        return (response as List).map((json) => BookingModel.fromJson(Map<String, dynamic>.from(json))).toList();
+      } catch (e2) {
+        print('Critical: Fallback select also failed: $e2');
+        return []; // منع الشاشة الحمراء بإرجاع قائمة فارغة في حالة الفشل التام
+      }
     }
   }
 
   @override
   Future<void> updateBookingStatus(String id, String status) async {
-    // التحديث المباشر للجدول مع التأكد من مطابقة الـ ID
+    // التحديث المباشر للجدول مع دعم مسمى الحقل الصحيح booking_status
     await client.from('bookings').update({
-      'status': status,
+      'booking_status': status,
     }).eq('id', id);
   }
 

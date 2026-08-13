@@ -25,9 +25,10 @@ class LoginCubit extends Cubit<LoginState> {
   }) : super(const LoginState());
 
   Future<void> checkInitialAuth({BuildContext? context}) async {
+    emit(state.copyWith(status: LoginStatus.checking));
     final result = await getCurrentUserUseCase(NoParams());
     result.fold(
-      (failure) => emit(state.copyWith(status: LoginStatus.initial)),
+      (failure) => emit(state.copyWith(status: LoginStatus.unauthenticated)),
       (user) async {
         if (user != null) {
           emit(state.copyWith(
@@ -40,7 +41,7 @@ class LoginCubit extends Cubit<LoginState> {
             _handleLoungeAdminAuth(user, context: context);
           }
         } else {
-          emit(state.copyWith(status: LoginStatus.initial));
+          emit(state.copyWith(status: LoginStatus.unauthenticated));
         }
       },
     );
@@ -115,6 +116,6 @@ class LoginCubit extends Cubit<LoginState> {
 
   Future<void> logout() async {
     await logoutUseCase(NoParams());
-    emit(const LoginState());
+    emit(const LoginState(status: LoginStatus.unauthenticated));
   }
 }

@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../../lounges/domain/entities/lounge.dart';
 
-enum LoginStatus { initial, loading, success, failure, authenticated }
+enum LoginStatus { initial, checking, loading, success, failure, authenticated, unauthenticated }
 
 class LoginState extends Equatable {
   final LoginStatus status;

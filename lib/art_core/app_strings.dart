@@ -13,6 +13,19 @@ class AppStrings {
   static String get lounges => 'lounges_owners'.tr();
   static String get categories => 'categories'.tr();
   static String get marketing => 'marketing'.tr();
+  static String get loyaltyRewards => 'loyalty_rewards'.tr();
+  static String get totalVouchersIssued => 'total_vouchers_issued'.tr();
+  static String get totalVouchersUsed => 'total_vouchers_used'.tr();
+  static String get totalVouchersActive => 'total_vouchers_active'.tr();
+  static String get totalDiscountUsedValue => 'total_discount_used_value'.tr();
+  static String get addReward => 'add_reward'.tr();
+  static String get editReward => 'edit_reward'.tr();
+  static String get pointsCost => 'points_cost'.tr();
+  static String get rewardType => 'reward_type'.tr();
+  static String get rewardValue => 'reward_value'.tr();
+  static String get isActive => 'is_active'.tr();
+  static String get redemptionOptions => 'redemption_options'.tr();
+
   static String get logout => 'logout'.tr();
   static String get bookings => 'live_operations'.tr();
   static String get rooms => 'rooms'.tr();
@@ -285,6 +298,7 @@ class AppStrings {
   static String get noFinishedBookings => 'no_finished_bookings'.tr();
   static String get noNewRequests => 'no_new_requests'.tr();
   static String get noActiveBookings => 'no_active_bookings'.tr();
+  static String get discount => 'discount'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

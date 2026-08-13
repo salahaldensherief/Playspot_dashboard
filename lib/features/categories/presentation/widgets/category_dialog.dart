@@ -21,14 +21,29 @@ class _CategoryDialogState extends State<CategoryDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameAr;
   late TextEditingController _nameEn;
-  late TextEditingController _iconKey;
+  String _selectedIcon = 'sports_esports';
+
+  final List<Map<String, dynamic>> _availableIcons = [
+    {'key': 'sports_esports', 'icon': Icons.sports_esports},
+    {'key': 'videogame_asset', 'icon': Icons.videogame_asset},
+    {'key': 'local_cafe', 'icon': Icons.local_cafe},
+    {'key': 'fastfood', 'icon': Icons.fastfood},
+    {'key': 'games', 'icon': Icons.games},
+    {'key': 'tv', 'icon': Icons.tv},
+    {'key': 'personal_video', 'icon': Icons.personal_video},
+    {'key': 'headset', 'icon': Icons.headset},
+    {'key': 'mouse', 'icon': Icons.mouse},
+    {'key': 'groups', 'icon': Icons.groups},
+    {'key': 'star', 'icon': Icons.star},
+    {'key': 'celebration', 'icon': Icons.celebration},
+  ];
 
   @override
   void initState() {
     super.initState();
     _nameAr = TextEditingController(text: widget.category?.nameAr);
     _nameEn = TextEditingController(text: widget.category?.nameEn);
-    _iconKey = TextEditingController(text: widget.category?.iconKey);
+    _selectedIcon = widget.category?.iconKey ?? 'sports_esports';
   }
 
   void _submit() {
@@ -37,7 +52,7 @@ class _CategoryDialogState extends State<CategoryDialog> {
         id: widget.category?.id ?? '',
         nameAr: _nameAr.text,
         nameEn: _nameEn.text,
-        iconKey: _iconKey.text,
+        iconKey: _selectedIcon,
       );
 
       if (widget.onSave != null) {
@@ -79,11 +94,45 @@ class _CategoryDialogState extends State<CategoryDialog> {
                 hintText: AppStrings.nameEn,
                 validator: AppValidator.validateRequired,
               ),
-              SizedBox(height: 16.h),
-              AppTextField(
-                label: AppStrings.iconKey,
-                controller: _iconKey,
-                hintText: 'e.g. sports_esports',
+              SizedBox(height: 24.h),
+              Text(
+                AppStrings.promoIcon, // أو نستخدم "Category Icon"
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.w500),
+              ),
+              SizedBox(height: 12.h),
+              Container(
+                padding: EdgeInsets.all(12.r),
+                decoration: BoxDecoration(
+                  color: AppColors.mutedBackground,
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: AppColors.borderDefault),
+                ),
+                child: Wrap(
+                  spacing: 16.r,
+                  runSpacing: 16.r,
+                  children: _availableIcons.map((item) {
+                    final bool isSelected = _selectedIcon == item['key'];
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedIcon = item['key']),
+                      child: Container(
+                        padding: EdgeInsets.all(10.r),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.neonBlue.withOpacity(0.1) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(
+                            color: isSelected ? AppColors.neonBlue : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                        child: Icon(
+                          item['icon'],
+                          color: isSelected ? AppColors.neonBlue : AppColors.textSecondary,
+                          size: 24.r,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
               SizedBox(height: 32.h),
               Row(

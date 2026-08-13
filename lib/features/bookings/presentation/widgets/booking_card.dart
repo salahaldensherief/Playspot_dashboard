@@ -110,7 +110,35 @@ class BookingCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   AppText.body(AppStrings.totalPrice, fontSize: 10.sp),
-                  AppText.subHeading('${booking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}', color: AppColors.neonBlue, fontSize: 15.sp, fontWeight: FontWeight.bold),
+                  Row(
+                    children: [
+                      AppText.subHeading('${booking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}', color: AppColors.neonBlue, fontSize: 15.sp, fontWeight: FontWeight.bold),
+                      if (booking.voucherDiscount != null && booking.voucherDiscount! > 0) ...[
+                        SizedBox(width: 8.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4.r),
+                            border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.local_offer_outlined, size: 10.sp, color: AppColors.success),
+                              SizedBox(width: 4.w),
+                              AppText.body(
+                                "${AppStrings.discount} ${booking.voucherDiscount!.toStringAsFixed(0)}", 
+                                color: AppColors.success, 
+                                fontSize: 9.sp, 
+                                fontWeight: FontWeight.bold
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
               isPaid ? StatusBadge.success(AppStrings.paid) : StatusBadge.warning(AppStrings.unpaid),

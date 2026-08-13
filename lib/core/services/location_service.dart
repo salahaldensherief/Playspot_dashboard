@@ -55,10 +55,12 @@ class LocationServiceImpl implements LocationService {
       final locale = Localizations.localeOf(context);
       
       // Try to set the locale globally for the geocoding service
-      try {
-        await setLocaleIdentifier(locale.languageCode);
-      } catch (e) {
-        debugPrint('Geocoding setLocaleIdentifier failed: $e');
+      if (locale.languageCode.isNotEmpty) {
+        try {
+          await setLocaleIdentifier(locale.languageCode);
+        } catch (e) {
+          debugPrint('Geocoding setLocaleIdentifier failed: $e');
+        }
       }
 
       List<Placemark> placemarks = await placemarkFromCoordinates(

@@ -10,6 +10,7 @@ class RedemptionOptionModel extends RedemptionOptionEntity {
     required super.pointsCost,
     required super.rewardType,
     required super.rewardValue,
+    super.isActive = true,
   });
 
   factory RedemptionOptionModel.fromJson(Map<String, dynamic> json) {
@@ -22,12 +23,12 @@ class RedemptionOptionModel extends RedemptionOptionEntity {
       pointsCost: (json['points_cost'] as num?)?.toInt() ?? 0,
       rewardType: json['reward_type']?.toString() ?? '',
       rewardValue: (json['reward_value'] as num?)?.toDouble() ?? 0.0,
+      isActive: json['is_active'] == true,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
       'title_ar': titleAr,
       'title_en': titleEn,
       'description_ar': descriptionAr,
@@ -35,6 +36,7 @@ class RedemptionOptionModel extends RedemptionOptionEntity {
       'points_cost': pointsCost,
       'reward_type': rewardType,
       'reward_value': rewardValue,
+      'is_active': isActive,
     };
   }
 }

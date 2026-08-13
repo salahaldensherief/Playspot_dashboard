@@ -9,6 +9,7 @@ class RedemptionOptionEntity extends Equatable {
   final int pointsCost;
   final String rewardType;
   final double rewardValue;
+  final bool isActive;
 
   const RedemptionOptionEntity({
     required this.id,
@@ -19,6 +20,7 @@ class RedemptionOptionEntity extends Equatable {
     required this.pointsCost,
     required this.rewardType,
     required this.rewardValue,
+    this.isActive = true,
   });
 
   @override
@@ -31,5 +33,6 @@ class RedemptionOptionEntity extends Equatable {
         pointsCost,
         rewardType,
         rewardValue,
+        isActive,
       ];
 }

@@ -137,6 +137,12 @@ class DashboardSidebar extends StatelessWidget {
         isActive: activeRoute == AppStrings.kycReviews,
         onTap: () => context.go(RouterKeys.superAdminKyc),
       ),
+      _SidebarItem(
+        icon: Icons.card_giftcard_outlined,
+        label: AppStrings.loyaltyRewards,
+        isActive: activeRoute == AppStrings.loyaltyRewards,
+        onTap: () => context.go(RouterKeys.superAdminLoyalty),
+      ),
     ];
   }
 

@@ -20,9 +20,11 @@ import 'package:play_spot_dashboard/features/lounges/presentation/pages/extras_m
 import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounge_profile_page.dart' as lounge_profile;
 import 'package:play_spot_dashboard/features/auth/presentation/profile/profile_page.dart' as profile;
 import 'package:play_spot_dashboard/features/kyc/presentation/pages/kyc_reviews_page.dart' as kyc_reviews;
+import 'package:play_spot_dashboard/features/loyalty/presentation/pages/loyalty_page.dart' as loyalty;
 import 'package:play_spot_dashboard/features/bookings/presentation/pages/booking_history_page.dart' as reports;
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_shell.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
@@ -33,6 +35,7 @@ import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit
 import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/extras_cubit.dart';
 import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_cubit.dart';
+import 'package:play_spot_dashboard/features/loyalty/presentation/cubit/loyalty_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
@@ -50,8 +53,16 @@ class AppRouter {
         final bool isLoggingIn = state.matchedLocation == RouterKeys.login;
         final user = authState.user;
 
-        if (authState.status != LoginStatus.authenticated && 
-            authState.status != LoginStatus.success) {
+        // Allow initial and checking states to pass through without redirecting to login
+        // This prevents jumping to login screen on page refresh
+        if (authState.status == LoginStatus.initial || authState.status == LoginStatus.checking) {
+          return null;
+        }
+
+        final bool isAuthenticated = authState.status == LoginStatus.authenticated || 
+                                     authState.status == LoginStatus.success;
+
+        if (!isAuthenticated) {
           return isLoggingIn ? null : RouterKeys.login;
         }
 
@@ -85,9 +96,21 @@ class AppRouter {
       routes: [
         ShellRoute(
           builder: (BuildContext context, GoRouterState state, Widget child) {
-            return BlocProvider(
-              create: (context) => sl<LoginCubit>(),
-              child: child,
+            return BlocProvider.value(
+              value: authCubit,
+              child: BlocBuilder<LoginCubit, LoginState>(
+                builder: (context, authState) {
+                  if (authState.status == LoginStatus.checking) {
+                    return const Scaffold(
+                      backgroundColor: AppColors.scaffoldBackground,
+                      body: Center(
+                        child: CircularProgressIndicator(color: AppColors.neonBlue),
+                      ),
+                    );
+                  }
+                  return child;
+                },
+              ),
             );
           },
           routes: [
@@ -179,6 +202,15 @@ class AppRouter {
                     child: BlocProvider(
                       create: (context) => sl<KycCubit>()..loadPendingReviews(),
                       child: const kyc_reviews.KycReviewsPage(),
+                    ),
+                  ),
+                ),
+                GoRoute(
+                  path: RouterKeys.superAdminLoyalty,
+                  pageBuilder: (context, state) => NoTransitionPage(
+                    child: BlocProvider(
+                      create: (context) => sl<LoyaltyCubit>(),
+                      child: const loyalty.LoyaltyPage(),
                     ),
                   ),
                 ),

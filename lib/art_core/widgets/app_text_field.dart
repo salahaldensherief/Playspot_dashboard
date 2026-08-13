@@ -12,6 +12,7 @@ class AppTextField extends StatelessWidget {
   final bool readOnly;
   final IconData? prefixIcon;
   final VoidCallback? onTap;
+  final int maxLines;
 
   const AppTextField({
     super.key,
@@ -24,6 +25,7 @@ class AppTextField extends StatelessWidget {
     this.readOnly = false,
     this.prefixIcon,
     this.onTap,
+    this.maxLines = 1,
   });
 
   @override
@@ -47,6 +49,7 @@ class AppTextField extends StatelessWidget {
           validator: validator,
           readOnly: readOnly,
           onTap: onTap,
+          maxLines: maxLines,
           style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
           decoration: InputDecoration(
             hintText: hintText,
