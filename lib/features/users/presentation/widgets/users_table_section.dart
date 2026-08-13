@@ -13,16 +13,25 @@ class UsersTableSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AdminManagementCubit, AdminManagementState>(
       builder: (context, state) {
-        if (state.status == AdminManagementStatus.loading) {
+        if (state.status == AdminManagementStatus.loading && state.admins.isEmpty) {
           return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
         }
-        if (state.status == AdminManagementStatus.failure) {
+        if (state.status == AdminManagementStatus.failure && state.admins.isEmpty) {
           return Center(child: AppText.body(state.errorMessage ?? 'Error', color: AppColors.danger));
         }
-        if (state.status == AdminManagementStatus.success || state.admins.isNotEmpty) {
-          return UsersDataTable(admins: state.admins);
-        }
-        return const SizedBox.shrink();
+        
+        return Stack(
+          children: [
+            UsersDataTable(admins: state.admins),
+            if (state.status == AdminManagementStatus.loading)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withOpacity(0.1),
+                  child: const Center(child: CircularProgressIndicator(color: AppColors.neonBlue)),
+                ),
+              ),
+          ],
+        );
       },
     );
   }

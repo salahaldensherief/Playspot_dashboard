@@ -30,6 +30,7 @@ void initAuthDI(GetIt sl) {
       logoutUseCase: sl(),
       getCurrentUserUseCase: sl(),
       loungeRepository: sl(),
+      locationService: sl(),
     ),
   );
 }

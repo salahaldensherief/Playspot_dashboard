@@ -8,13 +8,13 @@ import 'dart:typed_data';
 
 class LoungeInfoForm extends StatelessWidget {
   final TextEditingController nameController;
-  final TextEditingController cityController;
+  final TextEditingController? cityController;
   final Function(Uint8List? bytes, String? name) onImageSelected;
 
   const LoungeInfoForm({
     super.key,
     required this.nameController,
-    required this.cityController,
+    this.cityController,
     required this.onImageSelected,
   });
 
@@ -33,13 +33,15 @@ class LoungeInfoForm extends StatelessWidget {
           controller: nameController,
           validator: AppValidator.validateRequired,
         ),
-        SizedBox(height: 20.h),
-        AppTextField(
-          label: AppStrings.city,
-          hintText: AppStrings.cityHint,
-          controller: cityController,
-          validator: AppValidator.validateRequired,
-        ),
+        if (cityController != null) ...[
+          SizedBox(height: 20.h),
+          AppTextField(
+            label: AppStrings.city,
+            hintText: AppStrings.cityHint,
+            controller: cityController!,
+            validator: AppValidator.validateRequired,
+          ),
+        ],
       ],
     );
   }

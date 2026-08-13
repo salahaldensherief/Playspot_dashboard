@@ -229,6 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
               context.read<LoginCubit>().login(
                 _emailController.text.trim(),
                 _passwordController.text.trim(),
+                context: context,
               );
             }
           },

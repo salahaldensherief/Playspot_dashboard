@@ -45,11 +45,15 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   Future<List<LoungeModel>> getLounges() async {
     try {
       final response = await client.rpc('get_all_lounges_with_owners');
-      return (response as List).map((json) {
+      final list = (response as List).map((json) {
         return LoungeModel.fromJson(Map<String, dynamic>.from(json));
       }).toList();
+      // Filter out deleted lounges in case the RPC doesn't
+      return list.where((lounge) => lounge.status != 'deleted').toList();
     } catch (e) {
-      final response = await client.from('lounges').select();
+      final response = await client.from('lounges')
+          .select()
+          .neq('status', 'deleted');
       return (response as List).map((json) {
         return LoungeModel.fromJson(Map<String, dynamic>.from(json));
       }).toList();

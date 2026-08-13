@@ -51,13 +51,25 @@ class LoungesHeader extends StatelessWidget {
     final cubit = context.read<LoungeCubit>();
     showDialog(
       context: context,
-      builder: (diagContext) => BlocBuilder<LoungeCubit, LoungeState>(
+      builder: (diagContext) => BlocConsumer<LoungeCubit, LoungeState>(
         bloc: cubit,
+        listener: (context, state) {
+          if (state.status == LoungeStatus.success && state.errorMessage == null) {
+            // We only want to show success if it was an "add" action, 
+            // but for simplicity we can just check if state is success.
+            // However, fetchLounges also sets success.
+          }
+          if (state.status == LoungeStatus.failure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.errorMessage ?? 'Error'), backgroundColor: AppColors.danger),
+            );
+          }
+        },
         builder: (context, state) {
           return AddLoungeDialog(
             isLoading: state.status == LoungeStatus.loading,
-            onSave: (lounge, ownerName, ownerEmail, ownerPassword) {
-              cubit.createLoungeAndAdmin(
+            onSave: (lounge, ownerName, ownerEmail, ownerPassword) async {
+              await cubit.createLoungeAndAdmin(
                 lounge: lounge,
                 ownerName: ownerName,
                 ownerEmail: ownerEmail,

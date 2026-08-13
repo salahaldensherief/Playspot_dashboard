@@ -5,8 +5,10 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+import '../../domain/entities/lounge.dart';
 import '../cubit/lounge_cubit.dart';
 import '../cubit/lounge_state.dart';
+import 'edit_lounge_dialog.dart';
 
 class LoungesDataTable extends StatelessWidget {
   const LoungesDataTable({super.key});
@@ -95,12 +97,34 @@ class LoungesDataTable extends StatelessWidget {
     );
   }
 
-  void _showEditDialog(BuildContext context, dynamic lounge) {
-    // Placeholder: Super Admin Lounge Edit Dialog
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Editing Lounge: ${lounge.name}')));
+  void _showEditDialog(BuildContext context, Lounge lounge) {
+    final cubit = context.read<LoungeCubit>();
+    showDialog(
+      context: context,
+      builder: (diagContext) => BlocConsumer<LoungeCubit, LoungeState>(
+        bloc: cubit,
+        listener: (context, state) {
+          if (state.status == LoungeStatus.failure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.errorMessage ?? 'Error'), backgroundColor: AppColors.danger),
+            );
+          }
+        },
+        builder: (context, state) {
+          return EditLoungeDialog(
+            lounge: lounge,
+            isLoading: state.status == LoungeStatus.loading,
+            onSave: (updatedLounge) async {
+              await cubit.updateLounge(updatedLounge);
+            },
+          );
+        },
+      ),
+    );
   }
 
   void _confirmDelete(BuildContext context, String loungeId, String name) {
+    final cubit = context.read<LoungeCubit>();
     showDialog(
       context: context,
       builder: (diagContext) => AlertDialog(
@@ -111,7 +135,7 @@ class LoungesDataTable extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
           TextButton(
             onPressed: () {
-              context.read<LoungeCubit>().deleteLounge(loungeId);
+              cubit.deleteLounge(loungeId);
               Navigator.pop(diagContext);
             },
             child: const Text('Delete', style: TextStyle(color: AppColors.danger))

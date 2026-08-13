@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/core/di/di.dart';
+import 'package:play_spot_dashboard/core/services/location_service.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
-import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
+import 'package:play_spot_dashboard/features/lounges/domain/repositories/lounge_repository.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
 
 class GeolocationHandler extends StatefulWidget {
   final Widget child;
@@ -27,32 +27,37 @@ class _GeolocationHandlerState extends State<GeolocationHandler> {
 
   void _checkAndCapture() {
     final authState = context.read<LoginCubit>().state;
-    if (authState.user?.role == UserRole.loungeAdmin && authState.user?.loungeId != null && !_locationCaptured) {
-      _captureLocation(authState.user!.loungeId!);
+    if (authState.user?.role == UserRole.loungeAdmin && authState.userLounge != null && !_locationCaptured) {
+      _captureLocation();
     }
   }
 
-  Future<void> _captureLocation(String loungeId) async {
+  Future<void> _captureLocation() async {
+    final authState = context.read<LoginCubit>().state;
+    final lounge = authState.userLounge;
+    
+    if (lounge == null) return;
+
     try {
-      // Using browser geolocation API directly for Web as requested
-      if (html.window.navigator.geolocation != null) {
-        html.window.navigator.geolocation.getCurrentPosition().then((pos) {
-          // Use dynamic access to avoid JS interop type casting issues on Web
-          final dynamic coords = pos.coords;
-          final double? lat = coords?.latitude?.toDouble();
-          final double? lng = coords?.longitude?.toDouble();
-          
-          if (lat != null && lng != null && mounted) {
-            context.read<LoungeCubit>().updateLoungeLocation(loungeId, lat, lng);
-            setState(() => _locationCaptured = true);
-            debugPrint('Successfully captured and updated lounge location: $lat, $lng');
-          }
-        }).catchError((e) {
-          debugPrint('Error capturing location: $e');
-        });
+      final locationService = sl<LocationService>();
+      final position = await locationService.getCurrentPosition();
+      
+      if (position != null && mounted) {
+        final cityName = await locationService.getCityFromPosition(position, context);
+        
+        await sl<LoungeRepository>().updateLounge(
+          lounge.copyWith(
+            lat: position.latitude,
+            lng: position.longitude,
+            city: cityName ?? lounge.city,
+          ),
+        );
+        
+        setState(() => _locationCaptured = true);
+        debugPrint('Successfully captured and updated lounge location and city: ${position.latitude}, ${position.longitude}, $cityName');
       }
     } catch (e) {
-      debugPrint('Geolocation not supported or failed: $e');
+      debugPrint('Error capturing location: $e');
     }
   }
 
@@ -60,8 +65,8 @@ class _GeolocationHandlerState extends State<GeolocationHandler> {
   Widget build(BuildContext context) {
     return BlocListener<LoginCubit, LoginState>(
       listener: (context, state) {
-        if (state.user?.role == UserRole.loungeAdmin && state.user?.loungeId != null && !_locationCaptured) {
-          _captureLocation(state.user!.loungeId!);
+        if (state.user?.role == UserRole.loungeAdmin && state.userLounge != null && !_locationCaptured) {
+          _captureLocation();
         }
       },
       child: widget.child,

@@ -5,36 +5,40 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
+import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 
-class AddLoungeAdminDialog extends StatefulWidget {
+class EditAdminDialog extends StatefulWidget {
+  final UserEntity admin;
   final bool isLoading;
-  final Function(String email, String password, String name, String loungeName, String? city)? onSave;
+  final Function(String name, String email)? onSave;
 
-  const AddLoungeAdminDialog({
-    super.key, 
+  const EditAdminDialog({
+    super.key,
+    required this.admin,
     this.isLoading = false,
     this.onSave,
   });
 
   @override
-  State<AddLoungeAdminDialog> createState() => _AddLoungeAdminDialogState();
+  State<EditAdminDialog> createState() => _EditAdminDialogState();
 }
 
-class _AddLoungeAdminDialogState extends State<AddLoungeAdminDialog> {
+class _EditAdminDialogState extends State<EditAdminDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _loungeNameController = TextEditingController();
-  final _cityController = TextEditingController();
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.admin.name);
+    _emailController = TextEditingController(text: widget.admin.email);
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _passwordController.dispose();
-    _loungeNameController.dispose();
-    _cityController.dispose();
     super.dispose();
   }
 
@@ -42,11 +46,8 @@ class _AddLoungeAdminDialogState extends State<AddLoungeAdminDialog> {
     if (_formKey.currentState!.validate()) {
       if (widget.onSave != null) {
         widget.onSave!(
-          _emailController.text,
-          _passwordController.text,
           _nameController.text,
-          _loungeNameController.text,
-          _cityController.text.isEmpty ? null : _cityController.text,
+          _emailController.text,
         );
       }
     }
@@ -55,7 +56,7 @@ class _AddLoungeAdminDialogState extends State<AddLoungeAdminDialog> {
   @override
   Widget build(BuildContext context) {
     return AppDialog(
-      title: AppStrings.addLoungeAdmin,
+      title: 'Edit Administrator',
       width: 500.w,
       actions: [
         AppButton(
@@ -65,7 +66,7 @@ class _AddLoungeAdminDialogState extends State<AddLoungeAdminDialog> {
         ),
         SizedBox(width: 16.w),
         AppButton(
-          text: AppStrings.createAdmin,
+          text: 'Save Changes',
           isLoading: widget.isLoading,
           onPressed: _submit,
         ),
@@ -77,40 +78,15 @@ class _AddLoungeAdminDialogState extends State<AddLoungeAdminDialog> {
           children: [
             AppTextField(
               label: AppStrings.fullName,
-              hintText: 'Enter owner name',
               controller: _nameController,
               validator: (val) => val == null || val.isEmpty ? 'Required' : null,
             ),
             SizedBox(height: 16.h),
             AppTextField(
               label: AppStrings.email,
-              hintText: 'owner@lounge.com',
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               validator: (val) => val == null || !val.contains('@') ? 'Invalid email' : null,
-            ),
-            SizedBox(height: 16.h),
-            AppTextField(
-              label: AppStrings.password,
-              hintText: '••••••••',
-              controller: _passwordController,
-              isPassword: true,
-              validator: (val) => val == null || val.length < 6 ? 'Too short' : null,
-            ),
-            SizedBox(height: 24.h),
-            const Divider(color: AppColors.divider),
-            SizedBox(height: 24.h),
-            AppTextField(
-              label: AppStrings.loungeName,
-              hintText: 'e.g. Nova Gaming',
-              controller: _loungeNameController,
-              validator: (val) => val == null || val.isEmpty ? 'Required' : null,
-            ),
-            SizedBox(height: 16.h),
-            AppTextField(
-              label: AppStrings.city,
-              hintText: 'e.g. Cairo',
-              controller: _cityController,
             ),
           ],
         ),

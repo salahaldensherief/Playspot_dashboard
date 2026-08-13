@@ -7,48 +7,49 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
-import 'package:uuid/uuid.dart';
 import '../../domain/entities/lounge.dart';
 import 'lounge_info_form.dart';
-import 'owner_info_form.dart';
 
-class AddLoungeDialog extends StatefulWidget {
+class EditLoungeDialog extends StatefulWidget {
+  final Lounge lounge;
   final bool isLoading;
-  final Future<void> Function(Lounge lounge, String ownerName, String ownerEmail, String ownerPassword)? onSave;
+  final Future<void> Function(Lounge lounge)? onSave;
 
-  const AddLoungeDialog({
-    super.key, 
+  const EditLoungeDialog({
+    super.key,
+    required this.lounge,
     this.isLoading = false,
     this.onSave,
   });
 
   @override
-  State<AddLoungeDialog> createState() => _AddLoungeDialogState();
+  State<EditLoungeDialog> createState() => _EditLoungeDialogState();
 }
 
-class _AddLoungeDialogState extends State<AddLoungeDialog> {
+class _EditLoungeDialogState extends State<EditLoungeDialog> {
   final _formKey = GlobalKey<FormState>();
-  final String _loungeId = const Uuid().v4();
   
-  // Controllers
-  final _nameController = TextEditingController();
-  final _cityController = TextEditingController();
-  final _ownerNameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  late TextEditingController _nameController;
+  late TextEditingController _cityController;
   
   Uint8List? _loungeImageBytes;
   String? _loungeImageName;
+  bool _isOpen = true;
 
   bool _isLocalUploading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.lounge.name);
+    _cityController = TextEditingController(text: widget.lounge.city);
+    _isOpen = widget.lounge.isOpen;
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _cityController.dispose();
-    _ownerNameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -57,32 +58,25 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
       setState(() => _isLocalUploading = true);
       
       try {
-        String imageUrl = '';
+        String imageUrl = widget.lounge.imageUrl;
         if (_loungeImageBytes != null && _loungeImageName != null) {
-          imageUrl = await sl<StorageService>().uploadLoungeImage(_loungeImageBytes!, _loungeImageName!, _loungeId);
+          imageUrl = await sl<StorageService>().uploadLoungeImage(
+            _loungeImageBytes!, 
+            _loungeImageName!, 
+            widget.lounge.id
+          );
         }
 
         if (mounted) {
-          final lounge = Lounge(
-            id: _loungeId,
+          final updatedLounge = widget.lounge.copyWith(
             name: _nameController.text,
             imageUrl: imageUrl,
-            location: 'Address placeholder',
             city: _cityController.text,
-            opensAt: '10:00 AM',
-            closesAt: '02:00 AM',
-            categoryId: null,
-            lat: null,
-            lng: null,
+            isOpen: _isOpen,
           );
 
           if (widget.onSave != null) {
-             await widget.onSave!(
-               lounge,
-               _ownerNameController.text,
-               _emailController.text,
-               _passwordController.text,
-             );
+             await widget.onSave!(updatedLounge);
           }
           
           if (mounted) Navigator.pop(context);
@@ -102,7 +96,7 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
   @override
   Widget build(BuildContext context) {
     return AppDialog(
-      title: AppStrings.loungeSetup,
+      title: 'Edit Lounge Details',
       width: 600.w, // Reduced width since map is removed
       actions: [
         AppButton(
@@ -112,7 +106,7 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
         ),
         SizedBox(width: 16.w),
         AppButton(
-          text: AppStrings.createLoungeAdmin,
+          text: 'Save Changes',
           isLoading: widget.isLoading || _isLocalUploading,
           onPressed: _submit,
         ),
@@ -124,22 +118,56 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
           children: [
             LoungeInfoForm(
               nameController: _nameController,
-              // cityController removed - will be fetched from device
+              cityController: _cityController,
               onImageSelected: (bytes, name) {
                 _loungeImageBytes = bytes;
                 _loungeImageName = name;
               },
             ),
             SizedBox(height: 32.h),
-            const Divider(color: AppColors.divider),
-            SizedBox(height: 32.h),
-            OwnerInfoForm(
-              nameController: _ownerNameController,
-              emailController: _emailController,
-              passwordController: _passwordController,
-            ),
+            _buildStatusSection(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatusSection() {
+    return Container(
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: AppColors.mutedBackground.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _isOpen ? Icons.check_circle_outline : Icons.pause_circle_outline,
+            color: _isOpen ? AppColors.success : AppColors.warning,
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Lounge Status',
+                  style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  _isOpen ? 'This lounge is currently open and visible to users.' : 'This lounge is temporarily closed.',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: _isOpen,
+            onChanged: (val) => setState(() => _isOpen = val),
+            activeColor: AppColors.neonBlue,
+          ),
+        ],
       ),
     );
   }

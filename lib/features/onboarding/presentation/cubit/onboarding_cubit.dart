@@ -1,8 +1,10 @@
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_multi_image_picker.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
+import 'package:play_spot_dashboard/core/services/location_service.dart';
 import '../../../lounges/domain/entities/extra_entity.dart';
 import '../../../lounges/domain/entities/lounge.dart';
 import '../../../rooms/domain/entities/room_entity.dart';
@@ -15,11 +17,13 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   final AddRoomUseCase addRoomUseCase;
   final AddExtraUseCase addExtraUseCase;
   final SetupLoungeUseCase setupLoungeUseCase;
+  final LocationService locationService;
 
   OnboardingCubit({
     required this.addRoomUseCase,
     required this.addExtraUseCase,
     required this.setupLoungeUseCase,
+    required this.locationService,
   }) : super(const OnboardingState());
 
   void nextStep() {
@@ -76,6 +80,7 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     String? mainImageName,
     List<SelectedImage>? galleryImages,
     required String loungeId,
+    BuildContext? context,
   }) async {
     emit(state.copyWith(status: OnboardingStatus.loading));
     
@@ -94,10 +99,19 @@ class OnboardingCubit extends Cubit<OnboardingState> {
         );
       }
 
+      final position = await locationService.getCurrentPosition();
+      String? cityName;
+      if (position != null && context != null && context.mounted) {
+        cityName = await locationService.getCityFromPosition(position, context);
+      }
+
       final result = await setupLoungeUseCase(lounge.copyWith(
         id: loungeId,
         imageUrl: mainImageUrl,
         images: galleryUrls,
+        lat: position?.latitude,
+        lng: position?.longitude,
+        city: cityName ?? lounge.city,
       ));
 
       if (isClosed) return;

@@ -8,6 +8,8 @@ import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import '../cubit/admin_management_cubit.dart';
+import '../cubit/admin_management_state.dart';
+import 'edit_admin_dialog.dart';
 
 class UsersDataTable extends StatelessWidget {
   final List<UserEntity> admins;
@@ -71,7 +73,9 @@ class UsersDataTable extends StatelessWidget {
                 ),
               ],
               onSelected: (value) {
-                if (value == 'delete') {
+                if (value == 'edit') {
+                  _showEditDialog(context, admin);
+                } else if (value == 'delete') {
                   _confirmDelete(context, admin.id, admin.name);
                 }
               },
@@ -83,6 +87,7 @@ class UsersDataTable extends StatelessWidget {
   }
 
   void _confirmDelete(BuildContext context, String adminId, String name) {
+    final cubit = context.read<AdminManagementCubit>();
     showDialog(
       context: context,
       builder: (diagContext) => AlertDialog(
@@ -93,12 +98,39 @@ class UsersDataTable extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
           TextButton(
             onPressed: () {
-              context.read<AdminManagementCubit>().deleteAdmin(adminId);
+              cubit.deleteAdmin(adminId);
               Navigator.pop(diagContext);
             }, 
             child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger))
           ),
         ],
+      ),
+    );
+  }
+
+  void _showEditDialog(BuildContext context, UserEntity admin) {
+    final cubit = context.read<AdminManagementCubit>();
+    showDialog(
+      context: context,
+      builder: (diagContext) => BlocConsumer<AdminManagementCubit, AdminManagementState>(
+        bloc: cubit,
+        listener: (context, state) {
+          if (state.status == AdminManagementStatus.failure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.errorMessage ?? 'Error'), backgroundColor: AppColors.danger),
+            );
+          }
+        },
+        builder: (context, state) {
+          return EditAdminDialog(
+            admin: admin,
+            isLoading: state.status == AdminManagementStatus.loading,
+            onSave: (name, email) {
+              cubit.updateAdmin(admin.id, name: name, email: email);
+              Navigator.pop(diagContext);
+            },
+          );
+        },
       ),
     );
   }

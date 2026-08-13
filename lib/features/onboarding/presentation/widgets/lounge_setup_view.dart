@@ -110,6 +110,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
       mainImageName: _mainImageName,
       galleryImages: _galleryImages,
       loungeId: loungeId,
+      context: context,
     );
   }
 
@@ -224,10 +225,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
           },
         );
       case 1:
-        return LocationStep(
-          cityController: _cityController,
-          addressController: _addressController,
-        );
+        return const SizedBox.shrink(); // City/Address step no longer needed, handled by Geolocator
       case 2:
         return OperatingHoursStep(
           opensAtController: _opensAtController,

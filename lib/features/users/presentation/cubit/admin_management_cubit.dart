@@ -80,4 +80,19 @@ class AdminManagementCubit extends Cubit<AdminManagementState> {
       (_) => fetchAdmins(),
     );
   }
+
+  Future<void> updateAdmin(String adminId, {String? name, String? email}) async {
+    emit(state.copyWith(status: AdminManagementStatus.loading));
+    final result = await repository.updateAdmin(adminId, name: name, email: email);
+    
+    if (isClosed) return;
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: AdminManagementStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) => fetchAdmins(),
+    );
+  }
 }

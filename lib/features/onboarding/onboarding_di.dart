@@ -29,6 +29,7 @@ void initOnboardingDI(GetIt sl) {
       addRoomUseCase: sl(),
       addExtraUseCase: sl(),
       setupLoungeUseCase: sl(),
+      locationService: sl(),
     ),
   );
 }
