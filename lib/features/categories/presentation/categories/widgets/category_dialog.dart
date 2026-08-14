@@ -5,7 +5,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
-import '../../domain/entities/category_entity.dart';
+import '../../../data/entities/category_entity.dart';
 
 class CategoryDialog extends StatefulWidget {
   final CategoryEntity? category;

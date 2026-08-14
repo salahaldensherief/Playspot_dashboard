@@ -123,11 +123,11 @@ class BookingModel extends Booking {
       'start_time': startTime,
       'end_time': endTime,
       'total_price': totalPrice,
-      'booking_status': status.name,
+      'status': status.name,
       'user_name': userName,
       'user_phone': userPhone,
       'room_name': roomName,
-      'booking_extras': extras,
+      'extras': extras,
     };
   }
 }

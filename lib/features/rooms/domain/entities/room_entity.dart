@@ -7,6 +7,8 @@ class RoomEntity extends Equatable {
   final String loungeId;
   final String nameAr;
   final String nameEn;
+  final String descriptionAr;
+  final String descriptionEn;
   final List<String> activityNames;
   final List<String> activityIds;
   final String? spaceType;
@@ -15,6 +17,7 @@ class RoomEntity extends Equatable {
   final double pricePerHourSingle;
   final double pricePerHourMulti;
   final double pricePerHour; // Kept for backward compatibility if needed
+  final double extraControllerPrice;
   final bool isAvailable;
   final List<String> images;
   final List<String> featuresAr;
@@ -30,6 +33,8 @@ class RoomEntity extends Equatable {
     required this.loungeId,
     required this.nameAr,
     required this.nameEn,
+    this.descriptionAr = '',
+    this.descriptionEn = '',
     this.activityNames = const [],
     this.activityIds = const [],
     this.spaceType,
@@ -38,6 +43,7 @@ class RoomEntity extends Equatable {
     required this.pricePerHourSingle,
     required this.pricePerHourMulti,
     this.pricePerHour = 0.0,
+    this.extraControllerPrice = 0.0,
     required this.isAvailable,
     required this.images,
     required this.featuresAr,
@@ -53,6 +59,8 @@ class RoomEntity extends Equatable {
         loungeId,
         nameAr,
         nameEn,
+        descriptionAr,
+        descriptionEn,
         activityNames,
         activityIds,
         spaceType,
@@ -61,6 +69,7 @@ class RoomEntity extends Equatable {
         pricePerHourSingle,
         pricePerHourMulti,
         pricePerHour,
+        extraControllerPrice,
         isAvailable,
         images,
         featuresAr,

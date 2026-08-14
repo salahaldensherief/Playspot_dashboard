@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
-import '../../domain/entities/category_entity.dart';
+import '../../../data/entities/category_entity.dart';
 
 class CategoryCard extends StatelessWidget {
   final CategoryEntity category;

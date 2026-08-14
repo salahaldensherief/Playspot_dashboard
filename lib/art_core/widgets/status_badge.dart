@@ -17,6 +17,7 @@ class StatusBadge extends StatelessWidget {
   factory StatusBadge.danger(String text) => StatusBadge(text: text, color: AppColors.danger);
   factory StatusBadge.info(String text) => StatusBadge(text: text, color: AppColors.neonBlue);
   factory StatusBadge.neutral(String text) => StatusBadge(text: text, color: AppColors.textSecondary);
+  factory StatusBadge.secondary(String text) => StatusBadge(text: text, color: AppColors.neonPurple);
 
   @override
   Widget build(BuildContext context) {

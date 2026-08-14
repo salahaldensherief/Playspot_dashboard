@@ -7,16 +7,22 @@ import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 class RoomBasicInfoForm extends StatelessWidget {
   final TextEditingController nameArController;
   final TextEditingController nameEnController;
+  final TextEditingController descriptionArController;
+  final TextEditingController descriptionEnController;
   final TextEditingController priceSingleController;
   final TextEditingController priceMultiController;
+  final TextEditingController pricePerHourController;
   final bool isOpenArea;
 
   const RoomBasicInfoForm({
     super.key,
     required this.nameArController,
     required this.nameEnController,
+    required this.descriptionArController,
+    required this.descriptionEnController,
     required this.priceSingleController,
     required this.priceMultiController,
+    required this.pricePerHourController,
     this.isOpenArea = false,
   });
 
@@ -50,25 +56,63 @@ class RoomBasicInfoForm extends StatelessWidget {
           children: [
             Expanded(
               child: AppTextField(
-                label: 'سعر الساعة (فردي / Single)',
-                hintText: AppStrings.pricePerHourHint,
-                controller: priceSingleController,
-                keyboardType: TextInputType.number,
-                validator: AppValidator.validateNumber,
+                label: AppStrings.descriptionArLabel,
+                hintText: 'وصف الغرفة والمواصفات (مثل نوع الدركسيون في السيميليتور)...',
+                controller: descriptionArController,
+                maxLines: 3,
               ),
             ),
             SizedBox(width: 16.w),
             Expanded(
               child: AppTextField(
-                label: 'سعر الساعة (زوجي / Multi)',
-                hintText: AppStrings.pricePerHourHint,
-                controller: priceMultiController,
-                keyboardType: TextInputType.number,
-                validator: AppValidator.validateNumber,
+                label: AppStrings.descriptionEnLabel,
+                hintText: 'Description & Specs (e.g. Wheel type for Simulators, PC specs)...',
+                controller: descriptionEnController,
+                maxLines: 3,
               ),
             ),
           ],
         ),
+        SizedBox(height: 20.h),
+        if (isOpenArea)
+          Row(
+            children: [
+              Expanded(
+                child: AppTextField(
+                  label: AppStrings.singlePrice,
+                  hintText: AppStrings.pricePerHourHint,
+                  controller: priceSingleController,
+                  keyboardType: TextInputType.number,
+                  validator: AppValidator.validateNumber,
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: AppTextField(
+                  label: AppStrings.multiPrice,
+                  hintText: AppStrings.pricePerHourHint,
+                  controller: priceMultiController,
+                  keyboardType: TextInputType.number,
+                  validator: AppValidator.validateNumber,
+                ),
+              ),
+            ],
+          )
+        else
+          Row(
+            children: [
+              Expanded(
+                child: AppTextField(
+                  label: AppStrings.roomPricePerHour,
+                  hintText: AppStrings.pricePerHourHint,
+                  controller: pricePerHourController,
+                  keyboardType: TextInputType.number,
+                  validator: AppValidator.validateNumber,
+                ),
+              ),
+              const Spacer(),
+            ],
+          ),
       ],
     );
   }

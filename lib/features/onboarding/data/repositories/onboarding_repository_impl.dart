@@ -79,6 +79,7 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
         pricePerHourSingle: room.pricePerHourSingle,
         pricePerHourMulti: room.pricePerHourMulti,
         pricePerHour: room.pricePerHour,
+        extraControllerPrice: room.extraControllerPrice,
         capacity: room.capacity,
         images: room.images,
         featuresAr: room.featuresAr,

@@ -47,7 +47,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
         if (loungeId != null) query = query.eq('lounge_id', loungeId);
         if (status != null) {
-          query = query.eq('booking_status', status);
+          query = query.eq('status', status);
         }
         
         final response = await query
@@ -64,9 +64,9 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   @override
   Future<void> updateBookingStatus(String id, String status) async {
-    // التحديث المباشر للجدول مع دعم مسمى الحقل الصحيح booking_status
+    // التحديث المباشر للجدول مع دعم مسمى الحقل الصحيح status
     await client.from('bookings').update({
-      'booking_status': status,
+      'status': status,
     }).eq('id', id);
   }
 

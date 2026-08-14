@@ -4,22 +4,22 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
-import '../../domain/entities/category_entity.dart';
-import '../../domain/entities/city_entity.dart';
-import '../cubit/category_cubit.dart';
-import '../cubit/category_state.dart';
-import 'category_card.dart';
-import 'category_dialog.dart';
-import 'city_dialog.dart';
+import '../../data/entities/category_entity.dart';
+import '../../data/entities/city_entity.dart';
+import 'category_cubit.dart';
+import 'category_state.dart';
+import 'widgets/category_card.dart';
+import 'widgets/category_dialog.dart';
+import 'widgets/city_dialog.dart';
 
-class CategoriesView extends StatefulWidget {
-  const CategoriesView({super.key});
+class CategoriesScreen extends StatefulWidget {
+  const CategoriesScreen({super.key});
 
   @override
-  State<CategoriesView> createState() => _CategoriesViewState();
+  State<CategoriesScreen> createState() => _CategoriesScreenState();
 }
 
-class _CategoriesViewState extends State<CategoriesView> with SingleTickerProviderStateMixin {
+class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -135,10 +135,10 @@ class _CategoriesViewState extends State<CategoriesView> with SingleTickerProvid
   Widget _buildCategoriesGrid(BuildContext context, CategoryCubit categoryCubit) {
     return BlocBuilder<CategoryCubit, CategoryState>(
       builder: (context, state) {
-        if (state.status == CategoryStatus.loading) {
+        if (state.status.isLoading) {
           return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
         }
-        if (state.status == CategoryStatus.success) {
+        if (state.status.isSuccess) {
           if (state.categories.isEmpty) {
             return const Center(child: Text('No categories found', style: TextStyle(color: AppColors.textSecondary)));
           }
@@ -160,7 +160,7 @@ class _CategoriesViewState extends State<CategoriesView> with SingleTickerProvid
             },
           );
         }
-        if (state.status == CategoryStatus.failure) {
+        if (state.status.isFailure) {
           return Center(child: Text(state.errorMessage ?? 'Error', style: const TextStyle(color: AppColors.danger)));
         }
         return const SizedBox.shrink();
@@ -171,7 +171,7 @@ class _CategoriesViewState extends State<CategoriesView> with SingleTickerProvid
   Widget _buildCitiesList(BuildContext context, CategoryCubit cubit) {
     return BlocBuilder<CategoryCubit, CategoryState>(
       builder: (context, state) {
-        if (state.status == CategoryStatus.loading) return const Center(child: CircularProgressIndicator());
+        if (state.status.isLoading) return const Center(child: CircularProgressIndicator());
         if (state.cities.isEmpty) return const Center(child: Text('No cities found', style: TextStyle(color: AppColors.textSecondary)));
         
         return ListView.separated(

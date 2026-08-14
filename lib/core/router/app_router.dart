@@ -9,7 +9,7 @@ import 'package:play_spot_dashboard/features/auth/presentation/login/login_scree
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_screen.dart' as dashboard;
 import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounges_page.dart' as lounges;
 import 'package:play_spot_dashboard/features/users/presentation/pages/users_page.dart' as users;
-import 'package:play_spot_dashboard/features/categories/presentation/pages/categories_page.dart' as categories;
+import 'package:play_spot_dashboard/features/categories/presentation/categories/categories_screen.dart' as categories;
 import 'package:play_spot_dashboard/features/marketing/presentation/pages/marketing_page.dart' as marketing;
 import 'package:play_spot_dashboard/features/payouts/presentation/pages/super_admin_payouts_page.dart' as payouts;
 import 'package:play_spot_dashboard/features/payouts/presentation/pages/lounge_admin_payouts_page.dart' as lounge_payouts;
@@ -29,7 +29,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
 import 'package:play_spot_dashboard/features/users/presentation/cubit/admin_management_cubit.dart';
-import 'package:play_spot_dashboard/features/categories/presentation/cubit/category_cubit.dart';
+import 'package:play_spot_dashboard/features/categories/presentation/categories/category_cubit.dart';
 import 'package:play_spot_dashboard/features/marketing/presentation/cubit/marketing_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_cubit.dart';
@@ -177,7 +177,7 @@ class AppRouter {
                   pageBuilder: (context, state) => NoTransitionPage(
                     child: BlocProvider(
                       create: (context) => sl<CategoryCubit>()..loadCategories(),
-                      child: const categories.CategoriesPage(),
+                      child: const categories.CategoriesScreen(),
                     ),
                   ),
                 ),

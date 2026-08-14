@@ -6,7 +6,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import 'package:uuid/uuid.dart';
-import '../../domain/entities/city_entity.dart';
+import '../../../data/entities/city_entity.dart';
 
 class CityDialog extends StatefulWidget {
   final CityEntity? city;

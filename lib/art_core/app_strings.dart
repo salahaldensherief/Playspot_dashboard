@@ -61,6 +61,8 @@ class AppStrings {
   static String get liveBookingsFeed => 'live_bookings_feed'.tr();
 
   // Room Management
+  static String get addNew => 'add_new'.tr();
+  static String get addNewActivity => 'add_new_activity'.tr();
   static String get addNewRoom => 'add_new_room'.tr();
   static String get manageRoomsDesc => 'manage_rooms_desc'.tr();
   static String get roomName => 'room_name'.tr();
@@ -75,6 +77,15 @@ class AppStrings {
   static String get specs => 'specs'.tr();
   static String get capacity => 'capacity'.tr();
   static String get pricePerHour => 'price_per_hour'.tr();
+  static String get singlePrice => 'single_price'.tr();
+  static String get multiPrice => 'multi_price'.tr();
+  static String get extraControllerPrice => 'extra_controller_price'.tr();
+  static String get roomPricePerHour => 'room_price_per_hour'.tr();
+  static String get roomCapacityLabel => 'room_capacity_label'.tr();
+  static String get airConditioning => 'air_conditioning'.tr();
+  static String get soundproof => 'soundproof'.tr();
+  static String get soundSystem => 'sound_system'.tr();
+  static String get screen4k => 'screen_4k'.tr();
   static String get status => 'status'.tr();
   static String get actions => 'actions'.tr();
 
@@ -116,6 +127,9 @@ class AppStrings {
   static String get fullName => 'full_name'.tr();
   static String get nameAr => 'name_ar'.tr();
   static String get nameEn => 'name_en'.tr();
+  static String get descriptionArLabel => 'description_ar_label'.tr();
+  static String get descriptionEnLabel => 'description_en_label'.tr();
+  static String get experienceType => 'experience_type'.tr();
   static String get searchHint => 'search_hint'.tr();
   static String get address => 'address'.tr();
   static String get opensAt => 'opens_at'.tr();
@@ -225,8 +239,6 @@ class AppStrings {
   static String get mainImage => 'main_image'.tr();
   static String get saveChanges => 'save_changes'.tr();
   static String get uploadInstruction => 'upload_instruction'.tr();
-  static String get descriptionArLabel => 'description_ar_label'.tr();
-  static String get descriptionEnLabel => 'description_en_label'.tr();
   static String get descriptionArHint => 'description_ar_hint'.tr();
   static String get descriptionEnHint => 'description_en_hint'.tr();
   static String get cityHint => 'city_hint'.tr();
@@ -308,6 +320,7 @@ class AppStrings {
   static String get noNewRequests => 'no_new_requests'.tr();
   static String get noActiveBookings => 'no_active_bookings'.tr();
   static String get discount => 'discount'.tr();
+  static String get overlappingBookingError => 'overlapping_booking_error'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

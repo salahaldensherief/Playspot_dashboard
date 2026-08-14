@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
-import 'package:play_spot_dashboard/features/categories/presentation/cubit/category_cubit.dart';
+import 'package:play_spot_dashboard/features/categories/presentation/categories/category_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/widgets/room_dialog.dart';
 import '../cubit/room_cubit.dart';
 

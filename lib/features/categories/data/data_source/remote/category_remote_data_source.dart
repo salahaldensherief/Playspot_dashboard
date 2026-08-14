@@ -1,8 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/category_model.dart';
-import '../models/city_model.dart';
+import '../../models/category_model.dart';
+import '../../models/city_model.dart';
+import '../../models/activity_type_model.dart';
 
-abstract class CategoryRemoteDataSource {
+abstract class CategoryRemoteSource {
   Future<List<CategoryModel>> getCategories();
   Future<void> addCategory(CategoryModel category);
   Future<void> updateCategory(CategoryModel category);
@@ -13,12 +14,16 @@ abstract class CategoryRemoteDataSource {
   Future<void> addCity(CityModel city);
   Future<void> updateCity(CityModel city);
   Future<void> deleteCity(String id);
+
+  // Activity Types
+  Future<List<ActivityTypeModel>> getActivityTypes();
+  Future<ActivityTypeModel> addActivityType(ActivityTypeModel activityType);
 }
 
-class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
+class CategoryRemoteSourceImpl implements CategoryRemoteSource {
   final SupabaseClient _supabase;
 
-  CategoryRemoteDataSourceImpl(this._supabase);
+  CategoryRemoteSourceImpl(this._supabase);
 
   @override
   Future<List<CategoryModel>> getCategories() async {
@@ -61,5 +66,18 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
   @override
   Future<void> deleteCity(String id) async {
     await _supabase.from('cities').delete().eq('id', id);
+  }
+
+  // Activity Types Implementation
+  @override
+  Future<List<ActivityTypeModel>> getActivityTypes() async {
+    final response = await _supabase.from('activity_types').select().order('sort_order');
+    return (response as List).map((json) => ActivityTypeModel.fromJson(json)).toList();
+  }
+
+  @override
+  Future<ActivityTypeModel> addActivityType(ActivityTypeModel activityType) async {
+    final response = await _supabase.from('activity_types').insert(activityType.toJson()).select().single();
+    return ActivityTypeModel.fromJson(response);
   }
 }

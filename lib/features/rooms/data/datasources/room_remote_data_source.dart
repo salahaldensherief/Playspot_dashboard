@@ -18,8 +18,8 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
   @override
   Future<List<RoomModel>> getRooms(String loungeId) async {
     final response = await _supabase
-        .from('rooms')
-        .select('*, room_activities(activity_types(*))')
+        .from('rooms_detailed_view')
+        .select()
         .eq('lounge_id', loungeId)
         .order('name');
     return (response as List).map((json) => RoomModel.fromJson(json)).toList();
@@ -27,14 +27,17 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
 
   @override
   Stream<List<RoomModel>> watchRooms(String loungeId) {
-    // Note: Stream with joins is tricky in Supabase, 
-    // usually it's better to reload via a cubit when a change is detected or use simple stream.
-    // For now keeping it simple as joins in stream are not natively supported like select.
+    // Note: Stream with joins/views is tricky in Supabase Realtime, 
+    // it usually works on base tables. For detailed views, 
+    // we listen to the base table but might need to fetch from view.
     return _supabase
         .from('rooms')
         .stream(primaryKey: ['id'])
         .eq('lounge_id', loungeId)
-        .map((event) => event.map((json) => RoomModel.fromJson(json)).toList());
+        .asyncMap((event) async {
+          // Re-fetch from view to get names and joined data
+          return await getRooms(loungeId);
+        });
   }
 
   @override
