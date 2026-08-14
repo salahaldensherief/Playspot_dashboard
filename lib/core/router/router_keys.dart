@@ -11,6 +11,7 @@ class RouterKeys {
   static const String superAdminPayouts = '/super-admin/payouts';
   static const String superAdminKyc = '/super-admin/kyc';
   static const String superAdminLoyalty = '/super-admin/loyalty';
+  static const String superAdminShifts = '/super-admin/shifts';
 
   // Lounge Admin
   static const String loungeOnboarding = '/onboarding';
@@ -19,6 +20,7 @@ class RouterKeys {
   static const String loungeAdminExtras = '/lounge-admin/extras';
   static const String loungeAdminMarketing = '/lounge-admin/marketing';
   static const String loungeAdminPayouts = '/lounge-admin/payouts';
+  static const String loungeAdminStaff = '/lounge-admin/staff';
   static const String loungeAdminProfile = '/lounge-admin/profile';
   static const String profile = '/profile';
 }

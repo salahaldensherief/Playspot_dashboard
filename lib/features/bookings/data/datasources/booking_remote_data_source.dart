@@ -42,7 +42,8 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       print('Booking Fetch Alert: RPC skipped or failed, using safe select. Error: $e');
       
       try {
-        // نستخدم أبسط استعلام ممكن لتجنب أخطاء العلاقات (Joins) مؤقتاً حتى حل مشكلة السيرفر
+        // نستخدم أبسط استعلام ممكن مع استبعاد booking_status تماماً إذا كان يسبب خطأ في النوع
+        // ونعتمد على الحقل status الأصلي
         var query = client.from('bookings').select();
 
         if (loungeId != null) query = query.eq('lounge_id', loungeId);

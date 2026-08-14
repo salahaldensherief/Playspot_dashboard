@@ -37,7 +37,7 @@ class LoginCubit extends Cubit<LoginState> {
             isSetupCompleted: user.isSetupCompleted,
           ));
           
-          if (user.role == UserRole.loungeAdmin && user.loungeId != null) {
+          if (user.isStaff && user.loungeId != null) {
             _handleLoungeAdminAuth(user, context: context);
           }
         } else {
@@ -59,7 +59,7 @@ class LoginCubit extends Cubit<LoginState> {
           isSetupCompleted: user.isSetupCompleted,
         ));
 
-        if (user.role == UserRole.loungeAdmin && user.loungeId != null) {
+        if (user.isStaff && user.loungeId != null) {
           _handleLoungeAdminAuth(user, context: context);
         }
       },

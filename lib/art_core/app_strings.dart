@@ -322,5 +322,35 @@ class AppStrings {
   static String get discount => 'discount'.tr();
   static String get overlappingBookingError => 'overlapping_booking_error'.tr();
 
+  // Shift Management
+  static String get shiftActive => 'shift_active'.tr();
+  static String get noActiveShift => 'no_active_shift'.tr();
+  static String get cashier => 'cashier'.tr();
+  static String get startTimeLabel => 'start_time'.tr();
+  static String get closeShift => 'close_shift'.tr();
+  static String get openNewShift => 'open_new_shift'.tr();
+  static String get startingCash => 'starting_cash'.tr();
+  static String get actualCash => 'actual_cash'.tr();
+  static String get expectedCash => 'expected_cash'.tr();
+  static String get cashRevenue => 'cash_revenue'.tr();
+  static String get digitalRevenue => 'digital_revenue'.tr();
+  static String get discrepancy => 'discrepancy'.tr();
+  static String get zReport => 'z_report'.tr();
+  static String get printReport => 'print_report'.tr();
+  static String get logoutAfterClose => 'logout_after_close'.tr();
+  static String get shiftHistory => 'shift_history'.tr();
+
+  // Staff Management
+  static String get staffManagement => 'staff_management'.tr();
+  static String get addStaff => 'add_staff'.tr();
+  static String get staffName => 'staff_name'.tr();
+  static String get staffPhone => 'staff_phone'.tr();
+  static String get tempPassword => 'temp_password'.tr();
+  static String get accountStatus => 'account_status'.tr();
+  static String get freezeAccount => 'freeze_account'.tr();
+  static String get manager => 'manager'.tr();
+  static String get cashierLabel => 'cashier_label'.tr();
+  static String get deleteStaffWarning => 'delete_staff_warning'.tr();
+
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

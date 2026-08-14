@@ -16,6 +16,8 @@ import 'package:play_spot_dashboard/features/marketing/marketing_di.dart';
 import 'package:play_spot_dashboard/features/payouts/payouts_di.dart';
 import 'package:play_spot_dashboard/features/kyc/kyc_di.dart';
 import 'package:play_spot_dashboard/features/loyalty/loyalty_di.dart';
+import 'package:play_spot_dashboard/features/shifts/shifts_di.dart';
+import 'package:play_spot_dashboard/features/staff/staff_di.dart';
 
 final sl = GetIt.instance;
 
@@ -49,4 +51,6 @@ Future<void> setupInjection() async {
   initPayoutsDI(sl);
   initKycDI(sl);
   initLoyaltyDI(sl);
+  initShiftsDI(sl);
+  initStaffDI(sl);
 }

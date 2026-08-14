@@ -7,6 +7,9 @@ import 'dashboard_top_bar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/login/login_cubit.dart';
+import '../../features/shifts/presentation/shift_management/shift_cubit.dart';
+import '../../features/shifts/presentation/shift_management/widgets/shift_header_banner.dart';
+import '../../core/di/di.dart';
 import '../widgets/geolocation_handler.dart';
 
 class DashboardShell extends StatelessWidget {
@@ -23,6 +26,7 @@ class DashboardShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = context.read<LoginCubit>().state.user;
     final isSuperAdmin = user?.role == UserRole.superAdmin;
+    // ... rest of the logic
     String activeRoute = '';
     String title = AppStrings.dashboard;
 
@@ -53,6 +57,12 @@ class DashboardShell extends StatelessWidget {
     } else if (location.contains('loyalty')) {
       activeRoute = AppStrings.loyaltyRewards;
       title = AppStrings.loyaltyRewards;
+    } else if (location.contains('shifts')) {
+      activeRoute = AppStrings.shiftHistory;
+      title = AppStrings.shiftHistory;
+    } else if (location.contains('staff')) {
+      activeRoute = AppStrings.staffManagement;
+      title = AppStrings.staffManagement;
     } else if (location.contains('reports')) {
       activeRoute = AppStrings.monthlyReports;
       title = AppStrings.monthlyReports;
@@ -62,22 +72,26 @@ class DashboardShell extends StatelessWidget {
     }
 
     return GeolocationHandler(
-      child: Scaffold(
-        backgroundColor: AppColors.scaffoldBackground,
-        body: Row(
-          children: [
-            DashboardSidebar(activeRoute: activeRoute),
-            Expanded(
-              child: Column(
-                children: [
-                  DashboardTopBar(title: title),
-                  Expanded(
-                    child: child,
-                  ),
-                ],
+      child: BlocProvider(
+        create: (context) => sl<ShiftCubit>()..checkActiveShift(user?.id ?? ''),
+        child: Scaffold(
+          backgroundColor: AppColors.scaffoldBackground,
+          body: Row(
+            children: [
+              DashboardSidebar(activeRoute: activeRoute),
+              Expanded(
+                child: Column(
+                  children: [
+                    DashboardTopBar(title: title),
+                    if (!isSuperAdmin) const ShiftHeaderBanner(),
+                    Expanded(
+                      child: child,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

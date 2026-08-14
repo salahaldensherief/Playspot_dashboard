@@ -13,4 +13,8 @@ class AppColors {
   static const Color warning = Color(0xFFFBBF24);
   static const Color danger = Color(0xFFEF4444);
   static const Color borderDefault = Color(0x1AFFFFFF); // 10% white
+  static const Color divider = Color(0x1FFFFFFF);
+
+  static const Color sidebarActiveBg = Color(0xFF1E293B);
+  static const Color sidebarActiveBorder = Color(0xFF334155);
 }

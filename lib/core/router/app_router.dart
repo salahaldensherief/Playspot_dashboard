@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.da
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_screen.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_screen.dart' as dashboard;
 import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounges_page.dart' as lounges;
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/users/presentation/pages/users_page.dart' as users;
 import 'package:play_spot_dashboard/features/categories/presentation/categories/categories_screen.dart' as categories;
 import 'package:play_spot_dashboard/features/marketing/presentation/pages/marketing_page.dart' as marketing;
@@ -21,6 +22,9 @@ import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounge_p
 import 'package:play_spot_dashboard/features/auth/presentation/profile/profile_page.dart' as profile;
 import 'package:play_spot_dashboard/features/kyc/presentation/pages/kyc_reviews_page.dart' as kyc_reviews;
 import 'package:play_spot_dashboard/features/loyalty/presentation/pages/loyalty_page.dart' as loyalty;
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_history/shift_history_screen.dart' as shifts;
+import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_screen.dart' as staff;
+import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/pages/booking_history_page.dart' as reports;
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_shell.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -68,7 +72,7 @@ class AppRouter {
 
         if (user == null) return isLoggingIn ? null : null;
 
-        final bool isLoungeAdmin = user.role == UserRole.loungeAdmin;
+        final bool isLoungeAdmin = user.isStaff;
         final bool isSuperAdmin = user.role == UserRole.superAdmin;
         final bool isOnboardingPath = state.matchedLocation == RouterKeys.loungeOnboarding;
 
@@ -215,6 +219,15 @@ class AppRouter {
                   ),
                 ),
                 GoRoute(
+                  path: RouterKeys.superAdminShifts,
+                  pageBuilder: (context, state) => NoTransitionPage(
+                    child: BlocProvider(
+                      create: (context) => sl<ShiftCubit>(),
+                      child: const shifts.ShiftHistoryScreen(),
+                    ),
+                  ),
+                ),
+                GoRoute(
                   path: RouterKeys.loungeAdminLiveOps,
                   pageBuilder: (context, state) => NoTransitionPage(
                     child: BlocProvider(
@@ -268,6 +281,24 @@ class AppRouter {
                     child: BlocProvider(
                       create: (context) => sl<BookingCubit>()..startWatchingBookings(loungeId: context.read<LoginCubit>().state.user?.loungeId),
                       child: const reports.BookingHistoryPage(),
+                    ),
+                  ),
+                ),
+                GoRoute(
+                  path: '/lounge-admin/shifts',
+                  pageBuilder: (context, state) => NoTransitionPage(
+                    child: BlocProvider(
+                      create: (context) => sl<ShiftCubit>(),
+                      child: const shifts.ShiftHistoryScreen(),
+                    ),
+                  ),
+                ),
+                GoRoute(
+                  path: RouterKeys.loungeAdminStaff,
+                  pageBuilder: (context, state) => NoTransitionPage(
+                    child: BlocProvider(
+                      create: (context) => sl<StaffCubit>(),
+                      child: const staff.StaffScreen(),
                     ),
                   ),
                 ),

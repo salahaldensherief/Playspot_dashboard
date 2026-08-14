@@ -27,7 +27,7 @@ class _GeolocationHandlerState extends State<GeolocationHandler> {
 
   void _checkAndCapture() {
     final authState = context.read<LoginCubit>().state;
-    if (authState.user?.role == UserRole.loungeAdmin && authState.userLounge != null && !_locationCaptured) {
+    if (authState.user?.isStaff == true && authState.userLounge != null && !_locationCaptured) {
       _captureLocation();
     }
   }
@@ -65,7 +65,7 @@ class _GeolocationHandlerState extends State<GeolocationHandler> {
   Widget build(BuildContext context) {
     return BlocListener<LoginCubit, LoginState>(
       listener: (context, state) {
-        if (state.user?.role == UserRole.loungeAdmin && state.userLounge != null && !_locationCaptured) {
+        if (state.user?.isStaff == true && state.userLounge != null && !_locationCaptured) {
           _captureLocation();
         }
       },

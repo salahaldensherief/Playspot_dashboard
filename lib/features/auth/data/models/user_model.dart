@@ -17,8 +17,12 @@ class UserModel extends UserEntity {
       case 'super_admin':
         role = UserRole.superAdmin;
         break;
+      case 'lounge_owner':
       case 'lounge_admin':
-        role = UserRole.loungeAdmin;
+        role = UserRole.loungeOwner;
+        break;
+      case 'cashier':
+        role = UserRole.cashier;
         break;
       default:
         role = UserRole.user;
