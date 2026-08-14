@@ -23,6 +23,8 @@ class RoomEntity extends Equatable {
   final String screenSize;
   final RoomStatusEnum status;
 
+  bool get isOpenArea => spaceTypeId == 'open_area';
+
   const RoomEntity({
     required this.id,
     required this.loungeId,

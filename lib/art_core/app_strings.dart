@@ -64,6 +64,14 @@ class AppStrings {
   static String get addNewRoom => 'add_new_room'.tr();
   static String get manageRoomsDesc => 'manage_rooms_desc'.tr();
   static String get roomName => 'room_name'.tr();
+  static String get spaceType => 'space_type'.tr();
+  static String get openArea => 'open_area'.tr();
+  static String get standardRoom => 'standard_room'.tr();
+  static String get vipRoom => 'vip_room'.tr();
+  static String get stationNameLabelAr => 'station_name_label_ar'.tr();
+  static String get stationNameLabelEn => 'station_name_label_en'.tr();
+  static String get roomNameLabelAr => 'room_name_label_ar'.tr();
+  static String get roomNameLabelEn => 'room_name_label_en'.tr();
   static String get specs => 'specs'.tr();
   static String get capacity => 'capacity'.tr();
   static String get pricePerHour => 'price_per_hour'.tr();

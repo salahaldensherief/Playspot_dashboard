@@ -58,6 +58,17 @@ class RoomModel extends RoomEntity {
       return int.tryParse(value.toString()) ?? defaultValue;
     }
 
+    RoomStatusEnum parseStatus(String? status) {
+      switch (status) {
+        case 'maintenance':
+          return RoomStatusEnum.maintenance;
+        case 'occupied':
+          return RoomStatusEnum.occupied;
+        default:
+          return RoomStatusEnum.available;
+      }
+    }
+
     return RoomModel(
       id: json['id']?.toString() ?? '',
       loungeId: json['lounge_id']?.toString() ?? '',
@@ -81,7 +92,7 @@ class RoomModel extends RoomEntity {
       featuresEn: json['features_en'] != null ? List<String>.from(json['features_en']) : [],
       controllersCount: parseInt(json['controllers_count'], 2),
       screenSize: json['screen_size']?.toString() ?? '43"',
-      status: json['status'] == 'maintenance' ? RoomStatusEnum.maintenance : RoomStatusEnum.available,
+      status: parseStatus(json['status']),
     );
   }
 

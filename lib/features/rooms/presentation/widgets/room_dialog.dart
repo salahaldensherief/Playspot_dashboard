@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_multi_image_picker.dart';
+import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:uuid/uuid.dart';
@@ -49,7 +50,7 @@ class _RoomDialogState extends State<RoomDialog> {
   final List<String> _featuresEn = [];
   
   RoomStatusEnum _selectedStatus = RoomStatusEnum.available;
-  String? _selectedSpaceType;
+  String? _selectedSpaceTypeId;
   List<SelectedImage> _roomImages = [];
   bool _isUploading = false;
 
@@ -67,7 +68,15 @@ class _RoomDialogState extends State<RoomDialog> {
     _capacityController = TextEditingController(text: r?.capacity.toString());
     _controllersController = TextEditingController(text: r?.controllersCount.toString() ?? '2');
     _screenSizeController = TextEditingController(text: r?.screenSize ?? '43"');
-    _selectedSpaceType = r?.spaceType ?? 'Private';
+    
+    // Ensure _selectedSpaceTypeId is one of the valid options
+    const validSpaceTypes = ['open_area', 'standard_room', 'vip_room'];
+    if (r != null && validSpaceTypes.contains(r.spaceTypeId)) {
+      _selectedSpaceTypeId = r.spaceTypeId;
+    } else {
+      _selectedSpaceTypeId = 'open_area';
+    }
+
     _selectedStatus = r?.status ?? RoomStatusEnum.available;
     if (r != null) {
       _selectedActivityIds.addAll(r.activityIds);
@@ -118,8 +127,8 @@ class _RoomDialogState extends State<RoomDialog> {
             loungeId: widget.loungeId,
             nameAr: _nameArController.text,
             nameEn: _nameEnController.text,
-            spaceType: _selectedSpaceType,
-            spaceTypeId: widget.room?.spaceTypeId ?? '',
+            spaceType: _selectedSpaceTypeId == 'open_area' ? 'Open Area' : (_selectedSpaceTypeId == 'vip_room' ? 'VIP' : 'Standard'),
+            spaceTypeId: _selectedSpaceTypeId,
             pricePerHourSingle: double.tryParse(_priceSingleController.text) ?? 0,
             pricePerHourMulti: double.tryParse(_priceMultiController.text) ?? 0,
             pricePerHour: double.tryParse(_priceSingleController.text) ?? 0,
@@ -169,6 +178,21 @@ class _RoomDialogState extends State<RoomDialog> {
               children: [
                 _buildHeader(),
                 SizedBox(height: 32.h),
+                CustomDropdown<String>(
+                  label: AppStrings.spaceType,
+                  value: const ['open_area', 'standard_room', 'vip_room'].contains(_selectedSpaceTypeId)
+                      ? _selectedSpaceTypeId!
+                      : 'open_area',
+                  items: const ['open_area', 'standard_room', 'vip_room'],
+                  itemLabel: (id) {
+                    if (id == 'open_area') return AppStrings.openArea;
+                    if (id == 'standard_room') return AppStrings.standardRoom;
+                    if (id == 'vip_room') return AppStrings.vipRoom;
+                    return id;
+                  },
+                  onChanged: (v) => setState(() => _selectedSpaceTypeId = v),
+                ),
+                SizedBox(height: 24.h),
                 AppMultiImagePicker(
                   label: AppStrings.roomStationImage,
                   initialUrls: widget.room?.images,
@@ -182,14 +206,14 @@ class _RoomDialogState extends State<RoomDialog> {
                   nameEnController: _nameEnController,
                   priceSingleController: _priceSingleController,
                   priceMultiController: _priceMultiController,
+                  isOpenArea: _selectedSpaceTypeId == 'open_area',
                 ),
                 SizedBox(height: 20.h),
                 RoomSpecsForm(
                   capacityController: _capacityController,
                   controllersController: _controllersController,
                   screenSizeController: _screenSizeController,
-                  selectedSpaceType: _selectedSpaceType,
-                  onSpaceTypeChanged: (v) => setState(() => _selectedSpaceType = v),
+                  selectedSpaceTypeId: _selectedSpaceTypeId,
                   status: _selectedStatus,
                   onStatusChanged: (v) => setState(() => _selectedStatus = v!),
                 ),

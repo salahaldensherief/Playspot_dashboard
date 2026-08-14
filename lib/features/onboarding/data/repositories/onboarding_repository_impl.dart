@@ -84,6 +84,9 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
         featuresAr: room.featuresAr,
         featuresEn: room.featuresEn,
         isAvailable: room.isAvailable,
+        controllersCount: room.controllersCount,
+        screenSize: room.screenSize,
+        status: room.status,
       );
       final result = await remoteDataSource.addRoom(roomModel);
       return Right(result);

@@ -12,8 +12,7 @@ class RoomSpecsForm extends StatelessWidget {
   final TextEditingController capacityController;
   final TextEditingController controllersController;
   final TextEditingController screenSizeController;
-  final String? selectedSpaceType;
-  final Function(String?)? onSpaceTypeChanged;
+  final String? selectedSpaceTypeId;
   final RoomStatusEnum status;
   final Function(RoomStatusEnum?)? onStatusChanged;
 
@@ -22,8 +21,7 @@ class RoomSpecsForm extends StatelessWidget {
     required this.capacityController,
     required this.controllersController,
     required this.screenSizeController,
-    this.selectedSpaceType,
-    this.onSpaceTypeChanged,
+    this.selectedSpaceTypeId,
     required this.status,
     this.onStatusChanged,
   });
@@ -35,16 +33,6 @@ class RoomSpecsForm extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: CustomDropdown<String>(
-                label: 'Space Type',
-                value: selectedSpaceType ?? 'Private',
-                items: const ['Private', 'Shared', 'Area'],
-                itemLabel: (s) => s,
-                onChanged: onSpaceTypeChanged!,
-              ),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
               child: CustomDropdown<RoomStatusEnum>(
                 label: AppStrings.status,
                 value: status,
@@ -53,6 +41,7 @@ class RoomSpecsForm extends StatelessWidget {
                 onChanged: onStatusChanged!,
               ),
             ),
+            const Spacer(),
           ],
         ),
         SizedBox(height: 20.h),
@@ -68,23 +57,27 @@ class RoomSpecsForm extends StatelessWidget {
               ),
             ),
             SizedBox(width: 16.w),
-            Expanded(
-              child: AppTextField(
-                label: AppStrings.controllers,
-                hintText: AppStrings.controllersHint,
-                controller: controllersController,
-                keyboardType: TextInputType.number,
-                validator: AppValidator.validateOptionalNumber,
+            if (selectedSpaceTypeId == 'open_area') ...[
+              Expanded(
+                child: AppTextField(
+                  label: AppStrings.controllers,
+                  hintText: AppStrings.controllersHint,
+                  controller: controllersController,
+                  keyboardType: TextInputType.number,
+                  validator: AppValidator.validateOptionalNumber,
+                ),
               ),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: AppTextField(
-                label: AppStrings.specs,
-                hintText: AppStrings.screenSizeHint,
-                controller: screenSizeController,
+              SizedBox(width: 16.w),
+              Expanded(
+                child: AppTextField(
+                  label: AppStrings.specs,
+                  hintText: AppStrings.screenSizeHint,
+                  controller: screenSizeController,
+                ),
               ),
-            ),
+            ] else ...[
+              const Spacer(flex: 2),
+            ],
           ],
         ),
       ],

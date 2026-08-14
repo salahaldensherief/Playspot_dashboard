@@ -9,6 +9,7 @@ class RoomBasicInfoForm extends StatelessWidget {
   final TextEditingController nameEnController;
   final TextEditingController priceSingleController;
   final TextEditingController priceMultiController;
+  final bool isOpenArea;
 
   const RoomBasicInfoForm({
     super.key,
@@ -16,6 +17,7 @@ class RoomBasicInfoForm extends StatelessWidget {
     required this.nameEnController,
     required this.priceSingleController,
     required this.priceMultiController,
+    this.isOpenArea = false,
   });
 
   @override
@@ -26,8 +28,8 @@ class RoomBasicInfoForm extends StatelessWidget {
           children: [
             Expanded(
               child: AppTextField(
-                label: AppStrings.nameAr,
-                hintText: AppStrings.nameAr,
+                label: isOpenArea ? AppStrings.stationNameLabelAr : AppStrings.roomNameLabelAr,
+                hintText: isOpenArea ? AppStrings.stationNameLabelAr : AppStrings.roomNameLabelAr,
                 controller: nameArController,
                 validator: AppValidator.validateRequired,
               ),
@@ -35,8 +37,8 @@ class RoomBasicInfoForm extends StatelessWidget {
             SizedBox(width: 16.w),
             Expanded(
               child: AppTextField(
-                label: AppStrings.nameEn,
-                hintText: AppStrings.nameEn,
+                label: isOpenArea ? AppStrings.stationNameLabelEn : AppStrings.roomNameLabelEn,
+                hintText: isOpenArea ? AppStrings.stationNameLabelEn : AppStrings.roomNameLabelEn,
                 controller: nameEnController,
                 validator: AppValidator.validateRequired,
               ),

@@ -26,6 +26,7 @@ class RoomsDataTable extends StatelessWidget {
     return DataTableWidget(
       columns: [
         AppStrings.roomName,
+        AppStrings.spaceType,
         AppStrings.specs,
         AppStrings.capacity,
         'Price (Single/Multi)',
@@ -45,9 +46,13 @@ class RoomsDataTable extends StatelessWidget {
               ],
             ),
           ),
+          DataCell(_getSpaceTypeBadge(room.spaceTypeId)),
           DataCell(
-            Text('${room.screenSize} • ${room.controllersCount} ${AppStrings.controllers}', 
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp))
+            room.isOpenArea 
+              ? Text('${room.screenSize} • ${room.controllersCount} ${AppStrings.controllers}', 
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp))
+              : Text(room.featuresEn.take(2).join(', '), 
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp))
           ),
           DataCell(Text('${room.capacity} ${AppStrings.persons}', style: const TextStyle(color: AppColors.textSecondary))),
           DataCell(Text('${room.pricePerHourSingle.toStringAsFixed(0)} / ${room.pricePerHourMulti.toStringAsFixed(0)} EGP', style: const TextStyle(color: AppColors.textPrimary))),
@@ -119,6 +124,19 @@ class RoomsDataTable extends StatelessWidget {
         return StatusBadge.warning('Maintenance');
       case RoomStatusEnum.occupied:
         return StatusBadge.danger('Occupied');
+    }
+  }
+
+  Widget _getSpaceTypeBadge(String? spaceTypeId) {
+    switch (spaceTypeId) {
+      case 'open_area':
+        return StatusBadge.info(AppStrings.openArea);
+      case 'standard_room':
+        return StatusBadge.neutral(AppStrings.standardRoom);
+      case 'vip_room':
+        return StatusBadge.warning(AppStrings.vipRoom);
+      default:
+        return StatusBadge.neutral(spaceTypeId ?? 'N/A');
     }
   }
 }
