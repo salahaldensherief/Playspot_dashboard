@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/categories/presentation/categories/category_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/widgets/room_dialog.dart';
 import '../cubit/room_cubit.dart';
@@ -15,6 +16,9 @@ class RoomManagementHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.read<LoginCubit>().state.user;
+    final bool canEdit = user?.canEditSetup ?? false;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -37,11 +41,12 @@ class RoomManagementHeader extends StatelessWidget {
             ),
           ],
         ),
-        AppButton(
-          text: AppStrings.addNewRoom,
-          icon: Icons.add,
-          onPressed: () => _showAddRoomDialog(context, loungeId),
-        ),
+        if (canEdit)
+          AppButton(
+            text: AppStrings.addNewRoom,
+            icon: Icons.add,
+            onPressed: () => _showAddRoomDialog(context, loungeId),
+          ),
       ],
     );
   }

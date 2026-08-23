@@ -43,8 +43,6 @@ class _RoomDialogState extends State<RoomDialog> {
   late TextEditingController _nameEnController;
   late TextEditingController _descriptionArController;
   late TextEditingController _descriptionEnController;
-  late TextEditingController _priceSingleController;
-  late TextEditingController _priceMultiController;
   late TextEditingController _pricePerHourController;
   late TextEditingController _capacityController;
   late TextEditingController _controllersController;
@@ -71,8 +69,6 @@ class _RoomDialogState extends State<RoomDialog> {
     _nameEnController = TextEditingController(text: r?.nameEn);
     _descriptionArController = TextEditingController(text: r?.descriptionAr);
     _descriptionEnController = TextEditingController(text: r?.descriptionEn);
-    _priceSingleController = TextEditingController(text: r?.pricePerHourSingle.toString() ?? '0.0');
-    _priceMultiController = TextEditingController(text: r?.pricePerHourMulti.toString() ?? '0.0');
     _pricePerHourController = TextEditingController(text: r?.pricePerHour.toString() ?? '0.0');
     _capacityController = TextEditingController(text: r?.capacity.toString() ?? (r?.isOpenArea == true ? '2' : '4'));
     _controllersController = TextEditingController(text: r?.controllersCount.toString() ?? '2');
@@ -101,8 +97,6 @@ class _RoomDialogState extends State<RoomDialog> {
     _nameEnController.dispose();
     _descriptionArController.dispose();
     _descriptionEnController.dispose();
-    _priceSingleController.dispose();
-    _priceMultiController.dispose();
     _pricePerHourController.dispose();
     _capacityController.dispose();
     _controllersController.dispose();
@@ -115,12 +109,6 @@ class _RoomDialogState extends State<RoomDialog> {
 
   Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
-      if (_selectedActivityIds.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please select at least one Experience / Activity type'), backgroundColor: AppColors.danger),
-        );
-        return;
-      }
       if (_roomImages.isEmpty && (widget.room?.images == null || widget.room!.images.isEmpty)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppStrings.minImagesError), backgroundColor: AppColors.danger),
@@ -143,8 +131,6 @@ class _RoomDialogState extends State<RoomDialog> {
 
         if (mounted) {
           final isOpenArea = _selectedSpaceTypeId == 'open_area';
-          final priceSingle = double.tryParse(_priceSingleController.text) ?? 0;
-          final priceMulti = double.tryParse(_priceMultiController.text) ?? 0;
           final pricePerHour = double.tryParse(_pricePerHourController.text) ?? 0;
 
           final room = RoomEntity(
@@ -156,9 +142,9 @@ class _RoomDialogState extends State<RoomDialog> {
             descriptionEn: _descriptionEnController.text,
             spaceType: isOpenArea ? 'Open Area' : (_selectedSpaceTypeId == 'vip_room' ? 'VIP Room' : 'Standard Room'),
             spaceTypeId: _selectedSpaceTypeId,
-            pricePerHourSingle: isOpenArea ? priceSingle : pricePerHour,
-            pricePerHourMulti: isOpenArea ? priceMulti : pricePerHour,
-            pricePerHour: isOpenArea ? priceSingle : pricePerHour,
+            pricePerHourSingle: pricePerHour,
+            pricePerHourMulti: pricePerHour,
+            pricePerHour: pricePerHour,
             extraControllerPrice: double.tryParse(_extraPriceController.text) ?? 0,
             capacity: int.tryParse(_capacityController.text) ?? (isOpenArea ? 2 : 4),
             controllersCount: isOpenArea ? (int.tryParse(_controllersController.text) ?? 2) : 2,
@@ -221,8 +207,6 @@ class _RoomDialogState extends State<RoomDialog> {
                   onChanged: (v) => setState(() => _selectedSpaceTypeId = v),
                 ),
                 SizedBox(height: 24.h),
-                _buildActivitySelection(),
-                SizedBox(height: 24.h),
                 AppMultiImagePicker(
                   label: AppStrings.roomStationImage,
                   initialUrls: widget.room?.images,
@@ -236,8 +220,6 @@ class _RoomDialogState extends State<RoomDialog> {
                   nameEnController: _nameEnController,
                   descriptionArController: _descriptionArController,
                   descriptionEnController: _descriptionEnController,
-                  priceSingleController: _priceSingleController,
-                  priceMultiController: _priceMultiController,
                   pricePerHourController: _pricePerHourController,
                   isOpenArea: _selectedSpaceTypeId == 'open_area',
                 ),
@@ -405,113 +387,6 @@ class _RoomDialogState extends State<RoomDialog> {
           }),
         ),
       ],
-    );
-  }
-
-  Widget _buildActivitySelection() {
-    return BlocBuilder<CategoryCubit, CategoryState>(
-      bloc: widget.categoryCubit,
-      builder: (context, state) {
-        final activities = state.activityTypes;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${AppStrings.experienceType} (Activity)',
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.w500),
-            ),
-            SizedBox(height: 12.h),
-            Wrap(
-              spacing: 12.w,
-              runSpacing: 12.h,
-              children: [
-                ...activities.map<Widget>((ActivityTypeEntity cat) {
-                  final isSelected = _selectedActivityIds.contains(cat.id);
-                  return FilterChip(
-                    label: Text(cat.label),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedActivityIds.add(cat.id);
-                        } else {
-                          _selectedActivityIds.remove(cat.id);
-                        }
-                      });
-                    },
-                    backgroundColor: AppColors.mutedBackground,
-                    selectedColor: AppColors.neonBlue.withOpacity(0.2),
-                    labelStyle: TextStyle(
-                      color: isSelected ? AppColors.neonBlue : AppColors.textSecondary,
-                      fontSize: 12.sp,
-                    ),
-                    checkmarkColor: AppColors.neonBlue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                      side: BorderSide(
-                        color: isSelected ? AppColors.neonBlue : AppColors.borderDefault,
-                      ),
-                    ),
-                  );
-                }).toList(),
-                ActionChip(
-                  label: Text(AppStrings.addNew, style: TextStyle(fontSize: 12.sp, color: AppColors.neonBlue)),
-                  backgroundColor: AppColors.mutedBackground,
-                  onPressed: _showAddActivityDialog,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                    side: const BorderSide(color: AppColors.neonBlue),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showAddActivityDialog() {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        title: Text(AppStrings.addNewActivity, style: TextStyle(color: AppColors.textPrimary, fontSize: 18.sp)),
-        content: TextField(
-          controller: controller,
-          style: const TextStyle(color: Colors.white),
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: 'e.g. Racing Simulator, Billiards',
-            hintStyle: const TextStyle(color: AppColors.textSecondary),
-            filled: true,
-            fillColor: AppColors.mutedBackground,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: BorderSide.none),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(AppStrings.cancel)),
-          AppButton(
-            text: AppStrings.saveChanges,
-            onPressed: () async {
-              if (controller.text.isNotEmpty) {
-                final newActivity = await widget.categoryCubit.addActivityType(
-                  controller.text.toLowerCase().replaceAll(' ', '_'),
-                  controller.text,
-                );
-                if (newActivity != null) {
-                  setState(() {
-                    _selectedActivityIds.add(newActivity.id);
-                  });
-                }
-                if (mounted) Navigator.pop(context);
-              }
-            },
-          ),
-        ],
-      ),
     );
   }
 

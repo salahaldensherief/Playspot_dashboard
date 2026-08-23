@@ -34,6 +34,9 @@ class ExtrasManagementPage extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context, String loungeId) {
     final cubit = context.read<ExtrasCubit>();
+    final user = context.read<LoginCubit>().state.user;
+    final bool canEdit = user?.canEditSetup ?? false;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -44,19 +47,20 @@ class ExtrasManagementPage extends StatelessWidget {
             AppText.body(AppStrings.menuManagementSubtitle),
           ],
         ),
-        AppButton(
-          text: AppStrings.addExtraItem,
-          icon: Icons.add,
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (diagContext) => ExtraDialog(
-                loungeId: loungeId,
-                onSave: (newExtra) => cubit.addExtra(newExtra),
-              ),
-            );
-          },
-        ),
+        if (canEdit)
+          AppButton(
+            text: AppStrings.addExtraItem,
+            icon: Icons.add,
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (diagContext) => ExtraDialog(
+                  loungeId: loungeId,
+                  onSave: (newExtra) => cubit.addExtra(newExtra),
+                ),
+              );
+            },
+          ),
       ],
     );
   }

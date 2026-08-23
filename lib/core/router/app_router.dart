@@ -74,9 +74,12 @@ class AppRouter {
 
         final bool isLoungeAdmin = user.isStaff;
         final bool isSuperAdmin = user.role == UserRole.superAdmin;
+        final bool isLoungeOwner = user.isLoungeOwner;
         final bool isOnboardingPath = state.matchedLocation == RouterKeys.loungeOnboarding;
 
-        if (isLoungeAdmin && !user.isSetupCompleted) {
+        // Only redirect Owners to onboarding if setup is not completed.
+        // Other staff (Manager, Cashier) should go directly to their dashboard.
+        if (user.isLoungeOwner && !user.isSetupCompleted) {
           if (!isOnboardingPath) return RouterKeys.loungeOnboarding;
           return null;
         }
@@ -90,8 +93,29 @@ class AppRouter {
           if (isLoungeAdmin) return RouterKeys.loungeAdminLiveOps;
         }
 
-        final bool isSuperAdminRoute = state.matchedLocation.startsWith('/super-admin');
-        if (isSuperAdminRoute && !isSuperAdmin) {
+        // --- RBAC Route Protection ---
+        
+        final String location = state.matchedLocation;
+
+        // 1. Protect Super Admin Routes
+        if (location.startsWith('/super-admin') && !isSuperAdmin) {
+          return RouterKeys.loungeAdminLiveOps;
+        }
+
+        // 2. Protect Owner/Manager Routes
+        final bool isOwnerOnlyRoute = location == RouterKeys.loungeAdminStaff || 
+                                      location.contains('/payouts') || 
+                                      location.contains('/reports');
+        
+        final bool isMarketingRoute = location == RouterKeys.loungeAdminMarketing;
+
+        // Redirect if trying to access owner-only routes as manager/cashier
+        if (isOwnerOnlyRoute && !isLoungeOwner && !isSuperAdmin) {
+          return RouterKeys.loungeAdminLiveOps;
+        }
+
+        // Redirect if trying to access marketing as cashier
+        if (isMarketingRoute && user.isCashier && !isSuperAdmin) {
           return RouterKeys.loungeAdminLiveOps;
         }
 
@@ -234,7 +258,10 @@ class AppRouter {
                       create: (context) => sl<BookingCubit>()..startWatchingBookings(loungeId: context.read<LoginCubit>().state.user?.loungeId),
                       child: BlocProvider(
                         create: (context) => sl<LoungeCubit>()..fetchLounges(),
-                        child: const bookings.BookingsPage(),
+                        child: BlocProvider(
+                          create: (context) => sl<RoomCubit>(),
+                          child: const bookings.BookingsPage(),
+                        ),
                       ),
                     ),
                   ),

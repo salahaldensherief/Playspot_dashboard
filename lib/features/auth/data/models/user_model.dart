@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart';
+
 import '../../domain/entities/user_entity.dart';
 
 class UserModel extends UserEntity {
@@ -12,31 +14,33 @@ class UserModel extends UserEntity {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
-    UserRole role;
-    switch (json['role']) {
+    debugPrint('UserModel: parsing profile JSON: $json');
+    return UserModel(
+      id: (json['id'] ?? json['user_id'] ?? json['staff_id'])?.toString() ?? '',
+      email: (json['email'] ?? json['out_email'] ?? '')?.toString() ?? '',
+      name: (json['full_name'] ?? json['out_full_name'] ?? json['name'] ?? 'Unknown').toString(),
+      role: roleFromString((json['role'] ?? json['out_role'])?.toString()),
+      loungeId: (json['lounge_id'] ?? json['out_lounge_id'])?.toString(),
+      avatarUrl: json['avatar_url']?.toString(),
+      isSetupCompleted: json['is_setup_completed'] ?? json['out_is_setup_completed'] ?? false,
+    );
+  }
+
+  static UserRole roleFromString(String? role) {
+    switch (role?.toLowerCase()) {
       case 'super_admin':
-        role = UserRole.superAdmin;
-        break;
+        return UserRole.superAdmin;
       case 'lounge_owner':
       case 'lounge_admin':
-        role = UserRole.loungeOwner;
-        break;
+        return UserRole.loungeOwner;
+      case 'manager':
+        return UserRole.manager;
       case 'cashier':
-        role = UserRole.cashier;
-        break;
+      case 'staff':
+        return UserRole.cashier;
       default:
-        role = UserRole.user;
+        return UserRole.user;
     }
-
-    return UserModel(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      name: json['full_name'] as String? ?? 'Unknown',
-      role: role,
-      loungeId: json['lounge_id'] as String?,
-      avatarUrl: json['avatar_url'] as String?,
-      isSetupCompleted: json['is_setup_completed'] as bool? ?? false,
-    );
   }
 
   Map<String, dynamic> toJson() {

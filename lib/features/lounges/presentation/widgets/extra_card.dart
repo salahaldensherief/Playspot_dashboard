@@ -17,7 +17,9 @@ class ExtraCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final loungeId = context.read<LoginCubit>().state.user?.loungeId ?? '';
+    final user = context.read<LoginCubit>().state.user;
+    final loungeId = user?.loungeId ?? '';
+    final bool canEdit = user?.canEditSetup ?? false;
 
     return Container(
       decoration: BoxDecoration(
@@ -63,25 +65,29 @@ class ExtraCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20.r),
-                          onPressed: () => _showEditDialog(context, loungeId),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
-                          onPressed: () => _confirmDelete(context, loungeId),
-                        ),
-                      ],
-                    ),
-                    Switch(
-                      value: !extra.isOutOfStock,
-                      activeColor: AppColors.neonBlue,
-                      onChanged: (val) {
-                        context.read<ExtrasCubit>().toggleStock(extra.id, !val, loungeId);
-                      },
-                    ),
+                    if (canEdit)
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20.r),
+                            onPressed: () => _showEditDialog(context, loungeId),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
+                            onPressed: () => _confirmDelete(context, loungeId),
+                          ),
+                        ],
+                      )
+                    else
+                      const SizedBox.shrink(),
+                    if (canEdit)
+                      Switch(
+                        value: !extra.isOutOfStock,
+                        activeColor: AppColors.neonBlue,
+                        onChanged: (val) {
+                          context.read<ExtrasCubit>().toggleStock(extra.id, !val, loungeId);
+                        },
+                      ),
                   ],
                 ),
               ],

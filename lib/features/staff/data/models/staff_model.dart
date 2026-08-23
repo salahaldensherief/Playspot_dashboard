@@ -14,12 +14,12 @@ class StaffModel extends StaffEntity {
 
   factory StaffModel.fromJson(Map<String, dynamic> json) {
     return StaffModel(
-      id: (json['out_staff_id'] ?? json['id'] ?? json['out_user_id'])?.toString() ?? '',
-      name: (json['out_full_name'] ?? json['full_name'] ?? json['name'] ?? '')?.toString() ?? '',
-      email: (json['out_email'] ?? json['email'] ?? '')?.toString() ?? '',
-      phone: (json['out_phone'] ?? json['phone'])?.toString(),
-      role: (json['out_role'] ?? json['role'])?.toString() ?? 'cashier',
-      loungeId: (json['out_lounge_id'] ?? json['lounge_id'])?.toString() ?? '',
+      id: (json['staff_id'] ?? json['user_id'] ?? json['out_staff_id'] ?? json['id'])?.toString() ?? '',
+      name: (json['full_name'] ?? json['out_full_name'] ?? json['name'] ?? '')?.toString() ?? '',
+      email: (json['email'] ?? json['out_email'] ?? '')?.toString() ?? '',
+      phone: (json['phone'] ?? json['out_phone'])?.toString(),
+      role: (json['role'] ?? json['out_role'])?.toString() ?? 'cashier',
+      loungeId: (json['lounge_id'] ?? json['out_lounge_id'])?.toString() ?? '',
       isActive: json['is_active'] ?? json['out_is_active'] ?? true,
       createdAt: json['out_created_at'] != null
           ? DateTime.parse(json['out_created_at'].toString())

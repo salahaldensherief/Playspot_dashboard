@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
+import 'package:play_spot_dashboard/features/staff/data/entities/staff_entity.dart';
 import 'package:play_spot_dashboard/features/staff/data/models/staff_params.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_cubit.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_state.dart';
@@ -13,8 +14,9 @@ import 'package:play_spot_dashboard/features/staff/presentation/staff_management
 class AddStaffDialog extends StatefulWidget {
   final String loungeId;
   final StaffCubit cubit; // Explicitly pass the cubit
+  final StaffEntity? staff;
 
-  const AddStaffDialog({super.key, required this.loungeId, required this.cubit});
+  const AddStaffDialog({super.key, required this.loungeId, required this.cubit, this.staff});
 
   @override
   State<AddStaffDialog> createState() => _AddStaffDialogState();
@@ -22,11 +24,23 @@ class AddStaffDialog extends StatefulWidget {
 
 class _AddStaffDialogState extends State<AddStaffDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
-  String _selectedRole = 'cashier';
+  late final TextEditingController _nameController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _passwordController;
+  late String _selectedRole;
+
+  bool get isEdit => widget.staff != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.staff?.name);
+    _emailController = TextEditingController(text: widget.staff?.email);
+    _phoneController = TextEditingController(text: widget.staff?.phone);
+    _passwordController = TextEditingController();
+    _selectedRole = widget.staff?.role ?? 'cashier';
+  }
 
   @override
   void dispose() {
@@ -67,7 +81,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  AppStrings.addStaff,
+                  isEdit ? AppStrings.editStaff : AppStrings.addStaff,
                   style: TextStyle(color: AppColors.textPrimary, fontSize: 20.sp, fontWeight: FontWeight.bold, fontFamily: 'Orbitron'),
                 ),
                 SizedBox(height: 24.h),
@@ -84,6 +98,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                         label: AppStrings.email,
                         controller: _emailController,
                         validator: AppValidator.validateEmail,
+                        readOnly: isEdit, // Email usually shouldn't be edited if it's the auth ID
                       ),
                     ),
                     SizedBox(width: 16.w),
@@ -96,13 +111,15 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                     ),
                   ],
                 ),
-                SizedBox(height: 16.h),
-                AppTextField(
-                  label: AppStrings.tempPassword,
-                  controller: _passwordController,
-                  validator: (v) => (v?.length ?? 0) < 6 ? AppStrings.passwordTooShort : null,
-                  isPassword: true,
-                ),
+                if (!isEdit) ...[
+                  SizedBox(height: 16.h),
+                  AppTextField(
+                    label: AppStrings.tempPassword,
+                    controller: _passwordController,
+                    validator: (v) => (v?.length ?? 0) < 6 ? AppStrings.passwordTooShort : null,
+                    isPassword: true,
+                  ),
+                ],
                 SizedBox(height: 24.h),
                 Text(
                   AppStrings.roleLabel,
@@ -121,7 +138,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                     ),
                     SizedBox(width: 16.w),
                     AppButton(
-                      text: AppStrings.addStaff,
+                      text: isEdit ? AppStrings.saveChanges : AppStrings.addStaff,
                       onPressed: _submit,
                     ),
                   ],
@@ -154,16 +171,28 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      widget.cubit.addStaffMember(
-        AddStaffParams(
-          name: _nameController.text,
-          email: _emailController.text,
-          phone: _phoneController.text,
-          password: _passwordController.text,
-          role: _selectedRole,
-          loungeId: widget.loungeId,
-        ),
-      );
+      if (isEdit) {
+        widget.cubit.updateStaffMember(
+          widget.staff!.id,
+          {
+            'name': _nameController.text,
+            'phone': _phoneController.text,
+            'role': _selectedRole,
+          },
+          widget.loungeId,
+        );
+      } else {
+        widget.cubit.addStaffMember(
+          AddStaffParams(
+            name: _nameController.text,
+            email: _emailController.text,
+            phone: _phoneController.text,
+            password: _passwordController.text,
+            role: _selectedRole,
+            loungeId: widget.loungeId,
+          ),
+        );
+      }
     }
   }
 }

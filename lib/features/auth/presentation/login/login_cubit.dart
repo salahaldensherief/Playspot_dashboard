@@ -25,11 +25,16 @@ class LoginCubit extends Cubit<LoginState> {
   }) : super(const LoginState());
 
   Future<void> checkInitialAuth({BuildContext? context}) async {
+    debugPrint('LoginCubit: checking initial auth');
     emit(state.copyWith(status: LoginStatus.checking));
     final result = await getCurrentUserUseCase(NoParams());
     result.fold(
-      (failure) => emit(state.copyWith(status: LoginStatus.unauthenticated)),
+      (failure) {
+        debugPrint('LoginCubit: initial auth check failed: ${failure.message}');
+        emit(state.copyWith(status: LoginStatus.unauthenticated));
+      },
       (user) async {
+        debugPrint('LoginCubit: user found: ${user?.email}, role: ${user?.role}');
         if (user != null) {
           emit(state.copyWith(
             status: LoginStatus.authenticated,
@@ -47,12 +52,17 @@ class LoginCubit extends Cubit<LoginState> {
     );
   }
 
-  Future<void> login(String email, String password, {BuildContext? context}) async {
+  Future<void> login(String email, String password, { BuildContext? context}) async {
+    debugPrint('LoginCubit: logging in for $email');
     emit(state.copyWith(status: LoginStatus.loading));
     final result = await loginUseCase(LoginParams(email: email, password: password));
     result.fold(
-      (failure) => emit(state.copyWith(status: LoginStatus.failure, errorMessage: failure.message)),
+      (failure) {
+        debugPrint('LoginCubit: login failed: ${failure.message}');
+        emit(state.copyWith(status: LoginStatus.failure, errorMessage: failure.message));
+      },
       (user) async {
+        debugPrint('LoginCubit: login success for ${user.email}');
         emit(state.copyWith(
           status: LoginStatus.authenticated,
           user: user,

@@ -9,8 +9,6 @@ class RoomBasicInfoForm extends StatelessWidget {
   final TextEditingController nameEnController;
   final TextEditingController descriptionArController;
   final TextEditingController descriptionEnController;
-  final TextEditingController priceSingleController;
-  final TextEditingController priceMultiController;
   final TextEditingController pricePerHourController;
   final bool isOpenArea;
 
@@ -20,8 +18,6 @@ class RoomBasicInfoForm extends StatelessWidget {
     required this.nameEnController,
     required this.descriptionArController,
     required this.descriptionEnController,
-    required this.priceSingleController,
-    required this.priceMultiController,
     required this.pricePerHourController,
     this.isOpenArea = false,
   });
@@ -74,45 +70,20 @@ class RoomBasicInfoForm extends StatelessWidget {
           ],
         ),
         SizedBox(height: 20.h),
-        if (isOpenArea)
-          Row(
-            children: [
-              Expanded(
-                child: AppTextField(
-                  label: AppStrings.singlePrice,
-                  hintText: AppStrings.pricePerHourHint,
-                  controller: priceSingleController,
-                  keyboardType: TextInputType.number,
-                  validator: AppValidator.validateNumber,
-                ),
+        Row(
+          children: [
+            Expanded(
+              child: AppTextField(
+                label: AppStrings.roomPricePerHour,
+                hintText: AppStrings.pricePerHourHint,
+                controller: pricePerHourController,
+                keyboardType: TextInputType.number,
+                validator: AppValidator.validateNumber,
               ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: AppTextField(
-                  label: AppStrings.multiPrice,
-                  hintText: AppStrings.pricePerHourHint,
-                  controller: priceMultiController,
-                  keyboardType: TextInputType.number,
-                  validator: AppValidator.validateNumber,
-                ),
-              ),
-            ],
-          )
-        else
-          Row(
-            children: [
-              Expanded(
-                child: AppTextField(
-                  label: AppStrings.roomPricePerHour,
-                  hintText: AppStrings.pricePerHourHint,
-                  controller: pricePerHourController,
-                  keyboardType: TextInputType.number,
-                  validator: AppValidator.validateNumber,
-                ),
-              ),
-              const Spacer(),
-            ],
-          ),
+            ),
+            const Spacer(),
+          ],
+        ),
       ],
     );
   }

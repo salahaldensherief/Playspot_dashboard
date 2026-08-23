@@ -343,11 +343,14 @@ class AppStrings {
   // Staff Management
   static String get staffManagement => 'staff_management'.tr();
   static String get addStaff => 'add_staff'.tr();
+  static String get editStaff => 'edit_staff'.tr();
+  static String get searchStaff => 'search_staff'.tr();
   static String get staffName => 'staff_name'.tr();
   static String get staffPhone => 'staff_phone'.tr();
   static String get tempPassword => 'temp_password'.tr();
   static String get accountStatus => 'account_status'.tr();
   static String get freezeAccount => 'freeze_account'.tr();
+  static String get activate => 'activate'.tr();
   static String get manager => 'manager'.tr();
   static String get cashierLabel => 'cashier_label'.tr();
   static String get deleteStaffWarning => 'delete_staff_warning'.tr();

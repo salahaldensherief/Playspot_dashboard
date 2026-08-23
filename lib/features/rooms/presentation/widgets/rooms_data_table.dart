@@ -19,7 +19,9 @@ class RoomsDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final loungeId = context.read<LoginCubit>().state.user?.loungeId ?? '';
+    final user = context.read<LoginCubit>().state.user;
+    final loungeId = user?.loungeId ?? '';
+    final bool canEdit = user?.canEditSetup ?? false;
     final roomCubit = context.read<RoomCubit>();
     final categoryCubit = context.read<CategoryCubit>();
 
@@ -27,12 +29,11 @@ class RoomsDataTable extends StatelessWidget {
       columns: [
         AppStrings.roomName,
         AppStrings.spaceType,
-        AppStrings.experienceType,
         'Pricing',
         'Extra Ctr.',
         AppStrings.status,
-        'Online Toggle',
-        AppStrings.actions
+        if (canEdit) 'Online Toggle',
+        if (canEdit) AppStrings.actions
       ],
       rows: rooms.map((room) => DataRow(
         cells: [
@@ -47,42 +48,32 @@ class RoomsDataTable extends StatelessWidget {
             ),
           ),
           DataCell(_getSpaceTypeBadge(room.spaceType ?? room.spaceTypeId)),
-          DataCell(_getExperienceBadge(room.activityNames)),
-          DataCell(
-            room.isOpenArea 
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('S: ${room.pricePerHourSingle.toStringAsFixed(0)} EGP', style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp)),
-                    Text('M: ${room.pricePerHourMulti.toStringAsFixed(0)} EGP', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
-                  ],
-                )
-              : Text('${room.pricePerHour.toStringAsFixed(0)} EGP / Hr', style: const TextStyle(color: AppColors.textPrimary)),
-          ),
+          DataCell(Text('${room.pricePerHour.toStringAsFixed(0)} ${AppStrings.egp} / Hr', style: const TextStyle(color: AppColors.textPrimary))),
           DataCell(Text('+${room.extraControllerPrice.toStringAsFixed(0)} EGP/hr', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp))),
           DataCell(_getStatusBadge(room.status)),
-          DataCell(
-            Switch(
-              value: room.status == RoomStatusEnum.available,
-              activeColor: AppColors.neonBlue,
-              onChanged: (val) => roomCubit.toggleRoomStatus(room.id, room.status),
+          if (canEdit)
+            DataCell(
+              Switch(
+                value: room.status == RoomStatusEnum.available,
+                activeColor: AppColors.neonBlue,
+                onChanged: (val) => roomCubit.toggleRoomStatus(room.id, room.status),
+              ),
             ),
-          ),
-          DataCell(
-            Row(
-              children: [
-                IconButton(
-                  icon: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20.r),
-                  onPressed: () => _showEditDialog(context, roomCubit, categoryCubit, loungeId, room),
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
-                  onPressed: () => _confirmDelete(context, roomCubit, room),
-                ),
-              ],
+          if (canEdit)
+            DataCell(
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20.r),
+                    onPressed: () => _showEditDialog(context, roomCubit, categoryCubit, loungeId, room),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
+                    onPressed: () => _confirmDelete(context, roomCubit, room),
+                  ),
+                ],
+              ),
             ),
-          ),
         ],
       )).toList(),
     );
@@ -130,48 +121,6 @@ class RoomsDataTable extends StatelessWidget {
       case RoomStatusEnum.occupied:
         return StatusBadge.danger('Occupied');
     }
-  }
-
-  Widget _getExperienceBadge(List<String> activities) {
-    if (activities.isEmpty) return StatusBadge.neutral('N/A');
-    
-    final activity = activities.first.toLowerCase();
-    String label = activities.first;
-    IconData? icon;
-    Color color = AppColors.neonBlue;
-
-    if (activity.contains('playstation') || activity.contains('ps5') || activity.contains('ps4')) {
-      icon = Icons.sports_esports;
-      color = Colors.blueAccent;
-    } else if (activity.contains('simulator') || activity.contains('racing') || activity.contains('سباق')) {
-      icon = Icons.directions_car;
-      color = Colors.redAccent;
-    } else if (activity.contains('vr') || activity.contains('virtual') || activity.contains('واقع افتراضي')) {
-      icon = Icons.visibility;
-      color = Colors.purpleAccent;
-    } else if (activity.contains('pc') || activity.contains('computer') || activity.contains('كمبيوتر')) {
-      icon = Icons.computer;
-      color = Colors.greenAccent;
-    }
-
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(6.r),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 14.r, color: color),
-            SizedBox(width: 4.w),
-          ],
-          Text(label, style: TextStyle(color: color, fontSize: 11.sp, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
   }
 
   Widget _getSpaceTypeBadge(String? type) {
