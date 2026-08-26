@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import '../cubit/extras_cubit.dart';
 import '../cubit/extras_state.dart';
 import 'extra_card.dart';
@@ -16,10 +17,10 @@ class ExtrasGrid extends StatelessWidget {
     return BlocBuilder<ExtrasCubit, ExtrasState>(
       builder: (context, state) {
         if (state.status == ExtrasStatus.loading) {
-          return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
+          return const GridShimmer(itemCount: 8, aspectRatio: 0.8);
         }
         if (state.status == ExtrasStatus.failure) {
-          return Center(child: AppText.body(state.errorMessage ?? 'Error', color: AppColors.danger));
+          return Center(child: AppText.body(state.errorMessage ?? AppStrings.error, color: AppColors.danger));
         }
         if (state.status == ExtrasStatus.success) {
           if (state.extras.isEmpty) {

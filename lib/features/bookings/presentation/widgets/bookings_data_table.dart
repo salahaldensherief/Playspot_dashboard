@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
+import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
@@ -21,14 +22,14 @@ class BookingsDataTable extends StatelessWidget {
     return BlocBuilder<BookingCubit, BookingState>(
       builder: (context, state) {
         if (state.status == BookingStatusState.loading && state.bookings.isEmpty) {
-          return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
+          return const TableShimmer(columns: 7);
         }
         
         final bookings = filteredBookings ?? state.bookings;
         
         return DataTableWidget(
           columns: [
-            'ID', 
+            AppStrings.id,
             AppStrings.userLabel, 
             AppStrings.roomLabel, 
             AppStrings.gaming, 

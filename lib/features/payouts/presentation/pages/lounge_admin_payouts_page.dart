@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
+import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
@@ -65,7 +66,7 @@ class _LoungeAdminPayoutsPageState extends State<LoungeAdminPayoutsPage> {
           ),
           SizedBox(height: 32.h),
           _isLoading 
-            ? const Center(child: CircularProgressIndicator())
+            ? const TableShimmer(columns: 5)
             : _payouts.isEmpty 
               ? Center(child: Text(AppStrings.noPayoutHistoryFound, style: const TextStyle(color: AppColors.textSecondary)))
               : DataTableWidget(

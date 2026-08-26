@@ -4,6 +4,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
+import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -78,7 +79,7 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage> {
           ),
           SizedBox(height: 32.h),
           _isLoading 
-            ? const Center(child: CircularProgressIndicator())
+            ? const TableShimmer(columns: 4)
             : _pendingPayouts.isEmpty 
               ? Center(child: Text(AppStrings.noPendingPayouts, style: const TextStyle(color: AppColors.textSecondary)))
               : DataTableWidget(

@@ -43,6 +43,7 @@ dependencies:
   go_router: ^14.0.0
 
   # UI
+  shimmer: ^3.0.0
   flutter_screenutil: ^5.9.3
   cached_network_image: ^3.3.1
   flutter_svg: ^2.0.10

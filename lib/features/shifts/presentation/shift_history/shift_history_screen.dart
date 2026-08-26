@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import '../shift_management/shift_cubit.dart';
@@ -42,8 +43,8 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
           Expanded(
             child: BlocBuilder<ShiftCubit, ShiftState>(
               builder: (context, state) {
-                if (state.status.isLoading) return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
-                if (state.shifts.isEmpty) return const Center(child: Text('No shift history found', style: TextStyle(color: AppColors.textSecondary)));
+                if (state.status.isLoading) return const TableShimmer(columns: 7);
+                if (state.shifts.isEmpty) return Center(child: Text(AppStrings.noShiftHistoryFound, style: const TextStyle(color: AppColors.textSecondary)));
 
                 return Container(
                   decoration: BoxDecoration(
@@ -57,13 +58,13 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                       child: DataTable(
                         headingRowColor: MaterialStateProperty.all(AppColors.mutedBackground),
                         columns: [
-                          _buildColumn('Date'),
+                          _buildColumn(AppStrings.date),
                           _buildColumn(AppStrings.cashier),
                           _buildColumn(AppStrings.startingCash),
                           _buildColumn(AppStrings.totalRevenue),
                           _buildColumn(AppStrings.actualCash),
                           _buildColumn(AppStrings.discrepancy),
-                          _buildColumn('Status'),
+                          _buildColumn(AppStrings.status),
                         ],
                         rows: state.shifts.map((shift) {
                           final discrepancy = (shift.actualCash ?? 0) - (shift.expectedCash ?? 0);
@@ -71,14 +72,14 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
 
                           return DataRow(cells: [
                             DataCell(Text(DateFormat('MMM dd, hh:mm a').format(shift.startTime), style: const TextStyle(color: Colors.white))),
-                            DataCell(Text(shift.cashierName ?? 'System', style: const TextStyle(color: Colors.white))),
-                            DataCell(Text('${shift.startingCash} EGP', style: const TextStyle(color: Colors.white))),
-                            DataCell(Text('${shift.totalRevenue ?? 0} EGP', style: const TextStyle(color: Colors.white))),
-                            DataCell(Text('${shift.actualCash ?? "-"} EGP', style: const TextStyle(color: Colors.white))),
+                            DataCell(Text(shift.cashierName ?? AppStrings.system, style: const TextStyle(color: Colors.white))),
+                            DataCell(Text('${shift.startingCash} ${AppStrings.egp}', style: const TextStyle(color: Colors.white))),
+                            DataCell(Text('${shift.totalRevenue ?? 0} ${AppStrings.egp}', style: const TextStyle(color: Colors.white))),
+                            DataCell(Text('${shift.actualCash ?? "-"} ${AppStrings.egp}', style: const TextStyle(color: Colors.white))),
                             DataCell(
                               shift.status == 'closed' 
                               ? Text(
-                                  '${discrepancy.toStringAsFixed(2)} EGP',
+                                  '${discrepancy.toStringAsFixed(2)} ${AppStrings.egp}',
                                   style: TextStyle(color: isHealthy ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold),
                                 )
                               : const Text('---', style: TextStyle(color: AppColors.textSecondary)),

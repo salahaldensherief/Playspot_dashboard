@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import '../../data/entities/category_entity.dart';
 import '../../data/entities/city_entity.dart';
 import 'category_cubit.dart';
@@ -90,7 +91,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
               Row(
                 children: [
                   AppButton(
-                    text: 'Add City',
+                    text: AppStrings.addCity,
                     onPressed: () => _showCityDialog(context, categoryCubit),
                     icon: Icons.location_city,
                     variant: AppButtonVariant.outlined,
@@ -114,7 +115,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
             indicatorColor: AppColors.neonBlue,
             tabs: [
               Tab(text: AppStrings.categories),
-              Tab(text: 'Cities'),
+              Tab(text: AppStrings.cities),
             ],
           ),
           SizedBox(height: 24.h),
@@ -136,11 +137,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
     return BlocBuilder<CategoryCubit, CategoryState>(
       builder: (context, state) {
         if (state.status.isLoading) {
-          return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
+          return const GridShimmer(itemCount: 6, aspectRatio: 2.5);
         }
         if (state.status.isSuccess) {
           if (state.categories.isEmpty) {
-            return const Center(child: Text('No categories found', style: TextStyle(color: AppColors.textSecondary)));
+            return Center(child: Text(AppStrings.noCategoriesFound, style: const TextStyle(color: AppColors.textSecondary)));
           }
           return GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -171,8 +172,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
   Widget _buildCitiesList(BuildContext context, CategoryCubit cubit) {
     return BlocBuilder<CategoryCubit, CategoryState>(
       builder: (context, state) {
-        if (state.status.isLoading) return const Center(child: CircularProgressIndicator());
-        if (state.cities.isEmpty) return const Center(child: Text('No cities found', style: TextStyle(color: AppColors.textSecondary)));
+        if (state.status.isLoading) return const TableShimmer(columns: 1);
+        if (state.cities.isEmpty) return Center(child: Text(AppStrings.noCitiesFound, style: const TextStyle(color: AppColors.textSecondary)));
         
         return ListView.separated(
           itemCount: state.cities.length,
@@ -227,8 +228,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
       context: context,
       builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        title: const Text('Delete City', style: TextStyle(color: AppColors.textPrimary)),
-        content: Text('Delete city "${city.nameEn}"?'),
+        title: Text(AppStrings.deleteCity, style: const TextStyle(color: AppColors.textPrimary)),
+        content: Text('${AppStrings.deleteCityWarning} "${city.nameEn}"?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
           TextButton(

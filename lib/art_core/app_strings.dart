@@ -94,6 +94,10 @@ class AppStrings {
   static String get manageLoungesDesc => 'manage_lounges_desc'.tr();
   static String get loungesHeaderSubtitle => 'lounges_header_subtitle'.tr();
   static String get noLoungesFound => 'no_lounges_found'.tr();
+  static String get notAssigned => 'not_assigned'.tr();
+  static String get location => 'location'.tr();
+  static String get inactive => 'inactive'.tr();
+  static String get deleteLounge => 'delete_lounge'.tr();
   static String get loungeSetup => 'lounge_setup'.tr();
   static String get loungeName => 'lounge_name'.tr();
   static String get loungeNameHint => 'lounge_name_hint'.tr();
@@ -339,6 +343,8 @@ class AppStrings {
   static String get printReport => 'print_report'.tr();
   static String get logoutAfterClose => 'logout_after_close'.tr();
   static String get shiftHistory => 'shift_history'.tr();
+  static String get noShiftHistoryFound => 'no_shift_history_found'.tr();
+  static String get system => 'system'.tr();
 
   // Staff Management
   static String get staffManagement => 'staff_management'.tr();
@@ -351,6 +357,19 @@ class AppStrings {
   static String get manager => 'manager'.tr();
   static String get cashierLabel => 'cashier_label'.tr();
   static String get deleteStaffWarning => 'delete_staff_warning'.tr();
+  static String get noStaffFound => 'no_staff_found'.tr();
+  static String get activate => 'activate'.tr();
+  static String get id => 'id'.tr();
+
+  static String get addCity => 'add_city'.tr();
+  static String get cities => 'cities'.tr();
+  static String get noCategoriesFound => 'no_categories_found'.tr();
+  static String get noCitiesFound => 'no_cities_found'.tr();
+  static String get deleteCity => 'delete_city'.tr();
+  static String get deleteCityWarning => 'delete_city_warning'.tr();
+
+  static String get all => 'all'.tr();
+  static String get error => 'error'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

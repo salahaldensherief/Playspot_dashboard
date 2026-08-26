@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import '../cubit/room_cubit.dart';
 import '../cubit/room_state.dart';
 import 'rooms_data_table.dart';
@@ -27,7 +28,7 @@ class _RoomTableSectionState extends State<RoomTableSection> {
         BlocBuilder<RoomCubit, RoomState>(
           builder: (context, state) {
             if (state.status == RoomStatus.loading) {
-              return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
+              return const TableShimmer(columns: 5);
             }
 
             if (state.status == RoomStatus.success) {
@@ -38,7 +39,7 @@ class _RoomTableSectionState extends State<RoomTableSection> {
             }
 
             if (state.status == RoomStatus.failure) {
-              return Center(child: Text(state.errorMessage ?? 'Error', style: const TextStyle(color: AppColors.danger)));
+              return Center(child: Text(state.errorMessage ?? AppStrings.error, style: const TextStyle(color: AppColors.danger)));
             }
 
             return const SizedBox.shrink();
@@ -50,7 +51,7 @@ class _RoomTableSectionState extends State<RoomTableSection> {
 
   Widget _buildFilterChips() {
     final filters = {
-      'all': 'All',
+      'all': AppStrings.all,
       'open_area': AppStrings.openArea,
       'standard_room': AppStrings.standardRoom,
       'vip_room': AppStrings.vipRoom,

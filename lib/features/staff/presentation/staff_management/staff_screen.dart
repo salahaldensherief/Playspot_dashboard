@@ -5,6 +5,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_cubit.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_state.dart';
@@ -55,8 +56,8 @@ class _StaffScreenState extends State<StaffScreen> {
           Expanded(
             child: BlocBuilder<StaffCubit, StaffState>(
               builder: (context, state) {
-                if (state.status.isLoading) return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
-                if (state.staffList.isEmpty) return const Center(child: Text('No staff members found', style: TextStyle(color: AppColors.textSecondary)));
+                if (state.status.isLoading) return const TableShimmer(columns: 6);
+                if (state.staffList.isEmpty) return Center(child: Text(AppStrings.noStaffFound, style: const TextStyle(color: AppColors.textSecondary)));
 
                 return Container(
                   key: ValueKey('staff_table_${state.staffList.length}'), // Key يجبر الجدول على التحديث
@@ -127,7 +128,7 @@ class _StaffScreenState extends State<StaffScreen> {
           icon: Icon(staff.isActive ? Icons.block : Icons.check_circle_outline, 
                color: staff.isActive ? AppColors.warning : AppColors.success, size: 20.r),
           onPressed: () => context.read<StaffCubit>().toggleStaffStatus(staff.id, staff.isActive, loungeId),
-          tooltip: staff.isActive ? AppStrings.freezeAccount : 'Activate',
+          tooltip: staff.isActive ? AppStrings.freezeAccount : AppStrings.activate,
         ),
         IconButton(
           icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),

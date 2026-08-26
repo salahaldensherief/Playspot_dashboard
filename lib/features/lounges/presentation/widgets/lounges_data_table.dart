@@ -1,9 +1,11 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
+import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import '../../domain/entities/lounge.dart';
 import '../cubit/lounge_cubit.dart';
@@ -18,7 +20,7 @@ class LoungesDataTable extends StatelessWidget {
     return BlocBuilder<LoungeCubit, LoungeState>(
       builder: (context, state) {
         if (state.status == LoungeStatus.loading && state.lounges.isEmpty) {
-          return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
+          return const TableShimmer(columns: 6);
         }
 
         final lounges = state.lounges;
@@ -30,20 +32,20 @@ class LoungesDataTable extends StatelessWidget {
                 SizedBox(height: 100.h),
                 Icon(Icons.business_outlined, size: 64.r, color: AppColors.textMuted),
                 SizedBox(height: 16.h),
-                const Text('No lounges found', style: TextStyle(color: AppColors.textSecondary)),
+                Text(AppStrings.noLoungesFound, style: const TextStyle(color: AppColors.textSecondary)),
               ],
             ),
           );
         }
 
         return DataTableWidget(
-          columns: const [
-            'Lounge Name',
-            'Owner / Admin',
-            'Location',
-            'Price/Hr',
-            'Status',
-            'Actions'
+          columns: [
+            AppStrings.loungeName,
+            AppStrings.loungeOwnerAdmin,
+            AppStrings.location,
+            AppStrings.pricePerHour,
+            AppStrings.status,
+            AppStrings.actions
           ],
           rows: lounges.map((lounge) => DataRow(
             cells: [
@@ -53,7 +55,7 @@ class LoungesDataTable extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(lounge.name, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-                    Text('${lounge.availableRooms ?? 0} Rooms', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
+                    Text('${lounge.availableRooms ?? 0} ${AppStrings.rooms}', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
                   ],
                 ),
               ),
@@ -62,7 +64,7 @@ class LoungesDataTable extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(lounge.ownerName ?? 'Not Assigned', style: const TextStyle(color: AppColors.textPrimary)),
+                    Text(lounge.ownerName ?? AppStrings.notAssigned, style: const TextStyle(color: AppColors.textPrimary)),
                     Text(lounge.ownerEmail ?? '-', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
                   ],
                 ),
@@ -71,10 +73,10 @@ class LoungesDataTable extends StatelessWidget {
               DataCell(Text('\$${lounge.pricePerHour.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary))),
               DataCell(
                 lounge.status == 'pending' 
-                  ? StatusBadge.warning('Pending') 
+                  ? StatusBadge.warning(AppStrings.pending) 
                   : lounge.isOpen 
-                    ? StatusBadge.success('Active') 
-                    : StatusBadge.danger('Inactive')
+                    ? StatusBadge.success(AppStrings.active) 
+                    : StatusBadge.danger(AppStrings.inactive)
               ),
               DataCell(
                 Row(
@@ -129,8 +131,8 @@ class LoungesDataTable extends StatelessWidget {
       context: context,
       builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        title: Text('Delete Lounge', style: TextStyle(color: AppColors.textPrimary)),
-        content: Text('Are you sure you want to delete "$name"? All associated rooms and data will be removed.'),
+        title: Text(AppStrings.deleteLounge, style: const TextStyle(color: AppColors.textPrimary)),
+        content: Text('${AppStrings.deleteLoungeWarning} ($name)'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
           TextButton(
@@ -138,7 +140,7 @@ class LoungesDataTable extends StatelessWidget {
               cubit.deleteLounge(loungeId);
               Navigator.pop(diagContext);
             },
-            child: const Text('Delete', style: TextStyle(color: AppColors.danger))
+            child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger))
           ),
         ],
       ),
