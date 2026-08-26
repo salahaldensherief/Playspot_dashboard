@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/core/constants/app_constants.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/location_service.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
@@ -54,10 +55,10 @@ class _GeolocationHandlerState extends State<GeolocationHandler> {
         );
         
         setState(() => _locationCaptured = true);
-        debugPrint('Successfully captured and updated lounge location and city: ${position.latitude}, ${position.longitude}, $cityName');
+        debugPrint('${AppConstants.locationCaptureSuccess}${position.latitude}, ${position.longitude}, $cityName');
       }
     } catch (e) {
-      debugPrint('Error capturing location: $e');
+      debugPrint('${AppConstants.locationCaptureError}$e');
     }
   }
 

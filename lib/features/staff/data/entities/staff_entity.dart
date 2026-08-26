@@ -23,4 +23,26 @@ class StaffEntity extends Equatable {
 
   @override
   List<Object?> get props => [id, name, email, phone, role, loungeId, isActive, createdAt];
+
+  StaffEntity copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? phone,
+    String? role,
+    String? loungeId,
+    bool? isActive,
+    DateTime? createdAt,
+  }) {
+    return StaffEntity(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      role: role ?? this.role,
+      loungeId: loungeId ?? this.loungeId,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }

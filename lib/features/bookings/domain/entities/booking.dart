@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 
-enum BookingStatus { pending, upcoming, completed, cancelled, past }
+enum BookingStatus { pending, upcoming, completed, cancelled, inProgress }
+
+enum PaymentStatus { unpaid, paid, refunded }
 
 class Booking extends Equatable {
   final String id;
@@ -20,7 +22,7 @@ class Booking extends Equatable {
   final String endTime;
   final double durationHours;
   final BookingStatus status;
-  final String? paymentStatus;
+  final PaymentStatus paymentStatus;
   final double totalPrice;
   final double? voucherDiscount;
   final List<Map<String, dynamic>> extras;
@@ -46,7 +48,7 @@ class Booking extends Equatable {
     required this.endTime,
     this.durationHours = 0.0,
     required this.status,
-    this.paymentStatus,
+    this.paymentStatus = PaymentStatus.unpaid,
     required this.totalPrice,
     this.voucherDiscount,
     this.extras = const [],

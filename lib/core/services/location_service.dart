@@ -1,7 +1,8 @@
-
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import '../constants/app_constants.dart';
 
 abstract class LocationService {
   Future<Position?> getCurrentPosition();
@@ -45,21 +46,26 @@ class LocationServiceImpl implements LocationService {
         desiredAccuracy: LocationAccuracy.high,
       );
     } catch (e) {
+      debugPrint('${AppConstants.currentPositionError}$e');
       return null;
     }
   }
 
   @override
   Future<String?> getCityFromPosition(Position position, BuildContext context) async {
+    // geocoding package does not support Flutter Web.
+    // kIsWeb is the standard check, using identical(0, 0.0) as extra safety for JS environment.
+    if (kIsWeb || identical(0, 0.0)) return null; 
+
     try {
-      final locale = Localizations.localeOf(context);
+      final locale = Localizations.maybeLocaleOf(context);
       
       // Try to set the locale globally for the geocoding service
-      if (locale.languageCode.isNotEmpty) {
+      if (locale != null && locale.languageCode.isNotEmpty) {
         try {
           await setLocaleIdentifier(locale.languageCode);
         } catch (e) {
-          debugPrint('Geocoding setLocaleIdentifier failed: $e');
+          debugPrint('${AppConstants.geocodingFailed}$e');
         }
       }
 
@@ -74,6 +80,7 @@ class LocationServiceImpl implements LocationService {
       }
       return null;
     } catch (e) {
+      debugPrint('${AppConstants.cityFromPositionError}$e');
       return null;
     }
   }

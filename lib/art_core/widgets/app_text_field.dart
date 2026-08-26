@@ -12,11 +12,12 @@ class AppTextField extends StatelessWidget {
   final bool readOnly;
   final IconData? prefixIcon;
   final VoidCallback? onTap;
+  final ValueChanged<String>? onChanged;
   final int maxLines;
 
   const AppTextField({
     super.key,
-    required this.label,
+    this.label = '',
     this.hintText,
     this.controller,
     this.isPassword = false,
@@ -25,6 +26,7 @@ class AppTextField extends StatelessWidget {
     this.readOnly = false,
     this.prefixIcon,
     this.onTap,
+    this.onChanged,
     this.maxLines = 1,
   });
 
@@ -33,15 +35,17 @@ class AppTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w500,
+        if (label.isNotEmpty) ...[
+          Text(
+            label,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-        SizedBox(height: 8.h),
+          SizedBox(height: 8.h),
+        ],
         TextFormField(
           controller: controller,
           obscureText: isPassword,
@@ -49,6 +53,7 @@ class AppTextField extends StatelessWidget {
           validator: validator,
           readOnly: readOnly,
           onTap: onTap,
+          onChanged: onChanged,
           maxLines: maxLines,
           style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
           decoration: InputDecoration(

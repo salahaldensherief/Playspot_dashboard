@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../models/booking_model.dart';
 
 abstract class BookingRemoteDataSource {
@@ -39,7 +41,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       }).toList();
     } catch (e) {
       // خطة بديلة (Fallback) في حالة فشل الـ RPC
-      print('Booking Fetch Alert: RPC skipped or failed, using safe select. Error: $e');
+      debugPrint('${AppConstants.bookingFetchAlert}$e');
       
       try {
         // نستخدم أبسط استعلام ممكن مع استبعاد booking_status تماماً إذا كان يسبب خطأ في النوع
@@ -57,7 +59,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         
         return (response as List).map((json) => BookingModel.fromJson(Map<String, dynamic>.from(json))).toList();
       } catch (e2) {
-        print('Critical: Fallback select also failed: $e2');
+        debugPrint('${AppConstants.criticalFallbackError}$e2');
         return []; // منع الشاشة الحمراء بإرجاع قائمة فارغة في حالة الفشل التام
       }
     }

@@ -154,11 +154,14 @@ class DashboardSidebar extends StatelessWidget {
 
   List<Widget> _buildLoungeAdminItems(BuildContext context) {
     final user = context.read<LoginCubit>().state.user;
-    final bool isOwner = user?.role == UserRole.loungeOwner;
-    final bool isCashier = user?.role == UserRole.cashier;
+    if (user == null) return [];
+
+    final bool isOwner = user.isLoungeOwner;
+    final bool canManageStaff = user.canManageStaff;
+    final bool canViewFinancials = user.canViewFinancials;
 
     return [
-      // Common for both Owner and Cashier
+      // Common for all staff (Live Operations)
       _SidebarItem(
         icon: Icons.sensors,
         label: AppStrings.bookings,
@@ -166,46 +169,48 @@ class DashboardSidebar extends StatelessWidget {
         onTap: () => context.go(RouterKeys.loungeAdminLiveOps),
       ),
       
-      // Owner Only Items
-      if (isOwner) ...[
-        _SidebarItem(
-          icon: Icons.meeting_room_outlined,
-          label: AppStrings.rooms,
-          isActive: activeRoute == AppStrings.rooms,
-          onTap: () => context.go(RouterKeys.loungeAdminRooms),
-        ),
-        _SidebarItem(
-          icon: Icons.restaurant_menu,
-          label: AppStrings.extras,
-          isActive: activeRoute == AppStrings.extras,
-          onTap: () => context.go(RouterKeys.loungeAdminExtras),
-        ),
+      // Rooms & Setup (Read-only for Staff handled in UI)
+      _SidebarItem(
+        icon: Icons.meeting_room_outlined,
+        label: AppStrings.rooms,
+        isActive: activeRoute == AppStrings.rooms,
+        onTap: () => context.go(RouterKeys.loungeAdminRooms),
+      ),
+
+      _SidebarItem(
+        icon: Icons.restaurant_menu,
+        label: AppStrings.extras,
+        isActive: activeRoute == AppStrings.extras,
+        onTap: () => context.go(RouterKeys.loungeAdminExtras),
+      ),
+
+      // Marketing (Owner/Manager level)
+      if (user.canManageMarketing)
         _SidebarItem(
           icon: Icons.campaign_outlined,
           label: AppStrings.marketing,
           isActive: activeRoute == AppStrings.marketing,
           onTap: () => context.go(RouterKeys.loungeAdminMarketing),
         ),
-      ],
 
-      // Financials (Owner sees History, Cashier sees Operations via Banner)
-      if (isOwner)
+      // Financials (Lounge Owner Only)
+      if (canViewFinancials) ...[
         _SidebarItem(
           icon: Icons.account_balance_wallet_outlined,
           label: AppStrings.myPayouts,
           isActive: activeRoute == AppStrings.myPayouts,
           onTap: () => context.go('/lounge-admin/payouts'),
         ),
-      
-      if (isOwner)
         _SidebarItem(
           icon: Icons.assessment_outlined,
           label: AppStrings.monthlyReports,
           isActive: activeRoute == AppStrings.monthlyReports,
           onTap: () => context.go('/lounge-admin/reports'),
         ),
+      ],
 
-      if (isOwner)
+      // Staff Management (Lounge Owner Only)
+      if (canManageStaff)
         _SidebarItem(
           icon: Icons.people_outline,
           label: AppStrings.staffManagement,
@@ -213,6 +218,7 @@ class DashboardSidebar extends StatelessWidget {
           onTap: () => context.go(RouterKeys.loungeAdminStaff),
         ),
 
+      // Shift History (Shown for all)
       _SidebarItem(
         icon: Icons.history_outlined,
         label: AppStrings.shiftHistory,
