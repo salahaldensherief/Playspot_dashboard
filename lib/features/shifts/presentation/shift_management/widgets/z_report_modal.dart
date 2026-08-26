@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
-import '../../../data/entities/shift_entity.dart';
+import '../../../domain/entities/shift_entity.dart';
 
 class ZReportModal extends StatelessWidget {
   final ShiftEntity report;

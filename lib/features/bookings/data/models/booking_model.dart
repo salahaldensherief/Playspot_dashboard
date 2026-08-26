@@ -19,7 +19,7 @@ class BookingModel extends Booking {
     required super.endTime,
     super.durationHours = 0.0,
     required super.status,
-    super.paymentStatus,
+    required super.paymentStatus,
     required super.totalPrice,
     super.voucherDiscount,
     super.extras = const [],
@@ -83,7 +83,27 @@ class BookingModel extends Booking {
       case 'upcoming': status = BookingStatus.upcoming; break;
       case 'completed': status = BookingStatus.completed; break;
       case 'cancelled': status = BookingStatus.cancelled; break;
+      case 'in_progress': status = BookingStatus.inProgress; break;
       default: status = BookingStatus.pending;
+    }
+
+    String paymentStatusStr = (
+      json['out_payment_status'] ?? 
+      json['payment_status'] ?? 
+      'unpaid'
+    ).toString().trim().toLowerCase();
+
+    PaymentStatus paymentStatus;
+    switch (paymentStatusStr) {
+      case 'paid':
+      case 'completed':
+        paymentStatus = PaymentStatus.paid;
+        break;
+      case 'refunded':
+        paymentStatus = PaymentStatus.refunded;
+        break;
+      default:
+        paymentStatus = PaymentStatus.unpaid;
     }
 
     return BookingModel(
@@ -104,7 +124,7 @@ class BookingModel extends Booking {
       endTime: (json['out_end_time'] ?? json['end_time'] ?? '').toString(),
       durationHours: parseDouble(json['duration_hours']),
       status: status,
-      paymentStatus: (json['out_payment_status'] ?? json['payment_status'])?.toString(),
+      paymentStatus: paymentStatus,
       totalPrice: parseDouble(json['out_total_price'] ?? json['total_price']),
       voucherDiscount: json['voucher_discount'] != null ? parseDouble(json['voucher_discount']) : null,
       extras: List<Map<String, dynamic>>.from(json['out_booking_extras'] ?? json['booking_extras'] ?? json['extras'] ?? []),
@@ -124,6 +144,7 @@ class BookingModel extends Booking {
       'end_time': endTime,
       'total_price': totalPrice,
       'status': status.name,
+      'payment_status': paymentStatus.name,
       'user_name': userName,
       'user_phone': userPhone,
       'room_name': roomName,

@@ -35,8 +35,9 @@ class UserEntity extends Equatable {
   /// High-level permissions
   bool get canManageStaff => isLoungeOwner || isSuperAdmin;
   bool get canViewFinancials => isLoungeOwner || isSuperAdmin;
-  bool get canEditSetup => isLoungeOwner || isSuperAdmin;
+  bool get canEditSetup => isLoungeOwner || isSuperAdmin || isManager;
   bool get canManageMarketing => isLoungeOwner || isSuperAdmin || isManager;
+  bool get canToggleLoungeStatus => isLoungeOwner || isSuperAdmin || isManager;
   bool get isStaff => role == UserRole.loungeOwner || role == UserRole.manager || role == UserRole.cashier;
 
   @override

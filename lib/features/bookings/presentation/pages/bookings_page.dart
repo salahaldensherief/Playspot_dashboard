@@ -118,6 +118,7 @@ class BookingsPage extends StatelessWidget {
   }
 
   Widget _buildTopToolbar(BuildContext context, String loungeId) {
+    final user = context.read<LoginCubit>().state.user;
     return BlocBuilder<LoungeCubit, LoungeState>(
       buildWhen: (previous, current) => previous.lounges != current.lounges,
       builder: (context, state) {
@@ -175,14 +176,16 @@ class BookingsPage extends StatelessWidget {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
                     ),
                   ),
-                  SizedBox(width: 24.w),
-                  AppText.body(isOpen ? AppStrings.closeLounge : AppStrings.openLounge, fontWeight: FontWeight.bold),
-                  SizedBox(width: 8.w),
-                  Switch(
-                    value: isOpen, 
-                    activeColor: AppColors.success, 
-                    onChanged: (val) => context.read<LoungeCubit>().toggleLoungeStatus(loungeId, val),
-                  ),
+                  if (user?.canToggleLoungeStatus == true) ...[
+                    SizedBox(width: 24.w),
+                    AppText.body(isOpen ? AppStrings.closeLounge : AppStrings.openLounge, fontWeight: FontWeight.bold),
+                    SizedBox(width: 8.w),
+                    Switch(
+                      value: isOpen, 
+                      activeColor: AppColors.success, 
+                      onChanged: (val) => context.read<LoungeCubit>().toggleLoungeStatus(loungeId, val),
+                    ),
+                  ],
                 ],
               ),
             ],

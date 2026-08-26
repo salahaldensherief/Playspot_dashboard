@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../data/entities/shift_entity.dart';
+import '../../domain/entities/shift_entity.dart';
 
 enum ShiftStatus {
   initial,

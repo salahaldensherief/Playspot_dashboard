@@ -1,4 +1,4 @@
-import '../entities/shift_entity.dart';
+import '../../domain/entities/shift_entity.dart';
 
 class ShiftModel extends ShiftEntity {
   const ShiftModel({

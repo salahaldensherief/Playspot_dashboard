@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import '../../../domain/entities/shift_entity.dart';
 import '../shift_cubit.dart';
 import '../shift_state.dart';
 import 'open_shift_dialog.dart';
@@ -26,15 +27,16 @@ class ShiftHeaderBanner extends StatelessWidget {
       builder: (context, state) {
         final user = context.read<LoginCubit>().state.user;
         if (user == null) return const SizedBox.shrink();
+        final loungeId = user.loungeId ?? '';
 
         // If no active shift, show the warning banner
         if (state.status.isNoActive) {
-          return _buildNoActiveShiftBanner(context, user.id);
+          return _buildNoActiveShiftBanner(context, loungeId);
         }
 
         // If there is an active shift
         if (state.activeShift != null) {
-          return _buildActiveShiftBanner(context, state.activeShift!);
+          return _buildActiveShiftBanner(context, state.activeShift!, loungeId);
         }
 
         // Loading or initial state
@@ -43,7 +45,7 @@ class ShiftHeaderBanner extends StatelessWidget {
     );
   }
 
-  Widget _buildNoActiveShiftBanner(BuildContext context, String cashierId) {
+  Widget _buildNoActiveShiftBanner(BuildContext context, String loungeId) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
@@ -59,7 +61,7 @@ class ShiftHeaderBanner extends StatelessWidget {
           const Spacer(),
           AppButton(
             text: AppStrings.openNewShift,
-            onPressed: () => _showOpenShiftDialog(context, cashierId),
+            onPressed: () => _showOpenShiftDialog(context, loungeId),
             variant: AppButtonVariant.primary,
             height: 32.h,
           ),
@@ -68,7 +70,7 @@ class ShiftHeaderBanner extends StatelessWidget {
     );
   }
 
-  Widget _buildActiveShiftBanner(BuildContext context, dynamic shift) {
+  Widget _buildActiveShiftBanner(BuildContext context, ShiftEntity shift, String loungeId) {
     final startTime = DateFormat('hh:mm a').format(shift.startTime);
     
     return Container(
@@ -108,7 +110,7 @@ class ShiftHeaderBanner extends StatelessWidget {
           const Spacer(),
           AppButton(
             text: AppStrings.closeShift,
-            onPressed: () => _showCloseShiftDialog(context),
+            onPressed: () => _showCloseShiftDialog(context, shift, loungeId),
             variant: AppButtonVariant.outlined,
             height: 32.h,
           ),
@@ -126,24 +128,25 @@ class ShiftHeaderBanner extends StatelessWidget {
     );
   }
 
-  void _showOpenShiftDialog(BuildContext context, String cashierId) {
+  void _showOpenShiftDialog(BuildContext context, String loungeId) {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (diagContext) => BlocProvider.value(
-        value: context.read<ShiftCubit>(),
-        child: OpenShiftDialog(cashierId: cashierId),
+      builder: (diagContext) => OpenShiftDialog(
+        loungeId: loungeId,
+        cubit: context.read<ShiftCubit>(),
       ),
     );
   }
 
-  void _showCloseShiftDialog(BuildContext context) {
+  void _showCloseShiftDialog(BuildContext context, ShiftEntity shift, String loungeId) {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (diagContext) => BlocProvider.value(
-        value: context.read<ShiftCubit>(),
-        child: const CloseShiftDialog(),
+      builder: (diagContext) => CloseShiftDialog(
+        shift: shift,
+        cubit: context.read<ShiftCubit>(),
+        loungeId: loungeId,
       ),
     );
   }

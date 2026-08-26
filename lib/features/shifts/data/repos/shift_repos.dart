@@ -2,7 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/utils/repository_helper.dart';
 import '../data_source/remote/shift_remote_data_source.dart';
-import '../entities/shift_entity.dart';
+import '../../domain/entities/shift_entity.dart';
 import '../models/shift_params.dart';
 
 abstract class ShiftRepository {

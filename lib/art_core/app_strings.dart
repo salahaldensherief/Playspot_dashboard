@@ -361,7 +361,6 @@ class AppStrings {
   static String get cashierLabel => 'cashier_label'.tr();
   static String get deleteStaffWarning => 'delete_staff_warning'.tr();
   static String get noStaffFound => 'no_staff_found'.tr();
-  static String get activate => 'activate'.tr();
   static String get id => 'id'.tr();
 
   static String get addCity => 'add_city'.tr();

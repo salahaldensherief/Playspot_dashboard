@@ -69,11 +69,12 @@ class _StaffScreenState extends State<StaffScreen> {
                     ),
                   ],
                 ),
-                AppButton(
-                  text: AppStrings.addStaff,
-                  icon: Icons.person_add_outlined,
-                  onPressed: () => _showStaffDialog(context, loungeId),
-                ),
+                if (user?.canManageStaff == true)
+                  AppButton(
+                    text: AppStrings.addStaff,
+                    icon: Icons.person_add_outlined,
+                    onPressed: () => _showStaffDialog(context, loungeId),
+                  ),
               ],
             ),
             SizedBox(height: 32.h),
@@ -138,7 +139,7 @@ class _StaffScreenState extends State<StaffScreen> {
                             _buildColumn(AppStrings.staffPhone),
                             _buildColumn(AppStrings.roleLabel),
                             _buildColumn(AppStrings.accountStatus),
-                            _buildColumn(AppStrings.actions),
+                            if (user?.canManageStaff == true) _buildColumn(AppStrings.actions),
                           ],
                           rows: filteredList.map((staff) {
                             return DataRow(cells: [
@@ -147,7 +148,7 @@ class _StaffScreenState extends State<StaffScreen> {
                               DataCell(Text(staff.phone ?? 'N/A', style: const TextStyle(color: AppColors.textSecondary))),
                               DataCell(_buildRoleBadge(staff.role)),
                               DataCell(_buildStatusBadge(staff.isActive)),
-                              DataCell(_buildActions(staff, loungeId)),
+                              if (user?.canManageStaff == true) DataCell(_buildActions(staff, loungeId)),
                             ]);
                           }).toList(),
                         ),
