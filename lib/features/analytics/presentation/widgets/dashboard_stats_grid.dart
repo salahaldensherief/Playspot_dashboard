@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/stat_card.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import '../dashboard_cubit.dart';
 import '../dashboard_state.dart';
 
@@ -14,23 +15,27 @@ class DashboardStatsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.read<LoginCubit>().state.user;
+    final bool canViewRevenue = user?.canViewFinancials ?? false;
+
     return Row(
       children: [
-        Expanded(
-          child: BlocSelector<DashboardCubit, DashboardState, (double, double)>(
-            selector: (state) => (state.totalRevenue, state.revenueTrend),
-            builder: (context, data) {
-              return StatCard(
-                title: isSuperAdmin ? AppStrings.globalOverview : AppStrings.dailyRevenue,
-                value: '\$${data.$1.toStringAsFixed(0)}',
-                trendValue: data.$2,
-                icon: Icons.payments_outlined,
-                iconColor: AppColors.neonGreen,
-              );
-            },
+        if (canViewRevenue)
+          Expanded(
+            child: BlocSelector<DashboardCubit, DashboardState, (double, double)>(
+              selector: (state) => (state.totalRevenue, state.revenueTrend),
+              builder: (context, data) {
+                return StatCard(
+                  title: isSuperAdmin ? AppStrings.globalOverview : AppStrings.dailyRevenue,
+                  value: '\$${data.$1.toStringAsFixed(0)}',
+                  trendValue: data.$2,
+                  icon: Icons.payments_outlined,
+                  iconColor: AppColors.neonGreen,
+                );
+              },
+            ),
           ),
-        ),
-        SizedBox(width: 24.w),
+        if (canViewRevenue) SizedBox(width: 24.w),
         Expanded(
           child: BlocSelector<DashboardCubit, DashboardState, (int, double)>(
             selector: (state) => (isSuperAdmin ? state.totalBookings : state.activeSessions, state.bookingsTrend),

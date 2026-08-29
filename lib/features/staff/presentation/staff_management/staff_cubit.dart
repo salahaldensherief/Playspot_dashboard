@@ -41,12 +41,9 @@ class StaffCubit extends Cubit<StaffState> {
         debugPrint('StaffCubit: addStaffMember failed: ${failure.message}');
         emit(state.copyWith(status: StaffStatus.failure, errorMessage: failure.message));
       },
-      (updatedList) {
-        debugPrint('StaffCubit: addStaffMember success, updated list length: ${updatedList.length}');
-        emit(state.copyWith(
-          status: StaffStatus.success,
-          staffList: List.from(updatedList),
-        ));
+      (_) {
+        debugPrint('StaffCubit: addStaffMember success, refetching staff list');
+        fetchStaff(params.loungeId);
       },
     );
   }

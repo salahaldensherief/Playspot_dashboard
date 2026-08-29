@@ -78,8 +78,8 @@ class BookingCubit extends Cubit<BookingState> {
     );
   }
 
-  Future<void> confirmCashPayment(String id) async {
-    final result = await confirmCashPaymentUseCase(id);
+  Future<void> confirmCashPayment(String id, {String? shiftId}) async {
+    final result = await confirmCashPaymentUseCase(id, shiftId: shiftId);
     
     if (isClosed) return;
 
@@ -108,6 +108,10 @@ class BookingCubit extends Cubit<BookingState> {
         status: BookingStatusState.success,
       )),
     );
+  }
+
+  void updateSelectedDuration(int minutes) {
+    emit(state.copyWith(selectedDurationMinutes: minutes));
   }
 
   @override

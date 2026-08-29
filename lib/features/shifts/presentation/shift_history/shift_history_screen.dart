@@ -55,8 +55,11 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16.r),
                     child: SingleChildScrollView(
-                      child: DataTable(
-                        headingRowColor: MaterialStateProperty.all(AppColors.mutedBackground),
+                      scrollDirection: Axis.vertical,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          headingRowColor: MaterialStateProperty.all(AppColors.mutedBackground),
                         columns: [
                           _buildColumn(AppStrings.date),
                           _buildColumn(AppStrings.cashier),
@@ -90,6 +93,7 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                       ),
                     ),
                   ),
+                ),
                 );
               },
             ),

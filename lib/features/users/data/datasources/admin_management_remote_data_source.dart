@@ -40,7 +40,7 @@ class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSo
     if (result['success'] == true) {
       return UserEntity(
         id: result['owner_user_id']?.toString() ?? '',
-        role: UserRole.loungeOwner,
+        role: UserRole.owner,
         name: name,
         email: email,
         loungeId: result['lounge_id']?.toString(),
@@ -60,7 +60,7 @@ class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSo
         name: json['full_name']?.toString() ?? '',
         role: json['role'] == 'super_admin' 
             ? UserRole.superAdmin 
-            : (json['role'] == 'cashier' ? UserRole.cashier : UserRole.loungeOwner),
+            : (json['role'] == 'cashier' ? UserRole.cashier : UserRole.owner),
         loungeId: json['lounge_id']?.toString(),
       );
     }).toList();

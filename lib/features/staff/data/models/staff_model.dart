@@ -10,6 +10,10 @@ class StaffModel extends StaffEntity {
     required super.loungeId,
     super.isActive = true,
     required super.createdAt,
+    super.nationalIdNumber,
+    super.idFrontUrl,
+    super.idBackUrl,
+    super.avatarUrl,
   });
 
   factory StaffModel.fromJson(Map<String, dynamic> json) {
@@ -24,6 +28,10 @@ class StaffModel extends StaffEntity {
       createdAt: json['out_created_at'] != null
           ? DateTime.parse(json['out_created_at'].toString())
           : (json['created_at'] != null ? DateTime.parse(json['created_at'].toString()) : DateTime.now()),
+      nationalIdNumber: (json['national_id_number'] ?? json['out_national_id_number'])?.toString(),
+      idFrontUrl: (json['id_front_url'] ?? json['out_id_front_url'] ?? json['id_document_url'])?.toString(),
+      idBackUrl: (json['id_back_url'] ?? json['out_id_back_url'])?.toString(),
+      avatarUrl: (json['avatar_url'] ?? json['out_avatar_url'])?.toString(),
     );
   }
 
@@ -35,6 +43,10 @@ class StaffModel extends StaffEntity {
       'role': role,
       'lounge_id': loungeId,
       'is_active': isActive,
+      'national_id_number': nationalIdNumber,
+      'id_front_url': idFrontUrl,
+      'id_back_url': idBackUrl,
+      'avatar_url': avatarUrl,
     };
   }
 }

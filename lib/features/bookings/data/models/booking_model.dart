@@ -17,7 +17,7 @@ class BookingModel extends Booking {
     required super.date,
     required super.startTime,
     required super.endTime,
-    super.durationHours = 0.0,
+    super.durationMinutes = 60,
     required super.status,
     required super.paymentStatus,
     required super.totalPrice,
@@ -26,22 +26,33 @@ class BookingModel extends Booking {
     super.mapsLink,
     super.lat,
     super.lng,
+    super.shiftId,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
-    double parseDouble(dynamic value) {
+    double _parseDouble(dynamic value) {
       if (value == null) return 0.0;
       if (value is num) return value.toDouble();
       return double.tryParse(value.toString()) ?? 0.0;
     }
 
-    int parseInt(dynamic value, int defaultValue) {
+    int _parseInt(dynamic value, int defaultValue) {
       if (value == null) return defaultValue;
       if (value is num) return value.toInt();
       return int.tryParse(value.toString()) ?? defaultValue;
     }
 
-    // جلب البيانات مع دعم مسميات الـ RPC الجديدة (out_) والمسميات القديمة
+    bool _parseBool(dynamic value) {
+      if (value == null) return false;
+      if (value is bool) return value;
+      if (value is num) return value == 1;
+      if (value is String) {
+        final lower = value.toLowerCase();
+        return lower == 'true' || lower == '1' || lower == 'yes' || lower == 'y';
+      }
+      return false;
+    }
+
     final profileData = json['profiles'] as Map<String, dynamic>?;
     final roomData = json['rooms'] as Map<String, dynamic>?;
     final loungeData = json['lounges'] as Map<String, dynamic>?;
@@ -107,30 +118,31 @@ class BookingModel extends Booking {
     }
 
     return BookingModel(
-      id: (json['out_booking_id'] ?? json['id']).toString(),
-      userId: json['user_id']?.toString() ?? '',
+      id: (json['out_booking_id'] ?? json['id'] ?? '').toString(),
+      userId: (json['user_id'] ?? '').toString(),
       userName: userName,
       userEmail: (json['out_user_email'] ?? json['user_email'] ?? profileData?['email'])?.toString(),
       userPhone: userPhone,
-      loungeId: json['lounge_id']?.toString() ?? '',
-      roomId: json['room_id']?.toString() ?? '',
-      loungeName: (json['out_lounge_name'] ?? json['lounge_name'] ?? loungeData?['name']) ?? '',
-      loungeLocation: (json['lounge_location'] ?? loungeData?['location']) ?? '',
+      loungeId: (json['lounge_id'] ?? '').toString(),
+      roomId: (json['room_id'] ?? '').toString(),
+      loungeName: (json['out_lounge_name'] ?? json['lounge_name'] ?? loungeData?['name'] ?? '').toString(),
+      loungeLocation: (json['lounge_location'] ?? loungeData?['location'] ?? '').toString(),
       roomName: roomName,
-      controllersCount: parseInt(json['controllers_count'] ?? roomData?['controllers_count'], 0),
-      screenSize: (json['screen_size'] ?? roomData?['screen_size'])?.toString() ?? '',
+      controllersCount: _parseInt(json['controllers_count'] ?? roomData?['controllers_count'], 0),
+      screenSize: (json['screen_size'] ?? roomData?['screen_size'] ?? '').toString(),
       date: DateTime.parse(json['out_booking_date'] ?? json['date'] ?? DateTime.now().toIso8601String()),
       startTime: (json['out_start_time'] ?? json['start_time'] ?? '').toString(),
       endTime: (json['out_end_time'] ?? json['end_time'] ?? '').toString(),
-      durationHours: parseDouble(json['duration_hours']),
+      durationMinutes: _parseInt(json['duration_minutes'] ?? (json['duration_hours'] != null ? (_parseDouble(json['duration_hours']) * 60).round() : null), 60),
       status: status,
       paymentStatus: paymentStatus,
-      totalPrice: parseDouble(json['out_total_price'] ?? json['total_price']),
-      voucherDiscount: json['voucher_discount'] != null ? parseDouble(json['voucher_discount']) : null,
+      totalPrice: _parseDouble(json['out_total_price'] ?? json['total_price']),
+      voucherDiscount: json['voucher_discount'] != null ? _parseDouble(json['voucher_discount']) : null,
       extras: List<Map<String, dynamic>>.from(json['out_booking_extras'] ?? json['booking_extras'] ?? json['extras'] ?? []),
       mapsLink: (json['maps_link'] ?? loungeData?['maps_link'])?.toString(),
-      lat: (json['lat'] ?? loungeData?['lat']) != null ? parseDouble(json['lat'] ?? loungeData?['lat']) : null,
-      lng: (json['lng'] ?? loungeData?['lng']) != null ? parseDouble(json['lng'] ?? loungeData?['lng']) : null,
+      lat: (json['lat'] ?? loungeData?['lat']) != null ? _parseDouble(json['lat'] ?? loungeData?['lat']) : null,
+      lng: (json['lng'] ?? loungeData?['lng']) != null ? _parseDouble(json['lng'] ?? loungeData?['lng']) : null,
+      shiftId: json['shift_id']?.toString(),
     );
   }
 
@@ -142,6 +154,7 @@ class BookingModel extends Booking {
       'date': date.toIso8601String().split('T')[0],
       'start_time': startTime,
       'end_time': endTime,
+      'duration_minutes': durationMinutes,
       'total_price': totalPrice,
       'status': status.name,
       'payment_status': paymentStatus.name,
@@ -149,6 +162,7 @@ class BookingModel extends Booking {
       'user_phone': userPhone,
       'room_name': roomName,
       'extras': extras,
+      if (shiftId != null) 'shift_id': shiftId,
     };
   }
 }

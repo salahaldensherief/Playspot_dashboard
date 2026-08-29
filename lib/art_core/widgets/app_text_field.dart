@@ -10,6 +10,7 @@ class AppTextField extends StatelessWidget {
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
   final bool readOnly;
+  final bool enabled;
   final IconData? prefixIcon;
   final VoidCallback? onTap;
   final ValueChanged<String>? onChanged;
@@ -24,6 +25,7 @@ class AppTextField extends StatelessWidget {
     this.keyboardType = TextInputType.text,
     this.validator,
     this.readOnly = false,
+    this.enabled = true,
     this.prefixIcon,
     this.onTap,
     this.onChanged,
@@ -39,7 +41,7 @@ class AppTextField extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: AppColors.textPrimary,
+              color: enabled ? AppColors.textPrimary : AppColors.textSecondary,
               fontSize: 14.sp,
               fontWeight: FontWeight.w500,
             ),
@@ -52,16 +54,20 @@ class AppTextField extends StatelessWidget {
           keyboardType: keyboardType,
           validator: validator,
           readOnly: readOnly,
+          enabled: enabled,
           onTap: onTap,
           onChanged: onChanged,
           maxLines: maxLines,
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
+          style: TextStyle(
+            color: enabled ? AppColors.textPrimary : AppColors.textSecondary,
+            fontSize: 14.sp,
+          ),
           decoration: InputDecoration(
             hintText: hintText,
             hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
             prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppColors.textSecondary, size: 20.r) : null,
             filled: true,
-            fillColor: AppColors.mutedBackground,
+            fillColor: enabled ? AppColors.mutedBackground : AppColors.cardBackground.withOpacity(0.5),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),
               borderSide: const BorderSide(color: AppColors.borderDefault),
@@ -69,6 +75,10 @@ class AppTextField extends StatelessWidget {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),
               borderSide: const BorderSide(color: AppColors.borderDefault),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: BorderSide(color: AppColors.borderDefault.withOpacity(0.5)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),

@@ -7,6 +7,8 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
@@ -27,147 +29,210 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
   RoomEntity? _selectedRoom;
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _startTime = TimeOfDay.now();
-  TimeOfDay _endTime = TimeOfDay.fromDateTime(DateTime.now().add(const Duration(hours: 1)));
+
+  @override
+  void initState() {
+    super.initState();
+    // Default duration is 60 mins
+    context.read<BookingCubit>().updateSelectedDuration(60);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: AppColors.scaffoldBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Container(
-        width: 500.w,
-        padding: EdgeInsets.all(24.r),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  AppText.heading(AppStrings.newBooking, fontSize: 24.sp),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-              Divider(height: 32.h, color: AppColors.borderDefault),
-              
-              // Customer Info
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      controller: _nameController,
-                      label: AppStrings.customerName,
-                      hint: AppStrings.fullName,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 500.r),
+        child: Container(
+          padding: EdgeInsets.all(24.r),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    AppText.heading(AppStrings.newBooking, fontSize: 24.sp),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close, color: AppColors.textSecondary),
                     ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: _buildTextField(
-                      controller: _phoneController,
-                      label: AppStrings.phoneNumber,
-                      hint: "01xxxxxxxxx",
-                      keyboardType: TextInputType.phone,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-
-              // Room Selection
-              AppText.body(AppStrings.roomLabel, fontWeight: FontWeight.bold),
-              SizedBox(height: 8.h),
-              BlocBuilder<RoomCubit, RoomState>(
-                builder: (context, state) {
-                  final rooms = state.rooms.where((r) => r.status == RoomStatusEnum.available).toList();
-                  return Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w),
-                    decoration: BoxDecoration(
-                      color: AppColors.cardBackground,
-                      borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(color: AppColors.borderDefault),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<RoomEntity>(
-                        value: _selectedRoom,
-                        hint: AppText.body(AppStrings.roomLabel, color: AppColors.textSecondary),
-                        isExpanded: true,
-                        dropdownColor: AppColors.cardBackground,
-                        items: rooms.map((room) => DropdownMenuItem(
-                          value: room,
-                          child: AppText.body(room.nameEn),
-                        )).toList(),
-                        onChanged: (val) => setState(() => _selectedRoom = val),
+                  ],
+                ),
+                Divider(height: 32.h, color: AppColors.borderDefault),
+                
+                // Customer Info
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
+                        controller: _nameController,
+                        label: AppStrings.customerName,
+                        hint: AppStrings.fullName,
                       ),
                     ),
-                  );
-                },
-              ),
-              SizedBox(height: 24.h),
-
-              // Date & Time Selection
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildPickerField(
-                      label: AppStrings.date,
-                      value: DateFormat('yyyy-MM-dd').format(_selectedDate),
-                      icon: Icons.calendar_today,
-                      onTap: _pickDate,
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      child: _buildTextField(
+                        controller: _phoneController,
+                        label: AppStrings.phoneNumber,
+                        hint: "01xxxxxxxxx",
+                        keyboardType: TextInputType.phone,
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: _buildPickerField(
-                      label: AppStrings.opensAt,
-                      value: _startTime.format(context),
-                      icon: Icons.access_time,
-                      onTap: () => _pickTime(true),
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: _buildPickerField(
-                      label: AppStrings.closesAt,
-                      value: _endTime.format(context),
-                      icon: Icons.access_time,
-                      onTap: () => _pickTime(false),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 32.h),
+                  ],
+                ),
+                SizedBox(height: 16.h),
 
-              // Price Calculation Summary
-              if (_selectedRoom != null) _buildSummaryCard(),
+                // Room Selection
+                AppText.body(AppStrings.roomLabel, fontWeight: FontWeight.bold),
+                SizedBox(height: 8.h),
+                BlocBuilder<RoomCubit, RoomState>(
+                  builder: (context, state) {
+                    final rooms = state.rooms.where((r) => r.status == RoomStatusEnum.available).toList();
+                    return Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      decoration: BoxDecoration(
+                        color: AppColors.cardBackground,
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(color: AppColors.borderDefault),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<RoomEntity>(
+                          value: _selectedRoom,
+                          hint: AppText.body(AppStrings.roomLabel, color: AppColors.textSecondary),
+                          isExpanded: true,
+                          dropdownColor: AppColors.cardBackground,
+                          items: rooms.map((room) => DropdownMenuItem(
+                            value: room,
+                            child: AppText.body(room.nameEn),
+                          )).toList(),
+                          onChanged: (val) => setState(() => _selectedRoom = val),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: 24.h),
 
-              SizedBox(height: 32.h),
-
-              // Action Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: AppText.body(AppStrings.cancel, color: AppColors.textSecondary),
-                  ),
-                  SizedBox(width: 16.w),
-                  ElevatedButton(
-                    onPressed: _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.neonBlue,
-                      padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                // Date & Time Selection
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: _buildPickerField(
+                        label: AppStrings.date,
+                        value: DateFormat('yyyy-MM-dd').format(_selectedDate),
+                        icon: Icons.calendar_today,
+                        onTap: _pickDate,
+                      ),
                     ),
-                    child: AppText.body(AppStrings.newBooking, color: Colors.white, fontWeight: FontWeight.bold),
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      flex: 2,
+                      child: _buildPickerField(
+                        label: AppStrings.opensAt,
+                        value: _startTime.format(context),
+                        icon: Icons.access_time,
+                        onTap: _pickStartTime,
+                      ),
+                    ),
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      flex: 3,
+                      child: BlocBuilder<BookingCubit, BookingState>(
+                        buildWhen: (p, c) => p.selectedDurationMinutes != c.selectedDurationMinutes,
+                        builder: (context, state) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AppText.body("Duration", fontWeight: FontWeight.bold),
+                              SizedBox(height: 8.h),
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8.w),
+                                decoration: BoxDecoration(
+                                  color: AppColors.cardBackground,
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  border: Border.all(color: AppColors.borderDefault),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.remove, color: AppColors.neonBlue, size: 20),
+                                      onPressed: state.selectedDurationMinutes > 30 
+                                        ? () => context.read<BookingCubit>().updateSelectedDuration(state.selectedDurationMinutes - 30)
+                                        : null,
+                                    ),
+                                    AppText.body("${state.selectedDurationMinutes / 60.0} hrs"),
+                                    IconButton(
+                                      icon: const Icon(Icons.add, color: AppColors.neonBlue, size: 20),
+                                      onPressed: () => context.read<BookingCubit>().updateSelectedDuration(state.selectedDurationMinutes + 30),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+                
+                // End Time Display
+                BlocBuilder<BookingCubit, BookingState>(
+                  buildWhen: (p, c) => p.selectedDurationMinutes != c.selectedDurationMinutes,
+                  builder: (context, state) {
+                    final endTime = _calculateEndTime(_startTime, state.selectedDurationMinutes);
+                    return AppText.body(
+                      "Ends at: ${endTime.format(context)} (${state.selectedDurationMinutes / 60.0} hrs total)",
+                      color: AppColors.textSecondary,
+                      fontSize: 12.sp,
+                    );
+                  },
+                ),
+
+                SizedBox(height: 32.h),
+
+                // Price Calculation Summary
+                if (_selectedRoom != null) 
+                  BlocBuilder<BookingCubit, BookingState>(
+                    buildWhen: (p, c) => p.selectedDurationMinutes != c.selectedDurationMinutes,
+                    builder: (context, state) {
+                      return _buildSummaryCard(state.selectedDurationMinutes);
+                    },
                   ),
-                ],
-              ),
-            ],
+
+                SizedBox(height: 32.h),
+
+                // Action Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: AppText.body(AppStrings.cancel, color: AppColors.textSecondary),
+                    ),
+                    SizedBox(width: 16.w),
+                    ElevatedButton(
+                      onPressed: _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.neonBlue,
+                        padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                      ),
+                      child: AppText.body(AppStrings.newBooking, color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -227,7 +292,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
               children: [
                 Icon(icon, size: 18, color: AppColors.neonBlue),
                 SizedBox(width: 8.w),
-                AppText.body(value),
+                AppText.body(value, fontSize: 13.sp),
               ],
             ),
           ),
@@ -236,9 +301,9 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     );
   }
 
-  Widget _buildSummaryCard() {
-    final double duration = _calculateDuration();
-    final double totalPrice = duration * (_selectedRoom?.pricePerHour ?? 0);
+  Widget _buildSummaryCard(int durationMinutes) {
+    final double durationHours = durationMinutes / 60.0;
+    final double totalPrice = durationHours * (_selectedRoom?.pricePerHour ?? 0);
 
     return Container(
       padding: EdgeInsets.all(16.r),
@@ -253,7 +318,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText.body("${AppStrings.schedule}: $duration ${AppStrings.gaming}", color: AppColors.textSecondary),
+              AppText.body("${AppStrings.schedule}: $durationHours ${AppStrings.gaming}", color: AppColors.textSecondary),
               AppText.body("${AppStrings.pricePerHour}: ${_selectedRoom?.pricePerHour} ${AppStrings.egp}", color: AppColors.textSecondary),
             ],
           ),
@@ -261,7 +326,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               AppText.body(AppStrings.totalPrice, fontWeight: FontWeight.bold),
-              AppText.subHeading("${totalPrice.toStringAsFixed(0)} ${AppStrings.egp}", color: AppColors.neonBlue),
+              AppText.subHeading("${totalPrice.toStringAsFixed(2)} ${AppStrings.egp}", color: AppColors.neonBlue),
             ],
           ),
         ],
@@ -269,11 +334,11 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     );
   }
 
-  double _calculateDuration() {
-    double start = _startTime.hour + (_startTime.minute / 60);
-    double end = _endTime.hour + (_endTime.minute / 60);
-    if (end <= start) end += 24;
-    return end - start;
+  TimeOfDay _calculateEndTime(TimeOfDay start, int durationMinutes) {
+    int totalMinutes = start.hour * 60 + start.minute + durationMinutes;
+    int hour = (totalMinutes ~/ 60) % 24;
+    int minute = totalMinutes % 60;
+    return TimeOfDay(hour: hour, minute: minute);
   }
 
   Future<void> _pickDate() async {
@@ -286,27 +351,28 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     if (date != null) setState(() => _selectedDate = date);
   }
 
-  Future<void> _pickTime(bool isStart) async {
+  Future<void> _pickStartTime() async {
     final time = await showTimePicker(
       context: context,
-      initialTime: isStart ? _startTime : _endTime,
+      initialTime: _startTime,
     );
-    if (time != null) setState(() => isStart ? _startTime = time : _endTime = time);
+    if (time != null) setState(() => _startTime = time);
   }
 
   void _submit() {
     if (!_formKey.currentState!.validate() || _selectedRoom == null) return;
 
-    final startTimeStr = "${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}:00";
-    final endTimeStr = "${_endTime.hour.toString().padLeft(2, '0')}:${_endTime.minute.toString().padLeft(2, '0')}:00";
+    final durationMinutes = context.read<BookingCubit>().state.selectedDurationMinutes;
+    final endTime = _calculateEndTime(_startTime, durationMinutes);
 
-    // UI-level overlap check (for better UX)
+    final startTimeStr = "${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}:00";
+    final endTimeStr = "${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00";
+
+    // UI-level overlap check
     final bookingCubit = context.read<BookingCubit>();
     final isOverlapping = bookingCubit.state.bookings.any((b) {
       if (b.roomId != _selectedRoom!.id || b.status == BookingStatus.cancelled) return false;
       
-      // Basic time comparison (simplified for the same day)
-      // For cross-day logic, we'd need more robust parsing, but the DB will catch it anyway.
       return b.date.year == _selectedDate.year && 
              b.date.month == _selectedDate.month && 
              b.date.day == _selectedDate.day &&
@@ -320,8 +386,10 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
       return;
     }
 
+    final activeShiftId = context.read<ShiftCubit>().state.activeShift?.id;
+
     final booking = Booking(
-      id: '', // Will be generated by DB
+      id: '', 
       userId: '', 
       userName: _nameController.text,
       userPhone: _phoneController.text,
@@ -331,8 +399,10 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
       date: _selectedDate,
       startTime: startTimeStr,
       endTime: endTimeStr,
+      durationMinutes: durationMinutes,
       status: BookingStatus.upcoming,
-      totalPrice: _calculateDuration() * _selectedRoom!.pricePerHour,
+      totalPrice: (durationMinutes / 60.0) * _selectedRoom!.pricePerHour,
+      shiftId: activeShiftId,
     );
 
     context.read<BookingCubit>().createManualBooking(booking);

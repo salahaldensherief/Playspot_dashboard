@@ -102,20 +102,29 @@ class AppRouter {
           return RouterKeys.loungeAdminLiveOps;
         }
 
-        // 2. Protect Owner/Manager Routes
-        final bool isOwnerOnlyRoute = location == RouterKeys.loungeAdminStaff || 
-                                      location.contains('/payouts') || 
-                                      location.contains('/reports');
-        
+        // 2. Protect Specific Routes based on Permissions
+        final bool isStaffManagementRoute = location == RouterKeys.loungeAdminStaff;
+        final bool isFinancialRoute = location.contains('/payouts') || location.contains('/reports');
         final bool isMarketingRoute = location == RouterKeys.loungeAdminMarketing;
+        final bool isSetupRoute = location == RouterKeys.loungeAdminRooms || location == RouterKeys.loungeAdminExtras;
 
-        // Redirect if trying to access owner-only routes as manager/cashier
-        if (isOwnerOnlyRoute && !isLoungeOwner && !isSuperAdmin) {
+        // Redirect if trying to access staff management without permission
+        if (isStaffManagementRoute && !user.canManageStaff) {
           return RouterKeys.loungeAdminLiveOps;
         }
 
-        // Redirect if trying to access marketing as cashier
-        if (isMarketingRoute && user.isCashier && !isSuperAdmin) {
+        // Redirect if trying to access financials without permission (Owner/SuperAdmin only)
+        if (isFinancialRoute && !user.canViewFinancials) {
+          return RouterKeys.loungeAdminLiveOps;
+        }
+
+        // Redirect if trying to access marketing without permission
+        if (isMarketingRoute && !user.canManageMarketing) {
+          return RouterKeys.loungeAdminLiveOps;
+        }
+
+        // Redirect if trying to access setup without permission
+        if (isSetupRoute && !user.canEditSetup) {
           return RouterKeys.loungeAdminLiveOps;
         }
 

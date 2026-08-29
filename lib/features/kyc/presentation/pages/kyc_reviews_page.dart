@@ -9,6 +9,7 @@ import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import '../../domain/entities/kyc_request.dart';
 import '../cubit/kyc_cubit.dart';
 import '../cubit/kyc_state.dart';
+import '../widgets/kyc_inspection_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class KycReviewsPage extends StatelessWidget {
@@ -102,7 +103,7 @@ class _KycDataTable extends StatelessWidget {
           DataCell(AppText.body(req.loungeName)),
           DataCell(
             TextButton.icon(
-              onPressed: () => _openUrl(req.idDocumentUrl),
+              onPressed: () => _showInspection(context, req, cubit),
               icon: const Icon(Icons.visibility_outlined, size: 16),
               label: Text(AppStrings.viewDocument),
             ),
@@ -110,33 +111,31 @@ class _KycDataTable extends StatelessWidget {
           DataCell(
             req.businessDocumentUrl != null
               ? TextButton.icon(
-                  onPressed: () => _openUrl(req.businessDocumentUrl!),
+                  onPressed: () => _showInspection(context, req, cubit),
                   icon: const Icon(Icons.visibility_outlined, size: 16),
                   label: Text(AppStrings.viewDocument),
                 )
               : const Text('-'),
           ),
           DataCell(
-            Row(
-              children: [
-                AppButton(
-                  text: AppStrings.approve,
-                  onPressed: () => cubit.reviewKyc(userId: req.userId, approve: true),
-                  variant: AppButtonVariant.primary,
-                  width: 100.w,
-                ),
-                SizedBox(width: 8.w),
-                AppButton(
-                  text: AppStrings.reject,
-                  onPressed: () => cubit.reviewKyc(userId: req.userId, approve: false),
-                  variant: AppButtonVariant.outlined,
-                  width: 100.w,
-                ),
-              ],
+            AppButton(
+              text: "Inspect & Verify",
+              onPressed: () => _showInspection(context, req, cubit),
+              variant: AppButtonVariant.primary,
+              width: 160.w,
+              height: 36.h,
+              icon: Icons.fact_check_outlined,
             ),
           ),
         ],
       )).toList(),
+    );
+  }
+
+  void _showInspection(BuildContext context, KycRequest request, KycCubit cubit) {
+    showDialog(
+      context: context,
+      builder: (context) => KycInspectionDialog(request: request, cubit: cubit),
     );
   }
 

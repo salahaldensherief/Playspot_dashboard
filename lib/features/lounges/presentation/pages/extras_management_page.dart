@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
 import '../cubit/extras_cubit.dart';
 import '../widgets/extra_dialog.dart';
 import '../widgets/extras_grid.dart';
@@ -34,8 +35,7 @@ class ExtrasManagementPage extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context, String loungeId) {
     final cubit = context.read<ExtrasCubit>();
-    final user = context.read<LoginCubit>().state.user;
-    final bool canEdit = user?.canEditSetup ?? false;
+    final bool canEdit = context.hasPermission('menu_manage_items');
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

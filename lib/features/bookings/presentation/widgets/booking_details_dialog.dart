@@ -77,7 +77,7 @@ class BookingDetailsDialog extends StatelessWidget {
       childAspectRatio: 3,
       children: [
         _buildInfoItem(AppStrings.customerName, booking.userName ?? AppStrings.anonymous),
-        _buildInfoItem('Phone Number', booking.userPhone ?? '-'),
+        _buildInfoItem(AppStrings.phoneNumber, booking.userPhone ?? '-'),
         _buildInfoItem(AppStrings.roomLabel, booking.roomName),
         _buildInfoItem(AppStrings.schedule, '${booking.startTime} - ${booking.endTime}'),
         _buildInfoItem(AppStrings.date, DateFormat('MMM dd, yyyy').format(booking.date)),
@@ -96,7 +96,7 @@ class BookingDetailsDialog extends StatelessWidget {
           children: [
             const Icon(Icons.fastfood_outlined, color: AppColors.neonBlue, size: 20),
             SizedBox(width: 8.w),
-            AppText.subHeading('Additional Items', fontSize: 18.sp),
+            AppText.subHeading(AppStrings.additionalItems, fontSize: 18.sp),
           ],
         ),
         SizedBox(height: 16.h),
@@ -166,10 +166,10 @@ class BookingDetailsDialog extends StatelessWidget {
 
   Widget _getStatusBadge(BookingStatus status) {
     switch (status) {
-      case BookingStatus.pending: return StatusBadge.warning('REQUESTED');
-      case BookingStatus.upcoming: return StatusBadge.info('ACCEPTED');
-      case BookingStatus.completed: return StatusBadge.success('FINISHED');
-      case BookingStatus.cancelled: return StatusBadge.danger('CANCELLED');
+      case BookingStatus.pending: return StatusBadge.warning(AppStrings.pending.toUpperCase());
+      case BookingStatus.upcoming: return StatusBadge.info(AppStrings.upcoming.toUpperCase());
+      case BookingStatus.completed: return StatusBadge.success(AppStrings.completed.toUpperCase());
+      case BookingStatus.cancelled: return StatusBadge.danger(AppStrings.cancelled.toUpperCase());
       default: return StatusBadge.info(status.name.toUpperCase());
     }
   }

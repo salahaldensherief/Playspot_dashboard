@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -12,6 +13,7 @@ import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_cubit.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_state.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/widgets/add_staff_dialog.dart';
+import 'package:play_spot_dashboard/features/staff/presentation/staff_management/widgets/staff_details_dialog.dart';
 
 class StaffScreen extends StatefulWidget {
   const StaffScreen({super.key});
@@ -64,7 +66,7 @@ class _StaffScreenState extends State<StaffScreen> {
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      'Manage your lounge team and access levels',
+                      AppStrings.staffManagementDesc,
                       style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
                     ),
                   ],
@@ -79,7 +81,7 @@ class _StaffScreenState extends State<StaffScreen> {
             ),
             SizedBox(height: 32.h),
             Container(
-              width: 400.w, // Fixed width for search to look better
+              width: 400.w,
               child: AppTextField(
                 hintText: AppStrings.searchStaff,
                 prefixIcon: Icons.search,
@@ -91,13 +93,13 @@ class _StaffScreenState extends State<StaffScreen> {
               child: BlocBuilder<StaffCubit, StaffState>(
                 builder: (context, state) {
                   if (state.status.isLoading) {
-                    return const Center(
+                    return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          CircularProgressIndicator(color: AppColors.neonBlue),
-                          SizedBox(height: 16),
-                          Text('Loading team members...', style: TextStyle(color: AppColors.textSecondary)),
+                          const CircularProgressIndicator(color: AppColors.neonBlue),
+                          const SizedBox(height: 16),
+                          Text(AppStrings.loadingTeam, style: const TextStyle(color: AppColors.textSecondary)),
                         ],
                       ),
                     );
@@ -110,7 +112,7 @@ class _StaffScreenState extends State<StaffScreen> {
                         children: [
                           Icon(Icons.people_outline, size: 64.r, color: AppColors.textSecondary.withOpacity(0.2)),
                           SizedBox(height: 16.h),
-                          Text('No staff members found', style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp)),
+                          Text(AppStrings.noStaffFound, style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp)),
                         ],
                       ),
                     );
@@ -119,7 +121,7 @@ class _StaffScreenState extends State<StaffScreen> {
                   final filteredList = state.filteredStaff;
 
                   if (filteredList.isEmpty && state.searchQuery.isNotEmpty) {
-                    return Center(child: Text('No results matching "${state.searchQuery}"', style: const TextStyle(color: AppColors.textSecondary)));
+                    return Center(child: Text('no_results_matching'.tr(args: [state.searchQuery]), style: const TextStyle(color: AppColors.textSecondary)));
                   }
 
                   return Container(
@@ -142,14 +144,17 @@ class _StaffScreenState extends State<StaffScreen> {
                             if (user?.canManageStaff == true) _buildColumn(AppStrings.actions),
                           ],
                           rows: filteredList.map((staff) {
-                            return DataRow(cells: [
-                              DataCell(Text(staff.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500))),
-                              DataCell(Text(staff.email, style: const TextStyle(color: AppColors.textSecondary))),
-                              DataCell(Text(staff.phone ?? 'N/A', style: const TextStyle(color: AppColors.textSecondary))),
-                              DataCell(_buildRoleBadge(staff.role)),
-                              DataCell(_buildStatusBadge(staff.isActive)),
-                              if (user?.canManageStaff == true) DataCell(_buildActions(staff, loungeId)),
-                            ]);
+                            return DataRow(
+                              onSelectChanged: (_) => _showDetailsDialog(staff),
+                              cells: [
+                                DataCell(Text(staff.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500))),
+                                DataCell(Text(staff.email, style: const TextStyle(color: AppColors.textSecondary))),
+                                DataCell(Text(staff.phone ?? 'N/A', style: const TextStyle(color: AppColors.textSecondary))),
+                                DataCell(_buildRoleBadge(staff.role)),
+                                DataCell(_buildStatusBadge(staff.isActive)),
+                                if (user?.canManageStaff == true) DataCell(_buildActions(staff, loungeId)),
+                              ],
+                            );
                           }).toList(),
                         ),
                       ),
@@ -215,6 +220,13 @@ class _StaffScreenState extends State<StaffScreen> {
         cubit: staffCubit,
         staff: staff,
       ),
+    );
+  }
+
+  void _showDetailsDialog(StaffEntity staff) {
+    showDialog(
+      context: context,
+      builder: (context) => StaffDetailsDialog(staff: staff),
     );
   }
 

@@ -17,6 +17,7 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
 
   @override
   Future<List<RoomModel>> getRooms(String loungeId) async {
+    // Technical Guard: Always filter by lounge_id to prevent data leaks or dashboard clutter
     final response = await _supabase
         .from('rooms_detailed_view')
         .select()
@@ -27,9 +28,7 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
 
   @override
   Stream<List<RoomModel>> watchRooms(String loungeId) {
-    // Note: Stream with joins/views is tricky in Supabase Realtime, 
-    // it usually works on base tables. For detailed views, 
-    // we listen to the base table but might need to fetch from view.
+    // Technical Guard: Realtime filter enforced
     return _supabase
         .from('rooms')
         .stream(primaryKey: ['id'])
@@ -48,7 +47,6 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
   @override
   Future<void> addRoom(RoomModel room) async {
     final data = room.toJson();
-    // Ensure name is never null for the database constraint
     if (data['name'] == null || data['name'].toString().isEmpty) {
       data['name'] = room.nameEn.isEmpty ? 'Room' : room.nameEn;
     }
@@ -63,10 +61,8 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
   }
 
   Future<void> _syncRoomActivities(String roomId, List<String> activityIds) async {
-    // 1. Delete existing activities
     await _supabase.from('room_activities').delete().eq('room_id', roomId);
     
-    // 2. Insert new ones
     if (activityIds.isNotEmpty) {
       final inserts = activityIds.map((id) => {
         'room_id': roomId,

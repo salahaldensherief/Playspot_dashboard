@@ -27,6 +27,8 @@ class AppStrings {
   static String get redemptionOptions => 'redemption_options'.tr();
 
   static String get logout => 'logout'.tr();
+  static String get close => 'close'.tr();
+  static String get contactLabel => 'contact'.tr();
   static String get bookings => 'live_operations'.tr();
   static String get rooms => 'rooms'.tr();
   static String get extras => 'extras_menu'.tr();
@@ -153,6 +155,7 @@ class AppStrings {
   static String get ownerPassword => 'owner_password'.tr();
   static String get pinLocationMap => 'pin_location_map'.tr();
   static String get loungeOwnerAdmin => 'lounge_owner_admin'.tr();
+  static String get loungeOwnerLabel => 'lounge_owner_label'.tr();
   static String get createLoungeAdmin => 'create_lounge_admin'.tr();
   static String get ownerNameHint => 'owner_name_hint'.tr();
   static String get ownerEmailHint => 'owner_email_hint'.tr();
@@ -361,6 +364,9 @@ class AppStrings {
   static String get cashierLabel => 'cashier_label'.tr();
   static String get deleteStaffWarning => 'delete_staff_warning'.tr();
   static String get noStaffFound => 'no_staff_found'.tr();
+  static String get staffManagementDesc => 'staff_management_desc'.tr();
+  static String get loadingTeam => 'loading_team'.tr();
+  static String get noResultsMatching => 'no_results_matching'.tr();
   static String get id => 'id'.tr();
 
   static String get addCity => 'add_city'.tr();

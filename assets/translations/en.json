@@ -335,5 +335,19 @@
   "no_kyc_pending": "No pending KYC reviews at the moment.",
   "id_card": "ID Card",
   "business_doc": "Business Doc",
-  "overlapping_booking_error": "This room is already booked for the selected time."
+  "lounge_owner_label": "Lounge Owner",
+  "staff_management_desc": "Manage your lounge team and access levels",
+  "loading_team": "Loading team members...",
+  "no_results_matching": "No results matching \"{}\"",
+  "confirm_cash_instruction": "Please count the actual cash in drawer carefully before closing.",
+  "overlapping_booking_error": "This room is already booked for the selected time.",
+  "matched": "Matched",
+  "deficit": "Deficit",
+  "surplus": "Surplus",
+  "permissions": "Permissions",
+  "role_cashier": "Cashier",
+  "role_staff": "Staff",
+  "category_pos": "POS & Menu",
+  "category_financials": "Financials",
+  "category_shifts": "Shifts"
 }

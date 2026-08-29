@@ -1,48 +1,48 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
-import '../../../domain/entities/shift_entity.dart';
-import '../shift_cubit.dart';
+import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
 
 class CloseShiftDialog extends StatefulWidget {
-  final ShiftEntity shift;
-  final ShiftCubit cubit;
-  final String loungeId;
+  final double? expectedCash;
+  final Function(double, String?) onConfirm;
 
-  const CloseShiftDialog({
-    super.key,
-    required this.shift,
-    required this.cubit,
-    required this.loungeId,
-  });
+  const CloseShiftDialog({super.key, required this.onConfirm, this.expectedCash});
 
   @override
   State<CloseShiftDialog> createState() => _CloseShiftDialogState();
 }
 
 class _CloseShiftDialogState extends State<CloseShiftDialog> {
-  final _actualCashController = TextEditingController();
+  final _cashController = TextEditingController();
   final _notesController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   @override
-  void dispose() {
-    _actualCashController.dispose();
-    _notesController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final bool canViewExpected = context.hasPermission('shift_view_expected_cash');
+
     return AlertDialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      title: Text(
-        AppStrings.closeShift,
-        style: TextStyle(color: AppColors.textPrimary, fontFamily: 'Orbitron', fontSize: 20.sp),
+      title: Row(
+        children: [
+          Icon(Icons.lock_clock_outlined, color: AppColors.danger, size: 24.r),
+          SizedBox(width: 12.w),
+          Text(
+            AppStrings.closeShift,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Orbitron',
+            ),
+          ),
+        ],
       ),
       content: Form(
         key: _formKey,
@@ -51,15 +51,36 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "${AppStrings.expectedCash}: ${widget.shift.expectedCash ?? 0.0} ${AppStrings.egp}",
-              style: TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold, fontSize: 16.sp),
+              'confirm_cash_instruction'.tr(),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
             ),
-            SizedBox(height: 16.h),
+            if (canViewExpected && widget.expectedCash != null) ...[
+              SizedBox(height: 16.h),
+              Container(
+                padding: EdgeInsets.all(12.r),
+                decoration: BoxDecoration(
+                  color: AppColors.neonBlue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: AppColors.neonBlue.withOpacity(0.3)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(AppStrings.expectedCash, style: const TextStyle(color: AppColors.textSecondary)),
+                    Text(
+                      '${widget.expectedCash!.toStringAsFixed(2)} ${AppStrings.egp}',
+                      style: const TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            SizedBox(height: 24.h),
             AppTextField(
-              controller: _actualCashController,
+              controller: _cashController,
               label: AppStrings.actualCash,
-              hintText: "0.00",
-              keyboardType: TextInputType.number,
+              hintText: '0.00',
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
               validator: (val) {
                 if (val == null || val.isEmpty) return AppStrings.fieldRequired;
                 if (double.tryParse(val) == null) return AppStrings.invalidNumber;
@@ -70,29 +91,28 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
             AppTextField(
               controller: _notesController,
               label: AppStrings.notes,
-              hintText: "Any remarks...",
+              hintText: AppStrings.descriptionHint,
               maxLines: 2,
             ),
           ],
         ),
       ),
+      actionsPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(AppStrings.cancel, style: const TextStyle(color: AppColors.textSecondary)),
         ),
+        SizedBox(width: 8.w),
         AppButton(
           text: AppStrings.closeShift,
           variant: AppButtonVariant.danger,
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              widget.cubit.closeShift(
-                shiftId: widget.shift.id,
-                actualCash: double.parse(_actualCashController.text),
-                notes: _notesController.text,
-                loungeId: widget.loungeId,
+              widget.onConfirm(
+                double.parse(_cashController.text),
+                _notesController.text.isEmpty ? null : _notesController.text,
               );
-              Navigator.pop(context);
             }
           },
         ),

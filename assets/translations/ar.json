@@ -330,5 +330,19 @@
   "error": "خطأ",
   "no_shift_history_found": "لم يتم العثور على سجل ورديات",
   "system": "النظام",
-  "overlapping_booking_error": "هذه الغرفة محجوزة بالفعل في الوقت المحدد."
+  "lounge_owner_label": "مالك الصالة",
+  "staff_management_desc": "إدارة فريق العمل ومستويات الوصول الخاصة بصالتك",
+  "loading_team": "جاري تحميل أعضاء الفريق...",
+  "no_results_matching": "لا توجد نتائج مطابقة لـ \"{}\"",
+  "confirm_cash_instruction": "يرجى عد المبلغ النقدي الموجود في الدرج بدقة قبل الإغلاق.",
+  "overlapping_booking_error": "هذه الغرفة محجوزة بالفعل في الوقت المحدد.",
+  "matched": "مطابق",
+  "deficit": "عجز",
+  "surplus": "زيادة",
+  "permissions": "الصلاحيات",
+  "role_cashier": "كاشير",
+  "role_staff": "مساعد صالة",
+  "category_pos": "نقاط البيع والمنيو",
+  "category_financials": "الفواتير والماليات",
+  "category_shifts": "الورديات"
 }

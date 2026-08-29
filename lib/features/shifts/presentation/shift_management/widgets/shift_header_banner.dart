@@ -6,41 +6,45 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
+import 'package:play_spot_dashboard/features/permissions/presentation/cubit/permissions_cubit.dart';
 import '../../../domain/entities/shift_entity.dart';
 import '../shift_cubit.dart';
 import '../shift_state.dart';
 import 'open_shift_dialog.dart';
 import 'close_shift_dialog.dart';
-import 'z_report_modal.dart';
+import 'shift_summary_modal.dart';
 
 class ShiftHeaderBanner extends StatelessWidget {
   const ShiftHeaderBanner({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<ShiftCubit, ShiftState>(
-      listener: (context, state) {
-        if (state.status.isClosed && state.closedShiftReport != null) {
-          _showZReport(context, state.closedShiftReport!);
-        }
-      },
-      builder: (context, state) {
-        final user = context.read<LoginCubit>().state.user;
+    return BlocBuilder<LoginCubit, LoginState>(
+      builder: (context, loginState) {
+        final user = loginState.user;
         if (user == null) return const SizedBox.shrink();
         final loungeId = user.loungeId ?? '';
 
-        // If no active shift, show the warning banner
-        if (state.status.isNoActive) {
-          return _buildNoActiveShiftBanner(context, loungeId);
-        }
+        return BlocBuilder<ShiftCubit, ShiftState>(
+          builder: (context, state) {
+            // If no active shift
+            if (state.status == ShiftStatus.initial && state.activeShift == null) {
+              if (user.isCashier) {
+                return _buildNoActiveShiftBanner(context, loungeId);
+              } else {
+                return const SizedBox.shrink();
+              }
+            }
 
-        // If there is an active shift
-        if (state.activeShift != null) {
-          return _buildActiveShiftBanner(context, state.activeShift!, loungeId);
-        }
+            // If there is an active shift
+            if (state.activeShift != null) {
+              return _buildActiveShiftBanner(context, state.activeShift!, loungeId);
+            }
 
-        // Loading or initial state
-        return const SizedBox.shrink();
+            return const SizedBox.shrink();
+          },
+        );
       },
     );
   }
@@ -72,6 +76,8 @@ class ShiftHeaderBanner extends StatelessWidget {
 
   Widget _buildActiveShiftBanner(BuildContext context, ShiftEntity shift, String loungeId) {
     final startTime = DateFormat('hh:mm a').format(shift.startTime);
+    final user = context.read<LoginCubit>().state.user;
+    final bool isMyShift = user?.id == shift.cashierId;
     
     return Container(
       width: double.infinity,
@@ -108,12 +114,13 @@ class ShiftHeaderBanner extends StatelessWidget {
           SizedBox(width: 24.w),
           _buildInfoItem(AppStrings.startTimeLabel, startTime),
           const Spacer(),
-          AppButton(
-            text: AppStrings.closeShift,
-            onPressed: () => _showCloseShiftDialog(context, shift, loungeId),
-            variant: AppButtonVariant.outlined,
-            height: 32.h,
-          ),
+          if (isMyShift)
+            AppButton(
+              text: AppStrings.closeShift,
+              onPressed: () => _showCloseShiftDialog(context, shift, loungeId),
+              variant: AppButtonVariant.outlined,
+              height: 32.h,
+            ),
         ],
       ),
     );
@@ -129,35 +136,69 @@ class ShiftHeaderBanner extends StatelessWidget {
   }
 
   void _showOpenShiftDialog(BuildContext context, String loungeId) {
+    final shiftCubit = context.read<ShiftCubit>();
+    final loginCubit = context.read<LoginCubit>();
+    final permissionsCubit = context.read<PermissionsCubit>();
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (diagContext) => OpenShiftDialog(
-        loungeId: loungeId,
-        cubit: context.read<ShiftCubit>(),
+      builder: (diagContext) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: shiftCubit),
+          BlocProvider.value(value: loginCubit),
+          BlocProvider.value(value: permissionsCubit),
+        ],
+        child: OpenShiftDialog(
+          onConfirm: (startingCash) {
+            shiftCubit.openShift(loungeId, startingCash);
+            Navigator.pop(diagContext);
+          },
+        ),
       ),
     );
   }
 
   void _showCloseShiftDialog(BuildContext context, ShiftEntity shift, String loungeId) {
+    final shiftCubit = context.read<ShiftCubit>();
+    final loginCubit = context.read<LoginCubit>();
+    final permissionsCubit = context.read<PermissionsCubit>();
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (diagContext) => CloseShiftDialog(
-        shift: shift,
-        cubit: context.read<ShiftCubit>(),
-        loungeId: loungeId,
+      builder: (diagContext) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: shiftCubit),
+          BlocProvider.value(value: loginCubit),
+          BlocProvider.value(value: permissionsCubit),
+        ],
+        child: CloseShiftDialog(
+          expectedCash: shift.expectedCash,
+          onConfirm: (actualCash, notes) {
+            shiftCubit.closeShift(shift.id, actualCash, notes, loungeId);
+            Navigator.pop(diagContext);
+          },
+        ),
       ),
     );
   }
 
-  void _showZReport(BuildContext context, dynamic report) {
+  void _showShiftSummary(BuildContext context, ShiftEntity shift) {
+    final loginCubit = context.read<LoginCubit>();
+    final shiftCubit = context.read<ShiftCubit>();
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (diagContext) => ZReportModal(report: report),
+      builder: (diagContext) => ShiftSummaryModal(
+        shift: shift,
+        onFinish: () {
+          loginCubit.logout();
+          Navigator.pop(diagContext);
+        },
+      ),
     ).then((_) {
-      context.read<ShiftCubit>().resetReport();
+      shiftCubit.resetToInitial();
     });
   }
 }

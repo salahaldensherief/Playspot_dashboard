@@ -54,9 +54,9 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> confirmCashPayment(String bookingId) async {
+  Future<Either<Failure, void>> confirmCashPayment(String bookingId, {String? shiftId}) async {
     try {
-      await remoteDataSource.confirmCashPayment(bookingId);
+      await remoteDataSource.confirmCashPayment(bookingId, shiftId: shiftId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -90,6 +90,7 @@ class BookingRepositoryImpl implements BookingRepository {
         mapsLink: booking.mapsLink,
         lat: booking.lat,
         lng: booking.lng,
+        shiftId: booking.shiftId,
       );
       await remoteDataSource.createBooking(model);
       return const Right(null);

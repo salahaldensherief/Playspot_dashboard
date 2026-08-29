@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-
 import '../../domain/entities/user_entity.dart';
 
 class UserModel extends UserEntity {
@@ -8,6 +7,7 @@ class UserModel extends UserEntity {
     required super.email,
     required super.name,
     required super.role,
+    super.rawRole,
     super.loungeId,
     super.avatarUrl,
     super.isSetupCompleted = false,
@@ -15,11 +15,13 @@ class UserModel extends UserEntity {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     debugPrint('UserModel: parsing profile JSON: $json');
+    final rawRoleStr = (json['role'] ?? json['out_role'])?.toString();
     return UserModel(
       id: (json['id'] ?? json['user_id'] ?? json['staff_id'])?.toString() ?? '',
       email: (json['email'] ?? json['out_email'] ?? '')?.toString() ?? '',
       name: (json['full_name'] ?? json['out_full_name'] ?? json['name'] ?? 'Unknown').toString(),
-      role: roleFromString((json['role'] ?? json['out_role'])?.toString()),
+      role: roleFromString(rawRoleStr),
+      rawRole: rawRoleStr,
       loungeId: (json['lounge_id'] ?? json['out_lounge_id'])?.toString(),
       avatarUrl: json['avatar_url']?.toString(),
       isSetupCompleted: json['is_setup_completed'] ?? json['out_is_setup_completed'] ?? false,
@@ -30,14 +32,16 @@ class UserModel extends UserEntity {
     switch (role?.toLowerCase()) {
       case 'super_admin':
         return UserRole.superAdmin;
+      case 'owner':
       case 'lounge_owner':
-      case 'lounge_admin':
-        return UserRole.loungeOwner;
+        return UserRole.owner;
       case 'manager':
+      case 'lounge_admin':
         return UserRole.manager;
       case 'cashier':
-      case 'staff':
         return UserRole.cashier;
+      case 'staff':
+        return UserRole.staff;
       default:
         return UserRole.user;
     }
@@ -49,6 +53,7 @@ class UserModel extends UserEntity {
       'email': email,
       'full_name': name,
       'role': role.name,
+      'raw_role': rawRole,
       'lounge_id': loungeId,
       'avatar_url': avatarUrl,
       'is_setup_completed': isSetupCompleted,

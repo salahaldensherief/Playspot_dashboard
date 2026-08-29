@@ -7,7 +7,7 @@ class ConfirmCashPayment {
 
   ConfirmCashPayment(this.repository);
 
-  Future<Either<Failure, void>> call(String bookingId) async {
-    return await repository.confirmCashPayment(bookingId);
+  Future<Either<Failure, void>> call(String bookingId, {String? shiftId}) async {
+    return await repository.confirmCashPayment(bookingId, shiftId: shiftId);
   }
 }

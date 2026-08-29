@@ -9,6 +9,12 @@ class StaffEntity extends Equatable {
   final String loungeId;
   final bool isActive;
   final DateTime createdAt;
+  
+  // KYC & ID Details
+  final String? nationalIdNumber;
+  final String? idFrontUrl;
+  final String? idBackUrl;
+  final String? avatarUrl;
 
   const StaffEntity({
     required this.id,
@@ -19,10 +25,27 @@ class StaffEntity extends Equatable {
     required this.loungeId,
     this.isActive = true,
     required this.createdAt,
+    this.nationalIdNumber,
+    this.idFrontUrl,
+    this.idBackUrl,
+    this.avatarUrl,
   });
 
   @override
-  List<Object?> get props => [id, name, email, phone, role, loungeId, isActive, createdAt];
+  List<Object?> get props => [
+    id, 
+    name, 
+    email, 
+    phone, 
+    role, 
+    loungeId, 
+    isActive, 
+    createdAt,
+    nationalIdNumber,
+    idFrontUrl,
+    idBackUrl,
+    avatarUrl,
+  ];
 
   StaffEntity copyWith({
     String? id,
@@ -33,6 +56,10 @@ class StaffEntity extends Equatable {
     String? loungeId,
     bool? isActive,
     DateTime? createdAt,
+    String? nationalIdNumber,
+    String? idFrontUrl,
+    String? idBackUrl,
+    String? avatarUrl,
   }) {
     return StaffEntity(
       id: id ?? this.id,
@@ -43,6 +70,10 @@ class StaffEntity extends Equatable {
       loungeId: loungeId ?? this.loungeId,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
+      nationalIdNumber: nationalIdNumber ?? this.nationalIdNumber,
+      idFrontUrl: idFrontUrl ?? this.idFrontUrl,
+      idBackUrl: idBackUrl ?? this.idBackUrl,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
     );
   }
 }

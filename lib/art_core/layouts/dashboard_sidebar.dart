@@ -8,6 +8,7 @@ import '../app_strings.dart';
 import '../theme/app_colors.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/login/login_cubit.dart';
+import '../../features/auth/presentation/login/login_state.dart';
 
 class DashboardSidebar extends StatelessWidget {
   final String activeRoute;
@@ -15,47 +16,63 @@ class DashboardSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<LoginCubit>().state.user;
-    final isSuperAdmin = user?.role == UserRole.superAdmin;
+    return BlocBuilder<LoginCubit, LoginState>(
+      buildWhen: (prev, curr) => prev.user != curr.user,
+      builder: (context, state) {
+        final user = state.user;
+        final isSuperAdmin = user?.isSuperAdmin ?? false;
 
-    return Container(
-      width: 260.w,
-      decoration: const BoxDecoration(
-        color: AppColors.sidebarBackground,
-        border: Border(right: BorderSide(color: AppColors.borderDefault)),
-      ),
-      child: Column(
-        children: [
-          SizedBox(height: 32.h),
-          _buildLogo(user),
-          SizedBox(height: 40.h),
-          if (isSuperAdmin) ..._buildSuperAdminItems(context) else ..._buildLoungeAdminItems(context),
-          const Spacer(),
-          _SidebarItem(
-            icon: Icons.language,
-            label: context.locale.languageCode == 'en' ? 'العربية' : 'English',
-            isActive: false,
-            onTap: () {
-              if (context.locale.languageCode == 'en') {
-                context.setLocale(const Locale('ar'));
-              } else {
-                context.setLocale(const Locale('en'));
-              }
-            },
+        return Container(
+          width: 260.w,
+          decoration: const BoxDecoration(
+            color: AppColors.sidebarBackground,
+            border: Border(right: BorderSide(color: AppColors.borderDefault)),
           ),
-          _SidebarItem(
-            icon: Icons.logout,
-            label: AppStrings.logout,
-            isActive: false,
-            onTap: () => context.read<LoginCubit>().logout(),
+          child: Column(
+            children: [
+              SizedBox(height: 32.h),
+              _buildLogo(user),
+              SizedBox(height: 40.h),
+              if (isSuperAdmin) 
+                ..._buildSuperAdminItems(context) 
+              else 
+                ..._buildLoungeStaffItems(context, user),
+              const Spacer(),
+              _SidebarItem(
+                icon: Icons.language,
+                label: context.locale.languageCode == 'en' ? 'العربية' : 'English',
+                isActive: false,
+                onTap: () {
+                  if (context.locale.languageCode == 'en') {
+                    context.setLocale(const Locale('ar'));
+                  } else {
+                    context.setLocale(const Locale('en'));
+                  }
+                },
+              ),
+              _SidebarItem(
+                icon: Icons.logout,
+                label: AppStrings.logout,
+                isActive: false,
+                onTap: () => context.read<LoginCubit>().logout(),
+              ),
+              SizedBox(height: 24.h),
+            ],
           ),
-          SizedBox(height: 24.h),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildLogo(UserEntity? user) {
+    String roleLabel = 'Staff';
+    if (user != null) {
+      if (user.isSuperAdmin) roleLabel = AppStrings.superAdmin;
+      else if (user.isOwner) roleLabel = AppStrings.loungeOwnerLabel;
+      else if (user.isManager) roleLabel = AppStrings.loungeManager;
+      else if (user.isCashier) roleLabel = AppStrings.cashierLabel;
+    }
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Row(
@@ -83,7 +100,7 @@ class DashboardSidebar extends StatelessWidget {
                 ),
               ),
               Text(
-                user?.role == UserRole.superAdmin ? AppStrings.superAdmin : AppStrings.loungeManager,
+                roleLabel,
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
               ),
             ],
@@ -114,34 +131,10 @@ class DashboardSidebar extends StatelessWidget {
         onTap: () => context.go(RouterKeys.superAdminUsers),
       ),
       _SidebarItem(
-        icon: Icons.category_outlined,
-        label: AppStrings.categories,
-        isActive: activeRoute == AppStrings.categories,
-        onTap: () => context.go(RouterKeys.superAdminCategories),
-      ),
-      _SidebarItem(
-        icon: Icons.campaign_outlined,
-        label: AppStrings.marketing,
-        isActive: activeRoute == AppStrings.marketing,
-        onTap: () => context.go(RouterKeys.superAdminMarketing),
-      ),
-      _SidebarItem(
         icon: Icons.account_balance_wallet_outlined,
         label: AppStrings.payouts,
         isActive: activeRoute == AppStrings.payouts,
         onTap: () => context.go(RouterKeys.superAdminPayouts),
-      ),
-      _SidebarItem(
-        icon: Icons.verified_user_outlined,
-        label: AppStrings.kycReviews,
-        isActive: activeRoute == AppStrings.kycReviews,
-        onTap: () => context.go(RouterKeys.superAdminKyc),
-      ),
-      _SidebarItem(
-        icon: Icons.card_giftcard_outlined,
-        label: AppStrings.loyaltyRewards,
-        isActive: activeRoute == AppStrings.loyaltyRewards,
-        onTap: () => context.go(RouterKeys.superAdminLoyalty),
       ),
       _SidebarItem(
         icon: Icons.history_outlined,
@@ -152,16 +145,11 @@ class DashboardSidebar extends StatelessWidget {
     ];
   }
 
-  List<Widget> _buildLoungeAdminItems(BuildContext context) {
-    final user = context.read<LoginCubit>().state.user;
+  List<Widget> _buildLoungeStaffItems(BuildContext context, UserEntity? user) {
     if (user == null) return [];
 
-    final bool isOwner = user.isLoungeOwner;
-    final bool canManageStaff = user.canManageStaff;
-    final bool canViewFinancials = user.canViewFinancials;
-
     return [
-      // Common for all staff (Live Operations)
+      // Common: Live Operations (Sensors/Bookings)
       _SidebarItem(
         icon: Icons.sensors,
         label: AppStrings.bookings,
@@ -169,7 +157,7 @@ class DashboardSidebar extends StatelessWidget {
         onTap: () => context.go(RouterKeys.loungeAdminLiveOps),
       ),
       
-      // Rooms & Setup (Read-only for Staff handled in UI)
+      // Setup: Rooms & Extras
       _SidebarItem(
         icon: Icons.meeting_room_outlined,
         label: AppStrings.rooms,
@@ -184,7 +172,7 @@ class DashboardSidebar extends StatelessWidget {
         onTap: () => context.go(RouterKeys.loungeAdminExtras),
       ),
 
-      // Marketing (Owner/Manager level)
+      // Management Level
       if (user.canManageMarketing)
         _SidebarItem(
           icon: Icons.campaign_outlined,
@@ -193,24 +181,7 @@ class DashboardSidebar extends StatelessWidget {
           onTap: () => context.go(RouterKeys.loungeAdminMarketing),
         ),
 
-      // Financials (Lounge Owner Only)
-      if (canViewFinancials) ...[
-        _SidebarItem(
-          icon: Icons.account_balance_wallet_outlined,
-          label: AppStrings.myPayouts,
-          isActive: activeRoute == AppStrings.myPayouts,
-          onTap: () => context.go('/lounge-admin/payouts'),
-        ),
-        _SidebarItem(
-          icon: Icons.assessment_outlined,
-          label: AppStrings.monthlyReports,
-          isActive: activeRoute == AppStrings.monthlyReports,
-          onTap: () => context.go('/lounge-admin/reports'),
-        ),
-      ],
-
-      // Staff Management (Lounge Owner Only)
-      if (canManageStaff)
+      if (user.canManageStaff)
         _SidebarItem(
           icon: Icons.people_outline,
           label: AppStrings.staffManagement,
@@ -218,7 +189,7 @@ class DashboardSidebar extends StatelessWidget {
           onTap: () => context.go(RouterKeys.loungeAdminStaff),
         ),
 
-      // Shift History (Shown for all)
+      // History (All Staff can see their/lounge history)
       _SidebarItem(
         icon: Icons.history_outlined,
         label: AppStrings.shiftHistory,
@@ -226,11 +197,29 @@ class DashboardSidebar extends StatelessWidget {
         onTap: () => context.go('/lounge-admin/shifts'),
       ),
 
+      // Financial Reports (Owner/SuperAdmin)
+      if (user.canViewFinancials)
+        _SidebarItem(
+          icon: Icons.assessment_outlined,
+          label: AppStrings.monthlyReports,
+          isActive: activeRoute == AppStrings.monthlyReports,
+          onTap: () => context.go('/lounge-admin/reports'),
+        ),
+
+      // Profile & Settings
+      if (user.canEditLoungeProfile)
+        _SidebarItem(
+          icon: Icons.settings_outlined,
+          label: AppStrings.loungeProfile,
+          isActive: activeRoute == AppStrings.loungeProfile,
+          onTap: () => context.go(RouterKeys.loungeAdminProfile),
+        ),
+
       _SidebarItem(
         icon: Icons.person_outline,
         label: AppStrings.myProfile,
         isActive: activeRoute == AppStrings.myProfile,
-        onTap: () => context.go(RouterKeys.loungeAdminProfile),
+        onTap: () => context.go(RouterKeys.profile),
       ),
     ];
   }

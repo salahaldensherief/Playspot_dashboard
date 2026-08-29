@@ -1,3 +1,5 @@
+import 'package:dartz/dartz.dart';
+import '../../../../core/error/failures.dart';
 import '../repositories/shift_repository.dart';
 
 class OpenShiftUseCase {
@@ -5,7 +7,7 @@ class OpenShiftUseCase {
 
   OpenShiftUseCase(this.repository);
 
-  Future<void> call(String loungeId, double startingCash) {
-    return repository.openShift(loungeId, startingCash);
+  Future<Either<Failure, void>> call(String loungeId, double startingCash) async {
+    return await repository.openShift(loungeId, startingCash);
   }
 }

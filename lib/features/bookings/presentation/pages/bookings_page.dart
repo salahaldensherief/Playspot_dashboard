@@ -9,6 +9,9 @@ import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_state.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_state.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/admin_shift_monitoring_bar.dart';
 import '../../../lounges/domain/entities/lounge.dart';
 import '../../domain/entities/booking.dart';
 import '../cubit/booking_cubit.dart';
@@ -44,6 +47,11 @@ class BookingsPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (user?.isLoungeOwner == true || user?.isManager == true)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 24),
+                child: AdminShiftMonitoringBar(),
+              ),
             _buildTopToolbar(context, loungeId),
             SizedBox(height: 24.h),
             BlocBuilder<BookingCubit, BookingState>(
@@ -83,7 +91,7 @@ class BookingsPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _buildSectionHeader(AppStrings.finishedToday, finishedToday.length, AppColors.success),
-                        _buildRevenueCard(totalRevenueToday),
+                        if (user?.canViewReports == true) _buildRevenueCard(totalRevenueToday),
                       ],
                     ),
                     SizedBox(height: 16.h),
@@ -162,10 +170,21 @@ class BookingsPage extends StatelessWidget {
                 children: [
                   ElevatedButton.icon(
                     onPressed: () {
-                      context.read<RoomCubit>().watchRooms(loungeId);
+                      final roomCubit = context.read<RoomCubit>();
+                      final bookingCubit = context.read<BookingCubit>();
+                      final shiftCubit = context.read<ShiftCubit>();
+                      
+                      roomCubit.watchRooms(loungeId);
                       showDialog(
                         context: context,
-                        builder: (context) => AddBookingDialog(loungeId: loungeId),
+                        builder: (context) => MultiBlocProvider(
+                          providers: [
+                            BlocProvider.value(value: roomCubit),
+                            BlocProvider.value(value: bookingCubit),
+                            BlocProvider.value(value: shiftCubit),
+                          ],
+                          child: AddBookingDialog(loungeId: loungeId),
+                        ),
                       );
                     },
                     icon: const Icon(Icons.add_circle_outline, color: Colors.white),
@@ -221,26 +240,38 @@ class BookingsPage extends StatelessWidget {
       );
     }
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 20.w,
-        mainAxisSpacing: 20.h,
-        mainAxisExtent: 320.h,
-      ),
-      itemCount: bookings.length,
-      itemBuilder: (context, index) {
-        final booking = bookings[index];
-        return BookingCard(
-          key: ValueKey('booking_${booking.id}'),
-          booking: booking,
-          onApprove: isPending ? () => cubit.approveBooking(booking.id) : null,
-          onReject: isPending ? () => cubit.rejectBooking(booking.id) : null,
-          onConfirmPayment: !isPending && !isAudit && booking.paymentStatus != 'paid'
-              ? () => cubit.confirmCashPayment(booking.id)
-              : null,
+    final shiftState = context.read<ShiftCubit>().state;
+    final activeShiftId = shiftState.activeShift?.id;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Calculate dynamic column count based on available width
+        int crossAxisCount = 3;
+        if (constraints.maxWidth < 900) crossAxisCount = 2;
+        if (constraints.maxWidth < 600) crossAxisCount = 1;
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 20.r,
+            mainAxisSpacing: 20.r,
+            childAspectRatio: 0.9, // Dynamic ratio instead of fixed mainAxisExtent
+          ),
+          itemCount: bookings.length,
+          itemBuilder: (context, index) {
+            final booking = bookings[index];
+            return BookingCard(
+              key: ValueKey('booking_${booking.id}'),
+              booking: booking,
+              onApprove: isPending ? () => cubit.approveBooking(booking.id) : null,
+              onReject: isPending ? () => cubit.rejectBooking(booking.id) : null,
+              onConfirmPayment: !isPending && !isAudit && booking.paymentStatus != PaymentStatus.paid
+                  ? () => cubit.confirmCashPayment(booking.id, shiftId: activeShiftId)
+                  : null,
+            );
+          },
         );
       },
     );

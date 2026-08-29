@@ -7,6 +7,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
+import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/extra_entity.dart';
 
@@ -73,6 +74,8 @@ class _ExtraDialogState extends State<ExtraDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final bool canEditPrice = context.hasPermission('menu_edit_prices');
+
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
@@ -110,6 +113,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
                 controller: _priceController,
                 keyboardType: TextInputType.number,
                 validator: AppValidator.validateNumber,
+                enabled: canEditPrice,
               ),
               SizedBox(height: 16.h),
               CustomDropdown<String>(

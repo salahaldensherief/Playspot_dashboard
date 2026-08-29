@@ -1,29 +1,38 @@
+import 'package:dartz/dartz.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/utils/repository_helper.dart';
 import '../../domain/entities/shift_entity.dart';
+import '../../domain/entities/live_shift_overview_entity.dart';
 import '../../domain/repositories/shift_repository.dart';
-import '../data_sources/shift_remote_data_source.dart';
+import '../data_source/remote/shift_remote_data_source.dart';
 
-class ShiftRepositoryImpl implements ShiftRepository {
-  final ShiftRemoteDataSource remoteDataSource;
+class ShiftRepositoryImpl with RepositoryHelper implements ShiftRepository {
+  final ShiftRemoteSource remoteSource;
 
-  ShiftRepositoryImpl(this.remoteDataSource);
+  ShiftRepositoryImpl(this.remoteSource);
 
   @override
-  Future<ShiftEntity?> getCurrentShift(String loungeId) async {
-    return await remoteDataSource.getCurrentShift(loungeId);
+  Future<Either<Failure, ShiftEntity?>> getActiveShift(String loungeId) async {
+    return await callRepository(() => remoteSource.getActiveShift(loungeId));
   }
 
   @override
-  Future<void> openShift(String loungeId, double startingCash) async {
-    await remoteDataSource.openShift(loungeId, startingCash);
+  Future<Either<Failure, LiveShiftOverviewEntity>> getLoungeLiveShiftOverview(String loungeId) async {
+    return await callRepository(() => remoteSource.getLoungeLiveShiftOverview(loungeId));
   }
 
   @override
-  Future<void> closeShift(String shiftId, double actualCashCounted, String? notes) async {
-    await remoteDataSource.closeShift(shiftId, actualCashCounted, notes);
+  Future<Either<Failure, void>> openShift(String loungeId, double startingCash) async {
+    return await callRepository(() => remoteSource.openShift(loungeId, startingCash));
   }
 
   @override
-  Future<List<ShiftEntity>> getShiftHistory({String? loungeId}) async {
-    return await remoteDataSource.getShiftHistory(loungeId: loungeId);
+  Future<Either<Failure, ShiftEntity>> closeShift(String shiftId, double actualCash, String? notes) async {
+    return await callRepository(() => remoteSource.closeShift(shiftId, actualCash, notes));
+  }
+
+  @override
+  Future<Either<Failure, List<ShiftEntity>>> getShiftHistory({String? loungeId}) async {
+    return await callRepository(() => remoteSource.getShifts(loungeId: loungeId));
   }
 }

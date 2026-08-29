@@ -1,75 +1,157 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/use_cases/get_current_shift_use_case.dart';
+import '../../domain/use_cases/get_active_shift_use_case.dart';
+import '../../domain/use_cases/get_lounge_live_shift_overview_use_case.dart';
 import '../../domain/use_cases/open_shift_use_case.dart';
 import '../../domain/use_cases/close_shift_use_case.dart';
 import '../../domain/repositories/shift_repository.dart';
 import 'shift_state.dart';
 
 class ShiftCubit extends Cubit<ShiftState> {
-  final GetCurrentShiftUseCase _getCurrentShiftUseCase;
-  final OpenShiftUseCase _openShiftUseCase;
-  final CloseShiftUseCase _closeShiftUseCase;
-  final ShiftRepository _repository; // Needed for history if not using separate usecase
+  final GetActiveShiftUseCase getActiveShiftUseCase;
+  final GetLoungeLiveShiftOverviewUseCase getLoungeLiveShiftOverviewUseCase;
+  final OpenShiftUseCase openShiftUseCase;
+  final CloseShiftUseCase closeShiftUseCase;
+  final ShiftRepository repository;
 
-  ShiftCubit(
-    this._getCurrentShiftUseCase,
-    this._openShiftUseCase,
-    this._closeShiftUseCase,
-    this._repository,
-  ) : super(ShiftState.init());
+  ShiftCubit({
+    required this.getActiveShiftUseCase,
+    required this.getLoungeLiveShiftOverviewUseCase,
+    required this.openShiftUseCase,
+    required this.closeShiftUseCase,
+    required this.repository,
+  }) : super(ShiftState.initial());
 
+  /// Fetches a high-level overview for Admins
+  Future<void> getLiveShiftOverview(String loungeId) async {
+    if (isClosed) return;
+    emit(state.copyWith(status: ShiftStatus.loading));
+    
+    final result = await getLoungeLiveShiftOverviewUseCase(loungeId);
+    
+    if (isClosed) return;
+    result.fold(
+      (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
+      (overview) => emit(state.copyWith(status: ShiftStatus.active, liveOverview: overview)),
+    );
+  }
+
+  /// Verification check for personal cashier shift
   Future<void> checkActiveShift(String loungeId) async {
+    if (isClosed) return;
     emit(state.copyWith(status: ShiftStatus.loading));
+    
     try {
-      final shift = await _getCurrentShiftUseCase(loungeId);
-      if (shift != null) {
-        emit(state.copyWith(status: ShiftStatus.active, activeShift: shift));
-      } else {
-        emit(state.copyWith(status: ShiftStatus.noActive, activeShift: null));
-      }
+      final result = await getActiveShiftUseCase(loungeId);
+      
+      if (isClosed) return;
+      result.fold(
+        (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
+        (shift) {
+          if (shift != null) {
+            emit(state.copyWith(status: ShiftStatus.active, activeShift: shift));
+          } else {
+            // No shift found - purely informative reset to initial
+            emit(state.copyWith(status: ShiftStatus.initial, activeShift: null));
+          }
+        },
+      );
     } catch (e) {
-      emit(state.copyWith(status: ShiftStatus.failure, errorMessage: e.toString()));
+      emit(state.copyWith(status: ShiftStatus.error, errorMessage: e.toString()));
     }
   }
 
-  Future<void> openShift({required String loungeId, required double startingCash}) async {
+  /// Combined Open & Verify logic to break silent failure loops
+  Future<void> openShift(String loungeId, double startingCash) async {
+    if (isClosed) return;
+    
+    if (loungeId.isEmpty || loungeId == 'null') {
+      emit(state.copyWith(
+        status: ShiftStatus.error, 
+        errorMessage: 'Cannot open shift: No Lounge ID assigned to this account.'
+      ));
+      return;
+    }
+
     emit(state.copyWith(status: ShiftStatus.loading));
+    
     try {
-      await _openShiftUseCase(loungeId, startingCash);
-      await checkActiveShift(loungeId);
+      // 1. Attempt to open/insert shift
+      final openResult = await openShiftUseCase(loungeId, startingCash);
+      
+      if (isClosed) return;
+
+      await openResult.fold(
+        (failure) async {
+          emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message));
+        },
+        (_) async {
+          // 2. Immediately verify if the shift is now visible/queryable
+          debugPrint('🔵 [ShiftCubit] Open success, verifying shift sync...');
+          final verifyResult = await getActiveShiftUseCase(loungeId);
+          
+          if (isClosed) return;
+
+          verifyResult.fold(
+            (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
+            (shift) {
+              if (shift != null) {
+                debugPrint('🟢 [ShiftCubit] Shift verified and synced.');
+                emit(state.copyWith(status: ShiftStatus.active, activeShift: shift));
+              } else {
+                // BREAK THE LOOP: If DB said OK but verify says Null, it's an RLS/Sync error.
+                // Do not emit .initial as it triggers the dialog again.
+                debugPrint('🔴 [ShiftCubit] Shift was created but sync returned null.');
+                emit(state.copyWith(
+                  status: ShiftStatus.error, 
+                  errorMessage: 'Shift created but failed to sync from database. Check Supabase RLS policies.'
+                ));
+              }
+            },
+          );
+        },
+      );
     } catch (e) {
-      emit(state.copyWith(status: ShiftStatus.failure, errorMessage: e.toString()));
+      emit(state.copyWith(status: ShiftStatus.error, errorMessage: e.toString()));
     }
   }
 
-  Future<void> closeShift({
-    required String shiftId,
-    required double actualCash,
-    String? notes,
-    required String loungeId,
-  }) async {
+  Future<void> closeShift(String shiftId, double actualCash, String? notes, String loungeId) async {
+    if (isClosed) return;
     emit(state.copyWith(status: ShiftStatus.loading));
+    
     try {
-      await _closeShiftUseCase(shiftId, actualCash, notes);
-      // After closing, we might want to fetch the closed shift details for a report
-      // But the RPC close_shift in our data source doesn't return the model yet.
-      // Assuming we refetch or the state transition handles it.
-      emit(state.copyWith(status: ShiftStatus.closed, activeShift: null));
-      await checkActiveShift(loungeId);
+      final result = await closeShiftUseCase(shiftId, actualCash, notes);
+      
+      if (isClosed) return;
+      result.fold(
+        (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
+        (closedShift) {
+          emit(state.copyWith(
+            status: ShiftStatus.closed, 
+            lastClosedShift: closedShift,
+            activeShift: null,
+          ));
+        },
+      );
     } catch (e) {
-      emit(state.copyWith(status: ShiftStatus.failure, errorMessage: e.toString()));
+      emit(state.copyWith(status: ShiftStatus.error, errorMessage: e.toString()));
     }
   }
 
   Future<void> fetchShiftHistory({String? loungeId}) async {
+    if (isClosed) return;
     emit(state.copyWith(status: ShiftStatus.loading));
-    try {
-      final shifts = await _repository.getShiftHistory(loungeId: loungeId);
-      emit(state.copyWith(status: ShiftStatus.success, shifts: shifts));
-    } catch (e) {
-      emit(state.copyWith(status: ShiftStatus.failure, errorMessage: e.toString()));
-    }
+    final result = await repository.getShiftHistory(loungeId: loungeId);
+    
+    if (isClosed) return;
+    result.fold(
+      (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
+      (shifts) => emit(state.copyWith(status: ShiftStatus.active, shifts: shifts)),
+    );
   }
 
-  void resetReport() => emit(state.copyWith(closedShiftReport: null, status: ShiftStatus.noActive));
+  void resetToInitial() {
+    if (!isClosed) emit(ShiftState.initial());
+  }
 }

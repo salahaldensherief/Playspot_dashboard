@@ -20,7 +20,7 @@ class Booking extends Equatable {
   final DateTime date;
   final String startTime;
   final String endTime;
-  final double durationHours;
+  final int durationMinutes;
   final BookingStatus status;
   final PaymentStatus paymentStatus;
   final double totalPrice;
@@ -29,6 +29,7 @@ class Booking extends Equatable {
   final String? mapsLink;
   final double? lat;
   final double? lng;
+  final String? shiftId;
 
   const Booking({
     required this.id,
@@ -46,7 +47,7 @@ class Booking extends Equatable {
     required this.date,
     required this.startTime,
     required this.endTime,
-    this.durationHours = 0.0,
+    this.durationMinutes = 60,
     required this.status,
     this.paymentStatus = PaymentStatus.unpaid,
     required this.totalPrice,
@@ -55,6 +56,7 @@ class Booking extends Equatable {
     this.mapsLink,
     this.lat,
     this.lng,
+    this.shiftId,
   });
 
   @override
@@ -74,7 +76,7 @@ class Booking extends Equatable {
         date,
         startTime,
         endTime,
-        durationHours,
+        durationMinutes,
         status,
         paymentStatus,
         totalPrice,
@@ -83,5 +85,6 @@ class Booking extends Equatable {
         mapsLink,
         lat,
         lng,
+        shiftId,
       ];
 }

@@ -4,6 +4,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_state.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/close_shift_dialog.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import '../app_strings.dart';
 import '../theme/app_colors.dart';
 
@@ -52,11 +56,6 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           const Spacer(),
-          Flexible(
-            flex: 2,
-            child: _buildSearchField(),
-          ),
-          SizedBox(width: 24.w),
           if (actions != null) ...[
             ...actions!,
             SizedBox(width: 24.w),
@@ -66,28 +65,6 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
           ],
           _buildUserInfo(),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSearchField() {
-    return Container(
-      constraints: BoxConstraints(maxWidth: 300.w),
-      height: 40.h,
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: AppColors.divider),
-      ),
-      child: TextField(
-        style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
-        decoration: InputDecoration(
-          hintText: AppStrings.searchHint,
-          hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
-          prefixIcon: Icon(Icons.search, color: AppColors.textSecondary, size: 20.sp),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.only(bottom: 10.h), 
-        ),
       ),
     );
   }
@@ -148,7 +125,11 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
                       ),
                     ),
                     Text(
-                      user.role == UserRole.superAdmin ? AppStrings.superAdmin : AppStrings.loungeManager,
+                      user.isSuperAdmin 
+                        ? AppStrings.superAdmin 
+                        : (user.isLoungeOwner 
+                            ? AppStrings.loungeOwnerLabel 
+                            : (user.isCashier ? AppStrings.cashierLabel : AppStrings.loungeManager)),
                       style: TextStyle(
                         color: AppColors.neonPurple,
                         fontSize: 11.sp,

@@ -7,6 +7,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
 import '../../domain/entities/extra_entity.dart';
 import '../cubit/extras_cubit.dart';
 import 'extra_dialog.dart';
@@ -19,7 +20,8 @@ class ExtraCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = context.read<LoginCubit>().state.user;
     final loungeId = user?.loungeId ?? '';
-    final bool canEdit = user?.canEditSetup ?? false;
+    final bool canEdit = context.hasPermission('menu_manage_items');
+    final bool canToggleStock = context.hasPermission('menu_toggle_stock');
 
     return Container(
       decoration: BoxDecoration(

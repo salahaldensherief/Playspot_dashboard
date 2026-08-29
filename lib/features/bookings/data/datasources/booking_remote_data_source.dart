@@ -11,7 +11,7 @@ abstract class BookingRemoteDataSource {
     int offset = 0,
   });
   Future<void> updateBookingStatus(String id, String status);
-  Future<void> confirmCashPayment(String bookingId);
+  Future<void> confirmCashPayment(String bookingId, {String? shiftId});
   Future<void> createBooking(BookingModel booking);
 }
 
@@ -74,12 +74,17 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
 
   @override
-  Future<void> confirmCashPayment(String bookingId) async {
+  Future<void> confirmCashPayment(String bookingId, {String? shiftId}) async {
     try {
-      await client.rpc('confirm_cash_payment', params: {'p_booking_id': bookingId});
+      await client.rpc('confirm_cash_payment', params: {
+        'p_booking_id': bookingId,
+        if (shiftId != null) 'p_shift_id': shiftId,
+      });
     } catch (e) {
-      // تحديث الجدول يدوياً إذا فشلت الـ RPC
       await client.from('payments').update({'status': 'paid'}).eq('booking_id', bookingId);
+      if (shiftId != null) {
+        await client.from('bookings').update({'shift_id': shiftId}).eq('id', bookingId);
+      }
     }
   }
 

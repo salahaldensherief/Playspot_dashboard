@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
 import '../../domain/entities/booking.dart';
 
 class BookingCard extends StatelessWidget {
@@ -25,7 +26,12 @@ class BookingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPending = booking.status == BookingStatus.pending;
-    final isPaid = booking.paymentStatus == 'paid';
+    final isPaid = booking.paymentStatus == PaymentStatus.paid;
+    final bool canAddItems = context.hasPermission('pos_view_menu') && 
+                            (booking.status == BookingStatus.upcoming || booking.status == BookingStatus.inProgress);
+
+    final String formattedDuration = (booking.durationMinutes / 60.0).toStringAsFixed(1).replaceAll('.0', '');
+    final String timeRange = '${_formatTime(booking.startTime)} - ${_formatTime(booking.endTime)} ($formattedDuration hrs)';
 
     return Container(
       padding: EdgeInsets.all(16.r),
@@ -64,38 +70,41 @@ class BookingCard extends StatelessWidget {
           SizedBox(height: 8.h),
           
           // Room Info
-          _buildInfoRow(Icons.meeting_room_outlined, '${booking.roomName} (${booking.startTime} - ${booking.endTime})', AppColors.neonPurple),
+          _buildInfoRow(Icons.meeting_room_outlined, '${booking.roomName} ($timeRange)', AppColors.neonPurple),
 
-          // Extras Info (New Section)
+          // Extras Info
           if (booking.extras.isNotEmpty) ...[
             SizedBox(height: 8.h),
             Container(
               padding: EdgeInsets.all(8.r),
+              constraints: BoxConstraints(maxHeight: 80.h),
               decoration: BoxDecoration(
                 color: Colors.black.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(8.r),
                 border: Border.all(color: AppColors.neonBlue.withOpacity(0.2)),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.fastfood_outlined, size: 12, color: AppColors.neonBlue),
-                      SizedBox(width: 4.w),
-                      AppText.body("Order Details:", fontSize: 10.sp, fontWeight: FontWeight.bold, color: AppColors.neonBlue),
-                    ],
-                  ),
-                  SizedBox(height: 4.h),
-                  ...booking.extras.map((item) => Padding(
-                    padding: EdgeInsets.only(bottom: 2.h),
-                    child: AppText.body(
-                      "• ${item['quantity']}x ${item['name_en'] ?? item['name']}",
-                      fontSize: 11.sp,
-                      color: AppColors.textPrimary,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.fastfood_outlined, size: 12, color: AppColors.neonBlue),
+                        SizedBox(width: 4.w),
+                        AppText.body("Order Details:", fontSize: 10.sp, fontWeight: FontWeight.bold, color: AppColors.neonBlue),
+                      ],
                     ),
-                  )).toList(),
-                ],
+                    SizedBox(height: 4.h),
+                    ...booking.extras.map((item) => Padding(
+                      padding: EdgeInsets.only(bottom: 2.h),
+                      child: AppText.body(
+                        "• ${item['quantity']}x ${item['name_en'] ?? item['name']}",
+                        fontSize: 11.sp,
+                        color: AppColors.textPrimary,
+                      ),
+                    )).toList(),
+                  ],
+                ),
               ),
             ),
           ],
@@ -112,7 +121,7 @@ class BookingCard extends StatelessWidget {
                   AppText.body(AppStrings.totalPrice, fontSize: 10.sp),
                   Row(
                     children: [
-                      AppText.subHeading('${booking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}', color: AppColors.neonBlue, fontSize: 15.sp, fontWeight: FontWeight.bold),
+                      AppText.subHeading('${booking.totalPrice.toStringAsFixed(2)} ${AppStrings.egp}', color: AppColors.neonBlue, fontSize: 15.sp, fontWeight: FontWeight.bold),
                       if (booking.voucherDiscount != null && booking.voucherDiscount! > 0) ...[
                         SizedBox(width: 8.w),
                         Container(
@@ -145,7 +154,7 @@ class BookingCard extends StatelessWidget {
             ],
           ),
           
-          if (isPending || (!isPaid && onConfirmPayment != null)) ...[
+          if (isPending || (!isPaid && onConfirmPayment != null) || canAddItems) ...[
             SizedBox(height: 12.h),
             if (isPending)
               Row(
@@ -155,11 +164,44 @@ class BookingCard extends StatelessWidget {
                   Expanded(child: AppButton(text: AppStrings.reject, variant: AppButtonVariant.outlined, onPressed: onReject ?? () {}, height: 32.h)),
                 ],
               )
-            else
-              AppButton(text: AppStrings.confirmCash, onPressed: onConfirmPayment!, width: double.infinity, height: 34.h, icon: Icons.payments_outlined),
+            else ...[
+              if (canAddItems)
+                Padding(
+                  padding: EdgeInsets.only(bottom: 8.h),
+                  child: AppButton(
+                    text: "Add Items", 
+                    onPressed: () => _showAddExtrasDialog(context), 
+                    width: double.infinity, 
+                    height: 34.h, 
+                    variant: AppButtonVariant.outlined,
+                    icon: Icons.add_shopping_cart,
+                  ),
+                ),
+              if (!isPaid && onConfirmPayment != null)
+                AppButton(text: AppStrings.confirmCash, onPressed: onConfirmPayment!, width: double.infinity, height: 34.h, icon: Icons.payments_outlined),
+            ],
           ],
         ],
       ),
+    );
+  }
+
+  String _formatTime(String timeStr) {
+    if (timeStr.isEmpty) return '';
+    try {
+      final parts = timeStr.split(':');
+      final time = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+      final now = DateTime.now();
+      final dt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+      return DateFormat('hh:mm a').format(dt);
+    } catch (e) {
+      return timeStr;
+    }
+  }
+
+  void _showAddExtrasDialog(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Add Items Dialog - Coming Soon")),
     );
   }
 
