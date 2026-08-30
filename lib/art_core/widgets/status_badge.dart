@@ -30,6 +30,8 @@ class StatusBadge extends StatelessWidget {
       ),
       child: Text(
         text.toUpperCase(),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: color,
           fontSize: 10.sp,

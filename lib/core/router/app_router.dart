@@ -26,6 +26,7 @@ import 'package:play_spot_dashboard/features/shifts/presentation/shift_history/s
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_screen.dart' as staff;
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/pages/booking_history_page.dart' as reports;
+import 'package:play_spot_dashboard/features/splash/presentation/splash_screen.dart';
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_shell.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -138,12 +139,7 @@ class AppRouter {
               child: BlocBuilder<LoginCubit, LoginState>(
                 builder: (context, authState) {
                   if (authState.status == LoginStatus.checking) {
-                    return const Scaffold(
-                      backgroundColor: AppColors.scaffoldBackground,
-                      body: Center(
-                        child: CircularProgressIndicator(color: AppColors.neonBlue),
-                      ),
-                    );
+                    return const SplashScreen();
                   }
                   return child;
                 },

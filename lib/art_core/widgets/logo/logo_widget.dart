@@ -1,6 +1,8 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../assets_manager.dart';
 import '../app_text.dart';
 import '../../theme/app_colors.dart';
@@ -76,34 +78,37 @@ class _LogoWidgetState extends State<LogoWidget>
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AppText(
-          'PlaySp',
-          fontSize: widget.fontSize ?? 23.sp,
-          color: Colors.white,
-          isOrbitron: true,
-        ),
-        widget.animate
-            ? AnimatedBuilder(
-          animation: _wobble,
-          builder: (context, child) {
-            return Transform.rotate(
-              angle: _wobble.value,
-              child: child,
-            );
-          },
-          child: _icon(),
-        )
-            : _icon(),
-        AppText(
-          't',
-          fontSize: widget.fontSize ?? 23.sp,
-          color: Colors.white,
-          isOrbitron: true,
-        ),
-      ],
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppText(
+            'PlaySp',
+            fontSize: widget.fontSize ?? 23.sp,
+            color: widget.color ?? Colors.white,
+            fontFamily: GoogleFonts.orbitron().fontFamily,
+          ),
+          widget.animate
+              ? AnimatedBuilder(
+                  animation: _wobble,
+                  builder: (context, child) {
+                    return Transform.rotate(
+                      angle: _wobble.value,
+                      child: child,
+                    );
+                  },
+                  child: _icon(),
+                )
+              : _icon(),
+          AppText(
+            't',
+            fontSize: widget.fontSize ?? 23.sp,
+            color: widget.color ?? Colors.white,
+            fontFamily: GoogleFonts.orbitron().fontFamily,
+          ),
+        ],
+      ),
     );
   }
 

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import '../cubit/permissions_cubit.dart';
 import '../cubit/permissions_state.dart';
 import '../../domain/entities/permission_item_entity.dart';
@@ -79,10 +80,10 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+        crossAxisCount: Responsive.isMobile(context) ? 1 : 2,
         crossAxisSpacing: 24.w,
         mainAxisSpacing: 24.h,
-        mainAxisExtent: 400.h,
+        mainAxisExtent: Responsive.isMobile(context) ? 450.h : 400.h,
       ),
       itemCount: sortedCategoryKeys.length,
       itemBuilder: (context, index) {
@@ -94,36 +95,36 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
   }
 
   Widget _buildCategoryCard(String category, List<PermissionItemEntity> permissions, String role) {
-    return Container(
-      padding: EdgeInsets.all(24.r),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+    return Material(
+      color: AppColors.cardBackground,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.borderDefault),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
+        side: const BorderSide(color: AppColors.borderDefault),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              _getCategoryIcon(category),
-              SizedBox(width: 12.w),
-              AppText.heading(category, fontSize: 18.sp, color: AppColors.neonPurple),
-            ],
-          ),
-          SizedBox(height: 16.h),
-          const Divider(color: AppColors.divider),
-          Expanded(
-            child: ListView.separated(
-              itemCount: permissions.length,
-              separatorBuilder: (context, index) => const Divider(color: AppColors.divider, height: 1),
-              itemBuilder: (context, index) => _buildPermissionTile(permissions[index], role),
+      child: Container(
+        padding: EdgeInsets.all(24.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _getCategoryIcon(category),
+                SizedBox(width: 12.w),
+                AppText.heading(category.tr(), fontSize: 18.sp, color: AppColors.neonPurple),
+              ],
             ),
-          ),
-        ],
+            SizedBox(height: 16.h),
+            const Divider(color: AppColors.divider),
+            Expanded(
+              child: ListView.separated(
+                itemCount: permissions.length,
+                separatorBuilder: (context, index) => const Divider(color: AppColors.divider, height: 1),
+                itemBuilder: (context, index) => _buildPermissionTile(permissions[index], role),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -149,8 +150,8 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
       onChanged: (val) {
         context.read<PermissionsCubit>().togglePermission(role, p.key, val);
       },
-      title: AppText.body(isArabic ? p.nameAr : p.nameEn, fontWeight: FontWeight.bold),
-      subtitle: AppText.body(isArabic ? p.descriptionAr : p.descriptionEn, color: AppColors.textSecondary, fontSize: 12.sp),
+      title: AppText.body((isArabic ? p.nameAr : p.nameEn).tr(), fontWeight: FontWeight.bold),
+      subtitle: AppText.body((isArabic ? p.descriptionAr : p.descriptionEn).tr(), color: AppColors.textSecondary, fontSize: 12.sp),
       activeColor: AppColors.neonBlue,
       contentPadding: EdgeInsets.zero,
     );

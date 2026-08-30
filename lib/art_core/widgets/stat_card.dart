@@ -27,7 +27,7 @@ class StatCard extends StatelessWidget {
     final String trendText = '${isPositive ? '+' : ''}${trendValue.toStringAsFixed(1)}%';
 
     return Container(
-      padding: EdgeInsets.all(24.r),
+      padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16.r),
@@ -39,72 +39,86 @@ class StatCard extends StatelessWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                SizedBox(height: 8.h),
-                Text(
-                  value,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 28.sp,
-                    fontWeight: FontWeight.bold,
+                SizedBox(height: 4.h),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 28.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                SizedBox(height: 8.h),
+                SizedBox(height: 4.h),
                 if (subtitle != null) ...[
                   Text(
                     subtitle!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
                   ),
                 ] else ...[
-                  Row(
-                    children: [
-                      Icon(
-                        isPositive ? Icons.trending_up : Icons.trending_down,
-                        color: isPositive ? AppColors.success : AppColors.danger,
-                        size: 16.r,
-                      ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        trendText,
-                        style: TextStyle(
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      children: [
+                        Icon(
+                          isPositive ? Icons.trending_up : Icons.trending_down,
                           color: isPositive ? AppColors.success : AppColors.danger,
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
+                          size: 16.r,
                         ),
-                      ),
-                      SizedBox(width: 4.w),
-                      Flexible(
-                        child: Text(
+                        SizedBox(width: 4.w),
+                        Text(
+                          trendText,
+                          style: TextStyle(
+                            color: isPositive ? AppColors.success : AppColors.danger,
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
                           AppStrings.vsLastMonth,
                           style: TextStyle(
                             color: AppColors.textMuted,
                             fontSize: 12.sp,
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ],
             ),
           ),
-          Container(
-            padding: EdgeInsets.all(12.r),
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: iconColor.withOpacity(0.2)),
+          SizedBox(width: 12.w),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Container(
+              padding: EdgeInsets.all(12.r),
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: iconColor.withOpacity(0.2)),
+              ),
+              child: Icon(icon, color: iconColor, size: 24.r),
             ),
-            child: Icon(icon, color: iconColor, size: 24.r),
           ),
         ],
       ),

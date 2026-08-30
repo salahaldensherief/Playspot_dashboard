@@ -11,7 +11,6 @@ class AppText extends StatelessWidget {
   final TextOverflow? overflow;
   final int? maxLines;
   final String? fontFamily;
-  final bool isOrbitron;
 
   const AppText(
     this.text, {
@@ -23,7 +22,6 @@ class AppText extends StatelessWidget {
     this.overflow,
     this.maxLines,
     this.fontFamily,
-    this.isOrbitron = false,
   });
 
   const AppText.heading(
@@ -35,8 +33,7 @@ class AppText extends StatelessWidget {
     this.textAlign,
     this.overflow,
     this.maxLines,
-    this.isOrbitron = true,
-  }) : fontFamily = 'Orbitron';
+  }) : fontFamily = null;
 
   const AppText.subHeading(
     this.text, {
@@ -47,7 +44,6 @@ class AppText extends StatelessWidget {
     this.textAlign,
     this.overflow,
     this.maxLines,
-    this.isOrbitron = false,
   }) : fontFamily = null;
 
   const AppText.body(
@@ -59,7 +55,6 @@ class AppText extends StatelessWidget {
     this.textAlign,
     this.overflow,
     this.maxLines,
-    this.isOrbitron = false,
   }) : fontFamily = null;
 
   @override
@@ -73,7 +68,7 @@ class AppText extends StatelessWidget {
         fontSize: fontSize ?? 14.sp,
         fontWeight: fontWeight,
         color: color ?? AppColors.textPrimary,
-        fontFamily: isOrbitron ? 'Orbitron' : (fontFamily),
+        fontFamily: fontFamily,
       ),
     );
   }

@@ -27,6 +27,7 @@ dependencies:
   flutter_screenutil: ^5.9.3
   cached_network_image: ^3.3.1
   flutter_svg: ^2.0.10
+  google_fonts: ^6.2.1
 
   # Audio
   audioplayers: ^5.2.1

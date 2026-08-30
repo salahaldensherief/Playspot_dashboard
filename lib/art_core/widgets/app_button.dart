@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_colors.dart';
 
 enum AppButtonVariant { primary, outlined, danger }
@@ -28,9 +29,8 @@ class AppButton extends StatelessWidget {
     final isPrimary = variant == AppButtonVariant.primary;
     final isDanger = variant == AppButtonVariant.danger;
 
-    return SizedBox(
-      width: width,
-      height: height,
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4.h),
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
@@ -41,7 +41,7 @@ class AppButton extends StatelessWidget {
                   : Colors.transparent,
           foregroundColor: isPrimary || isDanger ? Colors.black : AppColors.textPrimary,
           padding: height != null ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          minimumSize: Size(width ?? 0, height ?? 0),
+          minimumSize: Size(width ?? 0, height ?? 48.h),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
             side: variant == AppButtonVariant.outlined
@@ -51,22 +51,26 @@ class AppButton extends StatelessWidget {
           elevation: 0,
         ),
         child: isLoading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            ? SizedBox(
+                height: 20.r,
+                width: 20.r,
+                child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, size: 18),
+                    Icon(icon, size: 18.r),
                     const SizedBox(width: 8),
                   ],
-                  Text(
-                    text,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  Flexible(
+                    child: Text(
+                      text,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),

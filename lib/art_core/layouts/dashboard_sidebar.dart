@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -75,37 +76,40 @@ class DashboardSidebar extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(8.r),
-            decoration: BoxDecoration(
-              color: AppColors.neonPurple.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8.r),
+      child: Directionality(
+        textDirection: ui.TextDirection.ltr,
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(8.r),
+              decoration: BoxDecoration(
+                color: AppColors.neonPurple.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Icon(Icons.sports_esports, color: AppColors.neonBlue, size: 24.r),
             ),
-            child: Icon(Icons.sports_esports, color: AppColors.neonBlue, size: 24.r),
-          ),
-          SizedBox(width: 12.w),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'PlaySpot',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                  fontFamily: 'Orbitron',
+            SizedBox(width: 12.w),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'PlaySpot',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                    fontFamily: 'Orbitron',
+                  ),
                 ),
-              ),
-              Text(
-                roleLabel,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
-              ),
-            ],
-          ),
-        ],
+                Text(
+                  roleLabel,
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -197,7 +201,6 @@ class DashboardSidebar extends StatelessWidget {
         onTap: () => context.go('/lounge-admin/shifts'),
       ),
 
-      // Financial Reports (Owner/SuperAdmin)
       if (user.canViewFinancials)
         _SidebarItem(
           icon: Icons.assessment_outlined,
