@@ -62,7 +62,7 @@ class ExtraCard extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 12.h),
-                AppText.heading(extra.name, fontSize: 16.sp, isOrbitron: false),
+                AppText.heading(extra.name, fontSize: 16.sp),
                 SizedBox(height: 16.h),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

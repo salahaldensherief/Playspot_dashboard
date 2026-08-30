@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'art_core/theme/app_colors.dart';
 import 'core/router/app_router.dart';
 import 'features/auth/presentation/login/login_cubit.dart';
@@ -44,7 +45,7 @@ class _MyAppState extends State<MyApp> {
               brightness: Brightness.dark,
             ),
             useMaterial3: true,
-            fontFamily: 'Orbitron',
+            textTheme: GoogleFonts.cairoTextTheme(Theme.of(context).textTheme),
           ),
           routerConfig: _appRouter.router,
         );

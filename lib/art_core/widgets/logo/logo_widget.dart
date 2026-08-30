@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../assets_manager.dart';
 import '../app_text.dart';
 import '../../theme/app_colors.dart';
@@ -83,7 +84,7 @@ class _LogoWidgetState extends State<LogoWidget>
           'PlaySp',
           fontSize: widget.fontSize ?? 23.sp,
           color: Colors.white,
-          isOrbitron: true,
+          fontFamily: GoogleFonts.orbitron().fontFamily,
         ),
         widget.animate
             ? AnimatedBuilder(
@@ -101,7 +102,7 @@ class _LogoWidgetState extends State<LogoWidget>
           't',
           fontSize: widget.fontSize ?? 23.sp,
           color: Colors.white,
-          isOrbitron: true,
+          fontFamily: GoogleFonts.orbitron().fontFamily,
         ),
       ],
     );
