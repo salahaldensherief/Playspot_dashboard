@@ -51,7 +51,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     return DashboardLayout(
       title: AppStrings.bookings,
       activeRoute: 'Bookings',
-      isScrollable: true, // Enable global scrolling
+      isScrollable: true,
       child: MultiBlocListener(
         listeners: [
           BlocListener<BookingCubit, BookingState>(
