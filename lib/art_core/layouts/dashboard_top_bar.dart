@@ -15,12 +15,14 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
   final Widget? leading;
+  final bool showMenuButton;
 
   const DashboardTopBar({
     super.key,
     required this.title,
     this.actions,
     this.leading,
+    this.showMenuButton = false,
   });
 
   static double get _defaultHeight => 64.h;
@@ -38,6 +40,13 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       child: Row(
         children: [
+          if (showMenuButton) ...[
+            IconButton(
+              icon: const Icon(Icons.menu, color: AppColors.textPrimary),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
+            SizedBox(width: 8.w),
+          ],
           if (leading != null) ...[
             leading!,
             SizedBox(width: 16.w),

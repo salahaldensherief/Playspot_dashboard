@@ -22,7 +22,6 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
 
   @override
   Future<void> updateRolePermission(String role, String permissionKey, bool isEnabled) async {
-    // ignore: avoid_print
     print('DEBUG: Supabase RPC update_role_permission: role=${role.toLowerCase().trim()}, key=$permissionKey, enabled=$isEnabled');
     await _supabase.rpc('update_role_permission', params: {
       'p_role': role.toLowerCase().trim(),

@@ -5,6 +5,7 @@ import 'dashboard_sidebar.dart';
 import 'dashboard_top_bar.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/login/login_cubit.dart';
 import '../../features/auth/presentation/login/login_state.dart';
@@ -147,13 +148,20 @@ class DashboardShell extends StatelessWidget {
               },
               child: Scaffold(
                 backgroundColor: AppColors.scaffoldBackground,
+                drawer: Responsive.isDesktop(context) 
+                    ? null 
+                    : Drawer(child: DashboardSidebar(activeRoute: activeRoute)),
                 body: Row(
                   children: [
-                    DashboardSidebar(activeRoute: activeRoute),
+                    if (Responsive.isDesktop(context))
+                      DashboardSidebar(activeRoute: activeRoute),
                     Expanded(
                       child: Column(
                         children: [
-                          DashboardTopBar(title: title),
+                          DashboardTopBar(
+                            title: title,
+                            showMenuButton: !Responsive.isDesktop(context),
+                          ),
                           if (!isSuperAdmin) const ShiftHeaderBanner(),
                           Expanded(
                             child: child,

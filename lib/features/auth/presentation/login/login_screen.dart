@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_gradient_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/logo/logo_widget.dart';
+import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import 'login_cubit.dart';
 import 'login_state.dart';
@@ -120,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildLoginCard() {
     return Container(
-      width: 450.w,
+      width: Responsive.isMobile(context) ? double.infinity : 450.w,
       padding: EdgeInsets.all(32.r),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,

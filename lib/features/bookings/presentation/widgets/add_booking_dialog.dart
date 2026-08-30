@@ -43,8 +43,11 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
       backgroundColor: AppColors.scaffoldBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 500.r),
-        child: Container(
+        constraints: BoxConstraints(
+          maxWidth: 500.r,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+        ),
+        child: SingleChildScrollView(
           padding: EdgeInsets.all(24.r),
           child: Form(
             key: _formKey,
@@ -292,7 +295,14 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
               children: [
                 Icon(icon, size: 18, color: AppColors.neonBlue),
                 SizedBox(width: 8.w),
-                AppText.body(value, fontSize: 13.sp),
+                Expanded(
+                  child: AppText.body(
+                    value, 
+                    fontSize: 13.sp,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
               ],
             ),
           ),
