@@ -14,16 +14,35 @@ class PermissionsCubit extends Cubit<PermissionsState> {
   }) : super(PermissionsState.initial());
 
   Future<void> fetchPermissions(String role) async {
+    // ignore: avoid_print
+    print('DEBUG: Fetching permissions for role: $role');
     emit(state.copyWith(status: PermissionsStatus.loading, selectedRole: role));
     final result = await getRolePermissionsUseCase(role);
     
     result.fold(
-      (failure) => emit(state.copyWith(status: PermissionsStatus.failure, errorMessage: failure.message)),
-      (permissions) => emit(state.copyWith(status: PermissionsStatus.success, permissions: permissions)),
+      (failure) {
+        // ignore: avoid_print
+        print('DEBUG: Fetch failure: ${failure.message}');
+        emit(state.copyWith(status: PermissionsStatus.failure, errorMessage: failure.message));
+      },
+      (permissions) {
+        // ignore: avoid_print
+        print('DEBUG: Fetched ${permissions.length} permissions');
+        emit(state.copyWith(status: PermissionsStatus.success, permissions: permissions));
+      },
     );
   }
 
   Future<void> togglePermission(String role, String key, bool value) async {
+    // ignore: avoid_print
+    print('DEBUG: Toggling permission - role: $role, key: $key, value: $value');
+    
+    if (key.isEmpty) {
+      // ignore: avoid_print
+      print('DEBUG: ERROR - Permission key is empty!');
+      return;
+    }
+
     // Optimistic update
     final oldPermissions = List<PermissionItemEntity>.from(state.permissions);
     final updatedPermissions = state.permissions.map((p) {
@@ -37,10 +56,15 @@ class PermissionsCubit extends Cubit<PermissionsState> {
     
     result.fold(
       (failure) {
+        // ignore: avoid_print
+        print('DEBUG: Update failure: ${failure.message}');
         // Rollback on failure
         emit(state.copyWith(permissions: oldPermissions, status: PermissionsStatus.failure, errorMessage: failure.message));
       },
-      (_) => null, // Success, already updated optimistically
+      (_) {
+        // ignore: avoid_print
+        print('DEBUG: Update success for key: $key');
+      },
     );
   }
 

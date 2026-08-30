@@ -5,6 +5,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_gradient_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/logo/logo_widget.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import 'login_cubit.dart';
 import 'login_state.dart';
@@ -98,36 +99,14 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildLogo() {
     return Column(
       children: [
-        Container(
-          padding: EdgeInsets.all(16.r),
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(16.r),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.neonBlue.withOpacity(0.2),
-                blurRadius: 20.r,
-                spreadRadius: 2.r,
-              ),
-            ],
-          ),
-          child: Icon(
-            Icons.sports_esports_outlined,
-            color: AppColors.textPrimary,
-            size: 40.r,
-          ),
+        LogoWidget(
+          fontSize: 48.sp,
+          width: 50.w,
+          height: 50.h,
+          color: AppColors.neonBlue,
+          animate: true,
         ),
         SizedBox(height: 16.h),
-        Text(
-          'PlaySpot',
-          style: TextStyle(
-            fontSize: 32.sp,
-            fontWeight: FontWeight.bold,
-            color: AppColors.neonBlue,
-            letterSpacing: 1.5,
-            fontFamily: 'Orbitron',
-          ),
-        ),
         Text(
           'Gaming Lounge Management',
           style: TextStyle(
@@ -192,25 +171,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             SizedBox(height: 32.h),
             _buildLoginButton(),
-            SizedBox(height: 32.h),
-            const Divider(color: AppColors.divider),
-            SizedBox(height: 24.h),
-            const Text(
-              'Demo Credentials:',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 12.h),
-            _buildDemoRow('Super Admin:', 'admin@playspot.app', AppColors.neonBlue),
-            SizedBox(height: 8.h),
-            _buildDemoRow('Lounge Admin:', 'lounge.owner@playspot.app', AppColors.neonPurple),
-            SizedBox(height: 8.h),
-            _buildDemoRow('Password (SA):', 'Admin@12345', AppColors.textSecondary),
-            SizedBox(height: 8.h),
-            _buildDemoRow('Password (LA):', 'LoungeOwner@123', AppColors.textSecondary),
           ],
         ),
       ),

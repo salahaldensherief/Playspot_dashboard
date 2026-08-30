@@ -83,7 +83,7 @@ class _LogoWidgetState extends State<LogoWidget>
         AppText(
           'PlaySp',
           fontSize: widget.fontSize ?? 23.sp,
-          color: Colors.white,
+          color: widget.color ?? Colors.white,
           fontFamily: GoogleFonts.orbitron().fontFamily,
         ),
         widget.animate
@@ -101,7 +101,7 @@ class _LogoWidgetState extends State<LogoWidget>
         AppText(
           't',
           fontSize: widget.fontSize ?? 23.sp,
-          color: Colors.white,
+          color: widget.color ?? Colors.white,
           fontFamily: GoogleFonts.orbitron().fontFamily,
         ),
       ],
