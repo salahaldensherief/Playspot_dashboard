@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -76,7 +77,7 @@ class DashboardSidebar extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Directionality(
-        textDirection: TextDirection.ltr,
+        textDirection: ui.TextDirection.ltr,
         child: Row(
           children: [
             Container(
@@ -200,7 +201,6 @@ class DashboardSidebar extends StatelessWidget {
         onTap: () => context.go('/lounge-admin/shifts'),
       ),
 
-      // Financial Reports (Owner/SuperAdmin)
       if (user.canViewFinancials)
         _SidebarItem(
           icon: Icons.assessment_outlined,
