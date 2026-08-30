@@ -104,9 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
           fontSize: 48.sp,
           width: 50.w,
           height: 50.h,
-          color: AppColors.neonBlue,
-          animate: false,
-        ),
+          color: AppColors.neonBlue,),
         SizedBox(height: 16.h),
         Text(
           'Gaming Lounge Management',

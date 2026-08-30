@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
+import '../../../permissions/presentation/cubit/permissions_cubit.dart';
 import '../../domain/entities/extra_entity.dart';
 import '../cubit/extras_cubit.dart';
 import 'extra_dialog.dart';
@@ -101,12 +102,21 @@ class ExtraCard extends StatelessWidget {
   }
 
   void _showEditDialog(BuildContext context, String loungeId) {
+    final loginCubit = context.read<LoginCubit>();
+    final permissionsCubit = context.read<PermissionsCubit>();
+
     showDialog(
       context: context,
-      builder: (_) => ExtraDialog(
-        loungeId: loungeId, 
-        extra: extra,
-        onSave: (updatedExtra) => context.read<ExtrasCubit>().updateExtra(updatedExtra),
+      builder: (_) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: loginCubit),
+          BlocProvider.value(value: permissionsCubit),
+        ],
+        child: ExtraDialog(
+          loungeId: loungeId, 
+          extra: extra,
+          onSave: (updatedExtra) => context.read<ExtrasCubit>().updateExtra(updatedExtra),
+        ),
       ),
     );
   }

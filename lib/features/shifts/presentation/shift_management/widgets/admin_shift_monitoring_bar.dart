@@ -105,6 +105,11 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
   Widget _buildMonitoringBanner(BuildContext context, LiveShiftOverviewEntity overview) {
     final startTimeStr = DateFormat('hh:mm a').format(overview.startTime!);
     final elapsed = _getElapsedTime(overview.startTime!);
+    final bool isMobile = MediaQuery.sizeOf(context).width < 850;
+
+    if (isMobile) {
+      return _buildMobileMonitoringBanner(context, overview, startTimeStr, elapsed);
+    }
 
     return Container(
       width: double.infinity,
@@ -170,6 +175,55 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
             variant: AppButtonVariant.danger,
             height: 36.h,
             onPressed: () => _confirmForceClose(context, overview),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileMonitoringBanner(BuildContext context, LiveShiftOverviewEntity overview, String startTime, String elapsed) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        border: Border(bottom: BorderSide(color: AppColors.borderDefault)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 20.r,
+                backgroundImage: overview.cashierAvatar != null ? NetworkImage(overview.cashierAvatar!) : null,
+                child: overview.cashierAvatar == null ? Icon(Icons.person, size: 20.r) : null,
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppText.body(overview.cashierName ?? 'Staff', fontWeight: FontWeight.bold, fontSize: 14.sp),
+                    AppText.body("Since $startTime ($elapsed)", color: AppColors.textSecondary, fontSize: 11.sp),
+                  ],
+                ),
+              ),
+              AppButton(
+                text: "Close",
+                variant: AppButtonVariant.danger,
+                height: 30.h,
+                onPressed: () => _confirmForceClose(context, overview),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildStatItem("Cash", "${overview.cashInDrawer?.toStringAsFixed(0)}"),
+              _buildStatItem("Digital", "${overview.digitalPayments?.toStringAsFixed(0)}"),
+              _buildStatItem("Active", overview.activeSessions.toString(), icon: Icons.videogame_asset_outlined),
+            ],
           ),
         ],
       ),

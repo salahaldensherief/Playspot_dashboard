@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/responsive/responsive.dart';
 import '../../core/router/router_keys.dart';
 import '../app_strings.dart';
 import '../theme/app_colors.dart';
@@ -24,8 +25,8 @@ class DashboardSidebar extends StatelessWidget {
         final isSuperAdmin = user?.isSuperAdmin ?? false;
 
         return Container(
-          width: 260.w,
-          decoration: const BoxDecoration(
+          width: Responsive.isDesktop(context) ? 260.w : double.infinity,
+          decoration: BoxDecoration(
             color: AppColors.sidebarBackground,
             border: Border(right: BorderSide(color: AppColors.borderDefault)),
           ),

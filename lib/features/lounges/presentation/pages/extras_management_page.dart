@@ -7,6 +7,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
+import '../../../permissions/presentation/cubit/permissions_cubit.dart';
 import '../cubit/extras_cubit.dart';
 import '../widgets/extra_dialog.dart';
 import '../widgets/extras_grid.dart';
@@ -52,11 +53,20 @@ class ExtrasManagementPage extends StatelessWidget {
             text: AppStrings.addExtraItem,
             icon: Icons.add,
             onPressed: () {
+              final loginCubit = context.read<LoginCubit>();
+              final permissionsCubit = context.read<PermissionsCubit>();
+
               showDialog(
                 context: context,
-                builder: (diagContext) => ExtraDialog(
-                  loungeId: loungeId,
-                  onSave: (newExtra) => cubit.addExtra(newExtra),
+                builder: (diagContext) => MultiBlocProvider(
+                  providers: [
+                    BlocProvider.value(value: loginCubit),
+                    BlocProvider.value(value: permissionsCubit),
+                  ],
+                  child: ExtraDialog(
+                    loungeId: loungeId,
+                    onSave: (newExtra) => cubit.addExtra(newExtra),
+                  ),
                 ),
               );
             },

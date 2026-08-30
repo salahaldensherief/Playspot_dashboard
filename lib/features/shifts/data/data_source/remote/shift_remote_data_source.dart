@@ -38,7 +38,7 @@ class ShiftRemoteSourceImpl implements ShiftRemoteSource {
       }
 
       debugPrint('🔵 [ShiftRemoteSource] Fetching active shift for user: $userId');
-      
+
       final response = await _supabase
           .from('shifts')
           .select('*, profiles(full_name)')
@@ -46,7 +46,7 @@ class ShiftRemoteSourceImpl implements ShiftRemoteSource {
           .eq('status', 'open')
           .order('start_time', ascending: false)
           .limit(1);
-      
+
       debugPrint('🔵 [ShiftRemoteSource] getActiveShift response list: $response');
       
       if (response == null || (response as List).isEmpty) return null;
@@ -81,7 +81,7 @@ class ShiftRemoteSourceImpl implements ShiftRemoteSource {
         'status': 'open',
         'start_time': DateTime.now().toIso8601String(),
       });
-      
+
       debugPrint('🟢 [ShiftRemoteSource] Shift insert successful');
     } catch (e, stack) {
       debugPrint('🔴 [ShiftRemoteSource] Exception in openShift: $e');
@@ -94,15 +94,15 @@ class ShiftRemoteSourceImpl implements ShiftRemoteSource {
   Future<ShiftModel> closeShift(String shiftId, double actualCash, String? notes) async {
     try {
       debugPrint('🔵 [ShiftRemoteSource] Attempting to close shift: $shiftId with cash: $actualCash');
-      
+
       final response = await _supabase.rpc('close_shift_and_calculate_z_report', params: {
         'p_shift_id': shiftId,
         'p_actual_cash': actualCash,
         'p_notes': notes,
       });
-      
+
       debugPrint('🔵 [ShiftRemoteSource] closeShift response: $response');
-      
+
       if (response == null) {
         throw Exception('Server returned no data after closing shift.');
       }

@@ -112,42 +112,45 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
         final user = state.user;
         if (user == null) return _buildDefaultAvatar();
 
+        final bool isMobile = MediaQuery.sizeOf(context).width < 600;
+
         return Container(
-          constraints: BoxConstraints(maxWidth: 200.w),
+          constraints: BoxConstraints(maxWidth: isMobile ? 50.w : 200.w),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Flexible(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      user.name,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.bold,
+              if (!isMobile)
+                Flexible(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        user.name,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    Text(
-                      user.isSuperAdmin 
-                        ? AppStrings.superAdmin 
-                        : (user.isLoungeOwner 
-                            ? AppStrings.loungeOwnerLabel 
-                            : (user.isCashier ? AppStrings.cashierLabel : AppStrings.loungeManager)),
-                      style: TextStyle(
-                        color: AppColors.neonPurple,
-                        fontSize: 11.sp,
+                      Text(
+                        user.isSuperAdmin 
+                          ? AppStrings.superAdmin 
+                          : (user.isLoungeOwner 
+                              ? AppStrings.loungeOwnerLabel 
+                              : (user.isCashier ? AppStrings.cashierLabel : AppStrings.loungeManager)),
+                        style: TextStyle(
+                          color: AppColors.neonPurple,
+                          fontSize: 11.sp,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(width: 12.w),
+              if (!isMobile) SizedBox(width: 12.w),
               _buildAvatar(user.avatarUrl),
             ],
           ),
