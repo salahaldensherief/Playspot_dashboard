@@ -34,16 +34,18 @@ class BookingCard extends StatelessWidget {
     final String timeRange = '${_formatTime(booking.startTime)} - ${_formatTime(booking.endTime)} ($formattedDuration hrs)';
 
     return Container(
-      padding: EdgeInsets.all(16.r),
+      width: 280.w, // Slightly narrower for better grid fitting
+      padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.borderDefault, width: 1.5),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.borderDefault, width: 1),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2)),
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min, // Shrink to fit content
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -51,66 +53,53 @@ class BookingCard extends StatelessWidget {
             children: [
               _getStatusBadge(booking.status),
               AppText.body(
-                DateFormat('MMM dd, hh:mm a').format(booking.date),
-                fontSize: 11.sp,
+                _formatTime(booking.startTime),
+                fontSize: 10.sp,
                 color: AppColors.textSecondary,
               ),
             ],
           ),
-          SizedBox(height: 12.h),
+          SizedBox(height: 10.h),
           
-          AppText.subHeading(booking.userName ?? AppStrings.anonymous, fontSize: 16.sp, maxLines: 1),
+          AppText.subHeading(booking.userName ?? AppStrings.anonymous, fontSize: 14.sp, maxLines: 1),
           
           if (booking.userPhone != null && booking.userPhone!.isNotEmpty)
-            Padding(
-              padding: EdgeInsets.only(top: 2.h),
-              child: AppText.body(booking.userPhone!, fontSize: 12.sp, color: AppColors.neonBlue),
-            ),
+            AppText.body(booking.userPhone!, fontSize: 11.sp, color: AppColors.neonBlue),
 
-          SizedBox(height: 8.h),
+          SizedBox(height: 6.h),
           
           // Room Info
-          _buildInfoRow(Icons.meeting_room_outlined, '${booking.roomName} ($timeRange)', AppColors.neonPurple),
+          _buildInfoRow(Icons.meeting_room_outlined, '${booking.roomName} ($formattedDuration hrs)', AppColors.neonPurple),
 
-          // Extras Info
+          // Extras Info - Dynamic Height
           if (booking.extras.isNotEmpty) ...[
             SizedBox(height: 8.h),
             Container(
-              padding: EdgeInsets.all(8.r),
-              constraints: BoxConstraints(maxHeight: 80.h),
+              padding: EdgeInsets.all(6.r),
+              width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: AppColors.neonBlue.withOpacity(0.2)),
+                color: Colors.black.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(6.r),
               ),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.fastfood_outlined, size: 12, color: AppColors.neonBlue),
-                        SizedBox(width: 4.w),
-                        AppText.body("Order Details:", fontSize: 10.sp, fontWeight: FontWeight.bold, color: AppColors.neonBlue),
-                      ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ...booking.extras.map((item) => Padding(
+                    padding: EdgeInsets.only(bottom: 2.h),
+                    child: AppText.body(
+                      "• ${item['quantity']}x ${item['name_en'] ?? item['name']}",
+                      fontSize: 10.sp,
+                      color: AppColors.textPrimary,
                     ),
-                    SizedBox(height: 4.h),
-                    ...booking.extras.map((item) => Padding(
-                      padding: EdgeInsets.only(bottom: 2.h),
-                      child: AppText.body(
-                        "• ${item['quantity']}x ${item['name_en'] ?? item['name']}",
-                        fontSize: 11.sp,
-                        color: AppColors.textPrimary,
-                      ),
-                    )).toList(),
-                  ],
-                ),
+                  )).toList(),
+                ],
               ),
             ),
           ],
 
-          const Spacer(),
-          Divider(color: AppColors.borderDefault, height: 16.h),
+          SizedBox(height: 12.h),
+          const Divider(color: AppColors.borderDefault, height: 1),
+          SizedBox(height: 12.h),
           
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -118,36 +107,8 @@ class BookingCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppText.body(AppStrings.totalPrice, fontSize: 10.sp),
-                  Row(
-                    children: [
-                      AppText.subHeading('${booking.totalPrice.toStringAsFixed(2)} ${AppStrings.egp}', color: AppColors.neonBlue, fontSize: 15.sp, fontWeight: FontWeight.bold),
-                      if (booking.voucherDiscount != null && booking.voucherDiscount! > 0) ...[
-                        SizedBox(width: 8.w),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                          decoration: BoxDecoration(
-                            color: AppColors.success.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4.r),
-                            border: Border.all(color: AppColors.success.withOpacity(0.3)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.local_offer_outlined, size: 10.sp, color: AppColors.success),
-                              SizedBox(width: 4.w),
-                              AppText.body(
-                                "${AppStrings.discount} ${booking.voucherDiscount!.toStringAsFixed(0)}", 
-                                color: AppColors.success, 
-                                fontSize: 9.sp, 
-                                fontWeight: FontWeight.bold
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                  AppText.body(AppStrings.totalPrice, fontSize: 9.sp),
+                  AppText.subHeading('${booking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}', color: AppColors.neonBlue, fontSize: 14.sp, fontWeight: FontWeight.bold),
                 ],
               ),
               isPaid ? StatusBadge.success(AppStrings.paid) : StatusBadge.warning(AppStrings.unpaid),
@@ -155,30 +116,30 @@ class BookingCard extends StatelessWidget {
           ),
           
           if (isPending || (!isPaid && onConfirmPayment != null) || canAddItems) ...[
-            SizedBox(height: 12.h),
+            SizedBox(height: 10.h),
             if (isPending)
               Row(
                 children: [
-                  Expanded(child: AppButton(text: AppStrings.approve, onPressed: onApprove ?? () {}, height: 32.h)),
+                  Expanded(child: AppButton(text: AppStrings.approve, onPressed: onApprove ?? () {}, height: 30.h)),
                   SizedBox(width: 8.w),
-                  Expanded(child: AppButton(text: AppStrings.reject, variant: AppButtonVariant.outlined, onPressed: onReject ?? () {}, height: 32.h)),
+                  Expanded(child: AppButton(text: AppStrings.reject, variant: AppButtonVariant.outlined, onPressed: onReject ?? () {}, height: 30.h)),
                 ],
               )
             else ...[
               if (canAddItems)
                 Padding(
-                  padding: EdgeInsets.only(bottom: 8.h),
+                  padding: EdgeInsets.only(bottom: 6.h),
                   child: AppButton(
                     text: "Add Items", 
                     onPressed: () => _showAddExtrasDialog(context), 
                     width: double.infinity, 
-                    height: 34.h, 
+                    height: 32.h, 
                     variant: AppButtonVariant.outlined,
                     icon: Icons.add_shopping_cart,
                   ),
                 ),
               if (!isPaid && onConfirmPayment != null)
-                AppButton(text: AppStrings.confirmCash, onPressed: onConfirmPayment!, width: double.infinity, height: 34.h, icon: Icons.payments_outlined),
+                AppButton(text: AppStrings.confirmCash, onPressed: onConfirmPayment!, width: double.infinity, height: 32.h, icon: Icons.payments_outlined),
             ],
           ],
         ],

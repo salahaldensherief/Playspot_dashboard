@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import '../cubit/permissions_cubit.dart';
 import '../cubit/permissions_state.dart';
 import '../../domain/entities/permission_item_entity.dart';
@@ -79,10 +80,10 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+        crossAxisCount: Responsive.isMobile(context) ? 1 : 2,
         crossAxisSpacing: 24.w,
         mainAxisSpacing: 24.h,
-        mainAxisExtent: 400.h,
+        mainAxisExtent: Responsive.isMobile(context) ? 450.h : 400.h,
       ),
       itemCount: sortedCategoryKeys.length,
       itemBuilder: (context, index) {

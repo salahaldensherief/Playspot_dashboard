@@ -7,6 +7,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import '../../domain/entities/lounge.dart';
 import '../cubit/lounge_cubit.dart';
 import '../cubit/lounge_state.dart';
@@ -35,6 +36,15 @@ class LoungesDataTable extends StatelessWidget {
                 Text(AppStrings.noLoungesFound, style: const TextStyle(color: AppColors.textSecondary)),
               ],
             ),
+          );
+        }
+
+        if (Responsive.isMobile(context)) {
+          return Column(
+            children: lounges.map((lounge) => Padding(
+              padding: EdgeInsets.only(bottom: 16.h),
+              child: _buildLoungeCard(context, lounge),
+            )).toList(),
           );
         }
 
@@ -96,6 +106,70 @@ class LoungesDataTable extends StatelessWidget {
           )).toList(),
         );
       },
+    );
+  }
+
+  Widget _buildLoungeCard(BuildContext context, Lounge lounge) {
+    return Container(
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(lounge.name, style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                  Text('${lounge.availableRooms ?? 0} ${AppStrings.rooms}', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                ],
+              ),
+              lounge.status == 'pending' 
+                ? StatusBadge.warning(AppStrings.pending) 
+                : lounge.isOpen 
+                  ? StatusBadge.success(AppStrings.active) 
+                  : StatusBadge.danger(AppStrings.inactive),
+            ],
+          ),
+          const Divider(height: 24, color: AppColors.divider),
+          _buildInfoRow(Icons.person_outline, AppStrings.loungeOwnerAdmin, lounge.ownerName ?? AppStrings.notAssigned),
+          SizedBox(height: 8.h),
+          _buildInfoRow(Icons.location_on_outlined, AppStrings.location, lounge.city ?? lounge.location ?? 'N/A'),
+          SizedBox(height: 8.h),
+          _buildInfoRow(Icons.payments_outlined, AppStrings.pricePerHour, '\$${lounge.pricePerHour.toStringAsFixed(2)}'),
+          const Divider(height: 24, color: AppColors.divider),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                icon: Icon(Icons.edit_outlined, color: AppColors.neonBlue, size: 22.r),
+                onPressed: () => _showEditDialog(context, lounge),
+              ),
+              IconButton(
+                icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 22.r),
+                onPressed: () => _confirmDelete(context, lounge.id, lounge.name),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 16.r, color: AppColors.textSecondary),
+        SizedBox(width: 8.w),
+        Text('$label: ', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+        Text(value, style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp, fontWeight: FontWeight.w500)),
+      ],
     );
   }
 

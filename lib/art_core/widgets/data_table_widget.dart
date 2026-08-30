@@ -25,25 +25,31 @@ class DataTableWidget extends StatelessWidget {
         data: Theme.of(context).copyWith(
           dividerColor: AppColors.divider,
         ),
-        child: DataTable(
-          headingRowColor: MaterialStateProperty.all(AppColors.mutedBackground),
-          horizontalMargin: 24.w,
-          columnSpacing: 20.w,
-          headingRowHeight: 56.h,
-          dataRowHeight: 64.h,
-          columns: columns
-              .map((col) => DataColumn(
-                    label: Text(
-                      col,
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14.sp,
-                      ),
-                    ),
-                  ))
-              .toList(),
-          rows: rows,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minWidth: MediaQuery.sizeOf(context).width - 310.w),
+            child: DataTable(
+              headingRowColor: MaterialStateProperty.all(AppColors.mutedBackground),
+              horizontalMargin: 24.w,
+              columnSpacing: 20.w,
+              headingRowHeight: 56.h,
+              dataRowHeight: 64.h,
+              columns: columns
+                  .map((col) => DataColumn(
+                        label: Text(
+                          col,
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                      ))
+                  .toList(),
+              rows: rows,
+            ),
+          ),
         ),
       ),
     );
