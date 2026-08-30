@@ -105,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
           width: 50.w,
           height: 50.h,
           color: AppColors.neonBlue,
-          animate: true,
+          animate: false,
         ),
         SizedBox(height: 16.h),
         Text(

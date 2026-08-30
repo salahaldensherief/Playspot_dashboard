@@ -30,7 +30,7 @@ class DashboardStatsGrid extends StatelessWidget {
                 : 5,
         crossAxisSpacing: 24.w,
         mainAxisSpacing: 24.h,
-        mainAxisExtent: 140.h,
+        mainAxisExtent: 160.h,
       ),
       children: [
         if (canViewRevenue)
