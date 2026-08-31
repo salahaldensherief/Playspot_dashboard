@@ -77,7 +77,7 @@ class BookingsDataTable extends StatelessWidget {
 
     // إذا تم قبول الحجز (Active)، نعرض زر تأكيد الدفع إذا لم يتم الدفع بعد
     if (booking.status == BookingStatus.upcoming) {
-      return booking.paymentStatus == 'completed'
+      return booking.paymentStatus == PaymentStatus.paid
         ? const Icon(Icons.check_circle, color: AppColors.success)
         : AppButton(
             text: AppStrings.confirmCash,
@@ -99,7 +99,14 @@ class BookingsDataTable extends StatelessWidget {
       context: context,
       builder: (_) => BookingDetailsDialog(
         booking: booking,
-        onConfirmPayment: () => context.read<BookingCubit>().confirmCashPayment(booking.id),
+        onConfirmPayment: (amount, percent, reason) {
+          context.read<BookingCubit>().confirmCashPayment(
+            booking.id,
+            discountAmount: amount,
+            discountPercentage: percent,
+            discountReason: reason,
+          );
+        },
         onCancel: () => context.read<BookingCubit>().rejectBooking(booking.id),
       ),
     );

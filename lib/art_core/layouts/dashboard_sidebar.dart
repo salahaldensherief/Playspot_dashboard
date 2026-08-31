@@ -8,6 +8,7 @@ import '../../core/responsive/responsive.dart';
 import '../../core/router/router_keys.dart';
 import '../app_strings.dart';
 import '../theme/app_colors.dart';
+import '../widgets/app_dialog.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/login/login_cubit.dart';
 import '../../features/auth/presentation/login/login_state.dart';
@@ -56,7 +57,7 @@ class DashboardSidebar extends StatelessWidget {
                 icon: Icons.logout,
                 label: AppStrings.logout,
                 isActive: false,
-                onTap: () => context.read<LoginCubit>().logout(),
+                onTap: () => _showLogoutConfirmation(context),
               ),
               SizedBox(height: 24.h),
             ],
@@ -64,6 +65,20 @@ class DashboardSidebar extends StatelessWidget {
         );
       },
     );
+  }
+
+  void _showLogoutConfirmation(BuildContext context) async {
+    final confirmed = await AppDialog.confirm(
+      context: context,
+      title: AppStrings.logoutConfirmation,
+      message: AppStrings.logoutWarning,
+      confirmText: AppStrings.logout,
+      confirmColor: AppColors.danger,
+    );
+
+    if (confirmed == true && context.mounted) {
+      context.read<LoginCubit>().logout();
+    }
   }
 
   Widget _buildLogo(UserEntity? user) {
@@ -154,6 +169,13 @@ class DashboardSidebar extends StatelessWidget {
     if (user == null) return [];
 
     return [
+      _SidebarItem(
+        icon: Icons.analytics_outlined,
+        label: AppStrings.dashboard,
+        isActive: activeRoute == AppStrings.dashboard,
+        onTap: () => context.go(RouterKeys.loungeAdminDashboard),
+      ),
+
       // Common: Live Operations (Sensors/Bookings)
       _SidebarItem(
         icon: Icons.sensors,

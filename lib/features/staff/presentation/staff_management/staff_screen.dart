@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/features/staff/data/entities/staff_entity.dart';
@@ -230,24 +231,17 @@ class _StaffScreenState extends State<StaffScreen> {
     );
   }
 
-  void _confirmDelete(dynamic staff, String loungeId) {
-    showDialog(
+  void _confirmDelete(dynamic staff, String loungeId) async {
+    final confirmed = await AppDialog.confirm(
       context: context,
-      builder: (diagContext) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),
-        content: Text('${AppStrings.deleteStaffWarning} (${staff.name})'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
-          TextButton(
-            onPressed: () {
-              context.read<StaffCubit>().deleteStaff(staff.id, loungeId);
-              Navigator.pop(diagContext);
-            }, 
-            child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger)),
-          ),
-        ],
-      ),
+      title: AppStrings.deleteConfirmation,
+      message: '${AppStrings.deleteStaffWarning} (${staff.name})',
+      confirmText: AppStrings.delete,
+      confirmColor: AppColors.danger,
     );
+
+    if (confirmed == true && context.mounted) {
+      context.read<StaffCubit>().deleteStaff(staff.id, loungeId);
+    }
   }
 }

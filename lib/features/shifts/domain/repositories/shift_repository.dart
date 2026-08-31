@@ -9,4 +9,5 @@ abstract class ShiftRepository {
   Future<Either<Failure, void>> openShift(String loungeId, double startingCash);
   Future<Either<Failure, ShiftEntity>> closeShift(String shiftId, double actualCash, String? notes);
   Future<Either<Failure, List<ShiftEntity>>> getShiftHistory({String? loungeId});
+  Future<Either<Failure, void>> approveShift(String shiftId, String managerId, String? notes);
 }

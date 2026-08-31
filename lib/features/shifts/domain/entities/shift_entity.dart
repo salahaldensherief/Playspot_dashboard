@@ -14,6 +14,10 @@ class ShiftEntity extends Equatable {
   final DateTime startTime;
   final DateTime? endTime;
   final String? notes;
+  final bool isApproved;
+  final String? approvedBy;
+  final DateTime? approvedAt;
+  final String? managerNotes;
 
   double get totalRevenue => (cashRevenue ?? 0) + (digitalRevenue ?? 0);
 
@@ -31,6 +35,10 @@ class ShiftEntity extends Equatable {
     required this.startTime,
     this.endTime,
     this.notes,
+    this.isApproved = false,
+    this.approvedBy,
+    this.approvedAt,
+    this.managerNotes,
   });
 
   @override
@@ -48,5 +56,9 @@ class ShiftEntity extends Equatable {
         startTime,
         endTime,
         notes,
+        isApproved,
+        approvedBy,
+        approvedAt,
+        managerNotes,
       ];
 }

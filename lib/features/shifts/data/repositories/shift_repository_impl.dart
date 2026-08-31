@@ -35,4 +35,9 @@ class ShiftRepositoryImpl with RepositoryHelper implements ShiftRepository {
   Future<Either<Failure, List<ShiftEntity>>> getShiftHistory({String? loungeId}) async {
     return await callRepository(() => remoteSource.getShifts(loungeId: loungeId));
   }
+
+  @override
+  Future<Either<Failure, void>> approveShift(String shiftId, String managerId, String? notes) async {
+    return await callRepository(() => remoteSource.approveShift(shiftId, managerId, notes));
+  }
 }

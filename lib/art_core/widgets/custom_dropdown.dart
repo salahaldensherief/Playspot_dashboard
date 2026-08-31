@@ -4,7 +4,7 @@ import '../theme/app_colors.dart';
 
 class CustomDropdown<T> extends StatelessWidget {
   final String label;
-  final T value;
+  final T? value;
   final List<T> items;
   final String Function(T) itemLabel;
   final Function(T?) onChanged;
@@ -12,7 +12,7 @@ class CustomDropdown<T> extends StatelessWidget {
   const CustomDropdown({
     super.key,
     required this.label,
-    required this.value,
+    this.value,
     required this.items,
     required this.itemLabel,
     required this.onChanged,

@@ -94,8 +94,13 @@ class DashboardShell extends StatelessWidget {
             providers: [
               BlocProvider(
                 create: (context) {
-                  debugPrint('DashboardShell: Creating ShiftCubit for lounge: ${user?.loungeId}');
-                  return sl<ShiftCubit>()..checkActiveShift(user?.loungeId ?? '');
+                  final loungeId = user?.loungeId;
+                  debugPrint('DashboardShell: Creating ShiftCubit for lounge: $loungeId');
+                  final cubit = sl<ShiftCubit>();
+                  if (loungeId != null && loungeId.isNotEmpty) {
+                    cubit.checkActiveShift(loungeId);
+                  }
+                  return cubit;
                 },
               ),
               BlocProvider(

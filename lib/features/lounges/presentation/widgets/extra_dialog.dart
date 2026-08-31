@@ -32,7 +32,10 @@ class _ExtraDialogState extends State<ExtraDialog> {
   late TextEditingController _nameArController;
   late TextEditingController _nameEnController;
   late TextEditingController _priceController;
+  late TextEditingController _stockQuantityController;
+  late TextEditingController _minStockAlertController;
   String _selectedCategory = 'Drinks';
+  bool _trackStock = false;
 
   @override
   void initState() {
@@ -40,7 +43,10 @@ class _ExtraDialogState extends State<ExtraDialog> {
     _nameArController = TextEditingController(text: widget.extra?.nameAr);
     _nameEnController = TextEditingController(text: widget.extra?.nameEn);
     _priceController = TextEditingController(text: widget.extra?.price.toString());
+    _stockQuantityController = TextEditingController(text: (widget.extra?.stockQuantity ?? 0).toString());
+    _minStockAlertController = TextEditingController(text: (widget.extra?.minStockAlert ?? 5).toString());
     _selectedCategory = widget.extra?.category ?? 'Drinks';
+    _trackStock = widget.extra?.trackStock ?? false;
   }
 
   @override
@@ -48,6 +54,8 @@ class _ExtraDialogState extends State<ExtraDialog> {
     _nameArController.dispose();
     _nameEnController.dispose();
     _priceController.dispose();
+    _stockQuantityController.dispose();
+    _minStockAlertController.dispose();
     super.dispose();
   }
 
@@ -62,6 +70,9 @@ class _ExtraDialogState extends State<ExtraDialog> {
         price: double.tryParse(_priceController.text) ?? 0,
         category: _selectedCategory,
         isOutOfStock: widget.extra?.isOutOfStock ?? false,
+        trackStock: _trackStock,
+        stockQuantity: int.tryParse(_stockQuantityController.text) ?? 0,
+        minStockAlert: int.tryParse(_minStockAlertController.text) ?? 5,
       );
 
       if (widget.onSave != null) {
@@ -132,6 +143,40 @@ class _ExtraDialogState extends State<ExtraDialog> {
                   if (val != null) setState(() => _selectedCategory = val);
                 },
               ),
+              SizedBox(height: 24.h),
+              Divider(color: AppColors.divider),
+              SizedBox(height: 16.h),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: AppText.body(AppStrings.trackStock),
+                value: _trackStock,
+                activeColor: AppColors.neonBlue,
+                onChanged: (val) => setState(() => _trackStock = val),
+              ),
+              if (_trackStock) ...[
+                SizedBox(height: 16.h),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppTextField(
+                        label: AppStrings.stockQuantity,
+                        controller: _stockQuantityController,
+                        keyboardType: TextInputType.number,
+                        validator: AppValidator.validateNumber,
+                      ),
+                    ),
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      child: AppTextField(
+                        label: AppStrings.lowStockThreshold,
+                        controller: _minStockAlertController,
+                        keyboardType: TextInputType.number,
+                        validator: AppValidator.validateNumber,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               SizedBox(height: 32.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,

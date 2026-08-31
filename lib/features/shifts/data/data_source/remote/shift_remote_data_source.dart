@@ -9,6 +9,7 @@ abstract class ShiftRemoteSource {
   Future<LiveShiftOverviewModel> getLoungeLiveShiftOverview(String loungeId);
   Future<void> openShift(String loungeId, double startingCash);
   Future<ShiftModel> closeShift(String shiftId, double actualCash, String? notes);
+  Future<void> approveShift(String shiftId, String managerId, String? notes);
 }
 
 class ShiftRemoteSourceImpl implements ShiftRemoteSource {
@@ -113,5 +114,14 @@ class ShiftRemoteSourceImpl implements ShiftRemoteSource {
       debugPrint('🔴 [ShiftRemoteSource] StackTrace: $stack');
       rethrow;
     }
+  }
+
+  @override
+  Future<void> approveShift(String shiftId, String managerId, String? notes) async {
+    await _supabase.rpc('approve_shift', params: {
+      'p_shift_id': shiftId,
+      'p_manager_id': managerId,
+      'p_notes': notes,
+    });
   }
 }

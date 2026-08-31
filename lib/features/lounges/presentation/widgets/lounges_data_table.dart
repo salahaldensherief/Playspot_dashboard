@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
@@ -199,25 +200,18 @@ class LoungesDataTable extends StatelessWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, String loungeId, String name) {
+  void _confirmDelete(BuildContext context, String loungeId, String name) async {
     final cubit = context.read<LoungeCubit>();
-    showDialog(
+    final confirmed = await AppDialog.confirm(
       context: context,
-      builder: (diagContext) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        title: Text(AppStrings.deleteLounge, style: const TextStyle(color: AppColors.textPrimary)),
-        content: Text('${AppStrings.deleteLoungeWarning} ($name)'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
-          TextButton(
-            onPressed: () {
-              cubit.deleteLounge(loungeId);
-              Navigator.pop(diagContext);
-            },
-            child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger))
-          ),
-        ],
-      ),
+      title: AppStrings.deleteLounge,
+      message: '${AppStrings.deleteLoungeWarning} ($name)',
+      confirmText: AppStrings.delete,
+      confirmColor: AppColors.danger,
     );
+
+    if (confirmed == true) {
+      cubit.deleteLounge(loungeId);
+    }
   }
 }

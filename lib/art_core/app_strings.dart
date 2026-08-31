@@ -27,6 +27,8 @@ class AppStrings {
   static String get redemptionOptions => 'redemption_options'.tr();
 
   static String get logout => 'logout'.tr();
+  static String get logoutConfirmation => 'logout_confirmation'.tr();
+  static String get logoutWarning => 'logout_warning'.tr();
   static String get close => 'close'.tr();
   static String get contactLabel => 'contact'.tr();
   static String get bookings => 'live_operations'.tr();
@@ -180,6 +182,11 @@ class AppStrings {
   static String get snacks => 'snacks'.tr();
   static String get services => 'services'.tr();
   static String get others => 'others'.tr();
+  static String get trackStock => 'track_stock'.tr();
+  static String get stockQuantity => 'stock_quantity'.tr();
+  static String get lowStockThreshold => 'low_stock_threshold'.tr();
+  static String get outOfStock => 'out_of_stock'.tr();
+  static String get lowStock => 'low_stock'.tr();
   static String get menuManagement => 'menu_management'.tr();
   static String get menuManagementSubtitle => 'menu_management_subtitle'.tr();
 
@@ -278,6 +285,14 @@ class AppStrings {
   static String get noPayoutHistoryFound => 'no_payout_history_found'.tr();
   static String get period => 'period'.tr();
   static String get notes => 'notes'.tr();
+  static String get approved => 'approved'.tr();
+  static String get pendingApproval => 'pending_approval'.tr();
+  static String get approveShift => 'approve_shift'.tr();
+  static String get managerNotes => 'manager_notes'.tr();
+  static String get swapRoom => 'swap_room'.tr();
+  static String get selectNewRoom => 'select_new_room'.tr();
+  static String get noAvailableRooms => 'no_available_rooms'.tr();
+  static String get confirmSwap => 'confirm_swap'.tr();
 
   // Common Actions
   static String get edit => 'edit'.tr();
@@ -327,6 +342,9 @@ class AppStrings {
   static String get noNewRequests => 'no_new_requests'.tr();
   static String get noActiveBookings => 'no_active_bookings'.tr();
   static String get discount => 'discount'.tr();
+  static String get discountReason => 'discount_reason'.tr();
+  static String get managerOverrideRequired => 'manager_override_required'.tr();
+  static String get reasonRequired => 'reason_required'.tr();
   static String get overlappingBookingError => 'overlapping_booking_error'.tr();
 
   // Shift Management

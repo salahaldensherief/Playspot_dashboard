@@ -11,6 +11,10 @@ class ExtraModel extends ExtraEntity {
     required super.category,
     super.iconKey,
     super.isOutOfStock,
+    super.imageUrl,
+    super.stockQuantity,
+    super.trackStock,
+    super.minStockAlert,
   });
 
   factory ExtraModel.fromJson(Map<String, dynamic> json) {
@@ -25,6 +29,10 @@ class ExtraModel extends ExtraEntity {
       iconKey: json['icon_key']?.toString(),
       // The backend uses 'is_available', so we invert it for 'isOutOfStock'
       isOutOfStock: json['is_available'] == false,
+      imageUrl: json['image_url']?.toString(),
+      stockQuantity: (json['stock_quantity'] as num?)?.toInt() ?? 0,
+      trackStock: json['track_stock'] ?? false,
+      minStockAlert: (json['min_stock_alert'] as num?)?.toInt() ?? 5,
     );
   }
 
@@ -38,6 +46,9 @@ class ExtraModel extends ExtraEntity {
       'category': category,
       'icon_key': iconKey,
       'is_available': !isOutOfStock,
+      'stock_quantity': stockQuantity,
+      'track_stock': trackStock,
+      'min_stock_alert': minStockAlert,
     };
   }
 }
