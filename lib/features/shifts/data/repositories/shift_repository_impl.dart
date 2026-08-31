@@ -4,40 +4,40 @@ import '../../../../core/utils/repository_helper.dart';
 import '../../domain/entities/shift_entity.dart';
 import '../../domain/entities/live_shift_overview_entity.dart';
 import '../../domain/repositories/shift_repository.dart';
-import '../data_source/remote/shift_remote_data_source.dart';
+import '../data_sources/shift_remote_data_source.dart';
 
 class ShiftRepositoryImpl with RepositoryHelper implements ShiftRepository {
-  final ShiftRemoteSource remoteSource;
+  final ShiftRemoteDataSource remoteDataSource;
 
-  ShiftRepositoryImpl(this.remoteSource);
+  ShiftRepositoryImpl(this.remoteDataSource);
 
   @override
   Future<Either<Failure, ShiftEntity?>> getActiveShift(String loungeId) async {
-    return await callRepository(() => remoteSource.getActiveShift(loungeId));
+    return await callRepository(() => remoteDataSource.getActiveShift(loungeId));
   }
 
   @override
   Future<Either<Failure, LiveShiftOverviewEntity>> getLoungeLiveShiftOverview(String loungeId) async {
-    return await callRepository(() => remoteSource.getLoungeLiveShiftOverview(loungeId));
+    return await callRepository(() => remoteDataSource.getLoungeLiveShiftOverview(loungeId));
   }
 
   @override
   Future<Either<Failure, void>> openShift(String loungeId, double startingCash) async {
-    return await callRepository(() => remoteSource.openShift(loungeId, startingCash));
+    return await callRepository(() => remoteDataSource.openShift(loungeId, startingCash));
   }
 
   @override
   Future<Either<Failure, ShiftEntity>> closeShift(String shiftId, double actualCash, String? notes) async {
-    return await callRepository(() => remoteSource.closeShift(shiftId, actualCash, notes));
+    return await callRepository(() => remoteDataSource.closeShift(shiftId, actualCash, notes));
   }
 
   @override
   Future<Either<Failure, List<ShiftEntity>>> getShiftHistory({String? loungeId}) async {
-    return await callRepository(() => remoteSource.getShifts(loungeId: loungeId));
+    return await callRepository(() => remoteDataSource.getShifts(loungeId: loungeId));
   }
 
   @override
   Future<Either<Failure, void>> approveShift(String shiftId, String managerId, String? notes) async {
-    return await callRepository(() => remoteSource.approveShift(shiftId, managerId, notes));
+    return await callRepository(() => remoteDataSource.approveShift(shiftId, managerId, notes));
   }
 }

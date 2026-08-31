@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 
 class RoomStatusCard extends StatefulWidget {
@@ -31,7 +32,7 @@ class _RoomStatusCardState extends State<RoomStatusCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Room Availability Control',
+            AppStrings.manageRoomsDesc,
             style: TextStyle(
               color: AppColors.textPrimary,
               fontSize: 18.sp,
@@ -51,13 +52,13 @@ class _RoomStatusCardState extends State<RoomStatusCard> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    room['name'],
+                    room['name'] ?? '',
                     style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w500, fontSize: 14.sp),
                   ),
                   Row(
                     children: [
                       Text(
-                        isAvailable ? 'Online' : 'Under Maintenance',
+                        isAvailable ? AppStrings.active : AppStrings.inactive,
                         style: TextStyle(
                           color: isAvailable ? AppColors.success : AppColors.warning,
                           fontSize: 12.sp,

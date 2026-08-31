@@ -111,15 +111,17 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         'p_discount_reason': discountReason,
       });
     } catch (e) {
+      // Fallback: Direct update to bookings table
+      // Note: discount info is now stored directly in bookings, not payments.
       final updateData = {
-        'status': 'paid',
+        'payment_status': 'paid',
         if (discountAmount != null) 'discount_amount': discountAmount,
+        if (discountPercentage != null) 'discount_percentage': discountPercentage,
         if (discountReason != null) 'discount_reason': discountReason,
+        if (shiftId != null) 'shift_id': shiftId,
       };
-      await client.from('payments').update(updateData).eq('booking_id', bookingId);
-      if (shiftId != null) {
-        await client.from('bookings').update({'shift_id': shiftId}).eq('id', bookingId);
-      }
+      
+      await client.from('bookings').update(updateData).eq('id', bookingId);
     }
   }
 

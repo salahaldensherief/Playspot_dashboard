@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/core/responsive/responsive.dart';
+import 'package:play_spot_dashboard/features/analytics/presentation/widgets/revenue_chart.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'chart_card.dart';
 import 'utilization_chart.dart';

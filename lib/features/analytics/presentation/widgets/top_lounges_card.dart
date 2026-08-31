@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import '../dashboard_cubit.dart';
 import '../dashboard_state.dart';
+import 'lounge_performance_item.dart';
 
 class TopLoungesCard extends StatelessWidget {
   const TopLoungesCard({super.key});
@@ -20,9 +21,10 @@ class TopLoungesCard extends StatelessWidget {
         border: Border.all(color: AppColors.borderDefault),
       ),
       child: BlocBuilder<DashboardCubit, DashboardState>(
+        buildWhen: (prev, curr) => prev.topLounges != curr.topLounges,
         builder: (context, state) {
           if (state.topLounges.isEmpty) {
-            return Center(child: AppText.body('No data yet'));
+            return Center(child: AppText.body(AppStrings.noResultsMatching.replaceFirst("\"{}\"", "")));
           }
 
           return Column(
@@ -45,8 +47,8 @@ class TopLoungesCard extends StatelessWidget {
                 separatorBuilder: (context, index) => Divider(color: AppColors.borderDefault, height: 24.h),
                 itemBuilder: (context, index) {
                   final lounge = state.topLounges[index];
-                  return _LoungeItem(
-                    name: lounge['lounge_name']?.toString() ?? 'Unknown',
+                  return LoungePerformanceItem(
+                    name: lounge['lounge_name']?.toString() ?? AppStrings.anonymous,
                     bookings: (lounge['bookings_count'] as num?)?.toInt() ?? 0,
                     revenue: '${(lounge['total_revenue'] as num?)?.toDouble().toStringAsFixed(0) ?? '0'} ${AppStrings.priceEgp}',
                     trend: '', 
@@ -57,71 +59,6 @@ class TopLoungesCard extends StatelessWidget {
           );
         },
       ),
-    );
-  }
-}
-
-class _LoungeItem extends StatelessWidget {
-  final String name;
-  final int bookings;
-  final String revenue;
-  final String trend;
-
-  const _LoungeItem({
-    required this.name,
-    required this.bookings,
-    required this.revenue,
-    required this.trend,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 40.r,
-          height: 40.r,
-          decoration: BoxDecoration(
-            color: AppColors.mutedBackground,
-            borderRadius: BorderRadius.circular(8.r),
-          ),
-          child: Icon(Icons.business, color: AppColors.neonBlue, size: 20.r),
-        ),
-        SizedBox(width: 16.w),
-        Expanded(
-          flex: 3,
-          child: AppText.subHeading(
-            name,
-            fontSize: 14.sp,
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppText.body('Bookings', fontSize: 11.sp, color: AppColors.textMuted),
-              AppText.body('$bookings', fontSize: 13.sp),
-            ],
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppText.body('Revenue', fontSize: 11.sp, color: AppColors.textMuted),
-              AppText.body(revenue, fontSize: 13.sp),
-            ],
-          ),
-        ),
-        if (trend.isNotEmpty)
-          AppText.subHeading(
-            trend,
-            color: AppColors.success,
-            fontSize: 13.sp,
-          ),
-      ],
     );
   }
 }

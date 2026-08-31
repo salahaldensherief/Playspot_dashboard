@@ -368,5 +368,9 @@
   "role_staff": "Staff",
   "category_pos": "POS & Menu",
   "category_financials": "Financials",
-  "category_shifts": "Shifts"
+  "category_shifts": "Shifts",
+  "kyc_inspection": "KYC Inspection",
+  "owner_details": "Owner Details",
+  "decision_status": "Decision Status",
+  "review_documents_for": "Review documents for"
 }

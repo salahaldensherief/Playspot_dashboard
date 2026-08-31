@@ -12,8 +12,24 @@ import '../cubit/extras_cubit.dart';
 import '../widgets/extra_dialog.dart';
 import '../widgets/extras_grid.dart';
 
-class ExtrasManagementPage extends StatelessWidget {
+class ExtrasManagementPage extends StatefulWidget {
   const ExtrasManagementPage({super.key});
+
+  @override
+  State<ExtrasManagementPage> createState() => _ExtrasManagementPageState();
+}
+
+class _ExtrasManagementPageState extends State<ExtrasManagementPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<LoginCubit>().state.user;
+      if (user?.loungeId != null) {
+        context.read<ExtrasCubit>().loadExtras(user!.loungeId!);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

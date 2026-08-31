@@ -108,8 +108,9 @@ class _RoomDialogState extends State<RoomDialog> {
   }
 
   Future<void> _submit() async {
-    if (_formKey.currentState!.validate()) {
-      if (_roomImages.isEmpty && (widget.room?.images == null || widget.room!.images.isEmpty)) {
+    final form = _formKey.currentState;
+    if (form != null && form.validate()) {
+      if (_roomImages.isEmpty && (widget.room?.images == null || (widget.room?.images.isEmpty ?? true))) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppStrings.minImagesError), backgroundColor: AppColors.danger),
         );
@@ -130,7 +131,8 @@ class _RoomDialogState extends State<RoomDialog> {
         }
 
         if (mounted) {
-          final isOpenArea = _selectedSpaceTypeId == 'open_area';
+          final spaceTypeId = _selectedSpaceTypeId ?? 'open_area';
+          final isOpenArea = spaceTypeId == 'open_area';
           final pricePerHour = double.tryParse(_pricePerHourController.text) ?? 0;
 
           final room = RoomEntity(
@@ -140,8 +142,8 @@ class _RoomDialogState extends State<RoomDialog> {
             nameEn: _nameEnController.text,
             descriptionAr: _descriptionArController.text,
             descriptionEn: _descriptionEnController.text,
-            spaceType: isOpenArea ? 'Open Area' : (_selectedSpaceTypeId == 'vip_room' ? 'VIP Room' : 'Standard Room'),
-            spaceTypeId: _selectedSpaceTypeId,
+            spaceType: isOpenArea ? 'Open Area' : (spaceTypeId == 'vip_room' ? 'VIP Room' : 'Standard Room'),
+            spaceTypeId: spaceTypeId,
             pricePerHourSingle: pricePerHour,
             pricePerHourMulti: pricePerHour,
             pricePerHour: pricePerHour,
@@ -166,7 +168,7 @@ class _RoomDialogState extends State<RoomDialog> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.danger),
+            SnackBar(content: Text('${AppStrings.error}: $e'), backgroundColor: AppColors.danger),
           );
         }
       } finally {
@@ -194,8 +196,8 @@ class _RoomDialogState extends State<RoomDialog> {
                 SizedBox(height: 32.h),
                 CustomDropdown<String>(
                   label: AppStrings.spaceType,
-                  value: const ['open_area', 'standard_room', 'vip_room'].contains(_selectedSpaceTypeId)
-                      ? _selectedSpaceTypeId!
+                  value: ['open_area', 'standard_room', 'vip_room'].contains(_selectedSpaceTypeId)
+                      ? (_selectedSpaceTypeId ?? 'open_area')
                       : 'open_area',
                   items: const ['open_area', 'standard_room', 'vip_room'],
                   itemLabel: (id) {
@@ -231,7 +233,11 @@ class _RoomDialogState extends State<RoomDialog> {
                   extraPriceController: _extraPriceController,
                   selectedSpaceTypeId: _selectedSpaceTypeId,
                   status: _selectedStatus,
-                  onStatusChanged: (v) => setState(() => _selectedStatus = v!),
+                  onStatusChanged: (v) {
+                    if (v != null) {
+                      setState(() => _selectedStatus = v);
+                    }
+                  },
                   featuresEn: _featuresEn,
                   onFeatureChanged: (feature, selected) {
                     setState(() {
@@ -331,7 +337,7 @@ class _RoomDialogState extends State<RoomDialog> {
                 controller: _featureArController,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'المميزات (عربي)',
+                  hintText: AppStrings.nameAr,
                   hintStyle: const TextStyle(color: AppColors.textSecondary),
                   filled: true,
                   fillColor: AppColors.mutedBackground,
@@ -345,7 +351,7 @@ class _RoomDialogState extends State<RoomDialog> {
                 controller: _featureEnController,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'Features (English)',
+                  hintText: AppStrings.nameEn,
                   hintStyle: const TextStyle(color: AppColors.textSecondary),
                   filled: true,
                   fillColor: AppColors.mutedBackground,

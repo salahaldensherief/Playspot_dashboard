@@ -25,8 +25,10 @@ class Booking extends Equatable {
   final PaymentStatus paymentStatus;
   final double totalPrice;
   final double? voucherDiscount;
+  final double? discountAmount;
+  final double? discountPercentage;
+  final String? discountReason;
   final List<Map<String, dynamic>> extras;
-  final String? mapsLink;
   final double? lat;
   final double? lng;
   final String? shiftId;
@@ -52,8 +54,10 @@ class Booking extends Equatable {
     this.paymentStatus = PaymentStatus.unpaid,
     required this.totalPrice,
     this.voucherDiscount,
+    this.discountAmount,
+    this.discountPercentage,
+    this.discountReason,
     this.extras = const [],
-    this.mapsLink,
     this.lat,
     this.lng,
     this.shiftId,
@@ -81,8 +85,10 @@ class Booking extends Equatable {
         paymentStatus,
         totalPrice,
         voucherDiscount,
+        discountAmount,
+        discountPercentage,
+        discountReason,
         extras,
-        mapsLink,
         lat,
         lng,
         shiftId,

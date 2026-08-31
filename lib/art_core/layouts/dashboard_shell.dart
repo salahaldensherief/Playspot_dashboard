@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import '../../core/theme/app_colors.dart';
+import '../../features/analytics/presentation/cubit/lounge_stats_cubit.dart';
+import '../../features/analytics/presentation/dashboard_cubit.dart';
+import '../../features/bookings/presentation/cubit/booking_cubit.dart';
+import '../../features/lounges/presentation/cubit/extras_cubit.dart';
+import '../../features/lounges/presentation/cubit/lounge_cubit.dart';
+import '../../features/rooms/presentation/cubit/room_cubit.dart';
 import 'dashboard_sidebar.dart';
 import 'dashboard_top_bar.dart';
 
@@ -35,14 +41,6 @@ class DashboardShell extends StatelessWidget {
       builder: (context, loginState) {
         final user = loginState.user;
         final isSuperAdmin = user?.role == UserRole.superAdmin;
-        final isLoungeOwner = user?.role == UserRole.owner;
-        
-        // Determine the role string for permissions for non-privileged users
-        // We use the rawRole from DB to match the Supabase expectations
-        String? permissionRole = user?.rawRole;
-        if (isSuperAdmin || isLoungeOwner || user?.role == UserRole.manager) {
-          permissionRole = null; // These roles bypass granular permissions
-        }
 
         String activeRoute = '';
         String title = AppStrings.dashboard;
@@ -89,124 +87,125 @@ class DashboardShell extends StatelessWidget {
         }
 
         return GeolocationHandler(
-          child: MultiBlocProvider(
-            key: ValueKey(user?.id ?? 'guest'), // Force recreation of providers on user change
-            providers: [
-              BlocProvider(
-                create: (context) {
-                  final loungeId = user?.loungeId;
-                  debugPrint('DashboardShell: Creating ShiftCubit for lounge: $loungeId');
-                  final cubit = sl<ShiftCubit>();
-                  if (loungeId != null && loungeId.isNotEmpty) {
-                    cubit.checkActiveShift(loungeId);
-                  }
-                  return cubit;
-                },
-              ),
-              BlocProvider(
-                create: (context) {
-                  final cubit = sl<PermissionsCubit>();
-                  if (permissionRole != null) {
-                    cubit.fetchPermissions(permissionRole);
-                  }
-                  return cubit;
-                },
-              ),
-            ],
-            child: BlocListener<ShiftCubit, ShiftState>(
-              listenWhen: (prev, curr) {
-                debugPrint('DashboardShell: Shift status changed from ${prev.status} to ${curr.status}');
-                return prev.status != curr.status;
-              },
-              listener: (context, state) {
-                final isCashier = user?.role == UserRole.cashier;
-                debugPrint('DashboardShell: Shift Listener - User: ${user?.email}, Role: ${user?.role}, isCashier: $isCashier, Status: ${state.status}');
-                
-                if (state.status == ShiftStatus.error) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error checking shift status: ${state.errorMessage}'),
-                      backgroundColor: AppColors.danger,
-                    ),
-                  );
-                }
-
-                if (state.status == ShiftStatus.initial && isCashier) {
-                   debugPrint('DashboardShell: No active shift found for staff, showing OpenShiftDialog');
-                   _showOpenShiftDialog(context, user?.loungeId ?? '');
-                } else if (state.status == ShiftStatus.closed && state.lastClosedShift != null) {
-                  // Only show summary and logout if the shift belongs to the current user
-                  if (state.lastClosedShift!.cashierId == user?.id) {
-                    _showShiftSummary(context, state.lastClosedShift!);
-                  } else {
-                    // It was a force close by an admin or another context
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Shift closed successfully.'), backgroundColor: Colors.green),
-                    );
-                    // Refresh history or overview if needed
-                    context.read<ShiftCubit>().resetToInitial();
-                    if (user?.loungeId != null) {
-                      context.read<ShiftCubit>().getLiveShiftOverview(user!.loungeId!);
-                    }
-                  }
-                }
-              },
-              child: Scaffold(
-                backgroundColor: AppColors.scaffoldBackground,
-                drawer: Responsive.isDesktop(context) 
-                    ? null 
-                    : Drawer(child: DashboardSidebar(activeRoute: activeRoute)),
-                body: Row(
-                  children: [
-                    if (Responsive.isDesktop(context))
-                      DashboardSidebar(activeRoute: activeRoute),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          DashboardTopBar(
-                            title: title,
-                            showMenuButton: !Responsive.isDesktop(context),
-                          ),
-                          if (!isSuperAdmin) const ShiftHeaderBanner(),
-                          Expanded(
-                            child: child,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          child: _DashboardShellContent(
+            activeRoute: activeRoute,
+            title: title,
+            user: user,
+            isSuperAdmin: isSuperAdmin,
+            child: child,
           ),
         );
       },
     );
   }
+}
+
+class _DashboardShellContent extends StatefulWidget {
+  final String activeRoute;
+  final String title;
+  final UserEntity? user;
+  final bool isSuperAdmin;
+  final Widget child;
+
+  const _DashboardShellContent({
+    required this.activeRoute,
+    required this.title,
+    required this.user,
+    required this.isSuperAdmin,
+    required this.child,
+  });
+
+  @override
+  State<_DashboardShellContent> createState() => _DashboardShellContentState();
+}
+
+class _DashboardShellContentState extends State<_DashboardShellContent> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final loungeId = widget.user?.loungeId;
+      if (loungeId != null && loungeId.isNotEmpty) {
+        context.read<ShiftCubit>().checkActiveShift(loungeId);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<ShiftCubit, ShiftState>(
+      listenWhen: (prev, curr) => prev.status != curr.status,
+      listener: (context, state) {
+        final isCashier = widget.user?.role == UserRole.cashier;
+        
+        if (state.status == ShiftStatus.error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error checking shift status: ${state.errorMessage}'),
+              backgroundColor: AppColors.danger,
+            ),
+          );
+        }
+
+        if (state.status == ShiftStatus.initial && isCashier) {
+           _showOpenShiftDialog(context, widget.user?.loungeId ?? '');
+        } else if (state.status == ShiftStatus.closed && state.lastClosedShift != null) {
+          if (state.lastClosedShift!.cashierId == widget.user?.id) {
+            _showShiftSummary(context, state.lastClosedShift!);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Shift closed successfully.'), backgroundColor: Colors.green),
+            );
+            context.read<ShiftCubit>().resetToInitial();
+            if (widget.user?.loungeId != null) {
+              context.read<ShiftCubit>().getLiveShiftOverview(widget.user!.loungeId!);
+            }
+          }
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.scaffoldBackground,
+        drawer: Responsive.isDesktop(context) 
+            ? null 
+            : Drawer(child: DashboardSidebar(activeRoute: widget.activeRoute)),
+        body: Row(
+          children: [
+            if (Responsive.isDesktop(context))
+              DashboardSidebar(activeRoute: widget.activeRoute),
+            Expanded(
+              child: Column(
+                children: [
+                  DashboardTopBar(
+                    title: widget.title,
+                    showMenuButton: !Responsive.isDesktop(context),
+                  ),
+                  if (!widget.isSuperAdmin) const ShiftHeaderBanner(),
+                  Expanded(
+                    child: widget.child,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   void _showOpenShiftDialog(BuildContext context, String loungeId) {
-    final loginCubit = context.read<LoginCubit>();
     final shiftCubit = context.read<ShiftCubit>();
-    final permissionsCubit = context.read<PermissionsCubit>();
-    final user = loginCubit.state.user;
-    final isDismissible = user?.role != UserRole.cashier;
+    final isDismissible = widget.user?.role != UserRole.cashier;
 
     showDialog(
       context: context,
+      useRootNavigator: false,
       barrierDismissible: isDismissible,
-      builder: (diagContext) => MultiBlocProvider(
-        providers: [
-          BlocProvider.value(value: loginCubit),
-          BlocProvider.value(value: shiftCubit),
-          BlocProvider.value(value: permissionsCubit),
-        ],
-        child: OpenShiftDialog(
-          isDismissible: isDismissible,
-          onConfirm: (startingCash) {
-            shiftCubit.openShift(loungeId, startingCash);
-            Navigator.pop(diagContext);
-          },
-        ),
+      builder: (diagContext) => OpenShiftDialog(
+        isDismissible: isDismissible,
+        onConfirm: (startingCash) {
+          shiftCubit.openShift(loungeId, startingCash);
+          Navigator.pop(diagContext);
+        },
       ),
     );
   }
@@ -214,24 +213,17 @@ class DashboardShell extends StatelessWidget {
   void _showShiftSummary(BuildContext context, dynamic shift) {
     final loginCubit = context.read<LoginCubit>();
     final shiftCubit = context.read<ShiftCubit>();
-    final permissionsCubit = context.read<PermissionsCubit>();
 
     showDialog(
       context: context,
+      useRootNavigator: false,
       barrierDismissible: false,
-      builder: (diagContext) => MultiBlocProvider(
-        providers: [
-          BlocProvider.value(value: loginCubit),
-          BlocProvider.value(value: shiftCubit),
-          BlocProvider.value(value: permissionsCubit),
-        ],
-        child: ShiftSummaryModal(
-          shift: shift,
-          onFinish: () {
-            loginCubit.logout();
-            Navigator.pop(diagContext);
-          },
-        ),
+      builder: (diagContext) => ShiftSummaryModal(
+        shift: shift,
+        onFinish: () {
+          loginCubit.logout();
+          Navigator.pop(diagContext);
+        },
       ),
     ).then((_) {
       shiftCubit.resetToInitial();

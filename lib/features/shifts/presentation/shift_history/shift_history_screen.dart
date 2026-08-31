@@ -26,11 +26,13 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    final user = context.read<LoginCubit>().state.user;
-    // If Lounge Staff (Owner or Cashier), only fetch their own lounge shifts
-    context.read<ShiftCubit>().fetchShiftHistory(
-      loungeId: user?.isStaff == true ? user?.loungeId : null,
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<LoginCubit>().state.user;
+      // If Lounge Staff (Owner or Cashier), only fetch their own lounge shifts
+      context.read<ShiftCubit>().fetchShiftHistory(
+        loungeId: user?.isStaff == true ? user?.loungeId : null,
+      );
+    });
   }
 
   @override
@@ -65,6 +67,8 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
                           headingRowColor: MaterialStateProperty.all(AppColors.mutedBackground),
+                          dataRowMinHeight: 65.h,
+                          dataRowMaxHeight: 80.h,
                         columns: [
                           _buildColumn(AppStrings.date),
                           _buildColumn(AppStrings.cashier),

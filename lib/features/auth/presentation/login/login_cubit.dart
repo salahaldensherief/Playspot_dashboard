@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/core/services/location_service.dart';
+import '../../domain/usecases/login_params.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/get_current_user_usecase.dart';
@@ -77,29 +78,16 @@ class LoginCubit extends Cubit<LoginState> {
   }
 
   Future<void> _handleLoungeAdminAuth(UserEntity user, {BuildContext? context}) async {
-    final loungeResult = await loungeRepository.getLoungeById(user.loungeId!);
+    final loungeId = user.loungeId;
+    if (loungeId == null) return;
+
+    final loungeResult = await loungeRepository.getLoungeById(loungeId);
     loungeResult.fold(
       (_) => null,
       (lounge) async {
         emit(state.copyWith(userLounge: lounge));
-        
-        if (lounge != null) {
-          final position = await locationService.getCurrentPosition();
-          if (position != null) {
-            String? cityName;
-            if (context != null && context.mounted) {
-              cityName = await locationService.getCityFromPosition(position, context);
-            }
-            
-            await loungeRepository.updateLounge(
-              lounge.copyWith(
-                lat: position.latitude,
-                lng: position.longitude,
-                city: cityName ?? lounge.city,
-              ),
-            );
-          }
-        }
+        // We removed the location capture from here to avoid redundancy and potential loops.
+        // It's now handled by the GeolocationHandler in the UI Shell.
       },
     );
   }

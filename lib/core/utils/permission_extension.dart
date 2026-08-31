@@ -31,6 +31,7 @@ extension PermissionExtension on BuildContext {
         case 'pos_checkout':        // Can process payments
         case 'extras_update_stock':  // Can update quantities
           return true;
+        case 'kyc_manage':          // Global KYC verification (Super Admin only)
         case 'staff_management':
         case 'extras_edit_prices':
         case 'extras_delete_item':

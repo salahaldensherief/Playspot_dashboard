@@ -236,6 +236,7 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
             onPressed: () {
               showDialog(
                 context: context,
+                useRootNavigator: false,
                 builder: (_) => SwapRoomDialog(
                   bookingId: widget.booking.id,
                   currentRoomId: widget.booking.roomId,

@@ -1,5 +1,5 @@
 import 'package:get_it/get_it.dart';
-import 'data/data_source/remote/shift_remote_data_source.dart';
+import 'data/data_sources/shift_remote_data_source.dart';
 import 'data/repositories/shift_repository_impl.dart';
 import 'domain/repositories/shift_repository.dart';
 import 'domain/use_cases/get_active_shift_use_case.dart';
@@ -10,9 +10,9 @@ import 'presentation/shift_management/shift_cubit.dart';
 
 void initShiftsDI(GetIt sl) {
   // Data Sources
-  if (!sl.isRegistered<ShiftRemoteSource>()) {
-    sl.registerLazySingleton<ShiftRemoteSource>(
-      () => ShiftRemoteSourceImpl(sl()),
+  if (!sl.isRegistered<ShiftRemoteDataSource>()) {
+    sl.registerLazySingleton<ShiftRemoteDataSource>(
+      () => ShiftRemoteDataSourceImpl(sl()),
     );
   }
 

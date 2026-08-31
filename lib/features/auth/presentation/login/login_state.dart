@@ -10,6 +10,7 @@ class LoginState extends Equatable {
   final Lounge? userLounge;
   final String? errorMessage;
   final bool isSetupCompleted;
+  final bool locationCaptured;
 
   const LoginState({
     this.status = LoginStatus.initial,
@@ -17,6 +18,7 @@ class LoginState extends Equatable {
     this.userLounge,
     this.errorMessage,
     this.isSetupCompleted = false,
+    this.locationCaptured = false,
   });
 
   factory LoginState.init() => const LoginState();
@@ -27,6 +29,7 @@ class LoginState extends Equatable {
     Lounge? userLounge,
     String? errorMessage,
     bool? isSetupCompleted,
+    bool? locationCaptured,
   }) {
     return LoginState(
       status: status ?? this.status,
@@ -34,9 +37,10 @@ class LoginState extends Equatable {
       userLounge: userLounge ?? this.userLounge,
       errorMessage: errorMessage ?? this.errorMessage,
       isSetupCompleted: isSetupCompleted ?? this.isSetupCompleted,
+      locationCaptured: locationCaptured ?? this.locationCaptured,
     );
   }
 
   @override
-  List<Object?> get props => [status, user, userLounge, errorMessage, isSetupCompleted];
+  List<Object?> get props => [status, user, userLounge, errorMessage, isSetupCompleted, locationCaptured];
 }

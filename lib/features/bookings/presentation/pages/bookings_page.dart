@@ -37,6 +37,12 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() => setState(() {}));
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<LoginCubit>().state.user;
+      context.read<BookingCubit>().startWatchingBookings(loungeId: user?.loungeId);
+      context.read<LoungeCubit>().fetchLounges();
+    });
   }
 
   @override
@@ -196,6 +202,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
 
     showDialog(
       context: context,
+      useRootNavigator: false,
       builder: (_) => BookingDetailsDialog(
         booking: booking,
         onConfirmPayment: (amount, percent, reason) {

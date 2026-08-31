@@ -363,5 +363,9 @@
   "role_staff": "مساعد صالة",
   "category_pos": "نقاط البيع والمنيو",
   "category_financials": "الفواتير والماليات",
-  "category_shifts": "الورديات"
+  "category_shifts": "الورديات",
+  "kyc_inspection": "مراجعة وثائق الهوية",
+  "owner_details": "بيانات المالك",
+  "decision_status": "حالة القرار",
+  "review_documents_for": "مراجعة وثائق"
 }

@@ -99,7 +99,6 @@ class BookingRepositoryImpl implements BookingRepository {
         totalPrice: booking.totalPrice,
         voucherDiscount: booking.voucherDiscount,
         extras: booking.extras,
-        mapsLink: booking.mapsLink,
         lat: booking.lat,
         lng: booking.lng,
         shiftId: booking.shiftId,

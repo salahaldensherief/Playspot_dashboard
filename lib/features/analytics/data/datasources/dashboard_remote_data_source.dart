@@ -12,15 +12,19 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
 
   @override
   Future<LoungeStatsModel> fetchLoungeStats(String? loungeId) async {
+    if (loungeId == null || loungeId.isEmpty) {
+      throw Exception('Lounge ID is required');
+    }
+
     final response = await supabaseClient.rpc(
       'get_lounge_owner_dashboard_stats',
       params: {
-        if (loungeId != null) 'p_lounge_id': loungeId,
+        'p_lounge_id': loungeId,
       },
     );
 
     if (response == null) {
-      throw Exception('Failed to fetch dashboard stats');
+      throw Exception('No data received');
     }
 
     return LoungeStatsModel.fromJson(Map<String, dynamic>.from(response));

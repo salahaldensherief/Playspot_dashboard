@@ -63,8 +63,8 @@ class BookingCard extends StatelessWidget {
           
           AppText.subHeading(booking.userName ?? AppStrings.anonymous, fontSize: 14.sp, maxLines: 1),
           
-          if (booking.userPhone != null && booking.userPhone!.isNotEmpty)
-            AppText.body(booking.userPhone!, fontSize: 11.sp, color: AppColors.neonBlue),
+          if (booking.userPhone != null && booking.userPhone?.isNotEmpty == true)
+            AppText.body(booking.userPhone ?? '', fontSize: 11.sp, color: AppColors.neonBlue),
 
           SizedBox(height: 6.h),
           
@@ -130,7 +130,7 @@ class BookingCard extends StatelessWidget {
                 Padding(
                   padding: EdgeInsets.only(bottom: 6.h),
                   child: AppButton(
-                    text: "Add Items", 
+                    text: AppStrings.addNew, 
                     onPressed: () => _showAddExtrasDialog(context), 
                     width: double.infinity, 
                     height: 32.h, 
@@ -139,7 +139,13 @@ class BookingCard extends StatelessWidget {
                   ),
                 ),
               if (!isPaid && onConfirmPayment != null)
-                AppButton(text: AppStrings.confirmCash, onPressed: onConfirmPayment!, width: double.infinity, height: 32.h, icon: Icons.payments_outlined),
+                AppButton(
+                  text: AppStrings.confirmCash, 
+                  onPressed: onConfirmPayment ?? () {}, 
+                  width: double.infinity, 
+                  height: 32.h, 
+                  icon: Icons.payments_outlined,
+                ),
             ],
           ],
         ],
@@ -162,7 +168,7 @@ class BookingCard extends StatelessWidget {
 
   void _showAddExtrasDialog(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Add Items Dialog - Coming Soon")),
+      SnackBar(content: Text(AppStrings.underConstruction)),
     );
   }
 
@@ -178,10 +184,10 @@ class BookingCard extends StatelessWidget {
 
   Widget _getStatusBadge(BookingStatus status) {
     switch (status) {
-      case BookingStatus.pending: return StatusBadge.warning('NEW');
-      case BookingStatus.upcoming: return StatusBadge.info('ACCEPTED');
-      case BookingStatus.completed: return StatusBadge.success('FINISHED');
-      case BookingStatus.cancelled: return StatusBadge.danger('CANCELLED');
+      case BookingStatus.pending: return StatusBadge.warning(AppStrings.pending.toUpperCase());
+      case BookingStatus.upcoming: return StatusBadge.info(AppStrings.upcoming.toUpperCase());
+      case BookingStatus.completed: return StatusBadge.success(AppStrings.completed.toUpperCase());
+      case BookingStatus.cancelled: return StatusBadge.danger(AppStrings.cancelled.toUpperCase());
       default: return StatusBadge.info(status.name.toUpperCase());
     }
   }

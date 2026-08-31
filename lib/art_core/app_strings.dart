@@ -329,6 +329,10 @@ class AppStrings {
   static String get kycSuccess => 'kyc_success'.tr();
   static String get viewDocument => 'view_document'.tr();
   static String get actionFailed => 'action_failed'.tr();
+  static String get kycInspection => 'kyc_inspection'.tr();
+  static String get ownerDetails => 'owner_details'.tr();
+  static String get decisionStatus => 'decision_status'.tr();
+  static String get reviewDocumentsFor => 'review_documents_for'.tr();
   static String get loungeIsOpen => 'lounge_is_open'.tr();
   static String get loungeIsClosed => 'lounge_is_closed'.tr();
   static String get usersCanBookNow => 'users_can_book_now'.tr();

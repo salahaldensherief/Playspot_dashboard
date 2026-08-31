@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/logo/logo_widget.dart';
 
@@ -65,7 +66,7 @@ class _SplashScreenState extends State<SplashScreen>
             FadeTransition(
               opacity: _fadeAnim,
               child: Text(
-                "Book, Play & Win",
+                AppStrings.appName,
                 style: GoogleFonts.orbitron(
                   textStyle: TextStyle(
                     shadows: [

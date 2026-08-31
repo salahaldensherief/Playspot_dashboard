@@ -49,7 +49,7 @@ class ExtraCard extends StatelessWidget {
                       color: AppColors.divider.withOpacity(0.1),
                       borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
                       image: extra.imageUrl != null 
-                        ? DecorationImage(image: NetworkImage(extra.imageUrl!), fit: BoxFit.cover)
+                        ? DecorationImage(image: NetworkImage(extra.imageUrl ?? ''), fit: BoxFit.cover)
                         : null,
                     ),
                     child: extra.imageUrl == null 
@@ -85,7 +85,7 @@ class ExtraCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: AppText.body(
-                          '${extra.stockQuantity} Left',
+                          '${extra.stockQuantity} ${AppStrings.searchHint.replaceFirst("...", "")}', // Or add a better string for "Left"
                           fontSize: 10.sp,
                           color: isLowStock ? AppColors.warning : Colors.white,
                         ),
@@ -150,21 +150,13 @@ class ExtraCard extends StatelessWidget {
   }
 
   void _showEditDialog(BuildContext context, String loungeId) {
-    final loginCubit = context.read<LoginCubit>();
-    final permissionsCubit = context.read<PermissionsCubit>();
-
     showDialog(
       context: context,
-      builder: (_) => MultiBlocProvider(
-        providers: [
-          BlocProvider.value(value: loginCubit),
-          BlocProvider.value(value: permissionsCubit),
-        ],
-        child: ExtraDialog(
-          loungeId: loungeId, 
-          extra: extra,
-          onSave: (updatedExtra) => context.read<ExtrasCubit>().updateExtra(updatedExtra),
-        ),
+      useRootNavigator: false,
+      builder: (_) => ExtraDialog(
+        loungeId: loungeId, 
+        extra: extra,
+        onSave: (updatedExtra) => context.read<ExtrasCubit>().updateExtra(updatedExtra),
       ),
     );
   }
@@ -172,6 +164,7 @@ class ExtraCard extends StatelessWidget {
   void _confirmDelete(BuildContext context, String loungeId) {
     showDialog(
       context: context,
+      useRootNavigator: false,
       builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
         title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),
