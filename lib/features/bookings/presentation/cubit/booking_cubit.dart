@@ -136,19 +136,20 @@ class BookingCubit extends Cubit<BookingState> {
     );
   }
 
-  Future<void> swapRoom(String bookingId, String newRoomId, String actionBy) async {
+  Future<void> swapRoom(String bookingId, String newRoomId, String actionBy, {String? newRoomName}) async {
     // Optimistic Update
     final originalBookings = List<Booking>.from(state.bookings);
     final updatedBookings = state.bookings.map((b) {
       if (b.id == bookingId) {
-        // Since we don't have the new room name here easily, we might just keep it or fetch it.
-        // But for UI fluidity, let's just mark it as loading or something if needed.
-        return b; 
+        return b.copyWith(
+          roomId: newRoomId,
+          roomName: newRoomName ?? b.roomName,
+        ); 
       }
       return b;
     }).toList();
 
-    emit(state.copyWith(bookings: updatedBookings));
+    emit(state.copyWith(bookings: updatedBookings.cast<Booking>()));
 
     final result = await repository.swapRoom(bookingId, newRoomId, actionBy);
 

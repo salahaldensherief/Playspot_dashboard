@@ -27,7 +27,7 @@ class StatCard extends StatelessWidget {
     final String trendText = '${isPositive ? '+' : ''}${trendValue.toStringAsFixed(1)}%';
 
     return Container(
-      padding: EdgeInsets.all(16.r),
+      padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16.r),

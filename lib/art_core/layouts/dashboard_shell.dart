@@ -178,6 +178,18 @@ class _DashboardShellContentState extends State<_DashboardShellContent> {
                   DashboardTopBar(
                     title: widget.title,
                     showMenuButton: !Responsive.isDesktop(context),
+                    actions: widget.activeRoute == AppStrings.myProfile 
+                      ? [
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined, color: AppColors.textPrimary),
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(AppStrings.underConstruction)),
+                              );
+                            },
+                          ),
+                        ]
+                      : null,
                   ),
                   if (!widget.isSuperAdmin) const ShiftHeaderBanner(),
                   Expanded(

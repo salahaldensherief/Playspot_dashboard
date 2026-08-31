@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/lounge_model.dart';
 import '../models/extra_model.dart';
+import 'package:play_spot_dashboard/features/rooms/data/models/room_model.dart';
 
 abstract class LoungeRemoteDataSource {
   Future<List<LoungeModel>> getLounges();
@@ -17,6 +18,10 @@ abstract class LoungeRemoteDataSource {
   Future<Map<String, dynamic>> getDashboardOverview();
   Future<List<Map<String, dynamic>>> getRevenueOverTime(int daysBack);
   Future<List<Map<String, dynamic>>> getTopLoungesByRevenue(int limitCount);
+  
+  // Rooms & Activities
+  Future<List<RoomModel>> getRooms(String loungeId);
+  Future<List<Map<String, dynamic>>> getActivities(String roomId);
   
   // Extras
   Future<List<ExtraModel>> getExtras(String loungeId);
@@ -117,6 +122,25 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     final response = await client.rpc('get_top_lounges_by_revenue', params: {
       'limit_count': limitCount,
     });
+    return (response as List).map((e) => Map<String, dynamic>.from(e)).toList();
+  }
+
+  @override
+  Future<List<RoomModel>> getRooms(String loungeId) async {
+    final response = await client
+        .from('rooms')
+        .select('*')
+        .eq('lounge_id', loungeId)
+        .order('created_at', ascending: true);
+    return (response as List).map((json) => RoomModel.fromJson(json)).toList();
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getActivities(String roomId) async {
+    final response = await client
+        .from('room_activities')
+        .select('*, activity_types(*)')
+        .eq('room_id', roomId);
     return (response as List).map((e) => Map<String, dynamic>.from(e)).toList();
   }
 

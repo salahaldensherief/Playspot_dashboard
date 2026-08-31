@@ -80,10 +80,14 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
                   text: AppStrings.confirmSwap,
                   onPressed: _selectedRoomId == null ? null : () {
                     if (_selectedRoomId != null) {
+                      final availableRooms = context.read<RoomCubit>().state.rooms;
+                      final roomName = availableRooms.firstWhere((r) => r.id == _selectedRoomId).nameEn;
+                      
                       context.read<BookingCubit>().swapRoom(
                         widget.bookingId,
                         _selectedRoomId!,
                         user?.id ?? '',
+                        newRoomName: roomName,
                       );
                       Navigator.pop(context);
                     }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/core/router/router_keys.dart';
 import 'activity_item.dart';
 
 class RecentActivityCard extends StatelessWidget {
@@ -11,7 +13,7 @@ class RecentActivityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(24.r),
+      padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16.r),
@@ -28,7 +30,7 @@ class RecentActivityCard extends StatelessWidget {
                 fontSize: 18.sp,
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () => context.push(RouterKeys.loungeAdminLiveOps),
                 child: AppText.body(
                   AppStrings.viewAll,
                   color: AppColors.neonBlue,

@@ -56,6 +56,11 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     );
   }
 
+  void removeRoom(String roomId) {
+    final updatedRooms = state.rooms.where((r) => r.id != roomId).toList();
+    emit(state.copyWith(rooms: updatedRooms));
+  }
+
   Future<void> addNewExtra(ExtraEntity extra) async {
     emit(state.copyWith(status: OnboardingStatus.loading));
     final result = await addExtraUseCase(extra);
