@@ -8,6 +8,7 @@ class CustomDropdown<T> extends StatelessWidget {
   final List<T> items;
   final String Function(T) itemLabel;
   final Function(T?) onChanged;
+  final String? Function(T?)? validator;
 
   const CustomDropdown({
     super.key,
@@ -16,6 +17,7 @@ class CustomDropdown<T> extends StatelessWidget {
     required this.items,
     required this.itemLabel,
     required this.onChanged,
+    this.validator,
   });
 
   @override
@@ -32,26 +34,35 @@ class CustomDropdown<T> extends StatelessWidget {
           ),
         ),
         SizedBox(height: 8.h),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 16.w),
-          decoration: BoxDecoration(
-            color: AppColors.mutedBackground,
-            borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(color: AppColors.borderDefault),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<T>(
-              value: value,
-              isExpanded: true,
-              dropdownColor: AppColors.cardBackground,
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
-              items: items.map((e) => DropdownMenuItem(
-                value: e,
-                child: Text(itemLabel(e)),
-              )).toList(),
-              onChanged: onChanged,
+        DropdownButtonFormField<T>(
+          value: value,
+          isExpanded: true,
+          dropdownColor: AppColors.cardBackground,
+          style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: AppColors.mutedBackground,
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(color: AppColors.borderDefault),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(color: AppColors.borderDefault),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(color: AppColors.neonBlue),
             ),
           ),
+          items: items.map((e) => DropdownMenuItem(
+            value: e,
+            child: Text(itemLabel(e)),
+          )).toList(),
+          onChanged: onChanged,
+          validator: validator,
+          icon: Icon(Icons.arrow_drop_down, color: AppColors.textSecondary, size: 24.r),
         ),
       ],
     );

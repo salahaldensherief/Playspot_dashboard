@@ -9,9 +9,9 @@ class MarketingCubit extends Cubit<MarketingState> {
 
   MarketingCubit(this.repository) : super(const MarketingState());
 
-  Future<void> loadPromotions({String? loungeId}) async {
+  Future<void> loadPromotions({String? loungeId, String? city}) async {
     emit(state.copyWith(status: MarketingStatus.loading));
-    final result = await repository.getPromotions(loungeId: loungeId);
+    final result = await repository.getPromotions(loungeId: loungeId, city: city);
     
     if (isClosed) return;
 
@@ -32,7 +32,10 @@ class MarketingCubit extends Cubit<MarketingState> {
     if (isClosed) return;
     result.fold(
       (failure) => emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message)),
-      (_) => loadPromotions(loungeId: loungeId),
+      (_) {
+        emit(state.copyWith(status: MarketingStatus.actionSuccess));
+        loadPromotions(loungeId: loungeId);
+      },
     );
   }
 
@@ -42,7 +45,10 @@ class MarketingCubit extends Cubit<MarketingState> {
     if (isClosed) return;
     result.fold(
       (failure) => emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message)),
-      (_) => loadPromotions(loungeId: promo.loungeId),
+      (_) {
+        emit(state.copyWith(status: MarketingStatus.actionSuccess));
+        loadPromotions(loungeId: promo.loungeId);
+      },
     );
   }
 
@@ -63,7 +69,10 @@ class MarketingCubit extends Cubit<MarketingState> {
     if (isClosed) return;
     result.fold(
       (failure) => emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message)),
-      (_) => loadNotifications(),
+      (_) {
+        emit(state.copyWith(status: MarketingStatus.actionSuccess));
+        loadNotifications();
+      },
     );
   }
 }

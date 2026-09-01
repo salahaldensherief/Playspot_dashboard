@@ -246,6 +246,17 @@ class AppStrings {
   static String get promoIcon => 'promo_icon'.tr();
   static String get iconKey => 'icon_key'.tr();
   static String get createPromotion => 'create_promotion'.tr();
+  static String get expirationDate => 'expiration_date'.tr();
+  static String get tagCategory => 'tag_category'.tr();
+  static String get roomSpecific => 'room_specific'.tr();
+  static String get selectRoom => 'select_room'.tr();
+  static String get promoPublishedSuccess => 'promo_published_success'.tr();
+  static String get promoPublishError => 'promo_publish_error'.tr();
+  static String get noPromotions => 'no_promotions'.tr();
+  static String get noNotifications => 'no_notifications'.tr();
+  static String get promotionsTab => 'promotions_tab'.tr();
+  static String get notificationsTab => 'notifications_tab'.tr();
+  static String get newNotification => 'new_notification'.tr();
 
   // Lounge Profile
   static String get loungeProfile => 'lounge_profile'.tr();

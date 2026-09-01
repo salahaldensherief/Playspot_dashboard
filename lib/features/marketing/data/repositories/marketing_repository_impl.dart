@@ -13,9 +13,9 @@ class MarketingRepositoryImpl implements MarketingRepository {
   MarketingRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<Either<Failure, List<PromoEntity>>> getPromotions({String? loungeId}) async {
+  Future<Either<Failure, List<PromoEntity>>> getPromotions({String? loungeId, String? city}) async {
     try {
-      final promos = await remoteDataSource.getPromotions(loungeId: loungeId);
+      final promos = await remoteDataSource.getPromotions(loungeId: loungeId, city: city);
       return Right(promos);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -36,6 +36,10 @@ class MarketingRepositoryImpl implements MarketingRepository {
         imageUrl: promo.imageUrl,
         deepLink: promo.deepLink,
         loungeId: promo.loungeId,
+        roomId: promo.roomId,
+        expiresAt: promo.expiresAt,
+        tag: promo.tag,
+        isRoomSpecific: promo.isRoomSpecific,
       ));
       return const Right(null);
     } catch (e) {

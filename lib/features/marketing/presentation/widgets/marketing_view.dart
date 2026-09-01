@@ -6,6 +6,8 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
 import '../../domain/entities/promo_entity.dart';
 import '../../domain/entities/notification_entity.dart';
 import '../cubit/marketing_cubit.dart';
@@ -25,7 +27,15 @@ class MarketingView extends StatefulWidget {
 class _MarketingViewState extends State<MarketingView> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _formKey = GlobalKey<FormState>();
-  
+  String _selectedFilterTag = 'All';
+  late TextEditingController _titleArController;
+  late TextEditingController _titleEnController;
+  late TextEditingController _expirationDateController;
+  DateTime? _expiresAt;
+  String? _selectedTag;
+  bool _isRoomSpecific = false;
+  String? _selectedRoomId;
+
   final List<List<Color>> _colorTemplates = [
     [AppColors.neonPurple, AppColors.neonBlue],
     [Colors.orange, Colors.red],
@@ -41,11 +51,25 @@ class _MarketingViewState extends State<MarketingView> with SingleTickerProvider
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _titleArController = TextEditingController();
+    _titleEnController = TextEditingController();
+    _expirationDateController = TextEditingController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<LoginCubit>().state.user;
+      final loungeId = user?.loungeId;
+      if (loungeId != null) {
+        context.read<RoomCubit>().watchRooms(loungeId);
+      }
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _titleArController.dispose();
+    _titleEnController.dispose();
+    _expirationDateController.dispose();
     super.dispose();
   }
 
@@ -55,110 +79,173 @@ class _MarketingViewState extends State<MarketingView> with SingleTickerProvider
     final isSuperAdmin = user?.role.name == 'superAdmin';
     final marketingCubit = context.read<MarketingCubit>();
 
-    return Padding(
-      padding: EdgeInsets.all(24.r),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                AppStrings.marketing,
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 28.sp,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Orbitron',
+    return BlocListener<MarketingCubit, MarketingState>(
+      listenWhen: (previous, current) => previous.status != current.status,
+      listener: (context, state) {
+        if (state.status == MarketingStatus.actionSuccess) {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppStrings.promoPublishedSuccess),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else if (state.status == MarketingStatus.failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage ?? AppStrings.promoPublishError),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: Padding(
+        padding: EdgeInsets.all(24.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  AppStrings.marketing,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 28.sp,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Orbitron',
+                  ),
                 ),
-              ),
-              if (isSuperAdmin)
-                Row(
-                  children: [
-                    AppButton(
-                      text: 'New Notification',
-                      onPressed: () => _showNotificationDialog(context, marketingCubit),
-                      icon: Icons.notifications_active_outlined,
-                      variant: AppButtonVariant.outlined,
-                    ),
-                    SizedBox(width: 16.w),
-                    AppButton(
-                      text: AppStrings.createGlobalPromo,
-                      onPressed: () => _showEditPromoDialog(context, marketingCubit, const PromoEntity(id: '', titleAr: '', titleEn: '', tagAr: '', tagEn: '', hexColors: [], iconKey: '')),
-                      icon: Icons.add,
-                    ),
-                  ],
-                ),
-            ],
-          ),
-          SizedBox(height: 32.h),
-          if (isSuperAdmin) ...[
-            TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              labelColor: AppColors.neonBlue,
-              indicatorColor: AppColors.neonBlue,
-              tabs: const [
-                Tab(text: 'Promotions'),
-                Tab(text: 'Notifications History'),
+                if (isSuperAdmin)
+                  Row(
+                    children: [
+                      AppButton(
+                        text: AppStrings.newNotification,
+                        onPressed: () => _showNotificationDialog(context, marketingCubit),
+                        icon: Icons.notifications_active_outlined,
+                        variant: AppButtonVariant.outlined,
+                      ),
+                      SizedBox(width: 16.w),
+                      AppButton(
+                        text: AppStrings.createGlobalPromo,
+                        onPressed: () => _showEditPromoDialog(context, marketingCubit, const PromoEntity(id: '', titleAr: '', titleEn: '', tagAr: '', tagEn: '', hexColors: [], iconKey: '')),
+                        icon: Icons.add,
+                      ),
+                    ],
+                  ),
               ],
             ),
-            SizedBox(height: 24.h),
-            Expanded(
-              child: TabBarView(
+            SizedBox(height: 32.h),
+            if (isSuperAdmin) ...[
+              TabBar(
                 controller: _tabController,
-                children: [
-                  _buildPromotionsList(marketingCubit),
-                  _buildNotificationsList(marketingCubit),
+                isScrollable: true,
+                labelColor: AppColors.neonBlue,
+                indicatorColor: AppColors.neonBlue,
+                tabs: [
+                  Tab(text: AppStrings.promotionsTab),
+                  Tab(text: AppStrings.notificationsTab),
                 ],
               ),
-            ),
-          ] else 
-            Expanded(child: SingleChildScrollView(child: _buildLoungeAdminForm())),
-        ],
+              SizedBox(height: 24.h),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildPromotionsList(marketingCubit),
+                    _buildNotificationsList(marketingCubit),
+                  ],
+                ),
+              ),
+            ] else
+              Expanded(child: SingleChildScrollView(child: _buildLoungeAdminForm())),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildLoungeAdminForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          PromoFormSection(
-            selectedDeepLink: _selectedDeepLink,
-            onDeepLinkChanged: (v) => setState(() => _selectedDeepLink = v!),
+    return BlocBuilder<RoomCubit, RoomState>(
+      builder: (context, roomState) {
+        return Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              PromoFormSection(
+                titleArController: _titleArController,
+                titleEnController: _titleEnController,
+                expirationDateController: _expirationDateController,
+                selectedDeepLink: _selectedDeepLink,
+                onDeepLinkChanged: (v) => setState(() => _selectedDeepLink = v ?? 'Lounge Profile'),
+                expiresAt: _expiresAt,
+                onDateChanged: (v) => setState(() {
+                  _expiresAt = v;
+                  _expirationDateController.text = v.toLocal().toString().split(' ')[0];
+                }),
+                selectedTag: _selectedTag,
+                onTagChanged: (v) => setState(() => _selectedTag = v),
+                isRoomSpecific: _isRoomSpecific,
+                onRoomSpecificChanged: (v) => setState(() => _isRoomSpecific = v),
+                selectedRoomId: _selectedRoomId,
+                onRoomChanged: (v) => setState(() => _selectedRoomId = v),
+                availableRooms: roomState.rooms,
+              ),
+              SizedBox(height: 32.h),
+              DesignStyleSection(
+                colorTemplates: _colorTemplates,
+                selectedTemplate: _selectedTemplate,
+                onTemplateSelected: (index) => setState(() => _selectedTemplate = index),
+                selectedIcon: _selectedIcon,
+                onIconChanged: (v) => setState(() => _selectedIcon = v ?? 'Flash'),
+              ),
+              SizedBox(height: 40.h),
+              AppButton(
+                text: AppStrings.createPromotion,
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    final promo = PromoEntity(
+                      id: '',
+                      titleAr: _titleArController.text,
+                      titleEn: _titleEnController.text,
+                      tagAr: _selectedTag ?? '',
+                      tagEn: _selectedTag ?? '',
+                      hexColors: _colorTemplates[_selectedTemplate].map((e) => '#${e.value.toRadixString(16).substring(2)}').toList(),
+                      iconKey: _selectedIcon,
+                      deepLink: _selectedDeepLink,
+                      expiresAt: _expiresAt,
+                      tag: _selectedTag,
+                      isRoomSpecific: _isRoomSpecific,
+                      roomId: _selectedRoomId,
+                    );
+                    context.read<MarketingCubit>().createPromotion(promo);
+                  }
+                },
+                width: 250.w,
+              ),
+            ],
           ),
-          SizedBox(height: 32.h),
-          DesignStyleSection(
-            colorTemplates: _colorTemplates,
-            selectedTemplate: _selectedTemplate,
-            onTemplateSelected: (index) => setState(() => _selectedTemplate = index),
-            selectedIcon: _selectedIcon,
-            onIconChanged: (v) => setState(() => _selectedIcon = v!),
-          ),
-          SizedBox(height: 40.h),
-          AppButton(
-            text: AppStrings.createPromotion,
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                // Save logic
-              }
-            },
-            width: 250.w,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildPromotionsList(MarketingCubit cubit) {
     return BlocBuilder<MarketingCubit, MarketingState>(
+      buildWhen: (previous, current) =>
+          previous.promotions != current.promotions ||
+          previous.status != current.status,
       builder: (context, state) {
         if (state.status == MarketingStatus.loading) {
-           return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
+          return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
         }
+
+        final tags = ['All', ...state.promotions.map((p) => p.tag).whereType<String>().toSet()];
+        final filteredPromos = _selectedFilterTag == 'All' ? state.promotions : state.promotions.where((p) => p.tag == _selectedFilterTag).toList();
+
         return Container(
           width: double.infinity,
           padding: EdgeInsets.all(24.r),
@@ -170,8 +257,30 @@ class _MarketingViewState extends State<MarketingView> with SingleTickerProvider
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (state.promotions.isEmpty)
-                const Center(child: Text('No promotions found', style: TextStyle(color: AppColors.textSecondary)))
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: tags
+                      .map((tag) => Padding(
+                            padding: EdgeInsets.only(right: 8.w),
+                            child: FilterChip(
+                              label: Text(tag),
+                              selected: _selectedFilterTag == tag,
+                              onSelected: (selected) {
+                                setState(() {
+                                  _selectedFilterTag = tag;
+                                });
+                              },
+                              selectedColor: AppColors.neonBlue.withOpacity(0.2),
+                              checkmarkColor: AppColors.neonBlue,
+                            ),
+                          ))
+                      .toList(),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              if (filteredPromos.isEmpty)
+                Center(child: Text(AppStrings.noPromotions, style: const TextStyle(color: AppColors.textSecondary)))
               else
                 DataTable(
                   headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
@@ -182,7 +291,7 @@ class _MarketingViewState extends State<MarketingView> with SingleTickerProvider
                     DataColumn(label: Text(AppStrings.status)),
                     DataColumn(label: Text(AppStrings.actions)),
                   ],
-                  rows: state.promotions.map((p) => _buildPromoRow(context, cubit, p)).toList(),
+                  rows: filteredPromos.map((p) => _buildPromoRow(context, cubit, p)).toList(),
                 ),
             ],
           ),
@@ -193,9 +302,12 @@ class _MarketingViewState extends State<MarketingView> with SingleTickerProvider
 
   Widget _buildNotificationsList(MarketingCubit cubit) {
     return BlocBuilder<MarketingCubit, MarketingState>(
+      buildWhen: (previous, current) =>
+          previous.notifications != current.notifications ||
+          previous.status != current.status,
       builder: (context, state) {
         if (state.status == MarketingStatus.loading) return const Center(child: CircularProgressIndicator());
-        if (state.notifications.isEmpty) return const Center(child: Text('No notification history', style: TextStyle(color: AppColors.textSecondary)));
+        if (state.notifications.isEmpty) return Center(child: Text(AppStrings.noNotifications, style: const TextStyle(color: AppColors.textSecondary)));
 
         return ListView.separated(
           itemCount: state.notifications.length,
