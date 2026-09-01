@@ -250,6 +250,12 @@ class AppStrings {
   static String get tagCategory => 'tag_category'.tr();
   static String get roomSpecific => 'room_specific'.tr();
   static String get selectRoom => 'select_room'.tr();
+  static String get targetAudience => 'target_audience'.tr();
+  static String get audienceLocal => 'audience_local'.tr();
+  static String get audienceAll => 'audience_all'.tr();
+  static String get uploadPoster => 'upload_poster'.tr();
+  static String get changePoster => 'change_poster'.tr();
+  static String get promoPoster => 'promo_poster'.tr();
   static String get promoPublishedSuccess => 'promo_published_success'.tr();
   static String get promoPublishError => 'promo_publish_error'.tr();
   static String get noPromotions => 'no_promotions'.tr();
@@ -360,6 +366,13 @@ class AppStrings {
   static String get discountReason => 'discount_reason'.tr();
   static String get managerOverrideRequired => 'manager_override_required'.tr();
   static String get reasonRequired => 'reason_required'.tr();
+  static String get directDiscount => 'direct_discount'.tr();
+  static String get activateDiscount => 'activate_discount'.tr();
+  static String get discountPercentage => 'discount_percentage'.tr();
+  static String get discountTitleAr => 'discount_title_ar'.tr();
+  static String get discountTitleEn => 'discount_title_en'.tr();
+  static String get discountExpiration => 'discount_expiration'.tr();
+  static String get discountUpdatedSuccess => 'discount_updated_success'.tr();
   static String get overlappingBookingError => 'overlapping_booking_error'.tr();
 
   // Shift Management

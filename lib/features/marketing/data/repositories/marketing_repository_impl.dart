@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
 import '../../domain/entities/notification_entity.dart';
@@ -40,6 +41,7 @@ class MarketingRepositoryImpl implements MarketingRepository {
         expiresAt: promo.expiresAt,
         tag: promo.tag,
         isRoomSpecific: promo.isRoomSpecific,
+        targetAudience: promo.targetAudience,
       ));
       return const Right(null);
     } catch (e) {
@@ -52,6 +54,16 @@ class MarketingRepositoryImpl implements MarketingRepository {
     try {
       await remoteDataSource.deletePromotion(id);
       return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> uploadPromoPoster(Uint8List fileBytes, String fileName) async {
+    try {
+      final url = await remoteDataSource.uploadPromoPoster(fileBytes, fileName);
+      return Right(url);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

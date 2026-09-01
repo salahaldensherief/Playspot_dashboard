@@ -15,6 +15,7 @@ class PromoEntity extends Equatable {
   final DateTime? expiresAt;
   final String? tag;
   final bool isRoomSpecific;
+  final String targetAudience;
 
   const PromoEntity({
     required this.id,
@@ -31,6 +32,7 @@ class PromoEntity extends Equatable {
     this.expiresAt,
     this.tag,
     this.isRoomSpecific = false,
+    this.targetAudience = 'all',
   });
 
   @override
@@ -49,5 +51,6 @@ class PromoEntity extends Equatable {
         expiresAt,
         tag,
         isRoomSpecific,
+        targetAudience,
       ];
 }

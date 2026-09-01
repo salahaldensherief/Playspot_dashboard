@@ -19,8 +19,8 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
 
   @override
   Future<List<ShiftModel>> getShifts({String? loungeId}) async {
-    // Direct query without joins as requested
-    var query = _supabase.from('shifts').select();
+    // Fetch shifts with cashier name from profiles table
+    var query = _supabase.from('shifts').select('*, profiles:cashier_id(full_name)');
     
     if (loungeId != null) {
       query = query.eq('lounge_id', loungeId);
@@ -41,10 +41,10 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
 
       debugPrint('🔵 [ShiftRemoteDataSource] Fetching active shift for user: $userId');
 
-      // Direct query without joins as requested
+      // Fetch active shift with cashier name from profiles
       final response = await _supabase
           .from('shifts')
-          .select()
+          .select('*, profiles:cashier_id(full_name)')
           .eq('cashier_id', userId)
           .eq('status', 'open')
           .order('start_time', ascending: false)

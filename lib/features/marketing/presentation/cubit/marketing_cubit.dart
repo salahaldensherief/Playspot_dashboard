@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/promo_entity.dart';
 import '../../domain/entities/notification_entity.dart';
@@ -49,6 +50,17 @@ class MarketingCubit extends Cubit<MarketingState> {
         emit(state.copyWith(status: MarketingStatus.actionSuccess));
         loadPromotions(loungeId: promo.loungeId);
       },
+    );
+  }
+
+  Future<String?> uploadPromoPoster(Uint8List fileBytes, String fileName) async {
+    final result = await repository.uploadPromoPoster(fileBytes, fileName);
+    return result.fold(
+      (failure) {
+        emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message));
+        return null;
+      },
+      (url) => url,
     );
   }
 

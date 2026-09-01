@@ -18,7 +18,7 @@ class ProfilePage extends StatelessWidget {
 
     return DashboardLayout(
       title: AppStrings.myProfile,
-      activeRoute: 'Profile',
+      activeRoute: AppStrings.myProfile,
       child: Center(
         child: Container(
           width: 600.w,

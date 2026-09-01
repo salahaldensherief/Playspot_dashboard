@@ -116,7 +116,36 @@ class LoungeRepositoryImpl implements LoungeRepository {
         'images': lounge.images,
         'is_open': lounge.isOpen,
         'status': lounge.status,
+        'has_discount': lounge.hasDiscount,
+        'discount_percentage': lounge.discountPercentage,
+        'discount_title_ar': lounge.discountTitleAr,
+        'discount_title_en': lounge.discountTitleEn,
+        'discount_expires_at': lounge.discountExpiresAt?.toIso8601String(),
       });
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateLoungeDiscount({
+    required String loungeId,
+    required bool hasDiscount,
+    required int discountPercentage,
+    String? titleAr,
+    String? titleEn,
+    DateTime? expiresAt,
+  }) async {
+    try {
+      await remoteDataSource.updateLoungeDiscount(
+        loungeId,
+        hasDiscount: hasDiscount,
+        discountPercentage: discountPercentage,
+        titleAr: titleAr,
+        titleEn: titleEn,
+        expiresAt: expiresAt,
+      );
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

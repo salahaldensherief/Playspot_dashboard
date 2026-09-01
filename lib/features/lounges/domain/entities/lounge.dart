@@ -24,6 +24,11 @@ class Lounge extends Equatable {
   final String? ownerName;
   final String? ownerEmail;
   final String status;
+  final bool hasDiscount;
+  final int discountPercentage;
+  final String? discountTitleAr;
+  final String? discountTitleEn;
+  final DateTime? discountExpiresAt;
 
   const Lounge({
     required this.id,
@@ -49,6 +54,11 @@ class Lounge extends Equatable {
     this.ownerName,
     this.ownerEmail,
     this.status = 'active',
+    this.hasDiscount = false,
+    this.discountPercentage = 0,
+    this.discountTitleAr,
+    this.discountTitleEn,
+    this.discountExpiresAt,
   });
 
   @override
@@ -76,6 +86,11 @@ class Lounge extends Equatable {
         ownerName,
         ownerEmail,
         status,
+        hasDiscount,
+        discountPercentage,
+        discountTitleAr,
+        discountTitleEn,
+        discountExpiresAt,
       ];
 
   Lounge copyWith({
@@ -102,6 +117,11 @@ class Lounge extends Equatable {
     String? ownerName,
     String? ownerEmail,
     String? status,
+    bool? hasDiscount,
+    int? discountPercentage,
+    String? discountTitleAr,
+    String? discountTitleEn,
+    DateTime? discountExpiresAt,
   }) {
     return Lounge(
       id: id ?? this.id,
@@ -127,6 +147,11 @@ class Lounge extends Equatable {
       ownerName: ownerName ?? this.ownerName,
       ownerEmail: ownerEmail ?? this.ownerEmail,
       status: status ?? this.status,
+      hasDiscount: hasDiscount ?? this.hasDiscount,
+      discountPercentage: discountPercentage ?? this.discountPercentage,
+      discountTitleAr: discountTitleAr ?? this.discountTitleAr,
+      discountTitleEn: discountTitleEn ?? this.discountTitleEn,
+      discountExpiresAt: discountExpiresAt ?? this.discountExpiresAt,
     );
   }
 }

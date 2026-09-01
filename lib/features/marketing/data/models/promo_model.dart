@@ -16,6 +16,7 @@ class PromoModel extends PromoEntity {
     super.expiresAt,
     super.tag,
     super.isRoomSpecific = false,
+    super.targetAudience = 'all',
   });
 
   factory PromoModel.fromJson(Map<String, dynamic> json) {
@@ -34,6 +35,7 @@ class PromoModel extends PromoEntity {
       expiresAt: json['expires_at'] != null ? DateTime.parse(json['expires_at']) : null,
       tag: json['tag']?.toString(),
       isRoomSpecific: json['is_room_specific'] ?? false,
+      targetAudience: json['target_audience']?.toString() ?? 'all',
     );
   }
 
@@ -53,6 +55,7 @@ class PromoModel extends PromoEntity {
       'expires_at': expiresAt?.toIso8601String(),
       'tag': tag,
       'is_room_specific': isRoomSpecific,
+      'target_audience': targetAudience,
     };
   }
 }

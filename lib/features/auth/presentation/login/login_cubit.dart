@@ -112,6 +112,14 @@ class LoginCubit extends Cubit<LoginState> {
     emit(state.copyWith(user: user, isSetupCompleted: user.isSetupCompleted));
   }
 
+  Future<void> refreshUserLounge(String loungeId) async {
+    final loungeResult = await loungeRepository.getLoungeById(loungeId);
+    loungeResult.fold(
+      (_) => null,
+      (lounge) => emit(state.copyWith(userLounge: lounge)),
+    );
+  }
+
   Future<void> logout() async {
     await logoutUseCase(NoParams());
     emit(const LoginState(status: LoginStatus.unauthenticated));

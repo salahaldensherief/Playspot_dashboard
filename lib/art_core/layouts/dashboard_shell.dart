@@ -81,6 +81,9 @@ class DashboardShell extends StatelessWidget {
         } else if (location.contains('reports')) {
           activeRoute = AppStrings.monthlyReports;
           title = AppStrings.monthlyReports;
+        } else if (location.contains('lounge-admin/profile')) {
+          activeRoute = AppStrings.loungeProfile;
+          title = AppStrings.loungeProfile;
         } else if (location.contains('profile')) {
           activeRoute = AppStrings.myProfile;
           title = AppStrings.myProfile;

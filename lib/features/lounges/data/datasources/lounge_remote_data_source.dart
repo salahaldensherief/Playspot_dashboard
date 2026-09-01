@@ -14,6 +14,13 @@ abstract class LoungeRemoteDataSource {
     String? city,
   });
   Future<void> updateLounge(String id, Map<String, dynamic> data);
+  Future<void> updateLoungeDiscount(String id, {
+    required bool hasDiscount,
+    required int discountPercentage,
+    String? titleAr,
+    String? titleEn,
+    DateTime? expiresAt,
+  });
   Future<Map<String, dynamic>> getDashboardStats(String? loungeId);
   Future<Map<String, dynamic>> getDashboardOverview();
   Future<List<Map<String, dynamic>>> getRevenueOverTime(int daysBack);
@@ -93,6 +100,23 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   @override
   Future<void> updateLounge(String id, Map<String, dynamic> data) async {
     await client.from('lounges').update(data).eq('id', id);
+  }
+
+  @override
+  Future<void> updateLoungeDiscount(String id, {
+    required bool hasDiscount,
+    required int discountPercentage,
+    String? titleAr,
+    String? titleEn,
+    DateTime? expiresAt,
+  }) async {
+    await client.from('lounges').update({
+      'has_discount': hasDiscount,
+      'discount_percentage': discountPercentage,
+      'discount_title_ar': titleAr,
+      'discount_title_en': titleEn,
+      'discount_expires_at': expiresAt?.toIso8601String(),
+    }).eq('id', id);
   }
 
   @override

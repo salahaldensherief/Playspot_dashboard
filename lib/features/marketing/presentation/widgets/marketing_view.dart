@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -16,6 +18,7 @@ import 'promo_form_section.dart';
 import 'design_style_section.dart';
 import 'promo_dialog.dart';
 import 'notification_dialog.dart';
+import 'promo_card.dart';
 
 class MarketingView extends StatefulWidget {
   const MarketingView({super.key});
@@ -35,6 +38,10 @@ class _MarketingViewState extends State<MarketingView> with SingleTickerProvider
   String? _selectedTag;
   bool _isRoomSpecific = false;
   String? _selectedRoomId;
+  String _targetAudience = 'all';
+  Uint8List? _selectedImageBytes;
+  String? _selectedImageName;
+  bool _isUploading = false;
 
   final List<List<Color>> _colorTemplates = [
     [AppColors.neonPurple, AppColors.neonBlue],
@@ -175,24 +182,98 @@ class _MarketingViewState extends State<MarketingView> with SingleTickerProvider
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              PromoFormSection(
-                titleArController: _titleArController,
-                titleEnController: _titleEnController,
-                expirationDateController: _expirationDateController,
-                selectedDeepLink: _selectedDeepLink,
-                onDeepLinkChanged: (v) => setState(() => _selectedDeepLink = v ?? 'Lounge Profile'),
-                expiresAt: _expiresAt,
-                onDateChanged: (v) => setState(() {
-                  _expiresAt = v;
-                  _expirationDateController.text = v.toLocal().toString().split(' ')[0];
-                }),
-                selectedTag: _selectedTag,
-                onTagChanged: (v) => setState(() => _selectedTag = v),
-                isRoomSpecific: _isRoomSpecific,
-                onRoomSpecificChanged: (v) => setState(() => _isRoomSpecific = v),
-                selectedRoomId: _selectedRoomId,
-                onRoomChanged: (v) => setState(() => _selectedRoomId = v),
-                availableRooms: roomState.rooms,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: PromoFormSection(
+                      titleArController: _titleArController,
+                      titleEnController: _titleEnController,
+                      expirationDateController: _expirationDateController,
+                      selectedDeepLink: _selectedDeepLink,
+                      onDeepLinkChanged: (v) => setState(() => _selectedDeepLink = v ?? 'Lounge Profile'),
+                      expiresAt: _expiresAt,
+                      onDateChanged: (v) => setState(() {
+                        _expiresAt = v;
+                        _expirationDateController.text = v.toLocal().toString().split(' ')[0];
+                      }),
+                      selectedTag: _selectedTag,
+                      onTagChanged: (v) => setState(() => _selectedTag = v),
+                      isRoomSpecific: _isRoomSpecific,
+                      onRoomSpecificChanged: (v) => setState(() => _isRoomSpecific = v),
+                      selectedRoomId: _selectedRoomId,
+                      onRoomChanged: (v) => setState(() => _selectedRoomId = v),
+                      targetAudience: _targetAudience,
+                      onTargetAudienceChanged: (v) => setState(() => _targetAudience = v),
+                      availableRooms: roomState.rooms,
+                    ),
+                  ),
+                  SizedBox(width: 32.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings.promoPoster,
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        GestureDetector(
+                          onTap: _pickImage,
+                          child: Container(
+                            height: 300.h,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: AppColors.mutedBackground,
+                              borderRadius: BorderRadius.circular(12.r),
+                              border: Border.all(color: AppColors.borderDefault),
+                              image: _selectedImageBytes != null
+                                  ? DecorationImage(
+                                      image: MemoryImage(_selectedImageBytes!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                            ),
+                            child: _selectedImageBytes == null
+                                ? Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.add_photo_alternate_outlined, size: 48.r, color: AppColors.textSecondary),
+                                      SizedBox(height: 8.h),
+                                      Text(AppStrings.uploadPoster, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                                    ],
+                                  )
+                                : Align(
+                                    alignment: Alignment.topRight,
+                                    child: IconButton(
+                                      onPressed: () => setState(() => _selectedImageBytes = null),
+                                      icon: Container(
+                                        padding: EdgeInsets.all(4.r),
+                                        decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                                        child: const Icon(Icons.close, color: Colors.white, size: 16),
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        if (_selectedImageBytes != null) ...[
+                          SizedBox(height: 12.h),
+                          AppButton(
+                            text: AppStrings.changePoster,
+                            onPressed: _pickImage,
+                            variant: AppButtonVariant.outlined,
+                            height: 36.h,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: 32.h),
               DesignStyleSection(
@@ -205,25 +286,42 @@ class _MarketingViewState extends State<MarketingView> with SingleTickerProvider
               SizedBox(height: 40.h),
               AppButton(
                 text: AppStrings.createPromotion,
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    final promo = PromoEntity(
-                      id: '',
-                      titleAr: _titleArController.text,
-                      titleEn: _titleEnController.text,
-                      tagAr: _selectedTag ?? '',
-                      tagEn: _selectedTag ?? '',
-                      hexColors: _colorTemplates[_selectedTemplate].map((e) => '#${e.value.toRadixString(16).substring(2)}').toList(),
-                      iconKey: _selectedIcon,
-                      deepLink: _selectedDeepLink,
-                      expiresAt: _expiresAt,
-                      tag: _selectedTag,
-                      isRoomSpecific: _isRoomSpecific,
-                      roomId: _selectedRoomId,
-                    );
-                    context.read<MarketingCubit>().createPromotion(promo);
-                  }
-                },
+                isLoading: _isUploading,
+                onPressed: _isUploading
+                    ? null
+                    : () async {
+                        if (_formKey.currentState!.validate()) {
+                          setState(() => _isUploading = true);
+                          String? imageUrl;
+                          if (_selectedImageBytes != null) {
+                            imageUrl = await context.read<MarketingCubit>().uploadPromoPoster(_selectedImageBytes!, _selectedImageName ?? 'promo.png');
+                          }
+
+                          final promo = PromoEntity(
+                            id: '',
+                            titleAr: _titleArController.text,
+                            titleEn: _titleEnController.text,
+                            tagAr: _selectedTag ?? '',
+                            tagEn: _selectedTag ?? '',
+                            hexColors: _colorTemplates[_selectedTemplate].map((e) => '#${e.value.toRadixString(16).substring(2)}').toList(),
+                            iconKey: _selectedIcon,
+                            deepLink: _selectedDeepLink,
+                            expiresAt: _expiresAt,
+                            tag: _selectedTag,
+                            isRoomSpecific: _isRoomSpecific,
+                            roomId: _selectedRoomId,
+                            targetAudience: _targetAudience,
+                            imageUrl: imageUrl,
+                          );
+                          if (mounted) {
+                            context.read<MarketingCubit>().createPromotion(promo);
+                            setState(() {
+                              _isUploading = false;
+                              _selectedImageBytes = null;
+                            });
+                          }
+                        }
+                      },
                 width: 250.w,
               ),
             ],
@@ -231,6 +329,16 @@ class _MarketingViewState extends State<MarketingView> with SingleTickerProvider
         );
       },
     );
+  }
+
+  Future<void> _pickImage() async {
+    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+    if (result != null) {
+      setState(() {
+        _selectedImageBytes = result.files.first.bytes;
+        _selectedImageName = result.files.first.name;
+      });
+    }
   }
 
   Widget _buildPromotionsList(MarketingCubit cubit) {
@@ -246,55 +354,54 @@ class _MarketingViewState extends State<MarketingView> with SingleTickerProvider
         final tags = ['All', ...state.promotions.map((p) => p.tag).whereType<String>().toSet()];
         final filteredPromos = _selectedFilterTag == 'All' ? state.promotions : state.promotions.where((p) => p.tag == _selectedFilterTag).toList();
 
-        return Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(24.r),
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.borderDefault),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: tags
-                      .map((tag) => Padding(
-                            padding: EdgeInsets.only(right: 8.w),
-                            child: FilterChip(
-                              label: Text(tag),
-                              selected: _selectedFilterTag == tag,
-                              onSelected: (selected) {
-                                setState(() {
-                                  _selectedFilterTag = tag;
-                                });
-                              },
-                              selectedColor: AppColors.neonBlue.withOpacity(0.2),
-                              checkmarkColor: AppColors.neonBlue,
-                            ),
-                          ))
-                      .toList(),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: tags
+                    .map((tag) => Padding(
+                          padding: EdgeInsets.only(right: 8.w),
+                          child: FilterChip(
+                            label: Text(tag),
+                            selected: _selectedFilterTag == tag,
+                            onSelected: (selected) {
+                              setState(() {
+                                _selectedFilterTag = tag;
+                              });
+                            },
+                            selectedColor: AppColors.neonBlue.withOpacity(0.2),
+                            checkmarkColor: AppColors.neonBlue,
+                          ),
+                        ))
+                    .toList(),
+              ),
+            ),
+            SizedBox(height: 24.h),
+            if (filteredPromos.isEmpty)
+              Expanded(child: Center(child: Text(AppStrings.noPromotions, style: const TextStyle(color: AppColors.textSecondary))))
+            else
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 400.w,
+                    mainAxisExtent: 220.h,
+                    crossAxisSpacing: 24.w,
+                    mainAxisSpacing: 24.h,
+                  ),
+                  itemCount: filteredPromos.length,
+                  itemBuilder: (context, index) {
+                    final promo = filteredPromos[index];
+                    return PromoCard(
+                      promo: promo,
+                      onEdit: () => _showEditPromoDialog(context, cubit, promo),
+                      onDelete: () => _confirmDelete(context, cubit, promo),
+                    );
+                  },
                 ),
               ),
-              SizedBox(height: 16.h),
-              if (filteredPromos.isEmpty)
-                Center(child: Text(AppStrings.noPromotions, style: const TextStyle(color: AppColors.textSecondary)))
-              else
-                DataTable(
-                  headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
-                  columns: [
-                    DataColumn(label: Text(AppStrings.promoTitleEn)),
-                    DataColumn(label: Text(AppStrings.tagEn)),
-                    DataColumn(label: Text(AppStrings.userLabel)),
-                    DataColumn(label: Text(AppStrings.status)),
-                    DataColumn(label: Text(AppStrings.actions)),
-                  ],
-                  rows: filteredPromos.map((p) => _buildPromoRow(context, cubit, p)).toList(),
-                ),
-            ],
-          ),
+          ],
         );
       },
     );

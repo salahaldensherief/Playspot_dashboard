@@ -23,6 +23,8 @@ class ShiftHistoryScreen extends StatefulWidget {
 }
 
 class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
+  final ScrollController _horizontalScrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -36,17 +38,18 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
   }
 
   @override
+  void dispose() {
+    _horizontalScrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.all(24.r),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            AppStrings.shiftHistory,
-            style: TextStyle(color: AppColors.textPrimary, fontSize: 28.sp, fontWeight: FontWeight.bold, fontFamily: 'Orbitron'),
-          ),
-          SizedBox(height: 24.h),
           Expanded(
             child: BlocBuilder<ShiftCubit, ShiftState>(
               builder: (context, state) {
@@ -61,14 +64,19 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16.r),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
+                    child: Scrollbar(
+                      controller: _horizontalScrollController,
+                      thumbVisibility: true,
+                      trackVisibility: true,
                       child: SingleChildScrollView(
+                        controller: _horizontalScrollController,
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
-                          headingRowColor: MaterialStateProperty.all(AppColors.mutedBackground),
-                          dataRowMinHeight: 65.h,
-                          dataRowMaxHeight: 80.h,
+                          headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
+                          dataRowMaxHeight: 60.h,
+                          dataRowMinHeight: 48.h,
+                          columnSpacing: 24.w,
+                          horizontalMargin: 20.w,
                         columns: [
                           _buildColumn(AppStrings.date),
                           _buildColumn(AppStrings.cashier),
@@ -135,34 +143,15 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
   }
 
   Widget _buildStatusBadge(ShiftEntity shift) {
-    final isOpen = shift.status == 'open';
-    if (isOpen) {
-      return Container(
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-        decoration: BoxDecoration(
-          color: AppColors.success.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(color: AppColors.success.withOpacity(0.5)),
-        ),
-        child: Text(
-          shift.status.toUpperCase(),
-          style: TextStyle(color: AppColors.success, fontSize: 10.sp, fontWeight: FontWeight.bold),
-        ),
-      );
+    if (shift.status == 'open') {
+      return StatusBadge.info(AppStrings.active.toUpperCase());
     }
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        StatusBadge.info(shift.status.toUpperCase()),
-        SizedBox(height: 4.h),
-        if (shift.isApproved)
-          StatusBadge.success(AppStrings.approved.toUpperCase())
-        else
-          StatusBadge.warning(AppStrings.pendingApproval.toUpperCase()),
-      ],
-    );
+    if (shift.isApproved) {
+      return StatusBadge.success(AppStrings.approved.toUpperCase());
+    }
+
+    return StatusBadge.warning(AppStrings.pendingApproval.toUpperCase());
   }
 
   void _showApproveDialog(BuildContext context, ShiftEntity shift) {

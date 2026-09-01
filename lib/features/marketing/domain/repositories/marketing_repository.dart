@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
 import '../entities/promo_entity.dart';
@@ -7,6 +8,7 @@ abstract class MarketingRepository {
   Future<Either<Failure, List<PromoEntity>>> getPromotions({String? loungeId, String? city});
   Future<Either<Failure, void>> createPromotion(PromoEntity promo);
   Future<Either<Failure, void>> deletePromotion(String id);
+  Future<Either<Failure, String>> uploadPromoPoster(Uint8List fileBytes, String fileName);
 
   // Notifications
   Future<Either<Failure, void>> sendNotification(NotificationEntity notification);

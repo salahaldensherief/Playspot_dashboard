@@ -23,7 +23,7 @@ class LoungeProfilePage extends StatelessWidget {
       length: canManagePermissions ? 2 : 1,
       child: DashboardLayout(
         title: AppStrings.loungeProfile,
-        activeRoute: AppStrings.myProfile,
+        activeRoute: AppStrings.loungeProfile,
         isScrollable: false,
         child: Column(
           children: [

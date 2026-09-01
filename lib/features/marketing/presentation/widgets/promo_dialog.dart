@@ -1,9 +1,12 @@
+import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/features/marketing/presentation/cubit/marketing_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
 import '../../domain/entities/promo_entity.dart';
@@ -40,6 +43,11 @@ class _PromoDialogState extends State<PromoDialog> {
   String? _selectedTag;
   bool _isRoomSpecific = false;
   String? _selectedRoomId;
+  String _targetAudience = 'all';
+  Uint8List? _selectedImageBytes;
+  String? _selectedImageName;
+  String? _currentImageUrl;
+  bool _isUploading = false;
 
   @override
   void initState() {
@@ -55,24 +63,38 @@ class _PromoDialogState extends State<PromoDialog> {
     _selectedTag = widget.promo.tag;
     _isRoomSpecific = widget.promo.isRoomSpecific;
     _selectedRoomId = widget.promo.roomId;
+    _targetAudience = widget.promo.targetAudience;
+    _currentImageUrl = widget.promo.imageUrl;
   }
 
-  @override
-  void dispose() {
-    _titleArController.dispose();
-    _titleEnController.dispose();
-    _expirationDateController.dispose();
-    super.dispose();
+  Future<void> _pickImage() async {
+    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+    if (result != null) {
+      setState(() {
+        _selectedImageBytes = result.files.first.bytes;
+        _selectedImageName = result.files.first.name;
+      });
+    }
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
+      setState(() => _isUploading = true);
+      
+      String? imageUrl = _currentImageUrl;
+      if (_selectedImageBytes != null) {
+        imageUrl = await context.read<MarketingCubit>().uploadPromoPoster(
+          _selectedImageBytes!,
+          _selectedImageName!,
+        );
+      }
+
       if (widget.onSave != null) {
         final updatedPromo = PromoEntity(
           id: widget.promo.id,
           titleAr: _titleArController.text,
           titleEn: _titleEnController.text,
-          tagAr: _selectedTag ?? '', // Or keep old ones if they are separate
+          tagAr: _selectedTag ?? '',
           tagEn: _selectedTag ?? '',
           hexColors: _colorTemplates[_selectedTemplate].map((e) => '#${e.value.toRadixString(16).substring(2)}').toList(),
           iconKey: _selectedIcon,
@@ -82,10 +104,13 @@ class _PromoDialogState extends State<PromoDialog> {
           isRoomSpecific: _isRoomSpecific,
           loungeId: widget.promo.loungeId,
           roomId: _selectedRoomId,
+          targetAudience: _targetAudience,
+          imageUrl: imageUrl,
         );
         widget.onSave!(updatedPromo);
       }
-      Navigator.pop(context);
+      setState(() => _isUploading = false);
+      if (mounted) Navigator.pop(context);
     }
   }
 
@@ -97,7 +122,7 @@ class _PromoDialogState extends State<PromoDialog> {
           backgroundColor: AppColors.cardBackground,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
           child: Container(
-            width: 600.w,
+            width: 700.w,
             padding: EdgeInsets.all(32.r),
             child: SingleChildScrollView(
               child: Form(
@@ -105,24 +130,106 @@ class _PromoDialogState extends State<PromoDialog> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    PromoFormSection(
-                      titleArController: _titleArController,
-                      titleEnController: _titleEnController,
-                      expirationDateController: _expirationDateController,
-                      selectedDeepLink: _selectedDeepLink,
-                      onDeepLinkChanged: (v) => setState(() => _selectedDeepLink = v ?? 'Specific Room'),
-                      expiresAt: _expiresAt,
-                      onDateChanged: (v) => setState(() {
-                        _expiresAt = v;
-                        _expirationDateController.text = v.toLocal().toString().split(' ')[0];
-                      }),
-                      selectedTag: _selectedTag,
-                      onTagChanged: (v) => setState(() => _selectedTag = v),
-                      isRoomSpecific: _isRoomSpecific,
-                      onRoomSpecificChanged: (v) => setState(() => _isRoomSpecific = v),
-                      selectedRoomId: _selectedRoomId,
-                      onRoomChanged: (v) => setState(() => _selectedRoomId = v),
-                      availableRooms: roomState.rooms,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: PromoFormSection(
+                            titleArController: _titleArController,
+                            titleEnController: _titleEnController,
+                            expirationDateController: _expirationDateController,
+                            selectedDeepLink: _selectedDeepLink,
+                            onDeepLinkChanged: (v) => setState(() => _selectedDeepLink = v ?? 'Specific Room'),
+                            expiresAt: _expiresAt,
+                            onDateChanged: (v) => setState(() {
+                              _expiresAt = v;
+                              _expirationDateController.text = v.toLocal().toString().split(' ')[0];
+                            }),
+                            selectedTag: _selectedTag,
+                            onTagChanged: (v) => setState(() => _selectedTag = v),
+                            isRoomSpecific: _isRoomSpecific,
+                            onRoomSpecificChanged: (v) => setState(() => _isRoomSpecific = v),
+                            selectedRoomId: _selectedRoomId,
+                            onRoomChanged: (v) => setState(() => _selectedRoomId = v),
+                            targetAudience: _targetAudience,
+                            onTargetAudienceChanged: (v) => setState(() => _targetAudience = v),
+                            availableRooms: roomState.rooms,
+                          ),
+                        ),
+                        SizedBox(width: 32.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                AppStrings.promoPoster,
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 16.h),
+                              GestureDetector(
+                                onTap: _pickImage,
+                                child: Container(
+                                  height: 300.h,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.mutedBackground,
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    border: Border.all(color: AppColors.borderDefault),
+                                    image: (_selectedImageBytes != null)
+                                        ? DecorationImage(
+                                            image: MemoryImage(_selectedImageBytes!),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : (_currentImageUrl != null)
+                                            ? DecorationImage(
+                                                image: NetworkImage(_currentImageUrl!),
+                                                fit: BoxFit.cover,
+                                              )
+                                            : null,
+                                  ),
+                                  child: (_selectedImageBytes == null && _currentImageUrl == null)
+                                      ? Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.add_photo_alternate_outlined, size: 48.r, color: AppColors.textSecondary),
+                                            SizedBox(height: 8.h),
+                                            Text(AppStrings.uploadPoster, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                                          ],
+                                        )
+                                      : Align(
+                                          alignment: Alignment.topRight,
+                                          child: IconButton(
+                                            onPressed: () => setState(() {
+                                              _selectedImageBytes = null;
+                                              _currentImageUrl = null;
+                                            }),
+                                            icon: Container(
+                                              padding: EdgeInsets.all(4.r),
+                                              decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                                              child: const Icon(Icons.close, color: Colors.white, size: 16),
+                                            ),
+                                          ),
+                                        ),
+                                ),
+                              ),
+                              if (_selectedImageBytes != null || _currentImageUrl != null) ...[
+                                SizedBox(height: 12.h),
+                                AppButton(
+                                  text: AppStrings.changePoster,
+                                  onPressed: _pickImage,
+                                  variant: AppButtonVariant.outlined,
+                                  height: 36.h,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                     SizedBox(height: 24.h),
                     DesignStyleSection(
@@ -144,7 +251,8 @@ class _PromoDialogState extends State<PromoDialog> {
                         SizedBox(width: 16.w),
                         AppButton(
                           text: AppStrings.saveChanges,
-                          onPressed: _submit,
+                          onPressed: _isUploading ? null : _submit,
+                          isLoading: _isUploading,
                         ),
                       ],
                     ),

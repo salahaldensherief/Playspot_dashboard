@@ -25,6 +25,11 @@ class LoungeModel extends Lounge {
     super.ownerName,
     super.ownerEmail,
     super.status = 'active',
+    super.hasDiscount = false,
+    super.discountPercentage = 0,
+    super.discountTitleAr,
+    super.discountTitleEn,
+    super.discountExpiresAt,
   });
 
   factory LoungeModel.fromJson(Map<String, dynamic> json) {
@@ -73,6 +78,11 @@ class LoungeModel extends Lounge {
       ownerName: json['owner_name']?.toString(),
       ownerEmail: json['owner_email']?.toString(),
       status: json['status']?.toString() ?? 'active',
+      hasDiscount: json['has_discount'] ?? false,
+      discountPercentage: parseInt(json['discount_percentage']) ?? 0,
+      discountTitleAr: json['discount_title_ar']?.toString(),
+      discountTitleEn: json['discount_title_en']?.toString(),
+      discountExpiresAt: json['discount_expires_at'] != null ? DateTime.parse(json['discount_expires_at']) : null,
     );
   }
 
@@ -91,6 +101,11 @@ class LoungeModel extends Lounge {
       'lat': lat,
       'lng': lng,
       'status': status,
+      'has_discount': hasDiscount,
+      'discount_percentage': discountPercentage,
+      'discount_title_ar': discountTitleAr,
+      'discount_title_en': discountTitleEn,
+      'discount_expires_at': discountExpiresAt?.toIso8601String(),
       if (categoryId != null) 'category_id': categoryId,
     };
   }

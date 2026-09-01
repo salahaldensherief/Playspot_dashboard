@@ -206,6 +206,12 @@
   "tag_category": "تصنيف العرض",
   "room_specific": "مخصص لغرفة معينة",
   "select_room": "اختر الغرفة",
+  "target_audience": "الجمهور المستهدف",
+  "audience_local": "نفس المدينة فقط",
+  "audience_all": "جميع المستخدمين",
+  "upload_poster": "رفع بوستر العرض",
+  "change_poster": "تغيير البوستر",
+  "promo_poster": "بوستر العرض الترويجي",
   "promo_published_success": "تم إنشاء ونشر العرض الترويجي بنجاح! 🎉",
   "promo_publish_error": "حدث خطأ أثناء نشر العرض",
   "no_promotions": "لا توجد عروض ترويجية حالياً",
@@ -378,5 +384,12 @@
   "kyc_inspection": "مراجعة وثائق الهوية",
   "owner_details": "بيانات المالك",
   "decision_status": "حالة القرار",
-  "review_documents_for": "مراجعة وثائق"
+  "review_documents_for": "مراجعة وثائق",
+  "direct_discount": "الخصم المباشر للصالة",
+  "activate_discount": "تفعيل الخصم المباشر",
+  "discount_percentage": "نسبة الخصم (%)",
+  "discount_title_ar": "عنوان الخصم (بالعربية)",
+  "discount_title_en": "عنوان الخصم (بالإنجليزية)",
+  "discount_expiration": "تاريخ انتهاء الخصم (اختياري)",
+  "discount_updated_success": "تم تحديث بيانات الخصم بنجاح!"
 }

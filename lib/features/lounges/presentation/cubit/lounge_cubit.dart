@@ -106,6 +106,38 @@ class LoungeCubit extends Cubit<LoungeState> {
     );
   }
 
+  Future<void> updateLoungeDiscount({
+    required String loungeId,
+    required bool hasDiscount,
+    required int discountPercentage,
+    String? titleAr,
+    String? titleEn,
+    DateTime? expiresAt,
+  }) async {
+    emit(state.copyWith(status: LoungeStatus.loading));
+    final result = await repository.updateLoungeDiscount(
+      loungeId: loungeId,
+      hasDiscount: hasDiscount,
+      discountPercentage: discountPercentage,
+      titleAr: titleAr,
+      titleEn: titleEn,
+      expiresAt: expiresAt,
+    );
+
+    if (isClosed) return;
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: LoungeStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) {
+        emit(state.copyWith(status: LoungeStatus.success));
+        fetchLounges();
+      },
+    );
+  }
+
   Future<void> deleteLounge(String id) async {
     emit(state.copyWith(status: LoungeStatus.loading));
     final result = await repository.deleteLounge(id);

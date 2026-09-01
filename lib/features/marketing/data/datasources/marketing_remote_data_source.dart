@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/promo_model.dart';
 import '../models/notification_model.dart';
@@ -6,6 +7,7 @@ abstract class MarketingRemoteDataSource {
   Future<List<PromoModel>> getPromotions({String? loungeId, String? city});
   Future<void> createPromotion(PromoModel promo);
   Future<void> deletePromotion(String id);
+  Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName);
 
   // Notifications
   Future<void> sendNotification(NotificationModel notification);
@@ -71,6 +73,13 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
   @override
   Future<void> deletePromotion(String id) async {
     await _supabase.from('promotions').delete().eq('id', id);
+  }
+
+  @override
+  Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName) async {
+    final path = 'posters/${DateTime.now().millisecondsSinceEpoch}_$fileName';
+    await _supabase.storage.from('promo-assets').uploadBinary(path, fileBytes);
+    return _supabase.storage.from('promo-assets').getPublicUrl(path);
   }
 
   @override
