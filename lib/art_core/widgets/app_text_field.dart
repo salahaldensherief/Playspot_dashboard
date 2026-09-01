@@ -12,6 +12,7 @@ class AppTextField extends StatelessWidget {
   final bool readOnly;
   final bool enabled;
   final IconData? prefixIcon;
+  final Widget? suffix;
   final VoidCallback? onTap;
   final ValueChanged<String>? onChanged;
   final int maxLines;
@@ -27,6 +28,7 @@ class AppTextField extends StatelessWidget {
     this.readOnly = false,
     this.enabled = true,
     this.prefixIcon,
+    this.suffix,
     this.onTap,
     this.onChanged,
     this.maxLines = 1,
@@ -66,6 +68,7 @@ class AppTextField extends StatelessWidget {
             hintText: hintText,
             hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
             prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppColors.textSecondary, size: 20.r) : null,
+            suffixIcon: suffix,
             filled: true,
             fillColor: enabled ? AppColors.mutedBackground : AppColors.cardBackground.withOpacity(0.5),
             border: OutlineInputBorder(

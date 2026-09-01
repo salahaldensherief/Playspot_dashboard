@@ -50,7 +50,8 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
     super.dispose();
   }
 
-  String _getElapsedTime(DateTime startTime) {
+  String _getElapsedTime(DateTime? startTime) {
+    if (startTime == null) return '--';
     final diff = DateTime.now().difference(startTime);
     final hours = diff.inHours;
     final minutes = diff.inMinutes % 60;
@@ -60,6 +61,7 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ShiftCubit, ShiftState>(
+      buildWhen: (previous, current) => previous.status != current.status || previous.liveOverview != current.liveOverview,
       builder: (context, state) {
         if (state.status == ShiftStatus.loading && state.liveOverview == null) {
           return const LinearProgressIndicator(color: AppColors.neonBlue, backgroundColor: Colors.transparent);
@@ -103,8 +105,14 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
   }
 
   Widget _buildMonitoringBanner(BuildContext context, LiveShiftOverviewEntity overview) {
-    final startTimeStr = DateFormat('hh:mm a').format(overview.startTime!);
-    final elapsed = _getElapsedTime(overview.startTime!);
+    final startTime = overview.startTime;
+    final startTimeStr = startTime != null ? DateFormat.jm().format(startTime) : '--:--';
+    final elapsed = _getElapsedTime(startTime);
+    final bool isMobile = MediaQuery.sizeOf(context).width < 850;
+
+    if (isMobile) {
+      return _buildMobileMonitoringBanner(context, overview, startTimeStr, elapsed);
+    }
 
     return Container(
       width: double.infinity,
@@ -122,7 +130,7 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
           CircleAvatar(
             radius: 24.r,
             backgroundColor: AppColors.neonBlue.withOpacity(0.1),
-            backgroundImage: overview.cashierAvatar != null ? NetworkImage(overview.cashierAvatar!) : null,
+            backgroundImage: overview.cashierAvatar != null ? NetworkImage(overview.cashierAvatar ?? '') : null,
             child: overview.cashierAvatar == null 
               ? Icon(Icons.person, color: AppColors.neonBlue, size: 24.r) 
               : null,
@@ -131,7 +139,7 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText.body(overview.cashierName ?? 'N/A', fontWeight: FontWeight.bold),
+              AppText.body(overview.cashierName ?? 'Cashier', fontWeight: FontWeight.bold),
               AppText.body(overview.cashierPhone ?? '', color: AppColors.textSecondary, fontSize: 12.sp),
             ],
           ),
@@ -156,9 +164,9 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
           const Spacer(),
 
           // Stats
-          _buildStatItem("Cash", "${overview.cashInDrawer?.toStringAsFixed(0)} ${AppStrings.egp}"),
+          _buildStatItem("Cash", "${(overview.cashInDrawer ?? 0.0).toStringAsFixed(0)} ${AppStrings.egp}"),
           SizedBox(width: 24.w),
-          _buildStatItem("Digital", "${overview.digitalPayments?.toStringAsFixed(0)} ${AppStrings.egp}"),
+          _buildStatItem("Digital", "${(overview.digitalPayments ?? 0.0).toStringAsFixed(0)} ${AppStrings.egp}"),
           SizedBox(width: 24.w),
           _buildStatItem("Sessions", overview.activeSessions.toString(), icon: Icons.videogame_asset_outlined),
           
@@ -170,6 +178,55 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
             variant: AppButtonVariant.danger,
             height: 36.h,
             onPressed: () => _confirmForceClose(context, overview),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileMonitoringBanner(BuildContext context, LiveShiftOverviewEntity overview, String startTime, String elapsed) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        border: Border(bottom: BorderSide(color: AppColors.borderDefault)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 20.r,
+                backgroundImage: overview.cashierAvatar != null ? NetworkImage(overview.cashierAvatar ?? '') : null,
+                child: overview.cashierAvatar == null ? Icon(Icons.person, size: 20.r) : null,
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppText.body(overview.cashierName ?? 'Staff', fontWeight: FontWeight.bold, fontSize: 14.sp),
+                    AppText.body("Since $startTime ($elapsed)", color: AppColors.textSecondary, fontSize: 11.sp),
+                  ],
+                ),
+              ),
+              AppButton(
+                text: "Close",
+                variant: AppButtonVariant.danger,
+                height: 30.h,
+                onPressed: () => _confirmForceClose(context, overview),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildStatItem("Cash", (overview.cashInDrawer ?? 0.0).toStringAsFixed(0)),
+              _buildStatItem("Digital", (overview.digitalPayments ?? 0.0).toStringAsFixed(0)),
+              _buildStatItem("Active", overview.activeSessions.toString(), icon: Icons.videogame_asset_outlined),
+            ],
           ),
         ],
       ),
@@ -200,7 +257,7 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
       builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
         title: Text("Force Close Shift", style: TextStyle(color: AppColors.textPrimary)),
-        content: Text("Are you sure you want to force close the current shift for ${overview.cashierName}?"),
+        content: Text("Are you sure you want to force close the current shift for ${overview.cashierName ?? 'this cashier'}?"),
         actions: [
           TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
           TextButton(
@@ -218,24 +275,20 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
   void _showCloseDialog(BuildContext context, LiveShiftOverviewEntity overview) {
     final shiftCubit = context.read<ShiftCubit>();
     final loginCubit = context.read<LoginCubit>();
-    final permissionsCubit = context.read<PermissionsCubit>();
     final user = loginCubit.state.user;
     
     showDialog(
       context: context,
-      builder: (diagContext) => MultiBlocProvider(
-        providers: [
-          BlocProvider.value(value: shiftCubit),
-          BlocProvider.value(value: loginCubit),
-          BlocProvider.value(value: permissionsCubit),
-        ],
-        child: CloseShiftDialog(
-          onConfirm: (actualCash, notes) {
-            shiftCubit.closeShift(overview.shiftId!, actualCash, notes, user?.loungeId ?? '');
+      useRootNavigator: false,
+      builder: (diagContext) => CloseShiftDialog(
+        onConfirm: (actualCash, notes) {
+          final shiftId = overview.shiftId;
+          if (shiftId != null) {
+            shiftCubit.closeShift(shiftId, actualCash, notes, user?.loungeId ?? '');
             Navigator.pop(diagContext);
             _refreshOverview();
-          },
-        ),
+          }
+        },
       ),
     );
   }

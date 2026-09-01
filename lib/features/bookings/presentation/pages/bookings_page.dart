@@ -20,6 +20,8 @@ import '../cubit/booking_state.dart';
 import '../widgets/booking_card.dart';
 import '../widgets/add_booking_dialog.dart';
 
+import '../widgets/booking_details_dialog.dart';
+
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
 
@@ -35,6 +37,12 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() => setState(() {}));
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<LoginCubit>().state.user;
+      context.read<BookingCubit>().startWatchingBookings(loungeId: user?.loungeId);
+      context.read<LoungeCubit>().fetchLounges();
+    });
   }
 
   @override
@@ -181,9 +189,33 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
         onApprove: isPending ? () => cubit.approveBooking(booking.id) : null,
         onReject: isPending ? () => cubit.rejectBooking(booking.id) : null,
         onConfirmPayment: !isPending && !isAudit && booking.paymentStatus != PaymentStatus.paid
-            ? () => cubit.confirmCashPayment(booking.id, shiftId: activeShiftId)
+            ? () => _showBookingDetails(context, booking)
             : null,
       )).toList(),
+    );
+  }
+
+  void _showBookingDetails(BuildContext context, Booking booking) {
+    final shiftState = context.read<ShiftCubit>().state;
+    final activeShiftId = shiftState.activeShift?.id;
+    final cubit = context.read<BookingCubit>();
+
+    showDialog(
+      context: context,
+      useRootNavigator: false,
+      builder: (_) => BookingDetailsDialog(
+        booking: booking,
+        onConfirmPayment: (amount, percent, reason) {
+          cubit.confirmCashPayment(
+            booking.id,
+            shiftId: activeShiftId,
+            discountAmount: amount,
+            discountPercentage: percent,
+            discountReason: reason,
+          );
+        },
+        onCancel: () => cubit.rejectBooking(booking.id),
+      ),
     );
   }
 
@@ -416,7 +448,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
               onApprove: isPending ? () => cubit.approveBooking(booking.id) : null,
               onReject: isPending ? () => cubit.rejectBooking(booking.id) : null,
               onConfirmPayment: !isPending && !isAudit && booking.paymentStatus != PaymentStatus.paid
-                  ? () => cubit.confirmCashPayment(booking.id, shiftId: activeShiftId)
+                  ? () => _showBookingDetails(context, booking)
                   : null,
             );
           },

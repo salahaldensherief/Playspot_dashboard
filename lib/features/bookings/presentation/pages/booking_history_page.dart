@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+import '../../../auth/presentation/login/login_cubit.dart';
 import '../../domain/entities/booking.dart';
 import '../cubit/booking_cubit.dart';
 import '../cubit/booking_state.dart';
@@ -21,6 +22,15 @@ class BookingHistoryPage extends StatefulWidget {
 
 class _BookingHistoryPageState extends State<BookingHistoryPage> {
   DateTime _selectedDate = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<LoginCubit>().state.user;
+      context.read<BookingCubit>().startWatchingBookings(loungeId: user?.loungeId);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

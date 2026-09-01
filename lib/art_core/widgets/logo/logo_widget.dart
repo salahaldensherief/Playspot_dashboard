@@ -1,4 +1,3 @@
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -79,7 +78,7 @@ class _LogoWidgetState extends State<LogoWidget>
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: ui.TextDirection.ltr,
+      textDirection: TextDirection.ltr,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -119,8 +118,8 @@ class _LogoWidgetState extends State<LogoWidget>
         widget.color ?? Colors.white,
         BlendMode.srcIn,
       ),
-      width: widget.width ?? 24,
-      height: widget.height ?? 24,
+      width: widget.width ?? 24.w,
+      height: widget.height ?? 24.w,
     );
   }
 }

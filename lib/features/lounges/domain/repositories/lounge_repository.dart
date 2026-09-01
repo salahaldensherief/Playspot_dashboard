@@ -19,6 +19,14 @@ abstract class LoungeRepository {
     required String loungeId,
   });
   Future<Either<Failure, void>> updateLounge(Lounge lounge);
+  Future<Either<Failure, void>> updateLoungeDiscount({
+    required String loungeId,
+    required bool hasDiscount,
+    required int discountPercentage,
+    String? titleAr,
+    String? titleEn,
+    DateTime? expiresAt,
+  });
   Future<Either<Failure, void>> updateLoungeLocation(String loungeId, double lat, double lng);
   Future<Either<Failure, void>> deleteLounge(String id);
   Future<Either<Failure, String>> createLoungeWithOwner({

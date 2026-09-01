@@ -18,7 +18,7 @@ class ProfilePage extends StatelessWidget {
 
     return DashboardLayout(
       title: AppStrings.myProfile,
-      activeRoute: 'Profile',
+      activeRoute: AppStrings.myProfile,
       child: Center(
         child: Container(
           width: 600.w,
@@ -31,7 +31,7 @@ class ProfilePage extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildAvatar(user?.avatarUrl, user?.name ?? ''),
+              _buildAvatar(context, user?.avatarUrl, user?.name ?? ''),
               SizedBox(height: 32.h),
               AppTextField(
                 label: AppStrings.fullNameLabel,
@@ -54,7 +54,11 @@ class ProfilePage extends StatelessWidget {
               AppButton(
                 text: AppStrings.changePassword,
                 variant: AppButtonVariant.outlined,
-                onPressed: () {},
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(AppStrings.underConstruction)),
+                  );
+                },
               ),
               SizedBox(height: 16.h),
               AppButton(
@@ -69,7 +73,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar(String? url, String name) {
+  Widget _buildAvatar(BuildContext context, String? url, String name) {
     return Stack(
       children: [
         CircleAvatar(
@@ -87,13 +91,21 @@ class ProfilePage extends StatelessWidget {
         Positioned(
           bottom: 0,
           right: 0,
-          child: Container(
-            padding: EdgeInsets.all(8.r),
-            decoration: const BoxDecoration(
-              color: AppColors.neonBlue,
-              shape: BoxShape.circle,
+          child: InkWell(
+            onTap: () {
+              // Image picking logic would go here
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(AppStrings.underConstruction)),
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.all(8.r),
+              decoration: const BoxDecoration(
+                color: AppColors.neonBlue,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.camera_alt, color: Colors.white, size: 20.r),
             ),
-            child: Icon(Icons.camera_alt, color: Colors.white, size: 20.r),
           ),
         ),
       ],

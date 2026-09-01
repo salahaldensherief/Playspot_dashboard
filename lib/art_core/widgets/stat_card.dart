@@ -40,6 +40,7 @@ class StatCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min, // Prevents overflow by using minimum space
               children: [
                 Text(
                   title,
@@ -59,7 +60,7 @@ class StatCard extends StatelessWidget {
                     value,
                     style: TextStyle(
                       color: AppColors.textPrimary,
-                      fontSize: 28.sp,
+                      fontSize: 24.sp, // Slightly reduced base size for better fit
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -70,25 +71,26 @@ class StatCard extends StatelessWidget {
                     subtitle!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 11.sp),
                   ),
                 ] else ...[
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           isPositive ? Icons.trending_up : Icons.trending_down,
                           color: isPositive ? AppColors.success : AppColors.danger,
-                          size: 16.r,
+                          size: 14.r,
                         ),
                         SizedBox(width: 4.w),
                         Text(
                           trendText,
                           style: TextStyle(
                             color: isPositive ? AppColors.success : AppColors.danger,
-                            fontSize: 13.sp,
+                            fontSize: 12.sp,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -97,7 +99,7 @@ class StatCard extends StatelessWidget {
                           AppStrings.vsLastMonth,
                           style: TextStyle(
                             color: AppColors.textMuted,
-                            fontSize: 12.sp,
+                            fontSize: 11.sp,
                           ),
                         ),
                       ],
@@ -107,17 +109,17 @@ class StatCard extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(width: 12.w),
+          SizedBox(width: 8.w),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Container(
-              padding: EdgeInsets.all(12.r),
+              padding: EdgeInsets.all(10.r),
               decoration: BoxDecoration(
                 color: iconColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12.r),
+                borderRadius: BorderRadius.circular(10.r),
                 border: Border.all(color: iconColor.withOpacity(0.2)),
               ),
-              child: Icon(icon, color: iconColor, size: 24.r),
+              child: Icon(icon, color: iconColor, size: 20.r),
             ),
           ),
         ],

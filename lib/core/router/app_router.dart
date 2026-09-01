@@ -7,6 +7,7 @@ import 'package:play_spot_dashboard/features/auth/presentation/login/login_state
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_screen.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_screen.dart' as dashboard;
+import 'package:play_spot_dashboard/features/analytics/presentation/cubit/lounge_stats_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounges_page.dart' as lounges;
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/users/presentation/pages/users_page.dart' as users;
@@ -45,6 +46,10 @@ import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
 
+import '../../features/permissions/presentation/cubit/permissions_cubit.dart';
+
+import 'go_router_refresh_stream.dart';
+
 class AppRouter {
   final LoginCubit authCubit;
 
@@ -58,8 +63,6 @@ class AppRouter {
         final bool isLoggingIn = state.matchedLocation == RouterKeys.login;
         final user = authState.user;
 
-        // Allow initial and checking states to pass through without redirecting to login
-        // This prevents jumping to login screen on page refresh
         if (authState.status == LoginStatus.initial || authState.status == LoginStatus.checking) {
           return null;
         }
@@ -78,55 +81,45 @@ class AppRouter {
         final bool isLoungeOwner = user.isLoungeOwner;
         final bool isOnboardingPath = state.matchedLocation == RouterKeys.loungeOnboarding;
 
-        // Only redirect Owners to onboarding if setup is not completed.
-        // Other staff (Manager, Cashier) should go directly to their dashboard.
         if (user.isLoungeOwner && !user.isSetupCompleted) {
           if (!isOnboardingPath) return RouterKeys.loungeOnboarding;
           return null;
         }
 
         if (isOnboardingPath && user.isSetupCompleted) {
-          return RouterKeys.loungeAdminLiveOps;
+          return RouterKeys.loungeAdminDashboard;
         }
 
         if (isLoggingIn || state.matchedLocation == RouterKeys.root) {
           if (isSuperAdmin) return RouterKeys.superAdminDashboard;
-          if (isLoungeAdmin) return RouterKeys.loungeAdminLiveOps;
+          if (isLoungeAdmin) return RouterKeys.loungeAdminDashboard;
         }
 
-        // --- RBAC Route Protection ---
-        
         final String location = state.matchedLocation;
 
-        // 1. Protect Super Admin Routes
         if (location.startsWith('/super-admin') && !isSuperAdmin) {
-          return RouterKeys.loungeAdminLiveOps;
+          return RouterKeys.loungeAdminDashboard;
         }
 
-        // 2. Protect Specific Routes based on Permissions
         final bool isStaffManagementRoute = location == RouterKeys.loungeAdminStaff;
         final bool isFinancialRoute = location.contains('/payouts') || location.contains('/reports');
         final bool isMarketingRoute = location == RouterKeys.loungeAdminMarketing;
         final bool isSetupRoute = location == RouterKeys.loungeAdminRooms || location == RouterKeys.loungeAdminExtras;
 
-        // Redirect if trying to access staff management without permission
         if (isStaffManagementRoute && !user.canManageStaff) {
-          return RouterKeys.loungeAdminLiveOps;
+          return RouterKeys.loungeAdminDashboard;
         }
 
-        // Redirect if trying to access financials without permission (Owner/SuperAdmin only)
         if (isFinancialRoute && !user.canViewFinancials) {
-          return RouterKeys.loungeAdminLiveOps;
+          return RouterKeys.loungeAdminDashboard;
         }
 
-        // Redirect if trying to access marketing without permission
         if (isMarketingRoute && !user.canManageMarketing) {
-          return RouterKeys.loungeAdminLiveOps;
+          return RouterKeys.loungeAdminDashboard;
         }
 
-        // Redirect if trying to access setup without permission
         if (isSetupRoute && !user.canEditSetup) {
-          return RouterKeys.loungeAdminLiveOps;
+          return RouterKeys.loungeAdminDashboard;
         }
 
         return null;
@@ -134,9 +127,10 @@ class AppRouter {
       routes: [
         ShellRoute(
           builder: (BuildContext context, GoRouterState state, Widget child) {
-            return BlocProvider.value(
-              value: authCubit,
+            return BlocProvider(
+              create: (context) => authCubit,
               child: BlocBuilder<LoginCubit, LoginState>(
+                buildWhen: (previous, current) => previous.status != current.status,
                 builder: (context, authState) {
                   if (authState.status == LoginStatus.checking) {
                     return const SplashScreen();
@@ -168,33 +162,61 @@ class AppRouter {
             ),
             
             ShellRoute(
-              pageBuilder: (BuildContext context, GoRouterState state, Widget child) => NoTransitionPage(
-                child: DashboardShell(
-                  location: state.matchedLocation,
-                  child: child,
-                ),
-              ),
+              builder: (BuildContext context, GoRouterState state, Widget child) {
+                final user = context.read<LoginCubit>().state.user;
+                final isSuperAdmin = user?.role == UserRole.superAdmin;
+                final isLoungeOwner = user?.role == UserRole.owner;
+                
+                String? permissionRole = user?.rawRole;
+                if (isSuperAdmin || isLoungeOwner || user?.role == UserRole.manager) {
+                  permissionRole = null; 
+                }
+
+                return BlocProvider(
+                  create: (context) => sl<ShiftCubit>(),
+                  child: BlocProvider(
+                    create: (context) => sl<BookingCubit>(),
+                    child: BlocProvider(
+                      create: (context) => sl<LoungeCubit>(),
+                      child: BlocProvider(
+                        create: (context) => sl<RoomCubit>(),
+                        child: BlocProvider(
+                          create: (context) => sl<LoungeStatsCubit>(),
+                          child: BlocProvider(
+                            create: (context) => sl<DashboardCubit>(),
+                            child: BlocProvider(
+                              create: (context) => sl<ExtrasCubit>(),
+                              child: BlocProvider(
+                                create: (context) {
+                                  final cubit = sl<PermissionsCubit>();
+                                  if (permissionRole != null) {
+                                    cubit.fetchPermissions(permissionRole);
+                                  }
+                                  return cubit;
+                                },
+                                child: DashboardShell(
+                                  location: state.matchedLocation,
+                                  child: child,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
               routes: [
                 GoRoute(
                   path: RouterKeys.superAdminDashboard,
-                  pageBuilder: (context, state) => NoTransitionPage(
-                    child: BlocProvider(
-                      create: (context) => sl<BookingCubit>()..startWatchingBookings(),
-                      child: BlocProvider(
-                        create: (context) => sl<DashboardCubit>()..loadDashboardData(),
-                        child: const dashboard.DashboardScreen(role: UserRole.superAdmin),
-                      ),
-                    ),
+                  pageBuilder: (context, state) => const NoTransitionPage(
+                    child: dashboard.DashboardScreen(role: UserRole.superAdmin),
                   ),
                 ),
                 GoRoute(
                   path: RouterKeys.superAdminLounges,
-                  pageBuilder: (context, state) => NoTransitionPage(
-                    child: BlocProvider(
-                      create: (context) => sl<LoungeCubit>()..fetchLounges(),
-                      child: const lounges.LoungesPage(),
-                    ),
-                  ),
+                  pageBuilder: (context, state) => const NoTransitionPage(child: lounges.LoungesPage()),
                 ),
                 GoRoute(
                   path: RouterKeys.superAdminUsers,
@@ -249,48 +271,35 @@ class AppRouter {
                 ),
                 GoRoute(
                   path: RouterKeys.superAdminShifts,
-                  pageBuilder: (context, state) => NoTransitionPage(
-                    child: BlocProvider(
-                      create: (context) => sl<ShiftCubit>(),
-                      child: const shifts.ShiftHistoryScreen(),
-                    ),
+                  pageBuilder: (context, state) => const NoTransitionPage(
+                    child: shifts.ShiftHistoryScreen(),
                   ),
                 ),
                 GoRoute(
+                  path: RouterKeys.loungeAdminDashboard,
+                  pageBuilder: (context, state) {
+                    final user = context.read<LoginCubit>().state.user;
+                    return NoTransitionPage(
+                      child: dashboard.DashboardScreen(role: user?.role ?? UserRole.manager),
+                    );
+                  },
+                ),
+                GoRoute(
                   path: RouterKeys.loungeAdminLiveOps,
-                  pageBuilder: (context, state) => NoTransitionPage(
-                    child: BlocProvider(
-                      create: (context) => sl<BookingCubit>()..startWatchingBookings(loungeId: context.read<LoginCubit>().state.user?.loungeId),
-                      child: BlocProvider(
-                        create: (context) => sl<LoungeCubit>()..fetchLounges(),
-                        child: BlocProvider(
-                          create: (context) => sl<RoomCubit>(),
-                          child: const bookings.BookingsPage(),
-                        ),
-                      ),
-                    ),
-                  ),
+                  pageBuilder: (context, state) => const NoTransitionPage(child: bookings.BookingsPage()),
                 ),
                 GoRoute(
                   path: RouterKeys.loungeAdminRooms,
                   pageBuilder: (context, state) => NoTransitionPage(
                     child: BlocProvider(
-                      create: (context) => sl<RoomCubit>()..watchRooms(context.read<LoginCubit>().state.user?.loungeId ?? ''),
-                      child: BlocProvider(
-                        create: (context) => sl<CategoryCubit>()..loadCategories(),
-                        child: const rooms.RoomManagementPage(),
-                      ),
+                      create: (context) => sl<CategoryCubit>()..loadCategories(),
+                      child: const rooms.RoomManagementPage(),
                     ),
                   ),
                 ),
                 GoRoute(
                   path: RouterKeys.loungeAdminExtras,
-                  pageBuilder: (context, state) => NoTransitionPage(
-                    child: BlocProvider(
-                      create: (context) => sl<ExtrasCubit>()..loadExtras(context.read<LoginCubit>().state.user?.loungeId ?? ''),
-                      child: const extras.ExtrasManagementPage(),
-                    ),
-                  ),
+                  pageBuilder: (context, state) => const NoTransitionPage(child: extras.ExtrasManagementPage()),
                 ),
                 GoRoute(
                   path: RouterKeys.loungeAdminMarketing,
@@ -309,20 +318,12 @@ class AppRouter {
                 ),
                 GoRoute(
                   path: '/lounge-admin/reports',
-                  pageBuilder: (context, state) => NoTransitionPage(
-                    child: BlocProvider(
-                      create: (context) => sl<BookingCubit>()..startWatchingBookings(loungeId: context.read<LoginCubit>().state.user?.loungeId),
-                      child: const reports.BookingHistoryPage(),
-                    ),
-                  ),
+                  pageBuilder: (context, state) => const NoTransitionPage(child: reports.BookingHistoryPage()),
                 ),
                 GoRoute(
                   path: '/lounge-admin/shifts',
-                  pageBuilder: (context, state) => NoTransitionPage(
-                    child: BlocProvider(
-                      create: (context) => sl<ShiftCubit>(),
-                      child: const shifts.ShiftHistoryScreen(),
-                    ),
+                  pageBuilder: (context, state) => const NoTransitionPage(
+                    child: shifts.ShiftHistoryScreen(),
                   ),
                 ),
                 GoRoute(
@@ -336,11 +337,8 @@ class AppRouter {
                 ),
                 GoRoute(
                   path: RouterKeys.loungeAdminProfile,
-                  pageBuilder: (context, state) => NoTransitionPage(
-                    child: BlocProvider(
-                      create: (context) => sl<LoungeCubit>(),
-                      child: const lounge_profile.LoungeProfilePage(),
-                    ),
+                  pageBuilder: (context, state) => const NoTransitionPage(
+                    child: lounge_profile.LoungeProfilePage(),
                   ),
                 ),
                 GoRoute(
@@ -370,28 +368,4 @@ class AppRouter {
         ),
       ),
     );
-}
-
-class GoRouterRefreshStream extends ChangeNotifier {
-  GoRouterRefreshStream(Stream<dynamic> stream) {
-    _subscription = stream.asBroadcastStream().listen(
-          (dynamic _) {
-            if (hasListeners) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (hasListeners) {
-                  notifyListeners();
-                }
-              });
-            }
-          },
-        );
-  }
-
-  late final StreamSubscription<dynamic> _subscription;
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
-  }
 }

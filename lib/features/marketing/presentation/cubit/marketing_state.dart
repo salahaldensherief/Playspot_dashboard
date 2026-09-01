@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/promo_entity.dart';
 import '../../domain/entities/notification_entity.dart';
 
-enum MarketingStatus { initial, loading, success, failure }
+enum MarketingStatus { initial, loading, success, actionSuccess, failure }
 
 class MarketingState extends Equatable {
   final MarketingStatus status;

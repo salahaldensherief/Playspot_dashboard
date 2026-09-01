@@ -16,7 +16,7 @@ class LiveBookingsFeed extends StatelessWidget {
     return BlocBuilder<BookingCubit, BookingState>(
       builder: (context, state) {
         return Container(
-          padding: EdgeInsets.all(24.r),
+          padding: EdgeInsets.all(20.r),
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(16.r),

@@ -13,6 +13,7 @@ import '../cubit/lounge_cubit.dart';
 import 'core_info_section.dart';
 import 'location_info_section.dart';
 import 'working_hours_section.dart';
+import 'quick_discount_section.dart';
 
 class LoungeProfileView extends StatefulWidget {
   const LoungeProfileView({super.key});
@@ -31,6 +32,11 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
   late TextEditingController _addressController;
   late TextEditingController _opensAtController;
   late TextEditingController _closesAtController;
+  
+  late TextEditingController _discountPercentageController;
+  late TextEditingController _discountTitleArController;
+  late TextEditingController _discountTitleEnController;
+  late TextEditingController _discountExpirationController;
 
   Uint8List? _mainImageBytes;
   String? _mainImageName;
@@ -38,6 +44,9 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
   double? _lat;
   double? _lng;
   bool _isSaving = false;
+  bool _hasDiscount = false;
+  DateTime? _discountExpiresAt;
+  bool _isSavingDiscount = false;
 
   @override
   void initState() {
@@ -50,6 +59,16 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     _addressController = TextEditingController(text: lounge?.location);
     _opensAtController = TextEditingController(text: lounge?.opensAt);
     _closesAtController = TextEditingController(text: lounge?.closesAt);
+    
+    _hasDiscount = lounge?.hasDiscount ?? false;
+    _discountPercentageController = TextEditingController(text: lounge?.discountPercentage.toString() ?? '0');
+    _discountTitleArController = TextEditingController(text: lounge?.discountTitleAr);
+    _discountTitleEnController = TextEditingController(text: lounge?.discountTitleEn);
+    _discountExpiresAt = lounge?.discountExpiresAt;
+    _discountExpirationController = TextEditingController(
+      text: _discountExpiresAt != null ? _discountExpiresAt!.toLocal().toString().split(' ')[0] : '',
+    );
+    
     _lat = lounge?.lat;
     _lng = lounge?.lng;
   }
@@ -63,6 +82,10 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     _addressController.dispose();
     _opensAtController.dispose();
     _closesAtController.dispose();
+    _discountPercentageController.dispose();
+    _discountTitleArController.dispose();
+    _discountTitleEnController.dispose();
+    _discountExpirationController.dispose();
     super.dispose();
   }
 
@@ -115,6 +138,8 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
              ScaffoldMessenger.of(context).showSnackBar(
                const SnackBar(content: Text('Profile updated successfully'), backgroundColor: Colors.green),
              );
+             // Refresh user data if needed
+             context.read<LoginCubit>().refreshUserLounge(lounge.id);
           }
         }
       } catch (e) {
@@ -126,6 +151,66 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
       } finally {
         if (mounted) setState(() => _isSaving = false);
       }
+    }
+  }
+
+  Future<void> _saveDiscount() async {
+    final lounge = context.read<LoginCubit>().state.userLounge;
+    if (lounge == null) return;
+
+    setState(() => _isSavingDiscount = true);
+    try {
+      await context.read<LoungeCubit>().updateLoungeDiscount(
+        loungeId: lounge.id,
+        hasDiscount: _hasDiscount,
+        discountPercentage: int.tryParse(_discountPercentageController.text) ?? 0,
+        titleAr: _discountTitleArController.text,
+        titleEn: _discountTitleEnController.text,
+        expiresAt: _discountExpiresAt,
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.discountUpdatedSuccess), backgroundColor: Colors.green),
+        );
+        context.read<LoginCubit>().refreshUserLounge(lounge.id);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.danger),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSavingDiscount = false);
+    }
+  }
+
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _discountExpiresAt ?? DateTime.now().add(const Duration(days: 7)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.neonBlue,
+              onPrimary: Colors.white,
+              surface: AppColors.cardBackground,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        _discountExpiresAt = picked;
+        _discountExpirationController.text = picked.toLocal().toString().split(' ')[0];
+      });
     }
   }
 
@@ -185,6 +270,18 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
                 isLoading: _isSaving,
                 onPressed: _saveProfile,
                 width: 200.w,
+              ),
+              SizedBox(height: 56.h),
+              QuickDiscountSection(
+                hasDiscount: _hasDiscount,
+                onHasDiscountChanged: (v) => setState(() => _hasDiscount = v),
+                percentageController: _discountPercentageController,
+                titleArController: _discountTitleArController,
+                titleEnController: _discountTitleEnController,
+                expirationController: _discountExpirationController,
+                onExpirationTap: _selectDate,
+                onSave: _saveDiscount,
+                isSaving: _isSavingDiscount,
               ),
               SizedBox(height: 40.h),
             ],

@@ -10,6 +10,7 @@ import 'package:play_spot_dashboard/features/staff/data/entities/staff_entity.da
 import 'package:play_spot_dashboard/features/staff/data/models/staff_params.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_cubit.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_state.dart';
+import 'role_chip.dart';
 
 class AddStaffDialog extends StatefulWidget {
   final String loungeId;
@@ -55,6 +56,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
   Widget build(BuildContext context) {
     return BlocListener<StaffCubit, StaffState>(
       bloc: widget.cubit, // Use the explicitly passed cubit instance
+      listenWhen: (prev, curr) => prev.status != curr.status,
       listener: (context, state) {
         if (state.status.isSuccess) {
           Navigator.pop(context);
@@ -62,7 +64,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
         if (state.status.isFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.errorMessage ?? 'Error'),
+              content: Text(state.errorMessage ?? AppStrings.error),
               backgroundColor: AppColors.danger,
             ),
           );
@@ -154,13 +156,13 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
   Widget _buildRoleSelection() {
     return Row(
       children: [
-        _RoleChip(
+        RoleChip(
           label: AppStrings.cashierLabel,
           isSelected: _selectedRole == 'cashier',
           onTap: () => setState(() => _selectedRole = 'cashier'),
         ),
         SizedBox(width: 12.w),
-        _RoleChip(
+        RoleChip(
           label: AppStrings.manager,
           isSelected: _selectedRole == 'lounge_owner',
           onTap: () => setState(() => _selectedRole = 'lounge_owner'),
@@ -170,10 +172,11 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
   }
 
   void _submit() {
-    if (_formKey.currentState!.validate()) {
-      if (isEdit) {
+    if (_formKey.currentState?.validate() == true) {
+      final staffId = widget.staff?.id;
+      if (isEdit && staffId != null) {
         widget.cubit.updateStaffMember(
-          widget.staff!.id,
+          staffId,
           {
             'name': _nameController.text,
             'phone': _phoneController.text,
@@ -181,7 +184,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
           },
           widget.loungeId,
         );
-      } else {
+      } else if (!isEdit) {
         widget.cubit.addStaffMember(
           AddStaffParams(
             name: _nameController.text,
@@ -194,35 +197,5 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
         );
       }
     }
-  }
-}
-
-class _RoleChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _RoleChip({required this.label, required this.isSelected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.neonBlue.withOpacity(0.1) : AppColors.mutedBackground,
-          borderRadius: BorderRadius.circular(8.r),
-          border: Border.all(color: isSelected ? AppColors.neonBlue : AppColors.borderDefault),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? AppColors.neonBlue : AppColors.textSecondary,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ),
-    );
   }
 }

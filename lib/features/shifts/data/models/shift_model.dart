@@ -12,19 +12,23 @@ class ShiftModel extends ShiftEntity {
     super.actualCash,
     super.discrepancy,
     required super.status,
-    required super.startTime,
+    required    super.startTime,
     super.endTime,
     super.notes,
+    super.isApproved,
+    super.approvedBy,
+    super.approvedAt,
+    super.managerNotes,
   });
 
   factory ShiftModel.fromJson(Map<String, dynamic> json) {
     // Safe parsing for DateTime with fallbacks
-    DateTime parseDate(dynamic dateStr) {
-      if (dateStr == null) return DateTime.now();
+    DateTime? parseDate(dynamic dateStr) {
+      if (dateStr == null) return null;
       try {
         return DateTime.parse(dateStr.toString());
       } catch (_) {
-        return DateTime.now();
+        return null;
       }
     }
 
@@ -39,11 +43,13 @@ class ShiftModel extends ShiftEntity {
       actualCash: (json['actual_cash_counted'] ?? json['actual_cash'] ?? 0).toDouble(),
       discrepancy: (json['discrepancy'] ?? json['difference'] ?? 0).toDouble(),
       status: (json['status'] ?? 'open').toString(),
-      startTime: parseDate(json['start_time'] ?? json['opened_at']),
-      endTime: json['end_time'] != null || json['closed_at'] != null 
-          ? parseDate(json['end_time'] ?? json['closed_at']) 
-          : null,
+      startTime: parseDate(json['start_time'] ?? json['opened_at']) ?? DateTime.now(),
+      endTime: parseDate(json['end_time'] ?? json['closed_at']),
       notes: json['notes']?.toString(),
+      isApproved: json['is_approved'] ?? false,
+      approvedBy: json['approved_by']?.toString(),
+      approvedAt: parseDate(json['approved_at']),
+      managerNotes: json['manager_notes']?.toString(),
     );
   }
 
@@ -57,6 +63,10 @@ class ShiftModel extends ShiftEntity {
       'status': status,
       'start_time': startTime.toIso8601String(),
       'end_time': endTime?.toIso8601String(),
+      'is_approved': isApproved,
+      'approved_by': approvedBy,
+      'approved_at': approvedAt?.toIso8601String(),
+      'manager_notes': managerNotes,
     };
   }
 }

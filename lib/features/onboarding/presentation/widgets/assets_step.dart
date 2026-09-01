@@ -37,7 +37,7 @@ class AssetsStep extends StatelessWidget {
               separatorBuilder: (_, __) => SizedBox(height: 12.h),
               itemBuilder: (context, index) {
                 final room = state.rooms[index];
-                return _buildRoomItem(room);
+                return _buildRoomItem(context, room);
               },
             );
           },
@@ -73,7 +73,7 @@ class AssetsStep extends StatelessWidget {
     );
   }
 
-  Widget _buildRoomItem(dynamic room) {
+  Widget _buildRoomItem(BuildContext context, dynamic room) {
     return Container(
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
@@ -108,7 +108,7 @@ class AssetsStep extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
             onPressed: () {
-              // TODO: Remove room
+              context.read<OnboardingCubit>().removeRoom(room.id);
             },
           ),
         ],

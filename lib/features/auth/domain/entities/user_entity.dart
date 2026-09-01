@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'user_permissions.dart';
 
 enum UserRole {
   superAdmin,
@@ -30,35 +31,32 @@ class UserEntity extends Equatable {
     this.isSetupCompleted = false,
   });
 
-  /// Role Groups for UI Logic
-  bool get isSuperAdmin => role == UserRole.superAdmin;
-  bool get isOwner => role == UserRole.owner;
-  bool get isManager => role == UserRole.manager;
-  bool get isCashier => role == UserRole.cashier;
-  bool get isStaffRole => role == UserRole.staff;
+  /// Access point for all permission logic
+  UserPermissions get permissions => UserPermissions(role);
+
+  /// Role Groups (Proxied to UserPermissions for compatibility)
+  bool get isSuperAdmin => permissions.isSuperAdmin;
+  bool get isOwner => permissions.isOwner;
+  bool get isManager => permissions.isManager;
+  bool get isCashier => permissions.isCashier;
+  bool get isStaffRole => permissions.isStaffRole;
 
   /// Compatibility Getters
   bool get isLoungeOwner => isOwner;
-  bool get isStaff => isOwner || isManager || isCashier || isStaffRole;
+  bool get isStaff => permissions.isStaff;
+  bool get isLoungeAdmin => permissions.isLoungeAdmin;
+  bool get needsShift => permissions.needsShift;
 
-  /// Combined Logic: Admins (Owner/Manager) bypass most restrictions
-  bool get isLoungeAdmin => isOwner || isManager;
-  
-  /// Enforcement: Only cashiers are forced into the Shift flow
-  bool get needsShift => isCashier;
-
-  /// High-Level Permission Checkers
-  bool get canManageStaff => isOwner || isSuperAdmin; 
-  bool get canViewFinancials => isOwner || isSuperAdmin;
-  bool get canViewReports => isLoungeAdmin || isSuperAdmin; 
-  bool get canEditSetup => isLoungeAdmin || isSuperAdmin || isCashier; // Changed: Cashier can now access Rooms/Extras (Setup)
-  bool get canManageMarketing => isLoungeAdmin || isSuperAdmin;
-  bool get canToggleLoungeStatus => isLoungeAdmin || isSuperAdmin || isCashier; // Cashier can toggle open/closed
-  bool get canEditLoungeProfile => isLoungeAdmin || isSuperAdmin;
-  
-  /// Menu/Extras Permission Logic
-  bool get canManageMenuStructure => isLoungeAdmin || isSuperAdmin; // Add/Delete/Price
-  bool get canUpdateStockOnly => isCashier; // Cashier specifically for quantities
+  /// High-Level Permission Checkers (Proxied to UserPermissions)
+  bool get canManageStaff => permissions.canManageStaff;
+  bool get canViewFinancials => permissions.canViewFinancials;
+  bool get canViewReports => permissions.canViewReports;
+  bool get canEditSetup => permissions.canEditSetup;
+  bool get canManageMarketing => permissions.canManageMarketing;
+  bool get canToggleLoungeStatus => permissions.canToggleLoungeStatus;
+  bool get canEditLoungeProfile => permissions.canEditLoungeProfile;
+  bool get canManageMenuStructure => permissions.canManageMenuStructure;
+  bool get canUpdateStockOnly => permissions.canUpdateStockOnly;
 
   @override
   List<Object?> get props => [

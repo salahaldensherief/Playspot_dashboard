@@ -11,6 +11,13 @@ class RoomCubit extends Cubit<RoomState> {
   RoomCubit(this._repository) : super(const RoomState());
 
   void watchRooms(String loungeId) {
+    if (loungeId.isEmpty) {
+      emit(state.copyWith(
+        status: RoomStatus.failure,
+        errorMessage: 'Lounge ID is required to watch rooms',
+      ));
+      return;
+    }
     emit(state.copyWith(status: RoomStatus.loading));
     _subscription?.cancel();
     _subscription = _repository.watchRooms(loungeId).listen(

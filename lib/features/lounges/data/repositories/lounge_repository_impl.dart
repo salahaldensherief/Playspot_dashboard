@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/features/lounges/domain/repositories/lounge_
 import 'package:play_spot_dashboard/features/lounges/data/datasources/lounge_remote_data_source.dart';
 import 'package:play_spot_dashboard/features/lounges/data/models/lounge_model.dart';
 import 'package:play_spot_dashboard/features/lounges/data/models/extra_model.dart';
+import 'package:play_spot_dashboard/features/rooms/data/models/room_model.dart';
 
 class LoungeRepositoryImpl implements LoungeRepository {
   final LoungeRemoteDataSource remoteDataSource;
@@ -115,7 +116,36 @@ class LoungeRepositoryImpl implements LoungeRepository {
         'images': lounge.images,
         'is_open': lounge.isOpen,
         'status': lounge.status,
+        'has_discount': lounge.hasDiscount,
+        'discount_percentage': lounge.discountPercentage,
+        'discount_title_ar': lounge.discountTitleAr,
+        'discount_title_en': lounge.discountTitleEn,
+        'discount_expires_at': lounge.discountExpiresAt?.toIso8601String(),
       });
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateLoungeDiscount({
+    required String loungeId,
+    required bool hasDiscount,
+    required int discountPercentage,
+    String? titleAr,
+    String? titleEn,
+    DateTime? expiresAt,
+  }) async {
+    try {
+      await remoteDataSource.updateLoungeDiscount(
+        loungeId,
+        hasDiscount: hasDiscount,
+        discountPercentage: discountPercentage,
+        titleAr: titleAr,
+        titleEn: titleEn,
+        expiresAt: expiresAt,
+      );
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -256,9 +286,40 @@ class LoungeRepositoryImpl implements LoungeRepository {
   }
 
   @override
-  Future<Either<Failure, List<Activity>>> getActivities(String roomId) => throw UnimplementedError();
+  Future<Either<Failure, List<Activity>>> getActivities(String roomId) async {
+    try {
+      final data = await remoteDataSource.getActivities(roomId);
+      final activities = data.map((json) {
+        final type = json['activity_types'];
+        return Activity(
+          id: json['id']?.toString() ?? '',
+          roomId: json['room_id']?.toString() ?? '',
+          name: type?['label'] ?? type?['name_en'] ?? type?['name'] ?? '',
+          pricePerHour: (json['price_override'] ?? type?['default_price'] ?? 0.0).toDouble(),
+          type: type?['category'] ?? '',
+        );
+      }).toList();
+      return Right(activities);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
   @override
-  Future<Either<Failure, List<Room>>> getRooms(String loungeId) => throw UnimplementedError();
+  Future<Either<Failure, List<Room>>> getRooms(String loungeId) async {
+    try {
+      final List<RoomModel> roomModels = await remoteDataSource.getRooms(loungeId);
+      final rooms = roomModels.map((m) => Room(
+        id: m.id,
+        loungeId: m.loungeId,
+        name: m.nameEn.isEmpty ? m.nameAr : m.nameEn,
+        type: m.spaceType ?? '',
+      )).toList();
+      return Right(rooms);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
   @override
   Future<Either<Failure, void>> deleteLounge(String id) async {
     try {

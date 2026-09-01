@@ -380,8 +380,11 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
 
     // UI-level overlap check
     final bookingCubit = context.read<BookingCubit>();
+    final selectedRoom = _selectedRoom;
+    if (selectedRoom == null) return;
+
     final isOverlapping = bookingCubit.state.bookings.any((b) {
-      if (b.roomId != _selectedRoom!.id || b.status == BookingStatus.cancelled) return false;
+      if (b.roomId != selectedRoom.id || b.status == BookingStatus.cancelled) return false;
       
       return b.date.year == _selectedDate.year && 
              b.date.month == _selectedDate.month && 
@@ -391,7 +394,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
 
     if (isOverlapping) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("هذه الغرفة محجوزة بالفعل في الوقت المختار"), backgroundColor: AppColors.danger),
+        SnackBar(content: Text(AppStrings.overlappingBookingError), backgroundColor: AppColors.danger),
       );
       return;
     }
@@ -404,14 +407,14 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
       userName: _nameController.text,
       userPhone: _phoneController.text,
       loungeId: widget.loungeId,
-      roomId: _selectedRoom!.id,
-      roomName: _selectedRoom!.nameEn,
+      roomId: selectedRoom.id,
+      roomName: selectedRoom.nameEn,
       date: _selectedDate,
       startTime: startTimeStr,
       endTime: endTimeStr,
       durationMinutes: durationMinutes,
       status: BookingStatus.upcoming,
-      totalPrice: (durationMinutes / 60.0) * _selectedRoom!.pricePerHour,
+      totalPrice: (durationMinutes / 60.0) * selectedRoom.pricePerHour,
       shiftId: activeShiftId,
     );
 

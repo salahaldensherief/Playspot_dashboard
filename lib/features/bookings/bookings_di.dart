@@ -36,6 +36,7 @@ void initBookingsDI(GetIt sl) {
       updateBookingStatus: sl(),
       confirmCashPaymentUseCase: sl(),
       createBookingUseCase: sl(),
+      repository: sl(),
       audioService: sl(),
     ),
   );

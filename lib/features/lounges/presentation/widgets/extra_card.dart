@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
+import '../../../permissions/presentation/cubit/permissions_cubit.dart';
 import '../../domain/entities/extra_entity.dart';
 import '../cubit/extras_cubit.dart';
 import 'extra_dialog.dart';
@@ -21,81 +22,129 @@ class ExtraCard extends StatelessWidget {
     final user = context.read<LoginCubit>().state.user;
     final loungeId = user?.loungeId ?? '';
     final bool canEdit = context.hasPermission('menu_manage_items');
-    final bool canToggleStock = context.hasPermission('menu_toggle_stock');
+    final bool isLowStock = extra.trackStock && extra.stockQuantity <= extra.minStockAlert && extra.stockQuantity > 0;
+    final bool isOutOfStock = extra.isOutOfStock || (extra.trackStock && extra.stockQuantity == 0);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.borderDefault),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.divider.withOpacity(0.1),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-                image: extra.imageUrl != null 
-                  ? DecorationImage(image: NetworkImage(extra.imageUrl!), fit: BoxFit.cover)
-                  : null,
-              ),
-              child: extra.imageUrl == null 
-                ? const Center(child: Icon(Icons.fastfood, color: AppColors.textSecondary, size: 48))
-                : null,
-            ),
+    return Opacity(
+      opacity: isOutOfStock ? 0.6 : 1.0,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(
+            color: isOutOfStock 
+              ? AppColors.danger.withOpacity(0.5) 
+              : isLowStock ? AppColors.warning.withOpacity(0.5) : AppColors.borderDefault,
+            width: (isLowStock || isOutOfStock) ? 2.r : 1.r,
           ),
-          Padding(
-            padding: EdgeInsets.all(16.r),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    StatusBadge.info(extra.category),
-                    AppText.subHeading(
-                      '${extra.price} ${AppStrings.priceEgp}',
-                      color: AppColors.neonBlue,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.divider.withOpacity(0.1),
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+                      image: extra.imageUrl != null 
+                        ? DecorationImage(image: NetworkImage(extra.imageUrl ?? ''), fit: BoxFit.cover)
+                        : null,
                     ),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                AppText.heading(extra.name, fontSize: 16.sp),
-                SizedBox(height: 16.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (canEdit)
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20.r),
-                            onPressed: () => _showEditDialog(context, loungeId),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
-                            onPressed: () => _confirmDelete(context, loungeId),
-                          ),
-                        ],
-                      )
-                    else
-                      const SizedBox.shrink(),
-                    if (canEdit)
-                      Switch(
-                        value: !extra.isOutOfStock,
-                        activeColor: AppColors.neonBlue,
-                        onChanged: (val) {
-                          context.read<ExtrasCubit>().toggleStock(extra.id, !val, loungeId);
-                        },
+                    child: extra.imageUrl == null 
+                      ? const Center(child: Icon(Icons.fastfood, color: AppColors.textSecondary, size: 48))
+                      : null,
+                  ),
+                  if (isOutOfStock)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.4),
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+                        ),
+                        child: Center(
+                          child: StatusBadge.danger(AppStrings.outOfStock),
+                        ),
                       ),
-                  ],
-                ),
-              ],
+                    )
+                  else if (isLowStock)
+                    Positioned(
+                      top: 12.r,
+                      right: 12.r,
+                      child: StatusBadge.warning(AppStrings.lowStock),
+                    ),
+                  if (extra.trackStock && !isOutOfStock)
+                    Positioned(
+                      bottom: 8.r,
+                      left: 12.r,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: AppText.body(
+                          '${extra.stockQuantity} ${AppStrings.searchHint.replaceFirst("...", "")}', // Or add a better string for "Left"
+                          fontSize: 10.sp,
+                          color: isLowStock ? AppColors.warning : Colors.white,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: EdgeInsets.all(16.r),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      StatusBadge.info(extra.category),
+                      AppText.subHeading(
+                        '${extra.price} ${AppStrings.priceEgp}',
+                        color: AppColors.neonBlue,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12.h),
+                  AppText.heading(extra.name, fontSize: 16.sp),
+                  SizedBox(height: 16.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (canEdit)
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20.r),
+                              onPressed: () => _showEditDialog(context, loungeId),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
+                              onPressed: () => _confirmDelete(context, loungeId),
+                            ),
+                          ],
+                        )
+                      else
+                        const SizedBox.shrink(),
+                      if (canEdit)
+                        Switch(
+                          value: !extra.isOutOfStock,
+                          activeColor: AppColors.neonBlue,
+                          onChanged: (val) {
+                            context.read<ExtrasCubit>().toggleStock(extra.id, !val, loungeId);
+                          },
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -103,6 +152,7 @@ class ExtraCard extends StatelessWidget {
   void _showEditDialog(BuildContext context, String loungeId) {
     showDialog(
       context: context,
+      useRootNavigator: false,
       builder: (_) => ExtraDialog(
         loungeId: loungeId, 
         extra: extra,
@@ -114,6 +164,7 @@ class ExtraCard extends StatelessWidget {
   void _confirmDelete(BuildContext context, String loungeId) {
     showDialog(
       context: context,
+      useRootNavigator: false,
       builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
         title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),

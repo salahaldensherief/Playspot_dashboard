@@ -35,9 +35,9 @@ class KycInspectionDialog extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AppText.heading("KYC Inspection", fontSize: 24.sp),
+                    AppText.heading(AppStrings.kycInspection, fontSize: 24.sp),
                     SizedBox(height: 4.h),
-                    AppText.body("Review documents for ${request.ownerName} - ${request.loungeName}"),
+                    AppText.body("${AppStrings.reviewDocumentsFor} ${request.ownerName} - ${request.loungeName}"),
                   ],
                 ),
                 IconButton(
@@ -58,10 +58,10 @@ class KycInspectionDialog extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildDocumentSection(context, "Identity Document (Front/Back)", request.idDocumentUrl),
+                          _buildDocumentSection(context, AppStrings.idCardImage, request.idDocumentUrl),
                           if (request.businessDocumentUrl != null) ...[
                             SizedBox(height: 24.h),
-                            _buildDocumentSection(context, "Business Document / Commercial License", request.businessDocumentUrl!),
+                            _buildDocumentSection(context, AppStrings.businessDocImage, request.businessDocumentUrl ?? ''),
                           ],
                         ],
                       ),
@@ -81,17 +81,17 @@ class KycInspectionDialog extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          AppText.subHeading("Owner Details", fontSize: 16.sp),
+                          AppText.subHeading(AppStrings.ownerDetails, fontSize: 16.sp),
                           SizedBox(height: 16.h),
-                          _buildDetailRow(Icons.person_outline, "Name", request.ownerName),
-                          _buildDetailRow(Icons.email_outlined, "Email", request.ownerEmail),
-                          _buildDetailRow(Icons.business_outlined, "Lounge", request.loungeName),
+                          _buildDetailRow(Icons.person_outline, AppStrings.fullName, request.ownerName),
+                          _buildDetailRow(Icons.email_outlined, AppStrings.email, request.ownerEmail),
+                          _buildDetailRow(Icons.business_outlined, AppStrings.lounges, request.loungeName),
                           
                           const Spacer(),
                           const Divider(color: AppColors.borderDefault),
                           SizedBox(height: 16.h),
                           
-                          AppText.body("Decision Status", fontWeight: FontWeight.bold),
+                          AppText.body(AppStrings.decisionStatus, fontWeight: FontWeight.bold),
                           SizedBox(height: 16.h),
                           AppButton(
                             text: AppStrings.approve,
@@ -180,6 +180,7 @@ class KycInspectionDialog extends StatelessWidget {
   void _showFullscreenImage(BuildContext context, String url) {
     showDialog(
       context: context,
+      useRootNavigator: false,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
         insetPadding: EdgeInsets.all(40.r),

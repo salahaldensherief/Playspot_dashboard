@@ -27,6 +27,8 @@ class AppStrings {
   static String get redemptionOptions => 'redemption_options'.tr();
 
   static String get logout => 'logout'.tr();
+  static String get logoutConfirmation => 'logout_confirmation'.tr();
+  static String get logoutWarning => 'logout_warning'.tr();
   static String get close => 'close'.tr();
   static String get contactLabel => 'contact'.tr();
   static String get bookings => 'live_operations'.tr();
@@ -180,6 +182,11 @@ class AppStrings {
   static String get snacks => 'snacks'.tr();
   static String get services => 'services'.tr();
   static String get others => 'others'.tr();
+  static String get trackStock => 'track_stock'.tr();
+  static String get stockQuantity => 'stock_quantity'.tr();
+  static String get lowStockThreshold => 'low_stock_threshold'.tr();
+  static String get outOfStock => 'out_of_stock'.tr();
+  static String get lowStock => 'low_stock'.tr();
   static String get menuManagement => 'menu_management'.tr();
   static String get menuManagementSubtitle => 'menu_management_subtitle'.tr();
 
@@ -239,6 +246,23 @@ class AppStrings {
   static String get promoIcon => 'promo_icon'.tr();
   static String get iconKey => 'icon_key'.tr();
   static String get createPromotion => 'create_promotion'.tr();
+  static String get expirationDate => 'expiration_date'.tr();
+  static String get tagCategory => 'tag_category'.tr();
+  static String get roomSpecific => 'room_specific'.tr();
+  static String get selectRoom => 'select_room'.tr();
+  static String get targetAudience => 'target_audience'.tr();
+  static String get audienceLocal => 'audience_local'.tr();
+  static String get audienceAll => 'audience_all'.tr();
+  static String get uploadPoster => 'upload_poster'.tr();
+  static String get changePoster => 'change_poster'.tr();
+  static String get promoPoster => 'promo_poster'.tr();
+  static String get promoPublishedSuccess => 'promo_published_success'.tr();
+  static String get promoPublishError => 'promo_publish_error'.tr();
+  static String get noPromotions => 'no_promotions'.tr();
+  static String get noNotifications => 'no_notifications'.tr();
+  static String get promotionsTab => 'promotions_tab'.tr();
+  static String get notificationsTab => 'notifications_tab'.tr();
+  static String get newNotification => 'new_notification'.tr();
 
   // Lounge Profile
   static String get loungeProfile => 'lounge_profile'.tr();
@@ -278,6 +302,14 @@ class AppStrings {
   static String get noPayoutHistoryFound => 'no_payout_history_found'.tr();
   static String get period => 'period'.tr();
   static String get notes => 'notes'.tr();
+  static String get approved => 'approved'.tr();
+  static String get pendingApproval => 'pending_approval'.tr();
+  static String get approveShift => 'approve_shift'.tr();
+  static String get managerNotes => 'manager_notes'.tr();
+  static String get swapRoom => 'swap_room'.tr();
+  static String get selectNewRoom => 'select_new_room'.tr();
+  static String get noAvailableRooms => 'no_available_rooms'.tr();
+  static String get confirmSwap => 'confirm_swap'.tr();
 
   // Common Actions
   static String get edit => 'edit'.tr();
@@ -314,6 +346,10 @@ class AppStrings {
   static String get kycSuccess => 'kyc_success'.tr();
   static String get viewDocument => 'view_document'.tr();
   static String get actionFailed => 'action_failed'.tr();
+  static String get kycInspection => 'kyc_inspection'.tr();
+  static String get ownerDetails => 'owner_details'.tr();
+  static String get decisionStatus => 'decision_status'.tr();
+  static String get reviewDocumentsFor => 'review_documents_for'.tr();
   static String get loungeIsOpen => 'lounge_is_open'.tr();
   static String get loungeIsClosed => 'lounge_is_closed'.tr();
   static String get usersCanBookNow => 'users_can_book_now'.tr();
@@ -327,6 +363,16 @@ class AppStrings {
   static String get noNewRequests => 'no_new_requests'.tr();
   static String get noActiveBookings => 'no_active_bookings'.tr();
   static String get discount => 'discount'.tr();
+  static String get discountReason => 'discount_reason'.tr();
+  static String get managerOverrideRequired => 'manager_override_required'.tr();
+  static String get reasonRequired => 'reason_required'.tr();
+  static String get directDiscount => 'direct_discount'.tr();
+  static String get activateDiscount => 'activate_discount'.tr();
+  static String get discountPercentage => 'discount_percentage'.tr();
+  static String get discountTitleAr => 'discount_title_ar'.tr();
+  static String get discountTitleEn => 'discount_title_en'.tr();
+  static String get discountExpiration => 'discount_expiration'.tr();
+  static String get discountUpdatedSuccess => 'discount_updated_success'.tr();
   static String get overlappingBookingError => 'overlapping_booking_error'.tr();
 
   // Shift Management

@@ -33,10 +33,11 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<LoginCubit, LoginState>(
+      listenWhen: (prev, curr) => prev.status != curr.status,
       listener: (context, state) {
         if (state.status == LoginStatus.failure) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage ?? 'Login Failed')),
+            SnackBar(content: Text(state.errorMessage ?? AppStrings.error)),
           );
         }
       },
@@ -105,11 +106,10 @@ class _LoginScreenState extends State<LoginScreen> {
           width: 50.w,
           height: 50.h,
           color: AppColors.neonBlue,
-          animate: false,
         ),
         SizedBox(height: 16.h),
         Text(
-          'Gaming Lounge Management',
+          AppStrings.appName,
           style: TextStyle(
             fontSize: 14.sp,
             color: AppColors.textSecondary,
@@ -156,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
             SizedBox(height: 32.h),
             AppTextField(
               label: AppStrings.email,
-              hintText: 'Enter your email',
+              hintText: AppStrings.emailHint,
               controller: _emailController,
               prefixIcon: Icons.email_outlined,
               validator: AppValidator.validateEmail,
@@ -164,7 +164,7 @@ class _LoginScreenState extends State<LoginScreen> {
             SizedBox(height: 24.h),
             AppTextField(
               label: AppStrings.password,
-              hintText: 'Enter your password',
+              hintText: AppStrings.passwordHint,
               controller: _passwordController,
               isPassword: true,
               prefixIcon: Icons.lock_outline,
@@ -186,7 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
           text: AppStrings.signIn,
           isLoading: isLoading,
           onPressed: () {
-            if (_formKey.currentState!.validate()) {
+            if (_formKey.currentState?.validate() == true) {
               context.read<LoginCubit>().login(
                 _emailController.text.trim(),
                 _passwordController.text.trim(),

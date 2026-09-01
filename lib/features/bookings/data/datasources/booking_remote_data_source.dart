@@ -11,8 +11,15 @@ abstract class BookingRemoteDataSource {
     int offset = 0,
   });
   Future<void> updateBookingStatus(String id, String status);
-  Future<void> confirmCashPayment(String bookingId, {String? shiftId});
+  Future<void> confirmCashPayment(
+    String bookingId, {
+    String? shiftId,
+    double? discountAmount,
+    double? discountPercentage,
+    String? discountReason,
+  });
   Future<void> createBooking(BookingModel booking);
+  Future<void> swapRoom(String bookingId, String newRoomId, String actionBy);
 }
 
 class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
@@ -27,6 +34,12 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     int limit = 50,
     int offset = 0,
   }) async {
+    // Technical Guard: Skip RPC if loungeId is null (unless it's a super-admin context which we don't differentiate here yet)
+    // This prevents "Not authorized" logs for staff with missing lounge_id
+    if (loungeId == null || loungeId.isEmpty) {
+      return _fetchSafeSelect(loungeId, status, limit, offset);
+    }
+
     try {
       // المحاولة الأساسية عبر الـ RPC
       final response = await client.rpc('get_all_bookings_admin', params: {
@@ -42,26 +55,34 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     } catch (e) {
       // خطة بديلة (Fallback) في حالة فشل الـ RPC
       debugPrint('${AppConstants.bookingFetchAlert}$e');
-      
-      try {
-        // نستخدم أبسط استعلام ممكن مع استبعاد booking_status تماماً إذا كان يسبب خطأ في النوع
-        // ونعتمد على الحقل status الأصلي
-        var query = client.from('bookings').select();
+      return _fetchSafeSelect(loungeId, status, limit, offset);
+    }
+  }
 
-        if (loungeId != null) query = query.eq('lounge_id', loungeId);
-        if (status != null) {
-          query = query.eq('status', status);
-        }
-        
-        final response = await query
-            .order('created_at', ascending: false)
-            .range(offset, offset + limit - 1);
-        
-        return (response as List).map((json) => BookingModel.fromJson(Map<String, dynamic>.from(json))).toList();
-      } catch (e2) {
-        debugPrint('${AppConstants.criticalFallbackError}$e2');
-        return []; // منع الشاشة الحمراء بإرجاع قائمة فارغة في حالة الفشل التام
+  Future<List<BookingModel>> _fetchSafeSelect(String? loungeId, String? status, int limit, int offset) async {
+    try {
+      // Technical Guard: If loungeId is null/empty, we should NOT return all bookings 
+      // for a staff member. We return an empty list to maintain data isolation.
+      if (loungeId == null || loungeId.isEmpty) {
+        debugPrint('BookingRemoteDataSource: Skipping fetch, loungeId is null/empty');
+        return [];
       }
+
+      var query = client.from('bookings').select();
+      query = query.eq('lounge_id', loungeId);
+      
+      if (status != null) {
+        query = query.eq('status', status);
+      }
+      
+      final response = await query
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+      
+      return (response as List).map((json) => BookingModel.fromJson(Map<String, dynamic>.from(json))).toList();
+    } catch (e2) {
+      debugPrint('${AppConstants.criticalFallbackError}$e2');
+      return []; // منع الشاشة الحمراء بإرجاع قائمة فارغة في حالة الفشل التام
     }
   }
 
@@ -74,22 +95,47 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
 
   @override
-  Future<void> confirmCashPayment(String bookingId, {String? shiftId}) async {
+  Future<void> confirmCashPayment(
+    String bookingId, {
+    String? shiftId,
+    double? discountAmount,
+    double? discountPercentage,
+    String? discountReason,
+  }) async {
     try {
       await client.rpc('confirm_cash_payment', params: {
         'p_booking_id': bookingId,
         if (shiftId != null) 'p_shift_id': shiftId,
+        'p_discount_amount': discountAmount ?? 0,
+        'p_discount_percentage': discountPercentage ?? 0,
+        'p_discount_reason': discountReason,
       });
     } catch (e) {
-      await client.from('payments').update({'status': 'paid'}).eq('booking_id', bookingId);
-      if (shiftId != null) {
-        await client.from('bookings').update({'shift_id': shiftId}).eq('id', bookingId);
-      }
+      // Fallback: Direct update to bookings table
+      // Note: discount info is now stored directly in bookings, not payments.
+      final updateData = {
+        'payment_status': 'paid',
+        if (discountAmount != null) 'discount_amount': discountAmount,
+        if (discountPercentage != null) 'discount_percentage': discountPercentage,
+        if (discountReason != null) 'discount_reason': discountReason,
+        if (shiftId != null) 'shift_id': shiftId,
+      };
+      
+      await client.from('bookings').update(updateData).eq('id', bookingId);
     }
   }
 
   @override
   Future<void> createBooking(BookingModel booking) async {
     await client.from('bookings').insert(booking.toJson());
+  }
+
+  @override
+  Future<void> swapRoom(String bookingId, String newRoomId, String actionBy) async {
+    await client.rpc('swap_booking_room', params: {
+      'p_booking_id': bookingId,
+      'p_new_room_id': newRoomId,
+      'p_action_by': actionBy,
+    });
   }
 }

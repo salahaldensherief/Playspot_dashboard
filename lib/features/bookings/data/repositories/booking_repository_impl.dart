@@ -54,9 +54,21 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> confirmCashPayment(String bookingId, {String? shiftId}) async {
+  Future<Either<Failure, void>> confirmCashPayment(
+    String bookingId, {
+    String? shiftId,
+    double? discountAmount,
+    double? discountPercentage,
+    String? discountReason,
+  }) async {
     try {
-      await remoteDataSource.confirmCashPayment(bookingId, shiftId: shiftId);
+      await remoteDataSource.confirmCashPayment(
+        bookingId,
+        shiftId: shiftId,
+        discountAmount: discountAmount,
+        discountPercentage: discountPercentage,
+        discountReason: discountReason,
+      );
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -87,7 +99,6 @@ class BookingRepositoryImpl implements BookingRepository {
         totalPrice: booking.totalPrice,
         voucherDiscount: booking.voucherDiscount,
         extras: booking.extras,
-        mapsLink: booking.mapsLink,
         lat: booking.lat,
         lng: booking.lng,
         shiftId: booking.shiftId,
@@ -99,6 +110,16 @@ class BookingRepositoryImpl implements BookingRepository {
         return const Left(ServerFailure('الوقت المحدد تم حجزه بالفعل، يرجى اختيار وقت آخر'));
       }
       return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> swapRoom(String bookingId, String newRoomId, String actionBy) async {
+    try {
+      await remoteDataSource.swapRoom(bookingId, newRoomId, actionBy);
+      return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
@@ -91,25 +92,18 @@ class RoomsDataTable extends StatelessWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, RoomCubit cubit, RoomEntity room) {
-    showDialog(
+  void _confirmDelete(BuildContext context, RoomCubit cubit, RoomEntity room) async {
+    final confirmed = await AppDialog.confirm(
       context: context,
-      builder: (diagContext) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),
-        content: Text('${AppStrings.deleteWarning} "${room.nameEn}"?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
-          TextButton(
-            onPressed: () {
-              cubit.deleteRoom(room.id);
-              Navigator.pop(diagContext);
-            }, 
-            child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger)),
-          ),
-        ],
-      ),
+      title: AppStrings.deleteConfirmation,
+      message: '${AppStrings.deleteWarning} "${room.nameEn}"?',
+      confirmText: AppStrings.delete,
+      confirmColor: AppColors.danger,
     );
+
+    if (confirmed == true) {
+      cubit.deleteRoom(room.id);
+    }
   }
 
   Widget _getStatusBadge(RoomStatusEnum status) {

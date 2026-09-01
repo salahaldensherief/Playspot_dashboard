@@ -82,11 +82,13 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
     final loungeId = user?.loungeId ?? '';
     final userId = user?.id ?? '';
 
-    if (_idCardBytes != null) {
+    final idCardBytes = _idCardBytes;
+    final idCardName = _idCardName;
+    if (idCardBytes != null && idCardName != null) {
       await kycCubit.submitKyc(
         userId: userId,
-        idCardBytes: _idCardBytes!,
-        idCardName: _idCardName!,
+        idCardBytes: idCardBytes,
+        idCardName: idCardName,
         businessDocBytes: _businessDocBytes,
         businessDocName: _businessDocName,
       );
@@ -140,7 +142,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
             listener: (context, state) {
               if (state.status == KycStatus.failure) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: AppText.body('KYC Error: ${state.errorMessage}', color: Colors.white), backgroundColor: AppColors.danger),
+                  SnackBar(content: AppText.body('${AppStrings.error}: ${state.errorMessage ?? AppStrings.actionFailed}', color: Colors.white), backgroundColor: AppColors.danger),
                 );
               }
             },

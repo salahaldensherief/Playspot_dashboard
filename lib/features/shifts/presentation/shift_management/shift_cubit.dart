@@ -24,6 +24,10 @@ class ShiftCubit extends Cubit<ShiftState> {
 
   /// Fetches a high-level overview for Admins
   Future<void> getLiveShiftOverview(String loungeId) async {
+    if (loungeId.isEmpty) {
+      emit(state.copyWith(status: ShiftStatus.initial));
+      return;
+    }
     if (isClosed) return;
     emit(state.copyWith(status: ShiftStatus.loading));
     
@@ -38,6 +42,10 @@ class ShiftCubit extends Cubit<ShiftState> {
 
   /// Verification check for personal cashier shift
   Future<void> checkActiveShift(String loungeId) async {
+    if (loungeId.isEmpty) {
+      emit(state.copyWith(status: ShiftStatus.initial, activeShift: null));
+      return;
+    }
     if (isClosed) return;
     emit(state.copyWith(status: ShiftStatus.loading));
     
@@ -140,6 +148,10 @@ class ShiftCubit extends Cubit<ShiftState> {
   }
 
   Future<void> fetchShiftHistory({String? loungeId}) async {
+    if (loungeId == null || loungeId.isEmpty) {
+      emit(state.copyWith(status: ShiftStatus.initial, shifts: []));
+      return;
+    }
     if (isClosed) return;
     emit(state.copyWith(status: ShiftStatus.loading));
     final result = await repository.getShiftHistory(loungeId: loungeId);
@@ -148,6 +160,21 @@ class ShiftCubit extends Cubit<ShiftState> {
     result.fold(
       (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
       (shifts) => emit(state.copyWith(status: ShiftStatus.active, shifts: shifts)),
+    );
+  }
+
+  Future<void> approveShift(String shiftId, String managerId, String? notes, {String? loungeId}) async {
+    if (isClosed) return;
+    emit(state.copyWith(status: ShiftStatus.loading));
+    
+    final result = await repository.approveShift(shiftId, managerId, notes);
+    
+    if (isClosed) return;
+    result.fold(
+      (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
+      (_) {
+        fetchShiftHistory(loungeId: loungeId);
+      },
     );
   }
 

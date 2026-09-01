@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/features/staff/data/entities/staff_entity.dart';
@@ -27,8 +28,9 @@ class _StaffScreenState extends State<StaffScreen> {
   void initState() {
     super.initState();
     final user = context.read<LoginCubit>().state.user;
-    if (user?.loungeId != null && user!.loungeId!.isNotEmpty) {
-      context.read<StaffCubit>().fetchStaff(user.loungeId!);
+    final loungeId = user?.loungeId;
+    if (loungeId != null && loungeId.isNotEmpty) {
+      context.read<StaffCubit>().fetchStaff(loungeId);
     }
   }
 
@@ -91,6 +93,9 @@ class _StaffScreenState extends State<StaffScreen> {
             SizedBox(height: 24.h),
             Expanded(
               child: BlocBuilder<StaffCubit, StaffState>(
+                buildWhen: (previous, current) => previous.status != current.status || 
+                                                 previous.staffList != current.staffList ||
+                                                 previous.searchQuery != current.searchQuery,
                 builder: (context, state) {
                   if (state.status.isLoading) {
                     return Center(
@@ -121,7 +126,7 @@ class _StaffScreenState extends State<StaffScreen> {
                   final filteredList = state.filteredStaff;
 
                   if (filteredList.isEmpty && state.searchQuery.isNotEmpty) {
-                    return Center(child: Text('no_results_matching'.tr(args: [state.searchQuery]), style: const TextStyle(color: AppColors.textSecondary)));
+                    return Center(child: Text(AppStrings.noResultsMatching.replaceFirst("\"{}\"", state.searchQuery), style: const TextStyle(color: AppColors.textSecondary)));
                   }
 
                   return Container(
@@ -149,7 +154,7 @@ class _StaffScreenState extends State<StaffScreen> {
                               cells: [
                                 DataCell(Text(staff.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500))),
                                 DataCell(Text(staff.email, style: const TextStyle(color: AppColors.textSecondary))),
-                                DataCell(Text(staff.phone ?? 'N/A', style: const TextStyle(color: AppColors.textSecondary))),
+                                DataCell(Text(staff.phone ?? AppStrings.notAssigned, style: const TextStyle(color: AppColors.textSecondary))),
                                 DataCell(_buildRoleBadge(staff.role)),
                                 DataCell(_buildStatusBadge(staff.isActive)),
                                 if (user?.canManageStaff == true) DataCell(_buildActions(staff, loungeId)),
@@ -176,8 +181,7 @@ class _StaffScreenState extends State<StaffScreen> {
   }
 
   Widget _buildRoleBadge(String role) {
-    if (role == 'lounge_owner') return StatusBadge.secondary(AppStrings.manager);
-    if (role == 'manager') return StatusBadge.secondary(AppStrings.manager);
+    if (role == 'lounge_owner' || role == 'manager') return StatusBadge.secondary(AppStrings.manager);
     return StatusBadge.info(AppStrings.cashierLabel);
   }
 
@@ -215,6 +219,7 @@ class _StaffScreenState extends State<StaffScreen> {
     final staffCubit = context.read<StaffCubit>();
     showDialog(
       context: context,
+      useRootNavigator: false,
       builder: (diagContext) => AddStaffDialog(
         loungeId: loungeId,
         cubit: staffCubit,
@@ -226,28 +231,22 @@ class _StaffScreenState extends State<StaffScreen> {
   void _showDetailsDialog(StaffEntity staff) {
     showDialog(
       context: context,
+      useRootNavigator: false,
       builder: (context) => StaffDetailsDialog(staff: staff),
     );
   }
 
-  void _confirmDelete(dynamic staff, String loungeId) {
-    showDialog(
+  void _confirmDelete(dynamic staff, String loungeId) async {
+    final confirmed = await AppDialog.confirm(
       context: context,
-      builder: (diagContext) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),
-        content: Text('${AppStrings.deleteStaffWarning} (${staff.name})'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
-          TextButton(
-            onPressed: () {
-              context.read<StaffCubit>().deleteStaff(staff.id, loungeId);
-              Navigator.pop(diagContext);
-            }, 
-            child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger)),
-          ),
-        ],
-      ),
+      title: AppStrings.deleteConfirmation,
+      message: '${AppStrings.deleteStaffWarning} (${staff.name})',
+      confirmText: AppStrings.delete,
+      confirmColor: AppColors.danger,
     );
+
+    if (confirmed == true && context.mounted) {
+      context.read<StaffCubit>().deleteStaff(staff.id, loungeId);
+    }
   }
 }

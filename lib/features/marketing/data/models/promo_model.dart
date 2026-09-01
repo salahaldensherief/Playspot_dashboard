@@ -12,6 +12,11 @@ class PromoModel extends PromoEntity {
     super.imageUrl,
     super.deepLink,
     super.loungeId,
+    super.roomId,
+    super.expiresAt,
+    super.tag,
+    super.isRoomSpecific = false,
+    super.targetAudience = 'all',
   });
 
   factory PromoModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +31,11 @@ class PromoModel extends PromoEntity {
       imageUrl: json['image_url'],
       deepLink: json['deep_link'],
       loungeId: json['lounge_id']?.toString(),
+      roomId: json['room_id']?.toString(),
+      expiresAt: json['expires_at'] != null ? DateTime.parse(json['expires_at']) : null,
+      tag: json['tag']?.toString(),
+      isRoomSpecific: json['is_room_specific'] ?? false,
+      targetAudience: json['target_audience']?.toString() ?? 'all',
     );
   }
 
@@ -40,7 +50,12 @@ class PromoModel extends PromoEntity {
       'icon_key': iconKey,
       'image_url': imageUrl,
       'deep_link': deepLink,
-      'lounge_id': loungeId,
+      'lounge_id': (loungeId != null && loungeId!.isNotEmpty) ? loungeId : null,
+      'room_id': (roomId != null && roomId!.isNotEmpty) ? roomId : null,
+      'expires_at': expiresAt?.toIso8601String(),
+      'tag': tag,
+      'is_room_specific': isRoomSpecific,
+      'target_audience': targetAudience,
     };
   }
 }
