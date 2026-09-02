@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:play_spot_dashboard/core/router/router_keys.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_state.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/close_shift_dialog.dart';
@@ -69,7 +74,7 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
             ...actions!,
             SizedBox(width: 24.w),
           ] else ...[
-            _buildNotificationIcon(),
+            _buildNotificationIcon(context),
             SizedBox(width: 24.w),
           ],
           _buildUserInfo(),
@@ -78,31 +83,61 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  Widget _buildNotificationIcon() {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Icon(Icons.notifications_outlined, color: AppColors.textSecondary, size: 24.r),
-        Positioned(
-          top: -2,
-          right: -2,
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(
-              color: AppColors.danger,
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              '3',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 8.sp,
-                fontWeight: FontWeight.bold,
+  Widget _buildNotificationIcon(BuildContext context) {
+    return BlocBuilder<BookingCubit, BookingState>(
+      builder: (context, state) {
+        final pendingCount = state.bookings
+            .where((b) => b.status == BookingStatus.pending)
+            .length;
+
+        return Tooltip(
+          message: pendingCount > 0
+              ? '$pendingCount ${AppStrings.pendingRequests}'
+              : AppStrings.noNotifications,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20.r),
+            onTap: () => context.go(RouterKeys.loungeAdminLiveOps),
+            child: Padding(
+              padding: EdgeInsets.all(4.r),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    Icons.notifications_outlined,
+                    color: AppColors.textSecondary,
+                    size: 24.r,
+                  ),
+                  if (pendingCount > 0)
+                    Positioned(
+                      top: -2,
+                      right: -2,
+                      child: Container(
+                        padding: EdgeInsets.all(4.r),
+                        decoration: const BoxDecoration(
+                          color: AppColors.danger,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: BoxConstraints(
+                          minWidth: 16.r,
+                          minHeight: 16.r,
+                        ),
+                        child: Text(
+                          '$pendingCount',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 9.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 

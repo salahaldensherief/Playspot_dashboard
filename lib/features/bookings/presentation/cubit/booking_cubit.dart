@@ -18,7 +18,10 @@ class BookingCubit extends Cubit<BookingState> {
   final BookingRepository repository;
   final AudioService audioService;
   StreamSubscription? _subscription;
-  int _lastBookingCount = 0;
+  
+  final Set<String> _knownBookingIds = {};
+  bool _isFirstLoad = true;
+  String? _watchedLoungeId;
 
   BookingCubit({
     required this.watchBookings,
@@ -38,20 +41,38 @@ class BookingCubit extends Cubit<BookingState> {
       return;
     }
 
+    // تجنب إعادة الاشتراك إذا كان يتتبع بالفعل نفس الـ loungeId
+    if (_subscription != null && _watchedLoungeId == loungeId) {
+      return;
+    }
+
+    _watchedLoungeId = loungeId;
+    _isFirstLoad = true;
+    _knownBookingIds.clear();
+
     emit(state.copyWith(status: BookingStatusState.loading));
     _subscription?.cancel();
 
     _subscription = watchBookings(loungeId: loungeId).listen(
-          (bookings) {
+      (bookings) {
         if (isClosed) return;
 
-        if (bookings.length > _lastBookingCount) {
-          try {
-            audioService.playNotificationSound();
-          } catch (_) {
+        final currentIds = bookings.map((b) => b.id).toSet();
+
+        if (_isFirstLoad) {
+          _isFirstLoad = false;
+          _knownBookingIds.addAll(currentIds);
+        } else {
+          final newIds = currentIds.difference(_knownBookingIds);
+          if (newIds.isNotEmpty) {
+            _knownBookingIds.addAll(newIds);
+            try {
+              audioService.playNotificationSound();
+            } catch (e) {
+              debugPrint('فشل تشغيل صوت التنبيه: $e');
+            }
           }
         }
-        _lastBookingCount = bookings.length;
 
         emit(state.copyWith(
           status: BookingStatusState.success,

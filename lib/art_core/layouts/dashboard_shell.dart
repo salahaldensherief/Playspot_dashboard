@@ -130,8 +130,24 @@ class _DashboardShellContentState extends State<_DashboardShellContent> {
       final loungeId = widget.user?.loungeId;
       if (loungeId != null && loungeId.isNotEmpty) {
         context.read<ShiftCubit>().checkActiveShift(loungeId);
+        context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
+      } else if (widget.isSuperAdmin) {
+        context.read<BookingCubit>().startWatchingBookings();
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant _DashboardShellContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.user?.loungeId != oldWidget.user?.loungeId) {
+      final loungeId = widget.user?.loungeId;
+      if (loungeId != null && loungeId.isNotEmpty) {
+        context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
+      } else if (widget.isSuperAdmin) {
+        context.read<BookingCubit>().startWatchingBookings();
+      }
+    }
   }
 
   @override
