@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -8,6 +9,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
 import '../../domain/entities/booking.dart';
+import '../cubit/booking_cubit.dart';
 
 class BookingCard extends StatelessWidget {
   final Booking booking;
@@ -27,14 +29,13 @@ class BookingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isPending = booking.status == BookingStatus.pending;
     final isPaid = booking.paymentStatus == PaymentStatus.paid;
-    final bool canAddItems = context.hasPermission('pos_view_menu') && 
-                            (booking.status == BookingStatus.upcoming || booking.status == BookingStatus.inProgress);
+    final bool canAddItems = context.hasPermission('pos_view_menu') &&
+        (booking.status == BookingStatus.upcoming || booking.status == BookingStatus.inProgress);
 
     final String formattedDuration = (booking.durationMinutes / 60.0).toStringAsFixed(1).replaceAll('.0', '');
-    final String timeRange = '${_formatTime(booking.startTime)} - ${_formatTime(booking.endTime)} ($formattedDuration hrs)';
 
     return Container(
-      width: 280.w, // Slightly narrower for better grid fitting
+      width: 280.w,
       padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
@@ -45,7 +46,7 @@ class BookingCard extends StatelessWidget {
         ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // Shrink to fit content
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -60,18 +61,16 @@ class BookingCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: 10.h),
-          
+
           AppText.subHeading(booking.userName ?? AppStrings.anonymous, fontSize: 14.sp, maxLines: 1),
-          
+
           if (booking.userPhone != null && booking.userPhone?.isNotEmpty == true)
             AppText.body(booking.userPhone ?? '', fontSize: 11.sp, color: AppColors.neonBlue),
 
           SizedBox(height: 6.h),
-          
-          // Room Info
+
           _buildInfoRow(Icons.meeting_room_outlined, '${booking.roomName} ($formattedDuration hrs)', AppColors.neonPurple),
 
-          // Extras Info - Dynamic Height
           if (booking.extras.isNotEmpty) ...[
             SizedBox(height: 8.h),
             Container(
@@ -91,7 +90,7 @@ class BookingCard extends StatelessWidget {
                       fontSize: 10.sp,
                       color: AppColors.textPrimary,
                     ),
-                  )).toList(),
+                  )),
                 ],
               ),
             ),
@@ -100,7 +99,7 @@ class BookingCard extends StatelessWidget {
           SizedBox(height: 12.h),
           const Divider(color: AppColors.borderDefault, height: 1),
           SizedBox(height: 12.h),
-          
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -114,15 +113,43 @@ class BookingCard extends StatelessWidget {
               isPaid ? StatusBadge.success(AppStrings.paid) : StatusBadge.warning(AppStrings.unpaid),
             ],
           ),
-          
+
           if (isPending || (!isPaid && onConfirmPayment != null) || canAddItems) ...[
             SizedBox(height: 10.h),
             if (isPending)
               Row(
                 children: [
-                  Expanded(child: AppButton(text: AppStrings.approve, onPressed: onApprove ?? () {}, height: 30.h)),
+                  Expanded(
+                    child: AppButton(
+                      text: AppStrings.approve,
+                      onPressed: () {
+                        debugPrint('🟢 [UI] APPROVE CLICKED FOR BOOKING: ${booking.id}');
+                        if (onApprove != null) {
+                          onApprove!();
+                        } else {
+                          debugPrint('⚠️ onApprove callback was null - triggering context.read<BookingCubit>().approveBooking directly');
+                          context.read<BookingCubit>().approveBooking(booking.id);
+                        }
+                      },
+                      height: 30.h,
+                    ),
+                  ),
                   SizedBox(width: 8.w),
-                  Expanded(child: AppButton(text: AppStrings.reject, variant: AppButtonVariant.outlined, onPressed: onReject ?? () {}, height: 30.h)),
+                  Expanded(
+                    child: AppButton(
+                      text: AppStrings.reject,
+                      variant: AppButtonVariant.outlined,
+                      onPressed: () {
+                        debugPrint('🔴 [UI] REJECT CLICKED FOR BOOKING: ${booking.id}');
+                        if (onReject != null) {
+                          onReject!();
+                        } else {
+                          context.read<BookingCubit>().rejectBooking(booking.id);
+                        }
+                      },
+                      height: 30.h,
+                    ),
+                  ),
                 ],
               )
             else ...[
@@ -130,20 +157,20 @@ class BookingCard extends StatelessWidget {
                 Padding(
                   padding: EdgeInsets.only(bottom: 6.h),
                   child: AppButton(
-                    text: AppStrings.addNew, 
-                    onPressed: () => _showAddExtrasDialog(context), 
-                    width: double.infinity, 
-                    height: 32.h, 
+                    text: AppStrings.addNew,
+                    onPressed: () => _showAddExtrasDialog(context),
+                    width: double.infinity,
+                    height: 32.h,
                     variant: AppButtonVariant.outlined,
                     icon: Icons.add_shopping_cart,
                   ),
                 ),
               if (!isPaid && onConfirmPayment != null)
                 AppButton(
-                  text: AppStrings.confirmCash, 
-                  onPressed: onConfirmPayment ?? () {}, 
-                  width: double.infinity, 
-                  height: 32.h, 
+                  text: AppStrings.confirmCash,
+                  onPressed: onConfirmPayment ?? () {},
+                  width: double.infinity,
+                  height: 32.h,
                   icon: Icons.payments_outlined,
                 ),
             ],

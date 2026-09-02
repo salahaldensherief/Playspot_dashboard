@@ -88,20 +88,25 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   @override
   Future<void> updateBookingStatus(String id, String status) async {
-    // التحديث المباشر للجدول مع دعم مسمى الحقل الصحيح status
-    await client.from('bookings').update({
-      'status': status,
-    }).eq('id', id);
-  }
+    final cleanStatus = status.contains('.') ? status.split('.').last : status;
+    debugPrint('🔵 [DATA_SOURCE] Calling RPC update_booking_status_admin for id=$id, status=$cleanStatus');
 
+    await client.rpc('update_booking_status_admin', params: {
+      'p_booking_id': id,
+      'p_status': cleanStatus,
+    });
+
+    debugPrint('🟢 [DATA_SOURCE] RPC Update Successful!');
+  }  @override
   @override
   Future<void> confirmCashPayment(
-    String bookingId, {
-    String? shiftId,
-    double? discountAmount,
-    double? discountPercentage,
-    String? discountReason,
-  }) async {
+      String bookingId, {
+        String? shiftId,
+        double? discountAmount,
+        double? discountPercentage,
+        String? discountReason,
+      }) async {
+    debugPrint('🔵 [DATA_SOURCE] Confirming cash payment for: $bookingId');
     try {
       await client.rpc('confirm_cash_payment', params: {
         'p_booking_id': bookingId,
@@ -110,9 +115,9 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         'p_discount_percentage': discountPercentage ?? 0,
         'p_discount_reason': discountReason,
       });
+      debugPrint('🟢 [DATA_SOURCE] RPC confirm_cash_payment succeeded');
     } catch (e) {
-      // Fallback: Direct update to bookings table
-      // Note: discount info is now stored directly in bookings, not payments.
+      debugPrint('⚠️ [DATA_SOURCE] RPC confirm_cash_payment failed ($e), attempting direct update fallback...');
       final updateData = {
         'payment_status': 'paid',
         if (discountAmount != null) 'discount_amount': discountAmount,
@@ -120,11 +125,15 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         if (discountReason != null) 'discount_reason': discountReason,
         if (shiftId != null) 'shift_id': shiftId,
       };
-      
-      await client.from('bookings').update(updateData).eq('id', bookingId);
+
+      final res = await client.from('bookings').update(updateData).eq('id', bookingId).select();
+      debugPrint('🟢 [DATA_SOURCE] Direct update fallback response: $res');
+
+      if ((res as List).isEmpty) {
+        throw Exception('فشل تأكيد الدفع: لا توجد صلاحيات لتعديل الحجز (RLS Restricted)');
+      }
     }
   }
-
   @override
   Future<void> createBooking(BookingModel booking) async {
     await client.from('bookings').insert(booking.toJson());

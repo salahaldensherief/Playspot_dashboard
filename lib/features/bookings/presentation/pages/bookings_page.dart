@@ -10,7 +10,6 @@ import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_c
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_state.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
-import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_state.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/admin_shift_monitoring_bar.dart';
 import '../../../../core/responsive/responsive.dart';
 import '../../../lounges/domain/entities/lounge.dart';
@@ -19,7 +18,6 @@ import '../cubit/booking_cubit.dart';
 import '../cubit/booking_state.dart';
 import '../widgets/booking_card.dart';
 import '../widgets/add_booking_dialog.dart';
-
 import '../widgets/booking_details_dialog.dart';
 
 class BookingsPage extends StatefulWidget {
@@ -36,8 +34,10 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() => setState(() {}));
-    
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = context.read<LoginCubit>().state.user;
       context.read<BookingCubit>().startWatchingBookings(loungeId: user?.loungeId);
@@ -81,16 +81,15 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                 padding: EdgeInsets.only(bottom: 24),
                 child: AdminShiftMonitoringBar(),
               ),
-            
+
             _buildLiveStatsHeader(context),
-            
-            SizedBox(height: 24.h),
-            
-            _buildTopToolbar(context, loungeId),
-            
+
             SizedBox(height: 24.h),
 
-            // Responsive TabBar - No TabBarView
+            _buildTopToolbar(context, loungeId),
+
+            SizedBox(height: 24.h),
+
             Container(
               decoration: BoxDecoration(
                 color: AppColors.cardBackground,
@@ -99,6 +98,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
               ),
               child: TabBar(
                 controller: _tabController,
+                onTap: (index) => setState(() {}),
                 indicatorSize: TabBarIndicatorSize.tab,
                 dividerColor: Colors.transparent,
                 indicator: BoxDecoration(
@@ -176,22 +176,23 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
   }
 
   Widget _buildBookingWrap(BuildContext context, List<Booking> bookings, {required bool isPending, bool isAudit = false}) {
-    final shiftState = context.read<ShiftCubit>().state;
-    final activeShiftId = shiftState.activeShift?.id;
     final cubit = context.read<BookingCubit>();
 
     return Wrap(
       spacing: 20.r,
       runSpacing: 20.r,
-      children: bookings.map((booking) => BookingCard(
-        key: ValueKey('booking_${booking.id}'),
-        booking: booking,
-        onApprove: isPending ? () => cubit.approveBooking(booking.id) : null,
-        onReject: isPending ? () => cubit.rejectBooking(booking.id) : null,
-        onConfirmPayment: !isPending && !isAudit && booking.paymentStatus != PaymentStatus.paid
-            ? () => _showBookingDetails(context, booking)
-            : null,
-      )).toList(),
+      children: bookings.map((booking) {
+        final isBookingPending = booking.status == BookingStatus.pending;
+        return BookingCard(
+          key: ValueKey('booking_${booking.id}'),
+          booking: booking,
+          onApprove: isBookingPending ? () => cubit.approveBooking(booking.id) : null,
+          onReject: isBookingPending ? () => cubit.rejectBooking(booking.id) : null,
+          onConfirmPayment: !isBookingPending && !isAudit && booking.paymentStatus != PaymentStatus.paid
+              ? () => _showBookingDetails(context, booking)
+              : null,
+        );
+      }).toList(),
     );
   }
 
@@ -278,26 +279,6 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildTabContent(BuildContext context, List<Booking> bookings, {required bool isPending, bool isAudit = false, required String emptyMsg}) {
-    if (bookings.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inbox_outlined, size: 48.r, color: AppColors.textMuted),
-            SizedBox(height: 16.h),
-            AppText.body(emptyMsg, color: AppColors.textSecondary),
-          ],
-        ),
-      );
-    }
-
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(vertical: 8.h),
-      child: _buildBookingGrid(context, context.read<BookingCubit>(), bookings, isPending: isPending, isAudit: isAudit),
-    );
-  }
-
   Widget _buildTopToolbar(BuildContext context, String loungeId) {
     final user = context.read<LoginCubit>().state.user;
     final isMobile = Responsive.isMobile(context);
@@ -311,12 +292,12 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
           currentLounge = found.isNotEmpty ? found.first : state.lounges.first;
         }
         final isOpen = currentLounge?.isOpen ?? true;
-        
+
         return Container(
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
           decoration: BoxDecoration(
-            color: AppColors.cardBackground, 
-            borderRadius: BorderRadius.circular(12.r), 
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(12.r),
             border: Border.all(color: AppColors.borderDefault),
           ),
           child: Flex(
@@ -332,12 +313,12 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AppText.subHeading(
-                        isOpen ? AppStrings.loungeIsOpen : AppStrings.loungeIsClosed, 
-                        color: isOpen ? AppColors.success : AppColors.danger, 
+                        isOpen ? AppStrings.loungeIsOpen : AppStrings.loungeIsClosed,
+                        color: isOpen ? AppColors.success : AppColors.danger,
                         fontSize: 16.sp,
                       ),
                       AppText.body(
-                        isOpen ? AppStrings.usersCanBookNow : AppStrings.loungeIsHidden, 
+                        isOpen ? AppStrings.usersCanBookNow : AppStrings.loungeIsHidden,
                         fontSize: 12.sp,
                       ),
                     ],
@@ -353,7 +334,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                       final roomCubit = context.read<RoomCubit>();
                       final bookingCubit = context.read<BookingCubit>();
                       final shiftCubit = context.read<ShiftCubit>();
-                      
+
                       roomCubit.watchRooms(loungeId);
                       showDialog(
                         context: context,
@@ -380,8 +361,8 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                     if (!isMobile) AppText.body(isOpen ? AppStrings.closeLounge : AppStrings.openLounge, fontWeight: FontWeight.bold),
                     if (!isMobile) SizedBox(width: 8.w),
                     Switch(
-                      value: isOpen, 
-                      activeColor: AppColors.success, 
+                      value: isOpen,
+                      activeColor: AppColors.success,
                       onChanged: (val) => context.read<LoungeCubit>().toggleLoungeStatus(loungeId, val),
                     ),
                   ],
@@ -389,69 +370,6 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
               ),
             ],
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSectionHeader(String title, int count, Color color) {
-    return Row(
-      children: [
-        Container(width: 4.w, height: 24.h, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2.r))),
-        SizedBox(width: 12.w),
-        AppText.heading(title, fontSize: 20.sp),
-        SizedBox(width: 12.w),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-          decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12.r)),
-          child: AppText.body(count.toString(), color: color, fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBookingGrid(BuildContext context, BookingCubit cubit, List<Booking> bookings, {required bool isPending, bool isAudit = false}) {
-    if (bookings.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(24.r),
-        decoration: BoxDecoration(color: AppColors.cardBackground.withOpacity(0.5), borderRadius: BorderRadius.circular(12.r), border: Border.all(color: AppColors.borderDefault)),
-        child: Center(child: AppText.body(isAudit ? AppStrings.noFinishedBookings : (isPending ? AppStrings.noNewRequests : AppStrings.noActiveBookings), color: AppColors.textSecondary)),
-      );
-    }
-
-    final shiftState = context.read<ShiftCubit>().state;
-    final activeShiftId = shiftState.activeShift?.id;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Calculate dynamic column count based on available width
-        int crossAxisCount = 3;
-        if (constraints.maxWidth < 900) crossAxisCount = 2;
-        if (constraints.maxWidth < 600) crossAxisCount = 1;
-
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 20.r,
-            mainAxisSpacing: 20.r,
-            childAspectRatio: 0.9, // Dynamic ratio instead of fixed mainAxisExtent
-          ),
-          itemCount: bookings.length,
-          itemBuilder: (context, index) {
-            final booking = bookings[index];
-            return BookingCard(
-              key: ValueKey('booking_${booking.id}'),
-              booking: booking,
-              onApprove: isPending ? () => cubit.approveBooking(booking.id) : null,
-              onReject: isPending ? () => cubit.rejectBooking(booking.id) : null,
-              onConfirmPayment: !isPending && !isAudit && booking.paymentStatus != PaymentStatus.paid
-                  ? () => _showBookingDetails(context, booking)
-                  : null,
-            );
-          },
         );
       },
     );

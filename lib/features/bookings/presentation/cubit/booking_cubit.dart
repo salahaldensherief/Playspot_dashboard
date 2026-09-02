@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/audio/audio_service.dart';
 import '../../domain/entities/booking.dart';
@@ -29,26 +30,29 @@ class BookingCubit extends Cubit<BookingState> {
   }) : super(const BookingState());
 
   void startWatchingBookings({String? loungeId}) {
-    if (loungeId == null || loungeId.isEmpty) {
-      // For Admins who can see everything, loungeId might be null.
-      // But if it's explicitly passed as empty string, we should handle it.
-      if (loungeId != null && loungeId.isEmpty) {
-         emit(state.copyWith(
-          status: BookingStatusState.failure,
-          errorMessage: 'Lounge ID is empty',
-        ));
-        return;
-      }
+    if (loungeId != null && loungeId.isEmpty) {
+      emit(state.copyWith(
+        status: BookingStatusState.failure,
+        errorMessage: 'Lounge ID is empty',
+      ));
+      return;
     }
+
     emit(state.copyWith(status: BookingStatusState.loading));
     _subscription?.cancel();
+
     _subscription = watchBookings(loungeId: loungeId).listen(
-      (bookings) {
+          (bookings) {
         if (isClosed) return;
+
         if (bookings.length > _lastBookingCount) {
-          audioService.playNotificationSound();
+          try {
+            audioService.playNotificationSound();
+          } catch (_) {
+          }
         }
         _lastBookingCount = bookings.length;
+
         emit(state.copyWith(
           status: BookingStatusState.success,
           bookings: bookings,
@@ -63,42 +67,60 @@ class BookingCubit extends Cubit<BookingState> {
       },
     );
   }
-
   Future<void> approveBooking(String id) async {
+    // 1. تحديث فوري وسريع للواجهة (Optimistic UI)
+    final updatedList = state.bookings.map((b) {
+      if (b.id == id) return b.copyWith(status: BookingStatus.upcoming);
+      return b;
+    }).toList();
+    emit(state.copyWith(bookings: updatedList));
+
+    // 2. إرسال التحديث للسيرفر
     final result = await updateBookingStatus(id, BookingStatus.upcoming);
-    
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: BookingStatusState.failure,
-        errorMessage: failure.message,
-      )),
-      (_) => null,
+          (failure) {
+        debugPrint('🔴 [CUBIT] Approve Failed: ${failure.message}');
+        emit(state.copyWith(
+          status: BookingStatusState.failure,
+          errorMessage: failure.message,
+        ));
+      },
+          (_) => debugPrint('🟢 [CUBIT] Approve Succeeded in Supabase'),
     );
   }
 
   Future<void> rejectBooking(String id) async {
+    // 1. تحديث فوري وسريع للواجهة (Optimistic UI)
+    final updatedList = state.bookings.map((b) {
+      if (b.id == id) return b.copyWith(status: BookingStatus.cancelled);
+      return b;
+    }).toList();
+    emit(state.copyWith(bookings: updatedList));
+
+    // 2. إرسال التحديث للسيرفر
     final result = await updateBookingStatus(id, BookingStatus.cancelled);
-    
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: BookingStatusState.failure,
-        errorMessage: failure.message,
-      )),
-      (_) => null,
+          (failure) {
+        debugPrint('🔴 [CUBIT] Reject Failed: ${failure.message}');
+        emit(state.copyWith(
+          status: BookingStatusState.failure,
+          errorMessage: failure.message,
+        ));
+      },
+          (_) => debugPrint('🟢 [CUBIT] Reject Succeeded in Supabase'),
     );
   }
-
   Future<void> confirmCashPayment(
-    String id, {
-    String? shiftId,
-    double? discountAmount,
-    double? discountPercentage,
-    String? discountReason,
-  }) async {
+      String id, {
+        String? shiftId,
+        double? discountAmount,
+        double? discountPercentage,
+        String? discountReason,
+      }) async {
     final result = await confirmCashPaymentUseCase(
       id,
       shiftId: shiftId,
@@ -106,15 +128,29 @@ class BookingCubit extends Cubit<BookingState> {
       discountPercentage: discountPercentage,
       discountReason: discountReason,
     );
-    
+
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
+          (failure) => emit(state.copyWith(
         status: BookingStatusState.failure,
         errorMessage: failure.message,
       )),
-      (_) => null,
+          (_) {
+        final updatedBookings = state.bookings.map((booking) {
+          if (booking.id == id) {
+            return booking.copyWith(
+              paymentStatus: PaymentStatus.paid,
+            );
+          }
+          return booking;
+        }).toList();
+
+        emit(state.copyWith(
+          status: BookingStatusState.success,
+          bookings: updatedBookings,
+        ));
+      },
     );
   }
 
