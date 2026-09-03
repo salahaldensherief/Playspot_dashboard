@@ -38,9 +38,9 @@ class LoungeOwnerAnalyticsGrid extends StatelessWidget {
                 : Responsive.isTablet(context)
                     ? 2
                     : 4,
-            crossAxisSpacing: 20.w,
-            mainAxisSpacing: 20.h,
-            mainAxisExtent: 180.h,
+            crossAxisSpacing: 16.w,
+            mainAxisSpacing: 16.h,
+            mainAxisExtent: 130.h.clamp(110.0, 160.0),
           ),
           children: [
             // Today's Revenue

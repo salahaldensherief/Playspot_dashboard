@@ -5,14 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
-import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
-import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
-import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_state.dart';
-import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/close_shift_dialog.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import '../app_strings.dart';
 import '../theme/app_colors.dart';
 
@@ -157,32 +152,37 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
             children: [
               if (!isMobile)
                 Flexible(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        user.name,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          user.name,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      Text(
-                        user.isSuperAdmin 
-                          ? AppStrings.superAdmin 
-                          : (user.isLoungeOwner 
-                              ? AppStrings.loungeOwnerLabel 
-                              : (user.isCashier ? AppStrings.cashierLabel : AppStrings.loungeManager)),
-                        style: TextStyle(
-                          color: AppColors.neonPurple,
-                          fontSize: 11.sp,
+                        Text(
+                          user.isSuperAdmin 
+                            ? AppStrings.superAdmin 
+                            : (user.isLoungeOwner 
+                                ? AppStrings.loungeOwnerLabel 
+                                : (user.isCashier ? AppStrings.cashierLabel : AppStrings.loungeManager)),
+                          style: TextStyle(
+                            color: AppColors.neonPurple,
+                            fontSize: 11.sp,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               if (!isMobile) SizedBox(width: 12.w),
@@ -197,7 +197,7 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
   Widget _buildAvatar(String? url) {
     return CircleAvatar(
       radius: 18.r,
-      backgroundColor: AppColors.neonPurple.withOpacity(0.2),
+      backgroundColor: AppColors.neonPurple.withValues(alpha: 0.2),
       backgroundImage: url != null ? NetworkImage(url) : null,
       child: url == null 
         ? Icon(Icons.person, color: AppColors.neonPurple, size: 20.sp)

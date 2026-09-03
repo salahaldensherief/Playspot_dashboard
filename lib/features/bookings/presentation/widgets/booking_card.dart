@@ -10,12 +10,15 @@ import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
 import '../../domain/entities/booking.dart';
 import '../cubit/booking_cubit.dart';
+import 'start_session_button.dart';
 
 class BookingCard extends StatelessWidget {
   final Booking booking;
   final VoidCallback? onApprove;
   final VoidCallback? onReject;
   final VoidCallback? onConfirmPayment;
+  final VoidCallback? onStartSession;
+  final VoidCallback? onNoShow;
 
   const BookingCard({
     super.key,
@@ -23,12 +26,16 @@ class BookingCard extends StatelessWidget {
     this.onApprove,
     this.onReject,
     this.onConfirmPayment,
+    this.onStartSession,
+    this.onNoShow,
   });
 
   @override
   Widget build(BuildContext context) {
     final isPending = booking.status == BookingStatus.pending;
     final isPaid = booking.paymentStatus == PaymentStatus.paid;
+    final isCanStartSession = booking.status == BookingStatus.pending || booking.status == BookingStatus.upcoming;
+    final isOverdue = _isPastStartTime(booking);
     final bool canAddItems = context.hasPermission('pos_view_menu') &&
         (booking.status == BookingStatus.upcoming || booking.status == BookingStatus.inProgress);
 
@@ -40,9 +47,16 @@ class BookingCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.borderDefault, width: 1),
+        border: Border.all(
+          color: isOverdue ? AppColors.danger.withValues(alpha: 0.5) : AppColors.borderDefault,
+          width: isOverdue ? 1.5 : 1,
+        ),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: isOverdue ? AppColors.danger.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
@@ -56,7 +70,8 @@ class BookingCard extends StatelessWidget {
               AppText.body(
                 _formatTime(booking.startTime),
                 fontSize: 10.sp,
-                color: AppColors.textSecondary,
+                color: isOverdue ? AppColors.danger : AppColors.textSecondary,
+                fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
               ),
             ],
           ),
@@ -77,7 +92,7 @@ class BookingCard extends StatelessWidget {
               padding: EdgeInsets.all(6.r),
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Column(
@@ -114,8 +129,37 @@ class BookingCard extends StatelessWidget {
             ],
           ),
 
-          if (isPending || (!isPaid && onConfirmPayment != null) || canAddItems) ...[
+          if (isPending || isCanStartSession || (!isPaid && onConfirmPayment != null) || canAddItems) ...[
             SizedBox(height: 10.h),
+            if (isCanStartSession)
+              Padding(
+                padding: EdgeInsets.only(bottom: 6.h),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: StartSessionButton(
+                        bookingId: booking.id,
+                        onSuccess: onStartSession,
+                        height: 32.h,
+                      ),
+                    ),
+                    if (isOverdue || isCanStartSession) ...[
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        flex: 2,
+                        child: AppButton(
+                          text: AppStrings.noShow,
+                          icon: Icons.person_off_outlined,
+                          variant: AppButtonVariant.outlined,
+                          height: 32.h,
+                          onPressed: () => _showNoShowConfirmDialog(context),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             if (isPending)
               Row(
                 children: [
@@ -180,6 +224,81 @@ class BookingCard extends StatelessWidget {
     );
   }
 
+  bool _isPastStartTime(Booking booking) {
+    if (booking.status != BookingStatus.pending && booking.status != BookingStatus.upcoming) {
+      return false;
+    }
+    try {
+      final date = booking.date;
+      final parts = booking.startTime.split(':');
+      if (parts.length < 2) return false;
+      final hour = int.tryParse(parts[0]) ?? 0;
+      final minute = int.tryParse(parts[1]) ?? 0;
+      final scheduledStart = DateTime(date.year, date.month, date.day, hour, minute);
+      return DateTime.now().isAfter(scheduledStart);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  void _showNoShowConfirmDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        title: Row(
+          children: [
+            const Icon(Icons.person_off, color: AppColors.danger),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: AppText.subHeading(
+                AppStrings.confirmNoShow,
+                color: AppColors.danger,
+                fontSize: 16.sp,
+              ),
+            ),
+          ],
+        ),
+        content: AppText.body(
+          AppStrings.confirmNoShowMessage,
+          fontSize: 13.sp,
+          color: AppColors.textPrimary,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: AppText.body(AppStrings.cancel, color: AppColors.textSecondary),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+            ),
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              final cubit = context.read<BookingCubit>();
+              final success = await cubit.markNoShow(booking.id);
+              if (onNoShow != null) {
+                onNoShow!();
+              }
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(success ? AppStrings.noShowSuccess : AppStrings.noShowFailed),
+                    backgroundColor: success ? AppColors.success : AppColors.danger,
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
+              }
+            },
+            child: AppText.body(AppStrings.markNoShow, color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _formatTime(String timeStr) {
     if (timeStr.isEmpty) return '';
     try {
@@ -213,9 +332,9 @@ class BookingCard extends StatelessWidget {
     switch (status) {
       case BookingStatus.pending: return StatusBadge.warning(AppStrings.pending.toUpperCase());
       case BookingStatus.upcoming: return StatusBadge.info(AppStrings.upcoming.toUpperCase());
+      case BookingStatus.inProgress: return StatusBadge.success(AppStrings.inProgress.toUpperCase());
       case BookingStatus.completed: return StatusBadge.success(AppStrings.completed.toUpperCase());
       case BookingStatus.cancelled: return StatusBadge.danger(AppStrings.cancelled.toUpperCase());
-      default: return StatusBadge.info(status.name.toUpperCase());
     }
   }
 }

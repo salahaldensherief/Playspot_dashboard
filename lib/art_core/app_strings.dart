@@ -425,5 +425,36 @@ class AppStrings {
   static String get all => 'all'.tr();
   static String get error => 'error'.tr();
 
+  static String get startSession => 'start_session'.tr();
+  static String get sessionStartedSuccess => 'session_started_success'.tr();
+  static String get sessionStartFailed => 'session_start_failed'.tr();
+  static String get inProgress => 'in_progress'.tr();
+
+  static String get noShow => 'no_show'.tr();
+  static String get markNoShow => 'mark_no_show'.tr();
+  static String get confirmNoShow => 'confirm_no_show'.tr();
+  static String get confirmNoShowMessage => 'confirm_no_show_message'.tr();
+  static String get noShowSuccess => 'no_show_success'.tr();
+  static String get noShowFailed => 'no_show_failed'.tr();
+
+  static String get endSession => 'end_session'.tr();
+  static String get extendTime => 'extend_time'.tr();
+  static String get timeExpired => 'time_expired'.tr();
+  static String get remainingTime => 'remaining_time'.tr();
+  static String get minutesUnit => 'minutes_unit'.tr();
+  static String get confirmEndSession => 'confirm_end_session'.tr();
+  static String get confirmEndSessionMessage => 'confirm_end_session_message'.tr();
+  static String get sessionEndedSuccess => 'session_ended_success'.tr();
+  static String get timeExtendedSuccess => 'time_extended_success'.tr();
+  static String get hours => 'hours'.tr();
+
+  static String get callStaff => 'call_staff'.tr();
+  static String get canteenOrder => 'canteen_order'.tr();
+  static String get markAsAttended => 'mark_as_attended'.tr();
+  static String get attended => 'attended'.tr();
+  static String get unread => 'unread'.tr();
+  static String get requestsFeed => 'requests_feed'.tr();
+  static String get noActiveRequests => 'no_active_requests'.tr();
+
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

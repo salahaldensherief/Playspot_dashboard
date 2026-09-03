@@ -19,6 +19,7 @@ import '../cubit/booking_state.dart';
 import '../widgets/booking_card.dart';
 import '../widgets/add_booking_dialog.dart';
 import '../widgets/booking_details_dialog.dart';
+import '../widgets/live_session_card.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -134,7 +135,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
 
                 switch (_tabController.index) {
                   case 0:
-                    displayedBookings = state.bookings.where((b) => b.status == BookingStatus.upcoming).toList();
+                    displayedBookings = state.bookings.where((b) => b.status == BookingStatus.upcoming || b.status == BookingStatus.inProgress).toList();
                     emptyMsg = AppStrings.noActiveBookings;
                     break;
                   case 1:
@@ -182,6 +183,12 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
       spacing: 20.r,
       runSpacing: 20.r,
       children: bookings.map((booking) {
+        if (booking.status == BookingStatus.inProgress) {
+          return LiveSessionCard(
+            key: ValueKey('live_session_${booking.id}'),
+            booking: booking,
+          );
+        }
         final isBookingPending = booking.status == BookingStatus.pending;
         return BookingCard(
           key: ValueKey('booking_${booking.id}'),
@@ -223,7 +230,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
   Widget _buildLiveStatsHeader(BuildContext context) {
     return BlocBuilder<BookingCubit, BookingState>(
       builder: (context, state) {
-        final activeCount = state.bookings.where((b) => b.status == BookingStatus.upcoming).length;
+        final activeCount = state.bookings.where((b) => b.status == BookingStatus.upcoming || b.status == BookingStatus.inProgress).length;
         final pendingCount = state.bookings.where((b) => b.status == BookingStatus.pending).length;
         final totalRevenue = state.bookings
             .where((b) => b.status == BookingStatus.completed)

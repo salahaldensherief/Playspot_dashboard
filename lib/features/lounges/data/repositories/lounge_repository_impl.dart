@@ -108,6 +108,10 @@ class LoungeRepositoryImpl implements LoungeRepository {
         'description_en': lounge.descriptionEn,
         'city': lounge.city,
         'location': lounge.location,
+        'latitude': lounge.lat,
+        'longitude': lounge.lng,
+        'opening_time': lounge.opensAt,
+        'closing_time': lounge.closesAt,
         'lat': lounge.lat,
         'lng': lounge.lng,
         'opens_at': lounge.opensAt,
@@ -156,6 +160,8 @@ class LoungeRepositoryImpl implements LoungeRepository {
   Future<Either<Failure, void>> updateLoungeLocation(String loungeId, double lat, double lng) async {
     try {
       await remoteDataSource.updateLounge(loungeId, {
+        'latitude': lat,
+        'longitude': lng,
         'lat': lat,
         'lng': lng,
       });

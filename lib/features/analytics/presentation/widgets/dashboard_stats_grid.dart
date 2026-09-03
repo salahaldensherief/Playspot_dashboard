@@ -4,7 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/stat_card.dart';
-import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import '../dashboard_cubit.dart';
 import '../dashboard_state.dart';
@@ -34,9 +33,9 @@ class DashboardStatsGrid extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 20.w,
-            mainAxisSpacing: 20.h,
-            mainAxisExtent: 160.h,
+            crossAxisSpacing: 16.w,
+            mainAxisSpacing: 16.h,
+            mainAxisExtent: 130.h.clamp(110.0, 160.0),
           ),
           children: [
             if (canViewRevenue)

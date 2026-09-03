@@ -20,6 +20,7 @@ abstract class BookingRemoteDataSource {
   });
   Future<void> createBooking(BookingModel booking);
   Future<void> swapRoom(String bookingId, String newRoomId, String actionBy);
+  Future<void> startBookingSession(String bookingId);
 }
 
 class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
@@ -88,7 +89,23 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   @override
   Future<void> updateBookingStatus(String id, String status) async {
-    final cleanStatus = status.contains('.') ? status.split('.').last : status;
+    String cleanStatus = status.contains('.') ? status.split('.').last : status;
+    cleanStatus = cleanStatus.trim().toLowerCase().replaceAll(' ', '_');
+
+    // Map rejected, canceled, no_show or non-standard values to valid DB enum 'cancelled'
+    if (cleanStatus == 'rejected' || cleanStatus == 'reject' || cleanStatus == 'canceled' || cleanStatus == 'no_show') {
+      cleanStatus = 'cancelled';
+    } else if (cleanStatus == 'inprogress' || cleanStatus == 'in_progress' || cleanStatus == 'active') {
+      cleanStatus = 'in_progress';
+    }
+
+    // Safety guard to guarantee only DB-recognized enum values are sent
+    const validDbStatuses = {'pending', 'upcoming', 'in_progress', 'completed', 'cancelled'};
+    if (!validDbStatuses.contains(cleanStatus)) {
+      debugPrint('⚠️ [DATA_SOURCE] Invalid/unrecognized status "$cleanStatus" provided for booking $id. Mapping to "cancelled".');
+      cleanStatus = 'cancelled';
+    }
+
     debugPrint('🔵 [DATA_SOURCE] Calling RPC update_booking_status_admin for id=$id, status=$cleanStatus');
 
     await client.rpc('update_booking_status_admin', params: {
@@ -146,5 +163,14 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       'p_new_room_id': newRoomId,
       'p_action_by': actionBy,
     });
+  }
+
+  @override
+  Future<void> startBookingSession(String bookingId) async {
+    debugPrint('🔵 [DATA_SOURCE] Calling RPC start_booking_session for bookingId=$bookingId');
+    await client.rpc('start_booking_session', params: {
+      'p_booking_id': bookingId,
+    });
+    debugPrint('🟢 [DATA_SOURCE] RPC start_booking_session successful!');
   }
 }

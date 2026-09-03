@@ -1,10 +1,10 @@
 import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
+import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_realtime_datasource.dart';
+import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_remote_data_source.dart';
+import 'package:play_spot_dashboard/features/bookings/data/models/booking_model.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/repositories/booking_repository.dart';
-import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_remote_data_source.dart';
-import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_realtime_datasource.dart';
-import 'package:play_spot_dashboard/features/bookings/data/models/booking_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class BookingRepositoryImpl implements BookingRepository {
@@ -41,7 +41,7 @@ class BookingRepositoryImpl implements BookingRepository {
   @override
   Future<Either<Failure, void>> updateBookingStatus(String id, BookingStatus status) async {
     try {
-      await remoteDataSource.updateBookingStatus(id, status.toString().split('.').last);
+      await remoteDataSource.updateBookingStatus(id, status.toDbString());
       return const Right(null);
     } on PostgrestException catch (e) {
       if (e.code == '23P01') {
@@ -120,6 +120,18 @@ class BookingRepositoryImpl implements BookingRepository {
     try {
       await remoteDataSource.swapRoom(bookingId, newRoomId, actionBy);
       return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> startBookingSession(String bookingId) async {
+    try {
+      await remoteDataSource.startBookingSession(bookingId);
+      return const Right(null);
+    } on PostgrestException catch (e) {
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

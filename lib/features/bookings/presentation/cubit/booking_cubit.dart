@@ -7,6 +7,7 @@ import '../../domain/usecases/confirm_cash_payment.dart';
 import '../../domain/usecases/update_booking_status.dart';
 import '../../domain/usecases/watch_bookings.dart';
 import '../../domain/usecases/create_booking.dart';
+import '../../domain/usecases/start_booking_session.dart';
 import '../../domain/repositories/booking_repository.dart';
 import 'booking_state.dart';
 
@@ -15,6 +16,7 @@ class BookingCubit extends Cubit<BookingState> {
   final UpdateBookingStatus updateBookingStatus;
   final ConfirmCashPayment confirmCashPaymentUseCase;
   final CreateBooking createBookingUseCase;
+  final StartBookingSession startBookingSessionUseCase;
   final BookingRepository repository;
   final AudioService audioService;
   StreamSubscription? _subscription;
@@ -28,6 +30,7 @@ class BookingCubit extends Cubit<BookingState> {
     required this.updateBookingStatus,
     required this.confirmCashPaymentUseCase,
     required this.createBookingUseCase,
+    required this.startBookingSessionUseCase,
     required this.repository,
     required this.audioService,
   }) : super(const BookingState());
@@ -220,6 +223,136 @@ class BookingCubit extends Cubit<BookingState> {
       )),
       (_) => null, // Realtime will handle the update
     );
+  }
+
+  Future<bool> startBookingSession(String id) async {
+    // 1. Optimistic UI update to reflect in_progress status immediately
+    final originalBookings = List<Booking>.from(state.bookings);
+    final updatedList = state.bookings.map((b) {
+      if (b.id == id) return b.copyWith(status: BookingStatus.inProgress);
+      return b;
+    }).toList();
+    emit(state.copyWith(bookings: updatedList));
+
+    // 2. Call RPC via usecase
+    final result = await startBookingSessionUseCase(id);
+    if (isClosed) return false;
+
+    return result.fold(
+      (failure) {
+        debugPrint('🔴 [CUBIT] Start Booking Session Failed: ${failure.message}');
+        emit(state.copyWith(
+          status: BookingStatusState.failure,
+          errorMessage: failure.message,
+          bookings: originalBookings,
+        ));
+        return false;
+      },
+      (_) {
+        debugPrint('🟢 [CUBIT] Start Booking Session Succeeded in Supabase');
+        if (_watchedLoungeId != null) {
+          startWatchingBookings(loungeId: _watchedLoungeId);
+        }
+        return true;
+      },
+    );
+  }
+
+  Future<bool> markNoShow(String id) async {
+    // 1. Optimistic UI update to cancel booking immediately and release room
+    final originalBookings = List<Booking>.from(state.bookings);
+    final updatedList = state.bookings.map((b) {
+      if (b.id == id) return b.copyWith(status: BookingStatus.cancelled);
+      return b;
+    }).toList();
+    emit(state.copyWith(bookings: updatedList));
+
+    // 2. Send cancellation to server
+    final result = await updateBookingStatus(id, BookingStatus.cancelled);
+    if (isClosed) return false;
+
+    return result.fold(
+      (failure) {
+        debugPrint('🔴 [CUBIT] Mark No-Show Failed: ${failure.message}');
+        emit(state.copyWith(
+          status: BookingStatusState.failure,
+          errorMessage: failure.message,
+          bookings: originalBookings,
+        ));
+        return false;
+      },
+      (_) {
+        debugPrint('🟢 [CUBIT] Mark No-Show Succeeded in Supabase');
+        if (_watchedLoungeId != null) {
+          startWatchingBookings(loungeId: _watchedLoungeId);
+        }
+        return true;
+      },
+    );
+  }
+
+  Future<bool> changeBookingStatus(String id, BookingStatus newStatus) async {
+    // 1. Optimistic UI update to reflect the new status immediately
+    final originalBookings = List<Booking>.from(state.bookings);
+    final updatedList = state.bookings.map((b) {
+      if (b.id == id) return b.copyWith(status: newStatus);
+      return b;
+    }).toList();
+    emit(state.copyWith(bookings: updatedList));
+
+    // 2. Send update to server
+    final result = await updateBookingStatus(id, newStatus);
+    if (isClosed) return false;
+
+    return result.fold(
+      (failure) {
+        debugPrint('🔴 [CUBIT] Change Booking Status Failed: ${failure.message}');
+        emit(state.copyWith(
+          status: BookingStatusState.failure,
+          errorMessage: failure.message,
+          bookings: originalBookings,
+        ));
+        return false;
+      },
+      (_) {
+        debugPrint('🟢 [CUBIT] Change Booking Status Succeeded in Supabase');
+        if (_watchedLoungeId != null) {
+          startWatchingBookings(loungeId: _watchedLoungeId);
+        }
+        return true;
+      },
+    );
+  }
+
+  Future<bool> extendBookingDuration(String id, int additionalMinutes) async {
+    final originalBookings = List<Booking>.from(state.bookings);
+    final foundIndex = state.bookings.indexWhere((b) => b.id == id);
+    if (foundIndex == -1) return false;
+
+    final booking = state.bookings[foundIndex];
+    final newDuration = booking.durationMinutes + additionalMinutes;
+
+    final updatedList = state.bookings.map((b) {
+      if (b.id == id) return b.copyWith(durationMinutes: newDuration);
+      return b;
+    }).toList();
+    emit(state.copyWith(bookings: updatedList));
+
+    try {
+      await repository.createBooking(booking.copyWith(durationMinutes: newDuration));
+      if (_watchedLoungeId != null) {
+        startWatchingBookings(loungeId: _watchedLoungeId);
+      }
+      return true;
+    } catch (e) {
+      debugPrint('🔴 [CUBIT] Extend Duration Failed: $e');
+      emit(state.copyWith(
+        status: BookingStatusState.failure,
+        errorMessage: e.toString(),
+        bookings: originalBookings,
+      ));
+      return false;
+    }
   }
 
   void updateSelectedDuration(int minutes) {

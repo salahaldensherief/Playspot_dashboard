@@ -69,10 +69,14 @@ class LoungeModel extends Lounge {
       descriptionAr: json['description_ar']?.toString(),
       descriptionEn: json['description_en']?.toString(),
       images: json['images'] != null ? List<String>.from(json['images']) : null,
-      opensAt: json['opens_at']?.toString() ?? '',
-      closesAt: json['closes_at']?.toString() ?? '',
-      lat: (json['lat'] != null) ? parseDouble(json['lat']) : null,
-      lng: (json['lng'] != null) ? parseDouble(json['lng']) : null,
+      opensAt: json['opening_time']?.toString() ?? json['opens_at']?.toString() ?? '',
+      closesAt: json['closing_time']?.toString() ?? json['closes_at']?.toString() ?? '',
+      lat: (json['latitude'] != null)
+          ? parseDouble(json['latitude'])
+          : ((json['lat'] != null) ? parseDouble(json['lat']) : null),
+      lng: (json['longitude'] != null)
+          ? parseDouble(json['longitude'])
+          : ((json['lng'] != null) ? parseDouble(json['lng']) : null),
       categoryIcons: json['category_icons'] != null ? List<String>.from(json['category_icons']) : [],
       categoryId: json['category_id']?.toString(),
       ownerName: json['owner_name']?.toString(),
@@ -96,6 +100,10 @@ class LoungeModel extends Lounge {
       'description_ar': descriptionAr,
       'description_en': descriptionEn,
       'images': images,
+      'opening_time': opensAt,
+      'closing_time': closesAt,
+      'latitude': lat,
+      'longitude': lng,
       'opens_at': opensAt,
       'closes_at': closesAt,
       'lat': lat,

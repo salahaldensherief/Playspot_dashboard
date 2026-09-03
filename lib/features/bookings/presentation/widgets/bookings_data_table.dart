@@ -45,7 +45,7 @@ class BookingsDataTable extends StatelessWidget {
               DataCell(AppText.body(b.roomName, color: AppColors.textSecondary)),
               DataCell(AppText.body(AppStrings.gaming, color: AppColors.textSecondary)),
               DataCell(AppText.body(b.startTime, color: AppColors.textSecondary)),
-              DataCell(_getStatusBadge(b.status.toString().split('.').last)),
+              DataCell(_getStatusBadge(b.status.toDbString())),
               DataCell(_buildActions(context, b)),
             ],
           )).toList(),
@@ -116,6 +116,7 @@ class BookingsDataTable extends StatelessWidget {
     switch (status) {
       case 'pending': return StatusBadge.warning(AppStrings.pending);
       case 'upcoming': return StatusBadge.info(AppStrings.upcoming);
+      case 'in_progress': return StatusBadge.success(AppStrings.inProgress);
       case 'completed': return StatusBadge.success(AppStrings.completed);
       case 'cancelled': return StatusBadge.danger(AppStrings.cancelled);
       default: return StatusBadge.info(status);

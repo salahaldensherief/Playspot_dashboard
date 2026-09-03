@@ -7,6 +7,7 @@ import 'domain/usecases/watch_bookings.dart';
 import 'domain/usecases/update_booking_status.dart';
 import 'domain/usecases/confirm_cash_payment.dart';
 import 'domain/usecases/create_booking.dart';
+import 'domain/usecases/start_booking_session.dart';
 import 'presentation/cubit/booking_cubit.dart';
 
 void initBookingsDI(GetIt sl) {
@@ -28,6 +29,7 @@ void initBookingsDI(GetIt sl) {
   sl.registerLazySingleton(() => UpdateBookingStatus(sl()));
   sl.registerLazySingleton(() => ConfirmCashPayment(sl()));
   sl.registerLazySingleton(() => CreateBooking(sl()));
+  sl.registerLazySingleton(() => StartBookingSession(sl()));
 
   // Cubits
   sl.registerFactory<BookingCubit>(
@@ -36,6 +38,7 @@ void initBookingsDI(GetIt sl) {
       updateBookingStatus: sl(),
       confirmCashPaymentUseCase: sl(),
       createBookingUseCase: sl(),
+      startBookingSessionUseCase: sl(),
       repository: sl(),
       audioService: sl(),
     ),

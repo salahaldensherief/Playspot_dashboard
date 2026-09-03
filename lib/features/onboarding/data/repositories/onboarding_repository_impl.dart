@@ -35,6 +35,8 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
       await remoteDataSource.updateLoungeData(loungeId, {
         'name': name,
         'location': location,
+        'latitude': lat,
+        'longitude': lng,
         'lat': lat,
         'lng': lng,
         'images': images,
@@ -54,6 +56,8 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
   }) async {
     try {
       await remoteDataSource.updateLoungeData(loungeId, {
+        'opening_time': opensAt,
+        'closing_time': closesAt,
         'opens_at': opensAt,
         'closes_at': closesAt,
         'weekly_holidays': weeklyHolidays,
