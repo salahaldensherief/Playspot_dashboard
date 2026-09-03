@@ -455,6 +455,8 @@ class AppStrings {
   static String get unread => 'unread'.tr();
   static String get requestsFeed => 'requests_feed'.tr();
   static String get noActiveRequests => 'no_active_requests'.tr();
+  static String get roomSwappedSuccess => 'room_swapped_success'.tr();
+  static String get startsAt => 'starts_at'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

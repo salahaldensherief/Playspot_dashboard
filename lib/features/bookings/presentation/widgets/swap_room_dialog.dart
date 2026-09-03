@@ -30,6 +30,18 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
   String? _selectedRoomId;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<LoginCubit>().state.user;
+      final loungeId = user?.loungeId;
+      if (loungeId != null && loungeId.isNotEmpty) {
+        context.read<RoomCubit>().watchRooms(loungeId);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final user = context.read<LoginCubit>().state.user;
 
@@ -51,9 +63,19 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
                     .where((r) => r.status == RoomStatusEnum.available && r.id != widget.currentRoomId)
                     .toList();
 
+                if (state.status == RoomStatus.loading && availableRooms.isEmpty) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    child: const Center(child: CircularProgressIndicator(color: AppColors.neonBlue)),
+                  );
+                }
+
                 if (availableRooms.isEmpty) {
-                  return Center(
-                    child: AppText.body(AppStrings.noAvailableRooms, color: AppColors.danger),
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    child: Center(
+                      child: AppText.body(AppStrings.noAvailableRooms, color: AppColors.danger),
+                    ),
                   );
                 }
 
@@ -61,7 +83,10 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
                   label: AppStrings.selectNewRoom,
                   value: _selectedRoomId,
                   items: availableRooms.map((r) => r.id).toList(),
-                  itemLabel: (id) => availableRooms.firstWhere((r) => r.id == id).nameEn,
+                  itemLabel: (id) {
+                    final found = availableRooms.firstWhere((r) => r.id == id);
+                    return found.nameEn.isNotEmpty ? found.nameEn : found.nameAr;
+                  },
                   onChanged: (val) => setState(() => _selectedRoomId = val),
                 );
               },
@@ -81,7 +106,8 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
                   onPressed: _selectedRoomId == null ? null : () {
                     if (_selectedRoomId != null) {
                       final availableRooms = context.read<RoomCubit>().state.rooms;
-                      final roomName = availableRooms.firstWhere((r) => r.id == _selectedRoomId).nameEn;
+                      final foundRoom = availableRooms.firstWhere((r) => r.id == _selectedRoomId);
+                      final roomName = foundRoom.nameEn.isNotEmpty ? foundRoom.nameEn : foundRoom.nameAr;
                       
                       context.read<BookingCubit>().swapRoom(
                         widget.bookingId,
@@ -90,6 +116,13 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
                         newRoomName: roomName,
                       );
                       Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(AppStrings.roomSwappedSuccess),
+                          backgroundColor: AppColors.success,
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
                     }
                   },
                 ),

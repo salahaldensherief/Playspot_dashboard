@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/shift_entity.dart';
 import '../../domain/entities/live_shift_overview_entity.dart';
+import '../../domain/entities/shift_expense_entity.dart';
 
 enum ShiftStatus { 
   initial, 
@@ -23,6 +24,7 @@ class ShiftState extends Equatable {
   final ShiftEntity? lastClosedShift;
   final String? errorMessage;
   final List<ShiftEntity> shifts;
+  final List<ShiftExpenseEntity> expenses;
 
   const ShiftState({
     required this.status,
@@ -31,7 +33,10 @@ class ShiftState extends Equatable {
     this.lastClosedShift,
     this.errorMessage,
     this.shifts = const [],
+    this.expenses = const [],
   });
+
+  double get totalExpenses => expenses.fold(0.0, (sum, item) => sum + item.amount);
 
   factory ShiftState.initial() => const ShiftState(status: ShiftStatus.initial);
 
@@ -42,6 +47,7 @@ class ShiftState extends Equatable {
     ShiftEntity? lastClosedShift,
     String? errorMessage,
     List<ShiftEntity>? shifts,
+    List<ShiftExpenseEntity>? expenses,
   }) {
     return ShiftState(
       status: status ?? this.status,
@@ -50,9 +56,18 @@ class ShiftState extends Equatable {
       lastClosedShift: lastClosedShift ?? this.lastClosedShift,
       errorMessage: errorMessage ?? this.errorMessage,
       shifts: shifts ?? this.shifts,
+      expenses: expenses ?? this.expenses,
     );
   }
 
   @override
-  List<Object?> get props => [status, activeShift, liveOverview, lastClosedShift, errorMessage, shifts];
+  List<Object?> get props => [
+        status,
+        activeShift,
+        liveOverview,
+        lastClosedShift,
+        errorMessage,
+        shifts,
+        expenses,
+      ];
 }

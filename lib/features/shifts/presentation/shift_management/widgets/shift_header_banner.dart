@@ -13,7 +13,7 @@ import '../shift_cubit.dart';
 import '../shift_state.dart';
 import 'open_shift_dialog.dart';
 import 'close_shift_dialog.dart';
-import 'shift_summary_modal.dart';
+import 'add_expense_dialog.dart';
 
 class ShiftHeaderBanner extends StatelessWidget {
   const ShiftHeaderBanner({super.key});
@@ -53,7 +53,7 @@ class ShiftHeaderBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
-      color: AppColors.danger.withOpacity(0.1),
+      color: AppColors.danger.withValues(alpha: 0.1),
       child: Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 20.r),
@@ -83,7 +83,7 @@ class ShiftHeaderBanner extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: AppColors.success.withOpacity(0.1),
+        color: AppColors.success.withValues(alpha: 0.1),
         border: const Border(bottom: BorderSide(color: AppColors.divider)),
       ),
       child: Row(
@@ -91,7 +91,7 @@ class ShiftHeaderBanner extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.2),
+              color: AppColors.success.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(4.r),
             ),
             child: Row(
@@ -114,13 +114,22 @@ class ShiftHeaderBanner extends StatelessWidget {
           SizedBox(width: 24.w),
           _buildInfoItem(AppStrings.startTimeLabel, startTime),
           const Spacer(),
-          if (isMyShift)
+          if (isMyShift) ...[
+            AppButton(
+              text: 'تسجيل مصروف / سحب',
+              icon: Icons.receipt_long_outlined,
+              variant: AppButtonVariant.outlined,
+              height: 32.h,
+              onPressed: () => _showAddExpenseDialog(context, shift, loungeId),
+            ),
+            SizedBox(width: 8.w),
             AppButton(
               text: AppStrings.closeShift,
               onPressed: () => _showCloseShiftDialog(context, shift, loungeId),
               variant: AppButtonVariant.outlined,
               height: 32.h,
             ),
+          ],
         ],
       ),
     );
@@ -184,21 +193,18 @@ class ShiftHeaderBanner extends StatelessWidget {
     );
   }
 
-  void _showShiftSummary(BuildContext context, ShiftEntity shift) {
-    final loginCubit = context.read<LoginCubit>();
+  void _showAddExpenseDialog(BuildContext context, ShiftEntity shift, String loungeId) {
     final shiftCubit = context.read<ShiftCubit>();
     showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (diagContext) => ShiftSummaryModal(
-        shift: shift,
-        onFinish: () {
-          loginCubit.logout();
-          Navigator.pop(diagContext);
-        },
+      useRootNavigator: false,
+      builder: (diagContext) => BlocProvider.value(
+        value: shiftCubit,
+        child: AddExpenseDialog(
+          shiftId: shift.id,
+          loungeId: loungeId,
+        ),
       ),
-    ).then((_) {
-      shiftCubit.resetToInitial();
-    });
+    );
   }
 }

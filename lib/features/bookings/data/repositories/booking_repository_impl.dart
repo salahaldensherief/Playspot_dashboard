@@ -136,4 +136,14 @@ class BookingRepositoryImpl implements BookingRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> autoCancelExpiredBookings() async {
+    try {
+      await remoteDataSource.autoCancelExpiredBookings();
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

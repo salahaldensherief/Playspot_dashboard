@@ -21,4 +21,5 @@ abstract class BookingRepository {
   Future<Either<Failure, void>> createBooking(Booking booking);
   Future<Either<Failure, void>> swapRoom(String bookingId, String newRoomId, String actionBy);
   Future<Either<Failure, void>> startBookingSession(String bookingId);
+  Future<Either<Failure, void>> autoCancelExpiredBookings();
 }

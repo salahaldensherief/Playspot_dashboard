@@ -400,5 +400,7 @@
   "attended": "Attended",
   "unread": "Unread",
   "requests_feed": "Live Client Requests",
-  "no_active_requests": "No active client requests"
+  "no_active_requests": "No active client requests",
+  "room_swapped_success": "Room swapped successfully",
+  "starts_at": "Starts at {}"
 }

@@ -8,8 +8,11 @@ import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_text.dart';
 import '../../../../art_core/widgets/status_badge.dart';
+import '../../../auth/presentation/login/login_cubit.dart';
+import '../../../rooms/presentation/cubit/room_cubit.dart';
 import '../../domain/entities/booking.dart';
 import '../cubit/booking_cubit.dart';
+import 'swap_room_dialog.dart';
 
 /// Interactive UI Card Widget for live active gaming sessions.
 /// Displays dynamic real-time countdown timer, overdue alerts, and action handlers.
@@ -168,6 +171,14 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
                     widget.booking.roomName,
                     fontSize: 15.sp,
                     color: AppColors.textPrimary,
+                  ),
+                  SizedBox(width: 6.w),
+                  IconButton(
+                    icon: Icon(Icons.swap_horiz, size: 18.r, color: AppColors.neonBlue),
+                    tooltip: AppStrings.swapRoom,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => _showSwapRoomDialog(context),
                   ),
                 ],
               ),
@@ -429,6 +440,28 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
               child: AppText.body(AppStrings.extendTime, color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showSwapRoomDialog(BuildContext context) {
+    final loginCubit = context.read<LoginCubit>();
+    final roomCubit = context.read<RoomCubit>();
+    final bookingCubit = context.read<BookingCubit>();
+
+    showDialog(
+      context: context,
+      useRootNavigator: false,
+      builder: (diagContext) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: loginCubit),
+          BlocProvider.value(value: roomCubit),
+          BlocProvider.value(value: bookingCubit),
+        ],
+        child: SwapRoomDialog(
+          bookingId: widget.booking.id,
+          currentRoomId: widget.booking.roomId,
         ),
       ),
     );

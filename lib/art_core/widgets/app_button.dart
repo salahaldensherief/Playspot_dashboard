@@ -12,6 +12,10 @@ class AppButton extends StatelessWidget {
   final IconData? icon;
   final double? width;
   final double? height;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
+  final Color? disabledBackgroundColor;
+  final Color? disabledForegroundColor;
 
   const AppButton({
     super.key,
@@ -22,6 +26,10 @@ class AppButton extends StatelessWidget {
     this.icon,
     this.width,
     this.height,
+    this.backgroundColor,
+    this.foregroundColor,
+    this.disabledBackgroundColor,
+    this.disabledForegroundColor,
   });
 
   @override
@@ -29,17 +37,25 @@ class AppButton extends StatelessWidget {
     final isPrimary = variant == AppButtonVariant.primary;
     final isDanger = variant == AppButtonVariant.danger;
 
+    final Color effectiveBg = backgroundColor ??
+        (isPrimary
+            ? AppColors.neonBlue
+            : isDanger
+                ? AppColors.danger
+                : Colors.transparent);
+
+    final Color effectiveFg = foregroundColor ??
+        (isPrimary || isDanger ? Colors.white : AppColors.textPrimary);
+
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 4.h),
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: isPrimary
-              ? AppColors.neonBlue
-              : isDanger
-                  ? AppColors.danger
-                  : Colors.transparent,
-          foregroundColor: isPrimary || isDanger ? Colors.black : AppColors.textPrimary,
+          backgroundColor: effectiveBg,
+          foregroundColor: effectiveFg,
+          disabledBackgroundColor: disabledBackgroundColor ?? AppColors.cardBackground,
+          disabledForegroundColor: disabledForegroundColor ?? AppColors.textMuted,
           padding: height != null ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           minimumSize: Size(width ?? 0, height ?? 48.h),
           shape: RoundedRectangleBorder(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/entities/shift_expense_entity.dart';
 import '../../domain/use_cases/get_active_shift_use_case.dart';
 import '../../domain/use_cases/get_lounge_live_shift_overview_use_case.dart';
 import '../../domain/use_cases/open_shift_use_case.dart';
@@ -160,6 +161,56 @@ class ShiftCubit extends Cubit<ShiftState> {
     result.fold(
       (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
       (shifts) => emit(state.copyWith(status: ShiftStatus.active, shifts: shifts)),
+    );
+  }
+
+  Future<void> fetchShiftExpenses(String shiftId) async {
+    if (shiftId.isEmpty || isClosed) return;
+    final result = await repository.fetchShiftExpenses(shiftId);
+    if (isClosed) return;
+
+    result.fold(
+      (failure) => debugPrint('🔴 [ShiftCubit] Fetch Expenses Failed: ${failure.message}'),
+      (expenses) => emit(state.copyWith(expenses: expenses)),
+    );
+  }
+
+  Future<bool> addShiftExpense({
+    required String shiftId,
+    required String loungeId,
+    required double amount,
+    required String reason,
+    required String type,
+  }) async {
+    if (isClosed) return false;
+
+    final expense = ShiftExpenseEntity(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      shiftId: shiftId,
+      loungeId: loungeId,
+      amount: amount,
+      type: type,
+      reason: reason,
+      createdAt: DateTime.now(),
+    );
+
+    final result = await repository.addShiftExpense(expense);
+    if (isClosed) return false;
+
+    return result.fold(
+      (failure) {
+        debugPrint('🔴 [ShiftCubit] Add Expense Failed: ${failure.message}');
+        emit(state.copyWith(
+          status: ShiftStatus.error,
+          errorMessage: failure.message,
+        ));
+        return false;
+      },
+      (_) async {
+        debugPrint('🟢 [ShiftCubit] Add Expense Succeeded');
+        await fetchShiftExpenses(shiftId);
+        return true;
+      },
     );
   }
 

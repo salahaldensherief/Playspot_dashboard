@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/shift_model.dart';
 import '../models/live_shift_overview_model.dart';
+import '../models/shift_expense_model.dart';
 
 abstract class ShiftRemoteDataSource {
   Future<List<ShiftModel>> getShifts({String? loungeId});
@@ -10,6 +11,8 @@ abstract class ShiftRemoteDataSource {
   Future<void> openShift(String loungeId, double startingCash);
   Future<ShiftModel> closeShift(String shiftId, double actualCash, String? notes);
   Future<void> approveShift(String shiftId, String managerId, String? notes);
+  Future<void> addShiftExpense(ShiftExpenseModel expense);
+  Future<List<ShiftExpenseModel>> fetchShiftExpenses(String shiftId);
 }
 
 class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
@@ -124,5 +127,31 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
       'p_manager_id': managerId,
       'p_notes': notes,
     });
+  }
+
+  @override
+  Future<void> addShiftExpense(ShiftExpenseModel expense) async {
+    final userId = _supabase.auth.currentUser?.id;
+    final payload = expense.toJson();
+    if (userId != null) {
+      payload['created_by'] = userId;
+    }
+    debugPrint('🔵 [ShiftRemoteDataSource] Inserting shift expense: $payload');
+    await _supabase.from('shift_expenses').insert(payload);
+    debugPrint('🟢 [ShiftRemoteDataSource] Inserted shift expense successfully');
+  }
+
+  @override
+  Future<List<ShiftExpenseModel>> fetchShiftExpenses(String shiftId) async {
+    debugPrint('🔵 [ShiftRemoteDataSource] Fetching shift expenses for shiftId: $shiftId');
+    final response = await _supabase
+        .from('shift_expenses')
+        .select('*, profiles:created_by(full_name)')
+        .eq('shift_id', shiftId)
+        .order('created_at', ascending: false);
+
+    return (response as List)
+        .map((json) => ShiftExpenseModel.fromJson(Map<String, dynamic>.from(json)))
+        .toList();
   }
 }

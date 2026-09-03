@@ -418,5 +418,7 @@
   "attended": "تمت التلبية",
   "unread": "غير مقروء",
   "requests_feed": "طلبات العملاء الحية",
-  "no_active_requests": "لا توجد طلبات جارية حالياً"
+  "no_active_requests": "لا توجد طلبات جارية حالياً",
+  "room_swapped_success": "تم نقل الحجز للغرفة الجديدة بنجاح",
+  "starts_at": "يبدأ في {}"
 }

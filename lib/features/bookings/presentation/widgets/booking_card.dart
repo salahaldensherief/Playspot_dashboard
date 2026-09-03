@@ -140,11 +140,13 @@ class BookingCard extends StatelessWidget {
                       flex: 3,
                       child: StartSessionButton(
                         bookingId: booking.id,
+                        bookingDate: booking.date,
+                        startTime: booking.startTime,
                         onSuccess: onStartSession,
                         height: 32.h,
                       ),
                     ),
-                    if (isOverdue || isCanStartSession) ...[
+                    if (isCanStartSession) ...[
                       SizedBox(width: 8.w),
                       Expanded(
                         flex: 2,
@@ -153,7 +155,7 @@ class BookingCard extends StatelessWidget {
                           icon: Icons.person_off_outlined,
                           variant: AppButtonVariant.outlined,
                           height: 32.h,
-                          onPressed: () => _showNoShowConfirmDialog(context),
+                          onPressed: isOverdue ? () => _showNoShowConfirmDialog(context) : null,
                         ),
                       ),
                     ],
@@ -230,12 +232,13 @@ class BookingCard extends StatelessWidget {
     }
     try {
       final date = booking.date;
-      final parts = booking.startTime.split(':');
+      final parts = booking.startTime.trim().split(':');
       if (parts.length < 2) return false;
       final hour = int.tryParse(parts[0]) ?? 0;
       final minute = int.tryParse(parts[1]) ?? 0;
       final scheduledStart = DateTime(date.year, date.month, date.day, hour, minute);
-      return DateTime.now().isAfter(scheduledStart);
+      final now = DateTime.now();
+      return now.isAfter(scheduledStart) || now.isAtSameMomentAs(scheduledStart);
     } catch (e) {
       return false;
     }

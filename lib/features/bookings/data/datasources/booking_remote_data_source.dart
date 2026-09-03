@@ -21,6 +21,7 @@ abstract class BookingRemoteDataSource {
   Future<void> createBooking(BookingModel booking);
   Future<void> swapRoom(String bookingId, String newRoomId, String actionBy);
   Future<void> startBookingSession(String bookingId);
+  Future<void> autoCancelExpiredBookings();
 }
 
 class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
@@ -172,5 +173,16 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       'p_booking_id': bookingId,
     });
     debugPrint('🟢 [DATA_SOURCE] RPC start_booking_session successful!');
+  }
+
+  @override
+  Future<void> autoCancelExpiredBookings() async {
+    try {
+      debugPrint('🔵 [DATA_SOURCE] Invoking RPC auto_cancel_expired_bookings...');
+      await client.rpc('auto_cancel_expired_bookings');
+      debugPrint('🟢 [DATA_SOURCE] RPC auto_cancel_expired_bookings completed successfully');
+    } catch (e) {
+      debugPrint('⚠️ [DATA_SOURCE] RPC auto_cancel_expired_bookings failed: $e');
+    }
   }
 }

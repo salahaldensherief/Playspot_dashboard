@@ -20,6 +20,7 @@ class BookingCubit extends Cubit<BookingState> {
   final BookingRepository repository;
   final AudioService audioService;
   StreamSubscription? _subscription;
+  Timer? _autoCancelTimer;
   
   final Set<String> _knownBookingIds = {};
   bool _isFirstLoad = true;
@@ -52,6 +53,10 @@ class BookingCubit extends Cubit<BookingState> {
     _watchedLoungeId = loungeId;
     _isFirstLoad = true;
     _knownBookingIds.clear();
+
+    // Trigger auto-cancel for overdue bookings on startup & start periodic background check
+    _triggerAutoCancelExpired();
+    _startPeriodicAutoCancelTimer();
 
     emit(state.copyWith(status: BookingStatusState.loading));
     _subscription?.cancel();
@@ -359,9 +364,27 @@ class BookingCubit extends Cubit<BookingState> {
     emit(state.copyWith(selectedDurationMinutes: minutes));
   }
 
+  void _triggerAutoCancelExpired() {
+    repository.autoCancelExpiredBookings().then((_) {
+      debugPrint('🟢 [BookingCubit] autoCancelExpiredBookings completed');
+    }).catchError((e) {
+      debugPrint('⚠️ [BookingCubit] autoCancelExpiredBookings error: $e');
+    });
+  }
+
+  void _startPeriodicAutoCancelTimer() {
+    _autoCancelTimer?.cancel();
+    _autoCancelTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (!isClosed) {
+        _triggerAutoCancelExpired();
+      }
+    });
+  }
+
   @override
   Future<void> close() {
     _subscription?.cancel();
+    _autoCancelTimer?.cancel();
     return super.close();
   }
 }
