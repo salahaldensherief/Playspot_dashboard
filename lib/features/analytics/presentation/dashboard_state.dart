@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../bookings/domain/entities/booking.dart';
 
 enum FeatureStatus { initial, loading, success, failure;
   bool get isInitial => this == FeatureStatus.initial;
@@ -17,6 +18,10 @@ class DashboardState extends Equatable {
   final double occupancyRate;
   final int activeRoomsCount;
   final double totalPlayHours;
+
+  // Active Sessions Live Monitoring
+  final List<Booking> activeSessionsList;
+  final Map<String, dynamic> activeSessionsStats;
   
   // Super Admin Overview
   final int totalLounges;
@@ -48,6 +53,8 @@ class DashboardState extends Equatable {
     this.occupancyRate = 0,
     this.activeRoomsCount = 0,
     this.totalPlayHours = 0,
+    this.activeSessionsList = const [],
+    this.activeSessionsStats = const {},
     this.totalLounges = 0,
     this.activeLounges = 0,
     this.totalUsers = 0,
@@ -76,6 +83,8 @@ class DashboardState extends Equatable {
     double? occupancyRate,
     int? activeRoomsCount,
     double? totalPlayHours,
+    List<Booking>? activeSessionsList,
+    Map<String, dynamic>? activeSessionsStats,
     int? totalLounges,
     int? activeLounges,
     int? totalUsers,
@@ -100,6 +109,8 @@ class DashboardState extends Equatable {
     occupancyRate: occupancyRate ?? this.occupancyRate,
     activeRoomsCount: activeRoomsCount ?? this.activeRoomsCount,
     totalPlayHours: totalPlayHours ?? this.totalPlayHours,
+    activeSessionsList: activeSessionsList ?? this.activeSessionsList,
+    activeSessionsStats: activeSessionsStats ?? this.activeSessionsStats,
     totalLounges: totalLounges ?? this.totalLounges,
     activeLounges: activeLounges ?? this.activeLounges,
     totalUsers: totalUsers ?? this.totalUsers,
@@ -127,6 +138,8 @@ class DashboardState extends Equatable {
     occupancyRate,
     activeRoomsCount,
     totalPlayHours,
+    activeSessionsList,
+    activeSessionsStats,
     totalLounges,
     activeLounges,
     totalUsers,

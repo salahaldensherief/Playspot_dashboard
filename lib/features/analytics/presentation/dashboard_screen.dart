@@ -10,6 +10,9 @@ import 'widgets/quick_actions.dart';
 import 'widgets/recent_activities.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/cubit/client_requests_cubit.dart';
+import 'dashboard_cubit.dart';
 import 'cubit/lounge_stats_cubit.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -28,10 +31,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.role != UserRole.superAdmin) {
-      final loungeId = context.read<LoginCubit>().state.user?.loungeId;
-      context.read<LoungeStatsCubit>().fetchStats(loungeId);
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (widget.role != UserRole.superAdmin) {
+        final loungeId = context.read<LoginCubit>().state.user?.loungeId;
+        context.read<LoungeStatsCubit>().fetchStats(loungeId);
+        context.read<DashboardCubit>().startWatchingActiveSessions(loungeId: loungeId);
+        context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
+        if (loungeId != null && loungeId.isNotEmpty) {
+          context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: loungeId);
+        }
+      } else {
+        context.read<DashboardCubit>().loadDashboardData();
+      }
+    });
   }
 
   @override

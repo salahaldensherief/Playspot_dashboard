@@ -12,6 +12,7 @@ import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/admin_shift_monitoring_bar.dart';
 import '../../../../core/responsive/responsive.dart';
+import '../../../auth/presentation/login/login_state.dart';
 import '../../../lounges/domain/entities/lounge.dart';
 import '../../domain/entities/booking.dart';
 import '../cubit/booking_cubit.dart';
@@ -63,6 +64,12 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
       isScrollable: true,
       child: MultiBlocListener(
         listeners: [
+          BlocListener<LoginCubit, LoginState>(
+            listenWhen: (previous, current) => previous.user?.loungeId != current.user?.loungeId,
+            listener: (context, state) {
+              context.read<BookingCubit>().startWatchingBookings(loungeId: state.user?.loungeId);
+            },
+          ),
           BlocListener<BookingCubit, BookingState>(
             listenWhen: (previous, current) => previous.status != current.status,
             listener: (context, state) {
@@ -104,7 +111,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                 dividerColor: Colors.transparent,
                 indicator: BoxDecoration(
                   borderRadius: BorderRadius.circular(8.r),
-                  color: AppColors.neonBlue.withOpacity(0.1),
+                  color: AppColors.neonBlue.withValues(alpha: 0.1),
                 ),
                 labelColor: AppColors.neonBlue,
                 unselectedLabelColor: AppColors.textSecondary,
@@ -264,13 +271,13 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
           Container(
             padding: EdgeInsets.all(8.r),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
             child: Icon(icon, color: color, size: 20.r),
           ),
           SizedBox(width: 16.w),
@@ -369,7 +376,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                     if (!isMobile) SizedBox(width: 8.w),
                     Switch(
                       value: isOpen,
-                      activeColor: AppColors.success,
+                      activeThumbColor: AppColors.success,
                       onChanged: (val) => context.read<LoungeCubit>().toggleLoungeStatus(loungeId, val),
                     ),
                   ],

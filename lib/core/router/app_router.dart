@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,7 +29,6 @@ import 'package:play_spot_dashboard/features/bookings/presentation/pages/booking
 import 'package:play_spot_dashboard/features/splash/presentation/splash_screen.dart';
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_shell.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
-import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
@@ -43,6 +41,7 @@ import 'package:play_spot_dashboard/features/lounges/presentation/cubit/extras_c
 import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_cubit.dart';
 import 'package:play_spot_dashboard/features/loyalty/presentation/cubit/loyalty_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/cubit/client_requests_cubit.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
 
@@ -78,7 +77,6 @@ class AppRouter {
 
         final bool isLoungeAdmin = user.isStaff;
         final bool isSuperAdmin = user.role == UserRole.superAdmin;
-        final bool isLoungeOwner = user.isLoungeOwner;
         final bool isOnboardingPath = state.matchedLocation == RouterKeys.loungeOnboarding;
 
         if (user.isLoungeOwner && !user.isSetupCompleted) {
@@ -187,16 +185,19 @@ class AppRouter {
                             child: BlocProvider(
                               create: (context) => sl<ExtrasCubit>(),
                               child: BlocProvider(
-                                create: (context) {
-                                  final cubit = sl<PermissionsCubit>();
-                                  if (permissionRole != null) {
-                                    cubit.fetchPermissions(permissionRole);
-                                  }
-                                  return cubit;
-                                },
-                                child: DashboardShell(
-                                  location: state.matchedLocation,
-                                  child: child,
+                                create: (context) => sl<ClientRequestsCubit>(),
+                                child: BlocProvider(
+                                  create: (context) {
+                                    final cubit = sl<PermissionsCubit>();
+                                    if (permissionRole != null) {
+                                      cubit.fetchPermissions(permissionRole);
+                                    }
+                                    return cubit;
+                                  },
+                                  child: DashboardShell(
+                                    location: state.matchedLocation,
+                                    child: child,
+                                  ),
                                 ),
                               ),
                             ),

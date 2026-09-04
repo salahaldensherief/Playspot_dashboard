@@ -31,6 +31,7 @@ class DashboardStatsGrid extends StatelessWidget {
         return GridView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
+          addSemanticIndexes: false,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 16.w,

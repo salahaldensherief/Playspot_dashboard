@@ -15,20 +15,44 @@ class BookingRealtimeDataSourceImpl implements BookingRealtimeDataSource {
 
   @override
   Stream<List<BookingModel>> watchBookings({String? loungeId}) {
-    final controller = StreamController<List<BookingModel>>();
+    late StreamController<List<BookingModel>> controller;
+    Timer? timer;
+    StreamSubscription? realtimeSubscription;
 
-    // 1. جلب البيانات الأولية فوراً عند فتح الصفحة
-    _fetchAndEmit(controller, loungeId);
+    void cancelResources() {
+      timer?.cancel();
+      realtimeSubscription?.cancel();
+    }
 
-    // 2. الاشتراك في التغييرات اللحظية
-    _client
-        .from('bookings')
-        .stream(primaryKey: ['id'])
-        .order('created_at')
-        .listen((_) {
-          // فور حدوث أي تغيير (إضافة، تعديل، حذف)، نعيد جلب البيانات كاملة من الـ RPC
+    controller = StreamController<List<BookingModel>>(
+      onListen: () {
+        // 1. Fetch initial data immediately on subscription
+        _fetchAndEmit(controller, loungeId);
+
+        // 2. Realtime postgres changes listener
+        try {
+          realtimeSubscription = _client
+              .from('bookings')
+              .stream(primaryKey: ['id'])
+              .order('created_at')
+              .listen((_) {
+                _fetchAndEmit(controller, loungeId);
+              }, onError: (e) {
+                // Ignore silent socket drops; heartbeat timer will continue polling
+              });
+        } catch (e) {
+          // Ignore stream setup errors; heartbeat polling will fetch updates
+        }
+
+        // 3. Periodic 5-second heartbeat poll to guarantee immediate live updates
+        timer = Timer.periodic(const Duration(seconds: 5), (_) {
           _fetchAndEmit(controller, loungeId);
         });
+      },
+      onCancel: () {
+        cancelResources();
+      },
+    );
 
     return controller.stream;
   }

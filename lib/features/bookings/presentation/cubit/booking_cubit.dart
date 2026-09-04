@@ -37,20 +37,14 @@ class BookingCubit extends Cubit<BookingState> {
   }) : super(const BookingState());
 
   void startWatchingBookings({String? loungeId}) {
-    if (loungeId != null && loungeId.isEmpty) {
-      emit(state.copyWith(
-        status: BookingStatusState.failure,
-        errorMessage: 'Lounge ID is empty',
-      ));
+    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
+
+    // Avoid re-subscribing only if active subscription exists AND loungeId hasn't changed
+    if (_subscription != null && _watchedLoungeId == cleanLoungeId) {
       return;
     }
 
-    // تجنب إعادة الاشتراك إذا كان يتتبع بالفعل نفس الـ loungeId
-    if (_subscription != null && _watchedLoungeId == loungeId) {
-      return;
-    }
-
-    _watchedLoungeId = loungeId;
+    _watchedLoungeId = cleanLoungeId;
     _isFirstLoad = true;
     _knownBookingIds.clear();
 
@@ -61,7 +55,7 @@ class BookingCubit extends Cubit<BookingState> {
     emit(state.copyWith(status: BookingStatusState.loading));
     _subscription?.cancel();
 
-    _subscription = watchBookings(loungeId: loungeId).listen(
+    _subscription = watchBookings(loungeId: cleanLoungeId).listen(
       (bookings) {
         if (isClosed) return;
 
@@ -74,6 +68,7 @@ class BookingCubit extends Cubit<BookingState> {
           final newIds = currentIds.difference(_knownBookingIds);
           if (newIds.isNotEmpty) {
             _knownBookingIds.addAll(newIds);
+            debugPrint('🔔 [BOOKING_CUBIT] New booking detected! Playing notification sound...');
             try {
               audioService.playNotificationSound();
             } catch (e) {
@@ -89,6 +84,7 @@ class BookingCubit extends Cubit<BookingState> {
       },
       onError: (error) {
         if (isClosed) return;
+        debugPrint('🔴 [BOOKING_CUBIT] watchBookings Error: $error');
         emit(state.copyWith(
           status: BookingStatusState.failure,
           errorMessage: error.toString(),

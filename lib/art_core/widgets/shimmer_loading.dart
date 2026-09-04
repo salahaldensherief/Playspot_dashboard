@@ -34,7 +34,7 @@ class ShimmerLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
       baseColor: AppColors.cardBackground,
-      highlightColor: AppColors.mutedBackground.withOpacity(0.5),
+      highlightColor: AppColors.mutedBackground.withValues(alpha: 0.5),
       child: Container(
         width: width,
         height: height,
@@ -119,6 +119,7 @@ class GridShimmer extends StatelessWidget {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
+      addSemanticIndexes: false,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         childAspectRatio: aspectRatio,

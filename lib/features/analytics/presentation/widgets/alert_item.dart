@@ -19,28 +19,33 @@ class AlertItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           padding: EdgeInsets.all(6.r),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: Icon(icon, color: color, size: 16.r),
         ),
         SizedBox(width: 12.w),
-        Expanded(
+        Flexible(
+          fit: FlexFit.loose,
           child: Text(
             label,
             style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
+        SizedBox(width: 12.w),
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: color.withOpacity(0.3)),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
           child: Text(
             value,

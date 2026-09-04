@@ -32,6 +32,7 @@ class LoungeOwnerAnalyticsGrid extends StatelessWidget {
         return GridView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
+          addSemanticIndexes: false,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: Responsive.isMobile(context)
                 ? 1

@@ -36,17 +36,13 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     int limit = 50,
     int offset = 0,
   }) async {
-    // Technical Guard: Skip RPC if loungeId is null (unless it's a super-admin context which we don't differentiate here yet)
-    // This prevents "Not authorized" logs for staff with missing lounge_id
-    if (loungeId == null || loungeId.isEmpty) {
-      return _fetchSafeSelect(loungeId, status, limit, offset);
-    }
+    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
 
     try {
       // المحاولة الأساسية عبر الـ RPC
       final response = await client.rpc('get_all_bookings_admin', params: {
         'p_status': status,
-        'p_lounge_id': loungeId,
+        'p_lounge_id': cleanLoungeId,
         'p_limit': limit,
         'p_offset': offset,
       });
@@ -57,21 +53,16 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     } catch (e) {
       // خطة بديلة (Fallback) في حالة فشل الـ RPC
       debugPrint('${AppConstants.bookingFetchAlert}$e');
-      return _fetchSafeSelect(loungeId, status, limit, offset);
+      return _fetchSafeSelect(cleanLoungeId, status, limit, offset);
     }
   }
 
   Future<List<BookingModel>> _fetchSafeSelect(String? loungeId, String? status, int limit, int offset) async {
     try {
-      // Technical Guard: If loungeId is null/empty, we should NOT return all bookings 
-      // for a staff member. We return an empty list to maintain data isolation.
-      if (loungeId == null || loungeId.isEmpty) {
-        debugPrint('BookingRemoteDataSource: Skipping fetch, loungeId is null/empty');
-        return [];
-      }
-
       var query = client.from('bookings').select();
-      query = query.eq('lounge_id', loungeId);
+      if (loungeId != null && loungeId.isNotEmpty) {
+        query = query.eq('lounge_id', loungeId);
+      }
       
       if (status != null) {
         query = query.eq('status', status);
@@ -128,7 +119,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     try {
       await client.rpc('confirm_cash_payment', params: {
         'p_booking_id': bookingId,
-        if (shiftId != null) 'p_shift_id': shiftId,
+        'p_shift_id': shiftId,
         'p_discount_amount': discountAmount ?? 0,
         'p_discount_percentage': discountPercentage ?? 0,
         'p_discount_reason': discountReason,
@@ -138,10 +129,10 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       debugPrint('⚠️ [DATA_SOURCE] RPC confirm_cash_payment failed ($e), attempting direct update fallback...');
       final updateData = {
         'payment_status': 'paid',
-        if (discountAmount != null) 'discount_amount': discountAmount,
-        if (discountPercentage != null) 'discount_percentage': discountPercentage,
-        if (discountReason != null) 'discount_reason': discountReason,
-        if (shiftId != null) 'shift_id': shiftId,
+        'discount_amount': discountAmount,
+        'discount_percentage': discountPercentage,
+        'discount_reason': discountReason,
+        'shift_id': shiftId,
       };
 
       final res = await client.from('bookings').update(updateData).eq('id', bookingId).select();

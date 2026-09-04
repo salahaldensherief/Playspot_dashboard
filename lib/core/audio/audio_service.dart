@@ -22,9 +22,17 @@ class AudioServiceImpl implements AudioService {
   Future<void> playNotificationSound() async {
     try {
       await _player.stop();
-      await _player.play(AssetSource('audio/notification.wav'));
+      if (kIsWeb) {
+        try {
+          await _player.play(UrlSource('assets/assets/audio/notification.wav'));
+        } catch (_) {
+          await _player.play(AssetSource('audio/notification.wav'));
+        }
+      } else {
+        await _player.play(AssetSource('audio/notification.wav'));
+      }
     } catch (e) {
-      debugPrint('Audio playback error on web: $e');
+      debugPrint('Audio playback error: $e');
     }
   }
 }

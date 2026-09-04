@@ -199,6 +199,14 @@ class AppStrings {
   
   // Booking Details
   static String get bookingDetails => 'booking_details'.tr();
+  static String get userAndContactInfo => 'user_and_contact_info'.tr();
+  static String get bookingSpecifications => 'booking_specifications'.tr();
+  static String get financialsAndExtras => 'financials_and_extras'.tr();
+  static String get basePrice => 'base_price'.tr();
+  static String get numberOfGuests => 'number_of_guests'.tr();
+  static String get roomType => 'room_type'.tr();
+  static String get completeBooking => 'complete_booking'.tr();
+  static String get minutesUnit => 'minutes_unit'.tr();
   static String get customerName => 'customer_name'.tr();
   static String get schedule => 'schedule'.tr();
   static String get date => 'date'.tr();
@@ -441,7 +449,6 @@ class AppStrings {
   static String get extendTime => 'extend_time'.tr();
   static String get timeExpired => 'time_expired'.tr();
   static String get remainingTime => 'remaining_time'.tr();
-  static String get minutesUnit => 'minutes_unit'.tr();
   static String get confirmEndSession => 'confirm_end_session'.tr();
   static String get confirmEndSessionMessage => 'confirm_end_session_message'.tr();
   static String get sessionEndedSuccess => 'session_ended_success'.tr();
@@ -457,6 +464,24 @@ class AppStrings {
   static String get noActiveRequests => 'no_active_requests'.tr();
   static String get roomSwappedSuccess => 'room_swapped_success'.tr();
   static String get startsAt => 'starts_at'.tr();
+
+  static String get addExtrasToSession => 'add_extras_to_session'.tr();
+  static String get extrasAddedSuccess => 'extras_added_success'.tr();
+  static String get pendingClientRequest => 'pending_client_request'.tr();
+  static String get clientRequestedExtension => 'client_requested_extension'.tr();
+  static String get clientRequestedExtras => 'client_requested_extras'.tr();
+  static String get approveRequest => 'approve_request'.tr();
+  static String get rejectRequest => 'reject_request'.tr();
+  static String get requestApproved => 'request_approved'.tr();
+  static String get requestRejected => 'request_rejected'.tr();
+  static String get totalActiveExtras => 'total_active_extras'.tr();
+  static String get activeSessionRevenue => 'active_session_revenue'.tr();
+  static String get noActiveSessions => 'no_active_sessions'.tr();
+  static String get extrasTotal => 'extras_total'.tr();
+  static String get selectExtras => 'select_extras'.tr();
+  static String get noExtrasAvailable => 'no_extras_available'.tr();
+  static String get confirmAddExtras => 'confirm_add_extras'.tr();
+  static String get activeSessionStats => 'active_session_stats'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }
