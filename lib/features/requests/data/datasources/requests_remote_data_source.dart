@@ -1,10 +1,10 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/client_request_model.dart';
 
 abstract class RequestsRemoteDataSource {
-  /// Stream combined real-time notifications and canteen orders for a lounge.
+  /// Stream combined real-time notifications, canteen orders, and pending extensions for a lounge.
   Stream<List<ClientRequestModel>> watchClientRequests({required String loungeId});
 
   /// Fetch combined client requests once for a lounge.
@@ -21,57 +21,94 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
 
   @override
   Stream<List<ClientRequestModel>> watchClientRequests({required String loungeId}) {
-    if (loungeId.isEmpty) {
+    final cleanLoungeId = loungeId.trim();
+    if (cleanLoungeId.isEmpty) {
       return Stream.value([]);
     }
 
-    try {
-      // Stream 1: Notifications
-      final notificationStream = client
-          .from('notifications')
-          .stream(primaryKey: ['id'])
-          .eq('lounge_id', loungeId)
-          .map((list) {
-            return list.map((json) => ClientRequestModel.fromNotificationJson(json)).toList();
-          });
+    late StreamController<List<ClientRequestModel>> controller;
+    Timer? heartbeatTimer;
+    StreamSubscription? notifSubscription;
+    StreamSubscription? canteenSubscription;
+    StreamSubscription? bookingsSubscription;
 
-      // Stream 2: Canteen Orders
-      final canteenOrderStream = client
-          .from('canteen_orders')
-          .stream(primaryKey: ['id'])
-          .eq('lounge_id', loungeId)
-          .map((list) {
-            return list.map((json) => ClientRequestModel.fromCanteenOrderJson(json)).toList();
-          });
-
-      // Combine both streams into one unified sorted list
-      return Rx.combineLatest2<List<ClientRequestModel>, List<ClientRequestModel>, List<ClientRequestModel>>(
-        notificationStream,
-        canteenOrderStream,
-        (notifications, orders) {
-          final combined = [...notifications, ...orders];
-          combined.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          return combined;
-        },
-      ).handleError((e) {
-        debugPrint('⚠️ [DATA_SOURCE] Requests Stream Error: $e');
-        return <ClientRequestModel>[];
-      });
-    } catch (e) {
-      debugPrint('⚠️ [DATA_SOURCE] Error initializing requests stream: $e');
-      return Stream.value([]);
+    void fetchAndEmit() async {
+      try {
+        final requests = await getClientRequests(loungeId: cleanLoungeId);
+        if (!controller.isClosed) {
+          controller.add(requests);
+        }
+      } catch (e) {
+        debugPrint('⚠️ [REQUESTS_DATA_SOURCE] fetchAndEmit Error: $e');
+      }
     }
+
+    controller = StreamController<List<ClientRequestModel>>(
+      onListen: () {
+        // 1. Initial fetch & emit
+        fetchAndEmit();
+
+        // 2. Realtime Subscriptions for notifications, canteen_orders, and bookings
+        try {
+          notifSubscription = client
+              .from('notifications')
+              .stream(primaryKey: ['id'])
+              .eq('lounge_id', cleanLoungeId)
+              .listen((_) {
+                fetchAndEmit();
+              }, onError: (e) {
+                debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Notifications Realtime Error: $e');
+              });
+
+          canteenSubscription = client
+              .from('canteen_orders')
+              .stream(primaryKey: ['id'])
+              .eq('lounge_id', cleanLoungeId)
+              .listen((_) {
+                fetchAndEmit();
+              }, onError: (e) {
+                debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Canteen Realtime Error: $e');
+              });
+
+          bookingsSubscription = client
+              .from('bookings')
+              .stream(primaryKey: ['id'])
+              .eq('lounge_id', cleanLoungeId)
+              .listen((_) {
+                fetchAndEmit();
+              }, onError: (e) {
+                debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Bookings Realtime Error: $e');
+              });
+        } catch (e) {
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Realtime Listen Exception: $e');
+        }
+
+        // 3. Heartbeat Timer (every 5 seconds) to guarantee real-time updates even if WebSockets drop
+        heartbeatTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+          fetchAndEmit();
+        });
+      },
+      onCancel: () {
+        notifSubscription?.cancel();
+        canteenSubscription?.cancel();
+        bookingsSubscription?.cancel();
+        heartbeatTimer?.cancel();
+      },
+    );
+
+    return controller.stream;
   }
 
   @override
   Future<List<ClientRequestModel>> getClientRequests({required String loungeId}) async {
-    if (loungeId.isEmpty) return [];
+    final cleanLoungeId = loungeId.trim();
+    if (cleanLoungeId.isEmpty) return [];
 
     try {
       final notifResponse = await client
           .from('notifications')
           .select()
-          .eq('lounge_id', loungeId)
+          .eq('lounge_id', cleanLoungeId)
           .order('created_at', ascending: false)
           .limit(30);
 
@@ -82,7 +119,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
       final ordersResponse = await client
           .from('canteen_orders')
           .select()
-          .eq('lounge_id', loungeId)
+          .eq('lounge_id', cleanLoungeId)
           .order('created_at', ascending: false)
           .limit(30);
 
@@ -90,20 +127,40 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
           .map((json) => ClientRequestModel.fromCanteenOrderJson(Map<String, dynamic>.from(json)))
           .toList();
 
-      final combined = [...notifList, ...ordersList];
+      final extensionsResponse = await client
+          .from('bookings')
+          .select()
+          .eq('lounge_id', cleanLoungeId)
+          .eq('extension_status', 'pending')
+          .order('updated_at', ascending: false)
+          .limit(30);
+
+      final extensionsList = (extensionsResponse as List)
+          .map((json) => ClientRequestModel.fromBookingExtensionJson(Map<String, dynamic>.from(json)))
+          .toList();
+
+      final combined = [...notifList, ...ordersList, ...extensionsList];
       combined.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return combined;
     } catch (e) {
-      debugPrint('⚠️ [DATA_SOURCE] getClientRequests Error: $e');
+      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] getClientRequests Error: $e');
       return [];
     }
   }
 
   @override
   Future<void> markRequestAsAttended(String id, {bool isCanteenOrder = false}) async {
-    debugPrint('🔵 [DATA_SOURCE] Marking request as attended: id=$id, isCanteenOrder=$isCanteenOrder');
+    debugPrint('🔵 [REQUESTS_DATA_SOURCE] Marking request as attended: id=$id, isCanteenOrder=$isCanteenOrder');
     try {
-      if (isCanteenOrder) {
+      if (id.startsWith('ext_')) {
+        final bookingId = id.replaceFirst('ext_', '');
+        await client
+            .from('bookings')
+            .update({
+              'extension_status': 'approved',
+            })
+            .eq('id', bookingId);
+      } else if (isCanteenOrder) {
         await client
             .from('canteen_orders')
             .update({
@@ -120,9 +177,9 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
             })
             .eq('id', id);
       }
-      debugPrint('🟢 [DATA_SOURCE] Successfully marked request $id as attended');
+      debugPrint('🟢 [REQUESTS_DATA_SOURCE] Successfully marked request $id as attended');
     } catch (e) {
-      debugPrint('🔴 [DATA_SOURCE] Failed to mark request $id as attended: $e');
+      debugPrint('🔴 [REQUESTS_DATA_SOURCE] Failed to mark request $id as attended: $e');
       rethrow;
     }
   }

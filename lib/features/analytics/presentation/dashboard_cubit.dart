@@ -7,6 +7,7 @@ import 'package:play_spot_dashboard/features/analytics/domain/usecases/watch_act
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/extend_session_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/add_extras_to_session_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/end_session_usecase.dart';
+import 'package:play_spot_dashboard/features/analytics/domain/usecases/review_extension_request_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/handle_client_request_action_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_state.dart';
 
@@ -16,6 +17,7 @@ class DashboardCubit extends Cubit<DashboardState> {
   final ExtendSessionUseCase extendSessionUseCase;
   final AddExtrasToSessionUseCase addExtrasToSessionUseCase;
   final EndSessionUseCase endSessionUseCase;
+  final ReviewExtensionRequestUseCase reviewExtensionRequestUseCase;
   final HandleClientRequestActionUseCase handleClientRequestActionUseCase;
 
   StreamSubscription<List<Booking>>? _activeSessionsSubscription;
@@ -27,6 +29,7 @@ class DashboardCubit extends Cubit<DashboardState> {
     required this.extendSessionUseCase,
     required this.addExtrasToSessionUseCase,
     required this.endSessionUseCase,
+    required this.reviewExtensionRequestUseCase,
     required this.handleClientRequestActionUseCase,
   }) : super(DashboardState.init());
 
@@ -134,6 +137,37 @@ class DashboardCubit extends Cubit<DashboardState> {
       },
       (_) {
         debugPrint('🟢 [DASHBOARD_CUBIT] endSession Succeeded');
+        return true;
+      },
+    );
+  }
+
+  Future<bool> reviewExtensionRequest({
+    required String bookingId,
+    required bool isApproved,
+    required int requestedMinutes,
+    required int currentDurationMinutes,
+  }) async {
+    final result = await reviewExtensionRequestUseCase(
+      bookingId: bookingId,
+      isApproved: isApproved,
+      requestedMinutes: requestedMinutes,
+      currentDurationMinutes: currentDurationMinutes,
+    );
+
+    if (isClosed) return false;
+
+    return result.fold(
+      (failure) {
+        debugPrint('🔴 [DASHBOARD_CUBIT] reviewExtensionRequest Failed: ${failure.message}');
+        emit(state.copyWith(
+          status: FeatureStatus.failure,
+          errorMessage: failure.message,
+        ));
+        return false;
+      },
+      (_) {
+        debugPrint('🟢 [DASHBOARD_CUBIT] reviewExtensionRequest Succeeded');
         return true;
       },
     );

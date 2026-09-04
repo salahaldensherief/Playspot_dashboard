@@ -12,7 +12,7 @@ import '../../../analytics/presentation/dashboard_cubit.dart';
 import '../../../auth/presentation/login/login_cubit.dart';
 import '../../../lounges/presentation/cubit/extras_cubit.dart';
 import '../../../requests/domain/entities/client_request_entity.dart';
-import '../../../requests/presentation/cubit/client_requests_cubit.dart';
+import '../../../requests/presentation/client_requests_cubit.dart';
 import '../../../requests/presentation/cubit/client_requests_state.dart';
 import '../../../rooms/presentation/cubit/room_cubit.dart';
 import '../../domain/entities/booking.dart';

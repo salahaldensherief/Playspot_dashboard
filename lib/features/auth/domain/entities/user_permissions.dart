@@ -32,6 +32,9 @@ class UserPermissions {
   /// Who can view advanced analytics and monthly reports?
   bool get canViewReports => isLoungeAdmin || isSuperAdmin;
 
+  /// Who can view shift history?
+  bool get canViewShiftHistory => isLoungeAdmin || isSuperAdmin;
+
   /// Who can manage the lounge's setup (Rooms, Extras, etc.)?
   bool get canEditSetup => isLoungeAdmin || isSuperAdmin || isCashier;
 

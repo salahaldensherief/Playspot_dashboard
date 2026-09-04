@@ -483,5 +483,12 @@ class AppStrings {
   static String get confirmAddExtras => 'confirm_add_extras'.tr();
   static String get activeSessionStats => 'active_session_stats'.tr();
 
+  static String get loungeReviews => 'lounge_reviews'.tr();
+  static String get averageRating => 'average_rating'.tr();
+  static String get totalReviews => 'total_reviews'.tr();
+  static String get noReviewsYet => 'no_reviews_yet'.tr();
+  static String get reviewComment => 'review_comment'.tr();
+  static String get reviewDate => 'review_date'.tr();
+
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

@@ -9,6 +9,12 @@ abstract class DashboardRepository {
   Future<Either<Failure, void>> extendSession(String bookingId, int additionalMinutes, {double? additionalCost});
   Future<Either<Failure, void>> addExtrasToSession(String bookingId, List<Map<String, dynamic>> extras, double additionalCost);
   Future<Either<Failure, void>> endSession(String bookingId);
+  Future<Either<Failure, void>> reviewExtensionRequest({
+    required String bookingId,
+    required bool isApproved,
+    required int requestedMinutes,
+    required int currentDurationMinutes,
+  });
   Future<Either<Failure, void>> handleClientRequestAction({
     required String requestId,
     required bool isCanteenOrder,

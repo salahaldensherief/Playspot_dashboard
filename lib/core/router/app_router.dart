@@ -6,7 +6,7 @@ import 'package:play_spot_dashboard/features/auth/presentation/login/login_state
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_screen.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_screen.dart' as dashboard;
-import 'package:play_spot_dashboard/features/analytics/presentation/cubit/lounge_stats_cubit.dart';
+import 'package:play_spot_dashboard/features/analytics/presentation/lounge_stats_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounges_page.dart' as lounges;
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/users/presentation/pages/users_page.dart' as users;
@@ -41,7 +41,8 @@ import 'package:play_spot_dashboard/features/lounges/presentation/cubit/extras_c
 import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_cubit.dart';
 import 'package:play_spot_dashboard/features/loyalty/presentation/cubit/loyalty_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
-import 'package:play_spot_dashboard/features/requests/presentation/cubit/client_requests_cubit.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
+import 'package:play_spot_dashboard/features/reviews/presentation/reviews_cubit.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
 
@@ -101,6 +102,7 @@ class AppRouter {
 
         final bool isStaffManagementRoute = location == RouterKeys.loungeAdminStaff;
         final bool isFinancialRoute = location.contains('/payouts') || location.contains('/reports');
+        final bool isShiftHistoryRoute = location == '/lounge-admin/shifts';
         final bool isMarketingRoute = location == RouterKeys.loungeAdminMarketing;
         final bool isSetupRoute = location == RouterKeys.loungeAdminRooms || location == RouterKeys.loungeAdminExtras;
 
@@ -109,6 +111,10 @@ class AppRouter {
         }
 
         if (isFinancialRoute && !user.canViewFinancials) {
+          return RouterKeys.loungeAdminDashboard;
+        }
+
+        if (isShiftHistoryRoute && !user.canViewShiftHistory) {
           return RouterKeys.loungeAdminDashboard;
         }
 
@@ -187,16 +193,19 @@ class AppRouter {
                               child: BlocProvider(
                                 create: (context) => sl<ClientRequestsCubit>(),
                                 child: BlocProvider(
-                                  create: (context) {
-                                    final cubit = sl<PermissionsCubit>();
-                                    if (permissionRole != null) {
-                                      cubit.fetchPermissions(permissionRole);
-                                    }
-                                    return cubit;
-                                  },
-                                  child: DashboardShell(
-                                    location: state.matchedLocation,
-                                    child: child,
+                                  create: (context) => sl<ReviewsCubit>(),
+                                  child: BlocProvider(
+                                    create: (context) {
+                                      final cubit = sl<PermissionsCubit>();
+                                      if (permissionRole != null) {
+                                        cubit.fetchPermissions(permissionRole);
+                                      }
+                                      return cubit;
+                                    },
+                                    child: DashboardShell(
+                                      location: state.matchedLocation,
+                                      child: child,
+                                    ),
                                   ),
                                 ),
                               ),

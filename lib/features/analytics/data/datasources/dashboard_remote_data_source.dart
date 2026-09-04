@@ -10,6 +10,12 @@ abstract class DashboardRemoteDataSource {
   Future<void> extendSession(String bookingId, int additionalMinutes, {double? additionalCost});
   Future<void> addExtrasToSession(String bookingId, List<Map<String, dynamic>> extras, double additionalCost);
   Future<void> endSession(String bookingId);
+  Future<void> reviewExtensionRequest({
+    required String bookingId,
+    required bool isApproved,
+    required int requestedMinutes,
+    required int currentDurationMinutes,
+  });
   Future<void> handleClientRequestAction({
     required String requestId,
     required bool isCanteenOrder,
@@ -207,6 +213,30 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
           .update({'status': 'completed'})
           .eq('id', bookingId);
       debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Direct update endSession completed!');
+    }
+  }
+
+  @override
+  Future<void> reviewExtensionRequest({
+    required String bookingId,
+    required bool isApproved,
+    required int requestedMinutes,
+    required int currentDurationMinutes,
+  }) async {
+    debugPrint('🔵 [DASHBOARD_DATA_SOURCE] reviewExtensionRequest: bookingId=$bookingId, isApproved=$isApproved, requestedMinutes=$requestedMinutes, currentDurationMinutes=$currentDurationMinutes');
+
+    if (isApproved) {
+      final newDuration = currentDurationMinutes + requestedMinutes;
+      await supabaseClient.from('bookings').update({
+        'duration_minutes': newDuration,
+        'extension_status': 'approved',
+      }).eq('id', bookingId);
+      debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Extension request approved: duration updated to $newDuration mins');
+    } else {
+      await supabaseClient.from('bookings').update({
+        'extension_status': 'rejected',
+      }).eq('id', bookingId);
+      debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Extension request rejected');
     }
   }
 

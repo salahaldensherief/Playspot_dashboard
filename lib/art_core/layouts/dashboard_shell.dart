@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import '../../core/theme/app_colors.dart';
-import '../../features/analytics/presentation/cubit/lounge_stats_cubit.dart';
+import '../../features/analytics/presentation/lounge_stats_cubit.dart';
 import '../../features/analytics/presentation/dashboard_cubit.dart';
 import '../../features/bookings/presentation/cubit/booking_cubit.dart';
 import '../../features/lounges/presentation/cubit/extras_cubit.dart';

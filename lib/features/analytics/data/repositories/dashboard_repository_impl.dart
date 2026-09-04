@@ -56,6 +56,26 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
+  Future<Either<Failure, void>> reviewExtensionRequest({
+    required String bookingId,
+    required bool isApproved,
+    required int requestedMinutes,
+    required int currentDurationMinutes,
+  }) async {
+    try {
+      await remoteDataSource.reviewExtensionRequest(
+        bookingId: bookingId,
+        isApproved: isApproved,
+        requestedMinutes: requestedMinutes,
+        currentDurationMinutes: currentDurationMinutes,
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> handleClientRequestAction({
     required String requestId,
     required bool isCanteenOrder,

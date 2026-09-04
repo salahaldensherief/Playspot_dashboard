@@ -81,14 +81,16 @@ class DashboardSidebar extends StatelessWidget {
     }
   }
 
+  String _getRoleLabel(UserEntity user) {
+    if (user.role == UserRole.superAdmin) return AppStrings.superAdmin;
+    if (user.role == UserRole.owner) return AppStrings.loungeOwnerLabel;
+    if (user.role == UserRole.manager) return AppStrings.loungeManager;
+    if (user.role == UserRole.cashier) return AppStrings.cashierLabel;
+    return 'Staff';
+  }
+
   Widget _buildLogo(UserEntity? user) {
-    String roleLabel = 'Staff';
-    if (user != null) {
-      if (user.isSuperAdmin) roleLabel = AppStrings.superAdmin;
-      else if (user.isOwner) roleLabel = AppStrings.loungeOwnerLabel;
-      else if (user.isManager) roleLabel = AppStrings.loungeManager;
-      else if (user.isCashier) roleLabel = AppStrings.cashierLabel;
-    }
+    final String roleLabel = user != null ? _getRoleLabel(user) : 'Staff';
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -99,7 +101,7 @@ class DashboardSidebar extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(8.r),
               decoration: BoxDecoration(
-                color: AppColors.neonPurple.withOpacity(0.1),
+                color: AppColors.neonPurple.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Icon(Icons.sports_esports, color: AppColors.neonBlue, size: 24.r),
@@ -222,15 +224,16 @@ class DashboardSidebar extends StatelessWidget {
           onTap: () => context.go(RouterKeys.loungeAdminStaff),
         ),
 
-      // History (All Staff can see their/lounge history)
-      _SidebarItem(
-        icon: Icons.history_outlined,
-        label: AppStrings.shiftHistory,
-        isActive: activeRoute == AppStrings.shiftHistory,
-        onTap: () => context.go('/lounge-admin/shifts'),
-      ),
+      // History & Reports (Restricted to Lounge Admins & Super Admins, hidden for Cashiers)
+      if (user.canViewShiftHistory)
+        _SidebarItem(
+          icon: Icons.history_outlined,
+          label: AppStrings.shiftHistory,
+          isActive: activeRoute == AppStrings.shiftHistory,
+          onTap: () => context.go('/lounge-admin/shifts'),
+        ),
 
-      if (user.canViewFinancials)
+      if (user.canViewReports)
         _SidebarItem(
           icon: Icons.assessment_outlined,
           label: AppStrings.monthlyReports,
@@ -279,7 +282,7 @@ class _SidebarItem extends StatelessWidget {
           color: isActive ? AppColors.sidebarActiveBg : Colors.transparent,
           borderRadius: BorderRadius.circular(12.r),
           border: isActive 
-            ? Border.all(color: AppColors.sidebarActiveBorder.withOpacity(0.5))
+            ? Border.all(color: AppColors.sidebarActiveBorder.withValues(alpha: 0.5))
             : null,
         ),
         child: Material(

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:play_spot_dashboard/core/audio/audio_service.dart';
+import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
@@ -67,10 +69,12 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
           const Spacer(),
           if (actions != null) ...[
             ...actions!,
-            SizedBox(width: 24.w),
+            SizedBox(width: 16.w),
           ] else ...[
+            _buildAudioMuteToggle(context),
+            SizedBox(width: 16.w),
             _buildNotificationIcon(context),
-            SizedBox(width: 24.w),
+            SizedBox(width: 16.w),
           ],
           _buildUserInfo(),
         ],
@@ -78,8 +82,34 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
+  Widget _buildAudioMuteToggle(BuildContext context) {
+    final audioService = sl<AudioService>();
+    return ListenableBuilder(
+      listenable: audioService,
+      builder: (context, _) {
+        final isMuted = audioService.isMuted;
+        return Tooltip(
+          message: isMuted ? 'Unmute Alerts' : 'Mute Alert Sound',
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20.r),
+            onTap: () => audioService.toggleMute(),
+            child: Padding(
+              padding: EdgeInsets.all(4.r),
+              child: Icon(
+                isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+                color: isMuted ? AppColors.textMuted : AppColors.neonBlue,
+                size: 22.r,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildNotificationIcon(BuildContext context) {
     return BlocBuilder<BookingCubit, BookingState>(
+      buildWhen: (prev, curr) => prev.bookings != curr.bookings,
       builder: (context, state) {
         final pendingCount = state.bookings
             .where((b) => b.status == BookingStatus.pending)
@@ -138,6 +168,7 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
 
   Widget _buildUserInfo() {
     return BlocBuilder<LoginCubit, LoginState>(
+      buildWhen: (prev, curr) => prev.user != curr.user,
       builder: (context, state) {
         final user = state.user;
         if (user == null) return _buildDefaultAvatar();

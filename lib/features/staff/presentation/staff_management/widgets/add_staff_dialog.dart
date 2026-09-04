@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/staff/data/entities/staff_entity.dart';
 import 'package:play_spot_dashboard/features/staff/data/models/staff_params.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_cubit.dart';
@@ -14,7 +15,7 @@ import 'role_chip.dart';
 
 class AddStaffDialog extends StatefulWidget {
   final String loungeId;
-  final StaffCubit cubit; // Explicitly pass the cubit
+  final StaffCubit cubit;
   final StaffEntity? staff;
 
   const AddStaffDialog({super.key, required this.loungeId, required this.cubit, this.staff});
@@ -55,7 +56,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<StaffCubit, StaffState>(
-      bloc: widget.cubit, // Use the explicitly passed cubit instance
+      bloc: widget.cubit,
       listenWhen: (prev, curr) => prev.status != curr.status,
       listener: (context, state) {
         if (state.status.isSuccess) {
@@ -100,7 +101,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                         label: AppStrings.email,
                         controller: _emailController,
                         validator: AppValidator.validateEmail,
-                        readOnly: isEdit, // Email usually shouldn't be edited if it's the auth ID
+                        readOnly: isEdit,
                       ),
                     ),
                     SizedBox(width: 16.w),
@@ -173,6 +174,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
 
   void _submit() {
     if (_formKey.currentState?.validate() == true) {
+      final currentUser = context.read<LoginCubit>().state.user;
       final staffId = widget.staff?.id;
       if (isEdit && staffId != null) {
         widget.cubit.updateStaffMember(
@@ -183,6 +185,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
             'role': _selectedRole,
           },
           widget.loungeId,
+          currentUser: currentUser,
         );
       } else if (!isEdit) {
         widget.cubit.addStaffMember(
@@ -194,6 +197,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
             role: _selectedRole,
             loungeId: widget.loungeId,
           ),
+          currentUser: currentUser,
         );
       }
     }

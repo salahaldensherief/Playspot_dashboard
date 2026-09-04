@@ -444,5 +444,11 @@
   "select_extras": "اختر الخدمات والإضافات",
   "no_extras_available": "لا توجد خدمات إضافية متاحة حالياً",
   "confirm_add_extras": "تأكيد إضافة الخدمات",
-  "active_session_stats": "إحصائيات الجلسات الحية"
+  "active_session_stats": "إحصائيات الجلسات الحية",
+  "lounge_reviews": "تقييمات وآراء العملاء",
+  "average_rating": "متوسط التقييم",
+  "total_reviews": "إجمالي التقييمات",
+  "no_reviews_yet": "لا توجد تقييمات لهذه الصالة بعد",
+  "review_comment": "التعليق",
+  "review_date": "التاريخ"
 }

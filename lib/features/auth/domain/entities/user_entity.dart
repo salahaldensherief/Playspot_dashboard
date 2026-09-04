@@ -51,6 +51,7 @@ class UserEntity extends Equatable {
   bool get canManageStaff => permissions.canManageStaff;
   bool get canViewFinancials => permissions.canViewFinancials;
   bool get canViewReports => permissions.canViewReports;
+  bool get canViewShiftHistory => permissions.canViewShiftHistory;
   bool get canEditSetup => permissions.canEditSetup;
   bool get canManageMarketing => permissions.canManageMarketing;
   bool get canToggleLoungeStatus => permissions.canToggleLoungeStatus;

@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'data/datasources/requests_remote_data_source.dart';
 import 'data/repositories/client_requests_repository_impl.dart';
 import 'domain/repositories/client_requests_repository.dart';
-import 'presentation/cubit/client_requests_cubit.dart';
+import 'presentation/client_requests_cubit.dart';
 
 void initRequestsDI(GetIt sl) {
   // Data Sources

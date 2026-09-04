@@ -24,6 +24,12 @@ class ClientRequestModel extends ClientRequestEntity {
     super.totalPrice,
   });
 
+  static int _parseInt(dynamic val, int defaultValue) {
+    if (val == null) return defaultValue;
+    if (val is num) return val.toInt();
+    return int.tryParse(val.toString()) ?? defaultValue;
+  }
+
   factory ClientRequestModel.fromNotificationJson(Map<String, dynamic> json) {
     final metadataObj = NotificationMetadata.fromJson(json['metadata']);
     final rawType = (json['type'] ?? json['request_type'] ?? metadataObj.requestType ?? '').toString().trim().toLowerCase();
@@ -124,6 +130,50 @@ class ClientRequestModel extends ClientRequestEntity {
       ),
       canteenItems: parsedItems,
       totalPrice: parseDouble(json['total_price'] ?? json['price']),
+    );
+  }
+
+  factory ClientRequestModel.fromBookingExtensionJson(Map<String, dynamic> json) {
+    final int requestedMinutes = _parseInt(json['requested_minutes'] ?? json['extension_minutes'], 30);
+    final int currentDuration = _parseInt(json['duration_minutes'], 60);
+    final String roomName = (json['room_name'] ?? json['room'] ?? 'Station').toString();
+    final String userName = (json['user_name'] ?? json['user'] ?? 'Client').toString();
+    final String extStatus = (json['extension_status'] ?? 'pending').toString().toLowerCase();
+    final bool isAttended = extStatus != 'pending';
+
+    return ClientRequestModel(
+      id: 'ext_${json['id']}',
+      loungeId: (json['lounge_id'] ?? '').toString(),
+      bookingId: json['id']?.toString(),
+      userId: json['user_id']?.toString(),
+      userName: userName,
+      userPhone: json['user_phone']?.toString(),
+      roomId: json['room_id']?.toString(),
+      roomName: roomName,
+      titleAr: 'طلب تمديد جلسة ($roomName)',
+      titleEn: 'Session Extension Request ($roomName)',
+      bodyAr: 'العميل $userName يطلب تمديد الجلسة +$requestedMinutes دقيقة',
+      bodyEn: 'Client $userName requested +$requestedMinutes mins session extension',
+      type: ClientRequestType.extendSession,
+      isRead: isAttended,
+      isAttended: isAttended,
+      createdAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'].toString())
+          : (json['created_at'] != null
+              ? DateTime.parse(json['created_at'].toString())
+              : DateTime.now()),
+      metadata: NotificationMetadata(
+        bookingId: json['id']?.toString(),
+        roomId: json['room_id']?.toString(),
+        roomName: roomName,
+        items: [
+          {
+            'minutes': requestedMinutes,
+            'requested_minutes': requestedMinutes,
+            'current_duration': currentDuration,
+          }
+        ],
+      ),
     );
   }
 

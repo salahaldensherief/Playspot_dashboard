@@ -18,28 +18,30 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
 
   @override
   Future<List<StaffModel>> getLoungeStaff(String loungeId) async {
+    final cleanLoungeId = loungeId.trim();
+    if (cleanLoungeId.isEmpty) return [];
+
     try {
-      debugPrint('Fetching staff for loungeId via RPC: $loungeId');
+      debugPrint('Fetching staff for loungeId via RPC: $cleanLoungeId');
       
       final response = await _supabase.rpc('get_lounge_staff', params: {
-        'p_lounge_id': loungeId,
+        'p_lounge_id': cleanLoungeId,
       });
       
       debugPrint('Staff RPC response: $response');
       if (response == null) return [];
       
-      return (response as List).map((json) => StaffModel.fromJson(json)).toList();
+      return (response as List).map((json) => StaffModel.fromJson(Map<String, dynamic>.from(json))).toList();
     } catch (e) {
       debugPrint('Error in getLoungeStaff RPC: $e');
-      // Fallback logic if RPC doesn't exist yet or fails
       try {
         final response = await _supabase
             .from('profiles')
             .select()
-            .eq('lounge_id', loungeId)
+            .eq('lounge_id', cleanLoungeId)
             .neq('role', 'super_admin')
             .order('full_name');
-        return (response as List).map((json) => StaffModel.fromJson(json)).toList();
+        return (response as List).map((json) => StaffModel.fromJson(Map<String, dynamic>.from(json))).toList();
       } catch (e2) {
         rethrow;
       }
@@ -50,10 +52,7 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
   Future<void> addStaffMember(AddStaffParams params) async {
     try {
       debugPrint('Adding staff member with params: ${params.toJson()}');
-      // Using add_staff_member as per technical directive, 
-      // ignoring return type to avoid casting issues.
       await _supabase.rpc('add_staff_member', params: params.toJson());
-      
       debugPrint('Add staff RPC executed successfully');
       return;
     } catch (e) {
@@ -64,27 +63,65 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
 
   @override
   Future<void> updateStaffMember(String staffId, Map<String, dynamic> data) async {
-    // Map internal params to DB column names if needed
-    final updates = {
-      if (data.containsKey('name')) 'full_name': data['name'],
-      if (data.containsKey('phone')) 'phone': data['phone'],
-      if (data.containsKey('role')) 'role': data['role'],
-      if (data.containsKey('email')) 'email': data['email'],
-      if (data.containsKey('national_id_number')) 'national_id_number': data['national_id_number'],
-      if (data.containsKey('id_front_url')) 'id_front_url': data['id_front_url'],
-      if (data.containsKey('id_back_url')) 'id_back_url': data['id_back_url'],
+    final cleanStaffId = staffId.trim();
+    if (cleanStaffId.isEmpty) {
+      throw Exception('Staff ID cannot be empty');
+    }
+
+    String? mappedRole;
+    if (data.containsKey('role') && data['role'] != null) {
+      final rawRole = data['role'].toString().toLowerCase().trim();
+      switch (rawRole) {
+        case 'cashier':
+        case 'role_cashier':
+          mappedRole = 'cashier';
+          break;
+        case 'lounge_owner':
+        case 'manager':
+        case 'lounge_admin':
+          mappedRole = 'lounge_owner';
+          break;
+        case 'staff':
+        case 'role_staff':
+          mappedRole = 'staff';
+          break;
+        default:
+          mappedRole = rawRole;
+      }
+    }
+
+    final updates = <String, dynamic>{
+      if (data.containsKey('name') && data['name'] != null) 'full_name': data['name'],
+      if (data.containsKey('phone') && data['phone'] != null) 'phone': data['phone'],
+      if (mappedRole != null) 'role': mappedRole,
+      if (data.containsKey('email') && data['email'] != null) 'email': data['email'],
+      if (data.containsKey('national_id_number') && data['national_id_number'] != null) 'national_id_number': data['national_id_number'],
+      if (data.containsKey('id_front_url') && data['id_front_url'] != null) 'id_front_url': data['id_front_url'],
+      if (data.containsKey('id_back_url') && data['id_back_url'] != null) 'id_back_url': data['id_back_url'],
     };
-    
-    await _supabase.from('profiles').update(updates).eq('id', staffId);
+
+    debugPrint('🔵 [STAFF_REMOTE_SOURCE] Updating profile targeting ID: $cleanStaffId with updates: $updates');
+
+    try {
+      await _supabase.from('profiles').update(updates).eq('id', cleanStaffId);
+      debugPrint('🟢 [STAFF_REMOTE_SOURCE] Profile updated successfully for $cleanStaffId');
+    } catch (e) {
+      debugPrint('🔴 [STAFF_REMOTE_SOURCE] Failed to update profile $cleanStaffId: $e');
+      rethrow;
+    }
   }
 
   @override
   Future<void> updateStaffStatus(String staffId, bool isActive) async {
-    await _supabase.from('profiles').update({'is_active': isActive}).eq('id', staffId);
+    final cleanStaffId = staffId.trim();
+    if (cleanStaffId.isEmpty) return;
+    await _supabase.from('profiles').update({'is_active': isActive}).eq('id', cleanStaffId);
   }
 
   @override
   Future<void> deleteStaff(String staffId) async {
-    await _supabase.from('profiles').delete().eq('id', staffId);
+    final cleanStaffId = staffId.trim();
+    if (cleanStaffId.isEmpty) return;
+    await _supabase.from('profiles').delete().eq('id', cleanStaffId);
   }
 }

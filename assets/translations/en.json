@@ -426,5 +426,11 @@
   "select_extras": "Select Extras & Menu Items",
   "no_extras_available": "No extras available currently",
   "confirm_add_extras": "Confirm Add Extras",
-  "active_session_stats": "Live Active Session Stats"
+  "active_session_stats": "Live Active Session Stats",
+  "lounge_reviews": "Lounge Reviews & Ratings",
+  "average_rating": "Average Rating",
+  "total_reviews": "Total Reviews",
+  "no_reviews_yet": "No reviews for this lounge yet",
+  "review_comment": "Comment",
+  "review_date": "Date"
 }

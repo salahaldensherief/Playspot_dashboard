@@ -7,13 +7,13 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
-import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_state.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/widgets/live_requests_feed.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/admin_shift_monitoring_bar.dart';
 import '../../../../core/responsive/responsive.dart';
 import '../../../auth/presentation/login/login_state.dart';
-import '../../../lounges/domain/entities/lounge.dart';
 import '../../domain/entities/booking.dart';
 import '../cubit/booking_cubit.dart';
 import '../cubit/booking_state.dart';
@@ -42,7 +42,11 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = context.read<LoginCubit>().state.user;
-      context.read<BookingCubit>().startWatchingBookings(loungeId: user?.loungeId);
+      final loungeId = user?.loungeId;
+      context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
+      if (loungeId != null && loungeId.isNotEmpty) {
+        context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: loungeId);
+      }
       context.read<LoungeCubit>().fetchLounges();
     });
   }
@@ -67,7 +71,11 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
           BlocListener<LoginCubit, LoginState>(
             listenWhen: (previous, current) => previous.user?.loungeId != current.user?.loungeId,
             listener: (context, state) {
-              context.read<BookingCubit>().startWatchingBookings(loungeId: state.user?.loungeId);
+              final updatedLoungeId = state.user?.loungeId;
+              context.read<BookingCubit>().startWatchingBookings(loungeId: updatedLoungeId);
+              if (updatedLoungeId != null && updatedLoungeId.isNotEmpty) {
+                context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: updatedLoungeId);
+              }
             },
           ),
           BlocListener<BookingCubit, BookingState>(
@@ -124,9 +132,19 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
               ),
             ),
 
-            SizedBox(height: 32.h),
+            SizedBox(height: 24.h),
+
+            // Show Live Client Requests Feed at the top of Tab 0 (Live Operations)
+            if (_tabController.index == 0) ...[
+              const LiveRequestsFeed(),
+              SizedBox(height: 24.h),
+            ],
 
             BlocBuilder<BookingCubit, BookingState>(
+              buildWhen: (prev, curr) =>
+                  prev.status != curr.status ||
+                  prev.bookings != curr.bookings ||
+                  prev.errorMessage != curr.errorMessage,
               builder: (context, state) {
                 if (state.status == BookingStatusState.loading && state.bookings.isEmpty) {
                   return const Center(child: Padding(
@@ -162,7 +180,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                 if (displayedBookings.isEmpty) {
                   return Center(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 60.h),
+                      padding: EdgeInsets.symmetric(vertical: 40.h),
                       child: Column(
                         children: [
                           Icon(Icons.inbox_outlined, size: 48.r, color: AppColors.textMuted),
@@ -236,6 +254,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
 
   Widget _buildLiveStatsHeader(BuildContext context) {
     return BlocBuilder<BookingCubit, BookingState>(
+      buildWhen: (prev, curr) => prev.bookings != curr.bookings,
       builder: (context, state) {
         final activeCount = state.bookings.where((b) => b.status == BookingStatus.upcoming || b.status == BookingStatus.inProgress).length;
         final pendingCount = state.bookings.where((b) => b.status == BookingStatus.pending).length;
@@ -280,12 +299,12 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
             decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
             child: Icon(icon, color: color, size: 20.r),
           ),
-          SizedBox(width: 16.w),
+          SizedBox(width: 12.w),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText.body(label, fontSize: 12.sp, color: AppColors.textSecondary),
-              AppText.heading(value, fontSize: 18.sp, color: color),
+              AppText.body(label, color: AppColors.textSecondary, fontSize: 12.sp),
+              AppText.subHeading(value, color: AppColors.textPrimary, fontSize: 18.sp, fontWeight: FontWeight.bold),
             ],
           ),
         ],
@@ -294,98 +313,32 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
   }
 
   Widget _buildTopToolbar(BuildContext context, String loungeId) {
-    final user = context.read<LoginCubit>().state.user;
-    final isMobile = Responsive.isMobile(context);
-
-    return BlocBuilder<LoungeCubit, LoungeState>(
-      buildWhen: (previous, current) => previous.lounges != current.lounges,
-      builder: (context, state) {
-        Lounge? currentLounge;
-        if (state.lounges.isNotEmpty) {
-          final found = state.lounges.where((l) => l.id == loungeId).toList();
-          currentLounge = found.isNotEmpty ? found.first : state.lounges.first;
-        }
-        final isOpen = currentLounge?.isOpen ?? true;
-
-        return Container(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppColors.borderDefault),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        AppText.heading(AppStrings.bookings, fontSize: 20.sp),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.neonBlue,
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
           ),
-          child: Flex(
-            direction: isMobile ? Axis.vertical : Axis.horizontal,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: isMobile ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-            children: [
-              Row(
-                children: [
-                  Icon(isOpen ? Icons.door_front_door : Icons.door_back_door, color: isOpen ? AppColors.success : AppColors.danger),
-                  SizedBox(width: 12.w),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppText.subHeading(
-                        isOpen ? AppStrings.loungeIsOpen : AppStrings.loungeIsClosed,
-                        color: isOpen ? AppColors.success : AppColors.danger,
-                        fontSize: 16.sp,
-                      ),
-                      AppText.body(
-                        isOpen ? AppStrings.usersCanBookNow : AppStrings.loungeIsHidden,
-                        fontSize: 12.sp,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              if (isMobile) SizedBox(height: 16.h),
-              Row(
-                mainAxisAlignment: isMobile ? MainAxisAlignment.spaceBetween : MainAxisAlignment.end,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      final roomCubit = context.read<RoomCubit>();
-                      final bookingCubit = context.read<BookingCubit>();
-                      final shiftCubit = context.read<ShiftCubit>();
+          onPressed: () => _showAddBookingModal(context, loungeId),
+          icon: const Icon(Icons.add, color: Colors.black),
+          label: AppText.body(AppStrings.newBooking, color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
 
-                      roomCubit.watchRooms(loungeId);
-                      showDialog(
-                        context: context,
-                        builder: (context) => MultiBlocProvider(
-                          providers: [
-                            BlocProvider.value(value: roomCubit),
-                            BlocProvider.value(value: bookingCubit),
-                            BlocProvider.value(value: shiftCubit),
-                          ],
-                          child: AddBookingDialog(loungeId: loungeId),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.add_circle_outline, color: Colors.white),
-                    label: AppText.body(AppStrings.newBooking, color: Colors.white, fontWeight: FontWeight.bold),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.neonBlue,
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                    ),
-                  ),
-                  if (user?.canToggleLoungeStatus == true) ...[
-                    SizedBox(width: 24.w),
-                    if (!isMobile) AppText.body(isOpen ? AppStrings.closeLounge : AppStrings.openLounge, fontWeight: FontWeight.bold),
-                    if (!isMobile) SizedBox(width: 8.w),
-                    Switch(
-                      value: isOpen,
-                      activeThumbColor: AppColors.success,
-                      onChanged: (val) => context.read<LoungeCubit>().toggleLoungeStatus(loungeId, val),
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ),
-        );
-      },
+  void _showAddBookingModal(BuildContext context, String loungeId) {
+    context.read<RoomCubit>().watchRooms(loungeId);
+    showDialog(
+      context: context,
+      useRootNavigator: false,
+      builder: (_) => AddBookingDialog(
+        loungeId: loungeId,
+      ),
     );
   }
 }
