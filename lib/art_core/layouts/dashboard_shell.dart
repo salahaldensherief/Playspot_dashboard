@@ -1,27 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:play_spot_dashboard/art_core/app_strings.dart';
-import '../../core/theme/app_colors.dart';
-import '../../features/analytics/presentation/lounge_stats_cubit.dart';
-import '../../features/analytics/presentation/dashboard_cubit.dart';
-import '../../features/bookings/presentation/cubit/booking_cubit.dart';
-import '../../features/lounges/presentation/cubit/extras_cubit.dart';
-import '../../features/lounges/presentation/cubit/lounge_cubit.dart';
-import '../../features/rooms/presentation/cubit/room_cubit.dart';
-import 'dashboard_sidebar.dart';
-import 'dashboard_top_bar.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/login/login_cubit.dart';
 import '../../features/auth/presentation/login/login_state.dart';
+import '../../features/bookings/presentation/cubit/booking_cubit.dart';
+import '../../features/lounges/presentation/cubit/lounge_cubit.dart';
 import '../../features/shifts/presentation/shift_management/shift_cubit.dart';
 import '../../features/shifts/presentation/shift_management/shift_state.dart';
 import '../../features/shifts/presentation/shift_management/widgets/open_shift_dialog.dart';
 import '../../features/shifts/presentation/shift_management/widgets/shift_summary_modal.dart';
 import '../../features/shifts/presentation/shift_management/widgets/shift_header_banner.dart';
-import '../../features/permissions/presentation/cubit/permissions_cubit.dart';
-import '../../core/di/di.dart';
+import 'dashboard_sidebar.dart';
+import 'dashboard_top_bar.dart';
 import '../widgets/geolocation_handler.dart';
 
 class DashboardShell extends StatelessWidget {
@@ -128,6 +121,7 @@ class _DashboardShellContentState extends State<_DashboardShellContent> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final loungeId = widget.user?.loungeId;
+      context.read<LoungeCubit>().fetchLounges();
       if (loungeId != null && loungeId.isNotEmpty) {
         context.read<ShiftCubit>().checkActiveShift(loungeId);
         context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);

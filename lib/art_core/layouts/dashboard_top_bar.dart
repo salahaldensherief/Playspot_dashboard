@@ -10,6 +10,9 @@ import 'package:play_spot_dashboard/features/auth/presentation/login/login_state
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
+import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
+import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
+import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_state.dart';
 import '../app_strings.dart';
 import '../theme/app_colors.dart';
 
@@ -71,6 +74,8 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
             ...actions!,
             SizedBox(width: 16.w),
           ] else ...[
+            _buildLoungeStatusToggle(context),
+            SizedBox(width: 16.w),
             _buildAudioMuteToggle(context),
             SizedBox(width: 16.w),
             _buildNotificationIcon(context),
@@ -79,6 +84,91 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
           _buildUserInfo(),
         ],
       ),
+    );
+  }
+
+  Widget _buildLoungeStatusToggle(BuildContext context) {
+    return BlocBuilder<LoginCubit, LoginState>(
+      buildWhen: (prev, curr) =>
+          prev.user != curr.user || prev.userLounge != curr.userLounge,
+      builder: (context, loginState) {
+        final user = loginState.user;
+        final loungeId = user?.loungeId;
+        if (user == null ||
+            !user.canToggleLoungeStatus ||
+            loungeId == null ||
+            loungeId.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return BlocBuilder<LoungeCubit, LoungeState>(
+          buildWhen: (prev, curr) => prev.lounges != curr.lounges,
+          builder: (context, loungeState) {
+            Lounge? currentLounge;
+            if (loungeState.lounges.isNotEmpty) {
+              final found =
+                  loungeState.lounges.where((l) => l.id == loungeId).toList();
+              if (found.isNotEmpty) currentLounge = found.first;
+            }
+
+            final isOpen =
+                currentLounge?.isOpen ?? (loginState.userLounge?.isOpen ?? true);
+            final bool isMobile = MediaQuery.sizeOf(context).width < 600;
+            final color = isOpen ? AppColors.success : AppColors.danger;
+
+            return Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 8.w : 12.w,
+                vertical: 2.h,
+              ),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20.r),
+                border: Border.all(
+                  color: color.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8.r,
+                    height: 8.r,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  if (!isMobile) SizedBox(width: 8.w),
+                  if (!isMobile)
+                    Text(
+                      isOpen ? AppStrings.loungeIsOpen : AppStrings.loungeIsClosed,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  SizedBox(width: 4.w),
+                  Transform.scale(
+                    scale: 0.75,
+                    child: Switch(
+                      value: isOpen,
+                      activeTrackColor: AppColors.success.withValues(alpha: 0.5),
+                      activeThumbColor: AppColors.success,
+                      inactiveThumbColor: AppColors.danger,
+                      inactiveTrackColor: AppColors.danger.withValues(alpha: 0.3),
+                      onChanged: (val) {
+                        context.read<LoungeCubit>().toggleLoungeStatus(loungeId, val);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
