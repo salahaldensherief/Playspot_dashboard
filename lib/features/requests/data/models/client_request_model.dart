@@ -32,22 +32,40 @@ class ClientRequestModel extends ClientRequestEntity {
 
   factory ClientRequestModel.fromNotificationJson(Map<String, dynamic> json) {
     final metadataObj = NotificationMetadata.fromJson(json['metadata']);
-    final rawType = (json['type'] ?? json['request_type'] ?? metadataObj.requestType ?? '').toString().trim().toLowerCase();
+    final rawType = (json['type'] ??
+            json['request_type'] ??
+            json['category'] ??
+            json['call_type'] ??
+            json['callType'] ??
+            metadataObj.requestType ??
+            '')
+        .toString()
+        .trim()
+        .toLowerCase();
 
     ClientRequestType type;
     switch (rawType) {
       case 'call_staff':
       case 'callstaff':
       case 'staff':
+      case 'assistance':
+      case 'controller_issue':
+      case 'cleaning':
+      case 'staff_call':
+      case 'room_call':
+      case 'help':
         type = ClientRequestType.callStaff;
         break;
       case 'canteen_order':
       case 'canteen':
       case 'order':
+      case 'food':
+      case 'drink':
         type = ClientRequestType.canteenOrder;
         break;
       case 'extend_session':
       case 'extend':
+      case 'extension':
         type = ClientRequestType.extendSession;
         break;
       case 'service':
@@ -55,11 +73,38 @@ class ClientRequestModel extends ClientRequestEntity {
         type = ClientRequestType.serviceRequest;
         break;
       default:
-        type = ClientRequestType.other;
+        final title = (json['title_ar'] ?? json['title'] ?? '').toString().toLowerCase();
+        final body = (json['body_ar'] ?? json['body'] ?? '').toString().toLowerCase();
+        if (title.contains('عامل') ||
+            title.contains('نداء') ||
+            title.contains('مساعدة') ||
+            title.contains('تنظيف') ||
+            title.contains('ذراع') ||
+            body.contains('عامل') ||
+            body.contains('مساعدة') ||
+            title.contains('staff') ||
+            title.contains('help')) {
+          type = ClientRequestType.callStaff;
+        } else {
+          type = ClientRequestType.other;
+        }
     }
 
     final bool isRead = _parseBool(json['is_read'] ?? json['read']);
     final bool isAttended = _parseBool(json['is_attended'] ?? json['attended']);
+
+    String bodyAr = (json['body_ar'] ?? json['body'] ?? '').toString();
+    if (bodyAr.isEmpty || bodyAr == 'طلب من العميل') {
+      if (rawType == 'assistance') {
+        bodyAr = 'طلب مساعدة من العامل';
+      } else if (rawType == 'controller_issue') {
+        bodyAr = 'مشكلة في أجهزة التحكم / الأذرع';
+      } else if (rawType == 'cleaning') {
+        bodyAr = 'طلب تنظيف المكان';
+      } else {
+        bodyAr = 'طلب نداء عامل من العميل';
+      }
+    }
 
     return ClientRequestModel(
       id: (json['id'] ?? '').toString(),
@@ -72,7 +117,7 @@ class ClientRequestModel extends ClientRequestEntity {
       roomName: (json['room_name'] ?? metadataObj.roomName)?.toString(),
       titleAr: (json['title_ar'] ?? json['title'] ?? 'طلب جديد').toString(),
       titleEn: (json['title_en'] ?? json['title'] ?? 'New Request').toString(),
-      bodyAr: (json['body_ar'] ?? json['body'] ?? 'طلب من العميل').toString(),
+      bodyAr: bodyAr,
       bodyEn: (json['body_en'] ?? json['body'] ?? 'Client request').toString(),
       type: type,
       isRead: isRead,

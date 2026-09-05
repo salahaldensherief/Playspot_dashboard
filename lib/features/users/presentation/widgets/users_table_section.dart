@@ -14,9 +14,11 @@ class UsersTableSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AdminManagementCubit, AdminManagementState>(
+      buildWhen: (previous, current) =>
+          previous.status != current.status || previous.admins != current.admins,
       builder: (context, state) {
         if (state.status == AdminManagementStatus.loading && state.admins.isEmpty) {
-          return const TableShimmer(columns: 4);
+          return const TableShimmer(columns: 7);
         }
         if (state.status == AdminManagementStatus.failure && state.admins.isEmpty) {
           return Center(child: AppText.body(state.errorMessage ?? AppStrings.error, color: AppColors.danger));

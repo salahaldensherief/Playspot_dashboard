@@ -99,9 +99,10 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
       ),
       actionsPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
       actions: [
-        TextButton(
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.outlined,
           onPressed: () => Navigator.pop(context),
-          child: Text(AppStrings.cancel, style: const TextStyle(color: AppColors.textSecondary)),
         ),
         SizedBox(width: 8.w),
         AppButton(

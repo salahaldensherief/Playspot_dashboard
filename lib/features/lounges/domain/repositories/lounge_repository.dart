@@ -7,8 +7,8 @@ import '../entities/activity.dart';
 import '../entities/extra_entity.dart';
 
 abstract class LoungeRepository {
-  Future<Either<Failure, List<Lounge>>> getLounges();
-  Future<Either<Failure, Lounge?>> getLoungeById(String id);
+  Future<Either<Failure, List<Lounge>>> getLounges({bool forceRefresh = false});
+  Future<Either<Failure, Lounge?>> getLoungeById(String id, {bool forceRefresh = false});
   Future<Either<Failure, List<Room>>> getRooms(String loungeId);
   Future<Either<Failure, List<Activity>>> getActivities(String roomId);
   Future<Either<Failure, String>> createLounge(Lounge lounge);
@@ -42,7 +42,7 @@ abstract class LoungeRepository {
   Future<Either<Failure, List<Map<String, dynamic>>>> getTopLoungesByRevenue(int limitCount);
   
   // Extras
-  Future<Either<Failure, List<ExtraEntity>>> getExtras(String loungeId);
+  Future<Either<Failure, List<ExtraEntity>>> getExtras(String loungeId, {bool forceRefresh = false});
   Future<Either<Failure, void>> addExtra(ExtraEntity extra);
   Future<Either<Failure, void>> updateExtra(ExtraEntity extra);
   Future<Either<Failure, void>> deleteExtra(String extraId);

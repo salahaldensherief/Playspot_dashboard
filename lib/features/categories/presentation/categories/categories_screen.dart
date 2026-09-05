@@ -210,13 +210,18 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
         title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),
         content: Text('${AppStrings.deleteWarning} "${category.nameEn}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
-          TextButton(
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.outlined,
+            onPressed: () => Navigator.pop(diagContext),
+          ),
+          AppButton(
+            text: AppStrings.delete,
+            variant: AppButtonVariant.danger,
             onPressed: () {
               cubit.deleteCategory(category.id);
               Navigator.pop(diagContext);
-            }, 
-            child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger)),
+            },
           ),
         ],
       ),
@@ -231,13 +236,18 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
         title: Text(AppStrings.deleteCity, style: const TextStyle(color: AppColors.textPrimary)),
         content: Text('${AppStrings.deleteCityWarning} "${city.nameEn}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
-          TextButton(
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.outlined,
+            onPressed: () => Navigator.pop(diagContext),
+          ),
+          AppButton(
+            text: AppStrings.delete,
+            variant: AppButtonVariant.danger,
             onPressed: () {
               cubit.deleteCity(city.id);
               Navigator.pop(diagContext);
-            }, 
-            child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger)),
+            },
           ),
         ],
       ),

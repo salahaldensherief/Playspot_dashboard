@@ -110,6 +110,7 @@ class LiveRequestsFeed extends StatelessWidget {
                       label: AppStrings.all,
                       filter: RequestFilter.all,
                       currentFilter: state.filter,
+                      count: state.requests.length,
                     ),
                     SizedBox(width: 8.w),
                     _buildFilterChip(
@@ -117,6 +118,7 @@ class LiveRequestsFeed extends StatelessWidget {
                       label: AppStrings.callStaff,
                       filter: RequestFilter.callStaff,
                       currentFilter: state.filter,
+                      count: state.requests.where((r) => r.type == ClientRequestType.callStaff && !r.isAttended).length,
                     ),
                     SizedBox(width: 8.w),
                     _buildFilterChip(
@@ -124,6 +126,7 @@ class LiveRequestsFeed extends StatelessWidget {
                       label: AppStrings.canteenOrder,
                       filter: RequestFilter.canteenOrders,
                       currentFilter: state.filter,
+                      count: state.requests.where((r) => r.isCanteenOrder && !r.isAttended).length,
                     ),
                     SizedBox(width: 8.w),
                     _buildFilterChip(
@@ -131,6 +134,7 @@ class LiveRequestsFeed extends StatelessWidget {
                       label: AppStrings.unread,
                       filter: RequestFilter.unattendedOnly,
                       currentFilter: state.filter,
+                      count: unreadCount,
                     ),
                   ],
                 ),
@@ -178,14 +182,36 @@ class LiveRequestsFeed extends StatelessWidget {
     required String label,
     required RequestFilter filter,
     required RequestFilter currentFilter,
+    int count = 0,
   }) {
     final isSelected = filter == currentFilter;
     return ChoiceChip(
-      label: AppText.body(
-        label,
-        color: isSelected ? Colors.black : AppColors.textPrimary,
-        fontSize: 11.sp,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppText.body(
+            label,
+            color: isSelected ? Colors.black : AppColors.textPrimary,
+            fontSize: 11.sp,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+          if (count > 0) ...[
+            SizedBox(width: 4.w),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.black.withValues(alpha: 0.2) : AppColors.neonBlue.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: AppText.body(
+                '$count',
+                color: isSelected ? Colors.black : AppColors.neonBlue,
+                fontSize: 10.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ],
       ),
       selected: isSelected,
       selectedColor: AppColors.neonBlue,

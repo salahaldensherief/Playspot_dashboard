@@ -105,6 +105,7 @@ class RoomModel extends RoomEntity {
   @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {
+      'id': id,
       'lounge_id': loungeId,
       'name': nameEn.isEmpty ? 'Unnamed Room' : nameEn,
       'name_ar': nameAr,

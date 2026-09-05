@@ -8,6 +8,7 @@ import '../../features/auth/presentation/login/login_cubit.dart';
 import '../../features/auth/presentation/login/login_state.dart';
 import '../../features/bookings/presentation/cubit/booking_cubit.dart';
 import '../../features/lounges/presentation/cubit/lounge_cubit.dart';
+import '../../features/lounges/presentation/cubit/lounge_state.dart';
 import '../../features/shifts/presentation/shift_management/shift_cubit.dart';
 import '../../features/shifts/presentation/shift_management/shift_state.dart';
 import '../../features/shifts/presentation/shift_management/widgets/open_shift_dialog.dart';
@@ -29,6 +30,13 @@ class DashboardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final loungeCubit = context.read<LoungeCubit>();
+      if (loungeCubit.state.lounges.isEmpty && loungeCubit.state.status != LoungeStatus.loading) {
+        loungeCubit.fetchLounges();
+      }
+    });
+
     return BlocBuilder<LoginCubit, LoginState>(
       buildWhen: (prev, curr) => prev.user != curr.user,
       builder: (context, loginState) {

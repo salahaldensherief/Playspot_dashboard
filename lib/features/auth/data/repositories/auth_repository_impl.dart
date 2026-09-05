@@ -1,13 +1,15 @@
 import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
+import 'package:play_spot_dashboard/core/services/local_cache_service.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../data_source/auth_remote_data_source.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
+  final LocalCacheService localCacheService;
 
-  AuthRepositoryImpl(this.remoteDataSource);
+  AuthRepositoryImpl(this.remoteDataSource, this.localCacheService);
 
   @override
   Future<Either<Failure, UserEntity>> login({
@@ -29,8 +31,10 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, void>> logout() async {
     try {
       await remoteDataSource.logout();
+      await localCacheService.clearAll();
       return const Right(null);
     } catch (e) {
+      await localCacheService.clearAll();
       return Left(ServerFailure(e.toString()));
     }
   }

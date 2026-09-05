@@ -38,6 +38,7 @@ class ExtraModel extends ExtraEntity {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'lounge_id': loungeId,
       'name': nameEn,
       'name_ar': nameAr,
@@ -46,6 +47,7 @@ class ExtraModel extends ExtraEntity {
       'category': category,
       'icon_key': iconKey,
       'is_available': !isOutOfStock,
+      'image_url': imageUrl,
       'stock_quantity': stockQuantity,
       'track_stock': trackStock,
       'min_stock_alert': minStockAlert,

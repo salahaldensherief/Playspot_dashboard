@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_gradient_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/logo/logo_widget.dart';
 import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
@@ -182,8 +182,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocSelector<LoginCubit, LoginState, bool>(
       selector: (state) => state.status == LoginStatus.loading,
       builder: (context, isLoading) {
-        return AppGradientButton(
+        return AppButton(
           text: AppStrings.signIn,
+          variant: AppButtonVariant.gradient,
+          width: double.infinity,
           isLoading: isLoading,
           onPressed: () {
             if (_formKey.currentState?.validate() == true) {

@@ -10,7 +10,6 @@ import '../../domain/entities/kyc_request.dart';
 import '../cubit/kyc_cubit.dart';
 import '../cubit/kyc_state.dart';
 import '../widgets/kyc_inspection_dialog.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class KycReviewsPage extends StatelessWidget {
   const KycReviewsPage({super.key});
@@ -34,7 +33,7 @@ class KycReviewsPage extends StatelessWidget {
                   return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
                 }
                 if (state.status == KycStatus.failure) {
-                  return Center(child: AppText.body(state.errorMessage ?? 'Error', color: AppColors.danger));
+                  return Center(child: AppText.body(state.errorMessage ?? AppStrings.error, color: AppColors.danger));
                 }
                 if (state.requests.isEmpty) {
                   return _buildEmptyState();
@@ -54,7 +53,7 @@ class KycReviewsPage extends StatelessWidget {
       children: [
         AppText.heading(AppStrings.kycReviews, fontSize: 32.sp),
         SizedBox(height: 8.h),
-        AppText.body('Review and verify documents submitted by lounge owners.'),
+        AppText.body(AppStrings.kycHeaderDesc),
       ],
     );
   }
@@ -66,7 +65,7 @@ class KycReviewsPage extends StatelessWidget {
         children: [
           Icon(Icons.verified_user_outlined, color: AppColors.textSecondary, size: 64.r),
           SizedBox(height: 16.h),
-          AppText.body('No pending KYC reviews at the moment.', fontSize: 18.sp),
+          AppText.body(AppStrings.noKycPending, fontSize: 18.sp),
         ],
       ),
     );
@@ -81,12 +80,12 @@ class _KycDataTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DataTableWidget(
-      columns: const [
-        'Owner Name',
-        'Lounge Name',
-        'ID Card',
-        'Business Doc',
-        'Actions',
+      columns: [
+        AppStrings.ownerName,
+        AppStrings.loungeName,
+        AppStrings.idCard,
+        AppStrings.businessDoc,
+        AppStrings.actions,
       ],
       rows: requests.map((req) => DataRow(
         cells: [
@@ -102,24 +101,26 @@ class _KycDataTable extends StatelessWidget {
           ),
           DataCell(AppText.body(req.loungeName)),
           DataCell(
-            TextButton.icon(
+            AppButton(
+              text: AppStrings.viewDocument,
+              icon: Icons.visibility_outlined,
+              variant: AppButtonVariant.text,
               onPressed: () => _showInspection(context, req, cubit),
-              icon: const Icon(Icons.visibility_outlined, size: 16),
-              label: Text(AppStrings.viewDocument),
             ),
           ),
           DataCell(
             req.businessDocumentUrl != null
-              ? TextButton.icon(
+              ? AppButton(
+                  text: AppStrings.viewDocument,
+                  icon: Icons.visibility_outlined,
+                  variant: AppButtonVariant.text,
                   onPressed: () => _showInspection(context, req, cubit),
-                  icon: const Icon(Icons.visibility_outlined, size: 16),
-                  label: Text(AppStrings.viewDocument),
                 )
               : const Text('-'),
           ),
           DataCell(
             AppButton(
-              text: "Inspect & Verify",
+              text: AppStrings.kycInspection,
               onPressed: () => _showInspection(context, req, cubit),
               variant: AppButtonVariant.primary,
               width: 160.w,
@@ -137,12 +138,5 @@ class _KycDataTable extends StatelessWidget {
       context: context,
       builder: (context) => KycInspectionDialog(request: request, cubit: cubit),
     );
-  }
-
-  Future<void> _openUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
   }
 }

@@ -8,9 +8,9 @@ class LoungeCubit extends Cubit<LoungeState> {
 
   LoungeCubit(this.repository) : super(const LoungeState());
 
-  Future<void> fetchLounges() async {
+  Future<void> fetchLounges({bool forceRefresh = false}) async {
     emit(state.copyWith(status: LoungeStatus.loading));
-    final result = await repository.getLounges();
+    final result = await repository.getLounges(forceRefresh: forceRefresh);
     
     if (isClosed) return;
 
@@ -102,7 +102,11 @@ class LoungeCubit extends Cubit<LoungeState> {
         status: LoungeStatus.failure,
         errorMessage: failure.message,
       )),
-      (_) => fetchLounges(),
+      (_) {
+        final updatedLounges = state.lounges.map((l) => l.id == lounge.id ? lounge : l).toList();
+        emit(state.copyWith(status: LoungeStatus.success, lounges: updatedLounges));
+        fetchLounges(forceRefresh: true);
+      },
     );
   }
 
@@ -132,8 +136,20 @@ class LoungeCubit extends Cubit<LoungeState> {
         errorMessage: failure.message,
       )),
       (_) {
-        emit(state.copyWith(status: LoungeStatus.success));
-        fetchLounges();
+        final updatedLounges = state.lounges.map((l) {
+          if (l.id == loungeId) {
+            return l.copyWith(
+              hasDiscount: hasDiscount,
+              discountPercentage: discountPercentage,
+              discountTitleAr: titleAr,
+              discountTitleEn: titleEn,
+              discountExpiresAt: expiresAt,
+            );
+          }
+          return l;
+        }).toList();
+        emit(state.copyWith(status: LoungeStatus.success, lounges: updatedLounges));
+        fetchLounges(forceRefresh: true);
       },
     );
   }

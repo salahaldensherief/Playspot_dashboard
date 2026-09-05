@@ -113,3 +113,8 @@ No Dead Registrations: When removing or refactoring duplicate data sources/repos
 Verify Existing Code First: Before creating any new file, inspect existing directories to prevent duplicating classes that already exist under slightly different names.
 
 No Unsolicited Scope Changes: Do not modify unrelated files or change project structure unless explicitly instructed.
+
+10. Single Component Architecture & Custom Component Reuse (MANDATORY)
+   SINGLE STANDARDIZED BUTTON COMPONENT: ALL buttons across the entire codebase MUST strictly use `AppButton` (`lib/art_core/widgets/app_button.dart`). Direct usage of raw Flutter buttons (`ElevatedButton`, `OutlinedButton`, `TextButton`) or duplicate custom button implementations in feature modules is strictly prohibited. `AppButton` supports all variants (`primary`, `gradient`, `outlined`, `danger`, `text`), icons, loading states, and custom styling.
+
+   CUSTOM COMPONENT REUSE FOR REPEATED UI: Any UI widget, card, table, input field, status badge, dialog, or section container that appears in more than one place MUST be created as a custom reusable widget component under `lib/art_core/widgets/` or feature-specific `widgets/`. Re-writing or duplicating identical UI structures across screens is strictly forbidden.

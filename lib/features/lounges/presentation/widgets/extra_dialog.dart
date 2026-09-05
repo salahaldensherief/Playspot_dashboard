@@ -66,7 +66,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
         loungeId: widget.loungeId,
         nameAr: _nameArController.text,
         nameEn: _nameEnController.text,
-        name: _nameEnController.text, // For compatibility
+        name: _nameEnController.text,
         price: double.tryParse(_priceController.text) ?? 0,
         category: _selectedCategory,
         isOutOfStock: widget.extra?.isOutOfStock ?? false,
@@ -106,14 +106,14 @@ class _ExtraDialogState extends State<ExtraDialog> {
               SizedBox(height: 24.h),
               AppTextField(
                 label: AppStrings.nameAr,
-                hintText: "الاسم بالعربية",
+                hintText: AppStrings.nameAr,
                 controller: _nameArController,
                 validator: AppValidator.validateRequired,
               ),
               SizedBox(height: 16.h),
               AppTextField(
                 label: AppStrings.nameEn,
-                hintText: "Item Name (English)",
+                hintText: AppStrings.nameEn,
                 controller: _nameEnController,
                 validator: AppValidator.validateRequired,
               ),
@@ -144,7 +144,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
                 },
               ),
               SizedBox(height: 24.h),
-              Divider(color: AppColors.divider),
+              const Divider(color: AppColors.divider),
               SizedBox(height: 16.h),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,

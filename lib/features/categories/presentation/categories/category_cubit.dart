@@ -10,11 +10,11 @@ class CategoryCubit extends Cubit<CategoryState> {
 
   CategoryCubit(this._repository) : super(CategoryState.init());
 
-  Future<void> loadCategories() async {
+  Future<void> loadCategories({bool forceRefresh = false}) async {
     emit(state.copyWith(status: CategoryStatus.loading));
-    final catResult = await _repository.getCategories();
-    final cityResult = await _repository.getCities();
-    final activityResult = await _repository.getActivityTypes();
+    final catResult = await _repository.getCategories(forceRefresh: forceRefresh);
+    final cityResult = await _repository.getCities(forceRefresh: forceRefresh);
+    final activityResult = await _repository.getActivityTypes(forceRefresh: forceRefresh);
     
     if (isClosed) return;
 

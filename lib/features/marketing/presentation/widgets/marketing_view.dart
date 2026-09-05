@@ -496,13 +496,18 @@ class _MarketingViewState extends State<MarketingView> with SingleTickerProvider
         title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),
         content: Text('${AppStrings.deleteWarning} "${promo.titleEn}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
-          TextButton(
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.outlined,
+            onPressed: () => Navigator.pop(diagContext),
+          ),
+          AppButton(
+            text: AppStrings.delete,
+            variant: AppButtonVariant.danger,
             onPressed: () {
               cubit.deletePromotion(promo.id);
               Navigator.pop(diagContext);
-            }, 
-            child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger)),
+            },
           ),
         ],
       ),

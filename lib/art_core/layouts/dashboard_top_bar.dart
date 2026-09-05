@@ -158,8 +158,11 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
                       activeThumbColor: AppColors.success,
                       inactiveThumbColor: AppColors.danger,
                       inactiveTrackColor: AppColors.danger.withValues(alpha: 0.3),
-                      onChanged: (val) {
-                        context.read<LoungeCubit>().toggleLoungeStatus(loungeId, val);
+                      onChanged: (val) async {
+                        await context.read<LoungeCubit>().toggleLoungeStatus(loungeId, val);
+                        if (context.mounted) {
+                          context.read<LoginCubit>().refreshUserLounge(loungeId);
+                        }
                       },
                     ),
                   ),

@@ -65,7 +65,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Send Global Notification',
+                AppStrings.newNotification,
                 style: TextStyle(color: AppColors.textPrimary, fontSize: 24.sp, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 24.h),
@@ -73,7 +73,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                 children: [
                   Expanded(
                     child: AppTextField(
-                      label: 'Title (Arabic)',
+                      label: AppStrings.promoTitleAr,
                       controller: _titleArController,
                       validator: AppValidator.validateRequired,
                     ),
@@ -81,7 +81,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                   SizedBox(width: 16.w),
                   Expanded(
                     child: AppTextField(
-                      label: 'Title (English)',
+                      label: AppStrings.promoTitleEn,
                       controller: _titleEnController,
                       validator: AppValidator.validateRequired,
                     ),
@@ -90,21 +90,21 @@ class _NotificationDialogState extends State<NotificationDialog> {
               ),
               SizedBox(height: 16.h),
               AppTextField(
-                label: 'Message (Arabic)',
+                label: AppStrings.descriptionArLabel,
                 controller: _bodyArController,
                 maxLines: 3,
                 validator: AppValidator.validateRequired,
               ),
               SizedBox(height: 16.h),
               AppTextField(
-                label: 'Message (English)',
+                label: AppStrings.descriptionEnLabel,
                 controller: _bodyEnController,
                 maxLines: 3,
                 validator: AppValidator.validateRequired,
               ),
               SizedBox(height: 16.h),
               CustomDropdown<NotificationType>(
-                label: 'Notification Type',
+                label: AppStrings.rewardType,
                 value: _selectedType,
                 items: NotificationType.values,
                 itemLabel: (t) => t.name.toUpperCase(),
@@ -121,7 +121,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                   ),
                   SizedBox(width: 16.w),
                   AppButton(
-                    text: 'Send Notification',
+                    text: AppStrings.newNotification,
                     onPressed: _submit,
                     icon: Icons.send,
                   ),

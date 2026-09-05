@@ -1,11 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
-import 'package:play_spot_dashboard/art_core/widgets/section_container.dart';
-import 'package:play_spot_dashboard/core/utils/app_validator.dart';
-
-import 'package:flutter/material.dart';
-import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
@@ -33,7 +27,7 @@ class LocationInfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SectionContainer(
-      title: 'Location Info', 
+      title: AppStrings.location, 
       children: [
         Row(
           children: [
@@ -72,8 +66,8 @@ class LocationInfoSection extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     lat != null && lng != null 
-                        ? 'Coordinates: ${lat!.toStringAsFixed(4)}, ${lng!.toStringAsFixed(4)}'
-                        : 'No coordinates set',
+                        ? '${lat!.toStringAsFixed(4)}, ${lng!.toStringAsFixed(4)}'
+                        : AppStrings.addressHint,
                     style: const TextStyle(color: AppColors.textPrimary),
                   ),
                 ],
@@ -81,7 +75,7 @@ class LocationInfoSection extends StatelessWidget {
             ),
             const SizedBox(width: 16),
             AppButton(
-              text: 'Capture GPS Location',
+              text: AppStrings.pinLocationMap,
               icon: Icons.gps_fixed,
               variant: AppButtonVariant.outlined,
               onPressed: () async {

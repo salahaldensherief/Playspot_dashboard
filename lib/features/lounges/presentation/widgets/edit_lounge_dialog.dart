@@ -84,7 +84,7 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.danger),
+            SnackBar(content: Text('${AppStrings.error}: $e'), backgroundColor: AppColors.danger),
           );
         }
       } finally {
@@ -96,8 +96,8 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
   @override
   Widget build(BuildContext context) {
     return AppDialog(
-      title: 'Edit Lounge Details',
-      width: 600.w, // Reduced width since map is removed
+      title: AppStrings.loungeProfile,
+      width: 600.w,
       actions: [
         AppButton(
           text: AppStrings.cancel,
@@ -106,7 +106,7 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
         ),
         SizedBox(width: 16.w),
         AppButton(
-          text: 'Save Changes',
+          text: AppStrings.saveChanges,
           isLoading: widget.isLoading || _isLocalUploading,
           onPressed: _submit,
         ),
@@ -152,11 +152,11 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Lounge Status',
-                  style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                  AppStrings.status,
+                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  _isOpen ? 'This lounge is currently open and visible to users.' : 'This lounge is temporarily closed.',
+                  _isOpen ? AppStrings.usersCanBookNow : AppStrings.loungeIsClosed,
                   style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
                 ),
               ],

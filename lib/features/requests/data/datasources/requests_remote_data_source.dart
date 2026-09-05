@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../domain/entities/client_request_entity.dart';
 import '../models/client_request_model.dart';
 
 abstract class RequestsRemoteDataSource {
@@ -49,42 +50,76 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         fetchAndEmit();
 
         // 2. Realtime Subscriptions for notifications, canteen_orders, and bookings
+        // Subscription 1: Notifications stream with graceful fallback on channel error
         try {
           notifSubscription = client
               .from('notifications')
               .stream(primaryKey: ['id'])
               .eq('lounge_id', cleanLoungeId)
-              .listen((_) {
-                fetchAndEmit();
-              }, onError: (e) {
-                debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Notifications Realtime Error: $e');
-              });
+              .listen(
+                (_) {
+                  fetchAndEmit();
+                },
+                onError: (e) {
+                  debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Notifications Realtime Error: $e');
+                  if (e is RealtimeSubscribeException) {
+                    debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Notifications RealtimeSubscribeException (status: ${e.status}, details: $e)');
+                  }
+                  _setupNotificationsFallbackStream(cleanLoungeId, fetchAndEmit, (sub) => notifSubscription = sub);
+                },
+                cancelOnError: false,
+              );
+        } catch (e) {
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Notifications Realtime Exception: $e');
+          _setupNotificationsFallbackStream(cleanLoungeId, fetchAndEmit, (sub) => notifSubscription = sub);
+        }
 
+        // Subscription 2: Canteen Orders stream
+        try {
           canteenSubscription = client
               .from('canteen_orders')
               .stream(primaryKey: ['id'])
               .eq('lounge_id', cleanLoungeId)
-              .listen((_) {
-                fetchAndEmit();
-              }, onError: (e) {
-                debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Canteen Realtime Error: $e');
-              });
+              .listen(
+                (_) {
+                  fetchAndEmit();
+                },
+                onError: (e) {
+                  debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Canteen Realtime Error: $e');
+                  if (e is RealtimeSubscribeException) {
+                    debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Canteen RealtimeSubscribeException (status: ${e.status}, details: $e)');
+                  }
+                },
+                cancelOnError: false,
+              );
+        } catch (e) {
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Canteen Realtime Exception: $e');
+        }
 
+        // Subscription 3: Bookings stream
+        try {
           bookingsSubscription = client
               .from('bookings')
               .stream(primaryKey: ['id'])
               .eq('lounge_id', cleanLoungeId)
-              .listen((_) {
-                fetchAndEmit();
-              }, onError: (e) {
-                debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Bookings Realtime Error: $e');
-              });
+              .listen(
+                (_) {
+                  fetchAndEmit();
+                },
+                onError: (e) {
+                  debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Bookings Realtime Error: $e');
+                  if (e is RealtimeSubscribeException) {
+                    debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Bookings RealtimeSubscribeException (status: ${e.status}, details: $e)');
+                  }
+                },
+                cancelOnError: false,
+              );
         } catch (e) {
-          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Realtime Listen Exception: $e');
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Bookings Realtime Exception: $e');
         }
 
-        // 3. Heartbeat Timer (every 5 seconds) to guarantee real-time updates even if WebSockets drop
-        heartbeatTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+        // 3. Heartbeat Timer (every 2 seconds) to guarantee immediate real-time updates
+        heartbeatTimer = Timer.periodic(const Duration(seconds: 2), (_) {
           fetchAndEmit();
         });
       },
@@ -99,48 +134,185 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     return controller.stream;
   }
 
+  void _setupNotificationsFallbackStream(
+    String loungeId,
+    VoidCallback fetchAndEmit,
+    void Function(StreamSubscription) setSubscription,
+  ) {
+    try {
+      debugPrint('🔄 [REQUESTS_DATA_SOURCE] Attempting fallback stream for notifications without filter...');
+      final sub = client
+          .from('notifications')
+          .stream(primaryKey: ['id'])
+          .listen(
+            (_) {
+              fetchAndEmit();
+            },
+            onError: (e) {
+              debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Notifications Fallback Stream Error: $e');
+              _setupClientRequestsFallbackStream(loungeId, fetchAndEmit, setSubscription);
+            },
+            cancelOnError: false,
+          );
+      setSubscription(sub);
+    } catch (e) {
+      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Notifications Fallback Stream Exception: $e');
+      _setupClientRequestsFallbackStream(loungeId, fetchAndEmit, setSubscription);
+    }
+  }
+
+  void _setupClientRequestsFallbackStream(
+    String loungeId,
+    VoidCallback fetchAndEmit,
+    void Function(StreamSubscription) setSubscription,
+  ) {
+    try {
+      debugPrint('🔄 [REQUESTS_DATA_SOURCE] Attempting fallback stream on client_requests table...');
+      final sub = client
+          .from('client_requests')
+          .stream(primaryKey: ['id'])
+          .listen(
+            (_) {
+              fetchAndEmit();
+            },
+            onError: (e) {
+              debugPrint('⚠️ [REQUESTS_DATA_SOURCE] ClientRequests Fallback Stream Error: $e');
+            },
+            cancelOnError: false,
+          );
+      setSubscription(sub);
+    } catch (e) {
+      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] ClientRequests Fallback Stream Exception: $e');
+    }
+  }
+
   @override
   Future<List<ClientRequestModel>> getClientRequests({required String loungeId}) async {
     final cleanLoungeId = loungeId.trim();
     if (cleanLoungeId.isEmpty) return [];
 
     try {
-      final notifResponse = await client
-          .from('notifications')
-          .select()
-          .eq('lounge_id', cleanLoungeId)
-          .order('created_at', ascending: false)
-          .limit(30);
+      // 1. Fetch notifications for the active lounge
+      dynamic notifResponse = [];
+      try {
+        notifResponse = await client
+            .from('notifications')
+            .select()
+            .eq('lounge_id', cleanLoungeId)
+            .order('created_at', ascending: false)
+            .limit(50);
+      } catch (e) {
+        try {
+          notifResponse = await client
+              .from('notifications')
+              .select()
+              .or('lounge_id.eq.$cleanLoungeId,metadata->>lounge_id.eq.$cleanLoungeId')
+              .order('created_at', ascending: false)
+              .limit(50);
+        } catch (_) {
+          notifResponse = await client
+              .from('notifications')
+              .select()
+              .order('created_at', ascending: false)
+              .limit(50);
+        }
+      }
 
-      final notifList = (notifResponse as List)
-          .map((json) => ClientRequestModel.fromNotificationJson(Map<String, dynamic>.from(json)))
-          .toList();
+      // 1b. Fetch fallback client_requests table if it exists
+      dynamic clientReqsResponse = [];
+      try {
+        clientReqsResponse = await client
+            .from('client_requests')
+            .select()
+            .eq('lounge_id', cleanLoungeId)
+            .order('created_at', ascending: false)
+            .limit(50);
+      } catch (_) {
+        // Table client_requests may not exist
+      }
 
-      final ordersResponse = await client
-          .from('canteen_orders')
-          .select()
-          .eq('lounge_id', cleanLoungeId)
-          .order('created_at', ascending: false)
-          .limit(30);
+      final notifList = [
+        ...((notifResponse is List) ? notifResponse : []),
+        ...((clientReqsResponse is List) ? clientReqsResponse : []),
+      ]
+      .map((json) => ClientRequestModel.fromNotificationJson(Map<String, dynamic>.from(json)))
+      .where((model) {
+        // Strict Lounge ID Filter: Must match active manager lounge_id
+        if (cleanLoungeId.isNotEmpty && model.loungeId.isNotEmpty && model.loungeId != cleanLoungeId) {
+          return false;
+        }
 
-      final ordersList = (ordersResponse as List)
+        // Operational Requests Only: Strictly EXCLUDE personal user notification types
+        // (like booking acceptances, session starts, or promo announcements)
+        if (model.type == ClientRequestType.other) {
+          return false;
+        }
+
+        return true;
+      })
+      .toList();
+
+      // 2. Fetch canteen orders for the active lounge
+      dynamic ordersResponse = [];
+      try {
+        ordersResponse = await client
+            .from('canteen_orders')
+            .select()
+            .eq('lounge_id', cleanLoungeId)
+            .order('created_at', ascending: false)
+            .limit(50);
+      } catch (e) {
+        try {
+          ordersResponse = await client
+              .from('canteen_orders')
+              .select()
+              .order('created_at', ascending: false)
+              .limit(50);
+        } catch (_) {}
+      }
+
+      final ordersList = ((ordersResponse is List) ? ordersResponse : [])
           .map((json) => ClientRequestModel.fromCanteenOrderJson(Map<String, dynamic>.from(json)))
-          .toList();
+          .where((model) {
+            if (cleanLoungeId.isNotEmpty && model.loungeId.isNotEmpty && model.loungeId != cleanLoungeId) {
+              return false;
+            }
+            return true;
+          }).toList();
 
-      final extensionsResponse = await client
-          .from('bookings')
-          .select()
-          .eq('lounge_id', cleanLoungeId)
-          .eq('extension_status', 'pending')
-          .order('updated_at', ascending: false)
-          .limit(30);
+      // 3. Fetch pending session extensions for the active lounge
+      dynamic extensionsResponse = [];
+      try {
+        extensionsResponse = await client
+            .from('bookings')
+            .select()
+            .eq('lounge_id', cleanLoungeId)
+            .eq('extension_status', 'pending')
+            .order('updated_at', ascending: false)
+            .limit(50);
+      } catch (e) {
+        try {
+          extensionsResponse = await client
+              .from('bookings')
+              .select()
+              .eq('extension_status', 'pending')
+              .order('updated_at', ascending: false)
+              .limit(50);
+        } catch (_) {}
+      }
 
-      final extensionsList = (extensionsResponse as List)
+      final extensionsList = ((extensionsResponse is List) ? extensionsResponse : [])
           .map((json) => ClientRequestModel.fromBookingExtensionJson(Map<String, dynamic>.from(json)))
-          .toList();
+          .where((model) {
+            if (cleanLoungeId.isNotEmpty && model.loungeId.isNotEmpty && model.loungeId != cleanLoungeId) {
+              return false;
+            }
+            return true;
+          }).toList();
 
       final combined = [...notifList, ...ordersList, ...extensionsList];
       combined.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
       return combined;
     } catch (e) {
       debugPrint('⚠️ [REQUESTS_DATA_SOURCE] getClientRequests Error: $e');
@@ -169,13 +341,23 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
             })
             .eq('id', id);
       } else {
-        await client
-            .from('notifications')
-            .update({
-              'is_read': true,
-              'is_attended': true,
-            })
-            .eq('id', id);
+        try {
+          await client
+              .from('notifications')
+              .update({
+                'is_read': true,
+                'is_attended': true,
+              })
+              .eq('id', id);
+        } catch (_) {
+          await client
+              .from('client_requests')
+              .update({
+                'is_read': true,
+                'is_attended': true,
+              })
+              .eq('id', id);
+        }
       }
       debugPrint('🟢 [REQUESTS_DATA_SOURCE] Successfully marked request $id as attended');
     } catch (e) {

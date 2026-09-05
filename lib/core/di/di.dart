@@ -1,8 +1,10 @@
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/core/audio/audio_service.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:play_spot_dashboard/core/services/location_service.dart';
+import 'package:play_spot_dashboard/core/services/local_cache_service.dart';
 
 import 'package:play_spot_dashboard/features/auth/auth_di.dart';
 import 'package:play_spot_dashboard/features/bookings/bookings_di.dart';
@@ -37,6 +39,10 @@ Future<void> setupInjection() async {
   );
 
   // Core Services
+  final prefs = await SharedPreferences.getInstance();
+  sl.registerSingleton<SharedPreferences>(prefs);
+  sl.registerLazySingleton<LocalCacheService>(() => LocalCacheServiceImpl(sl()));
+
   sl.registerLazySingleton<AudioService>(() => AudioServiceImpl());
   sl.registerLazySingleton<StorageService>(() => StorageServiceImpl(sl()));
   sl.registerLazySingleton<LocationService>(() => LocationServiceImpl());

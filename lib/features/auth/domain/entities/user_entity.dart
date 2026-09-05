@@ -19,6 +19,8 @@ class UserEntity extends Equatable {
   final String? loungeId;
   final String? avatarUrl;
   final bool isSetupCompleted;
+  final int pointsBalance;
+  final int referralCount;
 
   const UserEntity({
     required this.id,
@@ -29,6 +31,8 @@ class UserEntity extends Equatable {
     this.loungeId,
     this.avatarUrl,
     this.isSetupCompleted = false,
+    this.pointsBalance = 0,
+    this.referralCount = 0,
   });
 
   /// Access point for all permission logic
@@ -69,5 +73,7 @@ class UserEntity extends Equatable {
         loungeId,
         avatarUrl,
         isSetupCompleted,
+        pointsBalance,
+        referralCount,
       ];
 }

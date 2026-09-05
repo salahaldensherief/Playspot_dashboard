@@ -28,7 +28,15 @@ class UsersDataTable extends StatelessWidget {
     }
 
     return DataTableWidget(
-      columns: [AppStrings.fullName, AppStrings.email, 'Role', AppStrings.status, AppStrings.actions],
+      columns: [
+        AppStrings.fullName,
+        AppStrings.email,
+        AppStrings.roleLabel,
+        AppStrings.referrals,
+        AppStrings.pointsBalance,
+        AppStrings.status,
+        AppStrings.actions,
+      ],
       rows: admins.map((admin) => DataRow(
         cells: [
           DataCell(
@@ -36,7 +44,7 @@ class UsersDataTable extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 14.r,
-                  backgroundColor: AppColors.neonPurple.withOpacity(0.2),
+                  backgroundColor: AppColors.neonPurple.withValues(alpha: 0.2),
                   child: AppText.body(
                     admin.name.isNotEmpty ? admin.name[0].toUpperCase() : '?',
                     color: AppColors.neonPurple,
@@ -53,6 +61,34 @@ class UsersDataTable extends StatelessWidget {
             AppText.body(
               admin.role == UserRole.superAdmin ? AppStrings.superAdmin : AppStrings.loungeManager,
               color: admin.role == UserRole.superAdmin ? AppColors.neonPurple : AppColors.neonBlue,
+            ),
+          ),
+          DataCell(
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.share_outlined, size: 16.r, color: AppColors.neonBlue),
+                SizedBox(width: 6.w),
+                AppText.body('${admin.referralCount}', color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+              ],
+            ),
+          ),
+          DataCell(
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.stars_rounded, size: 14.r, color: AppColors.warning),
+                  SizedBox(width: 4.w),
+                  AppText.body('${admin.pointsBalance} ${AppStrings.pointsUnit}', color: AppColors.warning, fontWeight: FontWeight.bold, fontSize: 12.sp),
+                ],
+              ),
             ),
           ),
           DataCell(StatusBadge.success(AppStrings.active)),
@@ -79,7 +115,7 @@ class UsersDataTable extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 20.r,
-                backgroundColor: AppColors.neonPurple.withOpacity(0.2),
+                backgroundColor: AppColors.neonPurple.withValues(alpha: 0.2),
                 child: AppText.body(
                   admin.name.isNotEmpty ? admin.name[0].toUpperCase() : '?',
                   color: AppColors.neonPurple,
@@ -99,7 +135,36 @@ class UsersDataTable extends StatelessWidget {
               _buildActions(context, admin),
             ],
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.share_outlined, size: 16.r, color: AppColors.neonBlue),
+                  SizedBox(width: 6.w),
+                  AppText.body('${AppStrings.referrals}: ${admin.referralCount}', color: AppColors.textSecondary, fontSize: 12.sp),
+                ],
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.stars_rounded, size: 14.r, color: AppColors.warning),
+                    SizedBox(width: 4.w),
+                    AppText.body('${admin.pointsBalance} ${AppStrings.pointsUnit}', color: AppColors.warning, fontWeight: FontWeight.bold, fontSize: 12.sp),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -121,23 +186,23 @@ class UsersDataTable extends StatelessWidget {
       icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
       color: AppColors.cardBackground,
       itemBuilder: (context) => [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'edit',
           child: Row(
             children: [
-              Icon(Icons.edit_outlined, size: 18, color: AppColors.textPrimary),
-              SizedBox(width: 12),
-              Text('Edit Admin', style: TextStyle(color: AppColors.textPrimary)),
+              const Icon(Icons.edit_outlined, size: 18, color: AppColors.textPrimary),
+              const SizedBox(width: 12),
+              Text(AppStrings.edit, style: const TextStyle(color: AppColors.textPrimary)),
             ],
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'delete',
           child: Row(
             children: [
-              Icon(Icons.delete_outline, size: 18, color: AppColors.danger),
-              SizedBox(width: 12),
-              Text('Delete Account', style: TextStyle(color: AppColors.danger)),
+              const Icon(Icons.delete_outline, size: 18, color: AppColors.danger),
+              const SizedBox(width: 12),
+              Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger)),
             ],
           ),
         ),
@@ -158,8 +223,8 @@ class UsersDataTable extends StatelessWidget {
       context: context,
       builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        title: Text(AppStrings.deleteConfirmation, style: TextStyle(color: AppColors.textPrimary)),
-        content: Text('${AppStrings.deleteWarning} "$name"? This action cannot be undone.'),
+        title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),
+        content: Text('${AppStrings.deleteWarning} "$name"?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
           TextButton(
@@ -183,7 +248,7 @@ class UsersDataTable extends StatelessWidget {
         listener: (context, state) {
           if (state.status == AdminManagementStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage ?? 'Error'), backgroundColor: AppColors.danger),
+              SnackBar(content: Text(state.errorMessage ?? AppStrings.error), backgroundColor: AppColors.danger),
             );
           }
         },

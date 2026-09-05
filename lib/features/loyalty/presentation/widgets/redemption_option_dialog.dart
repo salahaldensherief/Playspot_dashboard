@@ -80,13 +80,13 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
                 SizedBox(height: 16.h),
                 AppTextField(
                   controller: _descArController,
-                  label: "Description (Arabic)",
+                  label: AppStrings.descriptionArLabel,
                   maxLines: 2,
                 ),
                 SizedBox(height: 16.h),
                 AppTextField(
                   controller: _descEnController,
-                  label: "Description (English)",
+                  label: AppStrings.descriptionEnLabel,
                   maxLines: 2,
                 ),
                 SizedBox(height: 16.h),
@@ -113,9 +113,9 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
                           DropdownButtonFormField<String>(
                             value: _rewardType,
                             dropdownColor: AppColors.cardBackground,
-                            items: const [
-                              DropdownMenuItem(value: 'discount_fixed', child: Text('Fixed Discount', style: TextStyle(color: AppColors.textPrimary))),
-                              DropdownMenuItem(value: 'free_hour', child: Text('Free Hour', style: TextStyle(color: AppColors.textPrimary))),
+                            items: [
+                              DropdownMenuItem(value: 'discount_fixed', child: Text(AppStrings.directDiscount, style: const TextStyle(color: AppColors.textPrimary))),
+                              DropdownMenuItem(value: 'free_hour', child: Text(AppStrings.playHours, style: const TextStyle(color: AppColors.textPrimary))),
                             ],
                             onChanged: (v) => setState(() => _rewardType = v!),
                             decoration: InputDecoration(
@@ -149,7 +149,11 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppStrings.cancel)),
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.outlined,
+          onPressed: () => Navigator.pop(context),
+        ),
         AppButton(
           text: AppStrings.saveChanges,
           onPressed: () {

@@ -259,13 +259,18 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
         title: Text("Force Close Shift", style: TextStyle(color: AppColors.textPrimary)),
         content: Text("Are you sure you want to force close the current shift for ${overview.cashierName ?? 'this cashier'}?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
-          TextButton(
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.outlined,
+            onPressed: () => Navigator.pop(diagContext),
+          ),
+          AppButton(
+            text: "Yes, Close It",
+            variant: AppButtonVariant.danger,
             onPressed: () {
               Navigator.pop(diagContext);
               _showCloseDialog(context, overview);
             },
-            child: Text("Yes, Close It", style: TextStyle(color: AppColors.danger)),
           ),
         ],
       ),

@@ -19,6 +19,7 @@ class CategoryModel extends CategoryEntity {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'name_ar': nameAr,
       'name_en': nameEn,
       'icon_key': iconKey,

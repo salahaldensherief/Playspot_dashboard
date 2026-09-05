@@ -11,7 +11,7 @@ void initCategoriesDI(GetIt sl) {
 
   // Repositories
   sl.registerLazySingleton<CategoryRepository>(
-    () => CategoryRepositoryImpl(sl()),
+    () => CategoryRepositoryImpl(sl(), sl()),
   );
 
   // Cubits

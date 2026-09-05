@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
-import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
@@ -56,7 +55,7 @@ class _EditAdminDialogState extends State<EditAdminDialog> {
   @override
   Widget build(BuildContext context) {
     return AppDialog(
-      title: 'Edit Administrator',
+      title: AppStrings.editAdmin,
       width: 500.w,
       actions: [
         AppButton(
@@ -66,7 +65,7 @@ class _EditAdminDialogState extends State<EditAdminDialog> {
         ),
         SizedBox(width: 16.w),
         AppButton(
-          text: 'Save Changes',
+          text: AppStrings.saveChanges,
           isLoading: widget.isLoading,
           onPressed: _submit,
         ),
@@ -79,14 +78,14 @@ class _EditAdminDialogState extends State<EditAdminDialog> {
             AppTextField(
               label: AppStrings.fullName,
               controller: _nameController,
-              validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+              validator: (val) => val == null || val.isEmpty ? AppStrings.fieldRequired : null,
             ),
             SizedBox(height: 16.h),
             AppTextField(
               label: AppStrings.email,
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              validator: (val) => val == null || !val.contains('@') ? 'Invalid email' : null,
+              validator: (val) => val == null || !val.contains('@') ? AppStrings.invalidEmail : null,
             ),
           ],
         ),

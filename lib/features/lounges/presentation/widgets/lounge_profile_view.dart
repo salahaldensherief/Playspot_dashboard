@@ -9,6 +9,8 @@ import 'package:play_spot_dashboard/art_core/widgets/app_multi_image_picker.dart
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
+import '../../domain/entities/lounge.dart';
 import '../cubit/lounge_cubit.dart';
 import 'core_info_section.dart';
 import 'location_info_section.dart';
@@ -51,19 +53,21 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
   @override
   void initState() {
     super.initState();
+    final user = context.read<LoginCubit>().state.user;
     final lounge = context.read<LoginCubit>().state.userLounge;
-    _nameController = TextEditingController(text: lounge?.name);
-    _descArController = TextEditingController(text: lounge?.descriptionAr);
-    _descEnController = TextEditingController(text: lounge?.descriptionEn);
-    _cityController = TextEditingController(text: lounge?.city);
-    _addressController = TextEditingController(text: lounge?.location);
-    _opensAtController = TextEditingController(text: lounge?.opensAt);
-    _closesAtController = TextEditingController(text: lounge?.closesAt);
+    
+    _nameController = TextEditingController(text: lounge?.name ?? '');
+    _descArController = TextEditingController(text: lounge?.descriptionAr ?? '');
+    _descEnController = TextEditingController(text: lounge?.descriptionEn ?? '');
+    _cityController = TextEditingController(text: lounge?.city ?? '');
+    _addressController = TextEditingController(text: lounge?.location ?? '');
+    _opensAtController = TextEditingController(text: lounge?.opensAt ?? '');
+    _closesAtController = TextEditingController(text: lounge?.closesAt ?? '');
     
     _hasDiscount = lounge?.hasDiscount ?? false;
     _discountPercentageController = TextEditingController(text: lounge?.discountPercentage.toString() ?? '0');
-    _discountTitleArController = TextEditingController(text: lounge?.discountTitleAr);
-    _discountTitleEnController = TextEditingController(text: lounge?.discountTitleEn);
+    _discountTitleArController = TextEditingController(text: lounge?.discountTitleAr ?? '');
+    _discountTitleEnController = TextEditingController(text: lounge?.discountTitleEn ?? '');
     _discountExpiresAt = lounge?.discountExpiresAt;
     _discountExpirationController = TextEditingController(
       text: _discountExpiresAt != null ? _discountExpiresAt!.toLocal().toString().split(' ')[0] : '',
@@ -71,6 +75,36 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     
     _lat = lounge?.lat;
     _lng = lounge?.lng;
+
+    if (user?.loungeId != null && user!.loungeId!.isNotEmpty) {
+      context.read<LoginCubit>().refreshUserLounge(user.loungeId!);
+    }
+  }
+
+  void _populateFromLounge(Lounge lounge) {
+    if (_nameController.text.isEmpty && lounge.name.isNotEmpty) {
+      _nameController.text = lounge.name;
+    }
+    if (_descArController.text.isEmpty && (lounge.descriptionAr?.isNotEmpty == true)) {
+      _descArController.text = lounge.descriptionAr!;
+    }
+    if (_descEnController.text.isEmpty && (lounge.descriptionEn?.isNotEmpty == true)) {
+      _descEnController.text = lounge.descriptionEn!;
+    }
+    if (_cityController.text.isEmpty && (lounge.city?.isNotEmpty == true)) {
+      _cityController.text = lounge.city!;
+    }
+    if (_addressController.text.isEmpty && (lounge.location?.isNotEmpty == true)) {
+      _addressController.text = lounge.location!;
+    }
+    if (_opensAtController.text.isEmpty && lounge.opensAt.isNotEmpty) {
+      _opensAtController.text = lounge.opensAt;
+    }
+    if (_closesAtController.text.isEmpty && lounge.closesAt.isNotEmpty) {
+      _closesAtController.text = lounge.closesAt;
+    }
+    _lat ??= lounge.lat;
+    _lng ??= lounge.lng;
   }
 
   @override
@@ -138,7 +172,6 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
              ScaffoldMessenger.of(context).showSnackBar(
                const SnackBar(content: Text('Profile updated successfully'), backgroundColor: Colors.green),
              );
-             // Refresh user data if needed
              context.read<LoginCubit>().refreshUserLounge(lounge.id);
           }
         }
@@ -216,78 +249,92 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(24.r),
-      child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                AppStrings.loungeProfile,
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 28.sp,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Orbitron',
-                ),
+    return BlocConsumer<LoginCubit, LoginState>(
+      listenWhen: (prev, curr) => prev.userLounge != curr.userLounge,
+      listener: (context, state) {
+        if (state.userLounge != null) {
+          _populateFromLounge(state.userLounge!);
+        }
+      },
+      builder: (context, loginState) {
+        if (loginState.userLounge != null) {
+          _populateFromLounge(loginState.userLounge!);
+        }
+
+        return Padding(
+          padding: EdgeInsets.all(24.r),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.loungeProfile,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 28.sp,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Orbitron',
+                    ),
+                  ),
+                  SizedBox(height: 32.h),
+                  CoreInfoSection(
+                    nameController: _nameController,
+                    descArController: _descArController,
+                    descEnController: _descEnController,
+                    onMainImageSelected: (bytes, name) {
+                      _mainImageBytes = bytes;
+                      _mainImageName = name;
+                    },
+                    onGallerySelected: (images) {
+                      _galleryImages = images;
+                    },
+                  ),
+                  SizedBox(height: 32.h),
+                  LocationInfoSection(
+                    cityController: _cityController,
+                    addressController: _addressController,
+                    lat: _lat,
+                    lng: _lng,
+                    onLocationChanged: (lat, lng) => setState(() {
+                      _lat = lat;
+                      _lng = lng;
+                    }),
+                  ),
+                  SizedBox(height: 32.h),
+                  WorkingHoursSection(
+                    opensAtController: _opensAtController,
+                    closesAtController: _closesAtController,
+                    onOpensAtTap: () => _selectTime(context, _opensAtController),
+                    onClosesAtTap: () => _selectTime(context, _closesAtController),
+                  ),
+                  SizedBox(height: 40.h),
+                  AppButton(
+                    text: AppStrings.saveChanges,
+                    isLoading: _isSaving,
+                    onPressed: _saveProfile,
+                    width: 200.w,
+                  ),
+                  SizedBox(height: 56.h),
+                  QuickDiscountSection(
+                    hasDiscount: _hasDiscount,
+                    onHasDiscountChanged: (v) => setState(() => _hasDiscount = v),
+                    percentageController: _discountPercentageController,
+                    titleArController: _discountTitleArController,
+                    titleEnController: _discountTitleEnController,
+                    expirationController: _discountExpirationController,
+                    onExpirationTap: _selectDate,
+                    onSave: _saveDiscount,
+                    isSaving: _isSavingDiscount,
+                  ),
+                  SizedBox(height: 40.h),
+                ],
               ),
-              SizedBox(height: 32.h),
-              CoreInfoSection(
-                nameController: _nameController,
-                descArController: _descArController,
-                descEnController: _descEnController,
-                onMainImageSelected: (bytes, name) {
-                  _mainImageBytes = bytes;
-                  _mainImageName = name;
-                },
-                onGallerySelected: (images) {
-                  _galleryImages = images;
-                },
-              ),
-              SizedBox(height: 32.h),
-              LocationInfoSection(
-                cityController: _cityController,
-                addressController: _addressController,
-                lat: _lat,
-                lng: _lng,
-                onLocationChanged: (lat, lng) => setState(() {
-                  _lat = lat;
-                  _lng = lng;
-                }),
-              ),
-              SizedBox(height: 32.h),
-              WorkingHoursSection(
-                opensAtController: _opensAtController,
-                closesAtController: _closesAtController,
-                onOpensAtTap: () => _selectTime(context, _opensAtController),
-                onClosesAtTap: () => _selectTime(context, _closesAtController),
-              ),
-              SizedBox(height: 40.h),
-              AppButton(
-                text: AppStrings.saveChanges,
-                isLoading: _isSaving,
-                onPressed: _saveProfile,
-                width: 200.w,
-              ),
-              SizedBox(height: 56.h),
-              QuickDiscountSection(
-                hasDiscount: _hasDiscount,
-                onHasDiscountChanged: (v) => setState(() => _hasDiscount = v),
-                percentageController: _discountPercentageController,
-                titleArController: _discountTitleArController,
-                titleEnController: _discountTitleEnController,
-                expirationController: _discountExpirationController,
-                onExpirationTap: _selectDate,
-                onSave: _saveDiscount,
-                isSaving: _isSavingDiscount,
-              ),
-              SizedBox(height: 40.h),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -295,9 +342,9 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
-      builder: (context, child) {
+      builder: (pickerContext, child) {
         return Theme(
-          data: Theme.of(context).copyWith(
+          data: Theme.of(pickerContext).copyWith(
             colorScheme: const ColorScheme.dark(
               primary: AppColors.neonBlue,
               onPrimary: Colors.white,
@@ -309,10 +356,9 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
         );
       },
     );
-    if (picked != null) {
-      if (mounted) {
-        controller.text = picked.format(context);
-      }
+    if (picked != null && context.mounted) {
+      final formatted = picked.format(context);
+      controller.text = formatted;
     }
   }
 }

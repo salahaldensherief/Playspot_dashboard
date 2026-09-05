@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/client_requests_state.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/widgets/live_requests_feed.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
@@ -88,6 +89,33 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
               }
             },
           ),
+          BlocListener<ClientRequestsCubit, ClientRequestsState>(
+            listenWhen: (previous, current) => previous.unreadCount < current.unreadCount,
+            listener: (context, state) {
+              final newRequest = state.requests.where((r) => !r.isAttended).firstOrNull;
+              if (newRequest != null) {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        const Icon(Icons.notifications_active_rounded, color: Colors.black),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            '${newRequest.titleAr}: ${newRequest.roomName ?? newRequest.userName ?? ""}',
+                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                          ),
+                        ),
+                      ],
+                    ),
+                    backgroundColor: AppColors.warning,
+                    duration: const Duration(seconds: 4),
+                  ),
+                );
+              }
+            },
+          ),
         ],
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,31 +134,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
 
             SizedBox(height: 24.h),
 
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.cardBackground,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: AppColors.borderDefault),
-              ),
-              child: TabBar(
-                controller: _tabController,
-                onTap: (index) => setState(() {}),
-                indicatorSize: TabBarIndicatorSize.tab,
-                dividerColor: Colors.transparent,
-                indicator: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8.r),
-                  color: AppColors.neonBlue.withValues(alpha: 0.1),
-                ),
-                labelColor: AppColors.neonBlue,
-                unselectedLabelColor: AppColors.textSecondary,
-                labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
-                tabs: [
-                  Tab(text: AppStrings.activeBookings),
-                  Tab(text: AppStrings.pendingRequests),
-                  Tab(text: AppStrings.finishedToday),
-                ],
-              ),
-            ),
+            _buildTabsWithBadges(context),
 
             SizedBox(height: 24.h),
 
@@ -225,6 +229,89 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
               : null,
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildTabsWithBadges(BuildContext context) {
+    return BlocBuilder<BookingCubit, BookingState>(
+      buildWhen: (prev, curr) => prev.bookings != curr.bookings,
+      builder: (context, bookingState) {
+        return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
+          buildWhen: (prev, curr) => prev.requests != curr.requests || prev.filter != curr.filter,
+          builder: (context, requestState) {
+            final pendingCount = bookingState.bookings.where((b) => b.status == BookingStatus.pending).length;
+            final unreadRequestsCount = requestState.unreadCount;
+
+            return Container(
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: AppColors.borderDefault),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                onTap: (index) => setState(() {}),
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: Colors.transparent,
+                indicator: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8.r),
+                  color: AppColors.neonBlue.withValues(alpha: 0.1),
+                ),
+                labelColor: AppColors.neonBlue,
+                unselectedLabelColor: AppColors.textSecondary,
+                labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
+                tabs: [
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(AppStrings.activeBookings),
+                        if (unreadRequestsCount > 0) ...[
+                          SizedBox(width: 8.w),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                            decoration: BoxDecoration(
+                              color: AppColors.warning,
+                              borderRadius: BorderRadius.circular(10.r),
+                            ),
+                            child: Text(
+                              '$unreadRequestsCount',
+                              style: TextStyle(color: Colors.black, fontSize: 10.sp, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(AppStrings.pendingRequests),
+                        if (pendingCount > 0) ...[
+                          SizedBox(width: 8.w),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                            decoration: BoxDecoration(
+                              color: AppColors.neonPurple,
+                              borderRadius: BorderRadius.circular(10.r),
+                            ),
+                            child: Text(
+                              '$pendingCount',
+                              style: TextStyle(color: Colors.white, fontSize: 10.sp, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Tab(text: AppStrings.finishedToday),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

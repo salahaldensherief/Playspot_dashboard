@@ -15,7 +15,7 @@ void initAuthDI(GetIt sl) {
 
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(sl()),
+    () => AuthRepositoryImpl(sl(), sl()),
   );
 
   // Use Cases

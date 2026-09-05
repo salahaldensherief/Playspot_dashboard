@@ -14,11 +14,14 @@ class PermissionsCubit extends Cubit<PermissionsState> {
   }) : super(PermissionsState.initial());
 
   Future<void> fetchPermissions(String role) async {
+    if (isClosed) return;
     // ignore: avoid_print
     print('DEBUG: Fetching permissions for role: $role');
     emit(state.copyWith(status: PermissionsStatus.loading, selectedRole: role));
     final result = await getRolePermissionsUseCase(role);
     
+    if (isClosed) return;
+
     result.fold(
       (failure) {
         // ignore: avoid_print
@@ -34,6 +37,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
   }
 
   Future<void> togglePermission(String role, String key, bool value) async {
+    if (isClosed) return;
     // ignore: avoid_print
     print('DEBUG: Toggling permission - role: $role, key: $key, value: $value');
     
@@ -54,6 +58,8 @@ class PermissionsCubit extends Cubit<PermissionsState> {
 
     final result = await updateRolePermissionUseCase(role, key, value);
     
+    if (isClosed) return;
+
     result.fold(
       (failure) {
         // ignore: avoid_print

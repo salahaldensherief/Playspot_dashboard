@@ -52,18 +52,24 @@ class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSo
 
   @override
   Future<List<UserEntity>> getAdmins() async {
-    final response = await supabaseClient.from('profiles').select().order('full_name');
-    return (response as List).map((json) {
-      return UserEntity(
-        id: json['id']?.toString() ?? '',
-        email: json['email']?.toString() ?? '',
-        name: json['full_name']?.toString() ?? '',
-        role: json['role'] == 'super_admin' 
-            ? UserRole.superAdmin 
-            : (json['role'] == 'cashier' ? UserRole.cashier : UserRole.owner),
-        loungeId: json['lounge_id']?.toString(),
-      );
-    }).toList();
+    try {
+      final response = await supabaseClient
+          .from('profiles')
+          .select('id, email, full_name, role, lounge_id, avatar_url, is_setup_completed, points_balance, reward_points, referral_count, referrals_count')
+          .order('full_name');
+      return (response as List).map((json) {
+        return UserModel.fromJson(Map<String, dynamic>.from(json));
+      }).toList();
+    } catch (_) {
+      try {
+        final fallbackResponse = await supabaseClient.from('profiles').select().order('full_name');
+        return (fallbackResponse as List).map((json) {
+          return UserModel.fromJson(Map<String, dynamic>.from(json));
+        }).toList();
+      } catch (fallbackError) {
+        return [];
+      }
+    }
   }
 
   @override

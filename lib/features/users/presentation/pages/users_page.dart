@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import '../widgets/users_header.dart';
+import '../widgets/users_stats_grid.dart';
 import '../widgets/users_table_section.dart';
 
 class UsersPage extends StatelessWidget {
@@ -17,7 +18,9 @@ class UsersPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const UsersHeader(),
-          SizedBox(height: 32.h),
+          SizedBox(height: 24.h),
+          const UsersStatsGrid(),
+          SizedBox(height: 24.h),
           const UsersTableSection(),
         ],
       ),

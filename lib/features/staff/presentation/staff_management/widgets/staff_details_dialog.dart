@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/staff/data/entities/staff_entity.dart';
@@ -71,9 +72,10 @@ class StaffDetailsDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(
+        AppButton(
+          text: AppStrings.close,
+          variant: AppButtonVariant.outlined,
           onPressed: () => Navigator.pop(context),
-          child: Text(AppStrings.close, style: const TextStyle(color: AppColors.textSecondary)),
         ),
       ],
     );

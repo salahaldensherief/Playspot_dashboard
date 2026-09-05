@@ -13,7 +13,7 @@ void initLoungesDI(GetIt sl) {
 
   // Repositories
   sl.registerLazySingleton<LoungeRepository>(
-    () => LoungeRepositoryImpl(sl()),
+    () => LoungeRepositoryImpl(sl(), sl()),
   );
 
   // Cubits

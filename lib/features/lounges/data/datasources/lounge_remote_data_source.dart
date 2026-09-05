@@ -99,7 +99,41 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
 
   @override
   Future<void> updateLounge(String id, Map<String, dynamic> data) async {
-    await client.from('lounges').update(data).eq('id', id);
+    final cleanData = Map<String, dynamic>.from(data);
+    cleanData.remove('id');
+    cleanData.remove('owner_name');
+    cleanData.remove('owner_email');
+    cleanData.remove('rating');
+    cleanData.remove('distance');
+    cleanData.remove('price_per_hour');
+    cleanData.remove('available_rooms');
+    cleanData.remove('total_reviews');
+
+    // Sanitize time fields: if empty string ("") or null, omit key to prevent Postgres TIME type cast error
+    for (final timeKey in ['opening_time', 'closing_time', 'opens_at', 'closes_at']) {
+      if (cleanData.containsKey(timeKey)) {
+        final val = cleanData[timeKey];
+        if (val == null || (val is String && val.trim().isEmpty)) {
+          cleanData.remove(timeKey);
+        }
+      }
+    }
+
+    cleanData.removeWhere((key, value) => value == null);
+
+    try {
+      await client.from('lounges').update(cleanData).eq('id', id);
+      // ignore: avoid_print
+      print('🟢 [Supabase] updateLounge Succeeded for id: $id');
+    } on PostgrestException catch (e) {
+      // ignore: avoid_print
+      print('🔴 [Supabase] updateLounge PostgrestException: ${e.message} (code: ${e.code}, details: ${e.details})');
+      rethrow;
+    } catch (e) {
+      // ignore: avoid_print
+      print('🔴 [Supabase] updateLounge Error: $e');
+      rethrow;
+    }
   }
 
   @override
@@ -110,13 +144,28 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     String? titleEn,
     DateTime? expiresAt,
   }) async {
-    await client.from('lounges').update({
+    final updateData = <String, dynamic>{
       'has_discount': hasDiscount,
       'discount_percentage': discountPercentage,
       'discount_title_ar': titleAr,
       'discount_title_en': titleEn,
       'discount_expires_at': expiresAt?.toIso8601String(),
-    }).eq('id', id);
+    };
+    updateData.removeWhere((key, value) => value == null && key.contains('title'));
+
+    try {
+      await client.from('lounges').update(updateData).eq('id', id);
+      // ignore: avoid_print
+      print('🟢 [Supabase] updateLoungeDiscount Succeeded for id: $id');
+    } on PostgrestException catch (e) {
+      // ignore: avoid_print
+      print('🔴 [Supabase] updateLoungeDiscount PostgrestException: ${e.message} (code: ${e.code})');
+      rethrow;
+    } catch (e) {
+      // ignore: avoid_print
+      print('🔴 [Supabase] updateLoungeDiscount Error: $e');
+      rethrow;
+    }
   }
 
   @override
@@ -200,7 +249,19 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
 
   @override
   Future<void> toggleLoungeOpenStatus(String loungeId, bool isOpen) async {
-    await client.from('lounges').update({'is_open': isOpen}).eq('id', loungeId);
+    try {
+      await client.from('lounges').update({'is_open': isOpen}).eq('id', loungeId);
+      // ignore: avoid_print
+      print('🟢 [Supabase] toggleLoungeOpenStatus Succeeded for loungeId: $loungeId, isOpen: $isOpen');
+    } on PostgrestException catch (e) {
+      // ignore: avoid_print
+      print('🔴 [Supabase] toggleLoungeOpenStatus PostgrestException: ${e.message} (code: ${e.code})');
+      rethrow;
+    } catch (e) {
+      // ignore: avoid_print
+      print('🔴 [Supabase] toggleLoungeOpenStatus Error: $e');
+      rethrow;
+    }
   }
 
   @override

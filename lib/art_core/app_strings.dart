@@ -25,6 +25,12 @@ class AppStrings {
   static String get rewardValue => 'reward_value'.tr();
   static String get isActive => 'is_active'.tr();
   static String get redemptionOptions => 'redemption_options'.tr();
+  static String get referrals => 'referrals'.tr();
+  static String get pointsBalance => 'points_balance'.tr();
+  static String get totalReferrals => 'total_referrals'.tr();
+  static String get totalPointsBalance => 'total_points_balance'.tr();
+  static String get pointsUnit => 'points_unit'.tr();
+  static String get editAdmin => 'edit_admin'.tr();
 
   static String get logout => 'logout'.tr();
   static String get logoutConfirmation => 'logout_confirmation'.tr();
@@ -355,6 +361,10 @@ class AppStrings {
   static String get viewDocument => 'view_document'.tr();
   static String get actionFailed => 'action_failed'.tr();
   static String get kycInspection => 'kyc_inspection'.tr();
+  static String get kycHeaderDesc => 'kyc_header_desc'.tr();
+  static String get noKycPending => 'no_kyc_pending'.tr();
+  static String get idCard => 'id_card'.tr();
+  static String get businessDoc => 'business_doc'.tr();
   static String get ownerDetails => 'owner_details'.tr();
   static String get decisionStatus => 'decision_status'.tr();
   static String get reviewDocumentsFor => 'review_documents_for'.tr();

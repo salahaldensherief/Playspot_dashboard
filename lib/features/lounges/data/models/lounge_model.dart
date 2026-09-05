@@ -92,11 +92,17 @@ class LoungeModel extends Lounge {
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
+      'id': id,
       'name': name,
       'image_url': imageUrl,
+      'rating': rating,
+      'distance': distance,
+      'price_per_hour': pricePerHour,
       'is_open': isOpen,
       'location': location,
       'city': city,
+      'total_reviews': totalReviews,
+      'available_rooms': availableRooms,
       'description_ar': descriptionAr,
       'description_en': descriptionEn,
       'images': images,
@@ -115,6 +121,8 @@ class LoungeModel extends Lounge {
       'discount_title_en': discountTitleEn,
       'discount_expires_at': discountExpiresAt?.toIso8601String(),
       if (categoryId != null) 'category_id': categoryId,
+      if (ownerName != null) 'owner_name': ownerName,
+      if (ownerEmail != null) 'owner_email': ownerEmail,
     };
   }
 }

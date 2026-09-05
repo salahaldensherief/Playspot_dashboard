@@ -19,6 +19,7 @@ class ActivityTypeModel extends ActivityTypeEntity {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'name': name,
       'label': label,
       'sort_order': sortOrder,
