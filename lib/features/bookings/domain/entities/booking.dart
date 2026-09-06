@@ -74,6 +74,8 @@ class Booking extends Equatable {
   final double? lat;
   final double? lng;
   final String? shiftId;
+  final String? playMode;
+  final double? roomPrice;
 
   const Booking({
     required this.id,
@@ -103,6 +105,8 @@ class Booking extends Equatable {
     this.lat,
     this.lng,
     this.shiftId,
+    this.playMode,
+    this.roomPrice,
   });
 
   @override
@@ -134,6 +138,8 @@ class Booking extends Equatable {
         lat,
         lng,
         shiftId,
+        playMode,
+        roomPrice,
       ];
 
   Booking copyWith({
@@ -164,6 +170,8 @@ class Booking extends Equatable {
     double? lat,
     double? lng,
     String? shiftId,
+    String? playMode,
+    double? roomPrice,
   }) {
     return Booking(
       id: id ?? this.id,
@@ -193,6 +201,95 @@ class Booking extends Equatable {
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
       shiftId: shiftId ?? this.shiftId,
+      playMode: playMode ?? this.playMode,
+      roomPrice: roomPrice ?? this.roomPrice,
     );
+  }
+
+  /// Calculates the exact start [DateTime] combining [date] and [startTime].
+  DateTime? get startDateTime {
+    if (startTime.trim().isEmpty) return null;
+    try {
+      final parts = startTime.trim().split(':');
+      if (parts.length >= 2) {
+        final hour = int.tryParse(parts[0]) ?? 0;
+        final minute = int.tryParse(parts[1]) ?? 0;
+        return DateTime(date.year, date.month, date.day, hour, minute);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Calculates the exact end [DateTime].
+  /// Uses parsed [endTime] if available, otherwise calculates [startDateTime] + [durationMinutes].
+  /// Handles ISO string formats and overnight sessions.
+  DateTime? get endDateTime {
+    final start = startDateTime;
+
+    if (endTime.trim().isNotEmpty) {
+      try {
+        final cleanEndTime = endTime.trim();
+        if (cleanEndTime.contains('T')) {
+          final parsed = DateTime.tryParse(cleanEndTime);
+          if (parsed != null) return parsed;
+        }
+        final parts = cleanEndTime.split(':');
+        if (parts.length >= 2) {
+          final hour = int.tryParse(parts[0]) ?? 0;
+          final minute = int.tryParse(parts[1]) ?? 0;
+          var end = DateTime(date.year, date.month, date.day, hour, minute);
+          if (start != null && (end.isBefore(start) || end.isAtSameMomentAs(start))) {
+            end = end.add(const Duration(days: 1));
+          }
+          return end;
+        }
+      } catch (_) {}
+    }
+
+    if (start == null) return null;
+    return start.add(Duration(minutes: durationMinutes));
+  }
+
+  /// Determines if the booking is currently active in real-time.
+  ///
+  /// A booking/room is ONLY considered active if:
+  /// 1. Its status is [BookingStatus.inProgress].
+  /// 2. The reference time [now] (defaults to [DateTime.now()]) is strictly between [startDateTime] and [endDateTime].
+  /// Once [now] passes [endDateTime] (now >= endDateTime), [isBookingActive] returns `false`.
+  bool isBookingActive([DateTime? now]) {
+    if (status == BookingStatus.completed || status == BookingStatus.cancelled) {
+      return false;
+    }
+    final currentTime = now ?? DateTime.now();
+    final end = endDateTime;
+    final start = startDateTime;
+    if (end == null || start == null) return false;
+
+    if (currentTime.isAfter(end) || currentTime.isAtSameMomentAs(end)) {
+      return false;
+    }
+
+    if (currentTime.isBefore(start)) {
+      return false;
+    }
+
+    return status == BookingStatus.inProgress;
+  }
+
+  /// Checks if the session has expired beyond an optional grace period (default 5 minutes).
+  bool isSessionExpired([DateTime? now, Duration gracePeriod = const Duration(minutes: 5)]) {
+    final currentTime = now ?? DateTime.now();
+    final end = endDateTime;
+    if (end == null) return false;
+    final endWithGrace = end.add(gracePeriod);
+    return currentTime.isAfter(endWithGrace) || currentTime.isAtSameMomentAs(endWithGrace);
+  }
+
+  /// Helper to get remaining duration based on real-world clock.
+  Duration remainingDuration([DateTime? now]) {
+    final end = endDateTime;
+    if (end == null) return Duration.zero;
+    final currentTime = now ?? DateTime.now();
+    return end.difference(currentTime);
   }
 }

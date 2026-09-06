@@ -29,6 +29,8 @@ class BookingModel extends Booking {
     super.lat,
     super.lng,
     super.shiftId,
+    super.playMode,
+    super.roomPrice,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
@@ -51,7 +53,9 @@ class BookingModel extends Booking {
     final String userName = (
       json['out_user_name'] ?? 
       json['user_name'] ?? 
+      json['userName'] ?? 
       profileData?['full_name'] ?? 
+      profileData?['name'] ?? 
       json['full_name'] ?? 
       'Client'
     ).toString();
@@ -64,13 +68,32 @@ class BookingModel extends Booking {
       'Gaming Station'
     ).toString();
 
-    final String userPhone = (
+    final String? rawPhone = (
       json['out_user_phone'] ?? 
       json['user_phone'] ?? 
+      json['userPhone'] ?? 
       json['phone'] ?? 
       profileData?['phone'] ?? 
-      'No Phone'
-    ).toString();
+      profileData?['user_phone'] ?? 
+      profileData?['mobile']
+    )?.toString().trim();
+
+    final String? userPhone = (rawPhone != null && rawPhone.isNotEmpty && rawPhone != 'null' && rawPhone != 'No Phone')
+        ? rawPhone
+        : null;
+
+    final String? rawEmail = (
+      json['out_user_email'] ?? 
+      json['user_email'] ?? 
+      json['userEmail'] ?? 
+      json['email'] ?? 
+      profileData?['email'] ?? 
+      profileData?['user_email']
+    )?.toString().trim();
+
+    final String? userEmail = (rawEmail != null && rawEmail.isNotEmpty && rawEmail != 'null')
+        ? rawEmail
+        : null;
 
     String statusStr = (
       json['out_booking_status'] ?? 
@@ -104,7 +127,7 @@ class BookingModel extends Booking {
       id: (json['out_booking_id'] ?? json['id'] ?? '').toString(),
       userId: (json['user_id'] ?? '').toString(),
       userName: userName,
-      userEmail: (json['out_user_email'] ?? json['user_email'] ?? profileData?['email'])?.toString(),
+      userEmail: userEmail,
       userPhone: userPhone,
       loungeId: (json['lounge_id'] ?? '').toString(),
       roomId: (json['room_id'] ?? '').toString(),
@@ -124,7 +147,21 @@ class BookingModel extends Booking {
       discountAmount: json['discount_amount'] != null ? parseDouble(json['discount_amount']) : null,
       discountPercentage: json['discount_percentage'] != null ? parseDouble(json['discount_percentage']) : null,
       discountReason: json['discount_reason']?.toString(),
-      extras: List<Map<String, dynamic>>.from(json['out_booking_extras'] ?? json['booking_extras'] ?? json['extras'] ?? []),
+      extras: () {
+        dynamic rawExtras = json['booking_items'] ??
+            json['canteen_items'] ??
+            json['out_booking_extras'] ??
+            json['booking_extras'] ??
+            json['extras'];
+
+        if (rawExtras is List) {
+          return rawExtras
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
+        }
+        return <Map<String, dynamic>>[];
+      }(),
       lat: (json['latitude'] ?? json['lat'] ?? loungeData?['latitude'] ?? loungeData?['lat']) != null
           ? parseDouble(json['latitude'] ?? json['lat'] ?? loungeData?['latitude'] ?? loungeData?['lat'])
           : null,
@@ -132,6 +169,10 @@ class BookingModel extends Booking {
           ? parseDouble(json['longitude'] ?? json['lng'] ?? loungeData?['longitude'] ?? loungeData?['lng'])
           : null,
       shiftId: json['shift_id']?.toString(),
+      playMode: (json['play_mode'] ?? json['playMode'])?.toString(),
+      roomPrice: (json['room_price'] ?? json['roomPrice']) != null
+          ? parseDouble(json['room_price'] ?? json['roomPrice'])
+          : null,
     );
   }
 
@@ -153,8 +194,9 @@ class BookingModel extends Booking {
       'discount_amount': discountAmount,
       'discount_percentage': discountPercentage,
       'discount_reason': discountReason,
-      'extras': extras,
       if (shiftId != null) 'shift_id': shiftId,
+      if (playMode != null) 'play_mode': playMode,
+      if (roomPrice != null) 'room_price': roomPrice,
     };
   }
 }

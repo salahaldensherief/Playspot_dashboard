@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
@@ -79,15 +80,11 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
             AppText.body(AppStrings.selectMonth),
           ],
         ),
-        ElevatedButton.icon(
+        AppButton(
+          text: AppStrings.selectMonth,
+          icon: Icons.calendar_month,
+          variant: AppButtonVariant.primary,
           onPressed: () => _selectDate(context),
-          icon: const Icon(Icons.calendar_month),
-          label: Text(AppStrings.selectMonth),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.neonBlue,
-            foregroundColor: Colors.black,
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-          ),
         ),
       ],
     );
@@ -116,7 +113,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
           children: [
             Container(
               padding: EdgeInsets.all(12.r),
-              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12.r)),
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12.r)),
               child: Icon(icon, color: color, size: 28.r),
             ),
             SizedBox(width: 20.w),
@@ -163,7 +160,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
               surface: AppColors.cardBackground,
               onSurface: AppColors.textPrimary,
             ),
-            dialogBackgroundColor: AppColors.cardBackground,
           ),
           child: child!,
         );

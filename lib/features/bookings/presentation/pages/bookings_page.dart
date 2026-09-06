@@ -4,8 +4,19 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_booking_dialog.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_card.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_details_dialog.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_session_card.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_occupancy_grid.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_state.dart';
@@ -13,15 +24,6 @@ import 'package:play_spot_dashboard/features/requests/presentation/widgets/live_
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/admin_shift_monitoring_bar.dart';
-import '../../../../core/responsive/responsive.dart';
-import '../../../auth/presentation/login/login_state.dart';
-import '../../domain/entities/booking.dart';
-import '../cubit/booking_cubit.dart';
-import '../cubit/booking_state.dart';
-import '../widgets/booking_card.dart';
-import '../widgets/add_booking_dialog.dart';
-import '../widgets/booking_details_dialog.dart';
-import '../widgets/live_session_card.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -138,8 +140,10 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
 
             SizedBox(height: 24.h),
 
-            // Show Live Client Requests Feed at the top of Tab 0 (Live Operations)
+            // Show Live Room Occupancy Grid & Client Requests Feed at the top of Tab 0 (Live Operations)
             if (_tabController.index == 0) ...[
+              RoomOccupancyGrid(loungeId: loungeId),
+              SizedBox(height: 24.h),
               const LiveRequestsFeed(),
               SizedBox(height: 24.h),
             ],
@@ -164,7 +168,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
 
                 switch (_tabController.index) {
                   case 0:
-                    displayedBookings = state.bookings.where((b) => b.status == BookingStatus.upcoming || b.status == BookingStatus.inProgress).toList();
+                    displayedBookings = state.bookings.where((b) => b.isBookingActive() || (b.status == BookingStatus.upcoming && !b.isSessionExpired())).toList();
                     emptyMsg = AppStrings.noActiveBookings;
                     break;
                   case 1:
@@ -343,7 +347,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     return BlocBuilder<BookingCubit, BookingState>(
       buildWhen: (prev, curr) => prev.bookings != curr.bookings,
       builder: (context, state) {
-        final activeCount = state.bookings.where((b) => b.status == BookingStatus.upcoming || b.status == BookingStatus.inProgress).length;
+        final activeCount = state.bookings.where((b) => b.isBookingActive()).length;
         final pendingCount = state.bookings.where((b) => b.status == BookingStatus.pending).length;
         final totalRevenue = state.bookings
             .where((b) => b.status == BookingStatus.completed)
@@ -404,15 +408,11 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         AppText.heading(AppStrings.bookings, fontSize: 20.sp),
-        ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.neonBlue,
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-          ),
+        AppButton(
+          text: AppStrings.newBooking,
+          icon: Icons.add,
+          variant: AppButtonVariant.primary,
           onPressed: () => _showAddBookingModal(context, loungeId),
-          icon: const Icon(Icons.add, color: Colors.black),
-          label: AppText.body(AppStrings.newBooking, color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ],
     );

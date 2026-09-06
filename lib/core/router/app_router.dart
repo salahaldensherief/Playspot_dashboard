@@ -18,6 +18,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/pages/booking
 import 'package:play_spot_dashboard/features/rooms/presentation/pages/room_management_page.dart' as rooms;
 import 'package:play_spot_dashboard/features/onboarding/presentation/pages/lounge_setup_page.dart' as onboarding;
 import 'package:play_spot_dashboard/features/lounges/presentation/pages/extras_management_page.dart' as extras;
+import 'package:play_spot_dashboard/features/reviews/presentation/pages/lounge_reviews_page.dart' as reviews_page;
 import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounge_profile_page.dart' as lounge_profile;
 import 'package:play_spot_dashboard/features/auth/presentation/profile/profile_page.dart' as profile;
 import 'package:play_spot_dashboard/features/kyc/presentation/pages/kyc_reviews_page.dart' as kyc_reviews;
@@ -105,6 +106,11 @@ class AppRouter {
         final bool isShiftHistoryRoute = location == '/lounge-admin/shifts';
         final bool isMarketingRoute = location == RouterKeys.loungeAdminMarketing;
         final bool isSetupRoute = location == RouterKeys.loungeAdminRooms || location == RouterKeys.loungeAdminExtras;
+        final bool isReviewsRoute = location == RouterKeys.loungeAdminReviews;
+
+        if (isReviewsRoute && !user.isLoungeOwner && !isSuperAdmin) {
+          return RouterKeys.loungeAdminDashboard;
+        }
 
         if (isStaffManagementRoute && !user.canManageStaff) {
           return RouterKeys.loungeAdminDashboard;
@@ -168,13 +174,7 @@ class AppRouter {
             ShellRoute(
               builder: (BuildContext context, GoRouterState state, Widget child) {
                 final user = context.read<LoginCubit>().state.user;
-                final isSuperAdmin = user?.role == UserRole.superAdmin;
-                final isLoungeOwner = user?.role == UserRole.owner;
-                
-                String? permissionRole = user?.rawRole;
-                if (isSuperAdmin || isLoungeOwner || user?.role == UserRole.manager) {
-                  permissionRole = null; 
-                }
+                final roleStr = user?.rawRole ?? user?.role.name ?? 'staff';
 
                 return BlocProvider(
                   create: (context) => sl<ShiftCubit>(),
@@ -194,14 +194,8 @@ class AppRouter {
                                 create: (context) => sl<ClientRequestsCubit>(),
                                 child: BlocProvider(
                                   create: (context) => sl<ReviewsCubit>(),
-                                  child: BlocProvider(
-                                    create: (context) {
-                                      final cubit = sl<PermissionsCubit>();
-                                      if (permissionRole != null) {
-                                        cubit.fetchPermissions(permissionRole);
-                                      }
-                                      return cubit;
-                                    },
+                                  child: BlocProvider.value(
+                                    value: sl<PermissionsCubit>()..loadUserPermissions(roleStr),
                                     child: DashboardShell(
                                       location: state.matchedLocation,
                                       child: child,
@@ -310,6 +304,10 @@ class AppRouter {
                 GoRoute(
                   path: RouterKeys.loungeAdminExtras,
                   pageBuilder: (context, state) => const NoTransitionPage(child: extras.ExtrasManagementPage()),
+                ),
+                GoRoute(
+                  path: RouterKeys.loungeAdminReviews,
+                  pageBuilder: (context, state) => const NoTransitionPage(child: reviews_page.LoungeReviewsPage()),
                 ),
                 GoRoute(
                   path: RouterKeys.loungeAdminMarketing,

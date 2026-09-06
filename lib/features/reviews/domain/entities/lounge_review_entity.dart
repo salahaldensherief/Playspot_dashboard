@@ -4,6 +4,7 @@ class LoungeReviewEntity extends Equatable {
   final String id;
   final String loungeId;
   final String? userId;
+  final String? bookingId;
   final String? userName;
   final String? userAvatarUrl;
   final double rating;
@@ -14,6 +15,7 @@ class LoungeReviewEntity extends Equatable {
     required this.id,
     required this.loungeId,
     this.userId,
+    this.bookingId,
     this.userName,
     this.userAvatarUrl,
     required this.rating,
@@ -26,6 +28,7 @@ class LoungeReviewEntity extends Equatable {
         id,
         loungeId,
         userId,
+        bookingId,
         userName,
         userAvatarUrl,
         rating,

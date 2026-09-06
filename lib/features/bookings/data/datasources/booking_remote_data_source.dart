@@ -22,6 +22,7 @@ abstract class BookingRemoteDataSource {
   Future<void> swapRoom(String bookingId, String newRoomId, String actionBy);
   Future<void> startBookingSession(String bookingId);
   Future<void> autoCancelExpiredBookings();
+  Future<List<Map<String, dynamic>>> getBookingItems(String bookingId);
 }
 
 class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
@@ -59,7 +60,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   Future<List<BookingModel>> _fetchSafeSelect(String? loungeId, String? status, int limit, int offset) async {
     try {
-      var query = client.from('bookings').select();
+      var query = client.from('bookings').select('*, profiles(full_name, phone, email), rooms(name, name_en, controllers_count, screen_size), lounges(name, location, latitude, longitude)');
       if (loungeId != null && loungeId.isNotEmpty) {
         query = query.eq('lounge_id', loungeId);
       }
@@ -74,8 +75,24 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       
       return (response as List).map((json) => BookingModel.fromJson(Map<String, dynamic>.from(json))).toList();
     } catch (e2) {
-      debugPrint('${AppConstants.criticalFallbackError}$e2');
-      return []; // منع الشاشة الحمراء بإرجاع قائمة فارغة في حالة الفشل التام
+      debugPrint('⚠️ [DATA_SOURCE] _fetchSafeSelect join query failed ($e2), attempting plain select fallback...');
+      try {
+        var query = client.from('bookings').select();
+        if (loungeId != null && loungeId.isNotEmpty) {
+          query = query.eq('lounge_id', loungeId);
+        }
+        if (status != null) {
+          query = query.eq('status', status);
+        }
+        final response = await query
+            .order('created_at', ascending: false)
+            .range(offset, offset + limit - 1);
+
+        return (response as List).map((json) => BookingModel.fromJson(Map<String, dynamic>.from(json))).toList();
+      } catch (e3) {
+        debugPrint('${AppConstants.criticalFallbackError}$e3');
+        return [];
+      }
     }
   }
 
@@ -174,6 +191,21 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       debugPrint('🟢 [DATA_SOURCE] RPC auto_cancel_expired_bookings completed successfully');
     } catch (e) {
       debugPrint('⚠️ [DATA_SOURCE] RPC auto_cancel_expired_bookings failed: $e');
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getBookingItems(String bookingId) async {
+    try {
+      final response = await client
+          .from('booking_items')
+          .select('*, canteen_items(*)')
+          .eq('booking_id', bookingId);
+          
+      return (response as List).map((item) => Map<String, dynamic>.from(item)).toList();
+    } catch (e) {
+      debugPrint('⚠️ [DATA_SOURCE] getBookingItems query failed: $e');
+      return [];
     }
   }
 }

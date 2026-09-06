@@ -3,18 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
-import '../../../../art_core/app_strings.dart';
-import '../../../../art_core/theme/app_colors.dart';
-import '../../../../art_core/widgets/app_button.dart';
-import '../../../../art_core/widgets/app_text.dart';
-import '../../../../art_core/widgets/status_badge.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import '../../../analytics/presentation/dashboard_cubit.dart';
 import '../../../auth/presentation/login/login_cubit.dart';
-import '../../../lounges/presentation/cubit/extras_cubit.dart';
 import '../../../requests/domain/entities/client_request_entity.dart';
 import '../../../requests/presentation/client_requests_cubit.dart';
 import '../../../requests/presentation/cubit/client_requests_state.dart';
-import '../../../rooms/presentation/cubit/room_cubit.dart';
 import '../../domain/entities/booking.dart';
 import '../cubit/booking_cubit.dart';
 import 'add_extras_dialog.dart';
@@ -44,24 +42,12 @@ class LiveSessionCard extends StatefulWidget {
 
 class _LiveSessionCardState extends State<LiveSessionCard> {
   Timer? _timer;
-  late DateTime _targetEndTime;
   bool _showExtrasList = false;
 
   @override
   void initState() {
     super.initState();
-    _targetEndTime = _calculateTargetEndTime();
     _startTimer();
-  }
-
-  @override
-  void didUpdateWidget(covariant LiveSessionCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.booking.durationMinutes != widget.booking.durationMinutes ||
-        oldWidget.booking.startTime != widget.booking.startTime ||
-        oldWidget.booking.date != widget.booking.date) {
-      _targetEndTime = _calculateTargetEndTime();
-    }
   }
 
   void _startTimer() {
@@ -79,34 +65,17 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
     super.dispose();
   }
 
-  DateTime _calculateTargetEndTime() {
-    try {
-      final date = widget.booking.date;
-      final parts = widget.booking.startTime.split(':');
-      if (parts.length >= 2) {
-        final hour = int.tryParse(parts[0]) ?? 0;
-        final minute = int.tryParse(parts[1]) ?? 0;
-        final start = DateTime(date.year, date.month, date.day, hour, minute);
-        return start.add(Duration(minutes: widget.booking.durationMinutes));
-      }
-    } catch (e) {
-      debugPrint('LiveSessionCard: Error parsing start time (${widget.booking.startTime}): $e');
-    }
-    return widget.booking.date.add(Duration(minutes: widget.booking.durationMinutes));
-  }
-
   Duration get _remainingDuration {
-    final now = DateTime.now();
-    return _targetEndTime.difference(now);
+    return widget.booking.remainingDuration();
   }
 
-  bool get _isExpired => _remainingDuration.isNegative;
+  bool get _isExpired => widget.booking.isSessionExpired();
 
   double _calculateExtrasTotal() {
     double total = 0.0;
     for (final extra in widget.booking.extras) {
       final price = (extra['price'] ?? extra['total_price'] ?? extra['unit_price'] as num?)?.toDouble() ?? 0.0;
-      final qty = (extra['quantity'] ?? extra['qty'] as num?)?.toInt() ?? 1;
+      final qty = (extra['quantity'] ?? extra['qty'] ?? extra['count'] as num?)?.toInt() ?? 1;
       total += (price * qty);
     }
     return total;
@@ -357,9 +326,9 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: widget.booking.extras.map((item) {
-                  final name = (item['name_ar'] ?? item['name'] ?? item['name_en'] ?? '').toString();
-                  final qty = (item['quantity'] ?? item['qty'] ?? 1);
-                  final price = (item['price'] ?? item['unit_price'] ?? 0.0);
+                  final name = (item['name'] ?? item['name_ar'] ?? item['name_en'] ?? item['title'] ?? item['item_name'] ?? 'إضافة').toString();
+                  final qty = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
+                  final price = (item['price'] ?? item['unit_price'] ?? item['total_price'] as num?)?.toDouble() ?? 0.0;
                   return Padding(
                     padding: EdgeInsets.symmetric(vertical: 2.h),
                     child: Row(
@@ -511,29 +480,25 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
   void _showAddExtrasDialog(BuildContext context) {
     final user = context.read<LoginCubit>().state.user;
     final loungeId = user?.loungeId ?? widget.booking.loungeId;
-    final extrasCubit = context.read<ExtrasCubit>();
     final dashboardCubit = context.read<DashboardCubit>();
 
     showDialog(
       context: context,
       useRootNavigator: false,
-      builder: (diagContext) => BlocProvider.value(
-        value: extrasCubit,
-        child: AddExtrasDialog(
-          bookingId: widget.booking.id,
-          loungeId: loungeId,
-          onConfirm: (extras, totalCost) async {
-            final success = await dashboardCubit.addExtrasToSession(widget.booking.id, extras, totalCost);
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(success ? AppStrings.extrasAddedSuccess : AppStrings.actionFailed),
-                  backgroundColor: success ? AppColors.success : AppColors.danger,
-                ),
-              );
-            }
-          },
-        ),
+      builder: (diagContext) => AddExtrasDialog(
+        bookingId: widget.booking.id,
+        loungeId: loungeId,
+        onConfirm: (extras, totalCost) async {
+          final success = await dashboardCubit.addExtrasToSession(widget.booking.id, extras, totalCost);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(success ? AppStrings.extrasAddedSuccess : AppStrings.actionFailed),
+                backgroundColor: success ? AppColors.success : AppColors.danger,
+              ),
+            );
+          }
+        },
       ),
     );
   }
@@ -571,15 +536,14 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
           color: AppColors.textPrimary,
         ),
         actions: [
-          TextButton(
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.text,
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: AppText.body(AppStrings.cancel, color: AppColors.textSecondary),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.danger,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-            ),
+          AppButton(
+            text: AppStrings.endSession,
+            variant: AppButtonVariant.danger,
             onPressed: () async {
               Navigator.of(dialogContext).pop();
               final success = await dashboardCubit.endSession(widget.booking.id);
@@ -596,7 +560,6 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
                 );
               }
             },
-            child: AppText.body(AppStrings.endSession, color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -668,15 +631,14 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
             ],
           ),
           actions: [
-            TextButton(
+            AppButton(
+              text: AppStrings.cancel,
+              variant: AppButtonVariant.text,
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: AppText.body(AppStrings.cancel, color: AppColors.textSecondary),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.neonBlue,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-              ),
+            AppButton(
+              text: AppStrings.extendTime,
+              variant: AppButtonVariant.primary,
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
                 if (widget.onExtendMinutes != null) {
@@ -697,7 +659,6 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
                   }
                 }
               },
-              child: AppText.body(AppStrings.extendTime, color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -706,23 +667,12 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
   }
 
   void _showSwapRoomDialog(BuildContext context) {
-    final loginCubit = context.read<LoginCubit>();
-    final roomCubit = context.read<RoomCubit>();
-    final bookingCubit = context.read<BookingCubit>();
-
     showDialog(
       context: context,
       useRootNavigator: false,
-      builder: (diagContext) => MultiBlocProvider(
-        providers: [
-          BlocProvider.value(value: loginCubit),
-          BlocProvider.value(value: roomCubit),
-          BlocProvider.value(value: bookingCubit),
-        ],
-        child: SwapRoomDialog(
-          bookingId: widget.booking.id,
-          currentRoomId: widget.booking.roomId,
-        ),
+      builder: (diagContext) => SwapRoomDialog(
+        bookingId: widget.booking.id,
+        currentRoomId: widget.booking.roomId,
       ),
     );
   }

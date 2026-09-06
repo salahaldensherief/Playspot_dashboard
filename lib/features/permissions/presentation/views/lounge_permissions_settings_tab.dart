@@ -47,6 +47,7 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
   Widget _buildRoleSelector(String selectedRole) {
     return SegmentedButton<String>(
       segments: [
+        ButtonSegment(value: 'manager', label: Text('role_manager'.tr())),
         ButtonSegment(value: 'cashier', label: Text('role_cashier'.tr())),
         ButtonSegment(value: 'staff', label: Text('role_staff'.tr())),
       ],
@@ -73,7 +74,6 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
       categories.putIfAbsent(p.category, () => []).add(p);
     }
 
-    // Sort categories to be consistent
     final sortedCategoryKeys = categories.keys.toList()..sort();
 
     return GridView.builder(
@@ -83,7 +83,7 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
         crossAxisCount: Responsive.isMobile(context) ? 1 : 2,
         crossAxisSpacing: 24.w,
         mainAxisSpacing: 24.h,
-        mainAxisExtent: Responsive.isMobile(context) ? 450.h : 400.h,
+        mainAxisExtent: Responsive.isMobile(context) ? 480.h : 420.h,
       ),
       itemCount: sortedCategoryKeys.length,
       itemBuilder: (context, index) {
@@ -95,6 +95,7 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
   }
 
   Widget _buildCategoryCard(String category, List<PermissionItemEntity> permissions, String role) {
+    final categoryTitle = category.tr();
     return Material(
       color: AppColors.cardBackground,
       elevation: 0,
@@ -111,7 +112,7 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
               children: [
                 _getCategoryIcon(category),
                 SizedBox(width: 12.w),
-                AppText.heading(category.tr(), fontSize: 18.sp, color: AppColors.neonPurple),
+                AppText.heading(categoryTitle, fontSize: 18.sp, color: AppColors.neonPurple),
               ],
             ),
             SizedBox(height: 16.h),
@@ -131,11 +132,12 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
 
   Widget _getCategoryIcon(String category) {
     IconData icon;
-    if (category.contains('منيو') || category.contains('Menu')) {
+    final lower = category.toLowerCase();
+    if (lower.contains('pos') || lower.contains('منيو') || lower.contains('menu')) {
       icon = Icons.restaurant_menu;
-    } else if (category.contains('مالي') || category.contains('Financial')) {
+    } else if (lower.contains('financial') || lower.contains('مالي')) {
       icon = Icons.account_balance_wallet_outlined;
-    } else if (category.contains('وردية') || category.contains('Shift')) {
+    } else if (lower.contains('shift') || lower.contains('وردية')) {
       icon = Icons.history_toggle_off;
     } else {
       icon = Icons.settings_outlined;
@@ -150,9 +152,10 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
       onChanged: (val) {
         context.read<PermissionsCubit>().togglePermission(role, p.key, val);
       },
-      title: AppText.body((isArabic ? p.nameAr : p.nameEn).tr(), fontWeight: FontWeight.bold),
-      subtitle: AppText.body((isArabic ? p.descriptionAr : p.descriptionEn).tr(), color: AppColors.textSecondary, fontSize: 12.sp),
-      activeColor: AppColors.neonBlue,
+      title: AppText.body(p.nameAr.isNotEmpty && isArabic ? p.nameAr : (p.nameEn.isNotEmpty ? p.nameEn : p.key), fontWeight: FontWeight.bold),
+      subtitle: AppText.body(isArabic ? p.descriptionAr : p.descriptionEn, color: AppColors.textSecondary, fontSize: 12.sp),
+      activeTrackColor: AppColors.neonBlue,
+      activeThumbColor: Colors.white,
       contentPadding: EdgeInsets.zero,
     );
   }

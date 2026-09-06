@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
@@ -15,7 +16,13 @@ import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state
 
 class AddBookingDialog extends StatefulWidget {
   final String loungeId;
-  const AddBookingDialog({super.key, required this.loungeId});
+  final RoomEntity? initialRoom;
+
+  const AddBookingDialog({
+    super.key,
+    required this.loungeId,
+    this.initialRoom,
+  });
 
   @override
   State<AddBookingDialog> createState() => _AddBookingDialogState();
@@ -33,6 +40,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
   @override
   void initState() {
     super.initState();
+    _selectedRoom = widget.initialRoom;
     // Default duration is 60 mins
     context.read<BookingCubit>().updateSelectedDuration(60);
   }
@@ -218,19 +226,16 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(
+                    AppButton(
+                      text: AppStrings.cancel,
+                      variant: AppButtonVariant.text,
                       onPressed: () => Navigator.pop(context),
-                      child: AppText.body(AppStrings.cancel, color: AppColors.textSecondary),
                     ),
                     SizedBox(width: 16.w),
-                    ElevatedButton(
+                    AppButton(
+                      text: AppStrings.newBooking,
+                      variant: AppButtonVariant.primary,
                       onPressed: _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.neonBlue,
-                        padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                      ),
-                      child: AppText.body(AppStrings.newBooking, color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -318,9 +323,9 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     return Container(
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: AppColors.neonBlue.withOpacity(0.05),
+        color: AppColors.neonBlue.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.neonBlue.withOpacity(0.2)),
+        border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

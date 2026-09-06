@@ -7,7 +7,6 @@ import 'package:play_spot_dashboard/core/services/location_service.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/repositories/lounge_repository.dart';
-import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 
 class GeolocationHandler extends StatefulWidget {
   final Widget child;
@@ -18,8 +17,6 @@ class GeolocationHandler extends StatefulWidget {
 }
 
 class _GeolocationHandlerState extends State<GeolocationHandler> {
-  bool _locationCaptured = false;
-
   @override
   void initState() {
     super.initState();
@@ -56,7 +53,7 @@ class _GeolocationHandlerState extends State<GeolocationHandler> {
         );
         
         // Mark as captured in global state to prevent loops
-        loginCubit.emit(loginCubit.state.copyWith(locationCaptured: true));
+        loginCubit.markLocationCaptured();
         debugPrint('${AppConstants.locationCaptureSuccess}${position.latitude}, ${position.longitude}, $cityName');
       }
     } catch (e) {

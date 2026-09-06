@@ -81,6 +81,7 @@ class BookingCubit extends Cubit<BookingState> {
           status: BookingStatusState.success,
           bookings: bookings,
         ));
+        _checkAndAutoTransitionExpiredSessions();
       },
       onError: (error) {
         if (isClosed) return;
@@ -368,11 +369,25 @@ class BookingCubit extends Cubit<BookingState> {
     });
   }
 
+  void _checkAndAutoTransitionExpiredSessions() {
+    if (isClosed) return;
+    final expiredInProgress = state.bookings.where((b) {
+      // 5-minute grace period matching the mobile client's getActiveSession logic
+      return b.status == BookingStatus.inProgress && b.isSessionExpired(null, const Duration(minutes: 5));
+    }).toList();
+
+    for (final booking in expiredInProgress) {
+      debugPrint('🔄 [BOOKING_CUBIT] Auto-transitioning expired session ${booking.id} to completed...');
+      changeBookingStatus(booking.id, BookingStatus.completed);
+    }
+  }
+
   void _startPeriodicAutoCancelTimer() {
     _autoCancelTimer?.cancel();
-    _autoCancelTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+    _autoCancelTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (!isClosed) {
         _triggerAutoCancelExpired();
+        _checkAndAutoTransitionExpiredSessions();
       }
     });
   }

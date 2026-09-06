@@ -27,10 +27,11 @@ void initPermissionsDI(GetIt sl) {
 
   // Cubits
   if (!sl.isRegistered<PermissionsCubit>()) {
-    sl.registerFactory<PermissionsCubit>(
+    sl.registerLazySingleton<PermissionsCubit>(
       () => PermissionsCubit(
         getRolePermissionsUseCase: sl(),
         updateRolePermissionUseCase: sl(),
+        cacheService: sl(),
       ),
     );
   }

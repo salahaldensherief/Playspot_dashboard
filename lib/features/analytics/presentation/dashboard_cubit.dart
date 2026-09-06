@@ -47,18 +47,20 @@ class DashboardCubit extends Cubit<DashboardState> {
       (sessions) {
         if (isClosed) return;
 
+        final activeList = sessions.where((b) => b.isBookingActive()).toList();
+
         double totalRevenue = 0.0;
         int totalExtrasCount = 0;
         double totalPlayHours = 0.0;
 
-        for (final booking in sessions) {
+        for (final booking in activeList) {
           totalRevenue += booking.totalPrice;
           totalExtrasCount += booking.extras.length;
           totalPlayHours += (booking.durationMinutes / 60.0);
         }
 
         final statsMap = {
-          'active_count': sessions.length,
+          'active_count': activeList.length,
           'total_revenue': totalRevenue,
           'total_extras_count': totalExtrasCount,
           'total_play_hours': totalPlayHours,
@@ -66,9 +68,9 @@ class DashboardCubit extends Cubit<DashboardState> {
 
         emit(state.copyWith(
           status: FeatureStatus.success,
-          activeSessionsList: sessions,
+          activeSessionsList: activeList,
           activeSessionsStats: statsMap,
-          activeSessions: sessions.length,
+          activeSessions: activeList.length,
         ));
       },
       onError: (error) {

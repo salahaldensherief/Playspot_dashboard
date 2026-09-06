@@ -45,8 +45,8 @@ class LoungeProfilePage extends StatelessWidget {
                 children: [
                   const LoungeProfileView(),
                   if (canManagePermissions)
-                    BlocProvider(
-                      create: (context) => sl<PermissionsCubit>(),
+                    BlocProvider.value(
+                      value: sl<PermissionsCubit>(),
                       child: const SingleChildScrollView(
                         padding: EdgeInsets.all(24),
                         child: LoungePermissionsSettingsTab(),

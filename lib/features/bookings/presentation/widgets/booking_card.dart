@@ -8,10 +8,10 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
-import '../../domain/entities/booking.dart';
-import '../cubit/booking_cubit.dart';
-import 'booking_details_dialog.dart';
-import 'start_session_button.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_details_dialog.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/start_session_button.dart';
 
 /// Redesigned Booking Card Widget accommodating all returned booking,
 /// user, room, schedule, extras, financial, and action data.
@@ -343,7 +343,11 @@ class _BookingCardState extends State<BookingCard> {
                           SizedBox(height: 4.h),
                           Text(
                             booking.extras
-                                .map((item) => '${item['quantity']}x ${item['name_en'] ?? item['name'] ?? item['name_ar']}')
+                                .map((item) {
+                                  final qty = item['quantity'] ?? item['qty'] ?? item['count'] ?? 1;
+                                  final name = item['name'] ?? item['name_ar'] ?? item['name_en'] ?? item['title'] ?? 'إضافة';
+                                  return '${qty}x $name';
+                                })
                                 .join(' • '),
                             style: TextStyle(
                               fontSize: 10.sp,
@@ -546,15 +550,14 @@ class _BookingCardState extends State<BookingCard> {
           color: AppColors.textPrimary,
         ),
         actions: [
-          TextButton(
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.text,
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: AppText.body(AppStrings.cancel, color: AppColors.textSecondary),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.danger,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-            ),
+          AppButton(
+            text: AppStrings.markNoShow,
+            variant: AppButtonVariant.danger,
             onPressed: () async {
               Navigator.of(dialogContext).pop();
               final cubit = context.read<BookingCubit>();
@@ -572,7 +575,6 @@ class _BookingCardState extends State<BookingCard> {
                 );
               }
             },
-            child: AppText.body(AppStrings.markNoShow, color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ],
       ),

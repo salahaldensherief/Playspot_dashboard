@@ -7,13 +7,13 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/swap_room_dialog.dart';
-import '../../domain/entities/booking.dart';
-import '../cubit/booking_cubit.dart';
-import '../cubit/booking_state.dart';
-import 'booking_financials_card.dart';
-import 'booking_specifications_card.dart';
-import 'booking_status_actions.dart';
-import 'booking_user_info_card.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_financials_card.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_specifications_card.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_status_actions.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_user_info_card.dart';
 
 /// Comprehensive Booking Details Dialog displaying:
 /// 1. User & Contact Info (Name, email, phone, avatar)

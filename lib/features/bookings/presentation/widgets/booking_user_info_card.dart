@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -26,9 +27,14 @@ class BookingUserInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = booking.userName ?? AppStrings.anonymous;
-    final email = booking.userEmail ?? '-';
-    final phone = booking.userPhone ?? '-';
+    final rawEmail = booking.userEmail?.trim();
+    final email = (rawEmail != null && rawEmail.isNotEmpty && rawEmail != 'null') ? rawEmail : '-';
+    final rawPhone = booking.userPhone?.trim();
+    final phone = (rawPhone != null && rawPhone.isNotEmpty && rawPhone != 'No Phone' && rawPhone != 'null') ? rawPhone : '-';
     final initials = _getInitials(name);
+    final userIdDisplay = booking.userId.isNotEmpty
+        ? (booking.userId.length > 8 ? booking.userId.substring(0, 8) : booking.userId)
+        : 'زائر';
 
     return Container(
       padding: EdgeInsets.all(16.r),
@@ -41,13 +47,31 @@ class BookingUserInfoCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Icon(Icons.person_outline, color: AppColors.neonBlue, size: 20),
-              SizedBox(width: 8.w),
-              AppText.subHeading(
-                AppStrings.userAndContactInfo,
-                fontSize: 16.sp,
-                color: AppColors.textPrimary,
+              Row(
+                children: [
+                  const Icon(Icons.person_pin_rounded, color: AppColors.neonBlue, size: 20),
+                  SizedBox(width: 8.w),
+                  AppText.subHeading(
+                    AppStrings.userAndContactInfo,
+                    fontSize: 15.sp,
+                    color: AppColors.textPrimary,
+                  ),
+                ],
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: AppColors.cardBackground,
+                  borderRadius: BorderRadius.circular(20.r),
+                  border: Border.all(color: AppColors.borderDefault),
+                ),
+                child: AppText.body(
+                  'ID: #$userIdDisplay',
+                  fontSize: 11.sp,
+                  color: AppColors.textMuted,
+                ),
               ),
             ],
           ),
@@ -56,8 +80,8 @@ class BookingUserInfoCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                width: 48.r,
-                height: 48.r,
+                width: 52.r,
+                height: 52.r,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
@@ -68,6 +92,13 @@ class BookingUserInfoCard extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.neonBlue.withValues(alpha: 0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -84,10 +115,76 @@ class BookingUserInfoCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AppText.subHeading(
-                      name,
-                      fontSize: 16.sp,
-                      color: AppColors.textPrimary,
+                    Row(
+                      children: [
+                        AppText.subHeading(
+                          name,
+                          fontSize: 16.sp,
+                          color: AppColors.textPrimary,
+                        ),
+                        SizedBox(width: 8.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                          decoration: BoxDecoration(
+                            color: AppColors.neonBlue.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                          child: Text(
+                            'عميل محجوز',
+                            style: TextStyle(
+                              color: AppColors.neonBlue,
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 6.h),
+                    Row(
+                      children: [
+                        const Icon(Icons.phone_android_rounded, color: AppColors.neonBlue, size: 14),
+                        SizedBox(width: 6.w),
+                        AppText.body(
+                          phone,
+                          fontSize: 13.sp,
+                          color: AppColors.neonBlue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        if (phone != '-') ...[
+                          SizedBox(width: 8.w),
+                          InkWell(
+                            onTap: () {
+                              Clipboard.setData(ClipboardData(text: phone));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('تم نسخ رقم الهاتف'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                              decoration: BoxDecoration(
+                                color: AppColors.cardBackground,
+                                borderRadius: BorderRadius.circular(4.r),
+                                border: Border.all(color: AppColors.borderDefault),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.copy_rounded, size: 11.r, color: AppColors.textMuted),
+                                  SizedBox(width: 4.w),
+                                  Text(
+                                    'نسخ',
+                                    style: TextStyle(fontSize: 10.sp, color: AppColors.textMuted),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     SizedBox(height: 4.h),
                     Row(
@@ -104,35 +201,7 @@ class BookingUserInfoCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: 2.h),
-                    Row(
-                      children: [
-                        const Icon(Icons.phone_outlined, color: AppColors.textSecondary, size: 14),
-                        SizedBox(width: 6.w),
-                        Expanded(
-                          child: AppText.body(
-                            phone,
-                            fontSize: 12.sp,
-                            color: AppColors.neonBlue,
-                            maxLines: 1,
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: AppColors.cardBackground,
-                  borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(color: AppColors.borderDefault),
-                ),
-                child: AppText.body(
-                  'ID: ${booking.userId.length > 8 ? booking.userId.substring(0, 8) : booking.userId}',
-                  fontSize: 11.sp,
-                  color: AppColors.textMuted,
                 ),
               ),
             ],

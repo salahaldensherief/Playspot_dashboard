@@ -5,6 +5,7 @@ class LoungeReviewModel extends LoungeReviewEntity {
     required super.id,
     required super.loungeId,
     super.userId,
+    super.bookingId,
     super.userName,
     super.userAvatarUrl,
     required super.rating,
@@ -19,21 +20,33 @@ class LoungeReviewModel extends LoungeReviewEntity {
       return double.tryParse(val.toString()) ?? 0.0;
     }
 
+    final bookingData = json['bookings'] as Map<String, dynamic>?;
+    final bookingProfileData = bookingData?['profiles'] as Map<String, dynamic>?;
     final profileData = json['profiles'] as Map<String, dynamic>?;
     final userData = json['users'] as Map<String, dynamic>?;
 
-    final String userName = (
+    final String? userId = (json['user_id'] ?? json['userId'] ?? bookingData?['user_id'])?.toString();
+    final String? bookingId = (json['booking_id'] ?? json['bookingId'])?.toString();
+
+    final String? rawUserName = (
       json['user_name'] ??
-      json['full_name'] ??
+      bookingData?['user_name'] ??
+      bookingProfileData?['full_name'] ??
+      bookingProfileData?['name'] ??
       profileData?['full_name'] ??
       profileData?['name'] ??
-      userData?['full_name'] ??
-      'Anonymous Client'
-    ).toString();
+      json['full_name'] ??
+      userData?['full_name']
+    )?.toString();
+
+    final String userName = (rawUserName != null && rawUserName.trim().isNotEmpty)
+        ? rawUserName
+        : 'Anonymous Client';
 
     final String? userAvatarUrl = (
       json['user_avatar'] ??
       json['avatar_url'] ??
+      bookingProfileData?['avatar_url'] ??
       profileData?['avatar_url'] ??
       userData?['avatar_url']
     )?.toString();
@@ -50,7 +63,8 @@ class LoungeReviewModel extends LoungeReviewEntity {
     return LoungeReviewModel(
       id: (json['id'] ?? '').toString(),
       loungeId: (json['lounge_id'] ?? json['loungeId'] ?? '').toString(),
-      userId: (json['user_id'] ?? json['userId'])?.toString(),
+      userId: userId,
+      bookingId: bookingId,
       userName: userName,
       userAvatarUrl: userAvatarUrl,
       rating: parseDouble(json['rating'] ?? json['score'] ?? json['stars']),
@@ -64,6 +78,7 @@ class LoungeReviewModel extends LoungeReviewEntity {
       'id': id,
       'lounge_id': loungeId,
       'user_id': userId,
+      'booking_id': bookingId,
       'user_name': userName,
       'user_avatar': userAvatarUrl,
       'rating': rating,

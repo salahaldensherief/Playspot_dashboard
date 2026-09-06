@@ -72,6 +72,18 @@ class RoomModel extends RoomEntity {
       }
     }
 
+    final double singleRate = parseDouble(
+      json['hourly_rate_single'] ??
+      json['price_per_hour_single'] ??
+      json['price_per_hour']
+    );
+
+    final double multiRate = parseDouble(
+      json['hourly_rate_multi'] ??
+      json['price_per_hour_multi'] ??
+      json['price_per_hour']
+    );
+
     return RoomModel(
       id: json['id']?.toString() ?? '',
       loungeId: json['lounge_id']?.toString() ?? '',
@@ -88,11 +100,11 @@ class RoomModel extends RoomEntity {
       spaceType: json['space_types']?['label'] ?? json['space_type_name']?.toString(),
       spaceTypeId: json['space_type_id']?.toString() ?? '',
       capacity: parseInt(json['capacity'], 4),
-      pricePerHourSingle: parseDouble(json['price_per_hour_single'] ?? json['price_per_hour']),
-      pricePerHourMulti: parseDouble(json['price_per_hour_multi'] ?? json['price_per_hour']),
-      pricePerHour: parseDouble(json['price_per_hour']),
+      pricePerHourSingle: singleRate,
+      pricePerHourMulti: multiRate,
+      pricePerHour: singleRate,
       extraControllerPrice: parseDouble(json['extra_controller_price']),
-      isAvailable: json['is_available'] ?? true,
+      isAvailable: json['is_available'] ?? json['is_active'] ?? true,
       images: json['images'] != null ? List<String>.from(json['images']) : [],
       featuresAr: json['features_ar'] != null ? List<String>.from(json['features_ar']) : [],
       featuresEn: json['features_en'] != null ? List<String>.from(json['features_en']) : [],
@@ -102,7 +114,6 @@ class RoomModel extends RoomEntity {
     );
   }
 
-  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {
       'id': id,
@@ -113,11 +124,14 @@ class RoomModel extends RoomEntity {
       'description_ar': descriptionAr,
       'description_en': descriptionEn,
       'capacity': capacity,
+      'hourly_rate_single': pricePerHourSingle,
+      'hourly_rate_multi': pricePerHourMulti,
       'price_per_hour_single': pricePerHourSingle,
       'price_per_hour_multi': pricePerHourMulti,
-      'price_per_hour': pricePerHour,
+      'price_per_hour': pricePerHourSingle,
       'extra_controller_price': extraControllerPrice,
       'is_available': isAvailable,
+      'is_active': isAvailable,
       'images': images,
       'features_ar': featuresAr,
       'features_en': featuresEn,

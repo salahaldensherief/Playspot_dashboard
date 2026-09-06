@@ -31,6 +31,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     Timer? heartbeatTimer;
     StreamSubscription? notifSubscription;
     StreamSubscription? canteenSubscription;
+    StreamSubscription? bookingItemsSubscription;
     StreamSubscription? bookingsSubscription;
 
     void fetchAndEmit() async {
@@ -96,7 +97,25 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
           debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Canteen Realtime Exception: $e');
         }
 
-        // Subscription 3: Bookings stream
+        // Subscription 3: Booking Items stream
+        try {
+          bookingItemsSubscription = client
+              .from('booking_items')
+              .stream(primaryKey: ['id'])
+              .listen(
+                (_) {
+                  fetchAndEmit();
+                },
+                onError: (e) {
+                  debugPrint('⚠️ [REQUESTS_DATA_SOURCE] BookingItems Realtime Error: $e');
+                },
+                cancelOnError: false,
+              );
+        } catch (e) {
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] BookingItems Realtime Exception: $e');
+        }
+
+        // Subscription 4: Bookings stream
         try {
           bookingsSubscription = client
               .from('bookings')
@@ -126,6 +145,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
       onCancel: () {
         notifSubscription?.cancel();
         canteenSubscription?.cancel();
+        bookingItemsSubscription?.cancel();
         bookingsSubscription?.cancel();
         heartbeatTimer?.cancel();
       },
@@ -280,6 +300,34 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
             return true;
           }).toList();
 
+      // 2b. Fetch canteen items from booking_items table
+      dynamic bookingItemsResponse = [];
+      try {
+        bookingItemsResponse = await client
+            .from('booking_items')
+            .select('*, bookings!inner(id, lounge_id, user_name, room_name, user_id, user_phone)')
+            .eq('bookings.lounge_id', cleanLoungeId)
+            .order('created_at', ascending: false)
+            .limit(50);
+      } catch (e) {
+        try {
+          bookingItemsResponse = await client
+              .from('booking_items')
+              .select()
+              .order('created_at', ascending: false)
+              .limit(50);
+        } catch (_) {}
+      }
+
+      final bookingItemsList = ((bookingItemsResponse is List) ? bookingItemsResponse : [])
+          .map((json) => ClientRequestModel.fromBookingItemJson(Map<String, dynamic>.from(json)))
+          .where((model) {
+            if (cleanLoungeId.isNotEmpty && model.loungeId.isNotEmpty && model.loungeId != cleanLoungeId) {
+              return false;
+            }
+            return true;
+          }).toList();
+
       // 3. Fetch pending session extensions for the active lounge
       dynamic extensionsResponse = [];
       try {
@@ -310,7 +358,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
             return true;
           }).toList();
 
-      final combined = [...notifList, ...ordersList, ...extensionsList];
+      final combined = [...notifList, ...ordersList, ...bookingItemsList, ...extensionsList];
       combined.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       return combined;
@@ -324,7 +372,16 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
   Future<void> markRequestAsAttended(String id, {bool isCanteenOrder = false}) async {
     debugPrint('🔵 [REQUESTS_DATA_SOURCE] Marking request as attended: id=$id, isCanteenOrder=$isCanteenOrder');
     try {
-      if (id.startsWith('ext_')) {
+      if (id.startsWith('item_')) {
+        final itemId = id.replaceFirst('item_', '');
+        await client
+            .from('booking_items')
+            .update({
+              'is_attended': true,
+              'is_read': true,
+            })
+            .eq('id', itemId);
+      } else if (id.startsWith('ext_')) {
         final bookingId = id.replaceFirst('ext_', '');
         await client
             .from('bookings')

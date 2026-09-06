@@ -112,6 +112,10 @@ class LoginCubit extends Cubit<LoginState> {
     emit(state.copyWith(user: user, isSetupCompleted: user.isSetupCompleted));
   }
 
+  void markLocationCaptured() {
+    emit(state.copyWith(locationCaptured: true));
+  }
+
   Future<void> refreshUserLounge(String loungeId) async {
     final loungeResult = await loungeRepository.getLoungeById(loungeId);
     loungeResult.fold(

@@ -16,7 +16,7 @@ class RoomEntity extends Equatable {
   final int capacity;
   final double pricePerHourSingle;
   final double pricePerHourMulti;
-  final double pricePerHour; // Kept for backward compatibility if needed
+  final double pricePerHour; // Kept for backward compatibility
   final double extraControllerPrice;
   final bool isAvailable;
   final List<String> images;
@@ -26,6 +26,10 @@ class RoomEntity extends Equatable {
   final String screenSize;
   final RoomStatusEnum status;
 
+  // Aliases for unified mobile & dashboard naming
+  double get hourlyRateSingle => pricePerHourSingle;
+  double get hourlyRateMulti => pricePerHourMulti;
+  bool get isActive => isAvailable;
   bool get isOpenArea => spaceTypeId == 'open_area';
 
   const RoomEntity({

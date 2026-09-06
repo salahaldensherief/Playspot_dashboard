@@ -12,13 +12,13 @@ import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart
 import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_cubit.dart';
 import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_state.dart';
 import 'package:play_spot_dashboard/features/kyc/presentation/widgets/kyc_step.dart';
-import '../cubit/onboarding_cubit.dart';
-import '../cubit/onboarding_state.dart';
-import 'basic_info_step.dart';
-import 'location_step.dart';
-import 'operating_hours_step.dart';
-import 'assets_step.dart';
-import 'marketplace_step.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_cubit.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_state.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/widgets/basic_info_step.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/widgets/location_step.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/widgets/operating_hours_step.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/widgets/assets_step.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/widgets/marketplace_step.dart';
 
 class LoungeSetupView extends StatefulWidget {
   const LoungeSetupView({super.key});
@@ -38,6 +38,9 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
   final _addressController = TextEditingController();
   final _opensAtController = TextEditingController();
   final _closesAtController = TextEditingController();
+
+  double? _lat;
+  double? _lng;
 
   Uint8List? _mainImageBytes;
   String? _mainImageName;
@@ -104,16 +107,20 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
       closesAt: _closesAtController.text,
       imageUrl: '', 
       categoryId: null,
+      lat: _lat,
+      lng: _lng,
     );
 
-    onboardingCubit.submitLounge(
-      lounge: lounge,
-      mainImageBytes: _mainImageBytes,
-      mainImageName: _mainImageName,
-      galleryImages: _galleryImages,
-      loungeId: loungeId,
-      context: context,
-    );
+    if (mounted) {
+      onboardingCubit.submitLounge(
+        lounge: lounge,
+        mainImageBytes: _mainImageBytes,
+        mainImageName: _mainImageName,
+        galleryImages: _galleryImages,
+        loungeId: loungeId,
+        context: context,
+      );
+    }
   }
 
   @override
@@ -127,7 +134,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
             listener: (context, state) async {
               if (state.status == OnboardingStatus.success) {
                 await Future.delayed(const Duration(milliseconds: 500));
-                if (mounted) {
+                if (context.mounted) {
                   context.read<LoginCubit>().checkInitialAuth();
                 }
               } else if (state.status == OnboardingStatus.failure) {
@@ -227,7 +234,14 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
           },
         );
       case 1:
-        return const SizedBox.shrink(); // City/Address step no longer needed, handled by Geolocator
+        return LocationStep(
+          cityController: _cityController,
+          addressController: _addressController,
+          onCoordinatesDetected: (lat, lng) {
+            _lat = lat;
+            _lng = lng;
+          },
+        );
       case 2:
         return OperatingHoursStep(
           opensAtController: _opensAtController,

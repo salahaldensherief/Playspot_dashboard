@@ -34,8 +34,8 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
   double _calculateExtrasTotal() {
     double total = 0.0;
     for (final item in widget.booking.extras) {
-      final q = (item['quantity'] as num?)?.toInt() ?? 1;
-      final p = (item['price'] as num?)?.toDouble() ?? 0.0;
+      final q = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
+      final p = (item['price'] ?? item['unit_price'] ?? item['total_price'] as num?)?.toDouble() ?? 0.0;
       total += q * p;
     }
     return total;
@@ -146,9 +146,9 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
               ),
               child: Column(
                 children: widget.booking.extras.map((item) {
-                  final quantity = (item['quantity'] as num?)?.toInt() ?? 1;
-                  final name = (item['name_en'] ?? item['name'] ?? item['name_ar'] ?? AppStrings.addItem).toString();
-                  final unitPrice = (item['price'] as num?)?.toDouble() ?? 0.0;
+                  final quantity = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
+                  final name = (item['name'] ?? item['name_ar'] ?? item['name_en'] ?? item['title'] ?? AppStrings.addItem).toString();
+                  final unitPrice = (item['price'] ?? item['unit_price'] as num?)?.toDouble() ?? 0.0;
                   final totalItemPrice = quantity * unitPrice;
 
                   return Padding(
@@ -193,23 +193,29 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
                     suffix: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        TextButton(
-                          onPressed: () => widget.onTogglePercentage?.call(false),
-                          child: Text(
-                            'EGP',
-                            style: TextStyle(
-                              color: !widget.isPercentage ? AppColors.neonBlue : Colors.white70,
-                              fontWeight: FontWeight.bold,
+                        InkWell(
+                          onTap: () => widget.onTogglePercentage?.call(false),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                            child: Text(
+                              'EGP',
+                              style: TextStyle(
+                                color: !widget.isPercentage ? AppColors.neonBlue : Colors.white70,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
-                        TextButton(
-                          onPressed: () => widget.onTogglePercentage?.call(true),
-                          child: Text(
-                            '%',
-                            style: TextStyle(
-                              color: widget.isPercentage ? AppColors.neonBlue : Colors.white70,
-                              fontWeight: FontWeight.bold,
+                        InkWell(
+                          onTap: () => widget.onTogglePercentage?.call(true),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                            child: Text(
+                              '%',
+                              style: TextStyle(
+                                color: widget.isPercentage ? AppColors.neonBlue : Colors.white70,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
@@ -271,7 +277,6 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
       case PaymentStatus.refunded:
         return StatusBadge.danger(AppStrings.payouts.toUpperCase());
       case PaymentStatus.unpaid:
-      default:
         return StatusBadge.warning(AppStrings.unpaid.toUpperCase());
     }
   }

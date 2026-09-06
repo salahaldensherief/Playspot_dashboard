@@ -8,7 +8,7 @@ import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/location_service.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 
-class LocationInfoSection extends StatelessWidget {
+class LocationInfoSection extends StatefulWidget {
   final TextEditingController cityController;
   final TextEditingController addressController;
   final double? lat;
@@ -25,6 +25,55 @@ class LocationInfoSection extends StatelessWidget {
   });
 
   @override
+  State<LocationInfoSection> createState() => _LocationInfoSectionState();
+}
+
+class _LocationInfoSectionState extends State<LocationInfoSection> {
+  bool _isLoading = false;
+  String? _statusMessage;
+
+  Future<void> _autoDetectLocation() async {
+    setState(() {
+      _isLoading = true;
+      _statusMessage = null;
+    });
+
+    try {
+      final locationService = sl<LocationService>();
+      final pos = await locationService.getCurrentPosition();
+
+      if (pos != null && mounted) {
+        final city = await locationService.getCityFromPosition(pos, context);
+        if (city != null && city.trim().isNotEmpty) {
+          widget.cityController.text = city.trim();
+        }
+
+        if (widget.onLocationChanged != null) {
+          widget.onLocationChanged!(pos.latitude, pos.longitude);
+        }
+
+        setState(() {
+          _statusMessage = 'تم الكشف عن الموقع والمدينة تلقائياً بنجاح';
+        });
+      } else {
+        setState(() {
+          _statusMessage = 'تعذر تحديد الموقع تلقائياً من المتصفح. يمكنك إدخال البيانات يدوياً.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'تعذر تحديد الموقع تلقائياً من المتصفح. يمكنك إدخال البيانات يدوياً.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SectionContainer(
       title: AppStrings.location, 
@@ -34,7 +83,7 @@ class LocationInfoSection extends StatelessWidget {
             Expanded(
               child: AppTextField(
                 label: AppStrings.city,
-                controller: cityController,
+                controller: widget.cityController,
                 hintText: AppStrings.cityHint,
                 validator: AppValidator.validateRequired,
               ),
@@ -43,7 +92,7 @@ class LocationInfoSection extends StatelessWidget {
             Expanded(
               child: AppTextField(
                 label: AppStrings.address,
-                controller: addressController,
+                controller: widget.addressController,
                 hintText: AppStrings.addressHint,
                 validator: AppValidator.validateRequired,
               ),
@@ -65,8 +114,8 @@ class LocationInfoSection extends StatelessWidget {
                   const Icon(Icons.location_on_outlined, color: AppColors.neonBlue, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    lat != null && lng != null 
-                        ? '${lat!.toStringAsFixed(4)}, ${lng!.toStringAsFixed(4)}'
+                    widget.lat != null && widget.lng != null 
+                        ? '${widget.lat!.toStringAsFixed(4)}, ${widget.lng!.toStringAsFixed(4)}'
                         : AppStrings.addressHint,
                     style: const TextStyle(color: AppColors.textPrimary),
                   ),
@@ -75,18 +124,24 @@ class LocationInfoSection extends StatelessWidget {
             ),
             const SizedBox(width: 16),
             AppButton(
-              text: AppStrings.pinLocationMap,
-              icon: Icons.gps_fixed,
-              variant: AppButtonVariant.outlined,
-              onPressed: () async {
-                final pos = await sl<LocationService>().getCurrentPosition();
-                if (pos != null && onLocationChanged != null) {
-                  onLocationChanged!(pos.latitude, pos.longitude);
-                }
-              },
+              text: 'تحديد الموقع تلقائياً',
+              icon: Icons.my_location_rounded,
+              variant: AppButtonVariant.primary,
+              isLoading: _isLoading,
+              onPressed: _autoDetectLocation,
             ),
           ],
         ),
+        if (_statusMessage != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            _statusMessage!,
+            style: TextStyle(
+              color: _statusMessage!.contains('بنجاح') ? AppColors.success : AppColors.warning,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ],
     );
   }

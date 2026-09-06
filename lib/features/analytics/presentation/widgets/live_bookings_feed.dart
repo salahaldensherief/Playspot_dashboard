@@ -26,10 +26,10 @@ class LiveBookingsFeed extends StatelessWidget {
         return BlocBuilder<BookingCubit, BookingState>(
           buildWhen: (prev, curr) => prev.status != curr.status || prev.bookings != curr.bookings,
           builder: (context, bookingState) {
-            // Combine active sessions from DashboardCubit or fallback to BookingCubit inProgress bookings
+            // Combine active sessions from DashboardCubit or fallback to BookingCubit active bookings
             final List<Booking> activeSessions = dashState.activeSessionsList.isNotEmpty
-                ? dashState.activeSessionsList
-                : bookingState.bookings.where((b) => b.status == BookingStatus.inProgress).toList();
+                ? dashState.activeSessionsList.where((b) => b.isBookingActive()).toList()
+                : bookingState.bookings.where((b) => b.isBookingActive()).toList();
 
             final stats = dashState.activeSessionsStats;
             final double activeRevenue = (stats['total_revenue'] as num?)?.toDouble() ??
@@ -176,7 +176,7 @@ class LiveBookingsFeed extends StatelessWidget {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: bookingState.bookings.take(5).length,
-                      separatorBuilder: (_, __) => Divider(color: AppColors.divider, height: 20.h),
+                      separatorBuilder: (context, index) => Divider(color: AppColors.divider, height: 20.h),
                       itemBuilder: (context, index) {
                         final booking = bookingState.bookings[index];
                         return LiveBookingItem(booking: booking);

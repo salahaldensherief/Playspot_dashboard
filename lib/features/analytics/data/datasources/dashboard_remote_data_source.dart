@@ -169,32 +169,58 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
 
   @override
   Future<void> addExtrasToSession(String bookingId, List<Map<String, dynamic>> extras, double additionalCost) async {
-    final response = await supabaseClient
-        .from('bookings')
-        .select('extras, total_price')
-        .eq('id', bookingId)
-        .maybeSingle();
-
-    if (response == null) {
-      throw Exception('Booking not found: $bookingId');
+    debugPrint('====================================================');
+    debugPrint('🚀 [CANTEEN_ORDER_SYNC] Executing addExtrasToSession...');
+    debugPrint('📌 [CANTEEN_ORDER_SYNC] Booking ID: $bookingId');
+    debugPrint('💰 [CANTEEN_ORDER_SYNC] Additional Cost: $additionalCost');
+    debugPrint('📦 [CANTEEN_ORDER_SYNC] Incoming Extras Payload (${extras.length} items):');
+    for (int i = 0; i < extras.length; i++) {
+      debugPrint('   - Item [$i]: ${extras[i]}');
     }
+    debugPrint('====================================================');
 
-    final List<Map<String, dynamic>> existingExtras = List<Map<String, dynamic>>.from(
-      response['extras'] ?? response['booking_extras'] ?? [],
-    );
+    try {
+      if (extras.isNotEmpty) {
+        final List<Map<String, dynamic>> bookingItemsToInsert = extras.map((e) {
+          final qty = (e['quantity'] as num?)?.toInt() ?? 1;
+          final price = (e['price'] ?? e['unit_price'] as num?)?.toDouble() ?? 0.0;
+          return {
+            'booking_id': bookingId,
+            'item_id': e['id'] ?? e['item_id'] ?? e['canteen_item_id'],
+            'item_name': e['name'] ?? e['name_ar'] ?? e['item_name'] ?? 'Extra Item',
+            'quantity': qty,
+            'unit_price': price,
+            'total_price': price * qty,
+          };
+        }).toList();
 
-    final currentTotalPrice = (response['total_price'] as num?)?.toDouble() ?? 0.0;
-    final updatedExtras = [...existingExtras, ...extras];
-    final updatedTotalPrice = currentTotalPrice + additionalCost;
+        debugPrint('🔵 [CANTEEN_ORDER_SYNC] Inserting ${bookingItemsToInsert.length} items into `booking_items` table...');
+        await supabaseClient.from('booking_items').insert(bookingItemsToInsert);
+      }
 
-    debugPrint('🔵 [DASHBOARD_DATA_SOURCE] Adding ${extras.length} extra items to booking $bookingId, new total: $updatedTotalPrice');
+      final bookingRes = await supabaseClient
+          .from('bookings')
+          .select('total_price')
+          .eq('id', bookingId)
+          .maybeSingle();
 
-    await supabaseClient.from('bookings').update({
-      'extras': updatedExtras,
-      'total_price': updatedTotalPrice,
-    }).eq('id', bookingId);
+      if (bookingRes != null) {
+        final currentTotalPrice = (bookingRes['total_price'] as num?)?.toDouble() ?? 0.0;
+        final updatedTotalPrice = currentTotalPrice + additionalCost;
 
-    debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Extras added to session successfully!');
+        debugPrint('🔵 [CANTEEN_ORDER_SYNC] Updating `total_price` on `bookings` table to: $updatedTotalPrice');
+        await supabaseClient.from('bookings').update({
+          'total_price': updatedTotalPrice,
+        }).eq('id', bookingId);
+      }
+
+      debugPrint('🟢 [CANTEEN_ORDER_SYNC] Successfully added items to `booking_items` and updated total_price!');
+      debugPrint('====================================================');
+    } catch (e) {
+      debugPrint('🔴 [CANTEEN_ORDER_SYNC] Error in addExtrasToSession: $e');
+      debugPrint('====================================================');
+      rethrow;
+    }
   }
 
   @override

@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/responsive/responsive.dart';
 import '../../core/router/router_keys.dart';
+import '../../core/utils/permission_extension.dart';
+import '../../features/permissions/presentation/cubit/permissions_cubit.dart';
+import '../../features/permissions/presentation/cubit/permissions_state.dart';
 import '../app_strings.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app_dialog.dart';
@@ -25,43 +28,47 @@ class DashboardSidebar extends StatelessWidget {
         final user = state.user;
         final isSuperAdmin = user?.isSuperAdmin ?? false;
 
-        return Container(
-          width: Responsive.isDesktop(context) ? 260.w : double.infinity,
-          decoration: BoxDecoration(
-            color: AppColors.sidebarBackground,
-            border: Border(right: BorderSide(color: AppColors.borderDefault)),
-          ),
-          child: Column(
-            children: [
-              SizedBox(height: 32.h),
-              _buildLogo(user),
-              SizedBox(height: 40.h),
-              if (isSuperAdmin) 
-                ..._buildSuperAdminItems(context) 
-              else 
-                ..._buildLoungeStaffItems(context, user),
-              const Spacer(),
-              _SidebarItem(
-                icon: Icons.language,
-                label: context.locale.languageCode == 'en' ? 'العربية' : 'English',
-                isActive: false,
-                onTap: () {
-                  if (context.locale.languageCode == 'en') {
-                    context.setLocale(const Locale('ar'));
-                  } else {
-                    context.setLocale(const Locale('en'));
-                  }
-                },
+        return BlocBuilder<PermissionsCubit, PermissionsState>(
+          builder: (context, permState) {
+            return Container(
+              width: Responsive.isDesktop(context) ? 260.w : double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.sidebarBackground,
+                border: Border(right: BorderSide(color: AppColors.borderDefault)),
               ),
-              _SidebarItem(
-                icon: Icons.logout,
-                label: AppStrings.logout,
-                isActive: false,
-                onTap: () => _showLogoutConfirmation(context),
+              child: Column(
+                children: [
+                  SizedBox(height: 32.h),
+                  _buildLogo(user),
+                  SizedBox(height: 40.h),
+                  if (isSuperAdmin) 
+                    ..._buildSuperAdminItems(context) 
+                  else 
+                    ..._buildLoungeStaffItems(context, user),
+                  const Spacer(),
+                  _SidebarItem(
+                    icon: Icons.language,
+                    label: context.locale.languageCode == 'en' ? 'العربية' : 'English',
+                    isActive: false,
+                    onTap: () {
+                      if (context.locale.languageCode == 'en') {
+                        context.setLocale(const Locale('ar'));
+                      } else {
+                        context.setLocale(const Locale('en'));
+                      }
+                    },
+                  ),
+                  _SidebarItem(
+                    icon: Icons.logout,
+                    label: AppStrings.logout,
+                    isActive: false,
+                    onTap: () => _showLogoutConfirmation(context),
+                  ),
+                  SizedBox(height: 24.h),
+                ],
               ),
-              SizedBox(height: 24.h),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -176,6 +183,16 @@ class DashboardSidebar extends StatelessWidget {
   List<Widget> _buildLoungeStaffItems(BuildContext context, UserEntity? user) {
     if (user == null) return [];
 
+    final canViewBookings = context.hasPermission('bookings_view') || context.hasPermission('pos_view_menu');
+    final canViewRooms = context.hasPermission('rooms_view');
+    final canViewExtras = context.hasPermission('menu_view');
+    final canViewReviews = context.hasPermission('reviews_view');
+    final canManageMarketing = context.hasPermission('marketing_manage');
+    final canManageStaff = context.hasPermission('staff_management');
+    final canViewShiftHistory = context.hasPermission('shifts_view');
+    final canViewReports = context.hasPermission('reports_view');
+    final canEditLoungeProfile = context.hasPermission('lounge_profile_edit');
+
     return [
       _SidebarItem(
         icon: Icons.analytics_outlined,
@@ -185,30 +202,41 @@ class DashboardSidebar extends StatelessWidget {
       ),
 
       // Common: Live Operations (Sensors/Bookings)
-      _SidebarItem(
-        icon: Icons.sensors,
-        label: AppStrings.bookings,
-        isActive: activeRoute == AppStrings.bookings,
-        onTap: () => context.go(RouterKeys.loungeAdminLiveOps),
-      ),
+      if (canViewBookings)
+        _SidebarItem(
+          icon: Icons.sensors,
+          label: AppStrings.bookings,
+          isActive: activeRoute == AppStrings.bookings,
+          onTap: () => context.go(RouterKeys.loungeAdminLiveOps),
+        ),
       
       // Setup: Rooms & Extras
-      _SidebarItem(
-        icon: Icons.meeting_room_outlined,
-        label: AppStrings.rooms,
-        isActive: activeRoute == AppStrings.rooms,
-        onTap: () => context.go(RouterKeys.loungeAdminRooms),
-      ),
+      if (canViewRooms)
+        _SidebarItem(
+          icon: Icons.meeting_room_outlined,
+          label: AppStrings.rooms,
+          isActive: activeRoute == AppStrings.rooms,
+          onTap: () => context.go(RouterKeys.loungeAdminRooms),
+        ),
 
-      _SidebarItem(
-        icon: Icons.restaurant_menu,
-        label: AppStrings.extras,
-        isActive: activeRoute == AppStrings.extras,
-        onTap: () => context.go(RouterKeys.loungeAdminExtras),
-      ),
+      if (canViewExtras)
+        _SidebarItem(
+          icon: Icons.restaurant_menu,
+          label: AppStrings.extras,
+          isActive: activeRoute == AppStrings.extras,
+          onTap: () => context.go(RouterKeys.loungeAdminExtras),
+        ),
+
+      if (canViewReviews)
+        _SidebarItem(
+          icon: Icons.star_outline_rounded,
+          label: AppStrings.loungeReviews,
+          isActive: activeRoute == AppStrings.loungeReviews,
+          onTap: () => context.go(RouterKeys.loungeAdminReviews),
+        ),
 
       // Management Level
-      if (user.canManageMarketing)
+      if (canManageMarketing)
         _SidebarItem(
           icon: Icons.campaign_outlined,
           label: AppStrings.marketing,
@@ -216,7 +244,7 @@ class DashboardSidebar extends StatelessWidget {
           onTap: () => context.go(RouterKeys.loungeAdminMarketing),
         ),
 
-      if (user.canManageStaff)
+      if (canManageStaff)
         _SidebarItem(
           icon: Icons.people_outline,
           label: AppStrings.staffManagement,
@@ -224,8 +252,8 @@ class DashboardSidebar extends StatelessWidget {
           onTap: () => context.go(RouterKeys.loungeAdminStaff),
         ),
 
-      // History & Reports (Restricted to Lounge Admins & Super Admins, hidden for Cashiers)
-      if (user.canViewShiftHistory)
+      // History & Reports
+      if (canViewShiftHistory)
         _SidebarItem(
           icon: Icons.history_outlined,
           label: AppStrings.shiftHistory,
@@ -233,7 +261,7 @@ class DashboardSidebar extends StatelessWidget {
           onTap: () => context.go('/lounge-admin/shifts'),
         ),
 
-      if (user.canViewReports)
+      if (canViewReports)
         _SidebarItem(
           icon: Icons.assessment_outlined,
           label: AppStrings.monthlyReports,
@@ -242,7 +270,7 @@ class DashboardSidebar extends StatelessWidget {
         ),
 
       // Profile & Settings
-      if (user.canEditLoungeProfile)
+      if (canEditLoungeProfile)
         _SidebarItem(
           icon: Icons.settings_outlined,
           label: AppStrings.loungeProfile,

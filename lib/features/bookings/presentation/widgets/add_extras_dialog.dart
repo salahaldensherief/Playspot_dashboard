@@ -237,9 +237,10 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
                     ),
                     Row(
                       children: [
-                        TextButton(
+                        AppButton(
+                          text: AppStrings.cancel,
+                          variant: AppButtonVariant.text,
                           onPressed: () => Navigator.of(context).pop(),
-                          child: AppText.body(AppStrings.cancel, color: AppColors.textSecondary),
                         ),
                         SizedBox(width: 8.w),
                         AppButton(
