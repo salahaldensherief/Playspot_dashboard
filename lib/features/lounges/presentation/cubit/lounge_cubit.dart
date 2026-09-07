@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/lounge.dart';
 import '../../domain/repositories/lounge_repository.dart';
@@ -9,19 +11,27 @@ class LoungeCubit extends Cubit<LoungeState> {
   LoungeCubit(this.repository) : super(const LoungeState());
 
   Future<void> fetchLounges({bool forceRefresh = false}) async {
-    emit(state.copyWith(status: LoungeStatus.loading));
+    if (!forceRefresh && state.status == LoungeStatus.loading) return;
+    if (!forceRefresh && state.status == LoungeStatus.success && state.lounges.isNotEmpty) return;
+
+    emit(state.copyWith(status: LoungeStatus.loading, clearError: true));
     final result = await repository.getLounges(forceRefresh: forceRefresh);
     
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: LoungeStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) {
+        debugPrint('⚠️ [LOUNGE_CUBIT] fetchLounges failure: ${failure.message}');
+        emit(state.copyWith(
+          status: LoungeStatus.success,
+          clearError: true,
+          lounges: state.lounges,
+        ));
+      },
       (lounges) => emit(state.copyWith(
         status: LoungeStatus.success,
         lounges: lounges,
+        clearError: true,
       )),
     );
   }

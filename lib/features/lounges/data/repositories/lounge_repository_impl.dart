@@ -19,17 +19,24 @@ class LoungeRepositoryImpl implements LoungeRepository {
 
   @override
   Future<Either<Failure, List<Lounge>>> getLounges({bool forceRefresh = false}) async {
-    const cacheKey = 'cache_lounges';
+    const cacheKey = 'cache_lounges_v2';
+    // Purge legacy cache key if present
+    await localCacheService.remove('cache_lounges');
+
     try {
       if (!forceRefresh) {
         final cached = localCacheService.getJson(cacheKey);
         if (cached is List && cached.isNotEmpty) {
-          final cachedLounges = cached
-              .map((item) => LoungeModel.fromJson(Map<String, dynamic>.from(item as Map)))
-              .map((e) => e as Lounge)
-              .toList();
-          _refreshLoungesInBackground(cacheKey);
-          return Right(cachedLounges);
+          try {
+            final cachedLounges = cached
+                .map((item) => LoungeModel.fromJson(Map<String, dynamic>.from(item as Map)))
+                .map((e) => e as Lounge)
+                .toList();
+            _refreshLoungesInBackground(cacheKey);
+            return Right(cachedLounges);
+          } catch (_) {
+            await localCacheService.remove(cacheKey);
+          }
         }
       }
 
@@ -72,13 +79,17 @@ class LoungeRepositoryImpl implements LoungeRepository {
 
       return Right(lounges.map((e) => e as Lounge).toList());
     } catch (e) {
-      final cached = localCacheService.getJson(cacheKey);
-      if (cached is List && cached.isNotEmpty) {
-        final cachedLounges = cached
-            .map((item) => LoungeModel.fromJson(Map<String, dynamic>.from(item as Map)))
-            .map((e) => e as Lounge)
-            .toList();
-        return Right(cachedLounges);
+      try {
+        final cached = localCacheService.getJson(cacheKey);
+        if (cached is List && cached.isNotEmpty) {
+          final cachedLounges = cached
+              .map((item) => LoungeModel.fromJson(Map<String, dynamic>.from(item as Map)))
+              .map((e) => e as Lounge)
+              .toList();
+          return Right(cachedLounges);
+        }
+      } catch (_) {
+        await localCacheService.remove(cacheKey);
       }
       return Left(ServerFailure(e.toString()));
     }
@@ -237,7 +248,7 @@ class LoungeRepositoryImpl implements LoungeRepository {
         opensAt: lounge.opensAt,
         closesAt: lounge.closesAt,
       ));
-      await localCacheService.remove('cache_lounges');
+      await localCacheService.remove('cache_lounges_v2');
       return Right(id);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -284,7 +295,7 @@ class LoungeRepositoryImpl implements LoungeRepository {
         address: address,
         phone: phone,
       );
-      await localCacheService.remove('cache_lounges');
+      await localCacheService.remove('cache_lounges_v2');
       return Right(result['lounge_id']?.toString() ?? result['id']?.toString() ?? '');
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -312,8 +323,8 @@ class LoungeRepositoryImpl implements LoungeRepository {
         'location': lounge.location,
         if (lounge.lat != null && lounge.lng != null)
           'location_point': 'POINT(${lounge.lng} ${lounge.lat})',
-        if (openingTime != null) 'opening_time': openingTime,
-        if (closingTime != null) 'closing_time': closingTime,
+        'opening_time': openingTime,
+        'closing_time': closingTime,
         'image_url': lounge.imageUrl,
         'images': lounge.images,
         'is_open': lounge.isOpen,
@@ -326,7 +337,7 @@ class LoungeRepositoryImpl implements LoungeRepository {
       };
 
       await remoteDataSource.updateLounge(lounge.id, updateMap);
-      await localCacheService.remove('cache_lounges');
+      await localCacheService.remove('cache_lounges_v2');
       await localCacheService.remove('cache_lounge_${lounge.id}');
       return const Right(null);
     } catch (e) {
@@ -352,7 +363,7 @@ class LoungeRepositoryImpl implements LoungeRepository {
         titleEn: titleEn,
         expiresAt: expiresAt,
       );
-      await localCacheService.remove('cache_lounges');
+      await localCacheService.remove('cache_lounges_v2');
       await localCacheService.remove('cache_lounge_$loungeId');
       return const Right(null);
     } catch (e) {
@@ -366,7 +377,7 @@ class LoungeRepositoryImpl implements LoungeRepository {
       await remoteDataSource.updateLounge(loungeId, {
         'location_point': 'POINT($lng $lat)',
       });
-      await localCacheService.remove('cache_lounges');
+      await localCacheService.remove('cache_lounges_v2');
       await localCacheService.remove('cache_lounge_$loungeId');
       return const Right(null);
     } catch (e) {

@@ -111,12 +111,12 @@ class LoungeModel extends Lounge {
       availableRooms: parseInt(json['available_rooms'] ?? json['rooms_count']),
       descriptionAr: json['description_ar']?.toString(),
       descriptionEn: json['description_en']?.toString(),
-      images: json['images'] != null ? List<String>.from(json['images']) : null,
+      images: (json['images'] is List) ? (json['images'] as List).map((e) => e.toString()).toList() : null,
       opensAt: json['opening_time']?.toString() ?? '',
       closesAt: json['closing_time']?.toString() ?? '',
       lat: lat,
       lng: lng,
-      categoryIcons: json['category_icons'] != null ? List<String>.from(json['category_icons']) : [],
+      categoryIcons: (json['category_icons'] is List) ? (json['category_icons'] as List).map((e) => e.toString()).toList() : [],
       categoryId: json['category_id']?.toString(),
       ownerName: json['owner_name']?.toString(),
       ownerEmail: json['owner_email']?.toString(),
@@ -125,7 +125,7 @@ class LoungeModel extends Lounge {
       discountPercentage: parseInt(json['discount_percentage']) ?? 0,
       discountTitleAr: json['discount_title_ar']?.toString(),
       discountTitleEn: json['discount_title_en']?.toString(),
-      discountExpiresAt: json['discount_expires_at'] != null ? DateTime.parse(json['discount_expires_at']) : null,
+      discountExpiresAt: json['discount_expires_at'] != null ? DateTime.tryParse(json['discount_expires_at'].toString()) : null,
     );
   }
 

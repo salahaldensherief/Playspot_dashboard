@@ -238,6 +238,8 @@ class DashboardCubit extends Cubit<DashboardState> {
             final chartResult = await loungeRepository.getRevenueOverTime(30);
             final topResult = await loungeRepository.getTopLoungesByRevenue(10);
 
+            if (isClosed) return;
+
             overviewResult.fold(
               (failure) => null,
               (overview) {
@@ -260,11 +262,14 @@ class DashboardCubit extends Cubit<DashboardState> {
             topResult.fold((_) => null, (top) => newState = newState.copyWith(topLounges: top));
           }
 
+          if (isClosed) return;
           emit(newState.copyWith(status: FeatureStatus.success));
         },
       );
     } catch (e) {
-      emit(state.copyWith(status: FeatureStatus.failure, errorMessage: e.toString()));
+      if (!isClosed) {
+        emit(state.copyWith(status: FeatureStatus.failure, errorMessage: e.toString()));
+      }
     }
   }
 

@@ -18,11 +18,12 @@ class LoungeState extends Equatable {
     LoungeStatus? status,
     List<Lounge>? lounges,
     String? errorMessage,
+    bool clearError = false,
   }) {
     return LoungeState(
       status: status ?? this.status,
       lounges: lounges ?? this.lounges,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }
 

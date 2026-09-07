@@ -132,7 +132,6 @@ class _DashboardShellContentState extends State<_DashboardShellContent> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final loungeId = widget.user?.loungeId;
-      context.read<LoungeCubit>().fetchLounges();
       if (loungeId != null && loungeId.isNotEmpty) {
         context.read<ShiftCubit>().checkActiveShift(loungeId);
         context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);

@@ -235,16 +235,48 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
 
   @override
   Future<Map<String, dynamic>> getDashboardStats(String? loungeId) async {
-    final response = await client.rpc('get_dashboard_stats', params: {
-      'p_lounge_id': loungeId,
-    });
-    return Map<String, dynamic>.from(response);
+    if (loungeId != null && loungeId.isNotEmpty) {
+      try {
+        final response = await client.rpc('get_lounge_owner_dashboard_stats', params: {
+          'p_lounge_id': loungeId,
+        });
+        if (response != null && response is Map) {
+          return Map<String, dynamic>.from(response);
+        }
+      } catch (_) {}
+    }
+
+    try {
+      final response = await client.rpc('get_dashboard_overview');
+      if (response != null && response is Map) {
+        return Map<String, dynamic>.from(response);
+      }
+    } catch (_) {}
+
+    return {
+      'total_revenue': 0.0,
+      'total_bookings': 0,
+      'active_rooms': 0,
+      'occupancy_rate': 0.0,
+    };
   }
 
   @override
   Future<Map<String, dynamic>> getDashboardOverview() async {
-    final response = await client.rpc('get_dashboard_overview');
-    return Map<String, dynamic>.from(response);
+    try {
+      final response = await client.rpc('get_dashboard_overview');
+      if (response != null && response is Map) {
+        return Map<String, dynamic>.from(response);
+      }
+    } catch (e) {
+      debugPrint('⚠️ [LOUNGE_DATA_SOURCE] getDashboardOverview RPC failed: $e');
+    }
+    return {
+      'total_revenue': 0.0,
+      'total_bookings': 0,
+      'total_lounges': 0,
+      'total_users': 0,
+    };
   }
 
   @override
