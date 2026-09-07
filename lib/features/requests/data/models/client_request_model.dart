@@ -143,7 +143,12 @@ class ClientRequestModel extends ClientRequestEntity {
     final metadataObj = NotificationMetadata.fromJson(json['metadata']);
 
     List<Map<String, dynamic>> parsedItems = [];
-    if (json['items'] != null && json['items'] is List) {
+    if (json['canteen_order_items'] != null && json['canteen_order_items'] is List) {
+      parsedItems = (json['canteen_order_items'] as List)
+          .whereType<Map>()
+          .map((i) => Map<String, dynamic>.from(i))
+          .toList();
+    } else if (json['items'] != null && json['items'] is List) {
       parsedItems = (json['items'] as List)
           .whereType<Map>()
           .map((i) => Map<String, dynamic>.from(i))

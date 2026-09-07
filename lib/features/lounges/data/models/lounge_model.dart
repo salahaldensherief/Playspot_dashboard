@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import '../../domain/entities/lounge.dart';
 
 class LoungeModel extends Lounge {
@@ -6,7 +7,7 @@ class LoungeModel extends Lounge {
     required super.name,
     required super.imageUrl,
     super.rating = 0.0,
-    super.distance = 0.0,
+    super.distance,
     super.pricePerHour = 0.0,
     super.isOpen = true,
     super.location,
@@ -34,10 +35,14 @@ class LoungeModel extends Lounge {
 
   factory LoungeModel.fromJson(Map<String, dynamic> json) {
     // Helper to parse double safely
-    double parseDouble(dynamic value) {
-      if (value == null) return 0.0;
+    double? parseDoubleNullable(dynamic value) {
+      if (value == null) return null;
       if (value is num) return value.toDouble();
-      return double.tryParse(value.toString()) ?? 0.0;
+      return double.tryParse(value.toString());
+    }
+
+    double parseDouble(dynamic value) {
+      return parseDoubleNullable(value) ?? 0.0;
     }
 
     // Helper to parse int safely
@@ -47,11 +52,49 @@ class LoungeModel extends Lounge {
       return int.tryParse(value.toString());
     }
 
-    double calculatedDistance = 0.0;
+    // Parse lat and lng
+    double? lat = parseDoubleNullable(json['lat']) ?? parseDoubleNullable(json['latitude']);
+    double? lng = parseDoubleNullable(json['lng']) ?? parseDoubleNullable(json['longitude']);
+
+    // Parse location_point if lat/lng are missing
+    if ((lat == null || lng == null) && json['location_point'] != null) {
+      final locPoint = json['location_point'];
+      if (locPoint is Map && locPoint['coordinates'] is List) {
+        final coords = locPoint['coordinates'] as List;
+        if (coords.length >= 2) {
+          lng ??= parseDoubleNullable(coords[0]);
+          lat ??= parseDoubleNullable(coords[1]);
+        }
+      } else if (locPoint is String) {
+        final match = RegExp(r'POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)', caseSensitive: false)
+            .firstMatch(locPoint);
+        if (match != null) {
+          lng ??= double.tryParse(match.group(1) ?? '');
+          lat ??= double.tryParse(match.group(2) ?? '');
+        }
+      }
+    }
+
+    // Calculate or parse distance dynamically
+    double? calculatedDistance;
     if (json['dist_meters'] != null) {
       calculatedDistance = parseDouble(json['dist_meters']) / 1000.0;
-    } else if (json['distance'] != null) {
-      calculatedDistance = parseDouble(json['distance']);
+    } else {
+      // Check if user/device coordinates are passed in json for dynamic calculation
+      final deviceLat = parseDoubleNullable(json['device_lat']) ?? parseDoubleNullable(json['user_lat']);
+      final deviceLng = parseDoubleNullable(json['device_lng']) ?? parseDoubleNullable(json['user_lng']);
+      if (deviceLat != null && deviceLng != null && lat != null && lng != null) {
+        const double earthRadiusKm = 6371.0;
+        final dLat = (lat - deviceLat) * (math.pi / 180.0);
+        final dLng = (lng - deviceLng) * (math.pi / 180.0);
+        final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+            math.cos(deviceLat * (math.pi / 180.0)) *
+                math.cos(lat * (math.pi / 180.0)) *
+                math.sin(dLng / 2) *
+                math.sin(dLng / 2);
+        final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+        calculatedDistance = earthRadiusKm * c;
+      }
     }
 
     return LoungeModel(
@@ -69,14 +112,10 @@ class LoungeModel extends Lounge {
       descriptionAr: json['description_ar']?.toString(),
       descriptionEn: json['description_en']?.toString(),
       images: json['images'] != null ? List<String>.from(json['images']) : null,
-      opensAt: json['opening_time']?.toString() ?? json['opens_at']?.toString() ?? '',
-      closesAt: json['closing_time']?.toString() ?? json['closes_at']?.toString() ?? '',
-      lat: (json['latitude'] != null)
-          ? parseDouble(json['latitude'])
-          : ((json['lat'] != null) ? parseDouble(json['lat']) : null),
-      lng: (json['longitude'] != null)
-          ? parseDouble(json['longitude'])
-          : ((json['lng'] != null) ? parseDouble(json['lng']) : null),
+      opensAt: json['opening_time']?.toString() ?? '',
+      closesAt: json['closing_time']?.toString() ?? '',
+      lat: lat,
+      lng: lng,
       categoryIcons: json['category_icons'] != null ? List<String>.from(json['category_icons']) : [],
       categoryId: json['category_id']?.toString(),
       ownerName: json['owner_name']?.toString(),
@@ -96,7 +135,6 @@ class LoungeModel extends Lounge {
       'name': name,
       'image_url': imageUrl,
       'rating': rating,
-      'distance': distance,
       'price_per_hour': pricePerHour,
       'is_open': isOpen,
       'location': location,
@@ -108,12 +146,7 @@ class LoungeModel extends Lounge {
       'images': images,
       'opening_time': opensAt,
       'closing_time': closesAt,
-      'latitude': lat,
-      'longitude': lng,
-      'opens_at': opensAt,
-      'closes_at': closesAt,
-      'lat': lat,
-      'lng': lng,
+      if (lat != null && lng != null) 'location_point': 'POINT($lng $lat)',
       'status': status,
       'has_discount': hasDiscount,
       'discount_percentage': discountPercentage,
@@ -126,3 +159,4 @@ class LoungeModel extends Lounge {
     };
   }
 }
+

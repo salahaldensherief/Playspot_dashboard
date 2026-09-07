@@ -35,6 +35,8 @@ abstract class LoungeRepository {
     required String ownerName,
     required String loungeName,
     String? city,
+    String? address,
+    String? phone,
   });
   Future<Either<Failure, Map<String, dynamic>>> getDashboardStats(String? loungeId);
   Future<Either<Failure, Map<String, dynamic>>> getDashboardOverview();

@@ -23,7 +23,6 @@ class LoungeReviewModel extends LoungeReviewEntity {
     final bookingData = json['bookings'] as Map<String, dynamic>?;
     final bookingProfileData = bookingData?['profiles'] as Map<String, dynamic>?;
     final profileData = json['profiles'] as Map<String, dynamic>?;
-    final userData = json['users'] as Map<String, dynamic>?;
 
     final String? userId = (json['user_id'] ?? json['userId'] ?? bookingData?['user_id'])?.toString();
     final String? bookingId = (json['booking_id'] ?? json['bookingId'])?.toString();
@@ -35,8 +34,7 @@ class LoungeReviewModel extends LoungeReviewEntity {
       bookingProfileData?['name'] ??
       profileData?['full_name'] ??
       profileData?['name'] ??
-      json['full_name'] ??
-      userData?['full_name']
+      json['full_name']
     )?.toString();
 
     final String userName = (rawUserName != null && rawUserName.trim().isNotEmpty)
@@ -47,8 +45,7 @@ class LoungeReviewModel extends LoungeReviewEntity {
       json['user_avatar'] ??
       json['avatar_url'] ??
       bookingProfileData?['avatar_url'] ??
-      profileData?['avatar_url'] ??
-      userData?['avatar_url']
+      profileData?['avatar_url']
     )?.toString();
 
     DateTime parsedDate;

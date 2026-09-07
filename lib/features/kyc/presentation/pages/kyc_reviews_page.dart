@@ -96,6 +96,8 @@ class _KycDataTable extends StatelessWidget {
               children: [
                 AppText.body(req.ownerName, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
                 AppText.body(req.ownerEmail, color: AppColors.textSecondary, fontSize: 11.sp),
+                if (req.ownerPhone.isNotEmpty)
+                  AppText.body(req.ownerPhone, color: AppColors.neonBlue, fontSize: 11.sp),
               ],
             ),
           ),

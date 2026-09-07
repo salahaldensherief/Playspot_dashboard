@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 class ShiftEntity extends Equatable {
   final String id;
+  final String? loungeId;
   final String cashierId;
   final String? cashierName;
   final double startingCash;
@@ -10,7 +11,7 @@ class ShiftEntity extends Equatable {
   final double? expectedCash;
   final double? actualCash;
   final double? discrepancy;
-  final String status; // 'open' or 'closed'
+  final String status; // 'open' or 'closed' or 'active'
   final DateTime startTime;
   final DateTime? endTime;
   final String? notes;
@@ -19,10 +20,16 @@ class ShiftEntity extends Equatable {
   final DateTime? approvedAt;
   final String? managerNotes;
 
+  String get staffId => cashierId;
+  double? get actualCashCounted => actualCash;
+  double? get difference => discrepancy;
+  DateTime get createdAt => startTime;
+
   double get totalRevenue => (cashRevenue ?? 0) + (digitalRevenue ?? 0);
 
   const ShiftEntity({
     required this.id,
+    this.loungeId,
     required this.cashierId,
     this.cashierName,
     required this.startingCash,
@@ -44,6 +51,7 @@ class ShiftEntity extends Equatable {
   @override
   List<Object?> get props => [
         id,
+        loungeId,
         cashierId,
         cashierName,
         startingCash,

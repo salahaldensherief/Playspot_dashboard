@@ -154,12 +154,6 @@ class DashboardSidebar extends StatelessWidget {
         onTap: () => context.go(RouterKeys.superAdminLounges),
       ),
       _SidebarItem(
-        icon: Icons.people_outline,
-        label: AppStrings.userLabel,
-        isActive: activeRoute == AppStrings.users,
-        onTap: () => context.go(RouterKeys.superAdminUsers),
-      ),
-      _SidebarItem(
         icon: Icons.account_balance_wallet_outlined,
         label: AppStrings.payouts,
         isActive: activeRoute == AppStrings.payouts,

@@ -66,6 +66,9 @@ class UserPermissions {
   /// Who can view shift history?
   bool get canViewShiftHistory => can('shifts_view');
 
+  /// Who can view customer reviews & ratings?
+  bool get canViewReviews => can('reviews_view');
+
   /// Who can manage the lounge's setup (Rooms, Extras, etc.)?
   bool get canEditSetup => can('rooms_view') || can('menu_view') || can('rooms_manage') || can('menu_manage_items');
 

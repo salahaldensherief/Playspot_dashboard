@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:equatable/equatable.dart';
 
 class Lounge extends Equatable {
@@ -5,7 +6,7 @@ class Lounge extends Equatable {
   final String name;
   final String imageUrl;
   final double rating;
-  final double distance;
+  final double? distance;
   final double pricePerHour;
   final bool isOpen;
   final String? location;
@@ -35,7 +36,7 @@ class Lounge extends Equatable {
     required this.name,
     required this.imageUrl,
     this.rating = 0.0,
-    this.distance = 0.0,
+    this.distance,
     this.pricePerHour = 0.0,
     this.isOpen = true,
     this.location,
@@ -60,6 +61,33 @@ class Lounge extends Equatable {
     this.discountTitleEn,
     this.discountExpiresAt,
   });
+
+  /// Calculates dynamic distance in kilometers from device coordinates ([deviceLat], [deviceLng])
+  /// to this lounge's location ([lat], [lng]).
+  /// Returns null if device or lounge coordinates are missing.
+  double? calculateDistance(double? deviceLat, double? deviceLng) {
+    if (deviceLat == null || deviceLng == null || lat == null || lng == null) {
+      return null;
+    }
+    const double earthRadiusKm = 6371.0;
+    final dLat = _degToRad(lat! - deviceLat);
+    final dLng = _degToRad(lng! - deviceLng);
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_degToRad(deviceLat)) *
+            math.cos(_degToRad(lat!)) *
+            math.sin(dLng / 2) *
+            math.sin(dLng / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadiusKm * c;
+  }
+
+  static double _degToRad(double deg) => deg * (math.pi / 180.0);
+
+  /// Returns a copy of this [Lounge] with [distance] calculated dynamically
+  /// from the given device coordinates.
+  Lounge withCalculatedDistance(double? deviceLat, double? deviceLng) {
+    return copyWith(distance: calculateDistance(deviceLat, deviceLng));
+  }
 
   @override
   List<Object?> get props => [
@@ -155,3 +183,4 @@ class Lounge extends Equatable {
     );
   }
 }
+

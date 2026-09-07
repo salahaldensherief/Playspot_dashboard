@@ -31,38 +31,63 @@ class LoungeCubit extends Cubit<LoungeState> {
     required String ownerName,
     required String ownerEmail,
     required String ownerPassword,
+    String? city,
+    String? address,
+    String? phone,
   }) async {
     emit(state.copyWith(status: LoungeStatus.loading));
     
-    final loungeResult = await repository.createLounge(lounge);
+    final result = await repository.createLoungeWithOwner(
+      email: ownerEmail,
+      password: ownerPassword.isNotEmpty ? ownerPassword : 'LoungeOwner@123',
+      ownerName: ownerName,
+      loungeName: lounge.name,
+      city: city ?? lounge.city,
+      address: address ?? lounge.location,
+      phone: phone,
+    );
     
     if (isClosed) return;
 
-    await loungeResult.fold(
-      (failure) async => emit(state.copyWith(
+    result.fold(
+      (failure) => emit(state.copyWith(
         status: LoungeStatus.failure,
         errorMessage: failure.message,
       )),
-      (loungeId) async {
-        final adminResult = await repository.createLoungeAdmin(
-          email: ownerEmail,
-          password: ownerPassword,
-          name: ownerName,
-          loungeId: loungeId,
-        );
-        
-        if (isClosed) return;
+      (_) => fetchLounges(forceRefresh: true),
+    );
+  }
 
-        adminResult.fold(
-          (failure) => emit(state.copyWith(
-            status: LoungeStatus.failure,
-            errorMessage: 'Lounge created but admin failed: ${failure.message}',
-          )),
-          (_) {
-            fetchLounges();
-          },
-        );
-      },
+  Future<void> createLoungeWithOwner({
+    required String loungeName,
+    String? city,
+    String? address,
+    String? phone,
+    required String ownerName,
+    required String ownerEmail,
+    String? ownerPhone,
+    String? ownerPassword,
+  }) async {
+    emit(state.copyWith(status: LoungeStatus.loading));
+    
+    final result = await repository.createLoungeWithOwner(
+      email: ownerEmail,
+      password: (ownerPassword != null && ownerPassword.isNotEmpty) ? ownerPassword : 'LoungeOwner@123',
+      ownerName: ownerName,
+      loungeName: loungeName,
+      city: city,
+      address: address,
+      phone: phone,
+    );
+
+    if (isClosed) return;
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: LoungeStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) => fetchLounges(forceRefresh: true),
     );
   }
 

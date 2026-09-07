@@ -74,7 +74,7 @@ class KycInspectionDialog extends StatelessWidget {
                     child: Container(
                       padding: EdgeInsets.all(24.r),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(color: AppColors.borderDefault),
                       ),
@@ -85,6 +85,8 @@ class KycInspectionDialog extends StatelessWidget {
                           SizedBox(height: 16.h),
                           _buildDetailRow(Icons.person_outline, AppStrings.fullName, request.ownerName),
                           _buildDetailRow(Icons.email_outlined, AppStrings.email, request.ownerEmail),
+                          if (request.ownerPhone.isNotEmpty)
+                            _buildDetailRow(Icons.phone_outlined, AppStrings.phoneNumber, request.ownerPhone),
                           _buildDetailRow(Icons.business_outlined, AppStrings.lounges, request.loungeName),
                           
                           const Spacer(),
@@ -105,10 +107,7 @@ class KycInspectionDialog extends StatelessWidget {
                           SizedBox(height: 12.h),
                           AppButton(
                             text: AppStrings.reject,
-                            onPressed: () {
-                              cubit.reviewKyc(userId: request.userId, approve: false);
-                              Navigator.pop(context);
-                            },
+                            onPressed: () => _showRejectionDialog(context),
                             variant: AppButtonVariant.outlined,
                             width: double.infinity,
                           ),
@@ -148,7 +147,7 @@ class KycInspectionDialog extends StatelessWidget {
               loadingBuilder: (context, child, progress) => progress == null 
                   ? child 
                   : const Center(child: CircularProgressIndicator()),
-              errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image_outlined, size: 48, color: AppColors.danger)),
+              errorBuilder: (context, error, _) => const Center(child: Icon(Icons.broken_image_outlined, size: 48, color: AppColors.danger)),
             ),
           ),
         ),
@@ -187,6 +186,58 @@ class KycInspectionDialog extends StatelessWidget {
         child: InteractiveViewer(
           child: Image.network(url),
         ),
+      ),
+    );
+  }
+
+  void _showRejectionDialog(BuildContext context) {
+    final notesController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        title: AppText.heading("Reject KYC Submission", fontSize: 18.sp),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppText.body("Please provide an optional reason or note for rejecting this KYC application:"),
+            SizedBox(height: 12.h),
+            TextField(
+              controller: notesController,
+              maxLines: 3,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: "Reason for rejection (e.g. Blurry document, expired ID...)",
+                hintStyle: const TextStyle(color: AppColors.textSecondary),
+                filled: true,
+                fillColor: Colors.black26,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.outlined,
+            onPressed: () => Navigator.pop(dialogCtx),
+          ),
+          AppButton(
+            text: AppStrings.reject,
+            variant: AppButtonVariant.danger,
+            onPressed: () {
+              cubit.reviewKyc(
+                userId: request.userId,
+                approve: false,
+                notes: notesController.text.trim(),
+              );
+              Navigator.pop(dialogCtx);
+              Navigator.pop(context);
+            },
+          ),
+        ],
       ),
     );
   }

@@ -43,8 +43,9 @@ class _RoomDialogState extends State<RoomDialog> {
   late TextEditingController _nameEnController;
   late TextEditingController _descriptionArController;
   late TextEditingController _descriptionEnController;
-  late TextEditingController _pricePerHourController;
-  late TextEditingController _capacityController;
+  late TextEditingController _hourlyRateSingleController;
+  late TextEditingController _hourlyRateMultiController;
+  late TextEditingController _maxCapacityController;
   late TextEditingController _controllersController;
   late TextEditingController _screenSizeController;
   late TextEditingController _extraPriceController;
@@ -69,8 +70,9 @@ class _RoomDialogState extends State<RoomDialog> {
     _nameEnController = TextEditingController(text: r?.nameEn);
     _descriptionArController = TextEditingController(text: r?.descriptionAr);
     _descriptionEnController = TextEditingController(text: r?.descriptionEn);
-    _pricePerHourController = TextEditingController(text: r?.pricePerHour.toString() ?? '0.0');
-    _capacityController = TextEditingController(text: r?.capacity.toString() ?? (r?.isOpenArea == true ? '2' : '4'));
+    _hourlyRateSingleController = TextEditingController(text: r?.hourlyRateSingle.toString() ?? '0.0');
+    _hourlyRateMultiController = TextEditingController(text: r?.hourlyRateMulti.toString() ?? '0.0');
+    _maxCapacityController = TextEditingController(text: r?.maxCapacity.toString() ?? (r?.isOpenArea == true ? '2' : '4'));
     _controllersController = TextEditingController(text: r?.controllersCount.toString() ?? '2');
     _screenSizeController = TextEditingController(text: r?.screenSize ?? '43"');
     _extraPriceController = TextEditingController(text: r?.extraControllerPrice.toString() ?? '0.0');
@@ -97,8 +99,9 @@ class _RoomDialogState extends State<RoomDialog> {
     _nameEnController.dispose();
     _descriptionArController.dispose();
     _descriptionEnController.dispose();
-    _pricePerHourController.dispose();
-    _capacityController.dispose();
+    _hourlyRateSingleController.dispose();
+    _hourlyRateMultiController.dispose();
+    _maxCapacityController.dispose();
     _controllersController.dispose();
     _screenSizeController.dispose();
     _extraPriceController.dispose();
@@ -133,7 +136,8 @@ class _RoomDialogState extends State<RoomDialog> {
         if (mounted) {
           final spaceTypeId = _selectedSpaceTypeId ?? 'open_area';
           final isOpenArea = spaceTypeId == 'open_area';
-          final pricePerHour = double.tryParse(_pricePerHourController.text) ?? 0;
+          final singleRate = double.tryParse(_hourlyRateSingleController.text) ?? 0.0;
+          final multiRate = double.tryParse(_hourlyRateMultiController.text) ?? 0.0;
 
           final room = RoomEntity(
             id: widget.room?.id ?? const Uuid().v4(),
@@ -144,11 +148,10 @@ class _RoomDialogState extends State<RoomDialog> {
             descriptionEn: _descriptionEnController.text,
             spaceType: isOpenArea ? 'Open Area' : (spaceTypeId == 'vip_room' ? 'VIP Room' : 'Standard Room'),
             spaceTypeId: spaceTypeId,
-            pricePerHourSingle: pricePerHour,
-            pricePerHourMulti: pricePerHour,
-            pricePerHour: pricePerHour,
+            hourlyRateSingle: singleRate,
+            hourlyRateMulti: multiRate,
             extraControllerPrice: double.tryParse(_extraPriceController.text) ?? 0,
-            capacity: int.tryParse(_capacityController.text) ?? (isOpenArea ? 2 : 4),
+            maxCapacity: int.tryParse(_maxCapacityController.text) ?? (isOpenArea ? 2 : 4),
             controllersCount: isOpenArea ? (int.tryParse(_controllersController.text) ?? 2) : 2,
             screenSize: isOpenArea ? _screenSizeController.text : '',
             activityIds: _selectedActivityIds,
@@ -222,12 +225,13 @@ class _RoomDialogState extends State<RoomDialog> {
                   nameEnController: _nameEnController,
                   descriptionArController: _descriptionArController,
                   descriptionEnController: _descriptionEnController,
-                  pricePerHourController: _pricePerHourController,
+                  hourlyRateSingleController: _hourlyRateSingleController,
+                  hourlyRateMultiController: _hourlyRateMultiController,
                   isOpenArea: _selectedSpaceTypeId == 'open_area',
                 ),
                 SizedBox(height: 20.h),
                 RoomSpecsForm(
-                  capacityController: _capacityController,
+                  capacityController: _maxCapacityController,
                   controllersController: _controllersController,
                   screenSizeController: _screenSizeController,
                   extraPriceController: _extraPriceController,
@@ -244,7 +248,6 @@ class _RoomDialogState extends State<RoomDialog> {
                       if (selected) {
                         if (!_featuresEn.contains(feature)) {
                           _featuresEn.add(feature);
-                          // For simplicity, just add same to AR for now or map them
                           _featuresAr.add(feature); 
                         }
                       } else {
@@ -321,7 +324,7 @@ class _RoomDialogState extends State<RoomDialog> {
                       _featuresAr.removeAt(idx);
                     } else {
                       _featuresEn.add(s);
-                      _featuresAr.add(s); // Simplification
+                      _featuresAr.add(s);
                     }
                   });
                 },

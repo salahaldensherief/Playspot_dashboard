@@ -4,9 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
-import '../cubit/admin_management_cubit.dart';
-import '../cubit/admin_management_state.dart';
-import 'add_lounge_admin_dialog.dart';
+import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
+import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_state.dart';
+import 'package:play_spot_dashboard/features/lounges/presentation/widgets/add_lounge_dialog.dart';
 
 class UsersHeader extends StatelessWidget {
   const UsersHeader({super.key});
@@ -36,42 +36,49 @@ class UsersHeader extends StatelessWidget {
           ],
         ),
         AppButton(
-          text: AppStrings.addLoungeAdminBtn,
-          icon: Icons.person_add_alt_1,
-          onPressed: () => _showAddAdminDialog(context),
+          text: "Create Lounge & Owner",
+          icon: Icons.add,
+          onPressed: () => _showAddLoungeAndOwnerDialog(context),
         ),
       ],
     );
   }
 
-  void _showAddAdminDialog(BuildContext context) {
-    final cubit = context.read<AdminManagementCubit>();
+  void _showAddLoungeAndOwnerDialog(BuildContext context) {
+    final cubit = context.read<LoungeCubit>();
     showDialog(
       context: context,
-      builder: (diagContext) => BlocConsumer<AdminManagementCubit, AdminManagementState>(
+      builder: (diagContext) => BlocConsumer<LoungeCubit, LoungeState>(
         bloc: cubit,
         listener: (context, state) {
-          if (state.status == AdminManagementStatus.success) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(AppStrings.adminCreatedSuccess), backgroundColor: AppColors.success),
-            );
-            Navigator.pop(diagContext);
-          } else if (state.status == AdminManagementStatus.failure) {
+          if (state.status == LoungeStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.errorMessage ?? 'Error'), backgroundColor: AppColors.danger),
             );
           }
         },
         builder: (context, state) {
-          return AddLoungeAdminDialog(
-            isLoading: state.status == AdminManagementStatus.loading,
-            onSave: (email, password, name, loungeName, city) {
-              cubit.createLoungeAdmin(
-                email: email,
-                password: password,
-                name: name,
+          return AddLoungeDialog(
+            isLoading: state.status == LoungeStatus.loading,
+            onSave: ({
+              required String loungeName,
+              String? city,
+              String? address,
+              String? phone,
+              required String ownerName,
+              required String ownerEmail,
+              String? ownerPhone,
+              String? ownerPassword,
+            }) async {
+              await cubit.createLoungeWithOwner(
                 loungeName: loungeName,
                 city: city,
+                address: address,
+                phone: phone,
+                ownerName: ownerName,
+                ownerEmail: ownerEmail,
+                ownerPhone: ownerPhone,
+                ownerPassword: ownerPassword,
               );
             },
           );

@@ -277,7 +277,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
       try {
         ordersResponse = await client
             .from('canteen_orders')
-            .select()
+            .select('*, canteen_order_items(*)')
             .eq('lounge_id', cleanLoungeId)
             .order('created_at', ascending: false)
             .limit(50);
@@ -285,10 +285,18 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         try {
           ordersResponse = await client
               .from('canteen_orders')
-              .select()
+              .select('*, canteen_order_items(*)')
               .order('created_at', ascending: false)
               .limit(50);
-        } catch (_) {}
+        } catch (_) {
+          try {
+            ordersResponse = await client
+                .from('canteen_orders')
+                .select()
+                .order('created_at', ascending: false)
+                .limit(50);
+          } catch (_) {}
+        }
       }
 
       final ordersList = ((ordersResponse is List) ? ordersResponse : [])

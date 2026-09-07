@@ -5,16 +5,26 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/lounge.dart';
-import 'lounge_info_form.dart';
-import 'owner_info_form.dart';
 
 class AddLoungeDialog extends StatefulWidget {
   final bool isLoading;
-  final Future<void> Function(Lounge lounge, String ownerName, String ownerEmail, String ownerPassword)? onSave;
+  final Future<void> Function({
+    required String loungeName,
+    String? city,
+    String? address,
+    String? phone,
+    required String ownerName,
+    required String ownerEmail,
+    String? ownerPhone,
+    String? ownerPassword,
+  })? onSave;
 
   const AddLoungeDialog({
     super.key, 
@@ -30,11 +40,16 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
   final _formKey = GlobalKey<FormState>();
   final String _loungeId = const Uuid().v4();
   
-  // Controllers
+  // Lounge Details Controllers
   final _nameController = TextEditingController();
   final _cityController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _phoneController = TextEditingController();
+
+  // Owner Details Controllers
   final _ownerNameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _ownerPhoneController = TextEditingController();
   final _passwordController = TextEditingController();
   
   Uint8List? _loungeImageBytes;
@@ -46,8 +61,11 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
   void dispose() {
     _nameController.dispose();
     _cityController.dispose();
+    _addressController.dispose();
+    _phoneController.dispose();
     _ownerNameController.dispose();
     _emailController.dispose();
+    _ownerPhoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -57,36 +75,20 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
       setState(() => _isLocalUploading = true);
       
       try {
-        String imageUrl = '';
-        if (_loungeImageBytes != null && _loungeImageName != null) {
-          imageUrl = await sl<StorageService>().uploadLoungeImage(_loungeImageBytes!, _loungeImageName!, _loungeId);
-        }
-
-        if (mounted) {
-          final lounge = Lounge(
-            id: _loungeId,
-            name: _nameController.text,
-            imageUrl: imageUrl,
-            location: 'Address placeholder',
-            city: _cityController.text,
-            opensAt: '10:00 AM',
-            closesAt: '02:00 AM',
-            categoryId: null,
-            lat: null,
-            lng: null,
+        if (widget.onSave != null) {
+          await widget.onSave!(
+            loungeName: _nameController.text.trim(),
+            city: _cityController.text.trim().isEmpty ? null : _cityController.text.trim(),
+            address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
+            phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+            ownerName: _ownerNameController.text.trim(),
+            ownerEmail: _emailController.text.trim(),
+            ownerPhone: _ownerPhoneController.text.trim().isEmpty ? null : _ownerPhoneController.text.trim(),
+            ownerPassword: _passwordController.text.trim().isEmpty ? null : _passwordController.text.trim(),
           );
-
-          if (widget.onSave != null) {
-             await widget.onSave!(
-               lounge,
-               _ownerNameController.text,
-               _emailController.text,
-               _passwordController.text,
-             );
-          }
-          
-          if (mounted) Navigator.pop(context);
         }
+        
+        if (mounted) Navigator.pop(context);
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -102,8 +104,8 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
   @override
   Widget build(BuildContext context) {
     return AppDialog(
-      title: AppStrings.loungeSetup,
-      width: 600.w, // Reduced width since map is removed
+      title: "Create Lounge & Owner",
+      width: 650.w,
       actions: [
         AppButton(
           text: AppStrings.cancel,
@@ -112,33 +114,95 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
         ),
         SizedBox(width: 16.w),
         AppButton(
-          text: AppStrings.createLoungeAdmin,
+          text: "Create Lounge & Owner",
           isLoading: widget.isLoading || _isLocalUploading,
           onPressed: _submit,
         ),
       ],
       child: Form(
         key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            LoungeInfoForm(
-              nameController: _nameController,
-              // cityController removed - will be fetched from device
-              onImageSelected: (bytes, name) {
-                _loungeImageBytes = bytes;
-                _loungeImageName = name;
-              },
-            ),
-            SizedBox(height: 32.h),
-            const Divider(color: AppColors.divider),
-            SizedBox(height: 32.h),
-            OwnerInfoForm(
-              nameController: _ownerNameController,
-              emailController: _emailController,
-              passwordController: _passwordController,
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // --- Section 1: Lounge Details ---
+              AppText.subHeading("1. Lounge Details", fontSize: 16.sp, color: AppColors.neonPurple),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppTextField(
+                      label: AppStrings.loungeName,
+                      hintText: AppStrings.loungeNameHint,
+                      controller: _nameController,
+                      validator: AppValidator.validateRequired,
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: AppTextField(
+                      label: "Contact Phone",
+                      hintText: "Lounge phone number",
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                    ),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 28.h),
+              const Divider(color: AppColors.divider),
+              SizedBox(height: 20.h),
+
+              // --- Section 2: Owner Details ---
+              AppText.subHeading("2. Owner Details", fontSize: 16.sp, color: AppColors.neonBlue),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppTextField(
+                      label: AppStrings.ownerName,
+                      hintText: AppStrings.ownerNameHint,
+                      controller: _ownerNameController,
+                      validator: AppValidator.validateRequired,
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: AppTextField(
+                      label: AppStrings.ownerEmail,
+                      hintText: AppStrings.emailHint,
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: AppValidator.validateEmail,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppTextField(
+                      label: "Owner Phone",
+                      hintText: "Owner mobile number",
+                      controller: _ownerPhoneController,
+                      keyboardType: TextInputType.phone,
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: AppTextField(
+                      label: AppStrings.ownerPassword,
+                      hintText: AppStrings.passwordHint,
+                      controller: _passwordController,
+                      isPassword: true,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

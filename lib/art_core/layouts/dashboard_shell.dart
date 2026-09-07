@@ -32,7 +32,7 @@ class DashboardShell extends StatelessWidget {
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final loungeCubit = context.read<LoungeCubit>();
-      if (loungeCubit.state.lounges.isEmpty && loungeCubit.state.status != LoungeStatus.loading) {
+      if (loungeCubit.state.status == LoungeStatus.initial) {
         loungeCubit.fetchLounges();
       }
     });
@@ -70,6 +70,9 @@ class DashboardShell extends StatelessWidget {
         } else if (location.contains('kyc')) {
           activeRoute = AppStrings.kycReviews;
           title = AppStrings.kycReviews;
+        } else if (location.contains('reviews')) {
+          activeRoute = AppStrings.loungeReviews;
+          title = AppStrings.loungeReviews;
         } else if (location.contains('loyalty')) {
           activeRoute = AppStrings.loyaltyRewards;
           title = AppStrings.loyaltyRewards;

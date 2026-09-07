@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/lounge_model.dart';
 import '../models/extra_model.dart';
@@ -12,6 +13,8 @@ abstract class LoungeRemoteDataSource {
     required String ownerName,
     required String loungeName,
     String? city,
+    String? address,
+    String? phone,
   });
   Future<void> updateLounge(String id, Map<String, dynamic> data);
   Future<void> updateLoungeDiscount(String id, {
@@ -56,19 +59,59 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   @override
   Future<List<LoungeModel>> getLounges() async {
     try {
-      final response = await client.rpc('get_all_lounges_with_owners');
-      final list = (response as List).map((json) {
-        return LoungeModel.fromJson(Map<String, dynamic>.from(json));
-      }).toList();
-      // Filter out deleted lounges in case the RPC doesn't
-      return list.where((lounge) => lounge.status != 'deleted').toList();
-    } catch (e) {
-      final response = await client.from('lounges')
+      // 1. Direct query on lounges table (bypassing any legacy RPCs or invalid table relationships)
+      final response = await client
+          .from('lounges')
           .select()
-          .neq('status', 'deleted');
-      return (response as List).map((json) {
-        return LoungeModel.fromJson(Map<String, dynamic>.from(json));
+          .neq('status', 'deleted')
+          .order('created_at', ascending: false);
+
+      final rawList = (response as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      if (rawList.isEmpty) return [];
+
+      // 2. Batch fetch owner profiles directly from public.profiles table
+      final ownerIds = rawList
+          .map((json) => json['owner_id']?.toString())
+          .where((id) => id != null && id.trim().isNotEmpty)
+          .cast<String>()
+          .toSet()
+          .toList();
+
+      final Map<String, Map<String, dynamic>> profilesMap = {};
+      if (ownerIds.isNotEmpty) {
+        try {
+          final profilesResponse = await client
+              .from('profiles')
+              .select('id, full_name, email')
+              .inFilter('id', ownerIds);
+
+          for (final p in profilesResponse as List) {
+            final pMap = Map<String, dynamic>.from(p as Map);
+            final pId = pMap['id']?.toString();
+            if (pId != null) {
+              profilesMap[pId] = pMap;
+            }
+          }
+        } catch (e) {
+          debugPrint('⚠️ [LOUNGE_DATA_SOURCE] Owner profiles batch fetch failed: $e');
+        }
+      }
+
+      // 3. Map lounges and attach owner profile details
+      final list = rawList.map((json) {
+        final ownerId = json['owner_id']?.toString();
+        if (ownerId != null && profilesMap.containsKey(ownerId)) {
+          final p = profilesMap[ownerId]!;
+          json['owner_name'] ??= p['full_name'];
+          json['owner_email'] ??= p['email'];
+        }
+        return LoungeModel.fromJson(json);
       }).toList();
+
+      return list;
+    } catch (e) {
+      debugPrint('🔴 [LOUNGE_DATA_SOURCE] Direct lounges query failed: $e');
+      return [];
     }
   }
 
@@ -86,15 +129,30 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     required String ownerName,
     required String loungeName,
     String? city,
+    String? address,
+    String? phone,
   }) async {
-    final response = await client.rpc('super_admin_create_lounge_with_owner', params: {
-      'p_owner_email': email,
-      'p_owner_password': password,
-      'p_owner_name': ownerName,
-      'p_lounge_name': loungeName,
-      'p_city': city,
-    });
-    return Map<String, dynamic>.from(response);
+    try {
+      final response = await client.rpc('create_lounge_with_owner', params: {
+        'p_owner_email': email,
+        'p_owner_password': password,
+        'p_owner_name': ownerName,
+        'p_lounge_name': loungeName,
+        'p_city': city,
+        'p_address': address,
+        'p_phone': phone,
+      });
+      return Map<String, dynamic>.from(response);
+    } catch (e) {
+      final response = await client.rpc('super_admin_create_lounge_with_owner', params: {
+        'p_owner_email': email,
+        'p_owner_password': password,
+        'p_owner_name': ownerName,
+        'p_lounge_name': loungeName,
+        'p_city': city,
+      });
+      return Map<String, dynamic>.from(response);
+    }
   }
 
   @override
@@ -108,9 +166,16 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     cleanData.remove('price_per_hour');
     cleanData.remove('available_rooms');
     cleanData.remove('total_reviews');
+    cleanData.remove('opens_at');
+    cleanData.remove('closes_at');
+    cleanData.remove('description');
+    cleanData.remove('lat');
+    cleanData.remove('lng');
+    cleanData.remove('latitude');
+    cleanData.remove('longitude');
 
     // Sanitize time fields: if empty string ("") or null, omit key to prevent Postgres TIME type cast error
-    for (final timeKey in ['opening_time', 'closing_time', 'opens_at', 'closes_at']) {
+    for (final timeKey in ['opening_time', 'closing_time']) {
       if (cleanData.containsKey(timeKey)) {
         final val = cleanData[timeKey];
         if (val == null || (val is String && val.trim().isEmpty)) {
@@ -219,7 +284,6 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
 
   @override
   Future<List<ExtraModel>> getExtras(String loungeId) async {
-    // Explicitly select columns to avoid PGRST204 error if schema cache is stale
     final response = await client
         .from('extras')
         .select('id, lounge_id, name, price, category, is_available')
@@ -268,6 +332,9 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   Future<String> createLounge(LoungeModel lounge) async {
     final data = lounge.toJson();
     data.remove('id'); 
+    data.remove('opens_at');
+    data.remove('closes_at');
+    data.remove('description');
     
     final response = await client.from('lounges').insert(data).select('id').single();
     return response['id'].toString();

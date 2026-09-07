@@ -9,7 +9,6 @@ import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_sc
 import 'package:play_spot_dashboard/features/analytics/presentation/lounge_stats_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounges_page.dart' as lounges;
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
-import 'package:play_spot_dashboard/features/users/presentation/pages/users_page.dart' as users;
 import 'package:play_spot_dashboard/features/categories/presentation/categories/categories_screen.dart' as categories;
 import 'package:play_spot_dashboard/features/marketing/presentation/pages/marketing_page.dart' as marketing;
 import 'package:play_spot_dashboard/features/payouts/presentation/pages/super_admin_payouts_page.dart' as payouts;
@@ -33,7 +32,6 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
-import 'package:play_spot_dashboard/features/users/presentation/cubit/admin_management_cubit.dart';
 import 'package:play_spot_dashboard/features/categories/presentation/categories/category_cubit.dart';
 import 'package:play_spot_dashboard/features/marketing/presentation/cubit/marketing_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
@@ -108,7 +106,7 @@ class AppRouter {
         final bool isSetupRoute = location == RouterKeys.loungeAdminRooms || location == RouterKeys.loungeAdminExtras;
         final bool isReviewsRoute = location == RouterKeys.loungeAdminReviews;
 
-        if (isReviewsRoute && !user.isLoungeOwner && !isSuperAdmin) {
+        if (isReviewsRoute && !user.canViewReviews) {
           return RouterKeys.loungeAdminDashboard;
         }
 
@@ -224,12 +222,7 @@ class AppRouter {
                 ),
                 GoRoute(
                   path: RouterKeys.superAdminUsers,
-                  pageBuilder: (context, state) => NoTransitionPage(
-                    child: BlocProvider(
-                      create: (context) => sl<AdminManagementCubit>()..fetchAdmins(),
-                      child: const users.UsersPage(),
-                    ),
-                  ),
+                  redirect: (context, state) => RouterKeys.superAdminLounges,
                 ),
                 GoRoute(
                   path: RouterKeys.superAdminCategories,

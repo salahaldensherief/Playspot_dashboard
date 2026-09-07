@@ -85,8 +85,34 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
             listenWhen: (previous, current) => previous.status != current.status,
             listener: (context, state) {
               if (state.status == BookingStatusState.failure) {
+                final errMsg = state.errorMessage ?? AppStrings.actionFailed;
+                final isShiftError = errMsg.contains('وردية') || errMsg.toLowerCase().contains('shift');
+
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.errorMessage ?? AppStrings.actionFailed), backgroundColor: AppColors.danger),
+                  SnackBar(
+                    content: Text(errMsg),
+                    backgroundColor: AppColors.danger,
+                    duration: Duration(seconds: isShiftError ? 10 : 4),
+                    action: isShiftError ? SnackBarAction(
+                      label: '⚡ فتح وردية فورية الآن',
+                      textColor: Colors.yellow,
+                      onPressed: () async {
+                        final user = context.read<LoginCubit>().state.user;
+                        if (user?.loungeId != null) {
+                          final success = await context.read<ShiftCubit>().quickOpenShift(user!.loungeId!, 0.0);
+                          if (context.mounted && success) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('🟢 تم فتح الوردية بنجاح! يمكنك إضافة الحجز الآن.'),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                    ) : null,
+                  ),
                 );
               }
             },

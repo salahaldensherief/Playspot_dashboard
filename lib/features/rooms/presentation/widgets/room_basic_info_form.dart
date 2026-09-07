@@ -9,7 +9,8 @@ class RoomBasicInfoForm extends StatelessWidget {
   final TextEditingController nameEnController;
   final TextEditingController descriptionArController;
   final TextEditingController descriptionEnController;
-  final TextEditingController pricePerHourController;
+  final TextEditingController hourlyRateSingleController;
+  final TextEditingController hourlyRateMultiController;
   final bool isOpenArea;
 
   const RoomBasicInfoForm({
@@ -18,7 +19,8 @@ class RoomBasicInfoForm extends StatelessWidget {
     required this.nameEnController,
     required this.descriptionArController,
     required this.descriptionEnController,
-    required this.pricePerHourController,
+    required this.hourlyRateSingleController,
+    required this.hourlyRateMultiController,
     this.isOpenArea = false,
   });
 
@@ -74,14 +76,23 @@ class RoomBasicInfoForm extends StatelessWidget {
           children: [
             Expanded(
               child: AppTextField(
-                label: AppStrings.roomPricePerHour,
+                label: 'سعر الساعة (فردي) / Single Rate (EGP/hr)',
                 hintText: AppStrings.pricePerHourHint,
-                controller: pricePerHourController,
-                keyboardType: TextInputType.number,
+                controller: hourlyRateSingleController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: AppValidator.validateNumber,
               ),
             ),
-            const Spacer(),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: AppTextField(
+                label: 'سعر الساعة (زوجي/مالتي) / Multi Rate (EGP/hr)',
+                hintText: AppStrings.pricePerHourHint,
+                controller: hourlyRateMultiController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                validator: AppValidator.validateNumber,
+              ),
+            ),
           ],
         ),
       ],

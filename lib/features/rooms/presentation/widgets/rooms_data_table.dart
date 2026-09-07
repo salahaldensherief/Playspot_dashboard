@@ -49,7 +49,16 @@ class RoomsDataTable extends StatelessWidget {
             ),
           ),
           DataCell(_getSpaceTypeBadge(room.spaceType ?? room.spaceTypeId)),
-          DataCell(Text('${room.pricePerHour.toStringAsFixed(0)} ${AppStrings.egp} / Hr', style: const TextStyle(color: AppColors.textPrimary))),
+          DataCell(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Single: ${room.hourlyRateSingle.toStringAsFixed(0)} ${AppStrings.egp}/hr', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+                Text('Multi: ${room.hourlyRateMulti.toStringAsFixed(0)} ${AppStrings.egp}/hr', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
+              ],
+            ),
+          ),
           DataCell(Text('+${room.extraControllerPrice.toStringAsFixed(0)} EGP/hr', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp))),
           DataCell(_getStatusBadge(room.status)),
           if (canEdit)

@@ -34,8 +34,10 @@ class _ExtraDialogState extends State<ExtraDialog> {
   late TextEditingController _priceController;
   late TextEditingController _stockQuantityController;
   late TextEditingController _minStockAlertController;
-  String _selectedCategory = 'Drinks';
+  String _selectedCategory = 'drinks';
   bool _trackStock = false;
+
+  static const List<String> _validCategories = ['drinks', 'food', 'snacks', 'services', 'others'];
 
   @override
   void initState() {
@@ -45,7 +47,9 @@ class _ExtraDialogState extends State<ExtraDialog> {
     _priceController = TextEditingController(text: widget.extra?.price.toString());
     _stockQuantityController = TextEditingController(text: (widget.extra?.stockQuantity ?? 0).toString());
     _minStockAlertController = TextEditingController(text: (widget.extra?.minStockAlert ?? 5).toString());
-    _selectedCategory = widget.extra?.category ?? 'Drinks';
+    
+    final rawCat = widget.extra?.category.toLowerCase().trim() ?? 'drinks';
+    _selectedCategory = _validCategories.contains(rawCat) ? rawCat : 'drinks';
     _trackStock = widget.extra?.trackStock ?? false;
   }
 
@@ -68,7 +72,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
         nameEn: _nameEnController.text,
         name: _nameEnController.text,
         price: double.tryParse(_priceController.text) ?? 0,
-        category: _selectedCategory,
+        category: _selectedCategory.toLowerCase().trim(),
         isOutOfStock: widget.extra?.isOutOfStock ?? false,
         trackStock: _trackStock,
         stockQuantity: int.tryParse(_stockQuantityController.text) ?? 0,
@@ -130,13 +134,19 @@ class _ExtraDialogState extends State<ExtraDialog> {
               CustomDropdown<String>(
                 label: AppStrings.category,
                 value: _selectedCategory,
-                items: const ['Drinks', 'Snacks', 'Services', 'Others'],
+                items: _validCategories,
                 itemLabel: (s) {
                   switch (s) {
-                    case 'Drinks': return AppStrings.drinks;
-                    case 'Snacks': return AppStrings.snacks;
-                    case 'Services': return AppStrings.services;
-                    default: return AppStrings.others;
+                    case 'drinks':
+                      return AppStrings.drinks;
+                    case 'food':
+                      return 'Food | مأكولات';
+                    case 'snacks':
+                      return AppStrings.snacks;
+                    case 'services':
+                      return AppStrings.services;
+                    default:
+                      return AppStrings.others;
                   }
                 },
                 onChanged: (val) {

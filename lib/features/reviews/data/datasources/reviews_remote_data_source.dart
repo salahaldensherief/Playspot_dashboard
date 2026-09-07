@@ -17,52 +17,65 @@ class ReviewsRemoteDataSourceImpl implements ReviewsRemoteDataSource {
   ReviewsRemoteDataSourceImpl(this.supabaseClient);
 
   Future<List<LoungeReviewModel>> _fetchReviewsFromSupabase(String loungeId) async {
-    debugPrint('🔵 [REVIEWS_DATA_SOURCE] Fetching reviews for loungeId: $loungeId');
     try {
+      // 1. Fetch reviews directly from lounge_reviews table
       final response = await supabaseClient
           .from('lounge_reviews')
-          .select('*, bookings(user_id, user_name, user_phone, profiles(full_name, email, avatar_url)), profiles(full_name, email, avatar_url)')
+          .select()
           .eq('lounge_id', loungeId)
           .order('created_at', ascending: false);
 
-      final list = (response as List)
-          .map((json) => LoungeReviewModel.fromJson(Map<String, dynamic>.from(json)))
+      final rawList = (response as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      if (rawList.isEmpty) return [];
+
+      // 2. Extract unique user_ids to resolve profiles in a batch
+      final userIds = rawList
+          .map((json) => json['user_id']?.toString())
+          .where((id) => id != null && id.trim().isNotEmpty)
+          .cast<String>()
+          .toSet()
           .toList();
-      debugPrint('🟢 [REVIEWS_DATA_SOURCE] Fetched ${list.length} reviews via `lounge_reviews` -> `bookings` / `profiles` join');
-      return list;
-    } catch (e1) {
-      debugPrint('⚠️ [REVIEWS_DATA_SOURCE] Primary join query failed ($e1), attempting fallback join on profiles...');
-      try {
-        final response = await supabaseClient
-            .from('lounge_reviews')
-            .select('*, profiles(full_name, email, avatar_url)')
-            .eq('lounge_id', loungeId)
-            .order('created_at', ascending: false);
 
-        final list = (response as List)
-            .map((json) => LoungeReviewModel.fromJson(Map<String, dynamic>.from(json)))
-            .toList();
-        debugPrint('🟢 [REVIEWS_DATA_SOURCE] Fetched ${list.length} reviews from `lounge_reviews` with profiles join');
-        return list;
-      } catch (e2) {
-        debugPrint('⚠️ [REVIEWS_DATA_SOURCE] Profiles join failed ($e2), attempting plain query fallback...');
+      final Map<String, Map<String, dynamic>> profilesMap = {};
+      if (userIds.isNotEmpty) {
         try {
-          final fallbackResponse = await supabaseClient
-              .from('lounge_reviews')
-              .select()
-              .eq('lounge_id', loungeId)
-              .order('created_at', ascending: false);
+          final profilesResponse = await supabaseClient
+              .from('profiles')
+              .select('id, full_name, email, avatar_url')
+              .inFilter('id', userIds);
 
-          final list = (fallbackResponse as List)
-              .map((json) => LoungeReviewModel.fromJson(Map<String, dynamic>.from(json)))
-              .toList();
-          debugPrint('🟢 [REVIEWS_DATA_SOURCE] Fetched ${list.length} reviews from `lounge_reviews` table');
-          return list;
-        } catch (e3) {
-          debugPrint('🔴 [REVIEWS_DATA_SOURCE] All review queries failed: $e3');
-          rethrow;
+          for (final p in profilesResponse as List) {
+            final pMap = Map<String, dynamic>.from(p as Map);
+            final pId = pMap['id']?.toString();
+            if (pId != null) {
+              profilesMap[pId] = pMap;
+            }
+          }
+        } catch (e) {
+          debugPrint('⚠️ [REVIEWS_DATA_SOURCE] Profiles batch fetch failed: $e');
         }
       }
+
+      // 3. Attach profile data to review JSON maps
+      final list = rawList.map((json) {
+        final uId = json['user_id']?.toString();
+        if (uId != null && profilesMap.containsKey(uId)) {
+          final p = profilesMap[uId]!;
+          json['profiles'] = p;
+          if (json['user_name'] == null || json['user_name'].toString().trim().isEmpty) {
+            json['user_name'] = p['full_name'];
+          }
+          if (json['user_avatar'] == null || json['user_avatar'].toString().trim().isEmpty) {
+            json['user_avatar'] = p['avatar_url'];
+          }
+        }
+        return LoungeReviewModel.fromJson(json);
+      }).toList();
+
+      return list;
+    } catch (e) {
+      debugPrint('🔴 [REVIEWS_DATA_SOURCE] Fetching reviews failed: $e');
+      rethrow;
     }
   }
 
@@ -111,7 +124,7 @@ class ReviewsRemoteDataSourceImpl implements ReviewsRemoteDataSource {
           debugPrint('⚠️ [REVIEWS_DATA_SOURCE] Realtime Listen Exception: $e');
         }
 
-        heartbeatTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+        heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (_) {
           fetchAndEmit();
         });
       },

@@ -12,9 +12,12 @@ class RoomModel extends RoomEntity {
     super.activityIds = const [],
     super.spaceType,
     required super.spaceTypeId,
-    required super.capacity,
-    required super.pricePerHourSingle,
-    required super.pricePerHourMulti,
+    super.maxCapacity,
+    super.capacity,
+    super.hourlyRateSingle,
+    super.hourlyRateMulti,
+    super.pricePerHourSingle,
+    super.pricePerHourMulti,
     super.pricePerHour,
     super.extraControllerPrice,
     required super.isAvailable,
@@ -39,7 +42,7 @@ class RoomModel extends RoomEntity {
           } else if (type['name_en'] != null) {
             activities.add(type['name_en']);
           }
-          
+
           if (type['id'] != null) {
             activityIds.add(type['id'].toString());
           }
@@ -47,14 +50,12 @@ class RoomModel extends RoomEntity {
       }
     }
 
-    // Helper to parse double safely
     double parseDouble(dynamic value) {
       if (value == null) return 0.0;
       if (value is num) return value.toDouble();
       return double.tryParse(value.toString()) ?? 0.0;
     }
 
-    // Helper to parse int safely
     int parseInt(dynamic value, int defaultValue) {
       if (value == null) return defaultValue;
       if (value is num) return value.toInt();
@@ -99,10 +100,9 @@ class RoomModel extends RoomEntity {
           : (json['activity_ids'] != null ? List<String>.from(json['activity_ids']) : []),
       spaceType: json['space_types']?['label'] ?? json['space_type_name']?.toString(),
       spaceTypeId: json['space_type_id']?.toString() ?? '',
-      capacity: parseInt(json['capacity'], 4),
-      pricePerHourSingle: singleRate,
-      pricePerHourMulti: multiRate,
-      pricePerHour: singleRate,
+      maxCapacity: parseInt(json['max_capacity'] ?? json['capacity'], 4),
+      hourlyRateSingle: singleRate,
+      hourlyRateMulti: multiRate,
       extraControllerPrice: parseDouble(json['extra_controller_price']),
       isAvailable: json['is_available'] ?? json['is_active'] ?? true,
       images: json['images'] != null ? List<String>.from(json['images']) : [],
@@ -123,12 +123,13 @@ class RoomModel extends RoomEntity {
       'name_en': nameEn,
       'description_ar': descriptionAr,
       'description_en': descriptionEn,
-      'capacity': capacity,
-      'hourly_rate_single': pricePerHourSingle,
-      'hourly_rate_multi': pricePerHourMulti,
-      'price_per_hour_single': pricePerHourSingle,
-      'price_per_hour_multi': pricePerHourMulti,
-      'price_per_hour': pricePerHourSingle,
+      'max_capacity': maxCapacity,
+      'capacity': maxCapacity,
+      'hourly_rate_single': hourlyRateSingle,
+      'hourly_rate_multi': hourlyRateMulti,
+      'price_per_hour_single': hourlyRateSingle,
+      'price_per_hour_multi': hourlyRateMulti,
+      'price_per_hour': hourlyRateSingle,
       'extra_controller_price': extraControllerPrice,
       'is_available': isAvailable,
       'is_active': isAvailable,

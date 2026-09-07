@@ -8,7 +8,6 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
-import 'package:play_spot_dashboard/features/permissions/presentation/cubit/permissions_cubit.dart';
 import '../shift_cubit.dart';
 import '../shift_state.dart';
 import '../../../domain/entities/live_shift_overview_entity.dart';
@@ -82,8 +81,8 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: AppColors.danger.withOpacity(0.1),
-        border: Border(bottom: BorderSide(color: AppColors.danger.withOpacity(0.2))),
+        color: AppColors.danger.withValues(alpha: 0.1),
+        border: Border(bottom: BorderSide(color: AppColors.danger.withValues(alpha: 0.2))),
       ),
       child: Row(
         children: [
@@ -95,6 +94,27 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
             fontWeight: FontWeight.bold,
           ),
           const Spacer(),
+          AppButton(
+            text: "⚡ فتح وردية فورية الآن",
+            variant: AppButtonVariant.primary,
+            height: 32.h,
+            onPressed: () async {
+              final user = context.read<LoginCubit>().state.user;
+              if (user?.loungeId != null) {
+                final success = await context.read<ShiftCubit>().quickOpenShift(user!.loungeId!, 0.0);
+                if (mounted && success) {
+                  _refreshOverview();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('🟢 تم فتح الوردية بنجاح!'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+          SizedBox(width: 8.w),
           IconButton(
             icon: Icon(Icons.refresh, color: AppColors.danger, size: 20.r),
             onPressed: _refreshOverview,
@@ -121,7 +141,7 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
         color: AppColors.cardBackground,
         border: Border(bottom: BorderSide(color: AppColors.borderDefault)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Row(
@@ -129,7 +149,7 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
           // Cashier Profile
           CircleAvatar(
             radius: 24.r,
-            backgroundColor: AppColors.neonBlue.withOpacity(0.1),
+            backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
             backgroundImage: overview.cashierAvatar != null ? NetworkImage(overview.cashierAvatar ?? '') : null,
             child: overview.cashierAvatar == null 
               ? Icon(Icons.person, color: AppColors.neonBlue, size: 24.r) 

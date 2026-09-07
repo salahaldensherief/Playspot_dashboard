@@ -181,6 +181,56 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
 
     try {
       if (extras.isNotEmpty) {
+        // 1. Fetch lounge_id & user_id for the booking
+        final bookingDetails = await supabaseClient
+            .from('bookings')
+            .select('lounge_id, user_id, total_price')
+            .eq('id', bookingId)
+            .maybeSingle();
+
+        final loungeId = bookingDetails?['lounge_id']?.toString();
+        final userId = bookingDetails?['user_id']?.toString();
+
+        // 2. Insert structured order header & items into canteen_orders and canteen_order_items tables
+        if (loungeId != null && loungeId.isNotEmpty) {
+          try {
+            final orderRes = await supabaseClient
+                .from('canteen_orders')
+                .insert({
+                  'lounge_id': loungeId,
+                  'booking_id': bookingId,
+                  if (userId != null && userId.isNotEmpty) 'user_id': userId,
+                  'total_price': additionalCost,
+                  'status': 'completed',
+                })
+                .select('id')
+                .maybeSingle();
+
+            final orderId = orderRes?['id']?.toString();
+
+            if (orderId != null && orderId.isNotEmpty) {
+              final List<Map<String, dynamic>> canteenOrderItemsToInsert = extras.map((e) {
+                final qty = (e['quantity'] as num?)?.toInt() ?? 1;
+                final price = (e['price'] ?? e['unit_price'] as num?)?.toDouble() ?? 0.0;
+                return {
+                  'order_id': orderId,
+                  'canteen_item_id': e['id'] ?? e['item_id'] ?? e['canteen_item_id'],
+                  'item_name': e['name'] ?? e['name_ar'] ?? e['item_name'] ?? 'Extra Item',
+                  'quantity': qty,
+                  'unit_price': price,
+                  'total_price': price * qty,
+                };
+              }).toList();
+
+              await supabaseClient.from('canteen_order_items').insert(canteenOrderItemsToInsert);
+              debugPrint('🟢 [CANTEEN_ORDER_SYNC] Successfully inserted structured items into `canteen_order_items` table!');
+            }
+          } catch (e) {
+            debugPrint('⚠️ [CANTEEN_ORDER_SYNC] canteen_orders/canteen_order_items insert warning: $e');
+          }
+        }
+
+        // 3. Insert into booking_items table for booking sessions
         final List<Map<String, dynamic>> bookingItemsToInsert = extras.map((e) {
           final qty = (e['quantity'] as num?)?.toInt() ?? 1;
           final price = (e['price'] ?? e['unit_price'] as num?)?.toDouble() ?? 0.0;
@@ -214,7 +264,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
         }).eq('id', bookingId);
       }
 
-      debugPrint('🟢 [CANTEEN_ORDER_SYNC] Successfully added items to `booking_items` and updated total_price!');
+      debugPrint('🟢 [CANTEEN_ORDER_SYNC] Successfully added items to `canteen_order_items`/`booking_items` and updated total_price!');
       debugPrint('====================================================');
     } catch (e) {
       debugPrint('🔴 [CANTEEN_ORDER_SYNC] Error in addExtrasToSession: $e');

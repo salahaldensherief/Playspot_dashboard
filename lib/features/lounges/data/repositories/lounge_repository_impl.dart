@@ -271,6 +271,8 @@ class LoungeRepositoryImpl implements LoungeRepository {
     required String ownerName,
     required String loungeName,
     String? city,
+    String? address,
+    String? phone,
   }) async {
     try {
       final result = await remoteDataSource.createLoungeWithOwner(
@@ -279,9 +281,11 @@ class LoungeRepositoryImpl implements LoungeRepository {
         ownerName: ownerName,
         loungeName: loungeName,
         city: city,
+        address: address,
+        phone: phone,
       );
       await localCacheService.remove('cache_lounges');
-      return Right(result['lounge_id']?.toString() ?? '');
+      return Right(result['lounge_id']?.toString() ?? result['id']?.toString() ?? '');
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -306,8 +310,8 @@ class LoungeRepositoryImpl implements LoungeRepository {
         'description_en': lounge.descriptionEn,
         'city': lounge.city,
         'location': lounge.location,
-        'latitude': lounge.lat,
-        'longitude': lounge.lng,
+        if (lounge.lat != null && lounge.lng != null)
+          'location_point': 'POINT(${lounge.lng} ${lounge.lat})',
         if (openingTime != null) 'opening_time': openingTime,
         if (closingTime != null) 'closing_time': closingTime,
         'image_url': lounge.imageUrl,
@@ -360,10 +364,7 @@ class LoungeRepositoryImpl implements LoungeRepository {
   Future<Either<Failure, void>> updateLoungeLocation(String loungeId, double lat, double lng) async {
     try {
       await remoteDataSource.updateLounge(loungeId, {
-        'latitude': lat,
-        'longitude': lng,
-        'lat': lat,
-        'lng': lng,
+        'location_point': 'POINT($lng $lat)',
       });
       await localCacheService.remove('cache_lounges');
       await localCacheService.remove('cache_lounge_$loungeId');

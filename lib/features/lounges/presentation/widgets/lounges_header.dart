@@ -39,7 +39,7 @@ class LoungesHeader extends StatelessWidget {
           ],
         ),
         AppButton(
-          text: AppStrings.addNewLounge,
+          text: "Create Lounge & Owner",
           icon: Icons.add,
           onPressed: () => _showAddLoungeDialog(context),
         ),
@@ -68,11 +68,24 @@ class LoungesHeader extends StatelessWidget {
         builder: (context, state) {
           return AddLoungeDialog(
             isLoading: state.status == LoungeStatus.loading,
-            onSave: (lounge, ownerName, ownerEmail, ownerPassword) async {
-              await cubit.createLoungeAndAdmin(
-                lounge: lounge,
+            onSave: ({
+              required String loungeName,
+              String? city,
+              String? address,
+              String? phone,
+              required String ownerName,
+              required String ownerEmail,
+              String? ownerPhone,
+              String? ownerPassword,
+            }) async {
+              await cubit.createLoungeWithOwner(
+                loungeName: loungeName,
+                city: city,
+                address: address,
+                phone: phone,
                 ownerName: ownerName,
                 ownerEmail: ownerEmail,
+                ownerPhone: ownerPhone,
                 ownerPassword: ownerPassword,
               );
             },

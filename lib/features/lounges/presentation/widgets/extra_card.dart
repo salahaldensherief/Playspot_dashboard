@@ -5,10 +5,8 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
-import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
-import '../../../permissions/presentation/cubit/permissions_cubit.dart';
 import '../../domain/entities/extra_entity.dart';
 import '../cubit/extras_cubit.dart';
 import 'extra_dialog.dart';
@@ -16,6 +14,21 @@ import 'extra_dialog.dart';
 class ExtraCard extends StatelessWidget {
   final ExtraEntity extra;
   const ExtraCard({super.key, required this.extra});
+
+  String _formatCategoryLabel(String category) {
+    switch (category.toLowerCase().trim()) {
+      case 'drinks':
+        return AppStrings.drinks;
+      case 'food':
+        return 'Food | مأكولات';
+      case 'snacks':
+        return AppStrings.snacks;
+      case 'services':
+        return AppStrings.services;
+      default:
+        return AppStrings.others;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +46,8 @@ class ExtraCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
             color: isOutOfStock 
-              ? AppColors.danger.withOpacity(0.5) 
-              : isLowStock ? AppColors.warning.withOpacity(0.5) : AppColors.borderDefault,
+              ? AppColors.danger.withValues(alpha: 0.5) 
+              : isLowStock ? AppColors.warning.withValues(alpha: 0.5) : AppColors.borderDefault,
             width: (isLowStock || isOutOfStock) ? 2.r : 1.r,
           ),
         ),
@@ -46,7 +59,7 @@ class ExtraCard extends StatelessWidget {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.divider.withOpacity(0.1),
+                      color: AppColors.divider.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
                       image: extra.imageUrl != null 
                         ? DecorationImage(image: NetworkImage(extra.imageUrl ?? ''), fit: BoxFit.cover)
@@ -60,7 +73,7 @@ class ExtraCard extends StatelessWidget {
                     Positioned.fill(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.4),
+                          color: Colors.black.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
                         ),
                         child: Center(
@@ -81,11 +94,11 @@ class ExtraCard extends StatelessWidget {
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
+                          color: Colors.black.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: AppText.body(
-                          '${extra.stockQuantity} ${AppStrings.searchHint.replaceFirst("...", "")}', // Or add a better string for "Left"
+                          '${extra.stockQuantity} Left',
                           fontSize: 10.sp,
                           color: isLowStock ? AppColors.warning : Colors.white,
                         ),
@@ -102,7 +115,7 @@ class ExtraCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      StatusBadge.info(extra.category),
+                      StatusBadge.info(_formatCategoryLabel(extra.category)),
                       AppText.subHeading(
                         '${extra.price} ${AppStrings.priceEgp}',
                         color: AppColors.neonBlue,

@@ -125,6 +125,65 @@ class ShiftCubit extends Cubit<ShiftState> {
     }
   }
 
+  /// Quick Open Shift for Manager/Cashier workflow recovery (returns true on success)
+  Future<bool> quickOpenShift(String loungeId, [double startingCash = 0.0]) async {
+    if (isClosed) return false;
+
+    if (loungeId.isEmpty || loungeId == 'null') {
+      emit(state.copyWith(
+        status: ShiftStatus.error,
+        errorMessage: 'Cannot open shift: No Lounge ID assigned.'
+      ));
+      return false;
+    }
+
+    emit(state.copyWith(status: ShiftStatus.loading));
+
+    try {
+      final openResult = await repository.quickOpenShift(loungeId, startingCash);
+
+      if (isClosed) return false;
+
+      return await openResult.fold(
+        (failure) {
+          emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message));
+          return false;
+        },
+        (_) async {
+          debugPrint('🔵 [ShiftCubit] Quick Open success, verifying active shift...');
+          final verifyResult = await getActiveShiftUseCase(loungeId);
+
+          if (isClosed) return false;
+
+          return verifyResult.fold(
+            (failure) {
+              emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message));
+              return false;
+            },
+            (shift) {
+              if (shift != null) {
+                debugPrint('🟢 [ShiftCubit] Quick shift verified & active.');
+                emit(state.copyWith(status: ShiftStatus.active, activeShift: shift));
+                getLiveShiftOverview(loungeId);
+                return true;
+              } else {
+                debugPrint('🔴 [ShiftCubit] Quick shift created but verify returned null.');
+                emit(state.copyWith(
+                  status: ShiftStatus.error,
+                  errorMessage: 'Shift created but failed to sync from database.'
+                ));
+                return false;
+              }
+            },
+          );
+        },
+      );
+    } catch (e) {
+      emit(state.copyWith(status: ShiftStatus.error, errorMessage: e.toString()));
+      return false;
+    }
+  }
+
   Future<void> closeShift(String shiftId, double actualCash, String? notes, String loungeId) async {
     if (isClosed) return;
     emit(state.copyWith(status: ShiftStatus.loading));

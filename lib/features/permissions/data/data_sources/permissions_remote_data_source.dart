@@ -77,10 +77,18 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
           'role': cleanRole,
           'permission_key': permissionKey,
           'is_enabled': isEnabled,
-        });
+        }, onConflict: 'lounge_id,role,permission_key');
       } catch (upsertError) {
-        // ignore: avoid_print
-        print('PermissionsRemoteSource: Table upsert failed: $upsertError');
+        try {
+          await _supabase.from('role_permissions').upsert({
+            'role': cleanRole,
+            'permission_key': permissionKey,
+            'is_enabled': isEnabled,
+          }, onConflict: 'role,permission_key');
+        } catch (e2) {
+          // ignore: avoid_print
+          print('PermissionsRemoteSource: Table upsert failed: $e2');
+        }
       }
     }
   }

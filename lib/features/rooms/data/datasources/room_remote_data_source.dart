@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/room_model.dart';
 
@@ -17,24 +18,31 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
 
   @override
   Future<List<RoomModel>> getRooms(String loungeId) async {
-    // Technical Guard: Always filter by lounge_id to prevent data leaks or dashboard clutter
-    final response = await _supabase
-        .from('rooms_detailed_view')
-        .select()
-        .eq('lounge_id', loungeId)
-        .order('name');
-    return (response as List).map((json) => RoomModel.fromJson(json)).toList();
+    // Query rooms table directly with room_activities relation
+    try {
+      final response = await _supabase
+          .from('rooms')
+          .select('*, room_activities(*, activity_types(*))')
+          .eq('lounge_id', loungeId)
+          .order('created_at', ascending: true);
+      return (response as List).map((json) => RoomModel.fromJson(json)).toList();
+    } catch (e) {
+      debugPrint('⚠️ [ROOM_DATA_SOURCE] Joint query failed ($e), falling back to plain rooms query...');
+      final response = await _supabase
+          .from('rooms')
+          .select('*')
+          .eq('lounge_id', loungeId);
+      return (response as List).map((json) => RoomModel.fromJson(json)).toList();
+    }
   }
 
   @override
   Stream<List<RoomModel>> watchRooms(String loungeId) {
-    // Technical Guard: Realtime filter enforced
     return _supabase
         .from('rooms')
         .stream(primaryKey: ['id'])
         .eq('lounge_id', loungeId)
         .asyncMap((event) async {
-          // Re-fetch from view to get names and joined data
           return await getRooms(loungeId);
         });
   }

@@ -24,7 +24,7 @@ class LiveShiftOverviewModel extends LiveShiftOverviewEntity {
       cashierPhone: json['cashier_phone'],
       startTime: json['start_time'] != null ? DateTime.parse(json['start_time']) : null,
       startingCash: (json['starting_cash'] ?? json['opening_cash'] ?? 0).toDouble(),
-      cashInDrawer: (json['cash_in_drawer'] ?? 0).toDouble(),
+      cashInDrawer: (json['actual_cash_counted'] ?? json['cash_in_drawer'] ?? 0).toDouble(),
       digitalPayments: (json['digital_payments'] ?? 0).toDouble(),
       activeSessions: json['active_sessions'] ?? 0,
       closedBookings: json['closed_bookings'] ?? 0,

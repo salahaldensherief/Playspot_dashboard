@@ -35,10 +35,7 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
       await remoteDataSource.updateLoungeData(loungeId, {
         'name': name,
         'location': location,
-        'latitude': lat,
-        'longitude': lng,
-        'lat': lat,
-        'lng': lng,
+        'location_point': 'POINT($lng $lat)',
         'images': images,
       });
       return const Right(null);
@@ -58,8 +55,6 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
       await remoteDataSource.updateLoungeData(loungeId, {
         'opening_time': opensAt,
         'closing_time': closesAt,
-        'opens_at': opensAt,
-        'closes_at': closesAt,
         'weekly_holidays': weeklyHolidays,
       });
       return const Right(null);
@@ -80,11 +75,10 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
         activityIds: room.activityIds,
         spaceType: room.spaceType,
         spaceTypeId: room.spaceTypeId ?? '',
-        pricePerHourSingle: room.pricePerHourSingle,
-        pricePerHourMulti: room.pricePerHourMulti,
-        pricePerHour: room.pricePerHour,
+        hourlyRateSingle: room.hourlyRateSingle,
+        hourlyRateMulti: room.hourlyRateMulti,
         extraControllerPrice: room.extraControllerPrice,
-        capacity: room.capacity,
+        maxCapacity: room.maxCapacity,
         images: room.images,
         featuresAr: room.featuresAr,
         featuresEn: room.featuresEn,

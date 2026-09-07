@@ -60,7 +60,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   Future<List<BookingModel>> _fetchSafeSelect(String? loungeId, String? status, int limit, int offset) async {
     try {
-      var query = client.from('bookings').select('*, profiles(full_name, phone, email), rooms(name, name_en, controllers_count, screen_size), lounges(name, location, latitude, longitude)');
+      var query = client.from('bookings').select('*, booking_items(*, canteen_items(*)), profiles(full_name, phone, email), rooms(name, name_en, controllers_count, screen_size), lounges(name, location, location_point)');
       if (loungeId != null && loungeId.isNotEmpty) {
         query = query.eq('lounge_id', loungeId);
       }
@@ -162,7 +162,55 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
   @override
   Future<void> createBooking(BookingModel booking) async {
-    await client.from('bookings').insert(booking.toJson());
+    // Validate active shift for lounge before allowing booking creation
+    final activeShift = await client
+        .from('shifts')
+        .select('id')
+        .eq('lounge_id', booking.loungeId)
+        .or('status.eq.open,status.eq.active')
+        .limit(1)
+        .maybeSingle();
+
+    if (activeShift == null) {
+      throw Exception('لا توجد وردية مفتوحة حالياً لهذا المقر. يرجى فتح وردية أولاً قبل إضافة أي حجز.');
+    }
+
+    final activeShiftId = activeShift['id']?.toString();
+    final bookingToInsert = (activeShiftId != null && (booking.shiftId == null || booking.shiftId!.isEmpty))
+        ? BookingModel(
+            id: booking.id,
+            userId: booking.userId,
+            userName: booking.userName,
+            userEmail: booking.userEmail,
+            userPhone: booking.userPhone,
+            loungeId: booking.loungeId,
+            roomId: booking.roomId,
+            loungeName: booking.loungeName,
+            loungeLocation: booking.loungeLocation,
+            roomName: booking.roomName,
+            controllersCount: booking.controllersCount,
+            screenSize: booking.screenSize,
+            date: booking.date,
+            startTime: booking.startTime,
+            endTime: booking.endTime,
+            durationMinutes: booking.durationMinutes,
+            status: booking.status,
+            paymentStatus: booking.paymentStatus,
+            totalPrice: booking.totalPrice,
+            voucherDiscount: booking.voucherDiscount,
+            discountAmount: booking.discountAmount,
+            discountPercentage: booking.discountPercentage,
+            discountReason: booking.discountReason,
+            extras: booking.extras,
+            lat: booking.lat,
+            lng: booking.lng,
+            shiftId: activeShiftId,
+            playMode: booking.playMode,
+            roomPrice: booking.roomPrice,
+          )
+        : booking;
+
+    await client.from('bookings').insert(bookingToInsert.toJson());
   }
 
   @override

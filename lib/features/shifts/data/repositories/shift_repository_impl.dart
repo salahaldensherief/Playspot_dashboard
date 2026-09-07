@@ -29,6 +29,11 @@ class ShiftRepositoryImpl with RepositoryHelper implements ShiftRepository {
   }
 
   @override
+  Future<Either<Failure, void>> quickOpenShift(String loungeId, [double startingCash = 0.0]) async {
+    return await callRepository(() => remoteDataSource.openShift(loungeId, startingCash));
+  }
+
+  @override
   Future<Either<Failure, ShiftEntity>> closeShift(String shiftId, double actualCash, String? notes) async {
     return await callRepository(() => remoteDataSource.closeShift(shiftId, actualCash, notes));
   }

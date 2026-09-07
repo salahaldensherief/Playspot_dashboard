@@ -148,11 +148,7 @@ class BookingModel extends Booking {
       discountPercentage: json['discount_percentage'] != null ? parseDouble(json['discount_percentage']) : null,
       discountReason: json['discount_reason']?.toString(),
       extras: () {
-        dynamic rawExtras = json['booking_items'] ??
-            json['canteen_items'] ??
-            json['out_booking_extras'] ??
-            json['booking_extras'] ??
-            json['extras'];
+        dynamic rawExtras = json['booking_items'] ?? json['canteen_items'];
 
         if (rawExtras is List) {
           return rawExtras
@@ -162,12 +158,32 @@ class BookingModel extends Booking {
         }
         return <Map<String, dynamic>>[];
       }(),
-      lat: (json['latitude'] ?? json['lat'] ?? loungeData?['latitude'] ?? loungeData?['lat']) != null
-          ? parseDouble(json['latitude'] ?? json['lat'] ?? loungeData?['latitude'] ?? loungeData?['lat'])
-          : null,
-      lng: (json['longitude'] ?? json['lng'] ?? loungeData?['longitude'] ?? loungeData?['lng']) != null
-          ? parseDouble(json['longitude'] ?? json['lng'] ?? loungeData?['longitude'] ?? loungeData?['lng'])
-          : null,
+      lat: () {
+        final val = json['latitude'] ?? json['lat'] ?? loungeData?['latitude'] ?? loungeData?['lat'];
+        if (val != null) return parseDouble(val);
+        final locPoint = json['location_point'] ?? loungeData?['location_point'];
+        if (locPoint is Map && locPoint['coordinates'] is List && (locPoint['coordinates'] as List).length >= 2) {
+          return parseDouble((locPoint['coordinates'] as List)[1]);
+        }
+        if (locPoint is String) {
+          final match = RegExp(r'POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)', caseSensitive: false).firstMatch(locPoint);
+          if (match != null) return double.tryParse(match.group(2) ?? '');
+        }
+        return null;
+      }(),
+      lng: () {
+        final val = json['longitude'] ?? json['lng'] ?? loungeData?['longitude'] ?? loungeData?['lng'];
+        if (val != null) return parseDouble(val);
+        final locPoint = json['location_point'] ?? loungeData?['location_point'];
+        if (locPoint is Map && locPoint['coordinates'] is List && (locPoint['coordinates'] as List).length >= 2) {
+          return parseDouble((locPoint['coordinates'] as List)[0]);
+        }
+        if (locPoint is String) {
+          final match = RegExp(r'POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)', caseSensitive: false).firstMatch(locPoint);
+          if (match != null) return double.tryParse(match.group(1) ?? '');
+        }
+        return null;
+      }(),
       shiftId: json['shift_id']?.toString(),
       playMode: (json['play_mode'] ?? json['playMode'])?.toString(),
       roomPrice: (json['room_price'] ?? json['roomPrice']) != null

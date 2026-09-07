@@ -3,6 +3,7 @@ import '../../domain/entities/shift_entity.dart';
 class ShiftModel extends ShiftEntity {
   const ShiftModel({
     required super.id,
+    super.loungeId,
     required super.cashierId,
     super.cashierName,
     required super.startingCash,
@@ -12,7 +13,7 @@ class ShiftModel extends ShiftEntity {
     super.actualCash,
     super.discrepancy,
     required super.status,
-    required    super.startTime,
+    required super.startTime,
     super.endTime,
     super.notes,
     super.isApproved,
@@ -34,7 +35,8 @@ class ShiftModel extends ShiftEntity {
 
     return ShiftModel(
       id: (json['id'] ?? json['shift_id'] ?? '').toString(),
-      cashierId: (json['cashier_id'] ?? json['staff_user_id'] ?? '').toString(),
+      loungeId: json['lounge_id']?.toString() ?? json['loungeId']?.toString(),
+      cashierId: (json['cashier_id'] ?? json['staff_id'] ?? json['staff_user_id'] ?? '').toString(),
       cashierName: json['profiles']?['full_name']?.toString() ?? json['cashier_name']?.toString() ?? 'N/A',
       startingCash: (json['starting_cash'] ?? json['opening_cash'] ?? 0).toDouble(),
       cashRevenue: (json['total_cash_sales'] ?? json['cash_revenue'] ?? 0).toDouble(),
@@ -42,8 +44,8 @@ class ShiftModel extends ShiftEntity {
       expectedCash: (json['expected_cash'] ?? 0).toDouble(),
       actualCash: (json['actual_cash_counted'] ?? json['actual_cash'] ?? 0).toDouble(),
       discrepancy: (json['difference'] ?? json['discrepancy'] ?? 0).toDouble(),
-      status: (json['status'] ?? 'open').toString(),
-      startTime: parseDate(json['start_time'] ?? json['opened_at']) ?? DateTime.now(),
+      status: (json['status'] ?? 'active').toString(),
+      startTime: parseDate(json['created_at'] ?? json['start_time'] ?? json['opened_at']) ?? DateTime.now(),
       endTime: parseDate(json['end_time'] ?? json['closed_at']),
       notes: json['notes']?.toString(),
       isApproved: json['is_approved'] ?? false,
@@ -56,18 +58,21 @@ class ShiftModel extends ShiftEntity {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      if (loungeId != null) 'lounge_id': loungeId,
+      'staff_id': cashierId,
       'cashier_id': cashierId,
       'starting_cash': startingCash,
       'actual_cash_counted': actualCash,
       'difference': discrepancy,
-      'notes': notes,
       'status': status,
+      'created_at': startTime.toIso8601String(),
       'start_time': startTime.toIso8601String(),
-      'end_time': endTime?.toIso8601String(),
+      if (notes != null) 'notes': notes,
+      if (endTime != null) 'end_time': endTime?.toIso8601String(),
       'is_approved': isApproved,
-      'approved_by': approvedBy,
-      'approved_at': approvedAt?.toIso8601String(),
-      'manager_notes': managerNotes,
+      if (approvedBy != null) 'approved_by': approvedBy,
+      if (approvedAt != null) 'approved_at': approvedAt?.toIso8601String(),
+      if (managerNotes != null) 'manager_notes': managerNotes,
     };
   }
 }
