@@ -19,8 +19,10 @@ class LoungesDataTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<LoungeCubit, LoungeState>(
+      listenWhen: (previous, current) =>
+          previous.status != current.status && current.status == LoungeStatus.failure,
       listener: (context, state) {
-        if (state.status == LoungeStatus.failure && state.errorMessage != null) {
+        if (state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage!),
@@ -29,6 +31,8 @@ class LoungesDataTable extends StatelessWidget {
           );
         }
       },
+      buildWhen: (previous, current) =>
+          previous.status != current.status || previous.lounges != current.lounges,
       builder: (context, state) {
         if (state.status == LoungeStatus.loading && state.lounges.isEmpty) {
           return const TableShimmer(columns: 6);

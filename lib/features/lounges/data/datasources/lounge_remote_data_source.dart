@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import '../models/lounge_model.dart';
@@ -60,61 +59,91 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
 
   @override
   Future<List<LoungeModel>> getLounges() async {
+    List<Map<String, dynamic>> rawList = [];
+
     try {
-      // 1. Direct query on lounges table (bypassing any legacy RPCs or invalid table relationships)
+      // 1. Direct query on lounges table excluding deleted lounges
       final response = await client
           .from('lounges')
           .select()
           .neq('status', 'deleted')
           .order('created_at', ascending: false);
 
-      final rawList = (response as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
-      if (rawList.isEmpty) return [];
-
-      // 2. Batch fetch owner profiles directly from public.profiles table
-      final ownerIds = rawList
-          .map((json) => json['owner_id']?.toString())
-          .where((id) => id != null && id.trim().isNotEmpty)
-          .cast<String>()
-          .toSet()
+      rawList = (response as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .where((json) => json['status'] != 'deleted' && json['is_active'] != false)
           .toList();
+    } catch (e, stackTrace) {
+      AppLogger.warning('Direct lounges select query failed ($e), attempting RPC fallbacks...', e, stackTrace);
 
-      final Map<String, Map<String, dynamic>> profilesMap = {};
-      if (ownerIds.isNotEmpty) {
-        try {
-          final profilesResponse = await client
-              .from('profiles')
-              .select('id, full_name, email')
-              .inFilter('id', ownerIds);
-
-          for (final p in profilesResponse as List) {
-            final pMap = Map<String, dynamic>.from(p as Map);
-            final pId = pMap['id']?.toString();
-            if (pId != null) {
-              profilesMap[pId] = pMap;
-            }
-          }
-        } catch (e) {
-          AppLogger.warning('Owner profiles batch fetch failed: $e');
+      try {
+        final fallbackResponse = await client.rpc('get_all_lounges');
+        if (fallbackResponse is List && fallbackResponse.isNotEmpty) {
+          rawList = fallbackResponse
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .where((json) => json['status'] != 'deleted' && json['is_active'] != false)
+              .toList();
         }
+      } catch (_) {}
+
+      if (rawList.isEmpty) {
+        try {
+          final fallbackResponse = await client.rpc('get_top_lounges_by_revenue', params: {'limit_count': 100});
+          if (fallbackResponse is List && fallbackResponse.isNotEmpty) {
+            rawList = fallbackResponse
+                .map((e) => Map<String, dynamic>.from(e as Map))
+                .where((json) => json['status'] != 'deleted' && json['is_active'] != false)
+                .toList();
+          }
+        } catch (_) {}
       }
 
-      // 3. Map lounges and attach owner profile details
-      final list = rawList.map((json) {
-        final ownerId = json['owner_id']?.toString();
-        if (ownerId != null && profilesMap.containsKey(ownerId)) {
-          final p = profilesMap[ownerId]!;
-          json['owner_name'] ??= p['full_name'];
-          json['owner_email'] ??= p['email'];
-        }
-        return LoungeModel.fromJson(json);
-      }).toList();
-
-      return list;
-    } catch (e) {
-      AppLogger.error('Direct lounges query failed: $e');
-      return [];
+      if (rawList.isEmpty) {
+        AppLogger.warning('All remote lounges query attempts failed or returned empty. Returning empty list gracefully.');
+        return [];
+      }
     }
+
+    if (rawList.isEmpty) return [];
+
+    // 2. Batch fetch owner profiles directly from public.profiles table
+    final ownerIds = rawList
+        .map((json) => json['owner_id']?.toString())
+        .where((id) => id != null && id.trim().isNotEmpty)
+        .cast<String>()
+        .toSet()
+        .toList();
+
+    final Map<String, Map<String, dynamic>> profilesMap = {};
+    if (ownerIds.isNotEmpty) {
+      try {
+        final profilesResponse = await client
+            .from('profiles')
+            .select('id, full_name, email')
+            .inFilter('id', ownerIds);
+
+        for (final p in profilesResponse as List) {
+          final pMap = Map<String, dynamic>.from(p as Map);
+          final pId = pMap['id']?.toString();
+          if (pId != null) {
+            profilesMap[pId] = pMap;
+          }
+        }
+      } catch (e, stackTrace) {
+        AppLogger.warning('Owner profiles batch fetch failed', e, stackTrace);
+      }
+    }
+
+    // 3. Map lounges and attach owner profile details
+    return rawList.map((json) {
+      final ownerId = json['owner_id']?.toString();
+      if (ownerId != null && profilesMap.containsKey(ownerId)) {
+        final p = profilesMap[ownerId]!;
+        json['owner_name'] ??= p['full_name'];
+        json['owner_email'] ??= p['email'];
+      }
+      return LoungeModel.fromJson(json);
+    }).toList();
   }
 
   @override
@@ -176,7 +205,6 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     cleanData.remove('latitude');
     cleanData.remove('longitude');
 
-    // Sanitize time fields: if empty string ("") or null, omit key to prevent Postgres TIME type cast error
     for (final timeKey in ['opening_time', 'closing_time']) {
       if (cleanData.containsKey(timeKey)) {
         final val = cleanData[timeKey];
@@ -265,7 +293,7 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
         return Map<String, dynamic>.from(response);
       }
     } catch (e) {
-      debugPrint('⚠️ [LOUNGE_DATA_SOURCE] getDashboardOverview RPC failed: $e');
+      AppLogger.warning('getDashboardOverview RPC failed: $e');
     }
     return {
       'total_revenue': 0.0,
@@ -385,10 +413,29 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     try {
       await client.from('lounges').update({'status': 'deleted'}).eq('id', id);
       AppLogger.info('deleteLounge soft delete succeeded for id: $id');
+      return;
     } catch (e) {
-      AppLogger.warning('deleteLounge soft delete failed ($e), attempting hard delete...');
+      AppLogger.warning('deleteLounge soft delete failed ($e), attempting RPC delete...');
+    }
+
+    try {
+      await client.rpc('delete_lounge_admin', params: {'p_lounge_id': id});
+      AppLogger.info('deleteLounge delete_lounge_admin RPC succeeded for id: $id');
+      return;
+    } catch (_) {}
+
+    try {
+      await client.rpc('super_admin_delete_lounge', params: {'p_lounge_id': id});
+      AppLogger.info('deleteLounge super_admin_delete_lounge RPC succeeded for id: $id');
+      return;
+    } catch (_) {}
+
+    try {
       await client.from('lounges').delete().eq('id', id);
       AppLogger.info('deleteLounge hard delete succeeded for id: $id');
+    } catch (e) {
+      AppLogger.error('deleteLounge hard delete failed: $e');
+      rethrow;
     }
   }
 }

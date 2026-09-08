@@ -160,7 +160,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
                 contentPadding: EdgeInsets.zero,
                 title: AppText.body(AppStrings.trackStock),
                 value: _trackStock,
-                activeColor: AppColors.neonBlue,
+                activeThumbColor: AppColors.neonBlue,
                 onChanged: (val) => setState(() => _trackStock = val),
               ),
               if (_trackStock) ...[

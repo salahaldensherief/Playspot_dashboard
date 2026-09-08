@@ -1,6 +1,5 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import '../../domain/entities/lounge.dart';
 import '../../domain/repositories/lounge_repository.dart';
 import 'lounge_state.dart';
@@ -21,7 +20,7 @@ class LoungeCubit extends Cubit<LoungeState> {
 
     result.fold(
       (failure) {
-        debugPrint('⚠️ [LOUNGE_CUBIT] fetchLounges failure: ${failure.message}');
+        AppLogger.warning('fetchLounges failure: ${failure.message}');
         emit(state.copyWith(
           status: LoungeStatus.success,
           clearError: true,
@@ -106,7 +105,7 @@ class LoungeCubit extends Cubit<LoungeState> {
   }
 
   Future<void> toggleLoungeStatus(String loungeId, bool isOpen) async {
-    // تحديث تفاؤلي للواجهة (Optimistic UI)
+    // Optimistic UI update
     final currentState = state;
     if (currentState.lounges.isNotEmpty) {
       final updatedLounges = currentState.lounges.map((l) {
@@ -120,7 +119,7 @@ class LoungeCubit extends Cubit<LoungeState> {
     result.fold(
       (failure) {
         emit(state.copyWith(status: LoungeStatus.failure, errorMessage: failure.message));
-        fetchLounges(); // إعادة الجلب في حالة الخطأ لاستعادة الحالة الصحيحة
+        fetchLounges(forceRefresh: true);
       },
       (_) => null,
     );

@@ -70,7 +70,6 @@ class LoungesHeader extends StatelessWidget {
             isLoading: state.status == LoungeStatus.loading,
             onSave: ({
               required String loungeName,
-              String? city,
               String? address,
               String? phone,
               required String ownerName,
@@ -80,7 +79,6 @@ class LoungesHeader extends StatelessWidget {
             }) async {
               await cubit.createLoungeWithOwner(
                 loungeName: loungeName,
-                city: city,
                 address: address,
                 phone: phone,
                 ownerName: ownerName,

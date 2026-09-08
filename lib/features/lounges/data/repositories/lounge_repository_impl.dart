@@ -30,10 +30,15 @@ class LoungeRepositoryImpl implements LoungeRepository {
           try {
             final cachedLounges = cached
                 .map((item) => LoungeModel.fromJson(Map<String, dynamic>.from(item as Map)))
+                .where((e) => e.status != 'deleted')
                 .map((e) => e as Lounge)
                 .toList();
-            _refreshLoungesInBackground(cacheKey);
-            return Right(cachedLounges);
+            if (cachedLounges.isEmpty) {
+              await localCacheService.remove(cacheKey);
+            } else {
+              _refreshLoungesInBackground(cacheKey);
+              return Right(cachedLounges);
+            }
           } catch (_) {
             await localCacheService.remove(cacheKey);
           }
@@ -41,41 +46,57 @@ class LoungeRepositoryImpl implements LoungeRepository {
       }
 
       final lounges = await remoteDataSource.getLounges();
-      final loungeModels = lounges.map((l) => LoungeModel(
-        id: l.id,
-        name: l.name,
-        imageUrl: l.imageUrl,
-        rating: l.rating,
-        distance: l.distance,
-        pricePerHour: l.pricePerHour,
-        isOpen: l.isOpen,
-        location: l.location,
-        city: l.city,
-        totalReviews: l.totalReviews,
-        availableRooms: l.availableRooms,
-        descriptionAr: l.descriptionAr,
-        descriptionEn: l.descriptionEn,
-        images: l.images,
-        opensAt: l.opensAt,
-        closesAt: l.closesAt,
-        lat: l.lat,
-        lng: l.lng,
-        categoryIcons: l.categoryIcons,
-        categoryId: l.categoryId,
-        ownerName: l.ownerName,
-        ownerEmail: l.ownerEmail,
-        status: l.status,
-        hasDiscount: l.hasDiscount,
-        discountPercentage: l.discountPercentage,
-        discountTitleAr: l.discountTitleAr,
-        discountTitleEn: l.discountTitleEn,
-        discountExpiresAt: l.discountExpiresAt,
-      )).toList();
+      if (lounges.isEmpty) {
+        try {
+          final cached = localCacheService.getJson(cacheKey);
+          if (cached is List && cached.isNotEmpty) {
+            final cachedLounges = cached
+                .map((item) => LoungeModel.fromJson(Map<String, dynamic>.from(item as Map)))
+                .where((e) => e.status != 'deleted')
+                .map((e) => e as Lounge)
+                .toList();
+            if (cachedLounges.isNotEmpty) {
+              return Right(cachedLounges);
+            }
+          }
+        } catch (_) {}
+      } else {
+        final loungeModels = lounges.map((l) => LoungeModel(
+          id: l.id,
+          name: l.name,
+          imageUrl: l.imageUrl,
+          rating: l.rating,
+          distance: l.distance,
+          pricePerHour: l.pricePerHour,
+          isOpen: l.isOpen,
+          location: l.location,
+          city: l.city,
+          totalReviews: l.totalReviews,
+          availableRooms: l.availableRooms,
+          descriptionAr: l.descriptionAr,
+          descriptionEn: l.descriptionEn,
+          images: l.images,
+          opensAt: l.opensAt,
+          closesAt: l.closesAt,
+          lat: l.lat,
+          lng: l.lng,
+          categoryIcons: l.categoryIcons,
+          categoryId: l.categoryId,
+          ownerName: l.ownerName,
+          ownerEmail: l.ownerEmail,
+          status: l.status,
+          hasDiscount: l.hasDiscount,
+          discountPercentage: l.discountPercentage,
+          discountTitleAr: l.discountTitleAr,
+          discountTitleEn: l.discountTitleEn,
+          discountExpiresAt: l.discountExpiresAt,
+        )).toList();
 
-      await localCacheService.setJson(
-        cacheKey,
-        loungeModels.map((m) => m.toJson()).toList(),
-      );
+        await localCacheService.setJson(
+          cacheKey,
+          loungeModels.map((m) => m.toJson()).toList(),
+        );
+      }
 
       return Right(lounges.map((e) => e as Lounge).toList());
     } catch (e) {
@@ -84,9 +105,12 @@ class LoungeRepositoryImpl implements LoungeRepository {
         if (cached is List && cached.isNotEmpty) {
           final cachedLounges = cached
               .map((item) => LoungeModel.fromJson(Map<String, dynamic>.from(item as Map)))
+              .where((e) => e.status != 'deleted')
               .map((e) => e as Lounge)
               .toList();
-          return Right(cachedLounges);
+          if (cachedLounges.isNotEmpty) {
+            return Right(cachedLounges);
+          }
         }
       } catch (_) {
         await localCacheService.remove(cacheKey);
@@ -613,6 +637,8 @@ class LoungeRepositoryImpl implements LoungeRepository {
       await localCacheService.remove('cache_lounge_$id');
       return const Right(null);
     } catch (e) {
+      await localCacheService.remove('cache_lounges_v2');
+      await localCacheService.remove('cache_lounge_$id');
       return Left(ServerFailure(e.toString()));
     }
   }

@@ -104,19 +104,10 @@ class OnboardingCubit extends Cubit<OnboardingState> {
         );
       }
 
-      final position = await locationService.getCurrentPosition();
-      String? cityName;
-      if (position != null && context != null && context.mounted) {
-        cityName = await locationService.getCityFromPosition(position, context);
-      }
-
       final result = await setupLoungeUseCase(lounge.copyWith(
         id: loungeId,
         imageUrl: mainImageUrl,
         images: galleryUrls,
-        lat: position?.latitude,
-        lng: position?.longitude,
-        city: cityName ?? lounge.city,
       ));
 
       if (isClosed) return;

@@ -10,7 +10,7 @@ import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 
 class AddLoungeAdminDialog extends StatefulWidget {
   final bool isLoading;
-  final Function(String email, String password, String name, String loungeName, String? city)? onSave;
+  final Function(String email, String password, String name, String loungeName)? onSave;
 
   const AddLoungeAdminDialog({
     super.key, 
@@ -28,7 +28,6 @@ class _AddLoungeAdminDialogState extends State<AddLoungeAdminDialog> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _loungeNameController = TextEditingController();
-  final _cityController = TextEditingController();
 
   @override
   void dispose() {
@@ -36,7 +35,6 @@ class _AddLoungeAdminDialogState extends State<AddLoungeAdminDialog> {
     _emailController.dispose();
     _passwordController.dispose();
     _loungeNameController.dispose();
-    _cityController.dispose();
     super.dispose();
   }
 
@@ -48,7 +46,6 @@ class _AddLoungeAdminDialogState extends State<AddLoungeAdminDialog> {
           _passwordController.text.trim().isEmpty ? 'LoungeOwner@123' : _passwordController.text.trim(),
           _nameController.text.trim(),
           _loungeNameController.text.trim(),
-          _cityController.text.trim().isEmpty ? null : _cityController.text.trim(),
         );
       }
     }

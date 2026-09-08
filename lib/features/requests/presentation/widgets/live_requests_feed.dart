@@ -20,6 +20,10 @@ class LiveRequestsFeed extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
+      buildWhen: (prev, curr) =>
+          prev.status != curr.status ||
+          prev.requests != curr.requests ||
+          prev.filter != curr.filter,
       builder: (context, state) {
         final requests = state.filteredRequests;
         final unreadCount = state.unreadCount;

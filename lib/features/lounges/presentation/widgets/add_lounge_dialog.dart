@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -8,16 +7,11 @@ import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
-import 'package:play_spot_dashboard/core/di/di.dart';
-import 'package:play_spot_dashboard/core/services/storage_service.dart';
-import 'package:uuid/uuid.dart';
-import '../../domain/entities/lounge.dart';
 
 class AddLoungeDialog extends StatefulWidget {
   final bool isLoading;
   final Future<void> Function({
     required String loungeName,
-    String? city,
     String? address,
     String? phone,
     required String ownerName,
@@ -38,11 +32,9 @@ class AddLoungeDialog extends StatefulWidget {
 
 class _AddLoungeDialogState extends State<AddLoungeDialog> {
   final _formKey = GlobalKey<FormState>();
-  final String _loungeId = const Uuid().v4();
   
   // Lounge Details Controllers
   final _nameController = TextEditingController();
-  final _cityController = TextEditingController();
   final _addressController = TextEditingController();
   final _phoneController = TextEditingController();
 
@@ -51,16 +43,12 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
   final _emailController = TextEditingController();
   final _ownerPhoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  
-  Uint8List? _loungeImageBytes;
-  String? _loungeImageName;
 
   bool _isLocalUploading = false;
 
   @override
   void dispose() {
     _nameController.dispose();
-    _cityController.dispose();
     _addressController.dispose();
     _phoneController.dispose();
     _ownerNameController.dispose();
@@ -78,7 +66,6 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
         if (widget.onSave != null) {
           await widget.onSave!(
             loungeName: _nameController.text.trim(),
-            city: _cityController.text.trim().isEmpty ? null : _cityController.text.trim(),
             address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
             phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
             ownerName: _ownerNameController.text.trim(),
