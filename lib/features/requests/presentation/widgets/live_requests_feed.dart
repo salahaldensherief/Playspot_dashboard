@@ -337,14 +337,11 @@ class LiveRequestsFeed extends StatelessWidget {
                 StatusBadge.success(AppStrings.attended)
               else if (isExtension) ...[
                 // Reject Extension Button
-                TextButton(
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                      side: BorderSide(color: AppColors.danger.withValues(alpha: 0.4)),
-                    ),
-                  ),
+                AppButton(
+                  text: AppStrings.rejectRequest,
+                  icon: Icons.close,
+                  variant: AppButtonVariant.danger,
+                  height: 30.h,
                   onPressed: () async {
                     final firstItem = request.metadata.items.isNotEmpty ? request.metadata.items.first : <String, dynamic>{};
                     final reqMins = (firstItem['requested_minutes'] ?? firstItem['minutes'] as num?)?.toInt() ?? 30;
@@ -368,13 +365,6 @@ class LiveRequestsFeed extends StatelessWidget {
                       );
                     }
                   },
-                  child: Row(
-                    children: [
-                      Icon(Icons.close, size: 14.r, color: AppColors.danger),
-                      SizedBox(width: 4.w),
-                      AppText.body(AppStrings.rejectRequest, color: AppColors.danger, fontSize: 11.sp, fontWeight: FontWeight.bold),
-                    ],
-                  ),
                 ),
                 SizedBox(width: 8.w),
 

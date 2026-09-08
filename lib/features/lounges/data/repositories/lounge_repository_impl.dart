@@ -607,8 +607,9 @@ class LoungeRepositoryImpl implements LoungeRepository {
   @override
   Future<Either<Failure, void>> deleteLounge(String id) async {
     try {
-      await remoteDataSource.updateLounge(id, {'status': 'deleted'});
+      await remoteDataSource.deleteLounge(id);
       await localCacheService.remove('cache_lounges');
+      await localCacheService.remove('cache_lounges_v2');
       await localCacheService.remove('cache_lounge_$id');
       return const Right(null);
     } catch (e) {

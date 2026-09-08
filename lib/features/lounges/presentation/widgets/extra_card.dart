@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
@@ -146,7 +147,7 @@ class ExtraCard extends StatelessWidget {
                       if (canEdit)
                         Switch(
                           value: !extra.isOutOfStock,
-                          activeColor: AppColors.neonBlue,
+                          activeThumbColor: AppColors.neonBlue,
                           onChanged: (val) {
                             context.read<ExtrasCubit>().toggleStock(extra.id, !val, loungeId);
                           },
@@ -183,13 +184,18 @@ class ExtraCard extends StatelessWidget {
         title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),
         content: Text('${AppStrings.deleteWarning} "${extra.name}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
-          TextButton(
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.text,
+            onPressed: () => Navigator.pop(diagContext),
+          ),
+          AppButton(
+            text: AppStrings.delete,
+            variant: AppButtonVariant.danger,
             onPressed: () {
               context.read<ExtrasCubit>().deleteExtra(extra.id, loungeId);
               Navigator.pop(diagContext);
-            }, 
-            child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger))
+            },
           ),
         ],
       ),

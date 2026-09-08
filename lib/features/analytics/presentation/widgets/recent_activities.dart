@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
 import 'activity_item.dart';
@@ -29,13 +30,10 @@ class RecentActivityCard extends StatelessWidget {
                 AppStrings.recentActivity,
                 fontSize: 18.sp,
               ),
-              TextButton(
+              AppButton(
+                text: AppStrings.viewAll,
+                variant: AppButtonVariant.text,
                 onPressed: () => context.push(RouterKeys.loungeAdminLiveOps),
-                child: AppText.body(
-                  AppStrings.viewAll,
-                  color: AppColors.neonBlue,
-                  fontSize: 13.sp,
-                ),
               ),
             ],
           ),

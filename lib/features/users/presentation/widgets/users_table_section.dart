@@ -13,7 +13,17 @@ class UsersTableSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AdminManagementCubit, AdminManagementState>(
+    return BlocConsumer<AdminManagementCubit, AdminManagementState>(
+      listener: (context, state) {
+        if (state.status == AdminManagementStatus.failure && state.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage!),
+              backgroundColor: AppColors.danger,
+            ),
+          );
+        }
+      },
       buildWhen: (previous, current) =>
           previous.status != current.status || previous.admins != current.admins,
       builder: (context, state) {

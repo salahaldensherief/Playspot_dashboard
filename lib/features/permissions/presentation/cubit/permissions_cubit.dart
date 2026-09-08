@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import 'package:play_spot_dashboard/core/services/local_cache_service.dart';
 import 'package:play_spot_dashboard/features/permissions/data/models/permission_item_model.dart';
 import 'package:play_spot_dashboard/features/permissions/domain/entities/permission_item_entity.dart';
@@ -23,8 +24,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
   Future<void> loadUserPermissions(String role) async {
     if (isClosed) return;
     final cleanRole = role.toLowerCase().trim();
-    // ignore: avoid_print
-    print('DEBUG: Loading user permissions for active role: $cleanRole');
+    AppLogger.debug('Loading user permissions for active role: $cleanRole');
 
     emit(state.copyWith(userRole: cleanRole));
 
@@ -37,11 +37,9 @@ class PermissionsCubit extends Cubit<PermissionsState> {
             .toList();
         final userPermMap = {for (var p in cachedList) p.key: p.isEnabled};
         emit(state.copyWith(userPermissions: userPermMap));
-        // ignore: avoid_print
-        print('DEBUG: Loaded ${userPermMap.length} permissions from local cache for $cleanRole');
+        AppLogger.debug('Loaded ${userPermMap.length} permissions from local cache for $cleanRole');
       } catch (e) {
-        // ignore: avoid_print
-        print('DEBUG: Error parsing cached permissions: $e');
+        AppLogger.warning('Error parsing cached permissions: $e');
       }
     }
 
@@ -51,8 +49,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
 
     result.fold(
       (failure) {
-        // ignore: avoid_print
-        print('DEBUG: User permissions fetch failure: ${failure.message}');
+        AppLogger.warning('User permissions fetch failure: ${failure.message}');
       },
       (permissions) {
         final userPermMap = {for (var p in permissions) p.key: p.isEnabled};
@@ -61,8 +58,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
           userPermissions: userPermMap,
           status: PermissionsStatus.success,
         ));
-        // ignore: avoid_print
-        print('DEBUG: Synced ${permissions.length} user permissions from remote DB for $cleanRole');
+        AppLogger.debug('Synced ${permissions.length} user permissions from remote DB for $cleanRole');
       },
     );
   }
@@ -71,8 +67,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
   Future<void> fetchPermissions(String role) async {
     if (isClosed) return;
     final cleanRole = role.toLowerCase().trim();
-    // ignore: avoid_print
-    print('DEBUG: Fetching permissions for role: $cleanRole');
+    AppLogger.debug('Fetching permissions for role: $cleanRole');
 
     emit(state.copyWith(status: PermissionsStatus.loading, selectedRole: cleanRole));
 
@@ -93,13 +88,11 @@ class PermissionsCubit extends Cubit<PermissionsState> {
 
     result.fold(
       (failure) {
-        // ignore: avoid_print
-        print('DEBUG: Fetch failure: ${failure.message}');
+        AppLogger.warning('Fetch failure: ${failure.message}');
         emit(state.copyWith(status: PermissionsStatus.failure, errorMessage: failure.message));
       },
       (permissions) {
-        // ignore: avoid_print
-        print('DEBUG: Fetched ${permissions.length} permissions for $cleanRole');
+        AppLogger.debug('Fetched ${permissions.length} permissions for $cleanRole');
         _saveToCache(cleanRole, permissions);
 
         Map<String, bool>? updatedUserPerms;
@@ -121,8 +114,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
     if (isClosed || key.isEmpty) return;
     final cleanRole = role.toLowerCase().trim();
 
-    // ignore: avoid_print
-    print('DEBUG: Toggling permission - role: $cleanRole, key: $key, value: $value');
+    AppLogger.debug('Toggling permission - role: $cleanRole, key: $key, value: $value');
 
     // 1. Optimistic Updates
     final oldPermissions = List<PermissionItemEntity>.from(state.permissions);
@@ -153,8 +145,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
 
     result.fold(
       (failure) {
-        // ignore: avoid_print
-        print('DEBUG: Update failure: ${failure.message}');
+        AppLogger.warning('Update failure: ${failure.message}');
         // Rollback on failure
         _saveToCache(cleanRole, oldPermissions);
         emit(state.copyWith(
@@ -165,8 +156,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
         ));
       },
       (_) {
-        // ignore: avoid_print
-        print('DEBUG: Update success for key: $key in role: $cleanRole');
+        AppLogger.debug('Update success for key: $key in role: $cleanRole');
       },
     );
   }
@@ -187,8 +177,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
       }).toList();
       cacheService!.setJson(_getCacheKey(role), jsonList);
     } catch (e) {
-      // ignore: avoid_print
-      print('DEBUG: Cache save error: $e');
+      AppLogger.warning('Cache save error: $e');
     }
   }
 

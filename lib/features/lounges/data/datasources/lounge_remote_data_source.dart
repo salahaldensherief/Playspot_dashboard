@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import '../models/lounge_model.dart';
 import '../models/extra_model.dart';
 import 'package:play_spot_dashboard/features/rooms/data/models/room_model.dart';
@@ -40,6 +41,7 @@ abstract class LoungeRemoteDataSource {
   Future<void> deleteExtra(String extraId);
   Future<void> toggleExtraStock(String extraId, bool isOutOfStock);
   Future<void> toggleLoungeOpenStatus(String loungeId, bool isOpen);
+  Future<void> deleteLounge(String id);
   
   // Legacy methods - kept for compatibility if needed
   Future<String> createLounge(LoungeModel lounge);
@@ -93,7 +95,7 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
             }
           }
         } catch (e) {
-          debugPrint('⚠️ [LOUNGE_DATA_SOURCE] Owner profiles batch fetch failed: $e');
+          AppLogger.warning('Owner profiles batch fetch failed: $e');
         }
       }
 
@@ -110,7 +112,7 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
 
       return list;
     } catch (e) {
-      debugPrint('🔴 [LOUNGE_DATA_SOURCE] Direct lounges query failed: $e');
+      AppLogger.error('Direct lounges query failed: $e');
       return [];
     }
   }
@@ -188,15 +190,12 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
 
     try {
       await client.from('lounges').update(cleanData).eq('id', id);
-      // ignore: avoid_print
-      print('🟢 [Supabase] updateLounge Succeeded for id: $id');
+      AppLogger.info('updateLounge Succeeded for id: $id');
     } on PostgrestException catch (e) {
-      // ignore: avoid_print
-      print('🔴 [Supabase] updateLounge PostgrestException: ${e.message} (code: ${e.code}, details: ${e.details})');
+      AppLogger.error('updateLounge PostgrestException: ${e.message} (code: ${e.code}, details: ${e.details})');
       rethrow;
     } catch (e) {
-      // ignore: avoid_print
-      print('🔴 [Supabase] updateLounge Error: $e');
+      AppLogger.error('updateLounge Error: $e');
       rethrow;
     }
   }
@@ -220,15 +219,12 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
 
     try {
       await client.from('lounges').update(updateData).eq('id', id);
-      // ignore: avoid_print
-      print('🟢 [Supabase] updateLoungeDiscount Succeeded for id: $id');
+      AppLogger.info('updateLoungeDiscount Succeeded for id: $id');
     } on PostgrestException catch (e) {
-      // ignore: avoid_print
-      print('🔴 [Supabase] updateLoungeDiscount PostgrestException: ${e.message} (code: ${e.code})');
+      AppLogger.error('updateLoungeDiscount PostgrestException: ${e.message} (code: ${e.code})');
       rethrow;
     } catch (e) {
-      // ignore: avoid_print
-      print('🔴 [Supabase] updateLoungeDiscount Error: $e');
+      AppLogger.error('updateLoungeDiscount Error: $e');
       rethrow;
     }
   }
@@ -347,15 +343,12 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   Future<void> toggleLoungeOpenStatus(String loungeId, bool isOpen) async {
     try {
       await client.from('lounges').update({'is_open': isOpen}).eq('id', loungeId);
-      // ignore: avoid_print
-      print('🟢 [Supabase] toggleLoungeOpenStatus Succeeded for loungeId: $loungeId, isOpen: $isOpen');
+      AppLogger.info('toggleLoungeOpenStatus Succeeded for loungeId: $loungeId, isOpen: $isOpen');
     } on PostgrestException catch (e) {
-      // ignore: avoid_print
-      print('🔴 [Supabase] toggleLoungeOpenStatus PostgrestException: ${e.message} (code: ${e.code})');
+      AppLogger.error('toggleLoungeOpenStatus PostgrestException: ${e.message} (code: ${e.code})');
       rethrow;
     } catch (e) {
-      // ignore: avoid_print
-      print('🔴 [Supabase] toggleLoungeOpenStatus Error: $e');
+      AppLogger.error('toggleLoungeOpenStatus Error: $e');
       rethrow;
     }
   }
@@ -385,5 +378,17 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
       'p_full_name': name,
       'p_lounge_id': loungeId,
     });
+  }
+
+  @override
+  Future<void> deleteLounge(String id) async {
+    try {
+      await client.from('lounges').update({'status': 'deleted'}).eq('id', id);
+      AppLogger.info('deleteLounge soft delete succeeded for id: $id');
+    } catch (e) {
+      AppLogger.warning('deleteLounge soft delete failed ($e), attempting hard delete...');
+      await client.from('lounges').delete().eq('id', id);
+      AppLogger.info('deleteLounge hard delete succeeded for id: $id');
+    }
   }
 }

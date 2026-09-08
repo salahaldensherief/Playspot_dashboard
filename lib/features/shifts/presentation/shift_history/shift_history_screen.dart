@@ -185,9 +185,10 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
+                  AppButton(
+                    text: AppStrings.cancel,
+                    variant: AppButtonVariant.text,
                     onPressed: () => Navigator.pop(dialogContext),
-                    child: Text(AppStrings.cancel),
                   ),
                   SizedBox(width: 16.w),
                   AppButton(

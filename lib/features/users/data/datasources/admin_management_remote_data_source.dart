@@ -55,15 +55,24 @@ class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSo
     try {
       final response = await supabaseClient
           .from('profiles')
-          .select('id, email, full_name, role, lounge_id, avatar_url, is_setup_completed, points_balance, reward_points, referral_count, referrals_count')
+          .select('id, email, full_name, role, lounge_id, avatar_url, is_setup_completed, points_balance, reward_points, referral_count, referrals_count, is_active')
+          .neq('role', 'inactive')
           .order('full_name');
-      return (response as List).map((json) {
+      return (response as List)
+          .where((json) => json['is_active'] != false && json['role'] != 'inactive')
+          .map((json) {
         return UserModel.fromJson(Map<String, dynamic>.from(json));
       }).toList();
     } catch (_) {
       try {
-        final fallbackResponse = await supabaseClient.from('profiles').select().order('full_name');
-        return (fallbackResponse as List).map((json) {
+        final fallbackResponse = await supabaseClient
+            .from('profiles')
+            .select()
+            .neq('role', 'inactive')
+            .order('full_name');
+        return (fallbackResponse as List)
+            .where((json) => json['is_active'] != false && json['role'] != 'inactive')
+            .map((json) {
           return UserModel.fromJson(Map<String, dynamic>.from(json));
         }).toList();
       } catch (fallbackError) {
@@ -74,9 +83,42 @@ class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSo
 
   @override
   Future<void> deleteAdmin(String adminId) async {
-    // Soft delete profile/admin record if possible or hard delete from auth if allowed
-    // For now, let's assume we delete from the public schema profiles/admins table
-    await supabaseClient.from('profiles').delete().eq('id', adminId);
+    final cleanAdminId = adminId.trim();
+    if (cleanAdminId.isEmpty) return;
+
+    // 1. Unassign lounge ownership if this admin is a lounge owner
+    try {
+      await supabaseClient
+          .from('lounges')
+          .update({'owner_id': null})
+          .eq('owner_id', cleanAdminId);
+    } catch (e) {
+      // ignore
+    }
+
+    // 2. Remove staff association if any
+    try {
+      await supabaseClient
+          .from('lounge_staff')
+          .delete()
+          .eq('user_id', cleanAdminId);
+    } catch (_) {}
+
+    // 3. Attempt hard delete from profiles
+    try {
+      await supabaseClient.from('profiles').delete().eq('id', cleanAdminId);
+    } on PostgrestException catch (_) {
+      // 4. Soft delete fallback if hard delete is restricted by DB foreign keys or RLS
+      await supabaseClient.from('profiles').update({
+        'is_active': false,
+        'role': 'inactive',
+      }).eq('id', cleanAdminId);
+    } catch (_) {
+      await supabaseClient.from('profiles').update({
+        'is_active': false,
+        'role': 'inactive',
+      }).eq('id', cleanAdminId);
+    }
   }
 
   @override

@@ -200,7 +200,11 @@ class LoungeCubit extends Cubit<LoungeState> {
         status: LoungeStatus.failure,
         errorMessage: failure.message,
       )),
-      (_) => fetchLounges(),
+      (_) {
+        final updatedLounges = state.lounges.where((l) => l.id != id).toList();
+        emit(state.copyWith(status: LoungeStatus.success, lounges: updatedLounges));
+        fetchLounges(forceRefresh: true);
+      },
     );
   }
 }

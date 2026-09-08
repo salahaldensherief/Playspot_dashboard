@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import '../models/permission_item_model.dart';
 
 abstract class PermissionsRemoteSource {
@@ -24,8 +25,7 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
             .toList();
       }
     } catch (e) {
-      // ignore: avoid_print
-      print('PermissionsRemoteSource: RPC get_role_permissions failed: $e');
+      AppLogger.warning('PermissionsRemoteSource: RPC get_role_permissions failed: $e');
     }
 
     // Fallback: Query role_permissions table directly
@@ -49,8 +49,7 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
         }).toList();
       }
     } catch (tableError) {
-      // ignore: avoid_print
-      print('PermissionsRemoteSource: Fallback table select failed: $tableError');
+      AppLogger.warning('PermissionsRemoteSource: Fallback table select failed: $tableError');
     }
 
     // Default static permissions list fallback so UI is NEVER EMPTY!
@@ -60,8 +59,7 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
   @override
   Future<void> updateRolePermission(String role, String permissionKey, bool isEnabled) async {
     final cleanRole = role.toLowerCase().trim();
-    // ignore: avoid_print
-    print('DEBUG: Supabase update_role_permission: role=$cleanRole, key=$permissionKey, enabled=$isEnabled');
+    AppLogger.debug('Supabase update_role_permission: role=$cleanRole, key=$permissionKey, enabled=$isEnabled');
 
     try {
       await _supabase.rpc('update_role_permission', params: {
@@ -70,8 +68,7 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
         'p_is_enabled': isEnabled,
       });
     } catch (e) {
-      // ignore: avoid_print
-      print('PermissionsRemoteSource: RPC update_role_permission failed: $e. Falling back to table upsert.');
+      AppLogger.warning('PermissionsRemoteSource: RPC update_role_permission failed: $e. Falling back to table upsert.');
       try {
         await _supabase.from('role_permissions').upsert({
           'role': cleanRole,
@@ -86,8 +83,7 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
             'is_enabled': isEnabled,
           }, onConflict: 'role,permission_key');
         } catch (e2) {
-          // ignore: avoid_print
-          print('PermissionsRemoteSource: Table upsert failed: $e2');
+          AppLogger.error('PermissionsRemoteSource: Table upsert failed: $e2');
         }
       }
     }

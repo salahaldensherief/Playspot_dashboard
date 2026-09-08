@@ -12,9 +12,6 @@ class PermissionItemModel extends PermissionItemEntity {
   });
 
   factory PermissionItemModel.fromJson(Map<String, dynamic> json) {
-    // This print will help us see the exact keys coming from the database
-    // ignore: avoid_print
-    print('DEBUG: Permission JSON: $json');
     
     return PermissionItemModel(
       key: (json['permission_key'] ?? json['out_permission_key'] ?? json['key'] ?? json['id'] ?? '').toString(),

@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import '../models/loyalty_stats_model.dart';
 import '../../../marketing/data/models/redemption_option_model.dart';
 
@@ -21,7 +22,7 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
       return LoyaltyStatsModel.fromJson(Map<String, dynamic>.from(response));
     } catch (e) {
       // Fallback if RPC is not created yet
-      print('Loyalty Stats Alert: RPC get_voucher_stats failed, using default values. Error: $e');
+      AppLogger.warning('Loyalty Stats Alert: RPC get_voucher_stats failed, using default values. Error: $e');
       return LoyaltyStatsModel(
         totalVouchersIssued: 0,
         totalVouchersUsed: 0,

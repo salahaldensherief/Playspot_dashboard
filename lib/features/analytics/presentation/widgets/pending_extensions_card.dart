@@ -6,7 +6,6 @@ import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_text.dart';
-import '../../../../art_core/widgets/status_badge.dart';
 import '../../../requests/domain/entities/client_request_entity.dart';
 import '../../../requests/presentation/client_requests_cubit.dart';
 import '../../../requests/presentation/client_requests_state.dart';
@@ -265,19 +264,11 @@ class PendingExtensionsCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               // Reject Button
-              TextButton(
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 14.w,
-                    vertical: 6.h,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                    side: BorderSide(
-                      color: AppColors.danger.withValues(alpha: 0.4),
-                    ),
-                  ),
-                ),
+              AppButton(
+                text: AppStrings.rejectRequest,
+                icon: Icons.close,
+                variant: AppButtonVariant.danger,
+                height: 32.h,
                 onPressed: () async {
                   final success = await dashboardCubit.reviewExtensionRequest(
                     bookingId: bookingId,
@@ -296,22 +287,6 @@ class PendingExtensionsCard extends StatelessWidget {
                     );
                   }
                 },
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.close,
-                      size: 14.r,
-                      color: AppColors.danger,
-                    ),
-                    SizedBox(width: 4.w),
-                    AppText.body(
-                      AppStrings.rejectRequest,
-                      color: AppColors.danger,
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ],
-                ),
               ),
               SizedBox(width: 8.w),
 

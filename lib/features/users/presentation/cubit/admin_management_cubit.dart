@@ -77,7 +77,14 @@ class AdminManagementCubit extends Cubit<AdminManagementState> {
         status: AdminManagementStatus.failure,
         errorMessage: failure.message,
       )),
-      (_) => fetchAdmins(),
+      (_) {
+        final updatedAdmins = state.admins.where((a) => a.id != adminId).toList();
+        emit(state.copyWith(
+          status: AdminManagementStatus.success,
+          admins: updatedAdmins,
+        ));
+        fetchAdmins();
+      },
     );
   }
 
