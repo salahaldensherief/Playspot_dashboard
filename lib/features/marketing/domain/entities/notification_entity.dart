@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum NotificationType { booking, offer, loyalty, system }
+enum NotificationType { booking, offer, loyalty, system, kyc }
 
 class NotificationEntity extends Equatable {
   final String id;
@@ -10,6 +10,7 @@ class NotificationEntity extends Equatable {
   final String bodyAr;
   final String bodyEn;
   final NotificationType type;
+  final bool isRead;
   final DateTime createdAt;
   final Map<String, dynamic>? metadata;
 
@@ -21,10 +22,11 @@ class NotificationEntity extends Equatable {
     required this.bodyAr,
     required this.bodyEn,
     required this.type,
+    this.isRead = false,
     required this.createdAt,
     this.metadata,
   });
 
   @override
-  List<Object?> get props => [id, userId, titleAr, titleEn, bodyAr, bodyEn, type, createdAt, metadata];
+  List<Object?> get props => [id, userId, titleAr, titleEn, bodyAr, bodyEn, type, isRead, createdAt, metadata];
 }

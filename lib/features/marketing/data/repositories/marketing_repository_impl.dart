@@ -98,4 +98,38 @@ class MarketingRepositoryImpl implements MarketingRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, List<NotificationEntity>>> getNotificationsRpc({
+    String lang = 'ar',
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      final notifications = await remoteDataSource.getNotificationsRpc(lang: lang, limit: limit, offset: offset);
+      return Right(notifications);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> markNotificationRead(String notificationId) async {
+    try {
+      await remoteDataSource.markNotificationRead(notificationId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> markAllNotificationsRead() async {
+    try {
+      await remoteDataSource.markAllNotificationsRead();
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

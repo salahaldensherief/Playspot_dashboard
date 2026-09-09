@@ -12,6 +12,10 @@ abstract class MarketingRemoteDataSource {
   // Notifications & User Preferences
   Future<void> sendNotification(NotificationModel notification);
   Future<List<NotificationModel>> getNotifications();
+  Future<List<NotificationModel>> getNotificationsRpc({String lang = 'ar', int limit = 20, int offset = 0});
+  Future<void> markNotificationRead(String notificationId);
+  Future<void> markAllNotificationsRead();
+  RealtimeChannel subscribeToUserNotifications(String userId, void Function(NotificationModel) onNewNotification);
   Future<Map<String, dynamic>?> getUserNotificationSettings(String userId);
   Future<void> updateUserNotificationSettings(String userId, Map<String, dynamic> settings);
 }
@@ -85,6 +89,75 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
   Future<List<NotificationModel>> getNotifications() async {
     final response = await _supabase.from('notifications').select().order('created_at', ascending: false);
     return (response as List).map((json) => NotificationModel.fromJson(json)).toList();
+  }
+
+  @override
+  Future<List<NotificationModel>> getNotificationsRpc({
+    String lang = 'ar',
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      final response = await _supabase.rpc('get_notifications', params: {
+        'p_lang': lang,
+        'p_limit': limit,
+        'p_offset': offset,
+      });
+      if (response != null && response is List) {
+        return (response as List).map((json) => NotificationModel.fromJson(Map<String, dynamic>.from(json as Map))).toList();
+      }
+    } catch (e) {
+      debugPrint('⚠️ [MARKETING_REMOTE] get_notifications RPC error: $e, falling back to direct select');
+    }
+    return getNotifications();
+  }
+
+  @override
+  Future<void> markNotificationRead(String notificationId) async {
+    try {
+      await _supabase.rpc('mark_notification_read', params: {
+        'p_notification_id': notificationId,
+      });
+      return;
+    } catch (e) {
+      debugPrint('⚠️ [MARKETING_REMOTE] mark_notification_read RPC error: $e, fallback update');
+      await _supabase.from('notifications').update({'is_read': true}).eq('id', notificationId);
+    }
+  }
+
+  @override
+  Future<void> markAllNotificationsRead() async {
+    try {
+      await _supabase.rpc('mark_all_notifications_read');
+      return;
+    } catch (e) {
+      debugPrint('⚠️ [MARKETING_REMOTE] mark_all_notifications_read RPC error: $e, fallback update');
+      await _supabase.from('notifications').update({'is_read': true});
+    }
+  }
+
+  @override
+  RealtimeChannel subscribeToUserNotifications(String userId, void Function(NotificationModel) onNewNotification) {
+    final channel = _supabase
+        .channel('public:notifications:user_$userId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'notifications',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
+          callback: (payload) {
+            if (payload.newRecord.isNotEmpty) {
+              final newModel = NotificationModel.fromJson(payload.newRecord);
+              onNewNotification(newModel);
+            }
+          },
+        )
+        .subscribe();
+    return channel;
   }
 
   @override

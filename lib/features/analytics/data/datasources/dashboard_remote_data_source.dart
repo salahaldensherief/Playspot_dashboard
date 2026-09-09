@@ -337,7 +337,20 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
         }
       }
 
-      if (isCanteenOrder) {
+      if (requestId.startsWith('sc_')) {
+        final scId = requestId.replaceFirst('sc_', '');
+        try {
+          await supabaseClient
+              .from('service_calls')
+              .update({'status': approve ? 'resolved' : 'rejected', 'is_attended': true, 'is_read': true})
+              .eq('id', scId);
+        } catch (_) {
+          await supabaseClient
+              .from('service_calls')
+              .update({'status': approve ? 'resolved' : 'rejected'})
+              .eq('id', scId);
+        }
+      } else if (isCanteenOrder) {
         await supabaseClient
             .from('canteen_orders')
             .update({'status': 'completed', 'is_attended': true})
@@ -350,7 +363,20 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       }
       debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Client request approved and session updated');
     } else {
-      if (isCanteenOrder) {
+      if (requestId.startsWith('sc_')) {
+        final scId = requestId.replaceFirst('sc_', '');
+        try {
+          await supabaseClient
+              .from('service_calls')
+              .update({'status': 'rejected', 'is_attended': true, 'is_read': true})
+              .eq('id', scId);
+        } catch (_) {
+          await supabaseClient
+              .from('service_calls')
+              .update({'status': 'rejected'})
+              .eq('id', scId);
+        }
+      } else if (isCanteenOrder) {
         await supabaseClient
             .from('canteen_orders')
             .update({'status': 'rejected', 'is_attended': true})

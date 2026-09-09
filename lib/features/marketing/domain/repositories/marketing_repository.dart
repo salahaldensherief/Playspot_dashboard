@@ -13,4 +13,7 @@ abstract class MarketingRepository {
   // Notifications
   Future<Either<Failure, void>> sendNotification(NotificationEntity notification);
   Future<Either<Failure, List<NotificationEntity>>> getNotifications();
+  Future<Either<Failure, List<NotificationEntity>>> getNotificationsRpc({String lang = 'ar', int limit = 20, int offset = 0});
+  Future<Either<Failure, void>> markNotificationRead(String notificationId);
+  Future<Either<Failure, void>> markAllNotificationsRead();
 }

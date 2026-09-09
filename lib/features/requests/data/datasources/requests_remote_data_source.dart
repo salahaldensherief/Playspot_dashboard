@@ -5,13 +5,13 @@ import '../../domain/entities/client_request_entity.dart';
 import '../models/client_request_model.dart';
 
 abstract class RequestsRemoteDataSource {
-  /// Stream combined real-time notifications, canteen orders, and pending extensions for a lounge.
+  /// Stream combined real-time service_calls, notifications, canteen orders, and pending extensions for a lounge.
   Stream<List<ClientRequestModel>> watchClientRequests({required String loungeId});
 
   /// Fetch combined client requests once for a lounge.
   Future<List<ClientRequestModel>> getClientRequests({required String loungeId});
 
-  /// Mark notification or canteen order as attended / read.
+  /// Mark notification, service_call, or canteen order as attended / read.
   Future<void> markRequestAsAttended(String id, {bool isCanteenOrder = false});
 }
 
@@ -29,6 +29,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
 
     late StreamController<List<ClientRequestModel>> controller;
     Timer? heartbeatTimer;
+    StreamSubscription? serviceCallsSubscription;
     StreamSubscription? notifSubscription;
     StreamSubscription? canteenSubscription;
     StreamSubscription? bookingItemsSubscription;
@@ -50,7 +51,31 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         // 1. Initial fetch & emit
         fetchAndEmit();
 
-        // 2. Realtime Subscriptions for notifications, canteen_orders, and bookings
+        // 2. Realtime Subscriptions for service_calls, notifications, canteen_orders, and bookings
+        // Subscription 0: Service Calls stream (Primary stream for assistance requests)
+        try {
+          serviceCallsSubscription = client
+              .from('service_calls')
+              .stream(primaryKey: ['id'])
+              .eq('lounge_id', cleanLoungeId)
+              .listen(
+                (_) {
+                  fetchAndEmit();
+                },
+                onError: (e) {
+                  debugPrint('⚠️ [REQUESTS_DATA_SOURCE] ServiceCalls Realtime Error: $e');
+                  if (e is RealtimeSubscribeException) {
+                    debugPrint('⚠️ [REQUESTS_DATA_SOURCE] ServiceCalls RealtimeSubscribeException (status: ${e.status}, details: $e)');
+                  }
+                  _setupServiceCallsFallbackStream(cleanLoungeId, fetchAndEmit, (sub) => serviceCallsSubscription = sub);
+                },
+                cancelOnError: false,
+              );
+        } catch (e) {
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] ServiceCalls Realtime Exception: $e');
+          _setupServiceCallsFallbackStream(cleanLoungeId, fetchAndEmit, (sub) => serviceCallsSubscription = sub);
+        }
+
         // Subscription 1: Notifications stream with graceful fallback on channel error
         try {
           notifSubscription = client
@@ -143,6 +168,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         });
       },
       onCancel: () {
+        serviceCallsSubscription?.cancel();
         notifSubscription?.cancel();
         canteenSubscription?.cancel();
         bookingItemsSubscription?.cancel();
@@ -152,6 +178,31 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     );
 
     return controller.stream;
+  }
+
+  void _setupServiceCallsFallbackStream(
+    String loungeId,
+    VoidCallback fetchAndEmit,
+    void Function(StreamSubscription) setSubscription,
+  ) {
+    try {
+      debugPrint('🔄 [REQUESTS_DATA_SOURCE] Attempting fallback stream for service_calls without filter...');
+      final sub = client
+          .from('service_calls')
+          .stream(primaryKey: ['id'])
+          .listen(
+            (_) {
+              fetchAndEmit();
+            },
+            onError: (e) {
+              debugPrint('⚠️ [REQUESTS_DATA_SOURCE] ServiceCalls Fallback Stream Error: $e');
+            },
+            cancelOnError: false,
+          );
+      setSubscription(sub);
+    } catch (e) {
+      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] ServiceCalls Fallback Stream Exception: $e');
+    }
   }
 
   void _setupNotificationsFallbackStream(
@@ -212,6 +263,43 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     if (cleanLoungeId.isEmpty) return [];
 
     try {
+      // 0. Fetch service_calls for the active lounge (primary source for assistance/call_staff)
+      dynamic serviceCallsResponse = [];
+      try {
+        serviceCallsResponse = await client
+            .from('service_calls')
+            .select('*, rooms(name), bookings(user_name, room_name, user_id, user_phone)')
+            .eq('lounge_id', cleanLoungeId)
+            .order('created_at', ascending: false)
+            .limit(50);
+      } catch (e) {
+        try {
+          serviceCallsResponse = await client
+              .from('service_calls')
+              .select()
+              .eq('lounge_id', cleanLoungeId)
+              .order('created_at', ascending: false)
+              .limit(50);
+        } catch (_) {
+          try {
+            serviceCallsResponse = await client
+                .from('service_calls')
+                .select()
+                .order('created_at', ascending: false)
+                .limit(50);
+          } catch (_) {}
+        }
+      }
+
+      final serviceCallsList = ((serviceCallsResponse is List) ? serviceCallsResponse : [])
+          .map((json) => ClientRequestModel.fromServiceCallJson(Map<String, dynamic>.from(json)))
+          .where((model) {
+            if (cleanLoungeId.isNotEmpty && model.loungeId.isNotEmpty && model.loungeId != cleanLoungeId) {
+              return false;
+            }
+            return true;
+          }).toList();
+
       // 1. Fetch notifications for the active lounge
       dynamic notifResponse = [];
       try {
@@ -366,7 +454,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
             return true;
           }).toList();
 
-      final combined = [...notifList, ...ordersList, ...bookingItemsList, ...extensionsList];
+      final combined = [...serviceCallsList, ...notifList, ...ordersList, ...bookingItemsList, ...extensionsList];
       combined.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       return combined;
@@ -380,7 +468,26 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
   Future<void> markRequestAsAttended(String id, {bool isCanteenOrder = false}) async {
     debugPrint('🔵 [REQUESTS_DATA_SOURCE] Marking request as attended: id=$id, isCanteenOrder=$isCanteenOrder');
     try {
-      if (id.startsWith('item_')) {
+      if (id.startsWith('sc_')) {
+        final serviceCallId = id.replaceFirst('sc_', '');
+        try {
+          await client
+              .from('service_calls')
+              .update({
+                'status': 'resolved',
+                'is_attended': true,
+                'is_read': true,
+              })
+              .eq('id', serviceCallId);
+        } catch (_) {
+          await client
+              .from('service_calls')
+              .update({
+                'status': 'resolved',
+              })
+              .eq('id', serviceCallId);
+        }
+      } else if (id.startsWith('item_')) {
         final itemId = id.replaceFirst('item_', '');
         await client
             .from('booking_items')

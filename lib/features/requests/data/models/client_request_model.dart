@@ -255,6 +255,64 @@ class ClientRequestModel extends ClientRequestEntity {
     );
   }
 
+  factory ClientRequestModel.fromServiceCallJson(Map<String, dynamic> json) {
+    final statusStr = (json['status'] ?? 'pending').toString().toLowerCase();
+    final bool isAttended = statusStr == 'resolved' || statusStr == 'completed' || statusStr == 'attended' || statusStr == 'approved' || json['is_attended'] == true;
+    final bool isRead = isAttended || json['is_read'] == true;
+
+    final String rawId = (json['id'] ?? '').toString();
+    final String reqId = rawId.startsWith('sc_') ? rawId : 'sc_$rawId';
+
+    final String callType = (json['call_type'] ?? json['type'] ?? 'assistance').toString().toLowerCase();
+    String bodyAr = 'طلب مساعدة من العامل';
+    if (callType == 'controller_issue') {
+      bodyAr = 'مشكلة في أجهزة التحكم / الأذرع';
+    } else if (callType == 'cleaning') {
+      bodyAr = 'طلب تنظيف المكان';
+    } else if (json['notes'] != null && json['notes'].toString().isNotEmpty) {
+      bodyAr = json['notes'].toString();
+    }
+
+    final roomObj = json['rooms'] as Map<String, dynamic>?;
+    final bookingObj = json['bookings'] as Map<String, dynamic>?;
+
+    final roomName = (bookingObj?['room_name'] ?? roomObj?['name'] ?? json['room_name'] ?? json['roomName'] ?? json['room'] ?? '').toString();
+    final userName = (bookingObj?['user_name'] ?? json['user_name'] ?? json['userName'] ?? json['user'] ?? json['full_name'] ?? 'عميل').toString();
+    final userPhone = (bookingObj?['user_phone'] ?? json['user_phone'] ?? json['userPhone'] ?? json['phone'])?.toString();
+
+    final loungeId = (json['lounge_id'] ?? json['loungeId'] ?? bookingObj?['lounge_id'] ?? '').toString();
+    final bookingId = (json['booking_id'] ?? json['bookingId'] ?? bookingObj?['id'])?.toString();
+    final userId = (json['user_id'] ?? json['userId'] ?? bookingObj?['user_id'])?.toString();
+    final roomId = (json['room_id'] ?? json['roomId'] ?? bookingObj?['room_id'])?.toString();
+
+    return ClientRequestModel(
+      id: reqId,
+      loungeId: loungeId,
+      bookingId: bookingId,
+      userId: userId,
+      userName: userName,
+      userPhone: userPhone,
+      roomId: roomId,
+      roomName: roomName.isNotEmpty ? roomName : null,
+      titleAr: roomName.isNotEmpty ? 'نداء خدمة ($roomName)' : 'نداء خدمة / مساعدة',
+      titleEn: roomName.isNotEmpty ? 'Service Call ($roomName)' : 'Service Call Request',
+      bodyAr: bodyAr,
+      bodyEn: 'Customer requested staff assistance',
+      type: ClientRequestType.callStaff,
+      isRead: isRead,
+      isAttended: isAttended,
+      createdAt: json['created_at'] != null ? (DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()) : DateTime.now(),
+      metadata: NotificationMetadata(
+        bookingId: bookingId,
+        roomId: roomId,
+        roomName: roomName,
+        userName: userName,
+        userPhone: userPhone,
+        notes: json['notes']?.toString(),
+      ),
+    );
+  }
+
   factory ClientRequestModel.fromBookingItemJson(Map<String, dynamic> json) {
     final bookingObj = json['bookings'] as Map<String, dynamic>?;
     final String name = (json['name'] ?? json['title'] ?? json['item_name'] ?? 'Canteen Item').toString();
