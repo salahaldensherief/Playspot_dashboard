@@ -11,12 +11,12 @@ class PermissionsRepositoryImpl with RepositoryHelper implements PermissionsRepo
   PermissionsRepositoryImpl(this.remoteSource);
 
   @override
-  Future<Either<Failure, List<PermissionItemEntity>>> getRolePermissions(String role) async {
-    return await callRepository(() => remoteSource.getRolePermissions(role));
+  Future<Either<Failure, List<PermissionItemEntity>>> getRolePermissions(String role, {String? loungeId}) async {
+    return await callRepository(() => remoteSource.getRolePermissions(role, loungeId: loungeId));
   }
 
   @override
-  Future<Either<Failure, void>> updateRolePermission(String role, String permissionKey, bool isEnabled) async {
-    return await callRepository(() => remoteSource.updateRolePermission(role, permissionKey, isEnabled));
+  Future<Either<Failure, void>> updateRolePermission(String role, String permissionKey, bool isEnabled, {String? loungeId}) async {
+    return await callRepository(() => remoteSource.updateRolePermission(role, permissionKey, isEnabled, loungeId: loungeId));
   }
 }

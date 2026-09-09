@@ -55,45 +55,54 @@ class LocationServiceImpl implements LocationService {
 
   @override
   Future<String?> getCityFromPosition(Position position, BuildContext context) async {
-    final locale = Localizations.maybeLocaleOf(context);
-    final lang = (locale != null && locale.languageCode.isNotEmpty) ? locale.languageCode : 'ar';
-
-    // 1. Web Reverse Geocoding (via OpenStreetMap Nominatim & BigDataCloud HTTP APIs)
-    if (kIsWeb) {
-      final webCity = await _reverseGeocodeHttp(position.latitude, position.longitude, lang);
-      if (webCity != null && webCity.isNotEmpty) {
-        return webCity;
-      }
-    }
-
-    // 2. Native Geocoding Package (for Android / iOS)
     try {
-      if (locale != null && locale.languageCode.isNotEmpty) {
-        try {
-          await setLocaleIdentifier(locale.languageCode);
-        } catch (e) {
-          debugPrint('${AppConstants.geocodingFailed}$e');
+      final locale = Localizations.maybeLocaleOf(context);
+      final lang = (locale != null && locale.languageCode.isNotEmpty) ? locale.languageCode : 'ar';
+
+      // 1. Web Reverse Geocoding (via OpenStreetMap Nominatim & BigDataCloud HTTP APIs)
+      if (kIsWeb) {
+        final webCity = await _reverseGeocodeHttp(position.latitude, position.longitude, lang);
+        if (webCity != null && webCity.trim().isNotEmpty) {
+          return webCity.trim();
         }
       }
 
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
-      );
-
-      if (placemarks.isNotEmpty) {
-        final placemark = placemarks.first;
-        final city = placemark.locality ?? placemark.subAdministrativeArea ?? placemark.administrativeArea;
-        if (city != null && city.trim().isNotEmpty) {
-          return city.trim();
+      // 2. Native Geocoding Package (for Android / iOS)
+      try {
+        if (locale != null && locale.languageCode.isNotEmpty) {
+          try {
+            await setLocaleIdentifier(locale.languageCode);
+          } catch (e) {
+            debugPrint('${AppConstants.geocodingFailed}$e');
+          }
         }
+
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+
+        if (placemarks.isNotEmpty) {
+          final placemark = placemarks.first;
+          final city = placemark.locality ?? placemark.subAdministrativeArea ?? placemark.administrativeArea;
+          if (city != null && city.trim().isNotEmpty) {
+            return city.trim();
+          }
+        }
+      } catch (e) {
+        debugPrint('${AppConstants.cityFromPositionError}$e');
       }
+
+      // Fallback to HTTP API if native geocoding fails
+      final fallbackCity = await _reverseGeocodeHttp(position.latitude, position.longitude, lang);
+      if (fallbackCity != null && fallbackCity.trim().isNotEmpty) {
+        return fallbackCity.trim();
+      }
+      return null;
     } catch (e) {
-      debugPrint('${AppConstants.cityFromPositionError}$e');
+      debugPrint('⚠️ [LOCATION_SERVICE] getCityFromPosition Error: $e');
+      return null;
     }
-
-    // Fallback to HTTP API if native geocoding fails
-    return await _reverseGeocodeHttp(position.latitude, position.longitude, lang);
   }
 
   Future<String?> _reverseGeocodeHttp(double lat, double lng, String lang) async {
@@ -102,12 +111,14 @@ class LocationServiceImpl implements LocationService {
       final url = Uri.parse(
         'https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=$lat&longitude=$lng&localityLanguage=$lang',
       );
-      final response = await http.get(url).timeout(const Duration(seconds: 4));
+      final response = await http.get(url).timeout(const Duration(seconds: 3));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final city = data['city'] ?? data['locality'] ?? data['principalSubdivision'];
-        if (city != null && city.toString().trim().isNotEmpty) {
-          return city.toString().trim();
+        if (data is Map) {
+          final city = data['city'] ?? data['locality'] ?? data['principalSubdivision'];
+          if (city != null && city.toString().trim().isNotEmpty) {
+            return city.toString().trim();
+          }
         }
       }
     } catch (e) {
@@ -122,12 +133,12 @@ class LocationServiceImpl implements LocationService {
       final response = await http.get(
         url,
         headers: {'User-Agent': 'PlaySpotDashboard/1.0'},
-      ).timeout(const Duration(seconds: 4));
+      ).timeout(const Duration(seconds: 3));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final address = data['address'];
-        if (address != null) {
+        if (data is Map && data['address'] is Map) {
+          final address = data['address'] as Map;
           final city = address['city'] ??
               address['town'] ??
               address['village'] ??

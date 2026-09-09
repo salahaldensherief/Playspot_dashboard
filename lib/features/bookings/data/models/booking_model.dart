@@ -21,11 +21,13 @@ class BookingModel extends Booking {
     required super.status,
     required super.paymentStatus,
     required super.totalPrice,
+    super.addonsPrice,
     super.voucherDiscount,
     super.discountAmount,
     super.discountPercentage,
     super.discountReason,
     super.extras = const [],
+    super.canteenOrders = const [],
     super.lat,
     super.lng,
     super.shiftId,
@@ -123,6 +125,51 @@ class BookingModel extends Booking {
         paymentStatus = PaymentStatus.unpaid;
     }
 
+    final double? addonsPrice = json['addons_price'] != null
+        ? parseDouble(json['addons_price'])
+        : (json['out_addons_price'] != null ? parseDouble(json['out_addons_price']) : null);
+
+    final List<Map<String, dynamic>> parsedCanteenOrders = () {
+      dynamic rawOrders = json['canteen_orders'];
+      if (rawOrders is List) {
+        return rawOrders
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      }
+      return <Map<String, dynamic>>[];
+    }();
+
+    final List<Map<String, dynamic>> parsedExtras = () {
+      List<Map<String, dynamic>> itemsList = [];
+
+      // 1. Process canteen_orders if present
+      if (parsedCanteenOrders.isNotEmpty) {
+        for (var order in parsedCanteenOrders) {
+          final rawItems = order['items'];
+          if (rawItems is List) {
+            for (var it in rawItems) {
+              if (it is Map) {
+                itemsList.add(Map<String, dynamic>.from(it));
+              }
+            }
+          }
+        }
+      }
+
+      // 2. Process booking_items or canteen_items
+      dynamic rawExtras = json['booking_items'] ?? json['canteen_items'];
+      if (rawExtras is List) {
+        for (var e in rawExtras) {
+          if (e is Map) {
+            itemsList.add(Map<String, dynamic>.from(e));
+          }
+        }
+      }
+
+      return itemsList;
+    }();
+
     return BookingModel(
       id: (json['out_booking_id'] ?? json['id'] ?? '').toString(),
       userId: (json['user_id'] ?? '').toString(),
@@ -143,21 +190,13 @@ class BookingModel extends Booking {
       status: status,
       paymentStatus: paymentStatus,
       totalPrice: parseDouble(json['out_total_price'] ?? json['total_price']),
+      addonsPrice: addonsPrice,
       voucherDiscount: json['voucher_discount'] != null ? parseDouble(json['voucher_discount']) : null,
       discountAmount: json['discount_amount'] != null ? parseDouble(json['discount_amount']) : null,
       discountPercentage: json['discount_percentage'] != null ? parseDouble(json['discount_percentage']) : null,
       discountReason: json['discount_reason']?.toString(),
-      extras: () {
-        dynamic rawExtras = json['booking_items'] ?? json['canteen_items'];
-
-        if (rawExtras is List) {
-          return rawExtras
-              .whereType<Map>()
-              .map((e) => Map<String, dynamic>.from(e))
-              .toList();
-        }
-        return <Map<String, dynamic>>[];
-      }(),
+      extras: parsedExtras,
+      canteenOrders: parsedCanteenOrders,
       lat: () {
         final val = json['latitude'] ?? json['lat'] ?? loungeData?['latitude'] ?? loungeData?['lat'];
         if (val != null) return parseDouble(val);
@@ -203,6 +242,7 @@ class BookingModel extends Booking {
       'duration_minutes': durationMinutes,
       'room_price': roomPrice ?? totalPrice,
       'total_price': totalPrice,
+      if (addonsPrice != null) 'addons_price': addonsPrice,
       'status': status.toDbString(),
       'payment_status': paymentStatus.name,
       'user_name': userName,

@@ -42,6 +42,10 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> {
             .map((r) => r.id)
             .toSet();
 
+        if (!_isFirstLoad && listEquals(state.requests, requests) && state.status == ClientRequestsStatus.success) {
+          return;
+        }
+
         if (_isFirstLoad) {
           _isFirstLoad = false;
           _knownRequestIds.addAll(currentUnattendedIds);

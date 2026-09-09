@@ -66,11 +66,13 @@ class Booking extends Equatable {
   final BookingStatus status;
   final PaymentStatus paymentStatus;
   final double totalPrice;
+  final double? addonsPrice;
   final double? voucherDiscount;
   final double? discountAmount;
   final double? discountPercentage;
   final String? discountReason;
   final List<Map<String, dynamic>> extras;
+  final List<Map<String, dynamic>> canteenOrders;
   final double? lat;
   final double? lng;
   final String? shiftId;
@@ -97,11 +99,13 @@ class Booking extends Equatable {
     required this.status,
     this.paymentStatus = PaymentStatus.unpaid,
     required this.totalPrice,
+    this.addonsPrice,
     this.voucherDiscount,
     this.discountAmount,
     this.discountPercentage,
     this.discountReason,
     this.extras = const [],
+    this.canteenOrders = const [],
     this.lat,
     this.lng,
     this.shiftId,
@@ -130,11 +134,13 @@ class Booking extends Equatable {
         status,
         paymentStatus,
         totalPrice,
+        addonsPrice,
         voucherDiscount,
         discountAmount,
         discountPercentage,
         discountReason,
         extras,
+        canteenOrders,
         lat,
         lng,
         shiftId,
@@ -162,11 +168,13 @@ class Booking extends Equatable {
     BookingStatus? status,
     PaymentStatus? paymentStatus,
     double? totalPrice,
+    double? addonsPrice,
     double? voucherDiscount,
     double? discountAmount,
     double? discountPercentage,
     String? discountReason,
     List<Map<String, dynamic>>? extras,
+    List<Map<String, dynamic>>? canteenOrders,
     double? lat,
     double? lng,
     String? shiftId,
@@ -193,11 +201,13 @@ class Booking extends Equatable {
       status: status ?? this.status,
       paymentStatus: paymentStatus ?? this.paymentStatus,
       totalPrice: totalPrice ?? this.totalPrice,
+      addonsPrice: addonsPrice ?? this.addonsPrice,
       voucherDiscount: voucherDiscount ?? this.voucherDiscount,
       discountAmount: discountAmount ?? this.discountAmount,
       discountPercentage: discountPercentage ?? this.discountPercentage,
       discountReason: discountReason ?? this.discountReason,
       extras: extras ?? this.extras,
+      canteenOrders: canteenOrders ?? this.canteenOrders,
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
       shiftId: shiftId ?? this.shiftId,
@@ -251,11 +261,6 @@ class Booking extends Equatable {
   }
 
   /// Determines if the booking is currently active in real-time.
-  ///
-  /// A booking/room is ONLY considered active if:
-  /// 1. Its status is [BookingStatus.inProgress].
-  /// 2. The reference time [now] (defaults to [DateTime.now()]) is strictly between [startDateTime] and [endDateTime].
-  /// Once [now] passes [endDateTime] (now >= endDateTime), [isBookingActive] returns `false`.
   bool isBookingActive([DateTime? now]) {
     if (status == BookingStatus.completed || status == BookingStatus.cancelled) {
       return false;

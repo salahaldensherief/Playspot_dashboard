@@ -17,6 +17,7 @@ class ClientRequestEntity extends Equatable {
   final String? userId;
   final String? userName;
   final String? userPhone;
+  final String? userAvatarUrl;
   final String? roomId;
   final String? roomName;
   final String titleAr;
@@ -38,6 +39,7 @@ class ClientRequestEntity extends Equatable {
     this.userId,
     this.userName,
     this.userPhone,
+    this.userAvatarUrl,
     this.roomId,
     this.roomName,
     required this.titleAr,
@@ -62,6 +64,7 @@ class ClientRequestEntity extends Equatable {
     String? userId,
     String? userName,
     String? userPhone,
+    String? userAvatarUrl,
     String? roomId,
     String? roomName,
     String? titleAr,
@@ -83,6 +86,7 @@ class ClientRequestEntity extends Equatable {
       userId: userId ?? this.userId,
       userName: userName ?? this.userName,
       userPhone: userPhone ?? this.userPhone,
+      userAvatarUrl: userAvatarUrl ?? this.userAvatarUrl,
       roomId: roomId ?? this.roomId,
       roomName: roomName ?? this.roomName,
       titleAr: titleAr ?? this.titleAr,
@@ -107,6 +111,7 @@ class ClientRequestEntity extends Equatable {
         userId,
         userName,
         userPhone,
+        userAvatarUrl,
         roomId,
         roomName,
         titleAr,

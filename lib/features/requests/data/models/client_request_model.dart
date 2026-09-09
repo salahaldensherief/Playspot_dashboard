@@ -9,6 +9,7 @@ class ClientRequestModel extends ClientRequestEntity {
     super.userId,
     super.userName,
     super.userPhone,
+    super.userAvatarUrl,
     super.roomId,
     super.roomName,
     required super.titleAr,
@@ -111,6 +112,8 @@ class ClientRequestModel extends ClientRequestEntity {
         ? rawId
         : 'notif_$rawId';
 
+    final String? userAvatarUrl = (json['user_avatar'] ?? json['user_avatar_url'] ?? json['avatar_url'] ?? metadataObj.userAvatar)?.toString();
+
     return ClientRequestModel(
       id: reqId,
       loungeId: (json['lounge_id'] ?? json['loungeId'] ?? metadataObj.loungeId ?? '').toString(),
@@ -118,6 +121,7 @@ class ClientRequestModel extends ClientRequestEntity {
       userId: (json['user_id'] ?? json['userId'] ?? metadataObj.userId)?.toString(),
       userName: (json['user_name'] ?? json['userName'] ?? json['full_name'] ?? json['user'] ?? metadataObj.userName)?.toString(),
       userPhone: (json['user_phone'] ?? json['userPhone'] ?? json['phone'] ?? metadataObj.userPhone)?.toString(),
+      userAvatarUrl: userAvatarUrl,
       roomId: (json['room_id'] ?? json['roomId'] ?? metadataObj.roomId)?.toString(),
       roomName: (json['room_name'] ?? json['roomName'] ?? json['room'] ?? metadataObj.roomName)?.toString(),
       titleAr: (json['title_ar'] ?? json['title'] ?? 'طلب جديد').toString(),
@@ -168,6 +172,7 @@ class ClientRequestModel extends ClientRequestEntity {
     final String roomName = (json['room_name'] ?? json['roomName'] ?? json['room'] ?? metadataObj.roomName ?? 'Gaming Station').toString();
     final String userName = (json['user_name'] ?? json['userName'] ?? json['user'] ?? json['full_name'] ?? metadataObj.userName ?? 'Client').toString();
     final String userPhone = (json['user_phone'] ?? json['userPhone'] ?? json['phone'] ?? metadataObj.userPhone ?? '').toString();
+    final String? userAvatarUrl = (json['user_avatar'] ?? json['user_avatar_url'] ?? json['avatar_url'] ?? metadataObj.userAvatar)?.toString();
 
     final String rawId = (json['id'] ?? '').toString();
     final String reqId = rawId.startsWith('canteen_') ? rawId : 'canteen_$rawId';
@@ -179,6 +184,7 @@ class ClientRequestModel extends ClientRequestEntity {
       userId: (json['user_id'] ?? json['userId'] ?? metadataObj.userId)?.toString(),
       userName: userName,
       userPhone: userPhone,
+      userAvatarUrl: userAvatarUrl,
       roomId: (json['room_id'] ?? json['roomId'] ?? metadataObj.roomId)?.toString(),
       roomName: roomName,
       titleAr: 'طلب كافيتريا ($roomName)',
@@ -195,6 +201,7 @@ class ClientRequestModel extends ClientRequestEntity {
         roomName: roomName,
         userName: userName,
         userPhone: userPhone,
+        userAvatar: userAvatarUrl,
         notes: json['notes']?.toString() ?? json['note']?.toString(),
         items: parsedItems,
       ),
@@ -211,6 +218,7 @@ class ClientRequestModel extends ClientRequestEntity {
     final int currentDuration = _parseInt(json['duration_minutes'], 60);
     final String roomName = (json['room_name'] ?? json['roomName'] ?? json['room'] ?? 'Station').toString();
     final String userName = (json['user_name'] ?? json['userName'] ?? json['user'] ?? json['full_name'] ?? 'Client').toString();
+    final String? userAvatarUrl = (json['user_avatar'] ?? json['user_avatar_url'] ?? json['avatar_url'])?.toString();
     final String extStatus = (json['extension_status'] ?? 'pending').toString().toLowerCase();
     final bool isAttended = extStatus != 'pending';
 
@@ -224,6 +232,7 @@ class ClientRequestModel extends ClientRequestEntity {
       userId: json['user_id']?.toString(),
       userName: userName,
       userPhone: (json['user_phone'] ?? json['userPhone'] ?? json['phone'])?.toString(),
+      userAvatarUrl: userAvatarUrl,
       roomId: (json['room_id'] ?? json['roomId'])?.toString(),
       roomName: roomName,
       titleAr: 'طلب تمديد جلسة ($roomName)',
@@ -244,6 +253,7 @@ class ClientRequestModel extends ClientRequestEntity {
         roomName: roomName,
         userName: userName,
         userPhone: (json['user_phone'] ?? json['userPhone'] ?? json['phone'])?.toString(),
+        userAvatar: userAvatarUrl,
         items: [
           {
             'minutes': requestedMinutes,
@@ -255,9 +265,18 @@ class ClientRequestModel extends ClientRequestEntity {
     );
   }
 
-  factory ClientRequestModel.fromServiceCallJson(Map<String, dynamic> json) {
+  factory ClientRequestModel.fromServiceCallJson(
+    Map<String, dynamic> json, {
+    Map<String, String>? roomNamesMap,
+    Map<String, String>? userNamesMap,
+    Map<String, String>? userAvatarsMap,
+  }) {
     final statusStr = (json['status'] ?? 'pending').toString().toLowerCase();
-    final bool isAttended = statusStr == 'resolved' || statusStr == 'completed' || statusStr == 'attended' || statusStr == 'approved' || json['is_attended'] == true;
+    final bool isAttended = statusStr == 'resolved' ||
+        statusStr == 'completed' ||
+        statusStr == 'attended' ||
+        statusStr == 'approved' ||
+        json['is_attended'] == true;
     final bool isRead = isAttended || json['is_read'] == true;
 
     final String rawId = (json['id'] ?? '').toString();
@@ -276,22 +295,41 @@ class ClientRequestModel extends ClientRequestEntity {
     final roomObj = json['rooms'] as Map<String, dynamic>?;
     final bookingObj = json['bookings'] as Map<String, dynamic>?;
 
-    final roomName = (bookingObj?['room_name'] ?? roomObj?['name'] ?? json['room_name'] ?? json['roomName'] ?? json['room'] ?? '').toString();
-    final userName = (bookingObj?['user_name'] ?? json['user_name'] ?? json['userName'] ?? json['user'] ?? json['full_name'] ?? 'عميل').toString();
-    final userPhone = (bookingObj?['user_phone'] ?? json['user_phone'] ?? json['userPhone'] ?? json['phone'])?.toString();
-
-    final loungeId = (json['lounge_id'] ?? json['loungeId'] ?? bookingObj?['lounge_id'] ?? '').toString();
+    final roomId = (json['room_id'] ?? json['roomId'] ?? bookingObj?['room_id'])?.toString();
     final bookingId = (json['booking_id'] ?? json['bookingId'] ?? bookingObj?['id'])?.toString();
     final userId = (json['user_id'] ?? json['userId'] ?? bookingObj?['user_id'])?.toString();
-    final roomId = (json['room_id'] ?? json['roomId'] ?? bookingObj?['room_id'])?.toString();
+
+    String roomName = (bookingObj?['room_name'] ?? roomObj?['name'] ?? json['room_name'] ?? json['roomName'] ?? json['room'] ?? '').toString();
+    if (roomName.isEmpty && roomId != null && roomNamesMap != null) {
+      roomName = roomNamesMap[roomId] ?? '';
+    }
+
+    String userName = (bookingObj?['user_name'] ?? json['user_name'] ?? json['userName'] ?? json['user'] ?? json['full_name'] ?? '').toString();
+    if (userName.isEmpty && bookingId != null && userNamesMap != null) {
+      userName = userNamesMap[bookingId] ?? '';
+    }
+    if (userName.isEmpty) {
+      userName = 'عميل';
+    }
+
+    String? userAvatarUrl = (json['user_avatar'] ?? json['user_avatar_url'] ?? json['avatar_url'] ?? bookingObj?['avatar_url'] ?? bookingObj?['user_avatar'])?.toString();
+    if ((userAvatarUrl == null || userAvatarUrl.isEmpty) && userAvatarsMap != null) {
+      if (bookingId != null && userAvatarsMap.containsKey(bookingId)) {
+        userAvatarUrl = userAvatarsMap[bookingId];
+      }
+      if ((userAvatarUrl == null || userAvatarUrl.isEmpty) && userId != null && userAvatarsMap.containsKey(userId)) {
+        userAvatarUrl = userAvatarsMap[userId];
+      }
+    }
 
     return ClientRequestModel(
       id: reqId,
-      loungeId: loungeId,
+      loungeId: (json['lounge_id'] ?? json['loungeId'] ?? bookingObj?['lounge_id'] ?? '').toString(),
       bookingId: bookingId,
       userId: userId,
       userName: userName,
-      userPhone: userPhone,
+      userPhone: (bookingObj?['user_phone'] ?? json['user_phone'] ?? json['userPhone'] ?? json['phone'])?.toString(),
+      userAvatarUrl: userAvatarUrl,
       roomId: roomId,
       roomName: roomName.isNotEmpty ? roomName : null,
       titleAr: roomName.isNotEmpty ? 'نداء خدمة ($roomName)' : 'نداء خدمة / مساعدة',
@@ -307,7 +345,8 @@ class ClientRequestModel extends ClientRequestEntity {
         roomId: roomId,
         roomName: roomName,
         userName: userName,
-        userPhone: userPhone,
+        userPhone: (bookingObj?['user_phone'] ?? json['user_phone'] ?? json['userPhone'] ?? json['phone'])?.toString(),
+        userAvatar: userAvatarUrl,
         notes: json['notes']?.toString(),
       ),
     );
@@ -321,6 +360,7 @@ class ClientRequestModel extends ClientRequestEntity {
     final String roomName = (bookingObj?['room_name'] ?? json['room_name'] ?? json['roomName'] ?? json['room'] ?? 'Gaming Station').toString();
     final String userName = (bookingObj?['user_name'] ?? json['user_name'] ?? json['userName'] ?? json['user'] ?? 'Client').toString();
     final String userPhone = (bookingObj?['user_phone'] ?? json['user_phone'] ?? json['userPhone'] ?? json['phone'] ?? '').toString();
+    final String? userAvatarUrl = (bookingObj?['avatar_url'] ?? bookingObj?['user_avatar'] ?? json['user_avatar'] ?? json['user_avatar_url'] ?? json['avatar_url'])?.toString();
     final bool isAttended = _parseBool(json['is_attended'] ?? json['is_read'] ?? json['attended'] ?? json['read']);
 
     final itemMap = {
@@ -340,6 +380,7 @@ class ClientRequestModel extends ClientRequestEntity {
       userId: (json['user_id'] ?? bookingObj?['user_id'])?.toString(),
       userName: userName,
       userPhone: userPhone,
+      userAvatarUrl: userAvatarUrl,
       roomId: (json['room_id'] ?? bookingObj?['room_id'])?.toString(),
       roomName: roomName,
       titleAr: 'طلب كافيتريا ($roomName)',
@@ -356,6 +397,7 @@ class ClientRequestModel extends ClientRequestEntity {
         roomName: roomName,
         userName: userName,
         userPhone: userPhone,
+        userAvatar: userAvatarUrl,
         notes: json['note']?.toString() ?? json['notes']?.toString(),
         items: [itemMap],
       ),

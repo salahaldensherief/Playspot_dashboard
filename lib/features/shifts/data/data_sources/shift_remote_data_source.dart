@@ -109,19 +109,64 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
     try {
       debugPrint('🔵 [ShiftRemoteDataSource] Attempting to close shift: $shiftId with cash: $actualCash');
 
-      final response = await _supabase.rpc('close_shift_and_calculate_z_report', params: {
-        'p_shift_id': shiftId,
-        'p_actual_cash': actualCash,
-        'p_notes': notes,
-      });
+      try {
+        final response = await _supabase.rpc('close_shift_and_calculate_z_report', params: {
+          'p_shift_id': shiftId,
+          'p_actual_cash': actualCash,
+          'p_notes': notes,
+        });
 
-      debugPrint('🔵 [ShiftRemoteDataSource] closeShift response: $response');
+        debugPrint('🔵 [ShiftRemoteDataSource] closeShift RPC response: $response');
 
-      if (response == null) {
-        throw Exception('Server returned no data after closing shift.');
+        if (response != null) {
+          return ShiftModel.fromJson(Map<String, dynamic>.from(response));
+        }
+      } catch (rpcErr) {
+        debugPrint('⚠️ [ShiftRemoteDataSource] RPC close_shift_and_calculate_z_report failed ($rpcErr), attempting direct table update fallback...');
       }
 
-      return ShiftModel.fromJson(Map<String, dynamic>.from(response));
+      // Direct Table Fallback
+      final nowIso = DateTime.now().toIso8601String();
+
+      try {
+        final List<dynamic> updatedList = await _supabase
+            .from('shifts')
+            .update({
+              'status': 'closed',
+              'actual_cash_counted': actualCash,
+              'end_time': nowIso,
+              'closed_at': nowIso,
+              if (notes != null && notes.isNotEmpty) 'notes': notes,
+            })
+            .eq('id', shiftId)
+            .select('*, profiles:cashier_id(full_name)');
+
+        if (updatedList.isNotEmpty) {
+          debugPrint('🟢 [ShiftRemoteDataSource] Direct table update closeShift successful!');
+          return ShiftModel.fromJson(Map<String, dynamic>.from(updatedList.first));
+        }
+      } catch (e1) {
+        debugPrint('⚠️ [ShiftRemoteDataSource] First update attempt failed ($e1), trying simpler fallback...');
+        try {
+          final List<dynamic> updatedList = await _supabase
+              .from('shifts')
+              .update({
+                'status': 'closed',
+                if (notes != null && notes.isNotEmpty) 'notes': notes,
+              })
+              .eq('id', shiftId)
+              .select('*, profiles:cashier_id(full_name)');
+
+          if (updatedList.isNotEmpty) {
+            debugPrint('🟢 [ShiftRemoteDataSource] Simple table update closeShift successful!');
+            return ShiftModel.fromJson(Map<String, dynamic>.from(updatedList.first));
+          }
+        } catch (e2) {
+          debugPrint('⚠️ [ShiftRemoteDataSource] Simple table update failed: $e2');
+        }
+      }
+
+      throw Exception('فشل تقفيل الشيفت: يرجى التأكد من صلاحيات قاعدة البيانات');
     } catch (e, stack) {
       debugPrint('🔴 [ShiftRemoteDataSource] Exception in closeShift: $e');
       debugPrint('🔴 [ShiftRemoteDataSource] StackTrace: $stack');
@@ -144,6 +189,10 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
     final payload = expense.toJson();
     if (userId != null) {
       payload['created_by'] = userId;
+    }
+    final rawId = payload['id']?.toString() ?? '';
+    if (rawId.length != 36 || !rawId.contains('-')) {
+      payload.remove('id');
     }
     debugPrint('🔵 [ShiftRemoteDataSource] Inserting shift expense: $payload');
     await _supabase.from('shift_expenses').insert(payload);

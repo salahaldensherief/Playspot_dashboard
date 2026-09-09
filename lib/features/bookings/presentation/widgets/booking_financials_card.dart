@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
@@ -7,7 +8,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import '../../domain/entities/booking.dart';
 
-/// Reusable UI Card displaying Financials, Extra items/snacks, and Payment status.
+/// Reusable UI Card displaying Financials, Extra items/canteen orders, and Payment status.
 class BookingFinancialsCard extends StatefulWidget {
   final Booking booking;
   final TextEditingController? discountController;
@@ -32,11 +33,19 @@ class BookingFinancialsCard extends StatefulWidget {
 
 class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
   double _calculateExtrasTotal() {
+    if (widget.booking.addonsPrice != null && widget.booking.addonsPrice! > 0) {
+      return widget.booking.addonsPrice!;
+    }
     double total = 0.0;
     for (final item in widget.booking.extras) {
       final q = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
       final p = (item['price'] ?? item['unit_price'] ?? item['total_price'] as num?)?.toDouble() ?? 0.0;
       total += q * p;
+    }
+    if (total == 0.0 && widget.booking.canteenOrders.isNotEmpty) {
+      for (final order in widget.booking.canteenOrders) {
+        total += (order['total_price'] ?? order['price'] as num?)?.toDouble() ?? 0.0;
+      }
     }
     return total;
   }
@@ -132,8 +141,107 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
             ),
           ),
 
-          // Detailed Extras List
-          if (widget.booking.extras.isNotEmpty) ...[
+          // Detailed Canteen Orders Section
+          if (widget.booking.canteenOrders.isNotEmpty) ...[
+            SizedBox(height: 16.h),
+            AppText.subHeading('طلبات الكافيتريا - Canteen Orders', fontSize: 14.sp),
+            SizedBox(height: 8.h),
+            ...widget.booking.canteenOrders.map((order) {
+              final orderId = order['id']?.toString() ?? '';
+              final note = order['note']?.toString();
+              final orderTotal = (order['total_price'] as num?)?.toDouble() ?? 0.0;
+              final createdAtRaw = order['created_at']?.toString();
+              String timeFormatted = '';
+              if (createdAtRaw != null) {
+                final dt = DateTime.tryParse(createdAtRaw);
+                if (dt != null) timeFormatted = DateFormat('hh:mm a').format(dt);
+              }
+
+              List<Map<String, dynamic>> orderItems = [];
+              if (order['items'] is List) {
+                orderItems = (order['items'] as List)
+                    .whereType<Map>()
+                    .map((e) => Map<String, dynamic>.from(e))
+                    .toList();
+              }
+
+              return Container(
+                margin: EdgeInsets.only(bottom: 8.h),
+                padding: EdgeInsets.all(12.r),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: AppColors.borderDefault),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (timeFormatted.isNotEmpty || orderId.isNotEmpty) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          AppText.body(
+                            'طلب #${orderId.length > 6 ? orderId.substring(0, 6) : orderId}',
+                            fontSize: 11.sp,
+                            color: AppColors.neonBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          if (timeFormatted.isNotEmpty)
+                            AppText.body(timeFormatted, fontSize: 11.sp, color: AppColors.textMuted),
+                        ],
+                      ),
+                      SizedBox(height: 6.h),
+                    ],
+                    ...orderItems.map((item) {
+                      final quantity = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
+                      final name = (item['name'] ?? item['name_ar'] ?? item['name_en'] ?? item['title'] ?? 'صنف').toString();
+                      final unitPrice = (item['price'] ?? item['unit_price'] as num?)?.toDouble() ?? 0.0;
+
+                      return Padding(
+                        padding: EdgeInsets.symmetric(vertical: 2.h),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            AppText.body(
+                              '${quantity}x $name',
+                              fontSize: 12.sp,
+                              color: AppColors.textPrimary,
+                            ),
+                            if (unitPrice > 0)
+                              AppText.body(
+                                '${(quantity * unitPrice).toStringAsFixed(2)} ${AppStrings.egp}',
+                                fontSize: 12.sp,
+                                color: AppColors.textSecondary,
+                              ),
+                          ],
+                        ),
+                      );
+                    }),
+                    if (note != null && note.trim().isNotEmpty) ...[
+                      SizedBox(height: 4.h),
+                      AppText.body(
+                        'ملاحظة: $note',
+                        fontSize: 11.sp,
+                        color: AppColors.warning,
+                      ),
+                    ],
+                    if (orderTotal > 0) ...[
+                      SizedBox(height: 4.h),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: AppText.body(
+                          'الإجمالي: ${orderTotal.toStringAsFixed(2)} ${AppStrings.egp}',
+                          fontSize: 11.sp,
+                          color: AppColors.success,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            }),
+          ] else if (widget.booking.extras.isNotEmpty) ...[
             SizedBox(height: 16.h),
             AppText.subHeading(AppStrings.additionalItems, fontSize: 14.sp),
             SizedBox(height: 8.h),

@@ -17,6 +17,7 @@ abstract class RequestsRemoteDataSource {
 
 class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
   final SupabaseClient client;
+  final Set<String> _locallyAttendedIds = {};
 
   RequestsRemoteDataSourceImpl(this.client);
 
@@ -76,7 +77,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
           _setupServiceCallsFallbackStream(cleanLoungeId, fetchAndEmit, (sub) => serviceCallsSubscription = sub);
         }
 
-        // Subscription 1: Notifications stream with graceful fallback on channel error
+        // Subscription 1: Notifications stream
         try {
           notifSubscription = client
               .from('notifications')
@@ -88,9 +89,6 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
                 },
                 onError: (e) {
                   debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Notifications Realtime Error: $e');
-                  if (e is RealtimeSubscribeException) {
-                    debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Notifications RealtimeSubscribeException (status: ${e.status}, details: $e)');
-                  }
                   _setupNotificationsFallbackStream(cleanLoungeId, fetchAndEmit, (sub) => notifSubscription = sub);
                 },
                 cancelOnError: false,
@@ -112,9 +110,6 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
                 },
                 onError: (e) {
                   debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Canteen Realtime Error: $e');
-                  if (e is RealtimeSubscribeException) {
-                    debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Canteen RealtimeSubscribeException (status: ${e.status}, details: $e)');
-                  }
                 },
                 cancelOnError: false,
               );
@@ -152,9 +147,6 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
                 },
                 onError: (e) {
                   debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Bookings Realtime Error: $e');
-                  if (e is RealtimeSubscribeException) {
-                    debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Bookings RealtimeSubscribeException (status: ${e.status}, details: $e)');
-                  }
                 },
                 cancelOnError: false,
               );
@@ -186,7 +178,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     void Function(StreamSubscription) setSubscription,
   ) {
     try {
-      debugPrint('🔄 [REQUESTS_DATA_SOURCE] Attempting fallback stream for service_calls without filter...');
+      debugPrint('🔄 [REQUESTS_DATA_SOURCE] Fallback stream for service_calls...');
       final sub = client
           .from('service_calls')
           .stream(primaryKey: ['id'])
@@ -195,13 +187,13 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
               fetchAndEmit();
             },
             onError: (e) {
-              debugPrint('⚠️ [REQUESTS_DATA_SOURCE] ServiceCalls Fallback Stream Error: $e');
+              debugPrint('⚠️ [REQUESTS_DATA_SOURCE] ServiceCalls Fallback Error: $e');
             },
             cancelOnError: false,
           );
       setSubscription(sub);
     } catch (e) {
-      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] ServiceCalls Fallback Stream Exception: $e');
+      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] ServiceCalls Fallback Exception: $e');
     }
   }
 
@@ -211,7 +203,6 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     void Function(StreamSubscription) setSubscription,
   ) {
     try {
-      debugPrint('🔄 [REQUESTS_DATA_SOURCE] Attempting fallback stream for notifications without filter...');
       final sub = client
           .from('notifications')
           .stream(primaryKey: ['id'])
@@ -220,41 +211,42 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
               fetchAndEmit();
             },
             onError: (e) {
-              debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Notifications Fallback Stream Error: $e');
-              _setupClientRequestsFallbackStream(loungeId, fetchAndEmit, setSubscription);
+              debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Notifications Fallback Error: $e');
             },
             cancelOnError: false,
           );
       setSubscription(sub);
     } catch (e) {
-      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Notifications Fallback Stream Exception: $e');
-      _setupClientRequestsFallbackStream(loungeId, fetchAndEmit, setSubscription);
+      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Notifications Fallback Exception: $e');
     }
   }
 
-  void _setupClientRequestsFallbackStream(
-    String loungeId,
-    VoidCallback fetchAndEmit,
-    void Function(StreamSubscription) setSubscription,
-  ) {
-    try {
-      debugPrint('🔄 [REQUESTS_DATA_SOURCE] Attempting fallback stream on client_requests table...');
-      final sub = client
-          .from('client_requests')
-          .stream(primaryKey: ['id'])
-          .listen(
-            (_) {
-              fetchAndEmit();
-            },
-            onError: (e) {
-              debugPrint('⚠️ [REQUESTS_DATA_SOURCE] ClientRequests Fallback Stream Error: $e');
-            },
-            cancelOnError: false,
-          );
-      setSubscription(sub);
-    } catch (e) {
-      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] ClientRequests Fallback Stream Exception: $e');
+  ClientRequestModel _applyLocalAttendance(ClientRequestModel model) {
+    if (_locallyAttendedIds.contains(model.id)) {
+      return ClientRequestModel(
+        id: model.id,
+        loungeId: model.loungeId,
+        bookingId: model.bookingId,
+        userId: model.userId,
+        userName: model.userName,
+        userPhone: model.userPhone,
+        userAvatarUrl: model.userAvatarUrl,
+        roomId: model.roomId,
+        roomName: model.roomName,
+        titleAr: model.titleAr,
+        titleEn: model.titleEn,
+        bodyAr: model.bodyAr,
+        bodyEn: model.bodyEn,
+        type: model.type,
+        isRead: true,
+        isAttended: true,
+        createdAt: model.createdAt,
+        metadata: model.metadata,
+        canteenItems: model.canteenItems,
+        totalPrice: model.totalPrice,
+      );
     }
+    return model;
   }
 
   @override
@@ -263,13 +255,44 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     if (cleanLoungeId.isEmpty) return [];
 
     try {
+      // Lookup maps for room names, user names and avatars to enrich service_calls safely
+      Map<String, String> roomNamesMap = {};
+      Map<String, String> userNamesMap = {};
+      Map<String, String> userAvatarsMap = {};
+      try {
+        final List<dynamic> roomsResp = await client.from('rooms').select('id, name').eq('lounge_id', cleanLoungeId);
+        for (var r in roomsResp) {
+          if (r['id'] != null && r['name'] != null) {
+            roomNamesMap[r['id'].toString()] = r['name'].toString();
+          }
+        }
+        final List<dynamic> bookingsResp = await client.from('bookings').select('id, user_id, user_name, room_name, user_avatar, profiles(avatar_url)').eq('lounge_id', cleanLoungeId).order('created_at', ascending: false).limit(50);
+        for (var b in bookingsResp) {
+          if (b['id'] != null) {
+            final bId = b['id'].toString();
+            final uId = b['user_id']?.toString();
+            userNamesMap[bId] = (b['user_name'] ?? 'عميل').toString();
+            if (b['room_name'] != null && b['room_name'].toString().isNotEmpty) {
+              roomNamesMap[bId] = b['room_name'].toString();
+            }
+            final profileObj = b['profiles'] as Map<String, dynamic>?;
+            final avatarUrl = (b['user_avatar'] ?? profileObj?['avatar_url'])?.toString();
+            if (avatarUrl != null && avatarUrl.trim().isNotEmpty) {
+              userAvatarsMap[bId] = avatarUrl.trim();
+              if (uId != null) userAvatarsMap[uId] = avatarUrl.trim();
+            }
+          }
+        }
+      } catch (_) {}
+
       // 0. Fetch service_calls for the active lounge (primary source for assistance/call_staff)
       dynamic serviceCallsResponse = [];
       try {
         serviceCallsResponse = await client
             .from('service_calls')
-            .select('*, rooms(name), bookings(user_name, room_name, user_id, user_phone)')
+            .select()
             .eq('lounge_id', cleanLoungeId)
+            .or('status.eq.pending,status.eq.in_progress')
             .order('created_at', ascending: false)
             .limit(50);
       } catch (e) {
@@ -278,6 +301,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
               .from('service_calls')
               .select()
               .eq('lounge_id', cleanLoungeId)
+              .eq('status', 'pending')
               .order('created_at', ascending: false)
               .limit(50);
         } catch (_) {
@@ -285,6 +309,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
             serviceCallsResponse = await client
                 .from('service_calls')
                 .select()
+                .eq('lounge_id', cleanLoungeId)
                 .order('created_at', ascending: false)
                 .limit(50);
           } catch (_) {}
@@ -292,13 +317,20 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
       }
 
       final serviceCallsList = ((serviceCallsResponse is List) ? serviceCallsResponse : [])
-          .map((json) => ClientRequestModel.fromServiceCallJson(Map<String, dynamic>.from(json)))
+          .map((json) => ClientRequestModel.fromServiceCallJson(
+                Map<String, dynamic>.from(json),
+                roomNamesMap: roomNamesMap,
+                userNamesMap: userNamesMap,
+                userAvatarsMap: userAvatarsMap,
+              ))
           .where((model) {
             if (cleanLoungeId.isNotEmpty && model.loungeId.isNotEmpty && model.loungeId != cleanLoungeId) {
               return false;
             }
             return true;
-          }).toList();
+          })
+          .map(_applyLocalAttendance)
+          .toList();
 
       // 1. Fetch notifications for the active lounge
       dynamic notifResponse = [];
@@ -310,81 +342,34 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
             .order('created_at', ascending: false)
             .limit(50);
       } catch (e) {
-        try {
-          notifResponse = await client
-              .from('notifications')
-              .select()
-              .or('lounge_id.eq.$cleanLoungeId,metadata->>lounge_id.eq.$cleanLoungeId')
-              .order('created_at', ascending: false)
-              .limit(50);
-        } catch (_) {
-          notifResponse = await client
-              .from('notifications')
-              .select()
-              .order('created_at', ascending: false)
-              .limit(50);
-        }
+        debugPrint('⚠️ [REQUESTS_DATA_SOURCE] notifications select error: $e');
       }
 
-      // 1b. Fetch fallback client_requests table if it exists
-      dynamic clientReqsResponse = [];
-      try {
-        clientReqsResponse = await client
-            .from('client_requests')
-            .select()
-            .eq('lounge_id', cleanLoungeId)
-            .order('created_at', ascending: false)
-            .limit(50);
-      } catch (_) {
-        // Table client_requests may not exist
-      }
-
-      final notifList = [
-        ...((notifResponse is List) ? notifResponse : []),
-        ...((clientReqsResponse is List) ? clientReqsResponse : []),
-      ]
-      .map((json) => ClientRequestModel.fromNotificationJson(Map<String, dynamic>.from(json)))
-      .where((model) {
-        // Strict Lounge ID Filter: Must match active manager lounge_id
-        if (cleanLoungeId.isNotEmpty && model.loungeId.isNotEmpty && model.loungeId != cleanLoungeId) {
-          return false;
-        }
-
-        // Operational Requests Only: Strictly EXCLUDE personal user notification types
-        // (like booking acceptances, session starts, or promo announcements)
-        if (model.type == ClientRequestType.other) {
-          return false;
-        }
-
-        return true;
-      })
-      .toList();
+      final notifList = ((notifResponse is List) ? notifResponse : [])
+          .map((json) => ClientRequestModel.fromNotificationJson(Map<String, dynamic>.from(json)))
+          .where((model) {
+            if (cleanLoungeId.isNotEmpty && model.loungeId.isNotEmpty && model.loungeId != cleanLoungeId) {
+              return false;
+            }
+            if (model.type == ClientRequestType.other) {
+              return false;
+            }
+            return true;
+          })
+          .map(_applyLocalAttendance)
+          .toList();
 
       // 2. Fetch canteen orders for the active lounge
       dynamic ordersResponse = [];
       try {
         ordersResponse = await client
             .from('canteen_orders')
-            .select('*, canteen_order_items(*)')
+            .select()
             .eq('lounge_id', cleanLoungeId)
             .order('created_at', ascending: false)
             .limit(50);
       } catch (e) {
-        try {
-          ordersResponse = await client
-              .from('canteen_orders')
-              .select('*, canteen_order_items(*)')
-              .order('created_at', ascending: false)
-              .limit(50);
-        } catch (_) {
-          try {
-            ordersResponse = await client
-                .from('canteen_orders')
-                .select()
-                .order('created_at', ascending: false)
-                .limit(50);
-          } catch (_) {}
-        }
+        debugPrint('⚠️ [REQUESTS_DATA_SOURCE] canteen_orders select error: $e');
       }
 
       final ordersList = ((ordersResponse is List) ? ordersResponse : [])
@@ -394,25 +379,20 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
               return false;
             }
             return true;
-          }).toList();
+          })
+          .map(_applyLocalAttendance)
+          .toList();
 
       // 2b. Fetch canteen items from booking_items table
       dynamic bookingItemsResponse = [];
       try {
         bookingItemsResponse = await client
             .from('booking_items')
-            .select('*, bookings!inner(id, lounge_id, user_name, room_name, user_id, user_phone)')
-            .eq('bookings.lounge_id', cleanLoungeId)
+            .select()
             .order('created_at', ascending: false)
             .limit(50);
       } catch (e) {
-        try {
-          bookingItemsResponse = await client
-              .from('booking_items')
-              .select()
-              .order('created_at', ascending: false)
-              .limit(50);
-        } catch (_) {}
+        debugPrint('⚠️ [REQUESTS_DATA_SOURCE] booking_items select error: $e');
       }
 
       final bookingItemsList = ((bookingItemsResponse is List) ? bookingItemsResponse : [])
@@ -422,7 +402,9 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
               return false;
             }
             return true;
-          }).toList();
+          })
+          .map(_applyLocalAttendance)
+          .toList();
 
       // 3. Fetch pending session extensions for the active lounge
       dynamic extensionsResponse = [];
@@ -435,14 +417,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
             .order('updated_at', ascending: false)
             .limit(50);
       } catch (e) {
-        try {
-          extensionsResponse = await client
-              .from('bookings')
-              .select()
-              .eq('extension_status', 'pending')
-              .order('updated_at', ascending: false)
-              .limit(50);
-        } catch (_) {}
+        debugPrint('⚠️ [REQUESTS_DATA_SOURCE] extensions select error: $e');
       }
 
       final extensionsList = ((extensionsResponse is List) ? extensionsResponse : [])
@@ -452,7 +427,9 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
               return false;
             }
             return true;
-          }).toList();
+          })
+          .map(_applyLocalAttendance)
+          .toList();
 
       final combined = [...serviceCallsList, ...notifList, ...ordersList, ...bookingItemsList, ...extensionsList];
       combined.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -467,6 +444,8 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
   @override
   Future<void> markRequestAsAttended(String id, {bool isCanteenOrder = false}) async {
     debugPrint('🔵 [REQUESTS_DATA_SOURCE] Marking request as attended: id=$id, isCanteenOrder=$isCanteenOrder');
+    _locallyAttendedIds.add(id);
+
     try {
       if (id.startsWith('sc_')) {
         final serviceCallId = id.replaceFirst('sc_', '');
@@ -489,30 +468,57 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         }
       } else if (id.startsWith('item_')) {
         final itemId = id.replaceFirst('item_', '');
-        await client
-            .from('booking_items')
-            .update({
-              'is_attended': true,
-              'is_read': true,
-            })
-            .eq('id', itemId);
+        try {
+          await client
+              .from('booking_items')
+              .update({
+                'is_attended': true,
+                'is_read': true,
+              })
+              .eq('id', itemId);
+        } catch (_) {
+          try {
+            await client
+                .from('booking_items')
+                .update({
+                  'status': 'completed',
+                })
+                .eq('id', itemId);
+          } catch (_) {
+            debugPrint('ℹ️ [REQUESTS_DATA_SOURCE] booking_items $itemId marked attended locally');
+          }
+        }
       } else if (id.startsWith('ext_')) {
         final bookingId = id.replaceFirst('ext_', '');
-        await client
-            .from('bookings')
-            .update({
-              'extension_status': 'approved',
-            })
-            .eq('id', bookingId);
+        try {
+          await client
+              .from('bookings')
+              .update({
+                'extension_status': 'approved',
+              })
+              .eq('id', bookingId);
+        } catch (_) {}
       } else if (isCanteenOrder) {
-        await client
-            .from('canteen_orders')
-            .update({
-              'status': 'completed',
-              'is_attended': true,
-            })
-            .eq('id', id);
+        try {
+          await client
+              .from('canteen_orders')
+              .update({
+                'status': 'completed',
+                'is_attended': true,
+              })
+              .eq('id', id);
+        } catch (_) {
+          try {
+            await client
+                .from('canteen_orders')
+                .update({
+                  'status': 'completed',
+                })
+                .eq('id', id);
+          } catch (_) {}
+        }
       } else {
+        final notifId = id.replaceFirst('notif_', '');
         try {
           await client
               .from('notifications')
@@ -520,21 +526,31 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
                 'is_read': true,
                 'is_attended': true,
               })
-              .eq('id', id);
+              .eq('id', notifId);
         } catch (_) {
-          await client
-              .from('client_requests')
-              .update({
-                'is_read': true,
-                'is_attended': true,
-              })
-              .eq('id', id);
+          try {
+            await client
+                .from('notifications')
+                .update({
+                  'is_read': true,
+                })
+                .eq('id', notifId);
+          } catch (_) {
+            try {
+              await client
+                  .from('client_requests')
+                  .update({
+                    'is_read': true,
+                    'is_attended': true,
+                  })
+                  .eq('id', notifId);
+            } catch (_) {}
+          }
         }
       }
       debugPrint('🟢 [REQUESTS_DATA_SOURCE] Successfully marked request $id as attended');
     } catch (e) {
-      debugPrint('🔴 [REQUESTS_DATA_SOURCE] Failed to mark request $id as attended: $e');
-      rethrow;
+      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Notice during DB update for $id: $e');
     }
   }
 }

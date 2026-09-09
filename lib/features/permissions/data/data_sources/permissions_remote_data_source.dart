@@ -3,8 +3,8 @@ import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import '../models/permission_item_model.dart';
 
 abstract class PermissionsRemoteSource {
-  Future<List<PermissionItemModel>> getRolePermissions(String role);
-  Future<void> updateRolePermission(String role, String permissionKey, bool isEnabled);
+  Future<List<PermissionItemModel>> getRolePermissions(String role, {String? loungeId});
+  Future<void> updateRolePermission(String role, String permissionKey, bool isEnabled, {String? loungeId});
 }
 
 class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
@@ -13,8 +13,49 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
   PermissionsRemoteSourceImpl(this._supabase);
 
   @override
-  Future<List<PermissionItemModel>> getRolePermissions(String role) async {
+  Future<List<PermissionItemModel>> getRolePermissions(String role, {String? loungeId}) async {
     final cleanRole = role.toLowerCase().trim();
+    final cleanLoungeId = loungeId?.trim();
+
+    // 1. Primary path: Query lounge_role_permissions table directly for this specific lounge
+    if (cleanLoungeId != null && cleanLoungeId.isNotEmpty) {
+      try {
+        final List<dynamic> loungePerms = await _supabase
+            .from('lounge_role_permissions')
+            .select('permission_key, is_enabled')
+            .eq('lounge_id', cleanLoungeId)
+            .eq('role', cleanRole);
+
+        if (loungePerms.isNotEmpty) {
+          AppLogger.debug('PermissionsRemoteSource: Loaded ${loungePerms.length} permissions from lounge_role_permissions for lounge $cleanLoungeId');
+          final Map<String, bool> loungeOverrides = {
+            for (var p in loungePerms)
+              if (p['permission_key'] != null)
+                p['permission_key'].toString(): p['is_enabled'] == true
+          };
+
+          final defaults = _getDefaultPermissionsForRole(cleanRole);
+          return defaults.map((item) {
+            if (loungeOverrides.containsKey(item.key)) {
+              return PermissionItemModel(
+                key: item.key,
+                nameAr: item.nameAr,
+                nameEn: item.nameEn,
+                category: item.category,
+                descriptionAr: item.descriptionAr,
+                descriptionEn: item.descriptionEn,
+                isEnabled: loungeOverrides[item.key]!,
+              );
+            }
+            return item;
+          }).toList();
+        }
+      } catch (e) {
+        AppLogger.warning('PermissionsRemoteSource: lounge_role_permissions query failed: $e');
+      }
+    }
+
+    // 2. Fallback 1: Query global role_permissions RPC
     try {
       final response = await _supabase.rpc('get_role_permissions', params: {
         'p_role': cleanRole,
@@ -28,7 +69,7 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
       AppLogger.warning('PermissionsRemoteSource: RPC get_role_permissions failed: $e');
     }
 
-    // Fallback: Query role_permissions table directly
+    // 3. Fallback 2: Query role_permissions table directly
     try {
       final tableResponse = await _supabase
           .from('role_permissions')
@@ -52,15 +93,61 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
       AppLogger.warning('PermissionsRemoteSource: Fallback table select failed: $tableError');
     }
 
-    // Default static permissions list fallback so UI is NEVER EMPTY!
+    // 4. Default static permissions list fallback so UI is NEVER EMPTY!
     return _getDefaultPermissionsForRole(cleanRole);
   }
 
   @override
-  Future<void> updateRolePermission(String role, String permissionKey, bool isEnabled) async {
+  Future<void> updateRolePermission(String role, String permissionKey, bool isEnabled, {String? loungeId}) async {
     final cleanRole = role.toLowerCase().trim();
-    AppLogger.debug('Supabase update_role_permission: role=$cleanRole, key=$permissionKey, enabled=$isEnabled');
+    final cleanLoungeId = loungeId?.trim();
 
+    AppLogger.debug('Supabase updateRolePermission: role=$cleanRole, key=$permissionKey, enabled=$isEnabled, loungeId=$cleanLoungeId');
+
+    // 1. Primary path: Save to lounge_role_permissions table
+    if (cleanLoungeId != null && cleanLoungeId.isNotEmpty) {
+      try {
+        final result = await _supabase
+            .from('lounge_role_permissions')
+            .upsert(
+              {
+                'lounge_id': cleanLoungeId,
+                'role': cleanRole,
+                'permission_key': permissionKey,
+                'is_enabled': isEnabled,
+                'updated_at': DateTime.now().toUtc().toIso8601String(),
+              },
+              onConflict: 'lounge_id,role,permission_key',
+            )
+            .select();
+        AppLogger.debug('Saved permission in lounge_role_permissions: $result');
+        print('Saved permission: $result');
+        return;
+      } catch (e) {
+        AppLogger.warning('PermissionsRemoteSource: upsert lounge_role_permissions with onConflict failed: $e. Trying without onConflict.');
+        try {
+          final result = await _supabase
+              .from('lounge_role_permissions')
+              .upsert(
+                {
+                  'lounge_id': cleanLoungeId,
+                  'role': cleanRole,
+                  'permission_key': permissionKey,
+                  'is_enabled': isEnabled,
+                  'updated_at': DateTime.now().toUtc().toIso8601String(),
+                },
+              )
+              .select();
+          AppLogger.debug('Saved permission in lounge_role_permissions (fallback): $result');
+          print('Saved permission: $result');
+          return;
+        } catch (e2) {
+          AppLogger.error('PermissionsRemoteSource: Fallback lounge_role_permissions upsert failed: $e2');
+        }
+      }
+    }
+
+    // 2. Global fallback (role_permissions)
     try {
       await _supabase.rpc('update_role_permission', params: {
         'p_role': cleanRole,
@@ -68,23 +155,15 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
         'p_is_enabled': isEnabled,
       });
     } catch (e) {
-      AppLogger.warning('PermissionsRemoteSource: RPC update_role_permission failed: $e. Falling back to table upsert.');
+      AppLogger.warning('PermissionsRemoteSource: RPC update_role_permission failed: $e. Falling back to role_permissions upsert.');
       try {
         await _supabase.from('role_permissions').upsert({
           'role': cleanRole,
           'permission_key': permissionKey,
           'is_enabled': isEnabled,
-        }, onConflict: 'lounge_id,role,permission_key');
-      } catch (upsertError) {
-        try {
-          await _supabase.from('role_permissions').upsert({
-            'role': cleanRole,
-            'permission_key': permissionKey,
-            'is_enabled': isEnabled,
-          }, onConflict: 'role,permission_key');
-        } catch (e2) {
-          AppLogger.error('PermissionsRemoteSource: Table upsert failed: $e2');
-        }
+        }, onConflict: 'role,permission_key');
+      } catch (e2) {
+        AppLogger.error('PermissionsRemoteSource: Table upsert failed: $e2');
       }
     }
   }

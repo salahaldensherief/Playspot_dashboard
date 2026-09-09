@@ -60,7 +60,21 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   Future<List<BookingModel>> _fetchSafeSelect(String? loungeId, String? status, int limit, int offset) async {
     try {
-      var query = client.from('bookings').select('*, booking_items(*, canteen_items(*)), profiles(full_name, phone, email), rooms(name, name_en, controllers_count, screen_size), lounges(name, location, location_point)');
+      var query = client.from('bookings').select('''
+        *,
+        canteen_orders (
+          id,
+          items,
+          total_price,
+          note,
+          status,
+          created_at
+        ),
+        booking_items(*, canteen_items(*)),
+        profiles(full_name, phone, email),
+        rooms(name, name_en, controllers_count, screen_size),
+        lounges(name, location, location_point)
+      ''');
       if (loungeId != null && loungeId.isNotEmpty) {
         query = query.eq('lounge_id', loungeId);
       }

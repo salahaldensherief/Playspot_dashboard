@@ -207,6 +207,7 @@ class AppRouter {
             ShellRoute(
               builder: (BuildContext context, GoRouterState state, Widget child) {
                 final user = context.read<LoginCubit>().state.user;
+                final loungeId = user?.loungeId ?? context.read<LoginCubit>().state.userLounge?.id;
                 final roleStr = user?.rawRole ?? user?.role.name ?? 'staff';
 
                 return BlocProvider(
@@ -228,7 +229,7 @@ class AppRouter {
                                 child: BlocProvider(
                                   create: (context) => sl<ReviewsCubit>(),
                                   child: BlocProvider.value(
-                                    value: sl<PermissionsCubit>()..loadUserPermissions(roleStr),
+                                    value: sl<PermissionsCubit>()..loadUserPermissions(roleStr, loungeId: loungeId),
                                     child: DashboardShell(
                                       location: state.matchedLocation,
                                       child: child,

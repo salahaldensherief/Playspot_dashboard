@@ -5,15 +5,16 @@ import 'package:intl/intl.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
+import '../../../../art_core/widgets/app_cached_image.dart';
 import '../../../../art_core/widgets/app_text.dart';
 import '../../../../art_core/widgets/status_badge.dart';
 import '../../../analytics/presentation/dashboard_cubit.dart';
 import '../../domain/entities/client_request_entity.dart';
+import '../../domain/entities/notification_metadata.dart';
 import '../client_requests_cubit.dart';
 import '../client_requests_state.dart';
 
-/// Premium Live Operations Requests Feed handling all client mobile request types:
-/// Staff Calls, Canteen Orders, Session Extensions, and General Service Requests.
+/// Premium Responsive Live Operations Requests Feed handling all client mobile request types.
 class LiveRequestsFeed extends StatelessWidget {
   const LiveRequestsFeed({super.key});
 
@@ -34,144 +35,55 @@ class LiveRequestsFeed extends StatelessWidget {
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
-              color: unreadCount > 0
-                  ? AppColors.warning.withValues(alpha: 0.5)
-                  : AppColors.borderDefault,
-              width: unreadCount > 0 ? 1.5 : 1.0,
+              color: AppColors.borderDefault,
+              width: 1.0,
             ),
-            boxShadow: [
-              if (unreadCount > 0)
-                BoxShadow(
-                  color: AppColors.warning.withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(8.r),
-                        decoration: BoxDecoration(
-                          color: unreadCount > 0
-                              ? AppColors.warning.withValues(alpha: 0.15)
-                              : AppColors.neonBlue.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          unreadCount > 0 ? Icons.notifications_active_rounded : Icons.notifications_none_rounded,
-                          color: unreadCount > 0 ? AppColors.warning : AppColors.neonBlue,
-                          size: 20.r,
-                        ),
-                      ),
-                      SizedBox(width: 10.w),
-                      AppText.heading(
-                        AppStrings.requestsFeed,
-                        fontSize: 16.sp,
-                      ),
-                      if (unreadCount > 0) ...[
-                        SizedBox(width: 8.w),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                          decoration: BoxDecoration(
-                            color: AppColors.warning,
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: AppText.body(
-                            '$unreadCount',
-                            color: Colors.black,
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  if (state.status == ClientRequestsStatus.loading && requests.isEmpty)
-                    SizedBox(
-                      width: 16.r,
-                      height: 16.r,
-                      child: const CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                ],
+              _LiveRequestsHeader(
+                unreadCount: unreadCount,
+                isLoading: state.status == ClientRequestsStatus.loading && requests.isEmpty,
               ),
               SizedBox(height: 14.h),
 
-              // Filter Chips Row
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildFilterChip(
-                      context,
-                      label: AppStrings.all,
-                      filter: RequestFilter.all,
-                      currentFilter: state.filter,
-                      count: state.requests.length,
-                    ),
-                    SizedBox(width: 8.w),
-                    _buildFilterChip(
-                      context,
-                      label: AppStrings.callStaff,
-                      filter: RequestFilter.callStaff,
-                      currentFilter: state.filter,
-                      count: state.requests.where((r) => r.type == ClientRequestType.callStaff && !r.isAttended).length,
-                    ),
-                    SizedBox(width: 8.w),
-                    _buildFilterChip(
-                      context,
-                      label: AppStrings.canteenOrder,
-                      filter: RequestFilter.canteenOrders,
-                      currentFilter: state.filter,
-                      count: state.requests.where((r) => r.isCanteenOrder && !r.isAttended).length,
-                    ),
-                    SizedBox(width: 8.w),
-                    _buildFilterChip(
-                      context,
-                      label: AppStrings.unread,
-                      filter: RequestFilter.unattendedOnly,
-                      currentFilter: state.filter,
-                      count: unreadCount,
-                    ),
-                  ],
-                ),
+              // Filter Bar
+              _LiveRequestsFilterBar(
+                currentFilter: state.filter,
+                requests: state.requests,
+                unreadCount: unreadCount,
               ),
               SizedBox(height: 16.h),
 
-              // Content List / Empty State
+              // Content Grid / Empty State
               if (requests.isEmpty)
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24.h),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Icon(Icons.inbox_outlined, size: 36.r, color: AppColors.textMuted),
-                        SizedBox(height: 8.h),
-                        AppText.body(
-                          AppStrings.noActiveRequests,
-                          color: AppColors.textSecondary,
-                          fontSize: 12.sp,
-                        ),
-                      ],
-                    ),
-                  ),
-                )
+                const _LiveRequestsEmptyState()
               else
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: requests.take(15).length,
-                  separatorBuilder: (context, index) => Divider(color: AppColors.divider, height: 16.h),
-                  itemBuilder: (context, index) {
-                    final item = requests[index];
-                    return _buildRequestTile(context, item);
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final double totalWidth = constraints.maxWidth;
+                    int columns = 1;
+                    if (totalWidth >= 1100) {
+                      columns = 3;
+                    } else if (totalWidth >= 600) {
+                      columns = 2;
+                    }
+
+                    final double cardWidth = (totalWidth - ((columns - 1) * 14.w)) / columns;
+
+                    return Wrap(
+                      spacing: 14.w,
+                      runSpacing: 14.h,
+                      children: requests.take(15).map((request) {
+                        return SizedBox(
+                          key: ValueKey(request.id),
+                          width: cardWidth,
+                          child: RequestCard(request: request),
+                        );
+                      }).toList(),
+                    );
                   },
                 ),
             ],
@@ -180,14 +92,143 @@ class LiveRequestsFeed extends StatelessWidget {
       },
     );
   }
+}
 
-  Widget _buildFilterChip(
-    BuildContext context, {
-    required String label,
-    required RequestFilter filter,
-    required RequestFilter currentFilter,
-    int count = 0,
-  }) {
+class _LiveRequestsHeader extends StatelessWidget {
+  final int unreadCount;
+  final bool isLoading;
+
+  const _LiveRequestsHeader({
+    required this.unreadCount,
+    required this.isLoading,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(8.r),
+              decoration: BoxDecoration(
+                color: AppColors.neonBlue.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                unreadCount > 0 ? Icons.notifications_active_rounded : Icons.notifications_none_rounded,
+                color: AppColors.neonBlue,
+                size: 20.r,
+              ),
+            ),
+            SizedBox(width: 10.w),
+            AppText.heading(
+              AppStrings.requestsFeed,
+              fontSize: 16.sp,
+            ),
+            if (unreadCount > 0) ...[
+              SizedBox(width: 8.w),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                decoration: BoxDecoration(
+                  color: AppColors.neonBlue.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: AppText.body(
+                  '$unreadCount',
+                  color: AppColors.neonBlue,
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ],
+        ),
+        if (isLoading)
+          SizedBox(
+            width: 16.r,
+            height: 16.r,
+            child: const CircularProgressIndicator(strokeWidth: 2),
+          ),
+      ],
+    );
+  }
+}
+
+class _LiveRequestsFilterBar extends StatelessWidget {
+  final RequestFilter currentFilter;
+  final List<ClientRequestEntity> requests;
+  final int unreadCount;
+
+  const _LiveRequestsFilterBar({
+    required this.currentFilter,
+    required this.requests,
+    required this.unreadCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<ClientRequestsCubit>();
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          LiveRequestsFilterChip(
+            label: AppStrings.all,
+            filter: RequestFilter.all,
+            currentFilter: currentFilter,
+            count: requests.length,
+            onSelected: cubit.setFilter,
+          ),
+          SizedBox(width: 8.w),
+          LiveRequestsFilterChip(
+            label: AppStrings.callStaff,
+            filter: RequestFilter.callStaff,
+            currentFilter: currentFilter,
+            count: requests.where((r) => r.type == ClientRequestType.callStaff && !r.isAttended).length,
+            onSelected: cubit.setFilter,
+          ),
+          SizedBox(width: 8.w),
+          LiveRequestsFilterChip(
+            label: AppStrings.canteenOrder,
+            filter: RequestFilter.canteenOrders,
+            currentFilter: currentFilter,
+            count: requests.where((r) => r.isCanteenOrder && !r.isAttended).length,
+            onSelected: cubit.setFilter,
+          ),
+          SizedBox(width: 8.w),
+          LiveRequestsFilterChip(
+            label: AppStrings.unread,
+            filter: RequestFilter.unattendedOnly,
+            currentFilter: currentFilter,
+            count: unreadCount,
+            onSelected: cubit.setFilter,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class LiveRequestsFilterChip extends StatelessWidget {
+  final String label;
+  final RequestFilter filter;
+  final RequestFilter currentFilter;
+  final int count;
+  final ValueChanged<RequestFilter> onSelected;
+
+  const LiveRequestsFilterChip({
+    super.key,
+    required this.label,
+    required this.filter,
+    required this.currentFilter,
+    this.count = 0,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final isSelected = filter == currentFilter;
     return ChoiceChip(
       label: Row(
@@ -204,7 +245,9 @@ class LiveRequestsFeed extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.black.withValues(alpha: 0.2) : AppColors.neonBlue.withValues(alpha: 0.2),
+                color: isSelected
+                    ? Colors.black.withValues(alpha: 0.2)
+                    : AppColors.neonBlue.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: AppText.body(
@@ -222,14 +265,43 @@ class LiveRequestsFeed extends StatelessWidget {
       backgroundColor: AppColors.mutedBackground,
       side: BorderSide(color: isSelected ? AppColors.neonBlue : AppColors.borderDefault),
       onSelected: (selected) {
-        if (selected) {
-          context.read<ClientRequestsCubit>().setFilter(filter);
-        }
+        if (selected) onSelected(filter);
       },
     );
   }
+}
 
-  Widget _buildRequestTile(BuildContext context, ClientRequestEntity request) {
+class _LiveRequestsEmptyState extends StatelessWidget {
+  const _LiveRequestsEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 24.h),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(Icons.inbox_outlined, size: 36.r, color: AppColors.textMuted),
+            SizedBox(height: 8.h),
+            AppText.body(
+              AppStrings.noActiveRequests,
+              color: AppColors.textSecondary,
+              fontSize: 12.sp,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class RequestCard extends StatelessWidget {
+  final ClientRequestEntity request;
+
+  const RequestCard({super.key, required this.request});
+
+  @override
+  Widget build(BuildContext context) {
     final requestsCubit = context.read<ClientRequestsCubit>();
     final dashboardCubit = context.read<DashboardCubit>();
 
@@ -239,192 +311,327 @@ class LiveRequestsFeed extends StatelessWidget {
     final timeFormatted = DateFormat('hh:mm a').format(request.createdAt);
 
     Color themeColor;
-    IconData iconData;
+    String typeTagAr;
 
     if (isCallStaff) {
       themeColor = AppColors.warning;
-      iconData = Icons.notifications_active_rounded;
+      typeTagAr = 'نداء عامل';
     } else if (isExtension) {
       themeColor = AppColors.neonBlue;
-      iconData = Icons.add_alarm_rounded;
+      typeTagAr = 'تمديد وقت';
     } else if (isCanteen) {
       themeColor = AppColors.success;
-      iconData = Icons.restaurant_menu_rounded;
+      typeTagAr = 'طلب كافيتريا';
     } else {
       themeColor = AppColors.neonPurple;
-      iconData = Icons.room_service_rounded;
+      typeTagAr = 'طلب خدمة';
     }
 
+    String descriptionText = request.bodyAr;
+    if (descriptionText.isEmpty || descriptionText == 'طلب من العميل') {
+      if (isCallStaff) {
+        descriptionText = 'طلب مساعدة من العامل في الغرفة';
+      } else if (isCanteen) {
+        descriptionText = 'طلب أصناف من الكافيتريا';
+      } else if (isExtension) {
+        descriptionText = 'طلب تمديد مدة الجلسة';
+      }
+    }
+
+    final roomDisplayName = request.roomName ?? 'غرفة/جهاز';
+    final userDisplayName = (request.userName != null && request.userName!.isNotEmpty) ? request.userName! : 'عميل';
+
     return Container(
-      padding: EdgeInsets.all(12.r),
+      padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
         color: request.isAttended
-            ? Colors.transparent
-            : themeColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12.r),
+            ? AppColors.cardBackground.withValues(alpha: 0.4)
+            : AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(14.r),
         border: Border.all(
-          color: request.isAttended
-              ? AppColors.borderDefault.withValues(alpha: 0.5)
-              : themeColor.withValues(alpha: 0.3),
+          color: AppColors.borderDefault,
+          width: 1.0,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Header Row: Room & User + Time
+          // 1. Top Bar: Type Tag + Time
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              CircleAvatar(
-                radius: 16.r,
-                backgroundColor: themeColor.withValues(alpha: 0.15),
-                child: Icon(
-                  iconData,
-                  color: themeColor,
-                  size: 16.r,
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                decoration: BoxDecoration(
+                  color: AppColors.mutedBackground,
+                  borderRadius: BorderRadius.circular(6.r),
+                  border: Border.all(color: AppColors.borderDefault),
                 ),
-              ),
-              SizedBox(width: 10.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      children: [
-                        AppText.subHeading(
-                          request.roomName ?? request.userName ?? AppStrings.anonymous,
-                          fontSize: 13.sp,
-                          color: AppColors.textPrimary,
-                        ),
-                        SizedBox(width: 6.w),
-                        if (request.userName != null && request.userName?.isNotEmpty == true)
-                          AppText.body(
-                            '(${request.userName})',
-                            fontSize: 11.sp,
-                            color: AppColors.textSecondary,
-                          ),
-                      ],
+                    Container(
+                      width: 6.r,
+                      height: 6.r,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: themeColor,
+                      ),
                     ),
-                    SizedBox(height: 2.h),
+                    SizedBox(width: 6.w),
                     AppText.body(
-                      request.titleAr.isNotEmpty ? request.titleAr : request.bodyAr,
+                      typeTagAr,
+                      color: AppColors.textPrimary,
                       fontSize: 11.sp,
-                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ],
                 ),
               ),
-              AppText.body(
-                timeFormatted,
-                fontSize: 10.sp,
-                color: AppColors.textMuted,
+              Row(
+                children: [
+                  Icon(Icons.access_time_rounded, size: 12.r, color: AppColors.textMuted),
+                  SizedBox(width: 4.w),
+                  AppText.body(
+                    timeFormatted,
+                    fontSize: 11.sp,
+                    color: AppColors.textMuted,
+                  ),
+                ],
               ),
             ],
           ),
 
-          // Request Specific Metadata Body
-          if (isExtension) ...[
-            SizedBox(height: 10.h),
-            _buildExtensionDetailsRow(request),
-          ] else if (isCanteen && request.canteenItems.isNotEmpty) ...[
-            SizedBox(height: 10.h),
-            _buildCanteenItemsBox(request),
-          ],
+          SizedBox(height: 12.h),
+
+          // 2. Room Name Header
+          AppText.subHeading(
+            roomDisplayName,
+            fontSize: 14.sp,
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
 
           SizedBox(height: 10.h),
 
-          // Actions Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (request.isAttended)
-                StatusBadge.success(AppStrings.attended)
-              else if (isExtension) ...[
-                // Reject Extension Button
-                AppButton(
-                  text: AppStrings.rejectRequest,
-                  icon: Icons.close,
-                  variant: AppButtonVariant.danger,
-                  height: 30.h,
-                  onPressed: () async {
-                    final firstItem = request.metadata.items.isNotEmpty ? request.metadata.items.first : <String, dynamic>{};
-                    final reqMins = (firstItem['requested_minutes'] ?? firstItem['minutes'] as num?)?.toInt() ?? 30;
-                    final curDuration = (firstItem['current_duration'] as num?)?.toInt() ?? 60;
-                    final bookingId = request.bookingId ?? request.id.replaceFirst('ext_', '');
+          // 3. Customer Info Tile
+          RequestCustomerTile(
+            userName: userDisplayName,
+            userPhone: request.userPhone,
+            userAvatarUrl: request.userAvatarUrl,
+          ),
 
-                    final success = await dashboardCubit.reviewExtensionRequest(
-                      bookingId: bookingId,
-                      isApproved: false,
-                      requestedMinutes: reqMins,
-                      currentDurationMinutes: curDuration,
-                    );
+          SizedBox(height: 10.h),
 
-                    if (success && context.mounted) {
-                      requestsCubit.markAsAttended(request.id);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(AppStrings.requestRejected),
-                          backgroundColor: AppColors.danger,
-                        ),
-                      );
-                    }
-                  },
-                ),
-                SizedBox(width: 8.w),
+          // 4. Description Body
+          AppText.body(
+            descriptionText,
+            fontSize: 12.sp,
+            color: AppColors.textSecondary,
+          ),
 
-                // Approve Extension Button
-                AppButton(
-                  text: AppStrings.approveRequest,
-                  icon: Icons.check,
-                  variant: AppButtonVariant.primary,
-                  height: 30.h,
-                  onPressed: () async {
-                    final firstItem = request.metadata.items.isNotEmpty ? request.metadata.items.first : <String, dynamic>{};
-                    final reqMins = (firstItem['requested_minutes'] ?? firstItem['minutes'] as num?)?.toInt() ?? 30;
-                    final curDuration = (firstItem['current_duration'] as num?)?.toInt() ?? 60;
-                    final bookingId = request.bookingId ?? request.id.replaceFirst('ext_', '');
+          // 5. Details Section (Canteen Items or Extension)
+          if (isExtension) ...[
+            SizedBox(height: 10.h),
+            ExtensionDetailsRow(metadata: request.metadata),
+          ] else if (isCanteen && request.canteenItems.isNotEmpty) ...[
+            SizedBox(height: 10.h),
+            CanteenItemsDetailsBox(
+              items: request.canteenItems,
+              totalPrice: request.totalPrice,
+            ),
+          ],
 
-                    final success = await dashboardCubit.reviewExtensionRequest(
-                      bookingId: bookingId,
-                      isApproved: true,
-                      requestedMinutes: reqMins,
-                      currentDurationMinutes: curDuration,
-                    );
+          SizedBox(height: 14.h),
 
-                    if (success && context.mounted) {
-                      requestsCubit.markAsAttended(request.id);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(AppStrings.requestApproved),
-                          backgroundColor: AppColors.success,
-                        ),
-                      );
-                    }
-                  },
-                ),
-              ] else
-                AppButton(
-                  text: AppStrings.markAsAttended,
-                  icon: Icons.done_all_rounded,
-                  variant: AppButtonVariant.primary,
-                  height: 30.h,
-                  onPressed: () {
-                    requestsCubit.markAsAttended(
-                      request.id,
-                      isCanteenOrder: isCanteen,
-                    );
-                  },
-                ),
-            ],
+          // 6. Action Button Footer
+          SizedBox(
+            width: double.infinity,
+            child: request.isAttended
+                ? Center(child: StatusBadge.success(AppStrings.attended))
+                : isExtension
+                    ? Row(
+                        children: [
+                          Expanded(
+                            child: AppButton(
+                              text: AppStrings.rejectRequest,
+                              icon: Icons.close_rounded,
+                              variant: AppButtonVariant.danger,
+                              height: 34.h,
+                              onPressed: () async {
+                                final firstItem = request.metadata.items.isNotEmpty ? request.metadata.items.first : <String, dynamic>{};
+                                final reqMins = (firstItem['requested_minutes'] ?? firstItem['minutes'] as num?)?.toInt() ?? 30;
+                                final curDuration = (firstItem['current_duration'] as num?)?.toInt() ?? 60;
+                                final bookingId = request.bookingId ?? request.id.replaceFirst('ext_', '');
+
+                                final success = await dashboardCubit.reviewExtensionRequest(
+                                  bookingId: bookingId,
+                                  isApproved: false,
+                                  requestedMinutes: reqMins,
+                                  currentDurationMinutes: curDuration,
+                                );
+
+                                if (success && context.mounted) {
+                                  requestsCubit.markAsAttended(request.id);
+                                }
+                              },
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: AppButton(
+                              text: AppStrings.approveRequest,
+                              icon: Icons.check_rounded,
+                              variant: AppButtonVariant.primary,
+                              height: 34.h,
+                              onPressed: () async {
+                                final firstItem = request.metadata.items.isNotEmpty ? request.metadata.items.first : <String, dynamic>{};
+                                final reqMins = (firstItem['requested_minutes'] ?? firstItem['minutes'] as num?)?.toInt() ?? 30;
+                                final curDuration = (firstItem['current_duration'] as num?)?.toInt() ?? 60;
+                                final bookingId = request.bookingId ?? request.id.replaceFirst('ext_', '');
+
+                                final success = await dashboardCubit.reviewExtensionRequest(
+                                  bookingId: bookingId,
+                                  isApproved: true,
+                                  requestedMinutes: reqMins,
+                                  currentDurationMinutes: curDuration,
+                                );
+
+                                if (success && context.mounted) {
+                                  requestsCubit.markAsAttended(request.id);
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      )
+                    : AppButton(
+                        text: AppStrings.markAsAttended,
+                        icon: Icons.done_all_rounded,
+                        variant: AppButtonVariant.primary,
+                        height: 34.h,
+                        onPressed: () {
+                          requestsCubit.markAsAttended(
+                            request.id,
+                            isCanteenOrder: isCanteen,
+                          );
+                        },
+                      ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildExtensionDetailsRow(ClientRequestEntity request) {
-    final firstMetadataItem = request.metadata.items.isNotEmpty
-        ? request.metadata.items.first
+class RequestCustomerTile extends StatelessWidget {
+  final String userName;
+  final String? userPhone;
+  final String? userAvatarUrl;
+
+  const RequestCustomerTile({
+    super.key,
+    required this.userName,
+    this.userPhone,
+    this.userAvatarUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(8.r),
+      decoration: BoxDecoration(
+        color: AppColors.mutedBackground,
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: AppColors.borderDefault.withValues(alpha: 0.6)),
+      ),
+      child: Row(
+        children: [
+          RequestUserAvatar(avatarUrl: userAvatarUrl, userName: userName),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppText.subHeading(
+                  userName,
+                  fontSize: 12.sp,
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+                if (userPhone != null && userPhone!.isNotEmpty) ...[
+                  SizedBox(height: 2.h),
+                  AppText.body(
+                    userPhone!,
+                    fontSize: 10.sp,
+                    color: AppColors.textMuted,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class RequestUserAvatar extends StatelessWidget {
+  final String? avatarUrl;
+  final String userName;
+
+  const RequestUserAvatar({
+    super.key,
+    this.avatarUrl,
+    required this.userName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bool hasAvatar = avatarUrl != null && avatarUrl!.trim().isNotEmpty;
+    final String initial = userName.trim().isNotEmpty ? userName.trim()[0].toUpperCase() : 'U';
+
+    final provider = AppCachedImage.provider(avatarUrl);
+
+    return Container(
+      width: 32.r,
+      height: 32.r,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.borderDefault, width: 1),
+        color: AppColors.cardBackground,
+        image: (hasAvatar && provider != null)
+            ? DecorationImage(
+                image: provider,
+                fit: BoxFit.cover,
+              )
+            : null,
+      ),
+      alignment: Alignment.center,
+      child: (!hasAvatar || provider == null)
+          ? Text(
+              initial,
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 12.sp,
+              ),
+            )
+          : null,
+    );
+  }
+}
+
+class ExtensionDetailsRow extends StatelessWidget {
+  final NotificationMetadata metadata;
+
+  const ExtensionDetailsRow({super.key, required this.metadata});
+
+  @override
+  Widget build(BuildContext context) {
+    final firstMetadataItem = metadata.items.isNotEmpty
+        ? metadata.items.first
         : <String, dynamic>{};
 
     final int requestedMinutes = (firstMetadataItem['requested_minutes'] ??
@@ -440,9 +647,9 @@ class LiveRequestsFeed extends StatelessWidget {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
           decoration: BoxDecoration(
-            color: AppColors.neonBlue.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.3)),
+            color: AppColors.mutedBackground,
+            borderRadius: BorderRadius.circular(6.r),
+            border: Border.all(color: AppColors.borderDefault),
           ),
           child: Row(
             children: [
@@ -466,46 +673,70 @@ class LiveRequestsFeed extends StatelessWidget {
       ],
     );
   }
+}
 
-  Widget _buildCanteenItemsBox(ClientRequestEntity request) {
+class CanteenItemsDetailsBox extends StatelessWidget {
+  final List<Map<String, dynamic>> items;
+  final double? totalPrice;
+
+  const CanteenItemsDetailsBox({
+    super.key,
+    required this.items,
+    this.totalPrice,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(8.r),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.25),
+        color: AppColors.mutedBackground,
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: AppColors.borderDefault.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.borderDefault.withValues(alpha: 0.6)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ...request.canteenItems.map((item) {
-            final name = item['name_ar'] ?? item['name'] ?? item['name_en'] ?? 'Item';
+          ...items.map((item) {
+            final name = item['name_ar'] ?? item['name'] ?? item['name_en'] ?? item['item_name'] ?? 'صنف';
             final qty = item['quantity'] ?? item['qty'] ?? 1;
-            final price = (item['price'] as num?)?.toDouble() ?? 0.0;
+            final price = (item['price'] ?? item['unit_price'] as num?)?.toDouble() ?? 0.0;
 
             return Padding(
               padding: EdgeInsets.symmetric(vertical: 2.h),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  AppText.body('• ${qty}x $name', fontSize: 11.sp, color: AppColors.textPrimary),
+                  AppText.body(
+                    '${qty}x $name',
+                    fontSize: 11.sp,
+                    color: AppColors.textPrimary,
+                  ),
                   if (price > 0)
-                    AppText.body('${(price * qty).toStringAsFixed(0)} ${AppStrings.egp}', fontSize: 11.sp, color: AppColors.success),
+                    AppText.body(
+                      '${(price * qty).toStringAsFixed(0)} ${AppStrings.egp}',
+                      fontSize: 11.sp,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
                 ],
               ),
             );
           }),
-          if (request.totalPrice != null && request.totalPrice! > 0) ...[
-            Divider(color: AppColors.borderDefault, height: 12.h),
+          if (totalPrice != null && totalPrice! > 0) ...[
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 4.h),
+              child: Divider(color: AppColors.borderDefault.withValues(alpha: 0.5), height: 1.h),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 AppText.body(AppStrings.extrasTotal, fontSize: 11.sp, color: AppColors.textMuted),
                 AppText.subHeading(
-                  '${request.totalPrice!.toStringAsFixed(0)} ${AppStrings.egp}',
-                  fontSize: 12.sp,
-                  color: AppColors.success,
+                  '${totalPrice!.toStringAsFixed(0)} ${AppStrings.egp}',
+                  fontSize: 11.sp,
+                  color: AppColors.neonBlue,
                   fontWeight: FontWeight.bold,
                 ),
               ],

@@ -12,24 +12,41 @@ class PermissionsCubit extends Cubit<PermissionsState> {
   final UpdateRolePermissionUseCase updateRolePermissionUseCase;
   final LocalCacheService? cacheService;
 
+  String? _activeLoungeId;
+
   PermissionsCubit({
     required this.getRolePermissionsUseCase,
     required this.updateRolePermissionUseCase,
     this.cacheService,
   }) : super(PermissionsState.initial());
 
-  String _getCacheKey(String role) => 'permissions_cache_${role.toLowerCase().trim()}';
+  String _getCacheKey(String role, {String? loungeId}) {
+    final cleanRole = role.toLowerCase().trim();
+    final lId = loungeId ?? _activeLoungeId ?? '';
+    return 'permissions_cache_${cleanRole}_$lId';
+  }
+
+  void setActiveLoungeId(String? loungeId) {
+    if (loungeId != null && loungeId.isNotEmpty) {
+      _activeLoungeId = loungeId;
+    }
+  }
 
   /// Loads permissions for the active logged-in user and populates local state & cache
-  Future<void> loadUserPermissions(String role) async {
+  Future<void> loadUserPermissions(String role, {String? loungeId}) async {
     if (isClosed) return;
+    if (loungeId != null && loungeId.isNotEmpty) {
+      _activeLoungeId = loungeId;
+    }
     final cleanRole = role.toLowerCase().trim();
-    AppLogger.debug('Loading user permissions for active role: $cleanRole');
+    final effectiveLoungeId = loungeId ?? _activeLoungeId;
+
+    AppLogger.debug('Loading user permissions for active role: $cleanRole, loungeId: $effectiveLoungeId');
 
     emit(state.copyWith(userRole: cleanRole));
 
     // 1. Instant Cache-First Load
-    final cachedData = cacheService?.getJson(_getCacheKey(cleanRole));
+    final cachedData = cacheService?.getJson(_getCacheKey(cleanRole, loungeId: effectiveLoungeId));
     if (cachedData != null && cachedData is List && cachedData.isNotEmpty) {
       try {
         final cachedList = cachedData
@@ -44,7 +61,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
     }
 
     // 2. Fetch from Remote DB to Sync
-    final result = await getRolePermissionsUseCase(cleanRole);
+    final result = await getRolePermissionsUseCase(cleanRole, loungeId: effectiveLoungeId);
     if (isClosed) return;
 
     result.fold(
@@ -53,7 +70,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
       },
       (permissions) {
         final userPermMap = {for (var p in permissions) p.key: p.isEnabled};
-        _saveToCache(cleanRole, permissions);
+        _saveToCache(cleanRole, permissions, loungeId: effectiveLoungeId);
         emit(state.copyWith(
           userPermissions: userPermMap,
           status: PermissionsStatus.success,
@@ -64,15 +81,20 @@ class PermissionsCubit extends Cubit<PermissionsState> {
   }
 
   /// Fetches permissions for a specific role to display/edit in settings tab
-  Future<void> fetchPermissions(String role) async {
+  Future<void> fetchPermissions(String role, {String? loungeId}) async {
     if (isClosed) return;
+    if (loungeId != null && loungeId.isNotEmpty) {
+      _activeLoungeId = loungeId;
+    }
     final cleanRole = role.toLowerCase().trim();
-    AppLogger.debug('Fetching permissions for role: $cleanRole');
+    final effectiveLoungeId = loungeId ?? _activeLoungeId;
+
+    AppLogger.debug('Fetching permissions for role: $cleanRole, loungeId: $effectiveLoungeId');
 
     emit(state.copyWith(status: PermissionsStatus.loading, selectedRole: cleanRole));
 
     // 1. Instant Cache-First Load
-    final cachedData = cacheService?.getJson(_getCacheKey(cleanRole));
+    final cachedData = cacheService?.getJson(_getCacheKey(cleanRole, loungeId: effectiveLoungeId));
     if (cachedData != null && cachedData is List && cachedData.isNotEmpty) {
       try {
         final cachedList = cachedData
@@ -83,7 +105,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
     }
 
     // 2. Remote Fetch
-    final result = await getRolePermissionsUseCase(cleanRole);
+    final result = await getRolePermissionsUseCase(cleanRole, loungeId: effectiveLoungeId);
     if (isClosed) return;
 
     result.fold(
@@ -93,7 +115,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
       },
       (permissions) {
         AppLogger.debug('Fetched ${permissions.length} permissions for $cleanRole');
-        _saveToCache(cleanRole, permissions);
+        _saveToCache(cleanRole, permissions, loungeId: effectiveLoungeId);
 
         Map<String, bool>? updatedUserPerms;
         if (cleanRole == (state.userRole ?? '').toLowerCase().trim()) {
@@ -110,11 +132,15 @@ class PermissionsCubit extends Cubit<PermissionsState> {
   }
 
   /// Toggles a permission for a role, updates remote DB, cache, and active state
-  Future<void> togglePermission(String role, String key, bool value) async {
+  Future<void> togglePermission(String role, String key, bool value, {String? loungeId}) async {
     if (isClosed || key.isEmpty) return;
+    if (loungeId != null && loungeId.isNotEmpty) {
+      _activeLoungeId = loungeId;
+    }
     final cleanRole = role.toLowerCase().trim();
+    final effectiveLoungeId = loungeId ?? _activeLoungeId;
 
-    AppLogger.debug('Toggling permission - role: $cleanRole, key: $key, value: $value');
+    AppLogger.debug('Toggling permission - role: $cleanRole, key: $key, value: $value, loungeId: $effectiveLoungeId');
 
     // 1. Optimistic Updates
     final oldPermissions = List<PermissionItemEntity>.from(state.permissions);
@@ -132,7 +158,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
     }
 
     // Update Local Cache Immediately
-    _saveToCache(cleanRole, updatedPermissions);
+    _saveToCache(cleanRole, updatedPermissions, loungeId: effectiveLoungeId);
 
     emit(state.copyWith(
       permissions: updatedPermissions,
@@ -140,14 +166,14 @@ class PermissionsCubit extends Cubit<PermissionsState> {
     ));
 
     // 2. Remote DB Update
-    final result = await updateRolePermissionUseCase(cleanRole, key, value);
+    final result = await updateRolePermissionUseCase(cleanRole, key, value, loungeId: effectiveLoungeId);
     if (isClosed) return;
 
     result.fold(
       (failure) {
         AppLogger.warning('Update failure: ${failure.message}');
         // Rollback on failure
-        _saveToCache(cleanRole, oldPermissions);
+        _saveToCache(cleanRole, oldPermissions, loungeId: effectiveLoungeId);
         emit(state.copyWith(
           permissions: oldPermissions,
           userPermissions: oldUserPermissions,
@@ -161,7 +187,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
     );
   }
 
-  void _saveToCache(String role, List<PermissionItemEntity> list) {
+  void _saveToCache(String role, List<PermissionItemEntity> list, {String? loungeId}) {
     if (cacheService == null) return;
     try {
       final jsonList = list.map((p) {
@@ -175,7 +201,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
           isEnabled: p.isEnabled,
         ).toJson();
       }).toList();
-      cacheService!.setJson(_getCacheKey(role), jsonList);
+      cacheService!.setJson(_getCacheKey(role, loungeId: loungeId), jsonList);
     } catch (e) {
       AppLogger.warning('Cache save error: $e');
     }

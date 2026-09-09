@@ -11,6 +11,7 @@ class NotificationMetadata extends Equatable {
   final String? roomName;
   final String? userName;
   final String? userPhone;
+  final String? userAvatar;
   final String? loungeId;
   final List<Map<String, dynamic>> items;
 
@@ -24,6 +25,7 @@ class NotificationMetadata extends Equatable {
     this.roomName,
     this.userName,
     this.userPhone,
+    this.userAvatar,
     this.loungeId,
     this.items = const [],
   });
@@ -53,6 +55,7 @@ class NotificationMetadata extends Equatable {
       roomName: map['room_name']?.toString() ?? map['roomName']?.toString(),
       userName: map['user_name']?.toString() ?? map['userName']?.toString() ?? map['full_name']?.toString(),
       userPhone: map['user_phone']?.toString() ?? map['userPhone']?.toString() ?? map['phone']?.toString(),
+      userAvatar: map['user_avatar']?.toString() ?? map['user_avatar_url']?.toString() ?? map['avatar_url']?.toString(),
       loungeId: map['lounge_id']?.toString() ?? map['loungeId']?.toString(),
       items: parsedItems,
     );
@@ -69,6 +72,7 @@ class NotificationMetadata extends Equatable {
       'room_name': roomName,
       'user_name': userName,
       'user_phone': userPhone,
+      'user_avatar': userAvatar,
       'lounge_id': loungeId,
       'items': items,
     };
@@ -85,6 +89,7 @@ class NotificationMetadata extends Equatable {
         roomName,
         userName,
         userPhone,
+        userAvatar,
         loungeId,
         items,
       ];

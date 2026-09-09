@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/core/responsive/responsive.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import '../cubit/permissions_cubit.dart';
 import '../cubit/permissions_state.dart';
 import '../../domain/entities/permission_item_entity.dart';
@@ -20,7 +21,9 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
   @override
   void initState() {
     super.initState();
-    context.read<PermissionsCubit>().fetchPermissions('cashier');
+    final loungeId = context.read<LoginCubit>().state.userLounge?.id ??
+        context.read<LoginCubit>().state.user?.loungeId;
+    context.read<PermissionsCubit>().fetchPermissions('cashier', loungeId: loungeId);
   }
 
   @override
@@ -53,7 +56,9 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
       ],
       selected: {selectedRole},
       onSelectionChanged: (Set<String> newSelection) {
-        context.read<PermissionsCubit>().fetchPermissions(newSelection.first);
+        final loungeId = context.read<LoginCubit>().state.userLounge?.id ??
+            context.read<LoginCubit>().state.user?.loungeId;
+        context.read<PermissionsCubit>().fetchPermissions(newSelection.first, loungeId: loungeId);
       },
       style: ButtonStyle(
         backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
@@ -150,7 +155,9 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
     return SwitchListTile(
       value: p.isEnabled,
       onChanged: (val) {
-        context.read<PermissionsCubit>().togglePermission(role, p.key, val);
+        final loungeId = context.read<LoginCubit>().state.userLounge?.id ??
+            context.read<LoginCubit>().state.user?.loungeId;
+        context.read<PermissionsCubit>().togglePermission(role, p.key, val, loungeId: loungeId);
       },
       title: AppText.body(p.nameAr.isNotEmpty && isArabic ? p.nameAr : (p.nameEn.isNotEmpty ? p.nameEn : p.key), fontWeight: FontWeight.bold),
       subtitle: AppText.body(isArabic ? p.descriptionAr : p.descriptionEn, color: AppColors.textSecondary, fontSize: 12.sp),

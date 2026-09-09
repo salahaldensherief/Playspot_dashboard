@@ -181,90 +181,81 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
 
     try {
       if (extras.isNotEmpty) {
-        // 1. Fetch lounge_id & user_id for the booking
+        // 1. Fetch lounge_id, user_id, total_price, & addons_price for the booking
         final bookingDetails = await supabaseClient
             .from('bookings')
-            .select('lounge_id, user_id, total_price')
+            .select('lounge_id, user_id, total_price, addons_price')
             .eq('id', bookingId)
             .maybeSingle();
 
         final loungeId = bookingDetails?['lounge_id']?.toString();
         final userId = bookingDetails?['user_id']?.toString();
+        final currentTotalPrice = (bookingDetails?['total_price'] as num?)?.toDouble() ?? 0.0;
+        final currentAddonsPrice = (bookingDetails?['addons_price'] as num?)?.toDouble() ?? 0.0;
 
-        // 2. Insert structured order header & items into canteen_orders and canteen_order_items tables
+        // 2. Insert into canteen_orders table
         if (loungeId != null && loungeId.isNotEmpty) {
           try {
-            final orderRes = await supabaseClient
-                .from('canteen_orders')
-                .insert({
-                  'lounge_id': loungeId,
-                  'booking_id': bookingId,
-                  if (userId != null && userId.isNotEmpty) 'user_id': userId,
-                  'total_price': additionalCost,
-                  'status': 'completed',
-                })
-                .select('id')
-                .maybeSingle();
-
-            final orderId = orderRes?['id']?.toString();
-
-            if (orderId != null && orderId.isNotEmpty) {
-              final List<Map<String, dynamic>> canteenOrderItemsToInsert = extras.map((e) {
-                final qty = (e['quantity'] as num?)?.toInt() ?? 1;
-                final price = (e['price'] ?? e['unit_price'] as num?)?.toDouble() ?? 0.0;
-                return {
-                  'order_id': orderId,
-                  'canteen_item_id': e['id'] ?? e['item_id'] ?? e['canteen_item_id'],
-                  'item_name': e['name'] ?? e['name_ar'] ?? e['item_name'] ?? 'Extra Item',
-                  'quantity': qty,
-                  'unit_price': price,
-                  'total_price': price * qty,
-                };
-              }).toList();
-
-              await supabaseClient.from('canteen_order_items').insert(canteenOrderItemsToInsert);
-              debugPrint('🟢 [CANTEEN_ORDER_SYNC] Successfully inserted structured items into `canteen_order_items` table!');
-            }
+            await supabaseClient.from('canteen_orders').insert({
+              'lounge_id': loungeId,
+              'booking_id': bookingId,
+              if (userId != null && userId.isNotEmpty) 'user_id': userId,
+              'items': extras,
+              'total_price': additionalCost,
+              'status': 'completed',
+            });
+            debugPrint('🟢 [CANTEEN_ORDER_SYNC] Successfully inserted into `canteen_orders`!');
           } catch (e) {
-            debugPrint('⚠️ [CANTEEN_ORDER_SYNC] canteen_orders/canteen_order_items insert warning: $e');
+            debugPrint('⚠️ [CANTEEN_ORDER_SYNC] canteen_orders insert warning: $e');
+            try {
+              await supabaseClient.from('canteen_orders').insert({
+                'lounge_id': loungeId,
+                'booking_id': bookingId,
+                'items': extras,
+                'total_price': additionalCost,
+              });
+            } catch (_) {}
           }
         }
 
-        // 3. Insert into booking_items table for booking sessions
-        final List<Map<String, dynamic>> bookingItemsToInsert = extras.map((e) {
-          final qty = (e['quantity'] as num?)?.toInt() ?? 1;
-          final price = (e['price'] ?? e['unit_price'] as num?)?.toDouble() ?? 0.0;
-          return {
-            'booking_id': bookingId,
-            'item_id': e['id'] ?? e['item_id'] ?? e['canteen_item_id'],
-            'item_name': e['name'] ?? e['name_ar'] ?? e['item_name'] ?? 'Extra Item',
-            'quantity': qty,
-            'unit_price': price,
-            'total_price': price * qty,
-          };
-        }).toList();
-
-        debugPrint('🔵 [CANTEEN_ORDER_SYNC] Inserting ${bookingItemsToInsert.length} items into `booking_items` table...');
-        await supabaseClient.from('booking_items').insert(bookingItemsToInsert);
-      }
-
-      final bookingRes = await supabaseClient
-          .from('bookings')
-          .select('total_price')
-          .eq('id', bookingId)
-          .maybeSingle();
-
-      if (bookingRes != null) {
-        final currentTotalPrice = (bookingRes['total_price'] as num?)?.toDouble() ?? 0.0;
+        // 3. Update bookings table (total_price & addons_price)
         final updatedTotalPrice = currentTotalPrice + additionalCost;
+        final updatedAddonsPrice = currentAddonsPrice + additionalCost;
 
-        debugPrint('🔵 [CANTEEN_ORDER_SYNC] Updating `total_price` on `bookings` table to: $updatedTotalPrice');
-        await supabaseClient.from('bookings').update({
-          'total_price': updatedTotalPrice,
-        }).eq('id', bookingId);
+        debugPrint('🔵 [CANTEEN_ORDER_SYNC] Updating `total_price` ($updatedTotalPrice) and `addons_price` ($updatedAddonsPrice) on `bookings`...');
+        try {
+          await supabaseClient.from('bookings').update({
+            'total_price': updatedTotalPrice,
+            'addons_price': updatedAddonsPrice,
+          }).eq('id', bookingId);
+        } catch (_) {
+          try {
+            await supabaseClient.from('bookings').update({
+              'total_price': updatedTotalPrice,
+            }).eq('id', bookingId);
+          } catch (_) {}
+        }
+
+        // 4. Failsafe optional insert to booking_items table
+        try {
+          final List<Map<String, dynamic>> bookingItemsToInsert = extras.map((e) {
+            final qty = (e['quantity'] as num?)?.toInt() ?? 1;
+            final price = (e['price'] ?? e['unit_price'] as num?)?.toDouble() ?? 0.0;
+            return {
+              'booking_id': bookingId,
+              'name': e['name'] ?? e['name_ar'] ?? e['item_name'] ?? 'Extra Item',
+              'quantity': qty,
+              'price': price,
+              'total_price': price * qty,
+            };
+          }).toList();
+          await supabaseClient.from('booking_items').insert(bookingItemsToInsert);
+        } catch (e) {
+          debugPrint('ℹ️ [CANTEEN_ORDER_SYNC] booking_items optional insert skipped: $e');
+        }
       }
 
-      debugPrint('🟢 [CANTEEN_ORDER_SYNC] Successfully added items to `canteen_order_items`/`booking_items` and updated total_price!');
+      debugPrint('🟢 [CANTEEN_ORDER_SYNC] Successfully added extras to session!');
       debugPrint('====================================================');
     } catch (e) {
       debugPrint('🔴 [CANTEEN_ORDER_SYNC] Error in addExtrasToSession: $e');
