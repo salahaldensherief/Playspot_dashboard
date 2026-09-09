@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:js_interop';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
@@ -27,7 +29,6 @@ import 'package:play_spot_dashboard/features/shifts/presentation/shift_history/s
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_screen.dart' as staff;
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/pages/booking_history_page.dart' as reports;
-import 'package:play_spot_dashboard/features/splash/presentation/splash_screen.dart';
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_shell.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
@@ -40,15 +41,26 @@ import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboa
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/extras_cubit.dart';
 import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_cubit.dart';
 import 'package:play_spot_dashboard/features/loyalty/presentation/cubit/loyalty_cubit.dart';
+
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import 'package:play_spot_dashboard/features/reviews/presentation/reviews_cubit.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
-
+import '../../art_core/theme/app_colors.dart';
 import '../../features/permissions/presentation/cubit/permissions_cubit.dart';
-
 import 'go_router_refresh_stream.dart';
+
+@JS('removeSplash')
+external void _removeWebSplash();
+
+void _hideWebSplash() {
+  if (kIsWeb) {
+    try {
+      _removeWebSplash();
+    } catch (_) {}
+  }
+}
 
 class AppRouter {
   final LoginCubit authCubit;
@@ -159,8 +171,9 @@ class AppRouter {
                 buildWhen: (previous, current) => previous.status != current.status,
                 builder: (context, authState) {
                   if (authState.status == LoginStatus.checking) {
-                    return const SplashScreen();
+                    return const Scaffold(backgroundColor: AppColors.scaffoldBackground);
                   }
+                  _hideWebSplash();
                   return child;
                 },
               ),

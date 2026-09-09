@@ -108,6 +108,20 @@
     <div class="spinner"></div>
   </div>
 
+  <script>
+    window.removeSplash = function() {
+      const splash = document.getElementById('splash');
+      if (splash) {
+        splash.style.transition = 'opacity 0.4s ease';
+        splash.style.opacity = '0';
+        setTimeout(() => {
+          if (splash && splash.parentNode) {
+            splash.parentNode.removeChild(splash);
+          }
+        }, 400);
+      }
+    };
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
