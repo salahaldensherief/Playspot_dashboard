@@ -18,11 +18,13 @@ class CategoryModel extends CategoryEntity {
   }
 
   Map<String, dynamic> toJson() {
+    final name = nameEn.isNotEmpty ? nameEn : (nameAr.isNotEmpty ? nameAr : 'Category');
     return {
-      'id': id,
+      if (id.isNotEmpty) 'id': id,
+      'name': name,
       'name_ar': nameAr,
       'name_en': nameEn,
-      'icon_key': iconKey,
+      'icon_key': iconKey.isNotEmpty ? iconKey : 'category',
     };
   }
 }

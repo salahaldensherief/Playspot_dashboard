@@ -37,13 +37,31 @@ class NotificationModel extends NotificationEntity {
   }
 
   Map<String, dynamic> toJson() {
+    String validTypeStr;
+    switch (type) {
+      case NotificationType.booking:
+        validTypeStr = 'booking';
+        break;
+      case NotificationType.offer:
+        validTypeStr = 'offer';
+        break;
+      case NotificationType.loyalty:
+        validTypeStr = 'offer';
+        break;
+      default:
+        validTypeStr = 'system';
+    }
+
     return {
+      if (id.isNotEmpty) 'id': id,
       'user_id': userId,
+      'title': titleEn.isNotEmpty ? titleEn : titleAr,
       'title_ar': titleAr,
       'title_en': titleEn,
+      'body': bodyEn.isNotEmpty ? bodyEn : bodyAr,
       'body_ar': bodyAr,
       'body_en': bodyEn,
-      'type': type.name,
+      'type': validTypeStr,
       'metadata': metadata,
     };
   }

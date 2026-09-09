@@ -79,15 +79,24 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
 
       debugPrint('🔵 [ShiftRemoteDataSource] Opening shift - User: $userId, Lounge: $loungeId, Float: $startingCash');
 
-      await _supabase.from('shifts').insert({
-        'cashier_id': userId,
-        'lounge_id': loungeId,
-        'starting_cash': startingCash,
-        'status': 'open',
-        'start_time': DateTime.now().toIso8601String(),
-      });
+      try {
+        await _supabase.rpc('open_shift', params: {
+          'p_lounge_id': loungeId,
+          'p_starting_cash': startingCash,
+        });
+        debugPrint('🟢 [ShiftRemoteDataSource] RPC open_shift successful');
+      } catch (rpcErr) {
+        debugPrint('⚠️ [ShiftRemoteDataSource] RPC open_shift failed ($rpcErr), falling back to direct insert');
+        await _supabase.from('shifts').insert({
+          'cashier_id': userId,
+          'lounge_id': loungeId,
+          'starting_cash': startingCash,
+          'status': 'open',
+          'start_time': DateTime.now().toIso8601String(),
+        });
+      }
 
-      debugPrint('🟢 [ShiftRemoteDataSource] Shift insert successful');
+      debugPrint('🟢 [ShiftRemoteDataSource] Shift opened successfully');
     } catch (e, stack) {
       debugPrint('🔴 [ShiftRemoteDataSource] Exception in openShift: $e');
       debugPrint('🔴 [ShiftRemoteDataSource] StackTrace: $stack');

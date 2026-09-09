@@ -77,34 +77,30 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     _lng = lounge?.lng;
 
     if (user?.loungeId != null && user!.loungeId!.isNotEmpty) {
-      context.read<LoginCubit>().refreshUserLounge(user.loungeId!);
+      context.read<LoginCubit>().refreshUserLounge(user.loungeId!, forceRefresh: true);
     }
   }
 
   void _populateFromLounge(Lounge lounge) {
-    if (_nameController.text.isEmpty && lounge.name.isNotEmpty) {
-      _nameController.text = lounge.name;
-    }
-    if (_descArController.text.isEmpty && (lounge.descriptionAr?.isNotEmpty == true)) {
-      _descArController.text = lounge.descriptionAr!;
-    }
-    if (_descEnController.text.isEmpty && (lounge.descriptionEn?.isNotEmpty == true)) {
-      _descEnController.text = lounge.descriptionEn!;
-    }
-    if (_cityController.text.isEmpty && (lounge.city?.isNotEmpty == true)) {
-      _cityController.text = lounge.city!;
-    }
-    if (_addressController.text.isEmpty && (lounge.location?.isNotEmpty == true)) {
-      _addressController.text = lounge.location!;
-    }
-    if (_opensAtController.text.isEmpty && lounge.opensAt.isNotEmpty) {
-      _opensAtController.text = lounge.opensAt;
-    }
-    if (_closesAtController.text.isEmpty && lounge.closesAt.isNotEmpty) {
-      _closesAtController.text = lounge.closesAt;
-    }
-    _lat ??= lounge.lat;
-    _lng ??= lounge.lng;
+    _nameController.text = lounge.name;
+    _descArController.text = lounge.descriptionAr ?? '';
+    _descEnController.text = lounge.descriptionEn ?? '';
+    _cityController.text = lounge.city ?? '';
+    _addressController.text = lounge.location ?? '';
+    _opensAtController.text = lounge.opensAt;
+    _closesAtController.text = lounge.closesAt;
+
+    _hasDiscount = lounge.hasDiscount;
+    _discountPercentageController.text = lounge.discountPercentage.toString();
+    _discountTitleArController.text = lounge.discountTitleAr ?? '';
+    _discountTitleEnController.text = lounge.discountTitleEn ?? '';
+    _discountExpiresAt = lounge.discountExpiresAt;
+    _discountExpirationController.text = _discountExpiresAt != null
+        ? _discountExpiresAt!.toLocal().toString().split(' ')[0]
+        : '';
+
+    _lat = lounge.lat;
+    _lng = lounge.lng;
   }
 
   @override
@@ -125,13 +121,6 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
 
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
-      if (_galleryImages.isEmpty && context.read<LoginCubit>().state.userLounge?.images == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.minImagesError), backgroundColor: AppColors.danger),
-        );
-        return;
-      }
-
       setState(() => _isSaving = true);
       try {
         final lounge = context.read<LoginCubit>().state.userLounge;
@@ -154,25 +143,25 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
 
         if (mounted) {
           final updatedLounge = lounge.copyWith(
-            name: _nameController.text,
-            descriptionAr: _descArController.text,
-            descriptionEn: _descEnController.text,
-            city: _cityController.text,
-            location: _addressController.text,
-            opensAt: _opensAtController.text,
-            closesAt: _closesAtController.text,
+            name: _nameController.text.trim(),
+            descriptionAr: _descArController.text.trim(),
+            descriptionEn: _descEnController.text.trim(),
+            city: _cityController.text.trim(),
+            location: _addressController.text.trim(),
+            opensAt: _opensAtController.text.trim(),
+            closesAt: _closesAtController.text.trim(),
             imageUrl: mainImageUrl,
             images: galleryUrls,
             lat: _lat,
             lng: _lng,
           );
 
-          await context.read<LoungeCubit>().repository.updateLounge(updatedLounge);
+          await context.read<LoungeCubit>().updateLounge(updatedLounge);
           if (mounted) {
              ScaffoldMessenger.of(context).showSnackBar(
                const SnackBar(content: Text('Profile updated successfully'), backgroundColor: Colors.green),
              );
-             context.read<LoginCubit>().refreshUserLounge(lounge.id);
+             await context.read<LoginCubit>().refreshUserLounge(lounge.id, forceRefresh: true);
           }
         }
       } catch (e) {
@@ -197,8 +186,8 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
         loungeId: lounge.id,
         hasDiscount: _hasDiscount,
         discountPercentage: int.tryParse(_discountPercentageController.text) ?? 0,
-        titleAr: _discountTitleArController.text,
-        titleEn: _discountTitleEnController.text,
+        titleAr: _discountTitleArController.text.trim(),
+        titleEn: _discountTitleEnController.text.trim(),
         expiresAt: _discountExpiresAt,
       );
       
@@ -206,7 +195,7 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppStrings.discountUpdatedSuccess), backgroundColor: Colors.green),
         );
-        context.read<LoginCubit>().refreshUserLounge(lounge.id);
+        await context.read<LoginCubit>().refreshUserLounge(lounge.id, forceRefresh: true);
       }
     } catch (e) {
       if (mounted) {
@@ -257,10 +246,6 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
         }
       },
       builder: (context, loginState) {
-        if (loginState.userLounge != null) {
-          _populateFromLounge(loginState.userLounge!);
-        }
-
         return Padding(
           padding: EdgeInsets.all(24.r),
           child: SingleChildScrollView(

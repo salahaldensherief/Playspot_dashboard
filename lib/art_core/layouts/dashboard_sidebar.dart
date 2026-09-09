@@ -10,6 +10,7 @@ import '../../core/utils/permission_extension.dart';
 import '../../features/permissions/presentation/cubit/permissions_cubit.dart';
 import '../../features/permissions/presentation/cubit/permissions_state.dart';
 import '../app_strings.dart';
+import '../assets_manager.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app_dialog.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
@@ -106,12 +107,25 @@ class DashboardSidebar extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              padding: EdgeInsets.all(8.r),
+              padding: EdgeInsets.all(4.r),
               decoration: BoxDecoration(
                 color: AppColors.neonPurple.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
-              child: Icon(Icons.sports_esports, color: AppColors.neonBlue, size: 24.r),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6.r),
+                child: Image.asset(
+                  AssetsManager.logo,
+                  width: 32.r,
+                  height: 32.r,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Icon(
+                    Icons.sports_esports,
+                    color: AppColors.neonBlue,
+                    size: 24.r,
+                  ),
+                ),
+              ),
             ),
             SizedBox(width: 12.w),
             Column(

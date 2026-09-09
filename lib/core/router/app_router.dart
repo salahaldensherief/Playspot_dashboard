@@ -21,6 +21,7 @@ import 'package:play_spot_dashboard/features/reviews/presentation/pages/lounge_r
 import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounge_profile_page.dart' as lounge_profile;
 import 'package:play_spot_dashboard/features/auth/presentation/profile/profile_page.dart' as profile;
 import 'package:play_spot_dashboard/features/kyc/presentation/pages/kyc_reviews_page.dart' as kyc_reviews;
+import 'package:play_spot_dashboard/features/kyc/presentation/pages/kyc_pending_page.dart';
 import 'package:play_spot_dashboard/features/loyalty/presentation/pages/loyalty_page.dart' as loyalty;
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_history/shift_history_screen.dart' as shifts;
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_screen.dart' as staff;
@@ -75,22 +76,39 @@ class AppRouter {
 
         if (user == null) return isLoggingIn ? null : null;
 
-        final bool isLoungeAdmin = user.isStaff;
+        final bool isStaffUser = user.isStaff;
+        final bool isLoungeOwner = user.isOwner;
         final bool isSuperAdmin = user.role == UserRole.superAdmin;
         final bool isOnboardingPath = state.matchedLocation == RouterKeys.loungeOnboarding;
+        final bool isKycPendingPath = state.matchedLocation == RouterKeys.kycPending;
 
-        if (user.isLoungeOwner && !user.isSetupCompleted) {
+        final lounge = authState.userLounge;
+        final bool isLoungePending = lounge != null && (lounge.status == 'pending' || lounge.status == 'pending_approval' || lounge.status != 'active');
+
+        // 1. Only Lounge Owners who haven't completed setup need Onboarding
+        if (!isSuperAdmin && isLoungeOwner && !user.isSetupCompleted) {
           if (!isOnboardingPath) return RouterKeys.loungeOnboarding;
           return null;
         }
 
-        if (isOnboardingPath && user.isSetupCompleted) {
+        // 2. Lounge Owners whose lounge/KYC is still pending approval go to KYC Pending Screen
+        if (!isSuperAdmin && isLoungeOwner && user.isSetupCompleted && isLoungePending) {
+          if (!isKycPendingPath) return RouterKeys.kycPending;
+          return null;
+        }
+
+        // Leave onboarding or kyc-pending if status is active or user is non-owner
+        if ((isOnboardingPath || isKycPendingPath) && (user.isSetupCompleted && !isLoungePending)) {
+          return RouterKeys.loungeAdminDashboard;
+        }
+
+        if (isOnboardingPath && !isLoungeOwner) {
           return RouterKeys.loungeAdminDashboard;
         }
 
         if (isLoggingIn || state.matchedLocation == RouterKeys.root) {
           if (isSuperAdmin) return RouterKeys.superAdminDashboard;
-          if (isLoungeAdmin) return RouterKeys.loungeAdminDashboard;
+          if (isStaffUser) return RouterKeys.loungeAdminDashboard;
         }
 
         final String location = state.matchedLocation;
@@ -167,6 +185,10 @@ class AppRouter {
                   ),
                 ),
               ),
+            ),
+            GoRoute(
+              path: RouterKeys.kycPending,
+              pageBuilder: (context, state) => const NoTransitionPage(child: KycPendingPage()),
             ),
             
             ShellRoute(

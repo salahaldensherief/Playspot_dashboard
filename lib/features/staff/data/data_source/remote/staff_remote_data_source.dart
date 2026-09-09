@@ -21,7 +21,25 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
     final cleanLoungeId = loungeId.trim();
     if (cleanLoungeId.isEmpty) return [];
 
-    // Stage 1: Try querying lounge_staff joined with profiles
+    // Stage 1: Direct query on profiles table (filtered by lounge_id)
+    try {
+      final response = await _supabase
+          .from('profiles')
+          .select()
+          .eq('lounge_id', cleanLoungeId)
+          .neq('role', 'super_admin')
+          .order('full_name');
+
+      final list = (response as List)
+          .map((json) => StaffModel.fromJson(Map<String, dynamic>.from(json as Map)))
+          .toList();
+
+      if (list.isNotEmpty) return list;
+    } catch (e1) {
+      debugPrint('⚠️ [STAFF_REMOTE_SOURCE] Profiles query failed ($e1), trying lounge_staff join...');
+    }
+
+    // Stage 2: Query lounge_staff joined with profiles
     try {
       final response = await _supabase
           .from('lounge_staff')
@@ -29,7 +47,7 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
           .eq('lounge_id', cleanLoungeId);
 
       if ((response as List).isNotEmpty) {
-        final list = (response as List).map((item) {
+        return (response as List).map((item) {
           final map = Map<String, dynamic>.from(item as Map);
           final profileMap = map['profiles'] as Map<String, dynamic>?;
           return StaffModel.fromJson({
@@ -43,52 +61,35 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
             'created_at': map['created_at'] ?? profileMap?['created_at'],
           });
         }).toList();
-        return list;
       }
-    } catch (e1) {
-      debugPrint('⚠️ [STAFF_REMOTE_SOURCE] lounge_staff join query failed ($e1), falling back to profiles...');
+    } catch (e2) {
+      debugPrint('⚠️ [STAFF_REMOTE_SOURCE] lounge_staff join query failed ($e2)');
     }
 
-    // Stage 2: Direct query on profiles table (filtered by lounge_id)
+    // Stage 3: Fallback RPC call
     try {
-      final response = await _supabase
-          .from('profiles')
-          .select()
-          .eq('lounge_id', cleanLoungeId)
-          .neq('role', 'super_admin')
-          .order('full_name');
-
+      final response = await _supabase.rpc('get_lounge_staff', params: {
+        'p_lounge_id': cleanLoungeId,
+      });
+      if (response == null) return [];
       return (response as List)
           .map((json) => StaffModel.fromJson(Map<String, dynamic>.from(json as Map)))
           .toList();
-    } catch (e2) {
-      debugPrint('⚠️ [STAFF_REMOTE_SOURCE] Profiles query failed ($e2), attempting RPC fallback...');
-      
-      // Stage 3: Fallback RPC call
-      try {
-        final response = await _supabase.rpc('get_lounge_staff', params: {
-          'p_lounge_id': cleanLoungeId,
-        });
-        if (response == null) return [];
-        return (response as List)
-            .map((json) => StaffModel.fromJson(Map<String, dynamic>.from(json as Map)))
-            .toList();
-      } catch (e3) {
-        debugPrint('🔴 [STAFF_REMOTE_SOURCE] All staff queries failed: $e3');
-        rethrow;
-      }
+    } catch (e3) {
+      debugPrint('🔴 [STAFF_REMOTE_SOURCE] All staff queries failed: $e3');
+      rethrow;
     }
   }
 
   @override
   Future<void> addStaffMember(AddStaffParams params) async {
     try {
-      debugPrint('Adding staff member with params: ${params.toJson()}');
-      await _supabase.rpc('add_staff_member', params: params.toJson());
+      debugPrint('Adding staff member via add_lounge_staff_member RPC with params: ${params.toJson()}');
+      await _supabase.rpc('add_lounge_staff_member', params: params.toJson());
       debugPrint('Add staff RPC executed successfully');
       return;
     } catch (e) {
-      debugPrint('Error in addStaffMember RPC: $e');
+      debugPrint('Error in add_lounge_staff_member RPC: $e');
       rethrow;
     }
   }
@@ -109,9 +110,13 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
           mappedRole = 'cashier';
           break;
         case 'lounge_owner':
+        case 'owner':
+          mappedRole = 'owner';
+          break;
         case 'manager':
         case 'lounge_admin':
-          mappedRole = 'lounge_owner';
+        case 'admin':
+          mappedRole = 'manager';
           break;
         case 'staff':
         case 'role_staff':

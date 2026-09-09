@@ -111,6 +111,7 @@ class _RoomDialogState extends State<RoomDialog> {
   }
 
   Future<void> _submit() async {
+    if (_isUploading) return;
     final form = _formKey.currentState;
     if (form != null && form.validate()) {
       if (_roomImages.isEmpty && (widget.room?.images == null || (widget.room?.images.isEmpty ?? true))) {

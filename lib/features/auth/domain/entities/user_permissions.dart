@@ -28,17 +28,25 @@ class UserPermissions {
     if (isSuperAdmin || isOwner) return true;
     if (GetIt.I.isRegistered<PermissionsCubit>()) {
       try {
-        return GetIt.I<PermissionsCubit>().hasPermission(key, userRole: role.name);
+        final cubit = GetIt.I<PermissionsCubit>();
+        if (cubit.state.userPermissions.containsKey(key)) {
+          return cubit.state.userPermissions[key] ?? false;
+        }
+        return cubit.hasPermission(key, userRole: role.name);
       } catch (_) {}
     }
-    // Default Fallbacks
+    // Default Fallbacks if dynamic permissions map is empty
     if (isManager) return true;
     if (isCashier) {
       if ([
+        'analytics_view_lounge',
+        'dashboard_view',
+        'rooms_view',
+        'reviews_view',
+        'shifts_view',
+        'reports_view',
         'staff_management',
         'financials_view',
-        'reports_view',
-        'shifts_view',
         'shifts_approve',
         'menu_edit_prices',
         'menu_manage_items',

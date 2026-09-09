@@ -4,7 +4,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../assets_manager.dart';
 import '../app_text.dart';
-import '../../theme/app_colors.dart';
 
 class LogoWidget extends StatefulWidget {
   final double? width;

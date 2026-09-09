@@ -16,11 +16,14 @@ class LiveShiftOverviewModel extends LiveShiftOverviewEntity {
   });
 
   factory LiveShiftOverviewModel.fromJson(Map<String, dynamic> json) {
+    final rawAvatar = json['cashier_avatar']?.toString();
+    final avatar = (rawAvatar != null && rawAvatar.trim().isNotEmpty) ? rawAvatar.trim() : null;
+
     return LiveShiftOverviewModel(
       hasActiveShift: json['has_active_shift'] ?? false,
       shiftId: json['shift_id']?.toString(),
       cashierName: json['cashier_name'],
-      cashierAvatar: json['cashier_avatar'],
+      cashierAvatar: avatar,
       cashierPhone: json['cashier_phone'],
       startTime: json['start_time'] != null ? DateTime.parse(json['start_time']) : null,
       startingCash: (json['starting_cash'] ?? json['opening_cash'] ?? 0).toDouble(),

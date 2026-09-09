@@ -16,6 +16,9 @@ mixin RepositoryHelper {
           e.message.contains('no_overlapping_room_bookings')) {
         return Left(ServerFailure(AppStrings.overlappingBookingError.tr()));
       }
+      if (e.code == '42501' || e.message.contains('permission denied')) {
+        return Left(ServerFailure("Permission denied for action (${e.code}): ${e.message}"));
+      }
       
       return Left(ServerFailure("${e.code}: ${e.message}"));
     } on NetworkException catch (e) {

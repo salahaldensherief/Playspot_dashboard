@@ -38,12 +38,25 @@ class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSo
     });
 
     if (result['success'] == true) {
+      final ownerUserId = result['owner_user_id']?.toString();
+      final loungeId = result['lounge_id']?.toString();
+
+      if (ownerUserId != null && ownerUserId.isNotEmpty) {
+        try {
+          await supabaseClient
+              .from('profiles')
+              .update({'is_setup_completed': false})
+              .eq('id', ownerUserId);
+        } catch (_) {}
+      }
+
       return UserEntity(
-        id: result['owner_user_id']?.toString() ?? '',
+        id: ownerUserId ?? '',
         role: UserRole.owner,
         name: name,
         email: email,
-        loungeId: result['lounge_id']?.toString(),
+        loungeId: loungeId,
+        isSetupCompleted: false,
       );
     } else {
       throw Exception(result['message'] ?? 'Failed to create lounge admin');

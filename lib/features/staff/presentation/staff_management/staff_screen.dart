@@ -181,7 +181,16 @@ class _StaffScreenState extends State<StaffScreen> {
   }
 
   Widget _buildRoleBadge(String role) {
-    if (role == 'lounge_owner' || role == 'manager') return StatusBadge.secondary(AppStrings.manager);
+    final cleanRole = role.toLowerCase().trim();
+    if (cleanRole == 'owner' || cleanRole == 'lounge_owner' || cleanRole == 'lounge_admin') {
+      return StatusBadge.secondary(AppStrings.loungeOwnerLabel);
+    }
+    if (cleanRole == 'manager') {
+      return StatusBadge.secondary(AppStrings.manager);
+    }
+    if (cleanRole == 'super_admin' || cleanRole == 'superadmin') {
+      return StatusBadge.secondary(AppStrings.superAdmin);
+    }
     return StatusBadge.info(AppStrings.cashierLabel);
   }
 

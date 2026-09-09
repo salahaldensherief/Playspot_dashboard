@@ -7,6 +7,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
+import '../../../../art_core/widgets/app_cached_image.dart';
 import '../login/login_cubit.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -74,13 +75,14 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _buildAvatar(BuildContext context, String? url, String name) {
+    final bool hasAvatar = url != null && url.trim().isNotEmpty;
     return Stack(
       children: [
         CircleAvatar(
           radius: 60.r,
           backgroundColor: AppColors.neonPurple.withOpacity(0.1),
-          backgroundImage: url != null ? NetworkImage(url) : null,
-          child: url == null 
+          backgroundImage: hasAvatar ? AppCachedImage.provider(url) : null,
+          child: !hasAvatar 
             ? AppText.heading(
                 name.isNotEmpty ? name[0].toUpperCase() : '?', 
                 fontSize: 40.sp, 

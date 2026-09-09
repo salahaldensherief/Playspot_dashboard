@@ -28,9 +28,15 @@ class RedemptionOptionModel extends RedemptionOptionEntity {
   }
 
   Map<String, dynamic> toJson() {
+    final title = titleEn.isNotEmpty ? titleEn : (titleAr.isNotEmpty ? titleAr : 'Redemption Option');
+    final description = descriptionEn.isNotEmpty ? descriptionEn : descriptionAr;
+
     return {
+      if (id.isNotEmpty) 'id': id,
+      'title': title,
       'title_ar': titleAr,
       'title_en': titleEn,
+      'description': description,
       'description_ar': descriptionAr,
       'description_en': descriptionEn,
       'points_cost': pointsCost,

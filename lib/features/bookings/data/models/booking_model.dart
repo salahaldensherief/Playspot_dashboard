@@ -201,6 +201,7 @@ class BookingModel extends Booking {
       'start_time': startTime,
       'end_time': endTime,
       'duration_minutes': durationMinutes,
+      'room_price': roomPrice ?? totalPrice,
       'total_price': totalPrice,
       'status': status.toDbString(),
       'payment_status': paymentStatus.name,
@@ -212,7 +213,6 @@ class BookingModel extends Booking {
       'discount_reason': discountReason,
       if (shiftId != null) 'shift_id': shiftId,
       if (playMode != null) 'play_mode': playMode,
-      if (roomPrice != null) 'room_price': roomPrice,
     };
   }
 }

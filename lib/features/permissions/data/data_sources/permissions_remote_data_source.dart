@@ -91,7 +91,13 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
 
   static List<PermissionItemModel> _getDefaultPermissionsForRole(String role) {
     final cleanRole = role.toLowerCase().trim();
-    final isManager = cleanRole == 'manager' || cleanRole == 'owner' || cleanRole == 'superadmin';
+    final isManager = cleanRole == 'manager' ||
+                      cleanRole == 'lounge_admin' ||
+                      cleanRole == 'admin' ||
+                      cleanRole == 'owner' ||
+                      cleanRole == 'lounge_owner' ||
+                      cleanRole == 'superadmin' ||
+                      cleanRole == 'super_admin';
     final isCashier = cleanRole == 'cashier';
 
     return [
@@ -159,7 +165,7 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
         category: 'category_pos',
         descriptionAr: 'رؤية قائمة الغرف والأجهزة في المكان',
         descriptionEn: 'View list of rooms and devices in the lounge',
-        isEnabled: true,
+        isEnabled: isManager,
       ),
       PermissionItemModel(
         key: 'rooms_manage',

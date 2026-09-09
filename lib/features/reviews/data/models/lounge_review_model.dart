@@ -41,12 +41,16 @@ class LoungeReviewModel extends LoungeReviewEntity {
         ? rawUserName
         : 'Anonymous Client';
 
-    final String? userAvatarUrl = (
+    final String? rawAvatar = (
       json['user_avatar'] ??
       json['avatar_url'] ??
       bookingProfileData?['avatar_url'] ??
       profileData?['avatar_url']
     )?.toString();
+
+    final String? userAvatarUrl = (rawAvatar != null && rawAvatar.trim().isNotEmpty)
+        ? rawAvatar.trim()
+        : null;
 
     DateTime parsedDate;
     try {

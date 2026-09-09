@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../domain/entities/user_entity.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
@@ -58,15 +57,31 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       
       debugPrint('AuthRemoteDataSource: Fetching profile for ID: $finalUserId');
 
-      // 1. Try RPC first (as requested)
-      // Note: get_my_profile RPC typically uses auth.uid() internally, 
-      // but if we have a specific userId, we might want a different RPC or eq query.
-      // For now, if userId is passed and is different from current user, RPC might not work as expected.
-      // But usually, userId passed here is the one just logged in.
+      // Check platform_super_admins table as single source of truth for Super Admin privilege
+      bool isPlatformSuperAdmin = false;
+      try {
+        final superAdminCheck = await supabaseClient
+            .from('platform_super_admins')
+            .select('user_id')
+            .eq('user_id', finalUserId)
+            .maybeSingle();
+        if (superAdminCheck != null) {
+          isPlatformSuperAdmin = true;
+          debugPrint('AuthRemoteDataSource: User $finalUserId confirmed as Platform Super Admin!');
+        }
+      } catch (e) {
+        debugPrint('AuthRemoteDataSource: platform_super_admins query check error: $e');
+      }
+
+      // 1. Try RPC first
       final response = await supabaseClient.rpc('get_my_profile');
       if (response != null) {
-        debugPrint('AuthRemoteDataSource: Profile found via RPC');
-        return UserModel.fromJson(Map<String, dynamic>.from(response));
+        final map = Map<String, dynamic>.from(response as Map);
+        if (isPlatformSuperAdmin) {
+          map['role'] = 'super_admin';
+        }
+        debugPrint('AuthRemoteDataSource: Profile found via RPC (isPlatformSuperAdmin: $isPlatformSuperAdmin)');
+        return UserModel.fromJson(map);
       }
 
       // 2. Fallback: Direct table select if RPC returns null
@@ -78,8 +93,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           .maybeSingle();
 
       if (tableResponse != null) {
-        debugPrint('AuthRemoteDataSource: Profile found via direct select: $tableResponse');
-        return UserModel.fromJson(Map<String, dynamic>.from(tableResponse));
+        final map = Map<String, dynamic>.from(tableResponse as Map);
+        if (isPlatformSuperAdmin) {
+          map['role'] = 'super_admin';
+        }
+        debugPrint('AuthRemoteDataSource: Profile found via direct select: $map (isPlatformSuperAdmin: $isPlatformSuperAdmin)');
+        return UserModel.fromJson(map);
       }
       
       debugPrint('AuthRemoteDataSource: Profile record totally missing in profiles table');

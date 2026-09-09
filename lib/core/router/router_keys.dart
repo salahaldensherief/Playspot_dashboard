@@ -15,6 +15,7 @@ class RouterKeys {
 
   // Lounge Admin
   static const String loungeOnboarding = '/onboarding';
+  static const String kycPending = '/kyc-pending';
   static const String loungeAdminDashboard = '/lounge-admin/dashboard';
   static const String loungeAdminLiveOps = '/lounge-admin/live-operations';
   static const String loungeAdminRooms = '/lounge-admin/rooms';

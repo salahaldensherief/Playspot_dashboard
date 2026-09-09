@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import '../../../../../art_core/widgets/app_cached_image.dart';
 import '../shift_cubit.dart';
 import '../shift_state.dart';
 import '../../../domain/entities/live_shift_overview_entity.dart';
@@ -147,13 +148,18 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
       child: Row(
         children: [
           // Cashier Profile
-          CircleAvatar(
-            radius: 24.r,
-            backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
-            backgroundImage: overview.cashierAvatar != null ? NetworkImage(overview.cashierAvatar ?? '') : null,
-            child: overview.cashierAvatar == null 
-              ? Icon(Icons.person, color: AppColors.neonBlue, size: 24.r) 
-              : null,
+          Builder(
+            builder: (context) {
+              final bool hasAvatar = overview.cashierAvatar != null && overview.cashierAvatar!.trim().isNotEmpty;
+              return CircleAvatar(
+                radius: 24.r,
+                backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
+                backgroundImage: hasAvatar ? AppCachedImage.provider(overview.cashierAvatar) : null,
+                child: !hasAvatar 
+                  ? Icon(Icons.person, color: AppColors.neonBlue, size: 24.r) 
+                  : null,
+              );
+            },
           ),
           SizedBox(width: 16.w),
           Column(
@@ -216,10 +222,15 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 20.r,
-                backgroundImage: overview.cashierAvatar != null ? NetworkImage(overview.cashierAvatar ?? '') : null,
-                child: overview.cashierAvatar == null ? Icon(Icons.person, size: 20.r) : null,
+              Builder(
+                builder: (context) {
+                  final bool hasAvatar = overview.cashierAvatar != null && overview.cashierAvatar!.trim().isNotEmpty;
+                  return CircleAvatar(
+                    radius: 20.r,
+                    backgroundImage: hasAvatar ? AppCachedImage.provider(overview.cashierAvatar) : null,
+                    child: !hasAvatar ? Icon(Icons.person, size: 20.r) : null,
+                  );
+                },
               ),
               SizedBox(width: 12.w),
               Expanded(

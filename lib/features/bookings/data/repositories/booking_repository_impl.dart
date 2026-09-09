@@ -44,7 +44,7 @@ class BookingRepositoryImpl implements BookingRepository {
       await remoteDataSource.updateBookingStatus(id, status.toDbString());
       return const Right(null);
     } on PostgrestException catch (e) {
-      if (e.code == '23P01') {
+      if (e.code == '23P01' || e.message.contains('bookings_room_booking_period_excl') || e.message.contains('exclusion')) {
         return const Left(ServerFailure('الوقت المحدد تم حجزه بالفعل، يرجى اختيار وقت آخر'));
       }
       return Left(ServerFailure(e.message));
@@ -106,7 +106,7 @@ class BookingRepositoryImpl implements BookingRepository {
       await remoteDataSource.createBooking(model);
       return const Right(null);
     } on PostgrestException catch (e) {
-      if (e.code == '23P01') {
+      if (e.code == '23P01' || e.message.contains('bookings_room_booking_period_excl') || e.message.contains('exclusion')) {
         return const Left(ServerFailure('الوقت المحدد تم حجزه بالفعل، يرجى اختيار وقت آخر'));
       }
       return Left(ServerFailure(e.message));
@@ -120,6 +120,11 @@ class BookingRepositoryImpl implements BookingRepository {
     try {
       await remoteDataSource.swapRoom(bookingId, newRoomId, actionBy);
       return const Right(null);
+    } on PostgrestException catch (e) {
+      if (e.code == '23P01' || e.message.contains('bookings_room_booking_period_excl') || e.message.contains('exclusion')) {
+        return const Left(ServerFailure('الغرفة الجديدة محجوزة في هذا الوقت، يرجى اختيار غرفة أخرى'));
+      }
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

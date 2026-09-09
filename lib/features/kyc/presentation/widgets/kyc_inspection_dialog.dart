@@ -4,6 +4,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_cached_image.dart';
 import '../../domain/entities/kyc_request.dart';
 import '../cubit/kyc_cubit.dart';
 
@@ -141,13 +142,9 @@ class KycInspectionDialog extends StatelessWidget {
               border: Border.all(color: AppColors.borderDefault),
             ),
             clipBehavior: Clip.antiAlias,
-            child: Image.network(
-              url,
+            child: AppCachedImage(
+              imageUrl: url,
               fit: BoxFit.contain,
-              loadingBuilder: (context, child, progress) => progress == null 
-                  ? child 
-                  : const Center(child: CircularProgressIndicator()),
-              errorBuilder: (context, error, _) => const Center(child: Icon(Icons.broken_image_outlined, size: 48, color: AppColors.danger)),
             ),
           ),
         ),
@@ -184,7 +181,7 @@ class KycInspectionDialog extends StatelessWidget {
         backgroundColor: Colors.transparent,
         insetPadding: EdgeInsets.all(40.r),
         child: InteractiveViewer(
-          child: Image.network(url),
+          child: AppCachedImage(imageUrl: url, fit: BoxFit.contain),
         ),
       ),
     );

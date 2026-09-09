@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_cached_image.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
@@ -308,7 +309,7 @@ class _LoungeReviewsPageState extends State<LoungeReviewsPage> {
                 radius: 18.r,
                 backgroundColor: AppColors.neonBlue.withValues(alpha: 0.15),
                 backgroundImage: (avatarUrl != null && avatarUrl.trim().isNotEmpty)
-                    ? NetworkImage(avatarUrl)
+                    ? AppCachedImage.provider(avatarUrl)
                     : null,
                 child: (avatarUrl == null || avatarUrl.trim().isEmpty)
                     ? Text(

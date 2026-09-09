@@ -30,6 +30,7 @@ void initOnboardingDI(GetIt sl) {
       addExtraUseCase: sl(),
       setupLoungeUseCase: sl(),
       locationService: sl(),
+      localCacheService: sl(),
     ),
   );
 }

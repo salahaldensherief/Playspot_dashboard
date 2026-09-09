@@ -15,6 +15,7 @@ import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_c
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_state.dart';
 import '../app_strings.dart';
 import '../theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_cached_image.dart';
 
 class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -95,6 +96,7 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
         final user = loginState.user;
         final loungeId = user?.loungeId;
         if (user == null ||
+            user.isSuperAdmin ||
             !user.canToggleLoungeStatus ||
             loungeId == null ||
             loungeId.isEmpty) {
@@ -201,6 +203,11 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget _buildNotificationIcon(BuildContext context) {
+    final user = context.read<LoginCubit>().state.user;
+    if (user == null || user.isSuperAdmin) {
+      return const SizedBox.shrink();
+    }
+
     return BlocBuilder<BookingCubit, BookingState>(
       buildWhen: (prev, curr) => prev.bookings != curr.bookings,
       builder: (context, state) {
@@ -319,11 +326,12 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget _buildAvatar(String? url) {
+    final bool hasAvatar = url != null && url.trim().isNotEmpty;
     return CircleAvatar(
       radius: 18.r,
       backgroundColor: AppColors.neonPurple.withValues(alpha: 0.2),
-      backgroundImage: url != null ? NetworkImage(url) : null,
-      child: url == null 
+      backgroundImage: hasAvatar ? AppCachedImage.provider(url) : null,
+      child: !hasAvatar 
         ? Icon(Icons.person, color: AppColors.neonPurple, size: 20.sp)
         : null,
     );

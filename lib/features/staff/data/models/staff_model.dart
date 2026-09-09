@@ -17,6 +17,13 @@ class StaffModel extends StaffEntity {
   });
 
   factory StaffModel.fromJson(Map<String, dynamic> json) {
+    final rawAvatar = (json['avatar_url'] ?? json['out_avatar_url'])?.toString();
+    final avatarUrl = (rawAvatar != null && rawAvatar.trim().isNotEmpty) ? rawAvatar.trim() : null;
+    final rawFront = (json['id_front_url'] ?? json['out_id_front_url'] ?? json['id_document_url'])?.toString();
+    final idFrontUrl = (rawFront != null && rawFront.trim().isNotEmpty) ? rawFront.trim() : null;
+    final rawBack = (json['id_back_url'] ?? json['out_id_back_url'])?.toString();
+    final idBackUrl = (rawBack != null && rawBack.trim().isNotEmpty) ? rawBack.trim() : null;
+
     return StaffModel(
       id: (json['staff_id'] ?? json['user_id'] ?? json['out_staff_id'] ?? json['id'])?.toString() ?? '',
       name: (json['full_name'] ?? json['out_full_name'] ?? json['name'] ?? '')?.toString() ?? '',
@@ -29,9 +36,9 @@ class StaffModel extends StaffEntity {
           ? DateTime.parse(json['out_created_at'].toString())
           : (json['created_at'] != null ? DateTime.parse(json['created_at'].toString()) : DateTime.now()),
       nationalIdNumber: (json['national_id_number'] ?? json['out_national_id_number'])?.toString(),
-      idFrontUrl: (json['id_front_url'] ?? json['out_id_front_url'] ?? json['id_document_url'])?.toString(),
-      idBackUrl: (json['id_back_url'] ?? json['out_id_back_url'])?.toString(),
-      avatarUrl: (json['avatar_url'] ?? json['out_avatar_url'])?.toString(),
+      idFrontUrl: idFrontUrl,
+      idBackUrl: idBackUrl,
+      avatarUrl: avatarUrl,
     );
   }
 

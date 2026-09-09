@@ -32,6 +32,8 @@
   "logout": "Logout",
   "logout_confirmation": "Logout Confirmation",
   "logout_warning": "Are you sure you want to log out?",
+  "close": "Close",
+  "contact": "Contact",
   "live_operations": "Live Operations",
   "rooms": "Rooms",
   "extras_menu": "Extras & Menu",

@@ -134,8 +134,43 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
       }
     }
 
-    // 3. Map lounges and attach owner profile details
+    // 3. Batch fetch room counts per lounge directly from public.rooms table
+    final loungeIds = rawList
+        .map((json) => (json['id'] ?? json['lounge_id'])?.toString())
+        .where((id) => id != null && id.trim().isNotEmpty)
+        .cast<String>()
+        .toSet()
+        .toList();
+
+    final Map<String, int> roomCountsMap = {};
+    if (loungeIds.isNotEmpty) {
+      try {
+        final roomsResponse = await client
+            .from('rooms')
+            .select('lounge_id, status')
+            .inFilter('lounge_id', loungeIds);
+
+        for (final r in roomsResponse as List) {
+          final rMap = Map<String, dynamic>.from(r as Map);
+          final lId = rMap['lounge_id']?.toString();
+          final status = rMap['status']?.toString();
+          if (lId != null && status != 'deleted') {
+            roomCountsMap[lId] = (roomCountsMap[lId] ?? 0) + 1;
+          }
+        }
+      } catch (e, stackTrace) {
+        AppLogger.warning('Room counts batch fetch failed', e, stackTrace);
+      }
+    }
+
+    // 4. Map lounges and attach owner profile details & room count
     return rawList.map((json) {
+      final lId = (json['id'] ?? json['lounge_id'])?.toString();
+      if (lId != null && roomCountsMap.containsKey(lId)) {
+        json['available_rooms'] ??= roomCountsMap[lId];
+        json['rooms_count'] ??= roomCountsMap[lId];
+      }
+
       final ownerId = json['owner_id']?.toString();
       if (ownerId != null && profilesMap.containsKey(ownerId)) {
         final p = profilesMap[ownerId]!;
@@ -163,6 +198,7 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     String? address,
     String? phone,
   }) async {
+    Map<String, dynamic> resMap;
     try {
       final response = await client.rpc('create_lounge_with_owner', params: {
         'p_owner_email': email,
@@ -173,17 +209,42 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
         'p_address': address,
         'p_phone': phone,
       });
-      return Map<String, dynamic>.from(response);
+      resMap = Map<String, dynamic>.from(response);
     } catch (e) {
-      final response = await client.rpc('super_admin_create_lounge_with_owner', params: {
-        'p_owner_email': email,
-        'p_owner_password': password,
-        'p_owner_name': ownerName,
-        'p_lounge_name': loungeName,
-        'p_city': city,
-      });
-      return Map<String, dynamic>.from(response);
+      if (e is PostgrestException && (e.code == '42501' || e.message.contains('permission denied'))) {
+        throw Exception('عفواً، لا تملك الصلاحية الكافية لإنشاء الصالة على الخادم.');
+      }
+      try {
+        final response = await client.rpc('super_admin_create_lounge_with_owner', params: {
+          'p_owner_email': email,
+          'p_owner_password': password,
+          'p_owner_name': ownerName,
+          'p_lounge_name': loungeName,
+          'p_city': city,
+        });
+        resMap = Map<String, dynamic>.from(response);
+      } on PostgrestException catch (pe) {
+        if (pe.code == '42501' || pe.message.contains('permission denied')) {
+          throw Exception('عفواً، تم رفض الإذن بإنشاء الصالة من قبل الخادم.');
+        }
+        throw Exception(pe.message);
+      } catch (e2) {
+        throw Exception(e2.toString());
+      }
     }
+
+    final ownerUserId = resMap['owner_user_id']?.toString() ?? resMap['owner_id']?.toString();
+
+    if (ownerUserId != null && ownerUserId.isNotEmpty) {
+      try {
+        await client.from('profiles').update({
+          'role': 'owner',
+          'is_setup_completed': false,
+        }).eq('id', ownerUserId);
+      } catch (_) {}
+    }
+
+    return resMap;
   }
 
   @override

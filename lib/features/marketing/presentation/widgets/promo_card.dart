@@ -23,9 +23,9 @@ class PromoCard extends StatelessWidget {
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.borderDefault),
-        image: promo.imageUrl != null
+        image: (promo.imageUrl != null && promo.imageUrl!.trim().isNotEmpty)
             ? DecorationImage(
-                image: CachedNetworkImageProvider(promo.imageUrl!),
+                image: CachedNetworkImageProvider(promo.imageUrl!.trim()),
                 fit: BoxFit.cover,
                 colorFilter: ColorFilter.mode(
                   Colors.black.withOpacity(0.4),

@@ -20,6 +20,9 @@ class PromoModel extends PromoEntity {
   });
 
   factory PromoModel.fromJson(Map<String, dynamic> json) {
+    final rawImage = json['image_url']?.toString();
+    final imageUrl = (rawImage != null && rawImage.trim().isNotEmpty) ? rawImage.trim() : null;
+
     return PromoModel(
       id: json['id']?.toString() ?? '',
       titleAr: json['title_ar']?.toString() ?? '',
@@ -28,7 +31,7 @@ class PromoModel extends PromoEntity {
       tagEn: json['tag_en']?.toString() ?? '',
       hexColors: List<String>.from(json['colors'] ?? []),
       iconKey: json['icon_key']?.toString() ?? '',
-      imageUrl: json['image_url'],
+      imageUrl: imageUrl,
       deepLink: json['deep_link'],
       loungeId: json['lounge_id']?.toString(),
       roomId: json['room_id']?.toString(),
@@ -40,20 +43,24 @@ class PromoModel extends PromoEntity {
   }
 
   Map<String, dynamic> toJson() {
+    final validColors = hexColors.length >= 2 ? hexColors : ['#1E88E5', '#1565C0'];
+    final title = titleEn.isNotEmpty ? titleEn : (titleAr.isNotEmpty ? titleAr : 'Special Offer');
+
     return {
-      'id': id,
+      if (id.isNotEmpty) 'id': id,
+      'title': title,
       'title_ar': titleAr,
       'title_en': titleEn,
       'tag_ar': tagAr,
       'tag_en': tagEn,
-      'colors': hexColors,
-      'icon_key': iconKey,
+      'colors': validColors,
+      'icon_key': iconKey.isNotEmpty ? iconKey : 'local_offer',
       'image_url': imageUrl,
       'deep_link': deepLink,
       'lounge_id': (loungeId != null && loungeId!.isNotEmpty) ? loungeId : null,
       'room_id': (roomId != null && roomId!.isNotEmpty) ? roomId : null,
       'expires_at': expiresAt?.toIso8601String(),
-      'tag': tag,
+      'tag': tag ?? (tagAr.isNotEmpty ? tagAr : tagEn),
       'is_room_specific': isRoomSpecific,
       'target_audience': targetAudience,
     };

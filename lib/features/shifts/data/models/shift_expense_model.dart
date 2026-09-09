@@ -36,11 +36,17 @@ class ShiftExpenseModel extends ShiftExpenseEntity {
   }
 
   Map<String, dynamic> toJson() {
+    final validExpenseType = ['cash_drop', 'expense', 'other'].contains(type.toLowerCase().trim())
+        ? type.toLowerCase().trim()
+        : 'expense';
+
     return {
+      if (id.isNotEmpty) 'id': id,
       'shift_id': shiftId,
       'lounge_id': loungeId,
       'amount': amount,
       'type': type,
+      'expense_type': validExpenseType,
       'reason': reason,
       if (createdBy != null) 'created_by': createdBy,
     };

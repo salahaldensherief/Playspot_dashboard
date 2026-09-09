@@ -41,7 +41,10 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
     _emailController = TextEditingController(text: widget.staff?.email);
     _phoneController = TextEditingController(text: widget.staff?.phone);
     _passwordController = TextEditingController();
-    _selectedRole = widget.staff?.role ?? 'cashier';
+    final rawRole = (widget.staff?.role ?? 'cashier').toLowerCase().trim();
+    _selectedRole = (rawRole == 'owner' || rawRole == 'lounge_owner' || rawRole == 'lounge_admin')
+        ? 'lounge_owner'
+        : rawRole;
   }
 
   @override
@@ -155,17 +158,18 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
   }
 
   Widget _buildRoleSelection() {
+    final bool isOwnerOrManager = _selectedRole == 'lounge_owner' || _selectedRole == 'owner' || _selectedRole == 'manager';
     return Row(
       children: [
         RoleChip(
           label: AppStrings.cashierLabel,
-          isSelected: _selectedRole == 'cashier',
+          isSelected: !isOwnerOrManager,
           onTap: () => setState(() => _selectedRole = 'cashier'),
         ),
         SizedBox(width: 12.w),
         RoleChip(
           label: AppStrings.manager,
-          isSelected: _selectedRole == 'lounge_owner',
+          isSelected: isOwnerOrManager,
           onTap: () => setState(() => _selectedRole = 'lounge_owner'),
         ),
       ],

@@ -9,6 +9,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/marketing/presentation/cubit/marketing_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
+import '../../../../art_core/widgets/app_cached_image.dart';
 import '../../domain/entities/promo_entity.dart';
 import 'promo_form_section.dart';
 import 'design_style_section.dart';
@@ -185,9 +186,9 @@ class _PromoDialogState extends State<PromoDialog> {
                                             image: MemoryImage(_selectedImageBytes!),
                                             fit: BoxFit.cover,
                                           )
-                                        : (_currentImageUrl != null)
+                                        : (_currentImageUrl != null && _currentImageUrl!.trim().isNotEmpty)
                                             ? DecorationImage(
-                                                image: NetworkImage(_currentImageUrl!),
+                                                image: AppCachedImage.provider(_currentImageUrl)!,
                                                 fit: BoxFit.cover,
                                               )
                                             : null,

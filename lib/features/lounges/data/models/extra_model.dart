@@ -18,6 +18,12 @@ class ExtraModel extends ExtraEntity {
   });
 
   factory ExtraModel.fromJson(Map<String, dynamic> json) {
+    String rawCategory = (json['category']?.toString() ?? 'other').toLowerCase().trim();
+    if (rawCategory == 'others') rawCategory = 'other';
+
+    final rawImage = json['image_url']?.toString();
+    final imageUrl = (rawImage != null && rawImage.trim().isNotEmpty) ? rawImage.trim() : null;
+
     return ExtraModel(
       id: json['id']?.toString() ?? '',
       loungeId: json['lounge_id']?.toString() ?? '',
@@ -25,11 +31,11 @@ class ExtraModel extends ExtraEntity {
       nameEn: (json['name_en'] ?? json['name'])?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
-      category: (json['category']?.toString() ?? 'others').toLowerCase().trim(),
+      category: rawCategory,
       iconKey: json['icon_key']?.toString(),
       // The backend uses 'is_available', so we invert it for 'isOutOfStock'
       isOutOfStock: json['is_available'] == false,
-      imageUrl: json['image_url']?.toString(),
+      imageUrl: imageUrl,
       stockQuantity: (json['stock_quantity'] as num?)?.toInt() ?? 0,
       trackStock: json['track_stock'] ?? false,
       minStockAlert: (json['min_stock_alert'] as num?)?.toInt() ?? 5,
@@ -37,17 +43,19 @@ class ExtraModel extends ExtraEntity {
   }
 
   Map<String, dynamic> toJson() {
+    String validCategory = category.toLowerCase().trim();
+    if (validCategory == 'others') validCategory = 'other';
+
     return {
       'id': id,
       'lounge_id': loungeId,
-      'name': nameEn,
+      'name': nameEn.isEmpty ? (nameAr.isEmpty ? 'Extra Item' : nameAr) : nameEn,
       'name_ar': nameAr,
       'name_en': nameEn,
       'price': price,
-      'category': category.toLowerCase().trim(),
+      'category': validCategory,
       'icon_key': iconKey,
       'is_available': !isOutOfStock,
-      'image_url': imageUrl,
       'stock_quantity': stockQuantity,
       'track_stock': trackStock,
       'min_stock_alert': minStockAlert,

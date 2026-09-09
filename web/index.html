@@ -47,44 +47,41 @@
       animation: elastic-scale 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
 
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .app-logo {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 20px rgba(0, 217, 255, 0.4));
+      margin-bottom: 16px;
+    }
+
+    .brand-title {
       font-family: 'Orbitron', sans-serif;
-      direction: ltr;
-    }
-
-    .logo-text {
-      font-size: 50px;
+      font-size: 32px;
       font-weight: 700;
-      color: white;
-      letter-spacing: -1px;
-    }
-
-    .joystick-icon {
-      width: 40px;
-      height: 40px;
-      background-color: #00D9FF;
-      -webkit-mask-image: url('joystik.svg');
-      mask-image: url('joystik.svg');
-      -webkit-mask-size: contain;
-      mask-size: contain;
-      -webkit-mask-repeat: no-repeat;
-      mask-repeat: no-repeat;
-      animation: wobble 0.6s ease-in-out infinite;
-      animation-delay: 0.8s;
+      color: #FFFFFF;
+      letter-spacing: 1px;
     }
 
     .tagline {
-      margin-top: 16px;
-      font-size: 18px;
+      margin-top: 10px;
+      font-size: 16px;
       color: #00D9FF;
-      text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+      text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
       opacity: 0;
       animation: fade-in 0.8s ease-in forwards;
       animation-delay: 0.3s;
-      font-weight: 400;
+      font-weight: 500;
+    }
+
+    .spinner {
+      margin-top: 28px;
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(0, 217, 255, 0.2);
+      border-top: 3px solid #00D9FF;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
     }
 
     @keyframes elastic-scale {
@@ -92,12 +89,9 @@
       100% { transform: scale(1); opacity: 1; }
     }
 
-    @keyframes wobble {
-      0%, 100% { transform: rotate(0deg); }
-      15% { transform: rotate(17deg); }
-      45% { transform: rotate(-17deg); }
-      75% { transform: rotate(17deg); }
-      85% { transform: rotate(0deg); }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     @keyframes fade-in {
@@ -108,12 +102,10 @@
 </head>
 <body>
   <div id="splash">
-    <div class="logo-container">
-      <span class="logo-text">PlaySp</span>
-      <div class="joystick-icon"></div>
-      <span class="logo-text">t</span>
-    </div>
-    <div class="tagline">Book, Play & Win</div>
+    <img class="app-logo" src="favicon.png" alt="PlaySpot Logo" />
+    <div class="brand-title">PlaySpot</div>
+    <div class="tagline">Dashboard Platform</div>
+    <div class="spinner"></div>
   </div>
 
   <script src="flutter_bootstrap.js" async></script>

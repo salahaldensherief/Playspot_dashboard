@@ -24,6 +24,7 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
           .from('rooms')
           .select('*, room_activities(*, activity_types(*))')
           .eq('lounge_id', loungeId)
+          .neq('status', 'deleted')
           .order('created_at', ascending: true);
       return (response as List).map((json) => RoomModel.fromJson(json)).toList();
     } catch (e) {
@@ -31,7 +32,8 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
       final response = await _supabase
           .from('rooms')
           .select('*')
-          .eq('lounge_id', loungeId);
+          .eq('lounge_id', loungeId)
+          .neq('status', 'deleted');
       return (response as List).map((json) => RoomModel.fromJson(json)).toList();
     }
   }
@@ -82,6 +84,10 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
 
   @override
   Future<void> deleteRoom(String roomId) async {
-    await _supabase.from('rooms').update({'status': 'deleted'}).eq('id', roomId);
+    try {
+      await _supabase.from('rooms').delete().eq('id', roomId);
+    } catch (_) {
+      await _supabase.from('rooms').update({'status': 'deleted'}).eq('id', roomId);
+    }
   }
 }

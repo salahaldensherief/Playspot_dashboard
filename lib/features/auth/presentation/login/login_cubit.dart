@@ -116,8 +116,8 @@ class LoginCubit extends Cubit<LoginState> {
     emit(state.copyWith(locationCaptured: true));
   }
 
-  Future<void> refreshUserLounge(String loungeId) async {
-    final loungeResult = await loungeRepository.getLoungeById(loungeId);
+  Future<void> refreshUserLounge(String loungeId, {bool forceRefresh = true}) async {
+    final loungeResult = await loungeRepository.getLoungeById(loungeId, forceRefresh: forceRefresh);
     loungeResult.fold(
       (_) => null,
       (lounge) => emit(state.copyWith(userLounge: lounge)),

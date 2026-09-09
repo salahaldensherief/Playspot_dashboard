@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import 'package:play_spot_dashboard/art_core/assets_manager.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
@@ -78,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
             height: 300.r,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.neonBlue.withOpacity(0.05),
+              color: AppColors.neonBlue.withValues(alpha: 0.05),
             ),
           ),
         ),
@@ -90,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
             height: 300.r,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.neonPurple.withOpacity(0.05),
+              color: AppColors.neonPurple.withValues(alpha: 0.05),
             ),
           ),
         ),
@@ -101,11 +102,17 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildLogo() {
     return Column(
       children: [
-        LogoWidget(
-          fontSize: 48.sp,
-          width: 50.w,
-          height: 50.h,
-          color: AppColors.neonBlue,
+        Image.asset(
+          AssetsManager.logo,
+          width: 90.r,
+          height: 90.r,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => LogoWidget(
+            fontSize: 48.sp,
+            width: 50.w,
+            height: 50.h,
+            color: AppColors.neonBlue,
+          ),
         ),
         SizedBox(height: 16.h),
         Text(

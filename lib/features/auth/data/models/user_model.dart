@@ -18,6 +18,8 @@ class UserModel extends UserEntity {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     debugPrint('UserModel: parsing profile JSON: $json');
     final rawRoleStr = (json['role'] ?? json['out_role'])?.toString();
+    final rawAvatar = (json['avatar_url'] ?? json['out_avatar_url'])?.toString();
+    final avatar = (rawAvatar != null && rawAvatar.trim().isNotEmpty) ? rawAvatar.trim() : null;
     return UserModel(
       id: (json['id'] ?? json['user_id'] ?? json['staff_id'])?.toString() ?? '',
       email: (json['email'] ?? json['out_email'] ?? '')?.toString() ?? '',
@@ -25,7 +27,7 @@ class UserModel extends UserEntity {
       role: roleFromString(rawRoleStr),
       rawRole: rawRoleStr,
       loungeId: (json['lounge_id'] ?? json['out_lounge_id'])?.toString(),
-      avatarUrl: json['avatar_url']?.toString(),
+      avatarUrl: avatar,
       isSetupCompleted: json['is_setup_completed'] ?? json['out_is_setup_completed'] ?? false,
       pointsBalance: (json['points_balance'] ?? json['reward_points'] ?? json['points'] as num?)?.toInt() ?? 0,
       referralCount: (json['referral_count'] ?? json['referrals_count'] ?? json['referrals'] as num?)?.toInt() ?? 0,
@@ -33,14 +35,16 @@ class UserModel extends UserEntity {
   }
 
   static UserRole roleFromString(String? role) {
-    switch (role?.toLowerCase()) {
+    switch (role?.toLowerCase().trim()) {
       case 'super_admin':
+      case 'superadmin':
         return UserRole.superAdmin;
       case 'owner':
       case 'lounge_owner':
         return UserRole.owner;
       case 'manager':
       case 'lounge_admin':
+      case 'admin':
         return UserRole.manager;
       case 'cashier':
         return UserRole.cashier;
