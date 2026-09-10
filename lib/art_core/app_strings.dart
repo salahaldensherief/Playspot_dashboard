@@ -233,6 +233,7 @@ class AppStrings {
   static String get pendingRequests => 'pending_requests'.tr();
   static String get activeBookings => 'active_bookings'.tr();
   static String get finishedToday => 'finished_today'.tr();
+  static String get today => 'today'.tr();
   static String get dailyTotal => 'daily_total'.tr();
   static String get cashInHand => 'cash_in_hand'.tr();
   static String get monthlyReports => 'monthly_reports'.tr();

@@ -446,9 +446,18 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     debugPrint('🔵 [REQUESTS_DATA_SOURCE] Marking request as attended: id=$id, isCanteenOrder=$isCanteenOrder');
     _locallyAttendedIds.add(id);
 
+    // Extract raw DB ID without prefixes
+    String rawDbId = id
+        .replaceFirst('canteen_', '')
+        .replaceFirst('notif_', '')
+        .replaceFirst('sc_', '')
+        .replaceFirst('item_', '')
+        .replaceFirst('ext_', '');
+
+    debugPrint('🔵 [REQUESTS_DATA_SOURCE] Clean DB ID: $rawDbId (original ID: $id)');
+
     try {
       if (id.startsWith('sc_')) {
-        final serviceCallId = id.replaceFirst('sc_', '');
         try {
           await client
               .from('service_calls')
@@ -457,68 +466,71 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
                 'is_attended': true,
                 'is_read': true,
               })
-              .eq('id', serviceCallId);
-        } catch (_) {
+              .eq('id', rawDbId);
+        } catch (e) {
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] service_calls update error: $e');
           await client
               .from('service_calls')
-              .update({
-                'status': 'resolved',
-              })
-              .eq('id', serviceCallId);
+              .update({'status': 'resolved'})
+              .eq('id', rawDbId);
         }
+      } else if (id.startsWith('ext_')) {
+        await client
+            .from('bookings')
+            .update({'extension_status': 'approved'})
+            .eq('id', rawDbId);
       } else if (id.startsWith('item_')) {
-        final itemId = id.replaceFirst('item_', '');
         try {
           await client
               .from('booking_items')
               .update({
                 'is_attended': true,
                 'is_read': true,
+                'status': 'completed',
               })
-              .eq('id', itemId);
-        } catch (_) {
-          try {
-            await client
-                .from('booking_items')
-                .update({
-                  'status': 'completed',
-                })
-                .eq('id', itemId);
-          } catch (_) {
-            debugPrint('ℹ️ [REQUESTS_DATA_SOURCE] booking_items $itemId marked attended locally');
-          }
+              .eq('id', rawDbId);
+        } catch (e) {
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] booking_items update error: $e');
         }
-      } else if (id.startsWith('ext_')) {
-        final bookingId = id.replaceFirst('ext_', '');
-        try {
-          await client
-              .from('bookings')
-              .update({
-                'extension_status': 'approved',
-              })
-              .eq('id', bookingId);
-        } catch (_) {}
-      } else if (isCanteenOrder) {
+      } else if (id.startsWith('canteen_') || isCanteenOrder) {
+        // Canteen Orders: update canteen_orders status to 'completed' so backend triggers compute booking totals
         try {
           await client
               .from('canteen_orders')
               .update({
                 'status': 'completed',
                 'is_attended': true,
+                'is_read': true,
               })
-              .eq('id', id);
-        } catch (_) {
+              .eq('id', rawDbId);
+          debugPrint('🟢 [CANTEEN_SYNC] Marked canteen_order $rawDbId as completed in DB');
+        } catch (e) {
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] canteen_orders update error: $e');
           try {
             await client
                 .from('canteen_orders')
-                .update({
-                  'status': 'completed',
-                })
-                .eq('id', id);
-          } catch (_) {}
+                .update({'status': 'completed'})
+                .eq('id', rawDbId);
+          } catch (e2) {
+            debugPrint('⚠️ [REQUESTS_DATA_SOURCE] canteen_orders fallback error: $e2');
+          }
         }
+
+        // Fail-safe updates for matching ID in related tables
+        try {
+          await client
+              .from('booking_items')
+              .update({'is_attended': true, 'is_read': true, 'status': 'completed'})
+              .eq('id', rawDbId);
+        } catch (_) {}
+        try {
+          await client
+              .from('notifications')
+              .update({'is_read': true, 'is_attended': true})
+              .eq('id', rawDbId);
+        } catch (_) {}
       } else {
-        final notifId = id.replaceFirst('notif_', '');
+        // Notifications / General Requests
         try {
           await client
               .from('notifications')
@@ -526,31 +538,29 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
                 'is_read': true,
                 'is_attended': true,
               })
-              .eq('id', notifId);
-        } catch (_) {
+              .eq('id', rawDbId);
+        } catch (e) {
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] notifications update 1 error: $e');
           try {
             await client
                 .from('notifications')
-                .update({
-                  'is_read': true,
-                })
-                .eq('id', notifId);
-          } catch (_) {
-            try {
-              await client
-                  .from('client_requests')
-                  .update({
-                    'is_read': true,
-                    'is_attended': true,
-                  })
-                  .eq('id', notifId);
-            } catch (_) {}
+                .update({'is_read': true})
+                .eq('id', rawDbId);
+          } catch (e2) {
+            debugPrint('⚠️ [REQUESTS_DATA_SOURCE] notifications update 2 error: $e2');
           }
         }
+
+        try {
+          await client
+              .from('canteen_orders')
+              .update({'status': 'completed', 'is_attended': true, 'is_read': true})
+              .eq('id', rawDbId);
+        } catch (_) {}
       }
-      debugPrint('🟢 [REQUESTS_DATA_SOURCE] Successfully marked request $id as attended');
+      debugPrint('🟢 [REQUESTS_DATA_SOURCE] Successfully marked request $id (rawDbId: $rawDbId) as attended in DB');
     } catch (e) {
-      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Notice during DB update for $id: $e');
+      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Exception during DB update for $id: $e');
     }
   }
 }

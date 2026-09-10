@@ -180,10 +180,10 @@ class DashboardSidebar extends StatelessWidget {
         onTap: () => context.go(RouterKeys.superAdminKyc),
       ),
       _SidebarItem(
-        icon: Icons.history_outlined,
-        label: AppStrings.shiftHistory,
-        isActive: activeRoute == AppStrings.shiftHistory,
-        onTap: () => context.go(RouterKeys.superAdminShifts),
+        icon: Icons.card_giftcard_outlined,
+        label: AppStrings.loyaltyRewards,
+        isActive: activeRoute == AppStrings.loyaltyRewards,
+        onTap: () => context.go(RouterKeys.superAdminLoyalty),
       ),
     ];
   }

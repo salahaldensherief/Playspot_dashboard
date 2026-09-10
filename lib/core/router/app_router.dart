@@ -303,12 +303,6 @@ class AppRouter {
                   ),
                 ),
                 GoRoute(
-                  path: RouterKeys.superAdminShifts,
-                  pageBuilder: (context, state) => const NoTransitionPage(
-                    child: shifts.ShiftHistoryScreen(),
-                  ),
-                ),
-                GoRoute(
                   path: RouterKeys.loungeAdminDashboard,
                   pageBuilder: (context, state) {
                     final user = context.read<LoginCubit>().state.user;

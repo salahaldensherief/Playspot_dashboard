@@ -239,8 +239,10 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   @override
   Future<void> startBookingSession(String bookingId) async {
     debugPrint('🔵 [DATA_SOURCE] Calling RPC start_booking_session for bookingId=$bookingId');
+    final userId = client.auth.currentUser?.id;
     await client.rpc('start_booking_session', params: {
       'p_booking_id': bookingId,
+      'p_action_by': userId ?? '',
     });
     debugPrint('🟢 [DATA_SOURCE] RPC start_booking_session successful!');
   }

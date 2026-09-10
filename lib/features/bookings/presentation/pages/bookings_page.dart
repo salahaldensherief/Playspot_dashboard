@@ -17,6 +17,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booki
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_details_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_session_card.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_occupancy_grid.dart';
+import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_state.dart';
@@ -203,7 +204,11 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                     isPending = true;
                     break;
                   case 2:
-                    displayedBookings = state.bookings.where((b) => b.status == BookingStatus.completed).toList();
+                    final activeShift = context.read<ShiftCubit>().state.activeShift;
+                    final userLounge = context.read<LoginCubit>().state.userLounge;
+                    displayedBookings = state.bookings
+                        .where((b) => _isBookingInCurrentShiftOrToday(b, activeShift, userLounge: userLounge))
+                        .toList();
                     emptyMsg = AppStrings.noFinishedBookings;
                     isAudit = true;
                     break;
@@ -369,14 +374,60 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     );
   }
 
+  bool _isBookingInCurrentShiftOrToday(Booking booking, dynamic activeShift, {Lounge? userLounge}) {
+    if (booking.status != BookingStatus.completed) return false;
+
+    // RULE 1: If there is an Active Open Shift -> The Operational Day is defined by the Open Shift!
+    if (activeShift != null) {
+      if (booking.shiftId != null && booking.shiftId == activeShift.id) {
+        return true;
+      }
+      final DateTime startTime = activeShift.startTime;
+      return booking.date.isAfter(startTime.subtract(const Duration(minutes: 15))) ||
+          booking.date.isAtSameMomentAs(startTime);
+    }
+
+    // RULE 2: If No Active Shift -> Calculate Operational Day based on Lounge Opening Hours / 5:00 AM Threshold
+    final now = DateTime.now();
+
+    // Default threshold for overnight lounges: 5:00 AM
+    int thresholdHour = 5;
+
+    // If Lounge has registered opening time (e.g. "12:00" or "14:00")
+    if (userLounge != null && userLounge.opensAt.isNotEmpty) {
+      final parts = userLounge.opensAt.split(':');
+      if (parts.isNotEmpty) {
+        final parsedHour = int.tryParse(parts[0]);
+        if (parsedHour != null && parsedHour >= 0 && parsedHour <= 23) {
+          thresholdHour = parsedHour;
+        }
+      }
+    }
+
+    // Calculate Operational Day Start Time
+    final DateTime operationalDayStart;
+    if (now.hour < thresholdHour) {
+      // It is past midnight (e.g. 2:00 AM), so we are still in the operational day that started yesterday at thresholdHour!
+      final yesterday = now.subtract(const Duration(days: 1));
+      operationalDayStart = DateTime(yesterday.year, yesterday.month, yesterday.day, thresholdHour);
+    } else {
+      // It is past the threshold hour today (e.g. 2:00 PM), so today's operational day started at thresholdHour today!
+      operationalDayStart = DateTime(now.year, now.month, now.day, thresholdHour);
+    }
+
+    return booking.date.isAfter(operationalDayStart) || booking.date.isAtSameMomentAs(operationalDayStart);
+  }
+
   Widget _buildLiveStatsHeader(BuildContext context) {
     return BlocBuilder<BookingCubit, BookingState>(
       buildWhen: (prev, curr) => prev.bookings != curr.bookings,
       builder: (context, state) {
+        final activeShift = context.read<ShiftCubit>().state.activeShift;
+        final userLounge = context.read<LoginCubit>().state.userLounge;
         final activeCount = state.bookings.where((b) => b.isBookingActive()).length;
         final pendingCount = state.bookings.where((b) => b.status == BookingStatus.pending).length;
         final totalRevenue = state.bookings
-            .where((b) => b.status == BookingStatus.completed)
+            .where((b) => _isBookingInCurrentShiftOrToday(b, activeShift, userLounge: userLounge))
             .fold(0.0, (sum, item) => sum + item.totalPrice);
 
         return Responsive(

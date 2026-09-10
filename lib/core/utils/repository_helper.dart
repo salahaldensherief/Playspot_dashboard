@@ -16,8 +16,10 @@ mixin RepositoryHelper {
           e.message.contains('no_overlapping_room_bookings')) {
         return Left(ServerFailure(AppStrings.overlappingBookingError.tr()));
       }
-      if (e.code == '42501' || e.message.contains('permission denied')) {
-        return Left(ServerFailure("Permission denied for action (${e.code}): ${e.message}"));
+      if (e.code == '42501' ||
+          e.message.toLowerCase().contains('permission denied') ||
+          e.message.toLowerCase().contains('not authorized')) {
+        return Left(ServerFailure('صلاحيات الحساب لا تسمح بالوصول لهذه البيانات'));
       }
       
       return Left(ServerFailure("${e.code}: ${e.message}"));

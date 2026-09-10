@@ -305,6 +305,7 @@
   "reason_required": "Reason is required for discounts",
   "unpaid": "Unpaid",
   "finished_today": "Finished Today",
+  "today": "Today",
   "daily_total": "Daily Total",
   "monthly_reports": "Monthly Reports",
   "total_revenue": "Total Revenue",

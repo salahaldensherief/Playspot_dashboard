@@ -21,18 +21,18 @@ class ClientRequestsState extends Equatable {
   int get unreadCount => requests.where((r) => !r.isAttended || !r.isRead).length;
 
   List<ClientRequestEntity> get filteredRequests {
+    final activeRequests = requests.where((r) => !r.isAttended).toList();
     switch (filter) {
       case RequestFilter.callStaff:
-        return requests.where((r) => r.type == ClientRequestType.callStaff).toList();
+        return activeRequests.where((r) => r.type == ClientRequestType.callStaff).toList();
       case RequestFilter.canteenOrders:
-        return requests.where((r) => r.isCanteenOrder || r.type == ClientRequestType.canteenOrder).toList();
+        return activeRequests.where((r) => r.isCanteenOrder || r.type == ClientRequestType.canteenOrder).toList();
       case RequestFilter.extensionRequests:
-        return requests.where((r) => r.type == ClientRequestType.extendSession).toList();
+        return activeRequests.where((r) => r.type == ClientRequestType.extendSession).toList();
       case RequestFilter.unattendedOnly:
-        return requests.where((r) => !r.isAttended).toList();
+        return activeRequests;
       case RequestFilter.all:
-      default:
-        return requests;
+        return activeRequests;
     }
   }
 

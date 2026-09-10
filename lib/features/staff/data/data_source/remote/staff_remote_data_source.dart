@@ -84,13 +84,20 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
   @override
   Future<void> addStaffMember(AddStaffParams params) async {
     try {
-      debugPrint('Adding staff member via add_lounge_staff_member RPC with params: ${params.toJson()}');
-      await _supabase.rpc('add_lounge_staff_member', params: params.toJson());
-      debugPrint('Add staff RPC executed successfully');
+      debugPrint('Adding staff member via create_lounge_staff RPC with params: ${params.toJson()}');
+      await _supabase.rpc('create_lounge_staff', params: params.toJson());
+      debugPrint('create_lounge_staff RPC executed successfully');
       return;
     } catch (e) {
-      debugPrint('Error in add_lounge_staff_member RPC: $e');
-      rethrow;
+      debugPrint('create_lounge_staff failed ($e), falling back to add_lounge_staff_member...');
+      try {
+        await _supabase.rpc('add_lounge_staff_member', params: params.toJson());
+        debugPrint('add_lounge_staff_member RPC executed successfully');
+        return;
+      } catch (e2) {
+        debugPrint('Error in staff creation RPC: $e2');
+        rethrow;
+      }
     }
   }
 

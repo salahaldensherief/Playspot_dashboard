@@ -41,71 +41,39 @@
 
     #splash {
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       animation: elastic-scale 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
 
+    .logo-container {
+      padding: 16px 20px;
+      border: 2.5px solid #00D9FF;
+      border-radius: 24px;
+      background-color: #000000;
+      box-shadow: 0 0 30px rgba(0, 217, 255, 0.35);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     .app-logo {
-      width: 120px;
-      height: 120px;
+      width: 240px;
+      height: 150px;
       object-fit: contain;
-      filter: drop-shadow(0 0 20px rgba(0, 217, 255, 0.4));
-      margin-bottom: 16px;
-    }
-
-    .brand-title {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 32px;
-      font-weight: 700;
-      color: #FFFFFF;
-      letter-spacing: 1px;
-    }
-
-    .tagline {
-      margin-top: 10px;
-      font-size: 16px;
-      color: #00D9FF;
-      text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
-      opacity: 0;
-      animation: fade-in 0.8s ease-in forwards;
-      animation-delay: 0.3s;
-      font-weight: 500;
-    }
-
-    .spinner {
-      margin-top: 28px;
-      width: 32px;
-      height: 32px;
-      border: 3px solid rgba(0, 217, 255, 0.2);
-      border-top: 3px solid #00D9FF;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
     }
 
     @keyframes elastic-scale {
-      0% { transform: scale(0.5); opacity: 0; }
+      0% { transform: scale(0.85); opacity: 0; }
       100% { transform: scale(1); opacity: 1; }
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    @keyframes fade-in {
-      from { opacity: 0; }
-      to { opacity: 1; }
     }
   </style>
 </head>
 <body>
   <div id="splash">
-    <img class="app-logo" src="favicon.png" alt="PlaySpot Logo" />
-    <div class="brand-title">PlaySpot</div>
-    <div class="tagline">Dashboard Platform</div>
-    <div class="spinner"></div>
+    <div class="logo-container">
+      <img class="app-logo" src="favicon.png" alt="PlaySpot Logo" />
+    </div>
   </div>
 
   <script>
@@ -125,3 +93,4 @@
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
+

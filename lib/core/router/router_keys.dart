@@ -11,7 +11,6 @@ class RouterKeys {
   static const String superAdminPayouts = '/super-admin/payouts';
   static const String superAdminKyc = '/super-admin/kyc';
   static const String superAdminLoyalty = '/super-admin/loyalty';
-  static const String superAdminShifts = '/super-admin/shifts';
 
   // Lounge Admin
   static const String loungeOnboarding = '/onboarding';

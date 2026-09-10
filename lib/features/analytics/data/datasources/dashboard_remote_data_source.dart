@@ -267,19 +267,28 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   @override
   Future<void> endSession(String bookingId) async {
     debugPrint('🔵 [DASHBOARD_DATA_SOURCE] Ending active session: $bookingId');
+    final userId = supabaseClient.auth.currentUser?.id;
     try {
-      await supabaseClient.rpc('update_booking_status_admin', params: {
+      await supabaseClient.rpc('complete_booking_session', params: {
         'p_booking_id': bookingId,
-        'p_status': 'completed',
+        'p_action_by': userId ?? '',
       });
-      debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Session ended via RPC!');
+      debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Session ended via RPC complete_booking_session!');
     } catch (e) {
-      debugPrint('⚠️ [DASHBOARD_DATA_SOURCE] RPC endSession failed ($e), attempting direct update fallback...');
-      await supabaseClient
-          .from('bookings')
-          .update({'status': 'completed'})
-          .eq('id', bookingId);
-      debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Direct update endSession completed!');
+      debugPrint('⚠️ [DASHBOARD_DATA_SOURCE] RPC complete_booking_session failed ($e), falling back to update_booking_status_admin...');
+      try {
+        await supabaseClient.rpc('update_booking_status_admin', params: {
+          'p_booking_id': bookingId,
+          'p_status': 'completed',
+        });
+        debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Session ended via update_booking_status_admin!');
+      } catch (_) {
+        await supabaseClient
+            .from('bookings')
+            .update({'status': 'completed'})
+            .eq('id', bookingId);
+        debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Direct update endSession completed!');
+      }
     }
   }
 

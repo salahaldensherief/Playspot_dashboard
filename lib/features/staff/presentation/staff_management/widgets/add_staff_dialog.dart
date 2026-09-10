@@ -122,7 +122,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                   AppTextField(
                     label: AppStrings.tempPassword,
                     controller: _passwordController,
-                    validator: (v) => (v?.length ?? 0) < 6 ? AppStrings.passwordTooShort : null,
+                    validator: (v) => AppValidator.validatePassword(v, minLength: 8),
                     isPassword: true,
                   ),
                 ],
