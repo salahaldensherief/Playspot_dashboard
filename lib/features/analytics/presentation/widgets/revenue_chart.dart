@@ -28,80 +28,82 @@ class RevenueChart extends StatelessWidget {
           if (val > maxY) maxY = val;
         }
 
-        return LineChart(
-          LineChartData(
-            gridData: FlGridData(
-              show: true,
-              drawVerticalLine: false,
-              getDrawingHorizontalLine: (value) => FlLine(
-                color: AppColors.borderDefault.withOpacity(0.5),
-                strokeWidth: 1,
-                dashArray: [5, 5],
+        return RepaintBoundary(
+          child: LineChart(
+            LineChartData(
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                getDrawingHorizontalLine: (value) => FlLine(
+                  color: AppColors.borderDefault.withValues(alpha: 0.5),
+                  strokeWidth: 1,
+                  dashArray: [5, 5],
+                ),
               ),
-            ),
-            titlesData: FlTitlesData(
-              show: true,
-              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  getTitlesWidget: (value, meta) {
-                    final index = value.toInt();
-                    if (index >= 0 && index < state.revenueChart.length && index % 5 == 0) {
-                      final day = state.revenueChart[index]['day']?.toString() ?? '';
-                      return Padding(
-                        padding: EdgeInsets.only(top: 10.h),
-                        child: Text(
-                          day.length > 5 ? day.substring(5) : day, // Show MM-DD
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp),
-                        ),
+              titlesData: FlTitlesData(
+                show: true,
+                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (value, meta) {
+                      final index = value.toInt();
+                      if (index >= 0 && index < state.revenueChart.length && index % 5 == 0) {
+                        final day = state.revenueChart[index]['day']?.toString() ?? '';
+                        return Padding(
+                          padding: EdgeInsets.only(top: 10.h),
+                          child: Text(
+                            day.length > 5 ? day.substring(5) : day, // Show MM-DD
+                            style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp),
+                          ),
+                        );
+                      }
+                      return const SizedBox();
+                    },
+                    reservedSize: 30.h,
+                  ),
+                ),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (value, meta) {
+                      return Text(
+                        '${value.toInt()}',
+                        style: TextStyle(color: AppColors.textSecondary, fontSize: 9.sp),
                       );
-                    }
-                    return const SizedBox();
-                  },
-                  reservedSize: 30.h,
-                ),
-              ),
-              leftTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  getTitlesWidget: (value, meta) {
-                    return Text(
-                      '${value.toInt()}',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 9.sp),
-                    );
-                  },
-                  reservedSize: 40.w,
-                ),
-              ),
-            ),
-            borderData: FlBorderData(show: false),
-            minX: 0,
-            maxX: state.revenueChart.length.toDouble() - 1,
-            minY: 0,
-            maxY: maxY * 1.2,
-            lineBarsData: [
-              LineChartBarData(
-                spots: spots,
-                isCurved: true,
-                gradient: const LinearGradient(colors: [AppColors.neonBlue, AppColors.neonCyan]),
-                barWidth: 3.w,
-                isStrokeCapRound: true,
-                dotData: const FlDotData(show: false),
-                belowBarData: BarAreaData(
-                  show: true,
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.neonBlue.withOpacity(0.2),
-                      AppColors.neonBlue.withOpacity(0.0),
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+                    },
+                    reservedSize: 40.w,
                   ),
                 ),
               ),
-            ],
+              borderData: FlBorderData(show: false),
+              minX: 0,
+              maxX: state.revenueChart.length.toDouble() - 1,
+              minY: 0,
+              maxY: maxY * 1.2,
+              lineBarsData: [
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: true,
+                  gradient: const LinearGradient(colors: [AppColors.neonBlue, AppColors.neonCyan]),
+                  barWidth: 3.w,
+                  isStrokeCapRound: true,
+                  dotData: const FlDotData(show: false),
+                  belowBarData: BarAreaData(
+                    show: true,
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.neonBlue.withValues(alpha: 0.2),
+                        AppColors.neonBlue.withValues(alpha: 0.0),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

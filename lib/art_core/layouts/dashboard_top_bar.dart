@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:play_spot_dashboard/core/audio/audio_service.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
@@ -31,13 +30,13 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
     this.showMenuButton = false,
   });
 
-  static double get _defaultHeight => 64.h;
+  static double get _defaultHeight => 64.0;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: _defaultHeight,
-      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
       decoration: const BoxDecoration(
         color: AppColors.scaffoldBackground,
         border: Border(
@@ -45,44 +44,62 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          if (showMenuButton) ...[
-            IconButton(
-              icon: const Icon(Icons.menu, color: AppColors.textPrimary),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            ),
-            SizedBox(width: 8.w),
-          ],
-          if (leading != null) ...[
-            leading!,
-            SizedBox(width: 16.w),
-          ],
-          Flexible(
-            child: Text(
-              title,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-                fontFamily: 'Orbitron',
-              ),
+          // Left Side: Title & Menu/Leading
+          Expanded(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showMenuButton) ...[
+                  IconButton(
+                    icon: const Icon(Icons.menu, color: AppColors.textPrimary),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                if (leading != null) ...[
+                  leading!,
+                  const SizedBox(width: 16),
+                ],
+                Flexible(
+                  child: Text(
+                    title,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                      fontFamily: 'Orbitron',
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const Spacer(),
-          if (actions != null) ...[
-            ...actions!,
-            SizedBox(width: 16.w),
-          ] else ...[
-            _buildLoungeStatusToggle(context),
-            SizedBox(width: 16.w),
-            _buildAudioMuteToggle(context),
-            SizedBox(width: 16.w),
-            _buildNotificationIcon(context),
-            SizedBox(width: 16.w),
-          ],
-          _buildUserInfo(),
+
+          const SizedBox(width: 16),
+
+          // Right Side: Actions & User Info
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (actions != null) ...[
+                ...actions!,
+                const SizedBox(width: 16),
+              ] else ...[
+                _buildLoungeStatusToggle(context),
+                const SizedBox(width: 16),
+                _buildAudioMuteToggle(context),
+                const SizedBox(width: 16),
+                _buildNotificationIcon(context),
+                const SizedBox(width: 20),
+              ],
+              _buildUserInfo(),
+            ],
+          ),
         ],
       ),
     );
@@ -120,12 +137,12 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
 
             return Container(
               padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 8.w : 12.w,
-                vertical: 2.h,
+                horizontal: isMobile ? 8 : 12,
+                vertical: 4,
               ),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20.r),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: color.withValues(alpha: 0.3),
                 ),
@@ -134,24 +151,24 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 8.r,
-                    height: 8.r,
+                    width: 8,
+                    height: 8,
                     decoration: BoxDecoration(
                       color: color,
                       shape: BoxShape.circle,
                     ),
                   ),
-                  if (!isMobile) SizedBox(width: 8.w),
+                  if (!isMobile) const SizedBox(width: 8),
                   if (!isMobile)
                     Text(
                       isOpen ? AppStrings.loungeIsOpen : AppStrings.loungeIsClosed,
                       style: TextStyle(
                         color: color,
-                        fontSize: 12.sp,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  SizedBox(width: 4.w),
+                  const SizedBox(width: 4),
                   Transform.scale(
                     scale: 0.75,
                     child: Switch(
@@ -186,14 +203,14 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
         return Tooltip(
           message: isMuted ? 'Unmute Alerts' : 'Mute Alert Sound',
           child: InkWell(
-            borderRadius: BorderRadius.circular(20.r),
+            borderRadius: BorderRadius.circular(20),
             onTap: () => audioService.toggleMute(),
             child: Padding(
-              padding: EdgeInsets.all(4.r),
+              padding: const EdgeInsets.all(4),
               child: Icon(
                 isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
                 color: isMuted ? AppColors.textMuted : AppColors.neonBlue,
-                size: 22.r,
+                size: 22,
               ),
             ),
           ),
@@ -220,38 +237,38 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
               ? '$pendingCount ${AppStrings.pendingRequests}'
               : AppStrings.noNotifications,
           child: InkWell(
-            borderRadius: BorderRadius.circular(20.r),
+            borderRadius: BorderRadius.circular(20),
             onTap: () => context.go(RouterKeys.loungeAdminLiveOps),
             child: Padding(
-              padding: EdgeInsets.all(4.r),
+              padding: const EdgeInsets.all(4),
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.notifications_outlined,
                     color: AppColors.textSecondary,
-                    size: 24.r,
+                    size: 24,
                   ),
                   if (pendingCount > 0)
                     Positioned(
                       top: -2,
                       right: -2,
                       child: Container(
-                        padding: EdgeInsets.all(4.r),
+                        padding: const EdgeInsets.all(4),
                         decoration: const BoxDecoration(
                           color: AppColors.danger,
                           shape: BoxShape.circle,
                         ),
-                        constraints: BoxConstraints(
-                          minWidth: 16.r,
-                          minHeight: 16.r,
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
                         ),
                         child: Text(
                           '$pendingCount',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 9.sp,
+                            fontSize: 9,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -275,51 +292,44 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
 
         final bool isMobile = MediaQuery.sizeOf(context).width < 600;
 
-        return Container(
-          constraints: BoxConstraints(maxWidth: isMobile ? 50.w : 200.w),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (!isMobile)
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerRight,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          user.name,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          user.isSuperAdmin 
-                            ? AppStrings.superAdmin 
-                            : (user.isLoungeOwner 
-                                ? AppStrings.loungeOwnerLabel 
-                                : (user.isCashier ? AppStrings.cashierLabel : AppStrings.loungeManager)),
-                          style: TextStyle(
-                            color: AppColors.neonPurple,
-                            fontSize: 11.sp,
-                          ),
-                        ),
-                      ],
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (!isMobile) ...[
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    user.name,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-              if (!isMobile) SizedBox(width: 12.w),
-              _buildAvatar(user.avatarUrl),
+                  const SizedBox(height: 2),
+                  Text(
+                    user.isSuperAdmin 
+                      ? AppStrings.superAdmin 
+                      : (user.isLoungeOwner 
+                          ? AppStrings.loungeOwnerLabel 
+                          : (user.isCashier ? AppStrings.cashierLabel : AppStrings.loungeManager)),
+                    style: const TextStyle(
+                      color: AppColors.neonPurple,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 12),
             ],
-          ),
+            _buildAvatar(user.avatarUrl),
+          ],
         );
       },
     );
@@ -328,20 +338,20 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
   Widget _buildAvatar(String? url) {
     final bool hasAvatar = url != null && url.trim().isNotEmpty;
     return CircleAvatar(
-      radius: 18.r,
+      radius: 18,
       backgroundColor: AppColors.neonPurple.withValues(alpha: 0.2),
       backgroundImage: hasAvatar ? AppCachedImage.provider(url) : null,
       child: !hasAvatar 
-        ? Icon(Icons.person, color: AppColors.neonPurple, size: 20.sp)
+        ? const Icon(Icons.person, color: AppColors.neonPurple, size: 20)
         : null,
     );
   }
 
   Widget _buildDefaultAvatar() {
-    return CircleAvatar(
-      radius: 18.r,
+    return const CircleAvatar(
+      radius: 18,
       backgroundColor: AppColors.neonPurple,
-      child: Icon(Icons.person, color: Colors.white, size: 20.sp),
+      child: Icon(Icons.person, color: Colors.white, size: 20),
     );
   }
 

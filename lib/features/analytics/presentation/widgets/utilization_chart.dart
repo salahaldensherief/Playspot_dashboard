@@ -58,49 +58,51 @@ class UtilizationChart extends StatelessWidget {
               barGroups.add(_makeGroup(i, utilizationRate, color));
             }
 
-            return BarChart(
-              BarChartData(
-                alignment: BarChartAlignment.spaceAround,
-                maxY: 100,
-                barTouchData: BarTouchData(enabled: false),
-                titlesData: FlTitlesData(
-                  show: true,
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        final index = value.toInt();
-                        if (index >= 0 && index < roomNames.length) {
-                          return Padding(
-                            padding: EdgeInsets.only(top: 8.h),
-                            child: Text(
-                              roomNames[index],
-                              style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          );
-                        }
-                        return const SizedBox();
-                      },
-                    ),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 30.w,
-                      getTitlesWidget: (value, meta) => Text(
-                        '${value.toInt()}%',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp),
+            return RepaintBoundary(
+              child: BarChart(
+                BarChartData(
+                  alignment: BarChartAlignment.spaceAround,
+                  maxY: 100,
+                  barTouchData: BarTouchData(enabled: false),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          final index = value.toInt();
+                          if (index >= 0 && index < roomNames.length) {
+                            return Padding(
+                              padding: EdgeInsets.only(top: 8.h),
+                              child: Text(
+                                roomNames[index],
+                                style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }
+                          return const SizedBox();
+                        },
                       ),
                     ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 30.w,
+                        getTitlesWidget: (value, meta) => Text(
+                          '${value.toInt()}%',
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp),
+                        ),
+                      ),
+                    ),
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  gridData: FlGridData(show: false),
+                  borderData: FlBorderData(show: false),
+                  barGroups: barGroups,
                 ),
-                gridData: FlGridData(show: false),
-                borderData: FlBorderData(show: false),
-                barGroups: barGroups,
               ),
             );
           },

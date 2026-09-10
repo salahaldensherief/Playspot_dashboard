@@ -7,6 +7,7 @@ import '../../domain/repositories/room_repository.dart';
 class RoomCubit extends Cubit<RoomState> {
   final RoomRepository _repository;
   StreamSubscription? _subscription;
+  String? _watchedLoungeId;
 
   RoomCubit(this._repository) : super(const RoomState());
 
@@ -18,6 +19,12 @@ class RoomCubit extends Cubit<RoomState> {
       ));
       return;
     }
+
+    if (_subscription != null && _watchedLoungeId == loungeId) {
+      return;
+    }
+
+    _watchedLoungeId = loungeId;
     emit(state.copyWith(status: RoomStatus.loading));
     _subscription?.cancel();
     _subscription = _repository.watchRooms(loungeId).listen(

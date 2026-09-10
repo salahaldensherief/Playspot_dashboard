@@ -57,7 +57,7 @@ class DashboardShell extends StatelessWidget {
           title = AppStrings.manageRoomsDesc;
         } else if (location.contains('live-operations')) {
           activeRoute = AppStrings.bookings;
-          title = AppStrings.liveBookingsFeed;
+          title = AppStrings.bookings;
         } else if (location.contains('users')) {
           activeRoute = AppStrings.users;
           title = AppStrings.loungeAdministrators;

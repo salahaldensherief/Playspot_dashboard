@@ -39,6 +39,9 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  String? _lastInitializedLoungeId;
+  bool _isInitialized = false;
+
   @override
   void initState() {
     super.initState();
@@ -50,14 +53,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _initRealtimeStreams(String? loungeId) {
+    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
+
+    if (_isInitialized && _lastInitializedLoungeId == cleanLoungeId) {
+      return;
+    }
+    _isInitialized = true;
+    _lastInitializedLoungeId = cleanLoungeId;
+
     if (widget.role != UserRole.superAdmin) {
-      context.read<LoungeStatsCubit>().fetchStats(loungeId);
-      context.read<DashboardCubit>().startWatchingActiveSessions(loungeId: loungeId);
-      context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
-      if (loungeId != null && loungeId.isNotEmpty) {
-        context.read<RoomCubit>().watchRooms(loungeId);
-        context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: loungeId);
-        context.read<ReviewsCubit>().startWatchingReviews(loungeId: loungeId);
+      context.read<LoungeStatsCubit>().fetchStats(cleanLoungeId);
+      context.read<DashboardCubit>().startWatchingActiveSessions(loungeId: cleanLoungeId);
+      context.read<BookingCubit>().startWatchingBookings(loungeId: cleanLoungeId);
+      if (cleanLoungeId != null) {
+        context.read<RoomCubit>().watchRooms(cleanLoungeId);
+        context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId);
+        context.read<ReviewsCubit>().startWatchingReviews(loungeId: cleanLoungeId);
       }
     } else {
       context.read<DashboardCubit>().loadDashboardData();
@@ -81,8 +92,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class _SuperAdminDashboardView extends StatelessWidget {
-  const _SuperAdminDashboardView();
+class _ResponsiveDashboardLayout extends StatelessWidget {
+  final List<Widget> mainChildren;
+  final List<Widget> sideChildren;
+  final List<Widget>? mobileChildren;
+
+  const _ResponsiveDashboardLayout({
+    required this.mainChildren,
+    required this.sideChildren,
+    this.mobileChildren,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -90,54 +109,88 @@ class _SuperAdminDashboardView extends StatelessWidget {
       builder: (context, constraints) {
         final bool isDesktop = constraints.maxWidth >= 1200;
 
-        return SingleChildScrollView(
-          padding: EdgeInsets.all(20.r),
-          child: Column(
+        if (isDesktop) {
+          return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const DashboardHeader(isSuperAdmin: true),
-              SizedBox(height: 20.h),
-              const DashboardStatsGrid(isSuperAdmin: true),
-              SizedBox(height: 20.h),
-              if (isDesktop)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 7,
-                      child: Column(
-                        children: [
-                          SizedBox(
-                            height: 380.h,
-                            child: ChartCard(
-                              title: AppStrings.revenueAnalytics,
-                              subtitle: AppStrings.weeklyPerformance,
-                              actionIcon: Icons.trending_up,
-                              actionIconColor: AppColors.success,
-                              chart: const RevenueChart(),
-                            ),
-                          ),
-                          SizedBox(height: 20.h),
-                          const TopLoungesCard(),
-                        ],
+              Expanded(
+                flex: 7,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: mainChildren,
+                ),
+              ),
+              SizedBox(width: 20.w),
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: sideChildren,
+                ),
+              ),
+            ],
+          );
+        }
+
+        final items = mobileChildren ?? [...mainChildren, ...sideChildren];
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: items,
+        );
+      },
+    );
+  }
+}
+
+class _SuperAdminDashboardView extends StatelessWidget {
+  const _SuperAdminDashboardView();
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        await context.read<DashboardCubit>().loadDashboardData();
+      },
+      color: AppColors.neonBlue,
+      backgroundColor: AppColors.cardBackground,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: EdgeInsets.all(20.r),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                DashboardHeader(
+                  isSuperAdmin: true,
+                  onRefresh: () async {
+                    await context.read<DashboardCubit>().loadDashboardData();
+                  },
+                ),
+                SizedBox(height: 20.h),
+                const RepaintBoundary(child: DashboardStatsGrid(isSuperAdmin: true)),
+                SizedBox(height: 20.h),
+                _ResponsiveDashboardLayout(
+                  mainChildren: [
+                    SizedBox(
+                      height: 380.h,
+                      child: ChartCard(
+                        title: AppStrings.revenueAnalytics,
+                        subtitle: AppStrings.weeklyPerformance,
+                        actionIcon: Icons.trending_up,
+                        actionIconColor: AppColors.success,
+                        chart: const RepaintBoundary(child: RevenueChart()),
                       ),
                     ),
-                    SizedBox(width: 20.w),
-                    Expanded(
-                      flex: 3,
-                      child: Column(
-                        children: [
-                          const QuickActionsCard(isSuperAdmin: true),
-                          SizedBox(height: 20.h),
-                          const RecentActivityCard(),
-                        ],
-                      ),
-                    ),
+                    SizedBox(height: 20.h),
+                    const RepaintBoundary(child: TopLoungesCard()),
                   ],
-                )
-              else
-                Column(
-                  children: [
+                  sideChildren: [
+                    const QuickActionsCard(isSuperAdmin: true),
+                    SizedBox(height: 20.h),
+                    const RepaintBoundary(child: RecentActivityCard()),
+                  ],
+                  mobileChildren: [
                     SizedBox(
                       height: 350.h,
                       child: ChartCard(
@@ -145,21 +198,22 @@ class _SuperAdminDashboardView extends StatelessWidget {
                         subtitle: AppStrings.weeklyPerformance,
                         actionIcon: Icons.trending_up,
                         actionIconColor: AppColors.success,
-                        chart: const RevenueChart(),
+                        chart: const RepaintBoundary(child: RevenueChart()),
                       ),
                     ),
                     SizedBox(height: 20.h),
                     const QuickActionsCard(isSuperAdmin: true),
                     SizedBox(height: 20.h),
-                    const TopLoungesCard(),
+                    const RepaintBoundary(child: TopLoungesCard()),
                     SizedBox(height: 20.h),
-                    const RecentActivityCard(),
+                    const RepaintBoundary(child: RecentActivityCard()),
                   ],
                 ),
-            ],
+              ]),
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
@@ -167,69 +221,72 @@ class _SuperAdminDashboardView extends StatelessWidget {
 class _LoungeOwnerDashboardView extends StatelessWidget {
   const _LoungeOwnerDashboardView();
 
+  Future<void> _handleRefresh(BuildContext context) async {
+    final loungeId = context.read<LoginCubit>().state.user?.loungeId;
+    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
+
+    await context.read<LoungeStatsCubit>().fetchStats(cleanLoungeId);
+    if (context.mounted) {
+      context.read<DashboardCubit>().startWatchingActiveSessions(loungeId: cleanLoungeId);
+      context.read<BookingCubit>().startWatchingBookings(loungeId: cleanLoungeId);
+      if (cleanLoungeId != null) {
+        context.read<RoomCubit>().watchRooms(cleanLoungeId);
+        context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId);
+        context.read<ReviewsCubit>().startWatchingReviews(loungeId: cleanLoungeId);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool isDesktop = constraints.maxWidth >= 1200;
-
-        return SingleChildScrollView(
-          padding: EdgeInsets.all(20.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const ShiftHeaderBanner(),
-              SizedBox(height: 12.h),
-              const DashboardHeader(isSuperAdmin: false),
-              SizedBox(height: 20.h),
-              const LoungeOwnerAnalyticsGrid(),
-              SizedBox(height: 20.h),
-              if (isDesktop)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 7,
-                      child: Column(
-                        children: [
-                          const RoomStatusCard(),
-                          SizedBox(height: 20.h),
-                          const LiveBookingsFeed(),
-                          SizedBox(height: 20.h),
-                          SizedBox(
-                            height: 380.h,
-                            child: ChartCard(
-                              title: AppStrings.roomUtilization,
-                              subtitle: AppStrings.capacityTracking,
-                              actionIcon: Icons.pie_chart_outline,
-                              actionIconColor: AppColors.neonPurple,
-                              chart: const UtilizationChart(),
-                            ),
-                          ),
-                          SizedBox(height: 20.h),
-                          const LoungeReviewsCard(),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 20.w),
-                    Expanded(
-                      flex: 3,
-                      child: Column(
-                        children: [
-                          const QuickActionsCard(isSuperAdmin: false),
-                          SizedBox(height: 20.h),
-                          const RecentActivityCard(),
-                        ],
-                      ),
-                    ),
-                  ],
-                )
-              else
-                Column(
-                  children: [
-                    const RoomStatusCard(),
+    return RefreshIndicator(
+      onRefresh: () => _handleRefresh(context),
+      color: AppColors.neonBlue,
+      backgroundColor: AppColors.cardBackground,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: EdgeInsets.all(20.r),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                const ShiftHeaderBanner(),
+                SizedBox(height: 12.h),
+                DashboardHeader(
+                  isSuperAdmin: false,
+                  onRefresh: () => _handleRefresh(context),
+                ),
+                SizedBox(height: 20.h),
+                const RepaintBoundary(child: LoungeOwnerAnalyticsGrid()),
+                SizedBox(height: 20.h),
+                _ResponsiveDashboardLayout(
+                  mainChildren: [
+                    const RepaintBoundary(child: RoomStatusCard()),
                     SizedBox(height: 20.h),
-                    const LiveBookingsFeed(),
+                    const RepaintBoundary(child: LiveBookingsFeed()),
+                    SizedBox(height: 20.h),
+                    SizedBox(
+                      height: 380.h,
+                      child: ChartCard(
+                        title: AppStrings.roomUtilization,
+                        subtitle: AppStrings.capacityTracking,
+                        actionIcon: Icons.pie_chart_outline,
+                        actionIconColor: AppColors.neonPurple,
+                        chart: const RepaintBoundary(child: UtilizationChart()),
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                    const RepaintBoundary(child: LoungeReviewsCard()),
+                  ],
+                  sideChildren: [
+                    const QuickActionsCard(isSuperAdmin: false),
+                    SizedBox(height: 20.h),
+                    const RepaintBoundary(child: RecentActivityCard()),
+                  ],
+                  mobileChildren: [
+                    const RepaintBoundary(child: RoomStatusCard()),
+                    SizedBox(height: 20.h),
+                    const RepaintBoundary(child: LiveBookingsFeed()),
                     SizedBox(height: 20.h),
                     SizedBox(
                       height: 350.h,
@@ -238,21 +295,22 @@ class _LoungeOwnerDashboardView extends StatelessWidget {
                         subtitle: AppStrings.capacityTracking,
                         actionIcon: Icons.pie_chart_outline,
                         actionIconColor: AppColors.neonPurple,
-                        chart: const UtilizationChart(),
+                        chart: const RepaintBoundary(child: UtilizationChart()),
                       ),
                     ),
                     SizedBox(height: 20.h),
                     const QuickActionsCard(isSuperAdmin: false),
                     SizedBox(height: 20.h),
-                    const LoungeReviewsCard(),
+                    const RepaintBoundary(child: LoungeReviewsCard()),
                     SizedBox(height: 20.h),
-                    const RecentActivityCard(),
+                    const RepaintBoundary(child: RecentActivityCard()),
                   ],
                 ),
-            ],
+              ]),
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
