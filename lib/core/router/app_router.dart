@@ -210,38 +210,24 @@ class AppRouter {
                 final loungeId = user?.loungeId ?? context.read<LoginCubit>().state.userLounge?.id;
                 final roleStr = user?.rawRole ?? user?.role.name ?? 'staff';
 
-                return BlocProvider(
-                  create: (context) => sl<ShiftCubit>(),
-                  child: BlocProvider(
-                    create: (context) => sl<BookingCubit>(),
-                    child: BlocProvider(
-                      create: (context) => sl<LoungeCubit>(),
-                      child: BlocProvider(
-                        create: (context) => sl<RoomCubit>(),
-                        child: BlocProvider(
-                          create: (context) => sl<LoungeStatsCubit>(),
-                          child: BlocProvider(
-                            create: (context) => sl<DashboardCubit>(),
-                            child: BlocProvider(
-                              create: (context) => sl<ExtrasCubit>(),
-                              child: BlocProvider(
-                                create: (context) => sl<ClientRequestsCubit>(),
-                                child: BlocProvider(
-                                  create: (context) => sl<ReviewsCubit>(),
-                                  child: BlocProvider.value(
-                                    value: sl<PermissionsCubit>()..loadUserPermissions(roleStr, loungeId: loungeId),
-                                    child: DashboardShell(
-                                      location: state.matchedLocation,
-                                      child: child,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                return MultiBlocProvider(
+                  providers: [
+                    BlocProvider(create: (context) => sl<ShiftCubit>()),
+                    BlocProvider(create: (context) => sl<BookingCubit>()),
+                    BlocProvider(create: (context) => sl<LoungeCubit>()),
+                    BlocProvider(create: (context) => sl<RoomCubit>()),
+                    BlocProvider(create: (context) => sl<LoungeStatsCubit>()),
+                    BlocProvider(create: (context) => sl<DashboardCubit>()),
+                    BlocProvider(create: (context) => sl<ExtrasCubit>()),
+                    BlocProvider.value(value: sl<ClientRequestsCubit>()),
+                    BlocProvider(create: (context) => sl<ReviewsCubit>()),
+                    BlocProvider.value(
+                      value: sl<PermissionsCubit>()..loadUserPermissions(roleStr, loungeId: loungeId),
                     ),
+                  ],
+                  child: DashboardShell(
+                    location: state.matchedLocation,
+                    child: child,
                   ),
                 );
               },

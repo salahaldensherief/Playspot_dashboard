@@ -170,6 +170,8 @@ class _LiveRequestsFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<ClientRequestsCubit>();
+    final activeCount = requests.where((r) => !r.isAttended).length;
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -178,7 +180,7 @@ class _LiveRequestsFilterBar extends StatelessWidget {
             label: AppStrings.all,
             filter: RequestFilter.all,
             currentFilter: currentFilter,
-            count: requests.length,
+            count: activeCount,
             onSelected: cubit.setFilter,
           ),
           SizedBox(width: 8.w),

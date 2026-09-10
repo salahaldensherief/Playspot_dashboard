@@ -292,8 +292,8 @@ class ClientRequestModel extends ClientRequestEntity {
       bodyAr = json['notes'].toString();
     }
 
-    final roomObj = json['rooms'] as Map<String, dynamic>?;
-    final bookingObj = json['bookings'] as Map<String, dynamic>?;
+    final roomObj = _parseMap(json['rooms']);
+    final bookingObj = _parseMap(json['bookings']);
 
     final roomId = (json['room_id'] ?? json['roomId'] ?? bookingObj?['room_id'])?.toString();
     final bookingId = (json['booking_id'] ?? json['bookingId'] ?? bookingObj?['id'])?.toString();
@@ -353,7 +353,7 @@ class ClientRequestModel extends ClientRequestEntity {
   }
 
   factory ClientRequestModel.fromBookingItemJson(Map<String, dynamic> json) {
-    final bookingObj = json['bookings'] as Map<String, dynamic>?;
+    final bookingObj = _parseMap(json['bookings']);
     final String name = (json['name'] ?? json['title'] ?? json['item_name'] ?? 'Canteen Item').toString();
     final double price = (json['price'] ?? json['unit_price'] as num?)?.toDouble() ?? 0.0;
     final int qty = (json['quantity'] ?? json['qty'] ?? json['count'] as num?)?.toInt() ?? 1;
@@ -361,7 +361,12 @@ class ClientRequestModel extends ClientRequestEntity {
     final String userName = (bookingObj?['user_name'] ?? json['user_name'] ?? json['userName'] ?? json['user'] ?? 'Client').toString();
     final String userPhone = (bookingObj?['user_phone'] ?? json['user_phone'] ?? json['userPhone'] ?? json['phone'] ?? '').toString();
     final String? userAvatarUrl = (bookingObj?['avatar_url'] ?? bookingObj?['user_avatar'] ?? json['user_avatar'] ?? json['user_avatar_url'] ?? json['avatar_url'])?.toString();
-    final bool isAttended = _parseBool(json['is_attended'] ?? json['is_read'] ?? json['attended'] ?? json['read']);
+    final String statusStr = (json['status'] ?? '').toString().toLowerCase();
+    final bool isAttended = statusStr == 'completed' ||
+        statusStr == 'attended' ||
+        statusStr == 'approved' ||
+        statusStr == 'resolved' ||
+        _parseBool(json['is_attended'] ?? json['is_read'] ?? json['attended'] ?? json['read']);
 
     final itemMap = {
       'name': name,
@@ -415,5 +420,15 @@ class ClientRequestModel extends ClientRequestEntity {
       return l == 'true' || l == '1' || l == 'yes';
     }
     return false;
+  }
+
+  static Map<String, dynamic>? _parseMap(dynamic val) {
+    if (val == null) return null;
+    if (val is Map) return Map<String, dynamic>.from(val);
+    if (val is List && val.isNotEmpty) {
+      final first = val.first;
+      if (first is Map) return Map<String, dynamic>.from(first);
+    }
+    return null;
   }
 }

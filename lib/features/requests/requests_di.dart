@@ -17,7 +17,7 @@ void initRequestsDI(GetIt sl) {
   );
 
   // Cubits
-  sl.registerFactory<ClientRequestsCubit>(
+  sl.registerLazySingleton<ClientRequestsCubit>(
     () => ClientRequestsCubit(
       repository: sl(),
       audioService: sl(),

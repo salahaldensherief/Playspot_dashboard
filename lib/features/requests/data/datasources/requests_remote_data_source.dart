@@ -388,11 +388,19 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
       try {
         bookingItemsResponse = await client
             .from('booking_items')
-            .select()
+            .select('*, bookings(lounge_id, room_name, user_name, user_phone, user_avatar)')
             .order('created_at', ascending: false)
             .limit(50);
       } catch (e) {
-        debugPrint('⚠️ [REQUESTS_DATA_SOURCE] booking_items select error: $e');
+        try {
+          bookingItemsResponse = await client
+              .from('booking_items')
+              .select()
+              .order('created_at', ascending: false)
+              .limit(50);
+        } catch (e2) {
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] booking_items select error: $e2');
+        }
       }
 
       final bookingItemsList = ((bookingItemsResponse is List) ? bookingItemsResponse : [])
@@ -458,6 +466,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
 
     try {
       if (id.startsWith('sc_')) {
+        bool scUpdated = false;
         try {
           await client
               .from('service_calls')
@@ -467,33 +476,70 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
                 'is_read': true,
               })
               .eq('id', rawDbId);
+          scUpdated = true;
         } catch (e) {
-          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] service_calls update error: $e');
-          await client
-              .from('service_calls')
-              .update({'status': 'resolved'})
-              .eq('id', rawDbId);
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] service_calls update 1 error: $e');
+        }
+
+        if (!scUpdated) {
+          try {
+            await client
+                .from('service_calls')
+                .update({'status': 'resolved'})
+                .eq('id', rawDbId);
+          } catch (e2) {
+            debugPrint('⚠️ [REQUESTS_DATA_SOURCE] service_calls update 2 error: $e2');
+          }
         }
       } else if (id.startsWith('ext_')) {
-        await client
-            .from('bookings')
-            .update({'extension_status': 'approved'})
-            .eq('id', rawDbId);
+        try {
+          await client
+              .from('bookings')
+              .update({'extension_status': 'approved'})
+              .eq('id', rawDbId);
+        } catch (e) {
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] bookings extension_status update error: $e');
+        }
       } else if (id.startsWith('item_')) {
+        bool itemUpdated = false;
         try {
           await client
               .from('booking_items')
               .update({
+                'status': 'completed',
                 'is_attended': true,
                 'is_read': true,
-                'status': 'completed',
               })
               .eq('id', rawDbId);
+          itemUpdated = true;
         } catch (e) {
-          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] booking_items update error: $e');
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] booking_items update 1 error: $e');
+        }
+
+        if (!itemUpdated) {
+          try {
+            await client
+                .from('booking_items')
+                .update({'status': 'completed'})
+                .eq('id', rawDbId);
+            itemUpdated = true;
+            debugPrint('🟢 [REQUESTS_DATA_SOURCE] Updated booking_items status to completed for $rawDbId');
+          } catch (e2) {
+            debugPrint('⚠️ [REQUESTS_DATA_SOURCE] booking_items update 2 error: $e2');
+          }
+        }
+
+        if (!itemUpdated) {
+          try {
+            await client
+                .from('booking_items')
+                .update({'is_read': true})
+                .eq('id', rawDbId);
+          } catch (_) {}
         }
       } else if (id.startsWith('canteen_') || isCanteenOrder) {
         // Canteen Orders: update canteen_orders status to 'completed' so backend triggers compute booking totals
+        bool canteenUpdated = false;
         try {
           await client
               .from('canteen_orders')
@@ -503,25 +549,36 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
                 'is_read': true,
               })
               .eq('id', rawDbId);
+          canteenUpdated = true;
           debugPrint('🟢 [CANTEEN_SYNC] Marked canteen_order $rawDbId as completed in DB');
         } catch (e) {
-          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] canteen_orders update error: $e');
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] canteen_orders update 1 error: $e');
+        }
+
+        if (!canteenUpdated) {
           try {
             await client
                 .from('canteen_orders')
                 .update({'status': 'completed'})
                 .eq('id', rawDbId);
+            canteenUpdated = true;
           } catch (e2) {
-            debugPrint('⚠️ [REQUESTS_DATA_SOURCE] canteen_orders fallback error: $e2');
+            debugPrint('⚠️ [REQUESTS_DATA_SOURCE] canteen_orders update 2 error: $e2');
           }
         }
 
-        // Fail-safe updates for matching ID in related tables
+        // Fail-safe updates for matching ID or booking_id in related tables
         try {
           await client
               .from('booking_items')
-              .update({'is_attended': true, 'is_read': true, 'status': 'completed'})
+              .update({'status': 'completed'})
               .eq('id', rawDbId);
+        } catch (_) {}
+        try {
+          await client
+              .from('booking_items')
+              .update({'status': 'completed'})
+              .eq('booking_id', rawDbId);
         } catch (_) {}
         try {
           await client
@@ -529,8 +586,15 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
               .update({'is_read': true, 'is_attended': true})
               .eq('id', rawDbId);
         } catch (_) {}
+        try {
+          await client
+              .from('notifications')
+              .update({'is_read': true})
+              .eq('id', rawDbId);
+        } catch (_) {}
       } else {
         // Notifications / General Requests
+        bool notifUpdated = false;
         try {
           await client
               .from('notifications')
@@ -539,13 +603,18 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
                 'is_attended': true,
               })
               .eq('id', rawDbId);
+          notifUpdated = true;
         } catch (e) {
           debugPrint('⚠️ [REQUESTS_DATA_SOURCE] notifications update 1 error: $e');
+        }
+
+        if (!notifUpdated) {
           try {
             await client
                 .from('notifications')
                 .update({'is_read': true})
                 .eq('id', rawDbId);
+            notifUpdated = true;
           } catch (e2) {
             debugPrint('⚠️ [REQUESTS_DATA_SOURCE] notifications update 2 error: $e2');
           }
@@ -554,7 +623,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         try {
           await client
               .from('canteen_orders')
-              .update({'status': 'completed', 'is_attended': true, 'is_read': true})
+              .update({'status': 'completed'})
               .eq('id', rawDbId);
         } catch (_) {}
       }
