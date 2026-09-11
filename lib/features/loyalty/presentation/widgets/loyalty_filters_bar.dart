@@ -85,6 +85,18 @@ class _LoyaltyFiltersBarState extends State<LoyaltyFiltersBar> {
         final levelItems = ['all', ...state.levels.map((l) => l.id)];
         final statusItems = ['all', 'completed', 'pending'];
 
+        final selectedLevel = (state.selectedLevelId != null &&
+                state.selectedLevelId!.isNotEmpty &&
+                levelItems.contains(state.selectedLevelId))
+            ? state.selectedLevelId!
+            : 'all';
+
+        final selectedStatus = (state.selectedReferralStatus != null &&
+                state.selectedReferralStatus!.isNotEmpty &&
+                statusItems.contains(state.selectedReferralStatus))
+            ? state.selectedReferralStatus!
+            : 'all';
+
         return Container(
           padding: EdgeInsets.all(16.r),
           decoration: BoxDecoration(
@@ -132,7 +144,7 @@ class _LoyaltyFiltersBarState extends State<LoyaltyFiltersBar> {
                 width: 170.w,
                 child: CustomDropdown<String>(
                   label: AppStrings.filterByLevel,
-                  value: state.selectedLevelId ?? 'all',
+                  value: selectedLevel,
                   items: levelItems,
                   itemLabel: (item) {
                     if (item == 'all') return AppStrings.all;
@@ -154,7 +166,7 @@ class _LoyaltyFiltersBarState extends State<LoyaltyFiltersBar> {
                 width: 170.w,
                 child: CustomDropdown<String>(
                   label: AppStrings.filterByStatus,
-                  value: state.selectedReferralStatus ?? 'all',
+                  value: selectedStatus,
                   items: statusItems,
                   itemLabel: (item) {
                     if (item == 'completed') return AppStrings.completed;
