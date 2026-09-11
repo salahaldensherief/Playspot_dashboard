@@ -123,18 +123,11 @@ class _LoyaltyFiltersBarState extends State<LoyaltyFiltersBar> {
                     ),
                   ),
                   SizedBox(height: 8.h),
-                  OutlinedButton.icon(
+                  AppButton(
                     onPressed: () => _pickDateRange(context, loyaltyCubit),
-                    icon: Icon(Icons.date_range_outlined, size: 18.r, color: AppColors.neonBlue),
-                    label: Text(
-                      dateLabel,
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.borderDefault),
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                    ),
+                    icon: Icons.date_range_outlined,
+                    text: dateLabel,
+                    variant: AppButtonVariant.outlined,
                   ),
                 ],
               ),

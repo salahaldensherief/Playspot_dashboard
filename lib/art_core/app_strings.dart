@@ -569,6 +569,13 @@ class AppStrings {
   static String get minPlayers => 'min_players'.tr();
   static String get maxPlayers => 'max_players'.tr();
   static String get regDeadline => 'reg_deadline'.tr();
+  static String get regOpensAt => 'reg_opens_at'.tr();
+  static String get regClosesAt => 'reg_closes_at'.tr();
+  static String get checkInOpensAt => 'check_in_opens_at'.tr();
+  static String get checkInClosesAt => 'check_in_closes_at'.tr();
+  static String get regCloseAfterOpenError => 'reg_close_after_open_error'.tr();
+  static String get checkInAfterRegCloseError => 'check_in_after_reg_close_error'.tr();
+  static String get checkInBeforeStartError => 'check_in_before_start_error'.tr();
   static String get startDate => 'start_date'.tr();
   static String get endDate => 'end_date'.tr();
   static String get rules => 'rules'.tr();

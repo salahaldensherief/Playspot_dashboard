@@ -106,8 +106,8 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
       if (_registrationClosesAt.isBefore(_registrationOpensAt) ||
           _registrationClosesAt.isAtSameMomentAs(_registrationOpensAt)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تاريخ إغلاق التسجيل يجب أن يكون بعد تاريخ فتح التسجيل'),
+          SnackBar(
+            content: Text(AppStrings.regCloseAfterOpenError),
             backgroundColor: AppColors.danger,
           ),
         );
@@ -116,8 +116,8 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
 
       if (_checkInOpensAt.isBefore(_registrationClosesAt)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تاريخ فتح تسجيل الحضور (Check-in) يجب أن يكون بعد إغلاق التسجيل'),
+          SnackBar(
+            content: Text(AppStrings.checkInAfterRegCloseError),
             backgroundColor: AppColors.danger,
           ),
         );
@@ -126,8 +126,8 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
 
       if (_checkInClosesAt.isAfter(_startDate)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تاريخ إغلاق تسجيل الحضور يجب أن يكون قبل انطلاق البطولة'),
+          SnackBar(
+            content: Text(AppStrings.checkInBeforeStartError),
             backgroundColor: AppColors.danger,
           ),
         );
@@ -306,99 +306,59 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
               style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 12.h),
-            // Schedule Dates Pickers
+            // Schedule Dates Pickers using standardized AppButton
             Wrap(
               spacing: 12.w,
               runSpacing: 12.h,
               children: [
                 SizedBox(
-                  width: 200.w,
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.timer_outlined, color: AppColors.neonBlue),
-                    label: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('فتح التسجيل', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
-                        Text(dateFormat.format(_registrationOpensAt), style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp)),
-                      ],
-                    ),
+                  width: 210.w,
+                  child: AppButton(
+                    icon: Icons.timer_outlined,
+                    text: '${AppStrings.regOpensAt}\n${dateFormat.format(_registrationOpensAt)}',
+                    variant: AppButtonVariant.outlined,
+                    fontSize: 12.sp,
                     onPressed: () => _selectDate(context, _registrationOpensAt, (d) => setState(() => _registrationOpensAt = d)),
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
-                      side: const BorderSide(color: AppColors.borderDefault),
-                    ),
                   ),
                 ),
                 SizedBox(
-                  width: 200.w,
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.timer_off_outlined, color: AppColors.warning),
-                    label: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('غلق التسجيل', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
-                        Text(dateFormat.format(_registrationClosesAt), style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp)),
-                      ],
-                    ),
+                  width: 210.w,
+                  child: AppButton(
+                    icon: Icons.timer_off_outlined,
+                    text: '${AppStrings.regClosesAt}\n${dateFormat.format(_registrationClosesAt)}',
+                    variant: AppButtonVariant.outlined,
+                    fontSize: 12.sp,
                     onPressed: () => _selectDate(context, _registrationClosesAt, (d) => setState(() => _registrationClosesAt = d)),
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
-                      side: const BorderSide(color: AppColors.borderDefault),
-                    ),
                   ),
                 ),
                 SizedBox(
-                  width: 200.w,
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.check_circle_outline, color: AppColors.neonBlue),
-                    label: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('فتح الحضور (Check-in)', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
-                        Text(dateFormat.format(_checkInOpensAt), style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp)),
-                      ],
-                    ),
+                  width: 210.w,
+                  child: AppButton(
+                    icon: Icons.check_circle_outline,
+                    text: '${AppStrings.checkInOpensAt}\n${dateFormat.format(_checkInOpensAt)}',
+                    variant: AppButtonVariant.outlined,
+                    fontSize: 12.sp,
                     onPressed: () => _selectDate(context, _checkInOpensAt, (d) => setState(() => _checkInOpensAt = d)),
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
-                      side: const BorderSide(color: AppColors.borderDefault),
-                    ),
                   ),
                 ),
                 SizedBox(
-                  width: 200.w,
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.play_circle_fill, color: AppColors.success),
-                    label: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('انطلاق البطولة', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
-                        Text(dateFormat.format(_startDate), style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp)),
-                      ],
-                    ),
+                  width: 210.w,
+                  child: AppButton(
+                    icon: Icons.play_circle_fill,
+                    text: '${AppStrings.startDate}\n${dateFormat.format(_startDate)}',
+                    variant: AppButtonVariant.outlined,
+                    fontSize: 12.sp,
                     onPressed: () => _selectDate(context, _startDate, (d) => setState(() => _startDate = d)),
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
-                      side: const BorderSide(color: AppColors.borderDefault),
-                    ),
                   ),
                 ),
                 SizedBox(
-                  width: 200.w,
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.flag_outlined, color: AppColors.danger),
-                    label: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('انتهاء البطولة', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
-                        Text(dateFormat.format(_endDate), style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp)),
-                      ],
-                    ),
+                  width: 210.w,
+                  child: AppButton(
+                    icon: Icons.flag_outlined,
+                    text: '${AppStrings.endDate}\n${dateFormat.format(_endDate)}',
+                    variant: AppButtonVariant.outlined,
+                    fontSize: 12.sp,
                     onPressed: () => _selectDate(context, _endDate, (d) => setState(() => _endDate = d)),
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
-                      side: const BorderSide(color: AppColors.borderDefault),
-                    ),
                   ),
                 ),
               ],
