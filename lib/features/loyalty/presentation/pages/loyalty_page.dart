@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:play_spot_dashboard/art_core/app_strings.dart';
-import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import '../../../../art_core/app_strings.dart';
+import '../../../../art_core/theme/app_colors.dart';
+import '../../../../art_core/widgets/app_button.dart';
+import '../../../../art_core/widgets/app_text.dart';
 import '../../../marketing/domain/entities/redemption_option_entity.dart';
 import '../cubit/loyalty_cubit.dart';
 import '../cubit/loyalty_state.dart';
-import '../widgets/loyalty_stats_grid.dart';
-import '../widgets/redemption_option_dialog.dart';
+import '../widgets/loyalty_filters_bar.dart';
+import '../widgets/loyalty_stats_tab.dart';
+import '../widgets/referrals_tab.dart';
+import '../widgets/tasks_tab.dart';
+import '../widgets/levels_tab.dart';
 import '../widgets/loyalty_data_table.dart';
+import '../widgets/redemption_option_dialog.dart';
 
 class LoyaltyPage extends StatefulWidget {
   const LoyaltyPage({super.key});
@@ -19,11 +23,26 @@ class LoyaltyPage extends StatefulWidget {
   State<LoyaltyPage> createState() => _LoyaltyPageState();
 }
 
-class _LoyaltyPageState extends State<LoyaltyPage> {
+class _LoyaltyPageState extends State<LoyaltyPage> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 5, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        context.read<LoyaltyCubit>().changeTab(_tabController.index);
+      }
+    });
+
     context.read<LoyaltyCubit>().loadLoyaltyData();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   void _showOptionDialog(BuildContext context, LoyaltyCubit cubit, {RedemptionOptionEntity? option}) {
@@ -59,68 +78,115 @@ class _LoyaltyPageState extends State<LoyaltyPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Top Header Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              AppText.heading(AppStrings.loyaltyRewards, fontSize: 32.sp),
-              AppButton(
-                text: AppStrings.addReward,
-                onPressed: () => _showOptionDialog(context, loyaltyCubit),
-                icon: Icons.add,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppText.heading(AppStrings.loyaltySystemAndReferrals, fontSize: 28.sp),
+                ],
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () => loyaltyCubit.loadLoyaltyData(),
+                    icon: const Icon(Icons.refresh, color: AppColors.neonBlue),
+                    tooltip: AppStrings.refresh,
+                  ),
+                  SizedBox(width: 12.w),
+                  AppButton(
+                    text: AppStrings.addReward,
+                    onPressed: () => _showOptionDialog(context, loyaltyCubit),
+                    icon: Icons.add,
+                  ),
+                ],
               ),
             ],
           ),
-          SizedBox(height: 32.h),
-          BlocBuilder<LoyaltyCubit, LoyaltyState>(
-            buildWhen: (prev, curr) => prev.stats != curr.stats || prev.status != curr.status,
-            builder: (context, state) {
-              if (state.stats == null && state.status == LoyaltyStatus.loading) {
-                return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
-              }
-              final stats = state.stats;
-              if (stats != null) {
-                return LoyaltyStatsGrid(stats: stats);
-              }
-              return const SizedBox.shrink();
-            },
+          SizedBox(height: 20.h),
+
+          // Filters Bar
+          const LoyaltyFiltersBar(),
+          SizedBox(height: 20.h),
+
+          // Custom Styled TabBar
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.cardBackground,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: AppColors.borderDefault),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: AppColors.neonBlue,
+              labelColor: AppColors.neonBlue,
+              unselectedLabelColor: AppColors.textSecondary,
+              labelStyle: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold),
+              tabs: [
+                Tab(text: AppStrings.loyaltyStatsTab, icon: const Icon(Icons.insights_rounded)),
+                Tab(text: AppStrings.referralsTab, icon: const Icon(Icons.people_alt_outlined)),
+                Tab(text: AppStrings.tasksTab, icon: const Icon(Icons.assignment_turned_in_outlined)),
+                Tab(text: AppStrings.levelsTab, icon: const Icon(Icons.workspace_premium_outlined)),
+                Tab(text: AppStrings.redemptionsTab, icon: const Icon(Icons.card_giftcard_outlined)),
+              ],
+            ),
           ),
-          SizedBox(height: 32.h),
-          AppText.subHeading(AppStrings.redemptionOptions, fontSize: 20.sp),
-          SizedBox(height: 16.h),
+          SizedBox(height: 20.h),
+
+          // TabBarView Content
           Expanded(
             child: BlocBuilder<LoyaltyCubit, LoyaltyState>(
-              buildWhen: (prev, curr) => prev.options != curr.options || prev.status != curr.status,
               builder: (context, state) {
-                if (state.status == LoyaltyStatus.loading && state.options.isEmpty) {
+                if (state.status == LoyaltyStatus.loading && state.stats == null) {
                   return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
                 }
+
                 if (state.status == LoyaltyStatus.failure) {
-                  return Center(child: AppText.body(state.errorMessage ?? AppStrings.error, color: AppColors.danger));
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AppText.body(state.errorMessage ?? AppStrings.error, color: AppColors.danger, fontSize: 16.sp),
+                        SizedBox(height: 16.h),
+                        AppButton(
+                          text: AppStrings.retry,
+                          onPressed: () => loyaltyCubit.loadLoyaltyData(),
+                        ),
+                      ],
+                    ),
+                  );
                 }
-                if (state.options.isEmpty) {
-                  return _buildEmptyState();
-                }
-                return LoyaltyDataTable(
-                  options: state.options, 
-                  cubit: loyaltyCubit, 
-                  onEdit: (opt) => _showOptionDialog(context, loyaltyCubit, option: opt),
+
+                return TabBarView(
+                  controller: _tabController,
+                  children: [
+                    // Tab 0: Stats
+                    state.stats != null
+                        ? LoyaltyStatsTab(stats: state.stats!)
+                        : const SizedBox.shrink(),
+
+                    // Tab 1: Referrals
+                    ReferralsTab(referrals: state.referrals),
+
+                    // Tab 2: Tasks
+                    TasksTab(tasks: state.tasks, cubit: loyaltyCubit),
+
+                    // Tab 3: Levels
+                    LevelsTab(levels: state.levels, cubit: loyaltyCubit),
+
+                    // Tab 4: Redemption Options
+                    LoyaltyDataTable(
+                      options: state.options,
+                      cubit: loyaltyCubit,
+                      onEdit: (opt) => _showOptionDialog(context, loyaltyCubit, option: opt),
+                    ),
+                  ],
                 );
               },
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.card_giftcard_outlined, color: AppColors.textSecondary, size: 64.r),
-          SizedBox(height: 16.h),
-          AppText.body(AppStrings.noResultsMatching, fontSize: 18.sp),
         ],
       ),
     );

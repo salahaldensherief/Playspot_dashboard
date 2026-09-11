@@ -181,8 +181,8 @@ class DashboardSidebar extends StatelessWidget {
       ),
       _SidebarItem(
         icon: Icons.card_giftcard_outlined,
-        label: AppStrings.loyaltyRewards,
-        isActive: activeRoute == AppStrings.loyaltyRewards,
+        label: AppStrings.loyaltySystemAndReferrals,
+        isActive: activeRoute == AppStrings.loyaltySystemAndReferrals,
         onTap: () => context.go(RouterKeys.superAdminLoyalty),
       ),
     ];

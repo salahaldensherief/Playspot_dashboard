@@ -74,8 +74,8 @@ class DashboardShell extends StatelessWidget {
           activeRoute = AppStrings.loungeReviews;
           title = AppStrings.loungeReviews;
         } else if (location.contains('loyalty')) {
-          activeRoute = AppStrings.loyaltyRewards;
-          title = AppStrings.loyaltyRewards;
+          activeRoute = AppStrings.loyaltySystemAndReferrals;
+          title = AppStrings.loyaltySystemAndReferrals;
         } else if (location.contains('shifts')) {
           activeRoute = AppStrings.shiftHistory;
           title = AppStrings.shiftHistory;
