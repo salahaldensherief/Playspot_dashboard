@@ -6,12 +6,14 @@ import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
-import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
-import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
-import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
+
 import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_state.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_state.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/client_requests_state.dart';
 import '../app_strings.dart';
 import '../theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_cached_image.dart';
@@ -90,12 +92,14 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
                 ...actions!,
                 const SizedBox(width: 16),
               ] else ...[
+                _buildShiftStatusIndicator(context),
+                const SizedBox(width: 12),
                 _buildLoungeStatusToggle(context),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 _buildAudioMuteToggle(context),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 _buildNotificationIcon(context),
-                const SizedBox(width: 20),
+                const SizedBox(width: 16),
               ],
               _buildUserInfo(),
             ],
@@ -219,18 +223,70 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
+  Widget _buildShiftStatusIndicator(BuildContext context) {
+    final user = context.read<LoginCubit>().state.user;
+    if (user == null || user.isSuperAdmin) {
+      return const SizedBox.shrink();
+    }
+
+    return BlocBuilder<ShiftCubit, ShiftState>(
+      buildWhen: (prev, curr) => prev.activeShift != curr.activeShift || prev.status != curr.status,
+      builder: (context, shiftState) {
+        final isActive = shiftState.activeShift != null;
+        final bool isMobile = MediaQuery.sizeOf(context).width < 600;
+        final color = isActive ? AppColors.success : AppColors.warning;
+
+        return Tooltip(
+          message: isActive ? AppStrings.shiftActive : AppStrings.noActiveShift,
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 8 : 12,
+              vertical: 6,
+            ),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: color.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                if (!isMobile) const SizedBox(width: 8),
+                if (!isMobile)
+                  Text(
+                    isActive ? AppStrings.shiftActive : AppStrings.noActiveShift,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildNotificationIcon(BuildContext context) {
     final user = context.read<LoginCubit>().state.user;
     if (user == null || user.isSuperAdmin) {
       return const SizedBox.shrink();
     }
 
-    return BlocBuilder<BookingCubit, BookingState>(
-      buildWhen: (prev, curr) => prev.bookings != curr.bookings,
+    return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
+      buildWhen: (prev, curr) => prev.requests != curr.requests || prev.status != curr.status,
       builder: (context, state) {
-        final pendingCount = state.bookings
-            .where((b) => b.status == BookingStatus.pending)
-            .length;
+        final pendingCount = state.requests.where((r) => !r.isAttended).length;
 
         return Tooltip(
           message: pendingCount > 0

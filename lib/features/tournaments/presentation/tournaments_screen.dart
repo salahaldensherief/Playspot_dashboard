@@ -218,6 +218,52 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                 ),
                 SizedBox(height: 24.h),
 
+                // Prominent Open Disputes Alert Banner
+                if (disputedCount > 0) ...[
+                  Container(
+                    padding: EdgeInsets.all(16.r),
+                    decoration: BoxDecoration(
+                      color: AppColors.danger.withAlpha(25),
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: AppColors.danger, width: 2),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 28),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${AppStrings.disputesRoom}: $disputedCount ${AppStrings.pendingRequests}',
+                                style: TextStyle(
+                                  color: AppColors.danger,
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 2.h),
+                              Text(
+                                '${AppStrings.resolveDispute} ${state.disputedMatches.first.player1Name ?? "P1"} vs ${state.disputedMatches.first.player2Name ?? "P2"}',
+                                style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
+                              ),
+                            ],
+                          ),
+                        ),
+                        AppButton(
+                          text: AppStrings.resolveDispute,
+                          backgroundColor: AppColors.danger,
+                          onPressed: () {
+                            _tabController.animateTo(3); // Switch to Disputes tab
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                ],
+
                 // Active Tournament Selector Dropdown
                 if (state.tournaments.isNotEmpty) ...[
                   Container(
@@ -344,17 +390,19 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                         onRecordCash: (p) => context.read<TournamentCubit>().recordCashPayment(p.id),
                         onCheckIn: (p) => context.read<TournamentCubit>().checkInParticipant(p.id),
                       ),
-                      // Tab 2: Bracket Tree
-                      TournamentBracketView(
-                        tournament: selected,
-                        matches: state.matches,
-                        onDrawBracket: () {
-                          if (selected != null) {
-                            context.read<TournamentCubit>().drawBracket(selected.id);
-                          }
-                        },
-                        onStartMatch: (m) => context.read<TournamentCubit>().startMatch(m.id),
-                      ),
+                      // Tab 2: Bracket Tree (Lazy Built)
+                      _tabController.index == 2
+                          ? TournamentBracketView(
+                              tournament: selected,
+                              matches: state.matches,
+                              onDrawBracket: () {
+                                if (selected != null) {
+                                  context.read<TournamentCubit>().drawBracket(selected.id);
+                                }
+                              },
+                              onStartMatch: (m) => context.read<TournamentCubit>().startMatch(m.id),
+                            )
+                          : const SizedBox.shrink(),
                       // Tab 3: Disputes Room
                       _buildDisputesRoomTab(context, state),
                       // Tab 4: Audit Trail

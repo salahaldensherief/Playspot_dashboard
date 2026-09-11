@@ -85,19 +85,38 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
   Future<TournamentModel> createTournament(TournamentModel tournament) async {
     try {
       final response = await client.rpc('create_tournament', params: {
+        'p_lounge_id': tournament.loungeId,
+        'p_city_id': tournament.cityId,
         'p_title': tournament.title,
+        'p_title_ar': tournament.titleAr ?? tournament.title,
+        'p_title_en': tournament.titleEn ?? tournament.title,
+        'p_description_ar': tournament.descriptionAr ?? tournament.rules,
+        'p_description_en': tournament.descriptionEn ?? tournament.rules,
         'p_game_title': tournament.gameTitle,
+        'p_game_name': tournament.gameTitle,
         'p_banner_url': tournament.bannerUrl,
         'p_tree_size': tournament.treeSize,
+        'p_bracket_size': tournament.treeSize,
         'p_entry_fee': tournament.entryFee,
         'p_prize_pool': tournament.prizePool,
         'p_start_date': tournament.startDate.toIso8601String(),
         'p_end_date': tournament.endDate.toIso8601String(),
         'p_registration_deadline': tournament.registrationDeadline.toIso8601String(),
+        if (tournament.registrationOpensAt != null)
+          'p_registration_opens_at': tournament.registrationOpensAt!.toIso8601String(),
+        'p_registration_closes_at':
+            (tournament.registrationClosesAt ?? tournament.registrationDeadline).toIso8601String(),
+        'p_payment_deadline_minutes': tournament.paymentDeadlineMinutes,
+        if (tournament.checkInOpensAt != null)
+          'p_check_in_opens_at': tournament.checkInOpensAt!.toIso8601String(),
+        if (tournament.checkInClosesAt != null)
+          'p_check_in_closes_at': tournament.checkInClosesAt!.toIso8601String(),
+        'p_tournament_starts_at':
+            (tournament.tournamentStartsAt ?? tournament.startDate).toIso8601String(),
         'p_min_players': tournament.minPlayers,
         'p_max_players': tournament.maxPlayers,
+        'p_max_participants': tournament.maxPlayers,
         'p_rules': tournament.rules,
-        'p_lounge_id': tournament.loungeId,
       });
 
       if (response != null && response is Map) {
@@ -476,9 +495,16 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
           ),
           callback: (payload) async {
             try {
-              final freshMatches = await getMatches(tournamentId);
-              if (!controller.isClosed) {
-                controller.add(freshMatches.where((m) => m.isDisputed).toList());
+              final newStatus = payload.newRecord['status'] as String?;
+              final oldStatus = payload.oldRecord['status'] as String?;
+
+              // Only re-fetch matches if the payload pertains to a disputed match
+              // or a match whose dispute status was just changed/resolved.
+              if (newStatus == 'disputed' || oldStatus == 'disputed') {
+                final freshMatches = await getMatches(tournamentId);
+                if (!controller.isClosed) {
+                  controller.add(freshMatches.where((m) => m.isDisputed).toList());
+                }
               }
             } catch (e) {
               debugPrint('⚠️ [TOURNAMENTS_REMOTE] Realtime update fetch error: $e');

@@ -23,6 +23,93 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
   final _formKey = GlobalKey<FormState>();
 
   @override
+  void initState() {
+    super.initState();
+    _cashController.addListener(_onCashChanged);
+  }
+
+  void _onCashChanged() {
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _cashController.removeListener(_onCashChanged);
+    _cashController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildDiscrepancyCard() {
+    if (widget.expectedCash == null) return const SizedBox.shrink();
+
+    final actualCash = double.tryParse(_cashController.text.trim());
+    if (actualCash == null) return const SizedBox.shrink();
+
+    final diff = actualCash - widget.expectedCash!;
+    final Color color;
+    final String label;
+    final IconData icon;
+
+    if (diff == 0) {
+      color = AppColors.success;
+      label = AppStrings.matched;
+      icon = Icons.check_circle_outline;
+    } else if (diff < 0) {
+      color = AppColors.danger;
+      label = AppStrings.deficit;
+      icon = Icons.error_outline;
+    } else {
+      color = AppColors.warning;
+      label = AppStrings.surplus;
+      icon = Icons.add_circle_outline;
+    }
+
+    final formattedDiff = diff.abs().toStringAsFixed(2);
+
+    return Container(
+      margin: EdgeInsets.only(top: 16.h),
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: color, width: 2),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 32.r),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${AppStrings.discrepancy}: $label',
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.sp,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  '${diff > 0 ? "+" : (diff < 0 ? "-" : "")}$formattedDiff ${AppStrings.egp}',
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 22.sp,
+                    fontFamily: 'Orbitron',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final bool canViewExpected = context.hasPermission('shift_view_expected_cash');
 
@@ -87,6 +174,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
                 return null;
               },
             ),
+            if (canViewExpected) _buildDiscrepancyCard(),
             SizedBox(height: 16.h),
             AppTextField(
               controller: _notesController,

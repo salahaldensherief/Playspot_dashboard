@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/live_indicator_badge.dart';
 import '../dashboard_cubit.dart';
 import '../dashboard_state.dart';
 
@@ -26,14 +27,22 @@ class DashboardHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                isSuperAdmin ? AppStrings.globalOverview : AppStrings.loungePerformance,
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 32.sp,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Orbitron',
-                ),
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 12.w,
+                runSpacing: 8.h,
+                children: [
+                  Text(
+                    isSuperAdmin ? AppStrings.globalOverview : AppStrings.loungePerformance,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 32.sp,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Orbitron',
+                    ),
+                  ),
+                  const LiveIndicatorBadge(),
+                ],
               ),
               SizedBox(height: 8.h),
               Text(

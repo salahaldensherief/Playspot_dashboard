@@ -14,11 +14,11 @@ class ReviewsCubit extends Cubit<ReviewsState> {
     required this.watchLoungeReviewsUseCase,
   }) : super(const ReviewsState());
 
-  void startWatchingReviews({required String loungeId}) {
+  void startWatchingReviews({required String loungeId, bool forceRefresh = false}) {
     final cleanLoungeId = loungeId.trim();
     if (cleanLoungeId.isEmpty) return;
 
-    if (_subscription != null && _watchedLoungeId == cleanLoungeId) {
+    if (!forceRefresh && _subscription != null && _watchedLoungeId == cleanLoungeId) {
       return;
     }
 

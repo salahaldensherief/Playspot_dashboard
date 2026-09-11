@@ -58,14 +58,14 @@ class _DisputeResolutionDialogState extends State<DisputeResolutionDialog> {
 
     if (winnerId == null || winnerId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى تحديد الفائز بالمباراة'), backgroundColor: AppColors.danger),
+        SnackBar(content: Text(AppStrings.selectWinnerError), backgroundColor: AppColors.danger),
       );
       return;
     }
 
     if (notes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى كتابة ملاحظات القرار الإداري (Resolution Notes)'), backgroundColor: AppColors.danger),
+        SnackBar(content: Text(AppStrings.notesRequiredError), backgroundColor: AppColors.danger),
       );
       return;
     }

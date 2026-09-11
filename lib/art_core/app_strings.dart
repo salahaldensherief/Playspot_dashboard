@@ -584,6 +584,18 @@ class AppStrings {
   static String get publishTournament => 'publish_tournament'.tr();
   static String get cancelTournament => 'cancel_tournament'.tr();
   static String get deleteDraft => 'delete_draft'.tr();
+  static String get roundLabel => 'round'.tr();
+  static String get finalRound => 'final_round'.tr();
+  static String get semiFinal => 'semi_final'.tr();
+  static String get quarterFinal => 'quarter_final'.tr();
+  static String get disputedTag => 'disputed_tag'.tr();
+  static String get selectWinnerError => 'select_winner_error'.tr();
+  static String get notesRequiredError => 'notes_required_error'.tr();
+  static String get matched => 'matched'.tr();
+  static String get deficit => 'deficit'.tr();
+  static String get surplus => 'surplus'.tr();
+  static String performedBy(String name) => 'performed_by'.tr(args: [name]);
+  static String detailsLabel(String details) => 'details_label'.tr(args: [details]);
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

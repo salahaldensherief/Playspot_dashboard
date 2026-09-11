@@ -7,6 +7,7 @@ import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/login/login_cubit.dart';
 import '../../features/auth/presentation/login/login_state.dart';
 import '../../features/bookings/presentation/cubit/booking_cubit.dart';
+import '../../features/requests/presentation/client_requests_cubit.dart';
 import '../../features/lounges/presentation/cubit/lounge_cubit.dart';
 import '../../features/lounges/presentation/cubit/lounge_state.dart';
 import '../../features/shifts/presentation/shift_management/shift_cubit.dart';
@@ -135,6 +136,7 @@ class _DashboardShellContentState extends State<_DashboardShellContent> {
       if (loungeId != null && loungeId.isNotEmpty) {
         context.read<ShiftCubit>().checkActiveShift(loungeId);
         context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
+        context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: loungeId);
       } else if (widget.isSuperAdmin) {
         context.read<BookingCubit>().startWatchingBookings();
       }
@@ -148,6 +150,7 @@ class _DashboardShellContentState extends State<_DashboardShellContent> {
       final loungeId = widget.user?.loungeId;
       if (loungeId != null && loungeId.isNotEmpty) {
         context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
+        context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: loungeId);
       } else if (widget.isSuperAdmin) {
         context.read<BookingCubit>().startWatchingBookings();
       }

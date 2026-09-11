@@ -33,10 +33,10 @@ class DashboardCubit extends Cubit<DashboardState> {
     required this.handleClientRequestActionUseCase,
   }) : super(DashboardState.init());
 
-  void startWatchingActiveSessions({String? loungeId}) {
+  void startWatchingActiveSessions({String? loungeId, bool forceRefresh = false}) {
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
 
-    if (_activeSessionsSubscription != null && _watchedLoungeId == cleanLoungeId) {
+    if (!forceRefresh && _activeSessionsSubscription != null && _watchedLoungeId == cleanLoungeId) {
       return;
     }
 

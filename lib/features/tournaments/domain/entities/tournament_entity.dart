@@ -43,7 +43,12 @@ class TournamentEntity extends Equatable {
   final String id;
   final String? loungeId;
   final String? loungeName;
+  final String? cityId;
   final String title;
+  final String? titleAr;
+  final String? titleEn;
+  final String? descriptionAr;
+  final String? descriptionEn;
   final String? gameTitle;
   final String? bannerUrl;
   final int treeSize; // 8, 16, 32
@@ -53,6 +58,12 @@ class TournamentEntity extends Equatable {
   final DateTime startDate;
   final DateTime endDate;
   final DateTime registrationDeadline;
+  final DateTime? registrationOpensAt;
+  final DateTime? registrationClosesAt;
+  final int paymentDeadlineMinutes;
+  final DateTime? checkInOpensAt;
+  final DateTime? checkInClosesAt;
+  final DateTime? tournamentStartsAt;
   final int minPlayers;
   final int maxPlayers;
   final String? rules;
@@ -63,7 +74,12 @@ class TournamentEntity extends Equatable {
     required this.id,
     this.loungeId,
     this.loungeName,
+    this.cityId,
     required this.title,
+    this.titleAr,
+    this.titleEn,
+    this.descriptionAr,
+    this.descriptionEn,
     this.gameTitle,
     this.bannerUrl,
     required this.treeSize,
@@ -73,6 +89,12 @@ class TournamentEntity extends Equatable {
     required this.startDate,
     required this.endDate,
     required this.registrationDeadline,
+    this.registrationOpensAt,
+    this.registrationClosesAt,
+    this.paymentDeadlineMinutes = 30,
+    this.checkInOpensAt,
+    this.checkInClosesAt,
+    this.tournamentStartsAt,
     required this.minPlayers,
     required this.maxPlayers,
     this.rules,
@@ -94,7 +116,12 @@ class TournamentEntity extends Equatable {
         id,
         loungeId,
         loungeName,
+        cityId,
         title,
+        titleAr,
+        titleEn,
+        descriptionAr,
+        descriptionEn,
         gameTitle,
         bannerUrl,
         treeSize,
@@ -104,6 +131,12 @@ class TournamentEntity extends Equatable {
         startDate,
         endDate,
         registrationDeadline,
+        registrationOpensAt,
+        registrationClosesAt,
+        paymentDeadlineMinutes,
+        checkInOpensAt,
+        checkInClosesAt,
+        tournamentStartsAt,
         minPlayers,
         maxPlayers,
         rules,

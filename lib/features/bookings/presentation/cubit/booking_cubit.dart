@@ -36,11 +36,11 @@ class BookingCubit extends Cubit<BookingState> {
     required this.audioService,
   }) : super(const BookingState());
 
-  void startWatchingBookings({String? loungeId}) {
+  void startWatchingBookings({String? loungeId, bool forceRefresh = false}) {
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
 
-    // Avoid re-subscribing only if active subscription exists AND loungeId hasn't changed
-    if (_subscription != null && _watchedLoungeId == cleanLoungeId) {
+    // Avoid re-subscribing only if active subscription exists AND loungeId hasn't changed AND not forced
+    if (!forceRefresh && _subscription != null && _watchedLoungeId == cleanLoungeId) {
       return;
     }
 

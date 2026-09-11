@@ -211,6 +211,7 @@ class DashboardSidebar extends StatelessWidget {
     final canViewExtras = context.hasPermission('menu_view');
     final canViewReviews = context.hasPermission('reviews_view');
     final canManageMarketing = context.hasPermission('marketing_manage');
+    final canViewTournaments = context.hasPermission('tournaments_view') || user.isOwner || user.isManager;
     final canManageStaff = context.hasPermission('staff_management');
     final canViewShiftHistory = context.hasPermission('shifts_view');
     final canViewReports = context.hasPermission('reports_view');
@@ -267,12 +268,13 @@ class DashboardSidebar extends StatelessWidget {
           onTap: () => context.go(RouterKeys.loungeAdminMarketing),
         ),
 
-      _SidebarItem(
-        icon: Icons.emoji_events_outlined,
-        label: AppStrings.tournaments,
-        isActive: activeRoute == RouterKeys.loungeAdminTournaments,
-        onTap: () => context.go(RouterKeys.loungeAdminTournaments),
-      ),
+      if (canViewTournaments)
+        _SidebarItem(
+          icon: Icons.emoji_events_outlined,
+          label: AppStrings.tournaments,
+          isActive: activeRoute == RouterKeys.loungeAdminTournaments,
+          onTap: () => context.go(RouterKeys.loungeAdminTournaments),
+        ),
 
       if (canManageStaff)
         _SidebarItem(

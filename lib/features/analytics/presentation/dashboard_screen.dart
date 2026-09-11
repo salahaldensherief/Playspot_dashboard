@@ -227,12 +227,12 @@ class _LoungeOwnerDashboardView extends StatelessWidget {
 
     await context.read<LoungeStatsCubit>().fetchStats(cleanLoungeId);
     if (context.mounted) {
-      context.read<DashboardCubit>().startWatchingActiveSessions(loungeId: cleanLoungeId);
-      context.read<BookingCubit>().startWatchingBookings(loungeId: cleanLoungeId);
+      context.read<DashboardCubit>().startWatchingActiveSessions(loungeId: cleanLoungeId, forceRefresh: true);
+      context.read<BookingCubit>().startWatchingBookings(loungeId: cleanLoungeId, forceRefresh: true);
       if (cleanLoungeId != null) {
-        context.read<RoomCubit>().watchRooms(cleanLoungeId);
-        context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId);
-        context.read<ReviewsCubit>().startWatchingReviews(loungeId: cleanLoungeId);
+        context.read<RoomCubit>().watchRooms(cleanLoungeId, forceRefresh: true);
+        context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId, forceRefresh: true);
+        context.read<ReviewsCubit>().startWatchingReviews(loungeId: cleanLoungeId, forceRefresh: true);
       }
     }
   }
@@ -284,6 +284,8 @@ class _LoungeOwnerDashboardView extends StatelessWidget {
                     const RepaintBoundary(child: RecentActivityCard()),
                   ],
                   mobileChildren: [
+                    const QuickActionsCard(isSuperAdmin: false),
+                    SizedBox(height: 20.h),
                     const RepaintBoundary(child: RoomStatusCard()),
                     SizedBox(height: 20.h),
                     const RepaintBoundary(child: LiveBookingsFeed()),
@@ -298,8 +300,6 @@ class _LoungeOwnerDashboardView extends StatelessWidget {
                         chart: const RepaintBoundary(child: UtilizationChart()),
                       ),
                     ),
-                    SizedBox(height: 20.h),
-                    const QuickActionsCard(isSuperAdmin: false),
                     SizedBox(height: 20.h),
                     const RepaintBoundary(child: LoungeReviewsCard()),
                     SizedBox(height: 20.h),

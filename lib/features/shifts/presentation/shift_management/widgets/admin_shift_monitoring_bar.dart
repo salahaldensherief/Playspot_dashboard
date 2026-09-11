@@ -90,13 +90,14 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
           Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 20.r),
           SizedBox(width: 12.w),
           AppText.body(
-            "⚠️ No Active Shift Running | لا توجد وردية مفتوحة",
+            "No Active Shift Running | لا توجد وردية مفتوحة",
             color: AppColors.danger,
             fontWeight: FontWeight.bold,
           ),
           const Spacer(),
           AppButton(
-            text: "⚡ فتح وردية فورية الآن",
+            text: "فتح وردية فورية الآن",
+            icon: Icons.flash_on_rounded,
             variant: AppButtonVariant.primary,
             height: 32.h,
             onPressed: () async {
@@ -107,7 +108,13 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
                   _refreshOverview();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('🟢 تم فتح الوردية بنجاح!'),
+                      content: Row(
+                        children: [
+                          Icon(Icons.check_circle_outline, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text('تم فتح الوردية بنجاح!'),
+                        ],
+                      ),
                       backgroundColor: AppColors.success,
                     ),
                   );

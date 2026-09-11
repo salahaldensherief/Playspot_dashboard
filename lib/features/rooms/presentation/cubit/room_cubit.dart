@@ -11,7 +11,7 @@ class RoomCubit extends Cubit<RoomState> {
 
   RoomCubit(this._repository) : super(const RoomState());
 
-  void watchRooms(String loungeId) {
+  void watchRooms(String loungeId, {bool forceRefresh = false}) {
     if (loungeId.isEmpty) {
       emit(state.copyWith(
         status: RoomStatus.failure,
@@ -20,7 +20,7 @@ class RoomCubit extends Cubit<RoomState> {
       return;
     }
 
-    if (_subscription != null && _watchedLoungeId == loungeId) {
+    if (!forceRefresh && _subscription != null && _watchedLoungeId == loungeId) {
       return;
     }
 

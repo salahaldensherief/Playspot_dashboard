@@ -57,9 +57,9 @@ class AuditLogsModal extends StatelessWidget {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('بواسطة: ${log.performedByName ?? log.performedBy}', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                        Text(AppStrings.performedBy(log.performedByName ?? log.performedBy), style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
                         if (log.details != null)
-                          Text('التفاصيل: ${log.details}', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
+                          Text(AppStrings.detailsLabel(log.details.toString()), style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
                       ],
                     ),
                     trailing: Text(

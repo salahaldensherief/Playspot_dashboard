@@ -33,9 +33,12 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
   late TextEditingController _rulesController;
 
   int _treeSize = 16;
+  DateTime _registrationOpensAt = DateTime.now();
+  DateTime _registrationClosesAt = DateTime.now().add(const Duration(days: 5));
+  DateTime _checkInOpensAt = DateTime.now().add(const Duration(days: 5, hours: 2));
+  DateTime _checkInClosesAt = DateTime.now().add(const Duration(days: 7, hours: -1));
   DateTime _startDate = DateTime.now().add(const Duration(days: 7));
   DateTime _endDate = DateTime.now().add(const Duration(days: 8));
-  DateTime _registrationDeadline = DateTime.now().add(const Duration(days: 5));
 
   @override
   void initState() {
@@ -53,7 +56,10 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
       _treeSize = t.treeSize;
       _startDate = t.startDate;
       _endDate = t.endDate;
-      _registrationDeadline = t.registrationDeadline;
+      _registrationOpensAt = t.registrationOpensAt ?? DateTime.now();
+      _registrationClosesAt = t.registrationClosesAt ?? t.registrationDeadline;
+      _checkInOpensAt = t.checkInOpensAt ?? t.registrationDeadline.add(const Duration(hours: 1));
+      _checkInClosesAt = t.checkInClosesAt ?? t.startDate.subtract(const Duration(hours: 1));
     }
   }
 
@@ -96,15 +102,38 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
 
   void _handleSubmit() {
     if (_formKey.currentState?.validate() ?? false) {
-      if (_registrationDeadline.isAfter(_startDate)) {
+      // Client Validations according to pre-launch checklist & spec
+      if (_registrationClosesAt.isBefore(_registrationOpensAt) ||
+          _registrationClosesAt.isAtSameMomentAs(_registrationOpensAt)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppStrings.regDeadline),
+          const SnackBar(
+            content: Text('تاريخ إغلاق التسجيل يجب أن يكون بعد تاريخ فتح التسجيل'),
             backgroundColor: AppColors.danger,
           ),
         );
         return;
       }
+
+      if (_checkInOpensAt.isBefore(_registrationClosesAt)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تاريخ فتح تسجيل الحضور (Check-in) يجب أن يكون بعد إغلاق التسجيل'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+        return;
+      }
+
+      if (_checkInClosesAt.isAfter(_startDate)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تاريخ إغلاق تسجيل الحضور يجب أن يكون قبل انطلاق البطولة'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+        return;
+      }
+
       if (_endDate.isBefore(_startDate)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -118,6 +147,10 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
       final entity = TournamentEntity(
         id: widget.tournament?.id ?? '',
         title: _titleController.text.trim(),
+        titleAr: _titleController.text.trim(),
+        titleEn: _titleController.text.trim(),
+        descriptionAr: _rulesController.text.trim(),
+        descriptionEn: _rulesController.text.trim(),
         gameTitle: _gameTitleController.text.trim(),
         treeSize: _treeSize,
         status: widget.tournament?.status ?? TournamentStatus.draft,
@@ -125,12 +158,18 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
         prizePool: double.tryParse(_prizePoolController.text.trim()) ?? 0.0,
         startDate: _startDate,
         endDate: _endDate,
-        registrationDeadline: _registrationDeadline,
+        registrationDeadline: _registrationClosesAt,
+        registrationOpensAt: _registrationOpensAt,
+        registrationClosesAt: _registrationClosesAt,
+        checkInOpensAt: _checkInOpensAt,
+        checkInClosesAt: _checkInClosesAt,
+        tournamentStartsAt: _startDate,
         minPlayers: int.tryParse(_minPlayersController.text.trim()) ?? 4,
         maxPlayers: int.tryParse(_maxPlayersController.text.trim()) ?? _treeSize,
         rules: _rulesController.text.trim(),
         registeredCount: widget.tournament?.registeredCount ?? 0,
         loungeId: widget.tournament?.loungeId,
+        cityId: widget.tournament?.cityId,
       );
 
       widget.onSubmit(entity);
@@ -145,7 +184,7 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
 
     return AppDialog(
       title: isEdit ? AppStrings.editTournament : AppStrings.createTournament,
-      width: 650.w,
+      width: 700.w,
       actions: [
         AppButton(
           text: AppStrings.cancel,
@@ -267,57 +306,97 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
               style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 12.h),
-            Row(
+            // Schedule Dates Pickers
+            Wrap(
+              spacing: 12.w,
+              runSpacing: 12.h,
               children: [
-                Expanded(
+                SizedBox(
+                  width: 200.w,
                   child: OutlinedButton.icon(
-                    icon: const Icon(Icons.calendar_today, color: AppColors.neonBlue),
+                    icon: const Icon(Icons.timer_outlined, color: AppColors.neonBlue),
                     label: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(AppStrings.regDeadline, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
-                        Text(dateFormat.format(_registrationDeadline), style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp)),
+                        Text('فتح التسجيل', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
+                        Text(dateFormat.format(_registrationOpensAt), style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp)),
                       ],
                     ),
-                    onPressed: () => _selectDate(context, _registrationDeadline, (d) => setState(() => _registrationDeadline = d)),
+                    onPressed: () => _selectDate(context, _registrationOpensAt, (d) => setState(() => _registrationOpensAt = d)),
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 12.w),
+                      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
                       side: const BorderSide(color: AppColors.borderDefault),
                     ),
                   ),
                 ),
-                SizedBox(width: 12.w),
-                Expanded(
+                SizedBox(
+                  width: 200.w,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.timer_off_outlined, color: AppColors.warning),
+                    label: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('غلق التسجيل', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
+                        Text(dateFormat.format(_registrationClosesAt), style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp)),
+                      ],
+                    ),
+                    onPressed: () => _selectDate(context, _registrationClosesAt, (d) => setState(() => _registrationClosesAt = d)),
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
+                      side: const BorderSide(color: AppColors.borderDefault),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 200.w,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.check_circle_outline, color: AppColors.neonBlue),
+                    label: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('فتح الحضور (Check-in)', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
+                        Text(dateFormat.format(_checkInOpensAt), style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp)),
+                      ],
+                    ),
+                    onPressed: () => _selectDate(context, _checkInOpensAt, (d) => setState(() => _checkInOpensAt = d)),
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
+                      side: const BorderSide(color: AppColors.borderDefault),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 200.w,
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.play_circle_fill, color: AppColors.success),
                     label: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(AppStrings.startDate, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
-                        Text(dateFormat.format(_startDate), style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp)),
+                        Text('انطلاق البطولة', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
+                        Text(dateFormat.format(_startDate), style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp)),
                       ],
                     ),
                     onPressed: () => _selectDate(context, _startDate, (d) => setState(() => _startDate = d)),
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 12.w),
+                      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
                       side: const BorderSide(color: AppColors.borderDefault),
                     ),
                   ),
                 ),
-                SizedBox(width: 12.w),
-                Expanded(
+                SizedBox(
+                  width: 200.w,
                   child: OutlinedButton.icon(
-                    icon: const Icon(Icons.stop_circle, color: AppColors.danger),
+                    icon: const Icon(Icons.flag_outlined, color: AppColors.danger),
                     label: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(AppStrings.endDate, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
-                        Text(dateFormat.format(_endDate), style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp)),
+                        Text('انتهاء البطولة', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
+                        Text(dateFormat.format(_endDate), style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp)),
                       ],
                     ),
                     onPressed: () => _selectDate(context, _endDate, (d) => setState(() => _endDate = d)),
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 12.w),
+                      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
                       side: const BorderSide(color: AppColors.borderDefault),
                     ),
                   ),

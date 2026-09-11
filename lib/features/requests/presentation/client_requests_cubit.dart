@@ -19,10 +19,10 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> {
     required this.audioService,
   }) : super(const ClientRequestsState());
 
-  void startWatchingRequests({required String loungeId}) {
+  void startWatchingRequests({required String loungeId, bool forceRefresh = false}) {
     if (loungeId.isEmpty) return;
 
-    if (_subscription != null && _watchedLoungeId == loungeId) {
+    if (!forceRefresh && _subscription != null && _watchedLoungeId == loungeId) {
       return;
     }
 

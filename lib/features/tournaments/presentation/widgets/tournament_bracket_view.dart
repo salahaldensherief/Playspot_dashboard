@@ -86,14 +86,20 @@ class TournamentBracketView extends StatelessWidget {
           ],
         ),
         SizedBox(height: 20.h),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: sortedRounds.map((r) {
-              final roundMatches = rounds[r]!;
-              return _buildRoundColumn(context, r, sortedRounds.length, roundMatches);
-            }).toList(),
+        // Wrapped with InteractiveViewer and RepaintBoundary for smooth pan/zoom & lag prevention
+        Expanded(
+          child: InteractiveViewer(
+            constrained: false,
+            boundaryMargin: const EdgeInsets.all(80),
+            minScale: 0.5,
+            maxScale: 2.5,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: sortedRounds.map((r) {
+                final roundMatches = rounds[r]!;
+                return _buildRoundColumn(context, r, sortedRounds.length, roundMatches);
+              }).toList(),
+            ),
           ),
         ),
       ],
@@ -106,13 +112,13 @@ class TournamentBracketView extends StatelessWidget {
     int totalRounds,
     List<TournamentMatchEntity> roundMatches,
   ) {
-    String roundTitle = 'جولة $roundNumber';
+    String roundTitle = '${AppStrings.roundLabel} $roundNumber';
     if (roundNumber == totalRounds) {
-      roundTitle = 'النهائي (Final 🏆)';
+      roundTitle = AppStrings.finalRound;
     } else if (roundNumber == totalRounds - 1) {
-      roundTitle = 'نصف النهائي (Semi-Final)';
+      roundTitle = AppStrings.semiFinal;
     } else if (roundNumber == totalRounds - 2) {
-      roundTitle = 'ربع النهائي (Quarter-Final)';
+      roundTitle = AppStrings.quarterFinal;
     }
 
     return Container(
@@ -140,7 +146,7 @@ class TournamentBracketView extends StatelessWidget {
             ),
           ),
           SizedBox(height: 16.h),
-          ...roundMatches.map((m) => _buildMatchCard(context, m)),
+          ...roundMatches.map((m) => RepaintBoundary(child: _buildMatchCard(context, m))),
         ],
       ),
     );
@@ -185,7 +191,7 @@ class TournamentBracketView extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                   decoration: BoxDecoration(color: AppColors.danger.withAlpha(30), borderRadius: BorderRadius.circular(4.r)),
-                  child: Text('نزاع ⚠️', style: TextStyle(color: AppColors.danger, fontSize: 10.sp, fontWeight: FontWeight.bold)),
+                  child: Text(AppStrings.disputedTag, style: TextStyle(color: AppColors.danger, fontSize: 10.sp, fontWeight: FontWeight.bold)),
                 ),
             ],
           ),
