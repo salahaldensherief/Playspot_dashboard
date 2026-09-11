@@ -555,5 +555,35 @@ class AppStrings {
   static String get reviewComment => 'review_comment'.tr();
   static String get reviewDate => 'review_date'.tr();
 
+  // Tournaments
+  static String get tournaments => 'tournaments'.tr();
+  static String get tournamentsHub => 'tournaments_hub'.tr();
+  static String get tournamentsHubSub => 'tournaments_hub_sub'.tr();
+  static String get createTournament => 'create_tournament'.tr();
+  static String get editTournament => 'edit_tournament'.tr();
+  static String get tournamentTitle => 'tournament_title'.tr();
+  static String get gameTitle => 'game_title'.tr();
+  static String get treeSize => 'tree_size'.tr();
+  static String get entryFee => 'entry_fee'.tr();
+  static String get prizePool => 'prize_pool'.tr();
+  static String get minPlayers => 'min_players'.tr();
+  static String get maxPlayers => 'max_players'.tr();
+  static String get regDeadline => 'reg_deadline'.tr();
+  static String get startDate => 'start_date'.tr();
+  static String get endDate => 'end_date'.tr();
+  static String get rules => 'rules'.tr();
+  static String get reviewReceipt => 'review_receipt'.tr();
+  static String get approvePayment => 'approve_payment'.tr();
+  static String get rejectPayment => 'reject_payment'.tr();
+  static String get cashPayment => 'cash_payment'.tr();
+  static String get checkIn => 'check_in'.tr();
+  static String get drawBracket => 'draw_bracket'.tr();
+  static String get disputesRoom => 'disputes_room'.tr();
+  static String get resolveDispute => 'resolve_dispute'.tr();
+  static String get auditTrail => 'audit_trail'.tr();
+  static String get publishTournament => 'publish_tournament'.tr();
+  static String get cancelTournament => 'cancel_tournament'.tr();
+  static String get deleteDraft => 'delete_draft'.tr();
+
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

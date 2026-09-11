@@ -39,14 +39,23 @@ class DashboardSidebar extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  SizedBox(height: 32.h),
+                  SizedBox(height: 24.h),
                   _buildLogo(user),
-                  SizedBox(height: 40.h),
-                  if (isSuperAdmin) 
-                    ..._buildSuperAdminItems(context) 
-                  else 
-                    ..._buildLoungeStaffItems(context, user),
-                  const Spacer(),
+                  SizedBox(height: 20.h),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Column(
+                        children: [
+                          if (isSuperAdmin) 
+                            ..._buildSuperAdminItems(context) 
+                          else 
+                            ..._buildLoungeStaffItems(context, user),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const Divider(color: AppColors.borderDefault, height: 1),
                   _SidebarItem(
                     icon: Icons.language,
                     label: context.locale.languageCode == 'en' ? 'العربية' : 'English',
@@ -65,7 +74,7 @@ class DashboardSidebar extends StatelessWidget {
                     isActive: false,
                     onTap: () => _showLogoutConfirmation(context),
                   ),
-                  SizedBox(height: 24.h),
+                  SizedBox(height: 16.h),
                 ],
               ),
             );
@@ -185,6 +194,12 @@ class DashboardSidebar extends StatelessWidget {
         isActive: activeRoute == AppStrings.loyaltySystemAndReferrals,
         onTap: () => context.go(RouterKeys.superAdminLoyalty),
       ),
+      _SidebarItem(
+        icon: Icons.emoji_events_outlined,
+        label: AppStrings.tournaments,
+        isActive: activeRoute == RouterKeys.superAdminTournaments,
+        onTap: () => context.go(RouterKeys.superAdminTournaments),
+      ),
     ];
   }
 
@@ -251,6 +266,13 @@ class DashboardSidebar extends StatelessWidget {
           isActive: activeRoute == AppStrings.marketing,
           onTap: () => context.go(RouterKeys.loungeAdminMarketing),
         ),
+
+      _SidebarItem(
+        icon: Icons.emoji_events_outlined,
+        label: AppStrings.tournaments,
+        isActive: activeRoute == RouterKeys.loungeAdminTournaments,
+        onTap: () => context.go(RouterKeys.loungeAdminTournaments),
+      ),
 
       if (canManageStaff)
         _SidebarItem(

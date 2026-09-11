@@ -41,6 +41,8 @@ import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboa
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/extras_cubit.dart';
 import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_cubit.dart';
 import 'package:play_spot_dashboard/features/loyalty/presentation/cubit/loyalty_cubit.dart';
+import 'package:play_spot_dashboard/features/tournaments/presentation/tournaments_screen.dart' as tournaments;
+import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_cubit.dart';
 
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
@@ -289,6 +291,15 @@ class AppRouter {
                   ),
                 ),
                 GoRoute(
+                  path: RouterKeys.superAdminTournaments,
+                  pageBuilder: (context, state) => NoTransitionPage(
+                    child: BlocProvider(
+                      create: (context) => sl<TournamentCubit>(),
+                      child: const tournaments.TournamentsScreen(),
+                    ),
+                  ),
+                ),
+                GoRoute(
                   path: RouterKeys.loungeAdminDashboard,
                   pageBuilder: (context, state) {
                     final user = context.read<LoginCubit>().state.user;
@@ -317,6 +328,15 @@ class AppRouter {
                 GoRoute(
                   path: RouterKeys.loungeAdminReviews,
                   pageBuilder: (context, state) => const NoTransitionPage(child: reviews_page.LoungeReviewsPage()),
+                ),
+                GoRoute(
+                  path: RouterKeys.loungeAdminTournaments,
+                  pageBuilder: (context, state) => NoTransitionPage(
+                    child: BlocProvider(
+                      create: (context) => sl<TournamentCubit>(),
+                      child: const tournaments.TournamentsScreen(),
+                    ),
+                  ),
                 ),
                 GoRoute(
                   path: RouterKeys.loungeAdminMarketing,
