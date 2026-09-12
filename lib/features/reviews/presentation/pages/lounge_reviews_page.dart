@@ -80,8 +80,10 @@ class _LoungeReviewsPageState extends State<LoungeReviewsPage> {
                       // Reviews List or Empty State
                       if (state.reviews.isEmpty)
                         _buildEmptyState()
-                      else
+                      else ...[
                         _buildReviewsGridOrList(context, state.reviews),
+                        _buildPaginationFooter(context, state),
+                      ],
                     ],
                   );
                 },
@@ -444,6 +446,73 @@ class _LoungeReviewsPageState extends State<LoungeReviewsPage> {
             AppStrings.noReviewsYet,
             color: AppColors.textSecondary,
             fontSize: 14.sp,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaginationFooter(BuildContext context, ReviewsState state) {
+    final loungeId = context.read<LoginCubit>().state.user?.loungeId;
+    if (loungeId == null || loungeId.isEmpty || state.totalCount == 0) {
+      return const SizedBox.shrink();
+    }
+
+    final startIndex = (state.page - 1) * state.pageSize + 1;
+    final endIndex = (startIndex + state.reviews.length - 1).clamp(0, state.totalCount);
+
+    return Container(
+      margin: EdgeInsets.only(top: 20.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            '$startIndex - $endIndex / ${state.totalCount}',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+          ),
+          Row(
+            children: [
+              AppButton(
+                text: AppStrings.back,
+                variant: AppButtonVariant.outlined,
+                fontSize: 12.sp,
+                onPressed: state.hasPreviousPage
+                    ? () => context.read<ReviewsCubit>().fetchReviewsPage(
+                          loungeId: loungeId,
+                          page: state.page - 1,
+                          pageSize: state.pageSize,
+                        )
+                    : null,
+              ),
+              SizedBox(width: 12.w),
+              Text(
+                '${state.page} / ${state.totalPages == 0 ? 1 : state.totalPages}',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.sp,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              AppButton(
+                text: AppStrings.next,
+                variant: AppButtonVariant.outlined,
+                fontSize: 12.sp,
+                onPressed: state.hasNextPage
+                    ? () => context.read<ReviewsCubit>().fetchReviewsPage(
+                          loungeId: loungeId,
+                          page: state.page + 1,
+                          pageSize: state.pageSize,
+                        )
+                    : null,
+              ),
+            ],
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/tournament_audit_log_entity.dart';
 import '../../domain/entities/tournament_entity.dart';
@@ -208,6 +209,29 @@ class TournamentRepositoryImpl implements TournamentRepository {
     try {
       final result = await remoteDataSource.getAuditLogs(tournamentId);
       return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedResult<TournamentAuditLogEntity>>> getTournamentAuditLogsPage({
+    required String tournamentId,
+    int page = 1,
+    int pageSize = 50,
+  }) async {
+    try {
+      final result = await remoteDataSource.getTournamentAuditLogsPage(
+        tournamentId: tournamentId,
+        page: page,
+        pageSize: pageSize,
+      );
+      return Right(PaginatedResult<TournamentAuditLogEntity>(
+        items: result.items,
+        totalCount: result.totalCount,
+        page: result.page,
+        pageSize: result.pageSize,
+      ));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

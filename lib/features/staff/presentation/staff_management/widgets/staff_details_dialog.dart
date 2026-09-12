@@ -6,7 +6,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
-import 'package:play_spot_dashboard/features/staff/data/entities/staff_entity.dart';
+import 'package:play_spot_dashboard/features/staff/domain/entities/staff_entity.dart';
 
 import '../../../../../art_core/widgets/app_cached_image.dart';
 

@@ -1,11 +1,17 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/utils/paginated_result.dart';
 import '../models/client_request_model.dart';
 
 abstract class RequestsRemoteDataSource {
   Stream<List<ClientRequestModel>> watchClientRequests({required String loungeId});
   Future<List<ClientRequestModel>> getClientRequests({required String loungeId});
+  Future<PaginatedResult<ClientRequestModel>> getActiveLoungeRequestsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 20,
+  });
   Future<void> markRequestAsAttended(String id, {bool isCanteenOrder = false});
 }
 
@@ -120,6 +126,69 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     return controller.stream;
   }
 
+  ClientRequestModel _parseClientRequestMap(Map<String, dynamic> map) {
+    if (map['id'] == null || map['id'].toString().trim().isEmpty) {
+      map['id'] = map['request_id'] ?? map['booking_id'] ?? 'req_${DateTime.now().microsecondsSinceEpoch}';
+    }
+
+    final typeStr = (map['type'] ?? map['request_type'] ?? '').toString().toLowerCase();
+
+    if (typeStr.contains('canteen') || typeStr.contains('order')) {
+      return ClientRequestModel.fromCanteenOrderJson(map);
+    } else if (typeStr.contains('extend') || typeStr.contains('extension')) {
+      return ClientRequestModel.fromBookingExtensionJson(map);
+    } else if (typeStr.contains('staff') || typeStr.contains('call') || typeStr.contains('assistance')) {
+      return ClientRequestModel.fromServiceCallJson(map);
+    } else {
+      return ClientRequestModel.fromNotificationJson(map);
+    }
+  }
+
+  @override
+  Future<PaginatedResult<ClientRequestModel>> getActiveLoungeRequestsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final cleanLoungeId = loungeId.trim();
+    if (cleanLoungeId.isEmpty) {
+      return PaginatedResult.empty(requestedPage: page, requestedPageSize: pageSize);
+    }
+
+    try {
+      final response = await client.rpc(
+        'get_active_lounge_requests_page',
+        params: {
+          'p_lounge_id': cleanLoungeId,
+          'p_page': page,
+          'p_page_size': pageSize,
+        },
+      );
+
+      final paginated = PaginatedResult.fromRpcResponse<ClientRequestModel>(
+        response,
+        mapper: (map) => _parseClientRequestMap(map),
+        requestedPage: page,
+        requestedPageSize: pageSize,
+      );
+
+      final filteredItems = paginated.items
+          .where((m) => !_locallyAttendedIds.contains(m.id))
+          .toList();
+
+      return paginated.copyWith(items: filteredItems);
+    } catch (e) {
+      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests_page Error: $e');
+      final fallbackList = await getClientRequests(loungeId: cleanLoungeId);
+      return PaginatedResult(
+        items: fallbackList,
+        totalCount: fallbackList.length,
+        page: page,
+        pageSize: pageSize,
+      );
+    }
+  }
+
   @override
   Future<List<ClientRequestModel>> getClientRequests({required String loungeId}) async {
     final cleanLoungeId = loungeId.trim();
@@ -127,31 +196,22 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
 
     try {
       final response = await client.rpc(
-        'get_active_lounge_requests',
-        params: {'p_lounge_id': cleanLoungeId},
+        'get_active_lounge_requests_page',
+        params: {
+          'p_lounge_id': cleanLoungeId,
+          'p_page': 1,
+          'p_page_size': 50,
+        },
       );
 
-      final list = (response as List).map((json) {
-        final map = Map<String, dynamic>.from(json);
+      final paginated = PaginatedResult.fromRpcResponse<ClientRequestModel>(
+        response,
+        mapper: (map) => _parseClientRequestMap(map),
+        requestedPage: 1,
+        requestedPageSize: 50,
+      );
 
-        // التأكد من وجود الـ ID أو توليد بديل آمن لمنع الفراغ
-        if (map['id'] == null || map['id'].toString().trim().isEmpty) {
-          map['id'] = map['request_id'] ?? map['booking_id'] ?? 'req_${DateTime.now().microsecondsSinceEpoch}';
-        }
-
-        final typeStr = (map['type'] ?? map['request_type'] ?? '').toString().toLowerCase();
-
-        // توجيه الـ JSON للمصنع (Factory) المناسب بناءً على النوع لتفادي تداخل الـ IDs
-        if (typeStr.contains('canteen') || typeStr.contains('order')) {
-          return ClientRequestModel.fromCanteenOrderJson(map);
-        } else if (typeStr.contains('extend') || typeStr.contains('extension')) {
-          return ClientRequestModel.fromBookingExtensionJson(map);
-        } else if (typeStr.contains('staff') || typeStr.contains('call') || typeStr.contains('assistance')) {
-          return ClientRequestModel.fromServiceCallJson(map);
-        } else {
-          return ClientRequestModel.fromNotificationJson(map);
-        }
-      })
+      final list = paginated.items
           .where((m) => !_locallyAttendedIds.contains(m.id))
           .toList();
 

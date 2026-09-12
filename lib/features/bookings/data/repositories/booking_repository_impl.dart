@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
+import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_realtime_datasource.dart';
 import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_remote_data_source.dart';
 import 'package:play_spot_dashboard/features/bookings/data/models/booking_model.dart';
@@ -28,6 +29,29 @@ class BookingRepositoryImpl implements BookingRepository {
         offset: offset,
       );
       return Right(bookings);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedResult<Booking>>> getLoungeBookingsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final result = await remoteDataSource.getLoungeBookingsPage(
+        loungeId: loungeId,
+        page: page,
+        pageSize: pageSize,
+      );
+      return Right(PaginatedResult<Booking>(
+        items: result.items,
+        totalCount: result.totalCount,
+        page: result.page,
+        pageSize: result.pageSize,
+      ));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

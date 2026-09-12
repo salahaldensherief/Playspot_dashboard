@@ -40,7 +40,6 @@ class _MyAppState extends State<MyApp> {
         }
 
         return ScreenUtilInit(
-          key: ValueKey(designSize.width), // Force full tree rebuild on breakpoint hit
           designSize: designSize,
           minTextAdapt: true,
           splitScreenMode: true,

@@ -1,9 +1,15 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/core/utils/app_logger.dart';
+import '../../../../core/utils/paginated_result.dart';
 import '../models/permission_item_model.dart';
 
 abstract class PermissionsRemoteSource {
   Future<List<PermissionItemModel>> getRolePermissions(String role, {String? loungeId});
+  Future<PaginatedResult<PermissionItemModel>> getLoungeRolePermissionsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 50,
+  });
   Future<void> updateRolePermission(String role, String permissionKey, bool isEnabled, {String? loungeId});
 }
 
@@ -98,6 +104,45 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
   }
 
   @override
+  Future<PaginatedResult<PermissionItemModel>> getLoungeRolePermissionsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 50,
+  }) async {
+    final cleanLoungeId = loungeId.trim();
+    if (cleanLoungeId.isEmpty) {
+      return PaginatedResult.empty(requestedPage: page, requestedPageSize: pageSize);
+    }
+
+    final clampedPageSize = pageSize.clamp(1, 100);
+    final validPage = page < 1 ? 1 : page;
+
+    try {
+      final response = await _supabase.rpc('get_lounge_role_permissions_page', params: {
+        'p_lounge_id': cleanLoungeId,
+        'p_page': validPage,
+        'p_page_size': clampedPageSize,
+      });
+
+      return PaginatedResult.fromRpcResponse<PermissionItemModel>(
+        response,
+        mapper: (json) => PermissionItemModel.fromJson(json),
+        requestedPage: validPage,
+        requestedPageSize: clampedPageSize,
+      );
+    } catch (e) {
+      AppLogger.warning('PermissionsRemoteSource: get_lounge_role_permissions_page failed: $e');
+      final fallbackList = await getRolePermissions('manager', loungeId: cleanLoungeId);
+      return PaginatedResult(
+        items: fallbackList,
+        totalCount: fallbackList.length,
+        page: validPage,
+        pageSize: clampedPageSize,
+      );
+    }
+  }
+
+  @override
   Future<void> updateRolePermission(String role, String permissionKey, bool isEnabled, {String? loungeId}) async {
     final cleanRole = role.toLowerCase().trim();
     final cleanLoungeId = loungeId?.trim();
@@ -121,7 +166,6 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
             )
             .select();
         AppLogger.debug('Saved permission in lounge_role_permissions: $result');
-        print('Saved permission: $result');
         return;
       } catch (e) {
         AppLogger.warning('PermissionsRemoteSource: upsert lounge_role_permissions with onConflict failed: $e. Trying without onConflict.');
@@ -139,7 +183,6 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
               )
               .select();
           AppLogger.debug('Saved permission in lounge_role_permissions (fallback): $result');
-          print('Saved permission: $result');
           return;
         } catch (e2) {
           AppLogger.error('PermissionsRemoteSource: Fallback lounge_role_permissions upsert failed: $e2');

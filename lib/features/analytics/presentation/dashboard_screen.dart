@@ -1,4 +1,3 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -78,7 +77,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final _ = context.locale;
     final isSuperAdmin = widget.role == UserRole.superAdmin;
 
     return BlocListener<LoginCubit, LoginState>(
@@ -88,8 +86,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _initRealtimeStreams(loungeId);
       },
       child: isSuperAdmin
-          ? _SuperAdminDashboardView()
-          : _LoungeOwnerDashboardView(),
+          ? const _SuperAdminDashboardView()
+          : const _LoungeOwnerDashboardView(),
     );
   }
 }
@@ -150,7 +148,6 @@ class _SuperAdminDashboardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _ = context.locale;
     return RefreshIndicator(
       onRefresh: () async {
         await context.read<DashboardCubit>().loadDashboardData();
@@ -171,7 +168,7 @@ class _SuperAdminDashboardView extends StatelessWidget {
                   },
                 ),
                 SizedBox(height: 20.h),
-                RepaintBoundary(child: DashboardStatsGrid(isSuperAdmin: true)),
+                const RepaintBoundary(child: DashboardStatsGrid(isSuperAdmin: true)),
                 SizedBox(height: 20.h),
                 _ResponsiveDashboardLayout(
                   mainChildren: [
@@ -189,7 +186,7 @@ class _SuperAdminDashboardView extends StatelessWidget {
                     const RepaintBoundary(child: TopLoungesCard()),
                   ],
                   sideChildren: [
-                    QuickActionsCard(isSuperAdmin: true),
+                    const QuickActionsCard(isSuperAdmin: true),
                     SizedBox(height: 20.h),
                     const RepaintBoundary(child: RecentActivityCard()),
                   ],
@@ -205,7 +202,7 @@ class _SuperAdminDashboardView extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 20.h),
-                    QuickActionsCard(isSuperAdmin: true),
+                    const QuickActionsCard(isSuperAdmin: true),
                     SizedBox(height: 20.h),
                     const RepaintBoundary(child: TopLoungesCard()),
                     SizedBox(height: 20.h),
@@ -242,7 +239,6 @@ class _LoungeOwnerDashboardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _ = context.locale;
     return RefreshIndicator(
       onRefresh: () => _handleRefresh(context),
       color: AppColors.neonBlue,
@@ -261,13 +257,13 @@ class _LoungeOwnerDashboardView extends StatelessWidget {
                   onRefresh: () => _handleRefresh(context),
                 ),
                 SizedBox(height: 20.h),
-                RepaintBoundary(child: LoungeOwnerAnalyticsGrid()),
+                const RepaintBoundary(child: LoungeOwnerAnalyticsGrid()),
                 SizedBox(height: 20.h),
                 _ResponsiveDashboardLayout(
                   mainChildren: [
-                    RepaintBoundary(child: RoomStatusCard()),
+                    const RepaintBoundary(child: RoomStatusCard()),
                     SizedBox(height: 20.h),
-                    RepaintBoundary(child: LiveBookingsFeed()),
+                    const RepaintBoundary(child: LiveBookingsFeed()),
                     SizedBox(height: 20.h),
                     SizedBox(
                       height: 380.h,
@@ -280,19 +276,19 @@ class _LoungeOwnerDashboardView extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 20.h),
-                    RepaintBoundary(child: LoungeReviewsCard()),
+                    const RepaintBoundary(child: LoungeReviewsCard()),
                   ],
                   sideChildren: [
-                    QuickActionsCard(isSuperAdmin: false),
+                    const QuickActionsCard(isSuperAdmin: false),
                     SizedBox(height: 20.h),
-                    RepaintBoundary(child: RecentActivityCard()),
+                    const RepaintBoundary(child: RecentActivityCard()),
                   ],
                   mobileChildren: [
-                    QuickActionsCard(isSuperAdmin: false),
+                    const QuickActionsCard(isSuperAdmin: false),
                     SizedBox(height: 20.h),
-                    RepaintBoundary(child: RoomStatusCard()),
+                    const RepaintBoundary(child: RoomStatusCard()),
                     SizedBox(height: 20.h),
-                    RepaintBoundary(child: LiveBookingsFeed()),
+                    const RepaintBoundary(child: LiveBookingsFeed()),
                     SizedBox(height: 20.h),
                     SizedBox(
                       height: 350.h,
@@ -305,9 +301,9 @@ class _LoungeOwnerDashboardView extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 20.h),
-                    RepaintBoundary(child: LoungeReviewsCard()),
+                    const RepaintBoundary(child: LoungeReviewsCard()),
                     SizedBox(height: 20.h),
-                    RepaintBoundary(child: RecentActivityCard()),
+                    const RepaintBoundary(child: RecentActivityCard()),
                   ],
                 ),
               ]),

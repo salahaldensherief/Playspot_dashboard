@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/entities/category_entity.dart';
-import '../../data/entities/city_entity.dart';
-import '../../data/entities/activity_type_entity.dart';
-import '../../data/repos/category_repos.dart';
+import '../../domain/entities/category_entity.dart';
+import '../../domain/entities/city_entity.dart';
+import '../../domain/entities/activity_type_entity.dart';
+import '../../domain/repositories/category_repository.dart';
 import 'category_state.dart';
 
 class CategoryCubit extends Cubit<CategoryState> {

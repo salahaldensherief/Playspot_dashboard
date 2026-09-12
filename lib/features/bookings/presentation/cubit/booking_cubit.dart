@@ -93,6 +93,39 @@ class BookingCubit extends Cubit<BookingState> {
       },
     );
   }
+
+  Future<void> fetchLoungeBookingsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final cleanLoungeId = loungeId.trim();
+    if (cleanLoungeId.isEmpty) return;
+
+    emit(state.copyWith(status: BookingStatusState.loading));
+
+    final result = await repository.getLoungeBookingsPage(
+      loungeId: cleanLoungeId,
+      page: page,
+      pageSize: pageSize,
+    );
+
+    if (isClosed) return;
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: BookingStatusState.failure,
+        errorMessage: failure.message,
+      )),
+      (paginated) => emit(state.copyWith(
+        status: BookingStatusState.success,
+        bookings: paginated.items,
+        page: paginated.page,
+        pageSize: paginated.pageSize,
+        totalCount: paginated.totalCount,
+      )),
+    );
+  }
   Future<void> approveBooking(String id) async {
     // 1. تحديث فوري وسريع للواجهة (Optimistic UI)
     final updatedList = state.bookings.map((b) {

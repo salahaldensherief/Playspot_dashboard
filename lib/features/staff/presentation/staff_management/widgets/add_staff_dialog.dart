@@ -7,7 +7,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
-import 'package:play_spot_dashboard/features/staff/data/entities/staff_entity.dart';
+import 'package:play_spot_dashboard/features/staff/domain/entities/staff_entity.dart';
 import 'package:play_spot_dashboard/features/staff/data/models/staff_params.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_cubit.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_state.dart';

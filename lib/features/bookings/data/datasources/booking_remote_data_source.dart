@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../models/booking_model.dart';
 
@@ -9,6 +10,11 @@ abstract class BookingRemoteDataSource {
     String? status,
     int limit = 50,
     int offset = 0,
+  });
+  Future<PaginatedResult<BookingModel>> getLoungeBookingsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 20,
   });
   Future<void> updateBookingStatus(String id, String status);
   Future<void> confirmCashPayment(
@@ -30,6 +36,45 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   DateTime? _lastAutoCancelExecution;
 
   BookingRemoteDataSourceImpl(this.client);
+
+  @override
+  Future<PaginatedResult<BookingModel>> getLoungeBookingsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final cleanLoungeId = loungeId.trim();
+    if (cleanLoungeId.isEmpty) {
+      return PaginatedResult.empty(requestedPage: page, requestedPageSize: pageSize);
+    }
+
+    final clampedPageSize = pageSize.clamp(1, 100);
+    final validPage = page < 1 ? 1 : page;
+
+    try {
+      final response = await client.rpc('get_lounge_bookings_page', params: {
+        'p_lounge_id': cleanLoungeId,
+        'p_page': validPage,
+        'p_page_size': clampedPageSize,
+      });
+
+      return PaginatedResult.fromRpcResponse<BookingModel>(
+        response,
+        mapper: (json) => BookingModel.fromJson(json),
+        requestedPage: validPage,
+        requestedPageSize: clampedPageSize,
+      );
+    } catch (e) {
+      debugPrint('⚠️ [DATA_SOURCE] get_lounge_bookings_page RPC error ($e), falling back');
+      final fallbackList = await getBookings(loungeId: cleanLoungeId, limit: clampedPageSize, offset: (validPage - 1) * clampedPageSize);
+      return PaginatedResult(
+        items: fallbackList,
+        totalCount: fallbackList.length,
+        page: validPage,
+        pageSize: clampedPageSize,
+      );
+    }
+  }
 
   @override
   Future<List<BookingModel>> getBookings({

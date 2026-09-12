@@ -75,6 +75,22 @@ class MarketingCubit extends Cubit<MarketingState> {
     );
   }
 
+  Future<void> loadNotificationsPage({int page = 1, int pageSize = 20}) async {
+    emit(state.copyWith(status: MarketingStatus.loading));
+    final result = await repository.getNotificationsPage(page: page, pageSize: pageSize);
+    if (isClosed) return;
+    result.fold(
+      (failure) => emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message)),
+      (paginated) => emit(state.copyWith(
+        status: MarketingStatus.success,
+        notifications: paginated.items,
+        notificationPage: paginated.page,
+        notificationPageSize: paginated.pageSize,
+        totalNotificationsCount: paginated.totalCount,
+      )),
+    );
+  }
+
   Future<void> sendNotification(NotificationEntity notification) async {
     emit(state.copyWith(status: MarketingStatus.loading));
     final result = await repository.sendNotification(notification);

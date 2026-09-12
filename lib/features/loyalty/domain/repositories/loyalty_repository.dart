@@ -1,9 +1,11 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/utils/paginated_result.dart';
 import '../../data/models/loyalty_stats_model.dart';
 import '../entities/referral_entity.dart';
 import '../entities/loyalty_task_entity.dart';
 import '../entities/loyalty_level_entity.dart';
+import '../entities/points_transaction_entity.dart';
 import '../../../marketing/domain/entities/redemption_option_entity.dart';
 
 abstract class LoyaltyRepository {
@@ -34,6 +36,11 @@ abstract class LoyaltyRepository {
     required String userId,
     required int pointsDelta,
     required String reason,
+  });
+
+  Future<Either<Failure, PaginatedResult<PointsTransactionEntity>>> getPointsTransactionsPage({
+    int page = 1,
+    int pageSize = 20,
   });
 
   Future<Either<Failure, List<RedemptionOptionEntity>>> getRedemptionOptions();

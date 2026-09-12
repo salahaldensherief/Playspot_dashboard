@@ -193,7 +193,7 @@ class AppRouter {
               child: MultiBlocProvider(
                 providers: [
                   BlocProvider(create: (_) => sl<OnboardingCubit>()),
-                  BlocProvider(create: (_) => sl<CategoryCubit>()..loadCategories()),
+                  BlocProvider(create: (_) => sl<CategoryCubit>()),
                   BlocProvider(create: (_) => sl<KycCubit>()),
                 ],
                 child: const onboarding.LoungeSetupPage(),
@@ -208,10 +208,6 @@ class AppRouter {
           // لوحة التحكم الرئيسية مع المحافظة على دورة حياة الـ Providers
           ShellRoute(
             builder: (BuildContext context, GoRouterState state, Widget child) {
-              final user = authCubit.state.user;
-              final loungeId = user?.loungeId ?? authCubit.state.userLounge?.id;
-              final roleStr = user?.rawRole ?? user?.role.name ?? 'staff';
-
               return MultiBlocProvider(
                 providers: [
                   BlocProvider<ShiftCubit>(create: (_) => sl<ShiftCubit>()),
@@ -226,7 +222,7 @@ class AppRouter {
                     value: sl<ClientRequestsCubit>(),
                   ),
                   BlocProvider<PermissionsCubit>.value(
-                    value: sl<PermissionsCubit>()..loadUserPermissions(roleStr, loungeId: loungeId),
+                    value: sl<PermissionsCubit>(),
                   ),
                 ],
                 child: DashboardShell(
@@ -254,7 +250,7 @@ class AppRouter {
                 path: RouterKeys.superAdminCategories,
                 pageBuilder: (context, state) => NoTransitionPage(
                   child: BlocProvider(
-                    create: (_) => sl<CategoryCubit>()..loadCategories(),
+                    create: (_) => sl<CategoryCubit>(),
                     child: const categories.CategoriesScreen(),
                   ),
                 ),
@@ -263,7 +259,7 @@ class AppRouter {
                 path: RouterKeys.superAdminMarketing,
                 pageBuilder: (context, state) => NoTransitionPage(
                   child: BlocProvider(
-                    create: (_) => sl<MarketingCubit>()..loadPromotions(),
+                    create: (_) => sl<MarketingCubit>(),
                     child: const marketing.MarketingPage(),
                   ),
                 ),
@@ -278,7 +274,7 @@ class AppRouter {
                 path: RouterKeys.superAdminKyc,
                 pageBuilder: (context, state) => NoTransitionPage(
                   child: BlocProvider(
-                    create: (_) => sl<KycCubit>()..loadPendingReviews(),
+                    create: (_) => sl<KycCubit>(),
                     child: const kyc_reviews.KycReviewsPage(),
                   ),
                 ),
@@ -318,7 +314,7 @@ class AppRouter {
                 path: RouterKeys.loungeAdminRooms,
                 pageBuilder: (context, state) => NoTransitionPage(
                   child: BlocProvider(
-                    create: (_) => sl<CategoryCubit>()..loadCategories(),
+                    create: (_) => sl<CategoryCubit>(),
                     child: const rooms.RoomManagementPage(),
                   ),
                 ),
@@ -344,7 +340,7 @@ class AppRouter {
                 path: RouterKeys.loungeAdminMarketing,
                 pageBuilder: (context, state) => NoTransitionPage(
                   child: BlocProvider(
-                    create: (_) => sl<MarketingCubit>()..loadPromotions(loungeId: authCubit.state.user?.loungeId),
+                    create: (_) => sl<MarketingCubit>(),
                     child: const marketing.MarketingPage(),
                   ),
                 ),

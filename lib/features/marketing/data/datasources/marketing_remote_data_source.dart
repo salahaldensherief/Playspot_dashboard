@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/utils/paginated_result.dart';
 import '../models/promo_model.dart';
 import '../models/notification_model.dart';
 
@@ -13,6 +14,7 @@ abstract class MarketingRemoteDataSource {
   Future<void> sendNotification(NotificationModel notification);
   Future<List<NotificationModel>> getNotifications();
   Future<List<NotificationModel>> getNotificationsRpc({String lang = 'ar', int limit = 20, int offset = 0});
+  Future<PaginatedResult<NotificationModel>> getNotificationsPage({int page = 1, int pageSize = 20});
   Future<void> markNotificationRead(String notificationId);
   Future<void> markAllNotificationsRead();
   RealtimeChannel subscribeToUserNotifications(String userId, void Function(NotificationModel) onNewNotification);
@@ -110,6 +112,38 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
       debugPrint('⚠️ [MARKETING_REMOTE] get_notifications RPC error: $e, falling back to direct select');
     }
     return getNotifications();
+  }
+
+  @override
+  Future<PaginatedResult<NotificationModel>> getNotificationsPage({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final clampedPageSize = pageSize.clamp(1, 100);
+    final validPage = page < 1 ? 1 : page;
+
+    try {
+      final response = await _supabase.rpc('get_notifications_page', params: {
+        'p_page': validPage,
+        'p_page_size': clampedPageSize,
+      });
+
+      return PaginatedResult.fromRpcResponse<NotificationModel>(
+        response,
+        mapper: (json) => NotificationModel.fromJson(json),
+        requestedPage: validPage,
+        requestedPageSize: clampedPageSize,
+      );
+    } catch (e) {
+      debugPrint('⚠️ [MARKETING_REMOTE] get_notifications_page RPC error: $e, falling back');
+      final list = await getNotifications();
+      return PaginatedResult(
+        items: list,
+        totalCount: list.length,
+        page: validPage,
+        pageSize: clampedPageSize,
+      );
+    }
   }
 
   @override

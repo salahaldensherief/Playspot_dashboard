@@ -73,7 +73,38 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> {
   }
 
   void setFilter(RequestFilter filter) {
-    emit(state.copyWith(filter: filter));
+    emit(state.copyWith(filter: filter, page: 1));
+  }
+
+  Future<void> fetchActiveRequestsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    if (loungeId.isEmpty) return;
+    emit(state.copyWith(status: ClientRequestsStatus.loading));
+
+    final result = await repository.getActiveLoungeRequestsPage(
+      loungeId: loungeId,
+      page: page,
+      pageSize: pageSize,
+    );
+
+    if (isClosed) return;
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: ClientRequestsStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (paginated) => emit(state.copyWith(
+        status: ClientRequestsStatus.success,
+        requests: paginated.items,
+        page: paginated.page,
+        pageSize: paginated.pageSize,
+        totalCount: paginated.totalCount,
+      )),
+    );
   }
 
   Future<void> markAsAttended(String requestId, {bool isCanteenOrder = false}) async {

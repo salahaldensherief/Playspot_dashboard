@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
+import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import '../../domain/entities/lounge_review_entity.dart';
 import '../../domain/repositories/reviews_repository.dart';
 import '../datasources/reviews_remote_data_source.dart';
@@ -19,6 +20,29 @@ class ReviewsRepositoryImpl implements ReviewsRepository {
     try {
       final reviews = await remoteDataSource.getLoungeReviews(loungeId: loungeId);
       return Right(reviews);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedResult<LoungeReviewEntity>>> getLoungeReviewsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final result = await remoteDataSource.getLoungeReviewsPage(
+        loungeId: loungeId,
+        page: page,
+        pageSize: pageSize,
+      );
+      return Right(PaginatedResult<LoungeReviewEntity>(
+        items: result.items,
+        totalCount: result.totalCount,
+        page: result.page,
+        pageSize: result.pageSize,
+      ));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

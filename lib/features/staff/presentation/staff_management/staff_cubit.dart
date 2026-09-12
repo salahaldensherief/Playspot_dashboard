@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/staff/data/models/staff_params.dart';
-import 'package:play_spot_dashboard/features/staff/data/repos/staff_repos.dart';
+import 'package:play_spot_dashboard/features/staff/domain/repositories/staff_repository.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_state.dart';
 
 class StaffCubit extends Cubit<StaffState> {

@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
+import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 
 abstract class BookingRepository {
@@ -8,6 +9,11 @@ abstract class BookingRepository {
     String? status,
     int limit = 50,
     int offset = 0,
+  });
+  Future<Either<Failure, PaginatedResult<Booking>>> getLoungeBookingsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 20,
   });
   Stream<List<Booking>> watchBookings({String? loungeId});
   Future<Either<Failure, void>> updateBookingStatus(String id, BookingStatus status);

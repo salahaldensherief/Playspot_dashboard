@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
+import '../../../../core/utils/paginated_result.dart';
 import '../../domain/entities/notification_entity.dart';
 import '../../domain/entities/promo_entity.dart';
 import '../../domain/repositories/marketing_repository.dart';
@@ -108,6 +109,19 @@ class MarketingRepositoryImpl implements MarketingRepository {
     try {
       final notifications = await remoteDataSource.getNotificationsRpc(lang: lang, limit: limit, offset: offset);
       return Right(notifications);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedResult<NotificationEntity>>> getNotificationsPage({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final result = await remoteDataSource.getNotificationsPage(page: page, pageSize: pageSize);
+      return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

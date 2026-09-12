@@ -1,4 +1,3 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -16,6 +15,7 @@ import '../../features/shifts/presentation/shift_management/shift_state.dart';
 import '../../features/shifts/presentation/shift_management/widgets/open_shift_dialog.dart';
 import '../../features/shifts/presentation/shift_management/widgets/shift_summary_modal.dart';
 import '../../features/shifts/presentation/shift_management/widgets/shift_header_banner.dart';
+import '../../features/permissions/presentation/cubit/permissions_cubit.dart';
 import 'dashboard_sidebar.dart';
 import 'dashboard_top_bar.dart';
 import '../widgets/geolocation_handler.dart';
@@ -32,8 +32,13 @@ class DashboardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _ = context.locale;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final loginState = context.read<LoginCubit>().state;
+      final user = loginState.user;
+      final loungeId = user?.loungeId ?? loginState.userLounge?.id;
+      final roleStr = user?.rawRole ?? user?.role.name ?? 'staff';
+      context.read<PermissionsCubit>().loadUserPermissions(roleStr, loungeId: loungeId);
+
       final loungeCubit = context.read<LoungeCubit>();
       if (loungeCubit.state.status == LoungeStatus.initial) {
         loungeCubit.fetchLounges();
@@ -41,6 +46,7 @@ class DashboardShell extends StatelessWidget {
     });
 
     return BlocBuilder<LoginCubit, LoginState>(
+      buildWhen: (prev, curr) => prev.user != curr.user,
       builder: (context, loginState) {
         final user = loginState.user;
         final isSuperAdmin = user?.role == UserRole.superAdmin;

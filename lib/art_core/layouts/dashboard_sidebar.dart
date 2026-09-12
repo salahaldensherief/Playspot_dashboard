@@ -23,8 +23,8 @@ class DashboardSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _ = context.locale;
     return BlocBuilder<LoginCubit, LoginState>(
+      buildWhen: (prev, curr) => prev.user != curr.user,
       builder: (context, state) {
         final user = state.user;
         final isSuperAdmin = user?.isSuperAdmin ?? false;

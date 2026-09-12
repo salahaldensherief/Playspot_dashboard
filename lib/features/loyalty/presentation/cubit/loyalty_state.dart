@@ -3,6 +3,7 @@ import '../../data/models/loyalty_stats_model.dart';
 import '../../domain/entities/referral_entity.dart';
 import '../../domain/entities/loyalty_task_entity.dart';
 import '../../domain/entities/loyalty_level_entity.dart';
+import '../../domain/entities/points_transaction_entity.dart';
 import '../../../marketing/domain/entities/redemption_option_entity.dart';
 
 enum LoyaltyStatus { initial, loading, success, failure }
@@ -14,6 +15,10 @@ class LoyaltyState extends Equatable {
   final List<LoyaltyTaskEntity> tasks;
   final List<LoyaltyLevelEntity> levels;
   final List<RedemptionOptionEntity> options;
+  final List<PointsTransactionEntity> pointsTransactions;
+  final int pointsPage;
+  final int pointsPageSize;
+  final int totalPointsCount;
   final int activeTab;
   final DateTime? startDate;
   final DateTime? endDate;
@@ -29,6 +34,10 @@ class LoyaltyState extends Equatable {
     this.tasks = const [],
     this.levels = const [],
     this.options = const [],
+    this.pointsTransactions = const [],
+    this.pointsPage = 1,
+    this.pointsPageSize = 20,
+    this.totalPointsCount = 0,
     this.activeTab = 0,
     this.startDate,
     this.endDate,
@@ -38,6 +47,10 @@ class LoyaltyState extends Equatable {
     this.errorMessage,
   });
 
+  bool get hasNextPointsPage => pointsPage * pointsPageSize < totalPointsCount;
+  bool get hasPreviousPointsPage => pointsPage > 1;
+  int get totalPointsPages => pointsPageSize > 0 ? (totalPointsCount / pointsPageSize).ceil() : 0;
+
   LoyaltyState copyWith({
     LoyaltyStatus? status,
     LoyaltyStatsModel? stats,
@@ -45,6 +58,10 @@ class LoyaltyState extends Equatable {
     List<LoyaltyTaskEntity>? tasks,
     List<LoyaltyLevelEntity>? levels,
     List<RedemptionOptionEntity>? options,
+    List<PointsTransactionEntity>? pointsTransactions,
+    int? pointsPage,
+    int? pointsPageSize,
+    int? totalPointsCount,
     int? activeTab,
     DateTime? startDate,
     DateTime? endDate,
@@ -60,6 +77,10 @@ class LoyaltyState extends Equatable {
       tasks: tasks ?? this.tasks,
       levels: levels ?? this.levels,
       options: options ?? this.options,
+      pointsTransactions: pointsTransactions ?? this.pointsTransactions,
+      pointsPage: pointsPage ?? this.pointsPage,
+      pointsPageSize: pointsPageSize ?? this.pointsPageSize,
+      totalPointsCount: totalPointsCount ?? this.totalPointsCount,
       activeTab: activeTab ?? this.activeTab,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
@@ -78,6 +99,10 @@ class LoyaltyState extends Equatable {
         tasks,
         levels,
         options,
+        pointsTransactions,
+        pointsPage,
+        pointsPageSize,
+        totalPointsCount,
         activeTab,
         startDate,
         endDate,

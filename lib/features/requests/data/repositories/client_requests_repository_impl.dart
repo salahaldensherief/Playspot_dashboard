@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/utils/paginated_result.dart';
 import '../../domain/entities/client_request_entity.dart';
 import '../../domain/repositories/client_requests_repository.dart';
 import '../datasources/requests_remote_data_source.dart';
@@ -19,6 +20,24 @@ class ClientRequestsRepositoryImpl implements ClientRequestsRepository {
     try {
       final list = await remoteDataSource.getClientRequests(loungeId: loungeId);
       return Right(list);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedResult<ClientRequestEntity>>> getActiveLoungeRequestsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final result = await remoteDataSource.getActiveLoungeRequestsPage(
+        loungeId: loungeId,
+        page: page,
+        pageSize: pageSize,
+      );
+      return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

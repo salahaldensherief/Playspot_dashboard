@@ -57,6 +57,53 @@ class ReviewsCubit extends Cubit<ReviewsState> {
     );
   }
 
+  Future<void> fetchReviewsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final cleanLoungeId = loungeId.trim();
+    if (cleanLoungeId.isEmpty) return;
+
+    emit(state.copyWith(status: ReviewsStatus.loading));
+
+    final result = await watchLoungeReviewsUseCase.repository.getLoungeReviewsPage(
+      loungeId: cleanLoungeId,
+      page: page,
+      pageSize: pageSize,
+    );
+
+    if (isClosed) return;
+
+    result.fold(
+      (failure) {
+        emit(state.copyWith(
+          status: ReviewsStatus.failure,
+          errorMessage: failure.message,
+        ));
+      },
+      (paginated) {
+        double totalRating = 0.0;
+        for (final r in paginated.items) {
+          totalRating += r.rating;
+        }
+
+        final double avgRating = paginated.items.isNotEmpty
+            ? (totalRating / paginated.items.length)
+            : 0.0;
+
+        emit(state.copyWith(
+          status: ReviewsStatus.success,
+          reviews: paginated.items,
+          averageRating: double.parse(avgRating.toStringAsFixed(1)),
+          page: paginated.page,
+          pageSize: paginated.pageSize,
+          totalCount: paginated.totalCount,
+        ));
+      },
+    );
+  }
+
   @override
   Future<void> close() {
     _subscription?.cancel();

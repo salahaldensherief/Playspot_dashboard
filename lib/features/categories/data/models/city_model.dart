@@ -1,4 +1,4 @@
-import '../entities/city_entity.dart';
+import '../../domain/entities/city_entity.dart';
 
 class CityModel extends CityEntity {
   const CityModel({

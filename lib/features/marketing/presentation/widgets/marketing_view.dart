@@ -63,8 +63,10 @@ class _MarketingViewState extends State<MarketingView> with SingleTickerProvider
     _expirationDateController = TextEditingController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final user = context.read<LoginCubit>().state.user;
       final loungeId = user?.loungeId;
+      context.read<MarketingCubit>().loadPromotions(loungeId: loungeId);
       if (loungeId != null) {
         context.read<RoomCubit>().watchRooms(loungeId);
       }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import '../models/lounge_review_model.dart';
 
 abstract class ReviewsRemoteDataSource {
@@ -9,6 +10,13 @@ abstract class ReviewsRemoteDataSource {
 
   /// Single fetch of reviews for a lounge.
   Future<List<LoungeReviewModel>> getLoungeReviews({required String loungeId});
+
+  /// Paginated fetch of reviews for a lounge.
+  Future<PaginatedResult<LoungeReviewModel>> getLoungeReviewsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 20,
+  });
 }
 
 class ReviewsRemoteDataSourceImpl implements ReviewsRemoteDataSource {
@@ -142,5 +150,44 @@ class ReviewsRemoteDataSourceImpl implements ReviewsRemoteDataSource {
   Future<List<LoungeReviewModel>> getLoungeReviews({required String loungeId}) async {
     if (loungeId.isEmpty) return [];
     return _fetchReviewsFromSupabase(loungeId);
+  }
+
+  @override
+  Future<PaginatedResult<LoungeReviewModel>> getLoungeReviewsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final cleanLoungeId = loungeId.trim();
+    if (cleanLoungeId.isEmpty) {
+      return PaginatedResult.empty(requestedPage: page, requestedPageSize: pageSize);
+    }
+
+    final clampedPageSize = pageSize.clamp(1, 100);
+    final validPage = page < 1 ? 1 : page;
+
+    try {
+      final response = await supabaseClient.rpc('get_lounge_reviews_page', params: {
+        'p_lounge_id': cleanLoungeId,
+        'p_page': validPage,
+        'p_page_size': clampedPageSize,
+      });
+
+      return PaginatedResult.fromRpcResponse<LoungeReviewModel>(
+        response,
+        mapper: (json) => LoungeReviewModel.fromJson(json),
+        requestedPage: validPage,
+        requestedPageSize: clampedPageSize,
+      );
+    } catch (e) {
+      debugPrint('⚠️ [REVIEWS_DATA_SOURCE] get_lounge_reviews_page RPC error ($e), falling back');
+      final fallbackList = await getLoungeReviews(loungeId: cleanLoungeId);
+      return PaginatedResult(
+        items: fallbackList,
+        totalCount: fallbackList.length,
+        page: validPage,
+        pageSize: clampedPageSize,
+      );
+    }
   }
 }

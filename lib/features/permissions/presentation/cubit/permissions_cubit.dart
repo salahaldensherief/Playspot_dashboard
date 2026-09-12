@@ -131,6 +131,42 @@ class PermissionsCubit extends Cubit<PermissionsState> {
     );
   }
 
+  /// Fetches paginated lounge role permissions
+  Future<void> fetchLoungeRolePermissionsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 50,
+  }) async {
+    if (isClosed || loungeId.trim().isEmpty) return;
+    _activeLoungeId = loungeId.trim();
+
+    emit(state.copyWith(status: PermissionsStatus.loading));
+
+    final result = await getRolePermissionsUseCase.repository.getLoungeRolePermissionsPage(
+      loungeId: _activeLoungeId!,
+      page: page,
+      pageSize: pageSize,
+    );
+
+    if (isClosed) return;
+
+    result.fold(
+      (failure) {
+        AppLogger.warning('Fetch lounge role permissions page failure: ${failure.message}');
+        emit(state.copyWith(status: PermissionsStatus.failure, errorMessage: failure.message));
+      },
+      (paginated) {
+        emit(state.copyWith(
+          status: PermissionsStatus.success,
+          permissions: paginated.items,
+          page: paginated.page,
+          pageSize: paginated.pageSize,
+          totalCount: paginated.totalCount,
+        ));
+      },
+    );
+  }
+
   /// Toggles a permission for a role, updates remote DB, cache, and active state
   Future<void> togglePermission(String role, String key, bool value, {String? loungeId}) async {
     if (isClosed || key.isEmpty) return;

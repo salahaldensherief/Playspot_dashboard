@@ -1,11 +1,13 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/utils/paginated_result.dart';
 import '../../domain/repositories/loyalty_repository.dart';
 import '../datasources/loyalty_remote_data_source.dart';
 import '../models/loyalty_stats_model.dart';
 import '../../domain/entities/referral_entity.dart';
 import '../../domain/entities/loyalty_task_entity.dart';
 import '../../domain/entities/loyalty_level_entity.dart';
+import '../../domain/entities/points_transaction_entity.dart';
 import '../../../marketing/domain/entities/redemption_option_entity.dart';
 import '../../../marketing/data/models/redemption_option_model.dart';
 
@@ -108,6 +110,19 @@ class LoyaltyRepositoryImpl implements LoyaltyRepository {
         reason: reason,
       );
       return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedResult<PointsTransactionEntity>>> getPointsTransactionsPage({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final result = await remoteDataSource.getPointsTransactionsPage(page: page, pageSize: pageSize);
+      return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

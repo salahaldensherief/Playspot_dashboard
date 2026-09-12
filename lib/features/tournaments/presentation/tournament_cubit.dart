@@ -382,11 +382,20 @@ class TournamentCubit extends Cubit<TournamentState> {
     );
   }
 
-  Future<void> loadAuditLogs(String tournamentId) async {
-    final result = await repository.getAuditLogs(tournamentId);
+  Future<void> loadAuditLogs(String tournamentId, {int page = 1, int pageSize = 50}) async {
+    final result = await repository.getTournamentAuditLogsPage(
+      tournamentId: tournamentId,
+      page: page,
+      pageSize: pageSize,
+    );
     result.fold(
       (failure) => emit(state.copyWith(errorMessage: failure.message)),
-      (logs) => emit(state.copyWith(auditLogs: logs)),
+      (paginated) => emit(state.copyWith(
+        auditLogs: paginated.items,
+        auditLogsPage: paginated.page,
+        auditLogsPageSize: paginated.pageSize,
+        totalAuditLogsCount: paginated.totalCount,
+      )),
     );
   }
 

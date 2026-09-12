@@ -67,6 +67,23 @@ class LoyaltyCubit extends Cubit<LoyaltyState> {
     emit(state.copyWith(activeTab: tabIndex));
   }
 
+  Future<void> loadPointsTransactionsPage({int page = 1, int pageSize = 20}) async {
+    emit(state.copyWith(status: LoyaltyStatus.loading));
+    final result = await repository.getPointsTransactionsPage(page: page, pageSize: pageSize);
+    if (isClosed) return;
+
+    result.fold(
+      (failure) => emit(state.copyWith(status: LoyaltyStatus.failure, errorMessage: failure.message)),
+      (paginated) => emit(state.copyWith(
+        status: LoyaltyStatus.success,
+        pointsTransactions: paginated.items,
+        pointsPage: paginated.page,
+        pointsPageSize: paginated.pageSize,
+        totalPointsCount: paginated.totalCount,
+      )),
+    );
+  }
+
   Future<void> updateFilters({
     DateTime? startDate,
     DateTime? endDate,

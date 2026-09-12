@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import '../models/tournament_audit_log_model.dart';
 import '../models/tournament_match_model.dart';
 import '../models/tournament_model.dart';
@@ -34,6 +35,11 @@ abstract class TournamentRemoteDataSource {
   Future<void> completeTournament(String tournamentId);
   Future<Map<String, dynamic>> awardPrizes(String tournamentId);
   Future<List<TournamentAuditLogModel>> getAuditLogs(String tournamentId);
+  Future<PaginatedResult<TournamentAuditLogModel>> getTournamentAuditLogsPage({
+    required String tournamentId,
+    int page = 1,
+    int pageSize = 50,
+  });
 
   Stream<List<TournamentMatchModel>> watchDisputedMatches(String tournamentId);
 }
@@ -460,6 +466,45 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
       return (plainResponse as List).map((json) {
         return TournamentAuditLogModel.fromJson(Map<String, dynamic>.from(json));
       }).toList();
+    }
+  }
+
+  @override
+  Future<PaginatedResult<TournamentAuditLogModel>> getTournamentAuditLogsPage({
+    required String tournamentId,
+    int page = 1,
+    int pageSize = 50,
+  }) async {
+    final cleanTournamentId = tournamentId.trim();
+    if (cleanTournamentId.isEmpty) {
+      return PaginatedResult.empty(requestedPage: page, requestedPageSize: pageSize);
+    }
+
+    final clampedPageSize = pageSize.clamp(1, 100);
+    final validPage = page < 1 ? 1 : page;
+
+    try {
+      final response = await client.rpc('get_tournament_audit_logs_page', params: {
+        'p_tournament_id': cleanTournamentId,
+        'p_page': validPage,
+        'p_page_size': clampedPageSize,
+      });
+
+      return PaginatedResult.fromRpcResponse<TournamentAuditLogModel>(
+        response,
+        mapper: (json) => TournamentAuditLogModel.fromJson(json),
+        requestedPage: validPage,
+        requestedPageSize: clampedPageSize,
+      );
+    } catch (e) {
+      debugPrint('⚠️ [TOURNAMENTS_REMOTE] get_tournament_audit_logs_page RPC error ($e), falling back');
+      final fallbackList = await getAuditLogs(cleanTournamentId);
+      return PaginatedResult(
+        items: fallbackList,
+        totalCount: fallbackList.length,
+        page: validPage,
+        pageSize: clampedPageSize,
+      );
     }
   }
 

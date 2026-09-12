@@ -11,8 +11,23 @@ import '../cubit/kyc_cubit.dart';
 import '../cubit/kyc_state.dart';
 import '../widgets/kyc_inspection_dialog.dart';
 
-class KycReviewsPage extends StatelessWidget {
+class KycReviewsPage extends StatefulWidget {
   const KycReviewsPage({super.key});
+
+  @override
+  State<KycReviewsPage> createState() => _KycReviewsPageState();
+}
+
+class _KycReviewsPageState extends State<KycReviewsPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<KycCubit>().loadPendingReviews();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

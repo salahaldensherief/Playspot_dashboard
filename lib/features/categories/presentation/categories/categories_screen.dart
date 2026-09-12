@@ -5,8 +5,8 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
-import '../../data/entities/category_entity.dart';
-import '../../data/entities/city_entity.dart';
+import '../../domain/entities/category_entity.dart';
+import '../../domain/entities/city_entity.dart';
 import 'category_cubit.dart';
 import 'category_state.dart';
 import 'widgets/category_card.dart';
@@ -27,6 +27,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<CategoryCubit>().loadCategories();
+      }
+    });
   }
 
   @override

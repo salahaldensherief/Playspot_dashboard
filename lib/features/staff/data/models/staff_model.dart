@@ -1,4 +1,4 @@
-import '../entities/staff_entity.dart';
+import '../../domain/entities/staff_entity.dart';
 
 class StaffModel extends StaffEntity {
   const StaffModel({

@@ -14,6 +14,9 @@ class TournamentState extends Equatable {
   final List<TournamentMatchEntity> matches;
   final List<TournamentMatchEntity> disputedMatches;
   final List<TournamentAuditLogEntity> auditLogs;
+  final int auditLogsPage;
+  final int auditLogsPageSize;
+  final int totalAuditLogsCount;
   final Map<String, dynamic>? lastAwardResult;
   final int selectedTab; // 0: Tournaments, 1: Participants/Payments, 2: Bracket, 3: Disputes, 4: Audit Logs & Prizes
   final String? errorMessage;
@@ -27,11 +30,18 @@ class TournamentState extends Equatable {
     this.matches = const [],
     this.disputedMatches = const [],
     this.auditLogs = const [],
+    this.auditLogsPage = 1,
+    this.auditLogsPageSize = 50,
+    this.totalAuditLogsCount = 0,
     this.lastAwardResult,
     this.selectedTab = 0,
     this.errorMessage,
     this.successMessage,
   });
+
+  bool get hasNextAuditLogsPage => auditLogsPage * auditLogsPageSize < totalAuditLogsCount;
+  bool get hasPreviousAuditLogsPage => auditLogsPage > 1;
+  int get totalAuditLogsPages => auditLogsPageSize > 0 ? (totalAuditLogsCount / auditLogsPageSize).ceil() : 0;
 
   TournamentState copyWith({
     TournamentCubitStatus? status,
@@ -42,6 +52,9 @@ class TournamentState extends Equatable {
     List<TournamentMatchEntity>? matches,
     List<TournamentMatchEntity>? disputedMatches,
     List<TournamentAuditLogEntity>? auditLogs,
+    int? auditLogsPage,
+    int? auditLogsPageSize,
+    int? totalAuditLogsCount,
     Map<String, dynamic>? lastAwardResult,
     int? selectedTab,
     String? errorMessage,
@@ -57,6 +70,9 @@ class TournamentState extends Equatable {
       matches: matches ?? this.matches,
       disputedMatches: disputedMatches ?? this.disputedMatches,
       auditLogs: auditLogs ?? this.auditLogs,
+      auditLogsPage: auditLogsPage ?? this.auditLogsPage,
+      auditLogsPageSize: auditLogsPageSize ?? this.auditLogsPageSize,
+      totalAuditLogsCount: totalAuditLogsCount ?? this.totalAuditLogsCount,
       lastAwardResult: lastAwardResult ?? this.lastAwardResult,
       selectedTab: selectedTab ?? this.selectedTab,
       errorMessage: errorMessage,
@@ -73,6 +89,9 @@ class TournamentState extends Equatable {
         matches,
         disputedMatches,
         auditLogs,
+        auditLogsPage,
+        auditLogsPageSize,
+        totalAuditLogsCount,
         lastAwardResult,
         selectedTab,
         errorMessage,

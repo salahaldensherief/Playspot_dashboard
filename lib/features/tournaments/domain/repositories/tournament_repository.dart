@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import '../../../../core/error/failures.dart';
 import '../entities/tournament_audit_log_entity.dart';
 import '../entities/tournament_entity.dart';
@@ -50,6 +51,12 @@ abstract class TournamentRepository {
   Future<Either<Failure, Map<String, dynamic>>> awardPrizes(String tournamentId);
 
   Future<Either<Failure, List<TournamentAuditLogEntity>>> getAuditLogs(String tournamentId);
+
+  Future<Either<Failure, PaginatedResult<TournamentAuditLogEntity>>> getTournamentAuditLogsPage({
+    required String tournamentId,
+    int page = 1,
+    int pageSize = 50,
+  });
 
   Stream<List<TournamentMatchEntity>> watchDisputedMatches(String tournamentId);
 }
