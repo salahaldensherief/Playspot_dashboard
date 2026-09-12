@@ -31,15 +31,36 @@ class ClientRequestModel extends ClientRequestEntity {
     return int.tryParse(val.toString()) ?? defaultValue;
   }
 
+  static bool _parseBool(dynamic val) {
+    if (val == null) return false;
+    if (val is bool) return val;
+    if (val is num) return val == 1;
+    if (val is String) {
+      final l = val.toLowerCase().trim();
+      return l == 'true' || l == '1' || l == 'yes';
+    }
+    return false;
+  }
+
+  static Map<String, dynamic>? _parseMap(dynamic val) {
+    if (val == null) return null;
+    if (val is Map) return Map<String, dynamic>.from(val);
+    if (val is List && val.isNotEmpty) {
+      final first = val.first;
+      if (first is Map) return Map<String, dynamic>.from(first);
+    }
+    return null;
+  }
+
   factory ClientRequestModel.fromNotificationJson(Map<String, dynamic> json) {
     final metadataObj = NotificationMetadata.fromJson(json['metadata']);
     final rawType = (json['type'] ??
-            json['request_type'] ??
-            json['category'] ??
-            json['call_type'] ??
-            json['callType'] ??
-            metadataObj.requestType ??
-            '')
+        json['request_type'] ??
+        json['category'] ??
+        json['call_type'] ??
+        json['callType'] ??
+        metadataObj.requestType ??
+        '')
         .toString()
         .trim()
         .toLowerCase();
@@ -91,8 +112,16 @@ class ClientRequestModel extends ClientRequestEntity {
         }
     }
 
-    final bool isRead = _parseBool(json['is_read'] ?? json['read']);
-    final bool isAttended = _parseBool(json['is_attended'] ?? json['attended'] ?? json['is_read'] ?? json['read']);
+    final statusStr = (json['status'] ?? '').toString().toLowerCase();
+    final bool isAttended = _parseBool(json['is_attended']) ||
+        _parseBool(json['attended']) ||
+        _parseBool(json['is_read']) ||
+        _parseBool(json['read']) ||
+        statusStr == 'completed' ||
+        statusStr == 'attended' ||
+        statusStr == 'resolved';
+
+    final bool isRead = isAttended || _parseBool(json['is_read'] ?? json['read']);
 
     String bodyAr = (json['body_ar'] ?? json['body'] ?? '').toString();
     if (bodyAr.isEmpty || bodyAr == 'طلب من العميل') {
@@ -107,12 +136,13 @@ class ClientRequestModel extends ClientRequestEntity {
       }
     }
 
-    final String rawId = (json['id'] ?? '').toString();
-    final String reqId = rawId.startsWith('notif_') || rawId.startsWith('ext_') || rawId.startsWith('item_') || rawId.startsWith('canteen_')
-        ? rawId
-        : 'notif_$rawId';
+    final String reqId = (json['id'] ?? '').toString();
 
-    final String? userAvatarUrl = (json['user_avatar'] ?? json['user_avatar_url'] ?? json['avatar_url'] ?? metadataObj.userAvatar)?.toString();
+    final String? userAvatarUrl = (json['user_avatar'] ??
+        json['user_avatar_url'] ??
+        json['avatar_url'] ??
+        metadataObj.userAvatar)
+        ?.toString();
 
     return ClientRequestModel(
       id: reqId,
@@ -167,15 +197,19 @@ class ClientRequestModel extends ClientRequestEntity {
     }
 
     final String statusStr = (json['status'] ?? 'pending').toString().toLowerCase();
-    final bool isAttended = statusStr == 'completed' || statusStr == 'attended' || statusStr == 'approved' || _parseBool(json['is_attended'] ?? json['is_read']);
+    final bool isAttended = statusStr == 'completed' ||
+        statusStr == 'attended' ||
+        statusStr == 'approved' ||
+        statusStr == 'resolved' ||
+        _parseBool(json['is_attended']) ||
+        _parseBool(json['attended']);
 
     final String roomName = (json['room_name'] ?? json['roomName'] ?? json['room'] ?? metadataObj.roomName ?? 'Gaming Station').toString();
     final String userName = (json['user_name'] ?? json['userName'] ?? json['user'] ?? json['full_name'] ?? metadataObj.userName ?? 'Client').toString();
     final String userPhone = (json['user_phone'] ?? json['userPhone'] ?? json['phone'] ?? metadataObj.userPhone ?? '').toString();
     final String? userAvatarUrl = (json['user_avatar'] ?? json['user_avatar_url'] ?? json['avatar_url'] ?? metadataObj.userAvatar)?.toString();
 
-    final String rawId = (json['id'] ?? '').toString();
-    final String reqId = rawId.startsWith('canteen_') ? rawId : 'canteen_$rawId';
+    final String reqId = (json['id'] ?? '').toString();
 
     return ClientRequestModel(
       id: reqId,
@@ -222,8 +256,7 @@ class ClientRequestModel extends ClientRequestEntity {
     final String extStatus = (json['extension_status'] ?? 'pending').toString().toLowerCase();
     final bool isAttended = extStatus != 'pending';
 
-    final String rawId = (json['id'] ?? '').toString();
-    final String reqId = rawId.startsWith('ext_') ? rawId : 'ext_$rawId';
+    final String reqId = (json['id'] ?? '').toString();
 
     return ClientRequestModel(
       id: reqId,
@@ -245,8 +278,8 @@ class ClientRequestModel extends ClientRequestEntity {
       createdAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'].toString())
           : (json['created_at'] != null
-              ? DateTime.parse(json['created_at'].toString())
-              : DateTime.now()),
+          ? DateTime.parse(json['created_at'].toString())
+          : DateTime.now()),
       metadata: NotificationMetadata(
         bookingId: json['id']?.toString(),
         roomId: (json['room_id'] ?? json['roomId'])?.toString(),
@@ -266,21 +299,20 @@ class ClientRequestModel extends ClientRequestEntity {
   }
 
   factory ClientRequestModel.fromServiceCallJson(
-    Map<String, dynamic> json, {
-    Map<String, String>? roomNamesMap,
-    Map<String, String>? userNamesMap,
-    Map<String, String>? userAvatarsMap,
-  }) {
+      Map<String, dynamic> json, {
+        Map<String, String>? roomNamesMap,
+        Map<String, String>? userNamesMap,
+        Map<String, String>? userAvatarsMap,
+      }) {
     final statusStr = (json['status'] ?? 'pending').toString().toLowerCase();
     final bool isAttended = statusStr == 'resolved' ||
         statusStr == 'completed' ||
         statusStr == 'attended' ||
         statusStr == 'approved' ||
-        json['is_attended'] == true;
-    final bool isRead = isAttended || json['is_read'] == true;
+        _parseBool(json['is_attended']);
+    final bool isRead = isAttended || _parseBool(json['is_read']);
 
-    final String rawId = (json['id'] ?? '').toString();
-    final String reqId = rawId.startsWith('sc_') ? rawId : 'sc_$rawId';
+    final String reqId = (json['id'] ?? '').toString();
 
     final String callType = (json['call_type'] ?? json['type'] ?? 'assistance').toString().toLowerCase();
     String bodyAr = 'طلب مساعدة من العامل';
@@ -361,12 +393,14 @@ class ClientRequestModel extends ClientRequestEntity {
     final String userName = (bookingObj?['user_name'] ?? json['user_name'] ?? json['userName'] ?? json['user'] ?? 'Client').toString();
     final String userPhone = (bookingObj?['user_phone'] ?? json['user_phone'] ?? json['userPhone'] ?? json['phone'] ?? '').toString();
     final String? userAvatarUrl = (bookingObj?['avatar_url'] ?? bookingObj?['user_avatar'] ?? json['user_avatar'] ?? json['user_avatar_url'] ?? json['avatar_url'])?.toString();
+
     final String statusStr = (json['status'] ?? '').toString().toLowerCase();
     final bool isAttended = statusStr == 'completed' ||
         statusStr == 'attended' ||
         statusStr == 'approved' ||
         statusStr == 'resolved' ||
-        _parseBool(json['is_attended'] ?? json['is_read'] ?? json['attended'] ?? json['read']);
+        _parseBool(json['is_attended']) ||
+        _parseBool(json['attended']);
 
     final itemMap = {
       'name': name,
@@ -375,8 +409,7 @@ class ClientRequestModel extends ClientRequestEntity {
       'note': json['note']?.toString() ?? json['notes']?.toString(),
     };
 
-    final String rawId = (json['id'] ?? '').toString();
-    final String reqId = rawId.startsWith('item_') ? rawId : 'item_$rawId';
+    final String reqId = (json['id'] ?? '').toString();
 
     return ClientRequestModel(
       id: reqId,
@@ -409,26 +442,5 @@ class ClientRequestModel extends ClientRequestEntity {
       canteenItems: [itemMap],
       totalPrice: price * qty,
     );
-  }
-
-  static bool _parseBool(dynamic val) {
-    if (val == null) return false;
-    if (val is bool) return val;
-    if (val is num) return val == 1;
-    if (val is String) {
-      final l = val.toLowerCase().trim();
-      return l == 'true' || l == '1' || l == 'yes';
-    }
-    return false;
-  }
-
-  static Map<String, dynamic>? _parseMap(dynamic val) {
-    if (val == null) return null;
-    if (val is Map) return Map<String, dynamic>.from(val);
-    if (val is List && val.isNotEmpty) {
-      final first = val.first;
-      if (first is Map) return Map<String, dynamic>.from(first);
-    }
-    return null;
   }
 }

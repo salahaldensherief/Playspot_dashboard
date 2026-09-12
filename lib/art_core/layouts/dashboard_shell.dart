@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -31,6 +32,7 @@ class DashboardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final _ = context.locale;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final loungeCubit = context.read<LoungeCubit>();
       if (loungeCubit.state.status == LoungeStatus.initial) {
@@ -39,7 +41,6 @@ class DashboardShell extends StatelessWidget {
     });
 
     return BlocBuilder<LoginCubit, LoginState>(
-      buildWhen: (prev, curr) => prev.user != curr.user,
       builder: (context, loginState) {
         final user = loginState.user;
         final isSuperAdmin = user?.role == UserRole.superAdmin;

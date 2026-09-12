@@ -12,12 +12,12 @@ abstract class BookingRemoteDataSource {
   });
   Future<void> updateBookingStatus(String id, String status);
   Future<void> confirmCashPayment(
-    String bookingId, {
-    String? shiftId,
-    double? discountAmount,
-    double? discountPercentage,
-    String? discountReason,
-  });
+      String bookingId, {
+        String? shiftId,
+        double? discountAmount,
+        double? discountPercentage,
+        String? discountReason,
+      });
   Future<void> createBooking(BookingModel booking);
   Future<void> swapRoom(String bookingId, String newRoomId, String actionBy);
   Future<void> startBookingSession(String bookingId);
@@ -27,6 +27,7 @@ abstract class BookingRemoteDataSource {
 
 class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   final SupabaseClient client;
+  DateTime? _lastAutoCancelExecution;
 
   BookingRemoteDataSourceImpl(this.client);
 
@@ -40,7 +41,6 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
 
     try {
-      // المحاولة الأساسية عبر الـ RPC
       final response = await client.rpc('get_all_bookings_admin', params: {
         'p_status': status,
         'p_lounge_id': cleanLoungeId,
@@ -52,7 +52,6 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         return BookingModel.fromJson(Map<String, dynamic>.from(json));
       }).toList();
     } catch (e) {
-      // خطة بديلة (Fallback) في حالة فشل الـ RPC
       debugPrint('${AppConstants.bookingFetchAlert}$e');
       return _fetchSafeSelect(cleanLoungeId, status, limit, offset);
     }
@@ -78,15 +77,15 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       if (loungeId != null && loungeId.isNotEmpty) {
         query = query.eq('lounge_id', loungeId);
       }
-      
+
       if (status != null) {
         query = query.eq('status', status);
       }
-      
+
       final response = await query
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
-      
+
       return (response as List).map((json) => BookingModel.fromJson(Map<String, dynamic>.from(json))).toList();
     } catch (e2) {
       debugPrint('⚠️ [DATA_SOURCE] _fetchSafeSelect join query failed ($e2), attempting plain select fallback...');
@@ -115,17 +114,15 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     String cleanStatus = status.contains('.') ? status.split('.').last : status;
     cleanStatus = cleanStatus.trim().toLowerCase().replaceAll(' ', '_');
 
-    // Map rejected, canceled, no_show or non-standard values to valid DB enum 'cancelled'
     if (cleanStatus == 'rejected' || cleanStatus == 'reject' || cleanStatus == 'canceled' || cleanStatus == 'no_show') {
       cleanStatus = 'cancelled';
     } else if (cleanStatus == 'inprogress' || cleanStatus == 'in_progress' || cleanStatus == 'active') {
       cleanStatus = 'in_progress';
     }
 
-    // Safety guard to guarantee only DB-recognized enum values are sent
     const validDbStatuses = {'pending', 'upcoming', 'in_progress', 'completed', 'cancelled'};
     if (!validDbStatuses.contains(cleanStatus)) {
-      debugPrint('⚠️ [DATA_SOURCE] Invalid/unrecognized status "$cleanStatus" provided for booking $id. Mapping to "cancelled".');
+      debugPrint('⚠️ [DATA_SOURCE] Invalid status "$cleanStatus" provided for booking $id. Mapping to "cancelled".');
       cleanStatus = 'cancelled';
     }
 
@@ -137,7 +134,8 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     });
 
     debugPrint('🟢 [DATA_SOURCE] RPC Update Successful!');
-  }  @override
+  }
+
   @override
   Future<void> confirmCashPayment(
       String bookingId, {
@@ -167,16 +165,14 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       };
 
       final res = await client.from('bookings').update(updateData).eq('id', bookingId).select();
-      debugPrint('🟢 [DATA_SOURCE] Direct update fallback response: $res');
-
       if ((res as List).isEmpty) {
         throw Exception('فشل تأكيد الدفع: لا توجد صلاحيات لتعديل الحجز (RLS Restricted)');
       }
     }
   }
+
   @override
   Future<void> createBooking(BookingModel booking) async {
-    // Validate active shift for lounge before allowing booking creation
     final activeShift = await client
         .from('shifts')
         .select('id')
@@ -192,36 +188,36 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     final activeShiftId = activeShift['id']?.toString();
     final bookingToInsert = (activeShiftId != null && (booking.shiftId == null || booking.shiftId!.isEmpty))
         ? BookingModel(
-            id: booking.id,
-            userId: booking.userId,
-            userName: booking.userName,
-            userEmail: booking.userEmail,
-            userPhone: booking.userPhone,
-            loungeId: booking.loungeId,
-            roomId: booking.roomId,
-            loungeName: booking.loungeName,
-            loungeLocation: booking.loungeLocation,
-            roomName: booking.roomName,
-            controllersCount: booking.controllersCount,
-            screenSize: booking.screenSize,
-            date: booking.date,
-            startTime: booking.startTime,
-            endTime: booking.endTime,
-            durationMinutes: booking.durationMinutes,
-            status: booking.status,
-            paymentStatus: booking.paymentStatus,
-            totalPrice: booking.totalPrice,
-            voucherDiscount: booking.voucherDiscount,
-            discountAmount: booking.discountAmount,
-            discountPercentage: booking.discountPercentage,
-            discountReason: booking.discountReason,
-            extras: booking.extras,
-            lat: booking.lat,
-            lng: booking.lng,
-            shiftId: activeShiftId,
-            playMode: booking.playMode,
-            roomPrice: booking.roomPrice,
-          )
+      id: booking.id,
+      userId: booking.userId,
+      userName: booking.userName,
+      userEmail: booking.userEmail,
+      userPhone: booking.userPhone,
+      loungeId: booking.loungeId,
+      roomId: booking.roomId,
+      loungeName: booking.loungeName,
+      loungeLocation: booking.loungeLocation,
+      roomName: booking.roomName,
+      controllersCount: booking.controllersCount,
+      screenSize: booking.screenSize,
+      date: booking.date,
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      durationMinutes: booking.durationMinutes,
+      status: booking.status,
+      paymentStatus: booking.paymentStatus,
+      totalPrice: booking.totalPrice,
+      voucherDiscount: booking.voucherDiscount,
+      discountAmount: booking.discountAmount,
+      discountPercentage: booking.discountPercentage,
+      discountReason: booking.discountReason,
+      extras: booking.extras,
+      lat: booking.lat,
+      lng: booking.lng,
+      shiftId: activeShiftId,
+      playMode: booking.playMode,
+      roomPrice: booking.roomPrice,
+    )
         : booking;
 
     await client.from('bookings').insert(bookingToInsert.toJson());
@@ -238,17 +234,24 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   @override
   Future<void> startBookingSession(String bookingId) async {
-    debugPrint('🔵 [DATA_SOURCE] Calling RPC start_booking_session for bookingId=$bookingId');
     final userId = client.auth.currentUser?.id;
     await client.rpc('start_booking_session', params: {
       'p_booking_id': bookingId,
       'p_action_by': userId ?? '',
     });
-    debugPrint('🟢 [DATA_SOURCE] RPC start_booking_session successful!');
   }
 
   @override
   Future<void> autoCancelExpiredBookings() async {
+    // Throttling Guard: منع التكرار العنيف لو تم استدعاؤها في أقل من دقيقة
+    if (_lastAutoCancelExecution != null &&
+        DateTime.now().difference(_lastAutoCancelExecution!) < const Duration(minutes: 1)) {
+      debugPrint('ℹ️ [DATA_SOURCE] auto_cancel_expired_bookings skipped (throttled).');
+      return;
+    }
+
+    _lastAutoCancelExecution = DateTime.now();
+
     try {
       debugPrint('🔵 [DATA_SOURCE] Invoking RPC auto_cancel_expired_bookings...');
       await client.rpc('auto_cancel_expired_bookings');
@@ -265,7 +268,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
           .from('booking_items')
           .select('*, canteen_items(*)')
           .eq('booking_id', bookingId);
-          
+
       return (response as List).map((item) => Map<String, dynamic>.from(item)).toList();
     } catch (e) {
       debugPrint('⚠️ [DATA_SOURCE] getBookingItems query failed: $e');

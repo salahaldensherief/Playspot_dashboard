@@ -34,17 +34,13 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> {
     _subscription?.cancel();
 
     _subscription = repository.watchClientRequests(loungeId: loungeId).listen(
-      (requests) {
+          (requests) {
         if (isClosed) return;
 
         final currentUnattendedIds = requests
             .where((r) => !r.isAttended)
             .map((r) => r.id)
             .toSet();
-
-        if (!_isFirstLoad && listEquals(state.requests, requests) && state.status == ClientRequestsStatus.success) {
-          return;
-        }
 
         if (_isFirstLoad) {
           _isFirstLoad = false;
@@ -81,6 +77,23 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> {
   }
 
   Future<void> markAsAttended(String requestId, {bool isCanteenOrder = false}) async {
+    // حماية ضد الـ IDs الوهمية أو التالفة زي 'notif_' عشان متضربش PostgrestException
+    if (requestId.isEmpty || requestId.startsWith('notif_')) {
+      debugPrint('⚠️ [CUBIT] Skipped backend call for invalid/mock request ID: $requestId');
+
+      // تحديث محلي فقط وإخفاء الطلب من الواجهة بأمان
+      final updatedList = state.requests.map((r) {
+        if (r.id == requestId) {
+          return r.copyWith(isAttended: true, isRead: true);
+        }
+        return r;
+      }).toList();
+
+      emit(state.copyWith(requests: updatedList));
+      return;
+    }
+
+    // 1. تحديث محلي سريع (Optimistic Update)
     final updatedList = state.requests.map((r) {
       if (r.id == requestId) {
         return r.copyWith(isAttended: true, isRead: true);
@@ -98,17 +111,16 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> {
     if (isClosed) return;
 
     result.fold(
-      (failure) {
+          (failure) {
         debugPrint('🔴 [CUBIT] Mark Attended Failed: ${failure.message}');
         emit(state.copyWith(
           status: ClientRequestsStatus.failure,
           errorMessage: failure.message,
         ));
       },
-      (_) => debugPrint('🟢 [CUBIT] Request $requestId marked as attended in DB'),
+          (_) => debugPrint('🟢 [CUBIT] Request $requestId marked as attended in DB'),
     );
   }
-
   @override
   Future<void> close() {
     _subscription?.cancel();

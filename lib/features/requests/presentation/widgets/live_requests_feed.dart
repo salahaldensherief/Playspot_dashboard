@@ -22,7 +22,7 @@ class LiveRequestsFeed extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
       buildWhen: (prev, curr) =>
-          prev.status != curr.status ||
+      prev.status != curr.status ||
           prev.requests != curr.requests ||
           prev.filter != curr.filter,
       builder: (context, state) {
@@ -76,9 +76,12 @@ class LiveRequestsFeed extends StatelessWidget {
                     return Wrap(
                       spacing: 14.w,
                       runSpacing: 14.h,
-                      children: requests.take(15).map((request) {
+                      children: requests.take(15).toList().asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final request = entry.value;
+
                         return SizedBox(
-                          key: ValueKey(request.id),
+                          key: ValueKey('${request.id}_$index'),
                           width: cardWidth,
                           child: RequestCard(request: request),
                         );
@@ -453,73 +456,73 @@ class RequestCard extends StatelessWidget {
             child: request.isAttended
                 ? Center(child: StatusBadge.success(AppStrings.attended))
                 : isExtension
-                    ? Row(
-                        children: [
-                          Expanded(
-                            child: AppButton(
-                              text: AppStrings.rejectRequest,
-                              icon: Icons.close_rounded,
-                              variant: AppButtonVariant.danger,
-                              height: 34.h,
-                              onPressed: () async {
-                                final firstItem = request.metadata.items.isNotEmpty ? request.metadata.items.first : <String, dynamic>{};
-                                final reqMins = (firstItem['requested_minutes'] ?? firstItem['minutes'] as num?)?.toInt() ?? 30;
-                                final curDuration = (firstItem['current_duration'] as num?)?.toInt() ?? 60;
-                                final bookingId = request.bookingId ?? request.id.replaceFirst('ext_', '');
+                ? Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    text: AppStrings.rejectRequest,
+                    icon: Icons.close_rounded,
+                    variant: AppButtonVariant.danger,
+                    height: 34.h,
+                    onPressed: () async {
+                      final firstItem = request.metadata.items.isNotEmpty ? request.metadata.items.first : <String, dynamic>{};
+                      final reqMins = (firstItem['requested_minutes'] ?? firstItem['minutes'] as num?)?.toInt() ?? 30;
+                      final curDuration = (firstItem['current_duration'] as num?)?.toInt() ?? 60;
+                      final bookingId = request.bookingId ?? request.id.replaceFirst('ext_', '');
 
-                                final success = await dashboardCubit.reviewExtensionRequest(
-                                  bookingId: bookingId,
-                                  isApproved: false,
-                                  requestedMinutes: reqMins,
-                                  currentDurationMinutes: curDuration,
-                                );
+                      final success = await dashboardCubit.reviewExtensionRequest(
+                        bookingId: bookingId,
+                        isApproved: false,
+                        requestedMinutes: reqMins,
+                        currentDurationMinutes: curDuration,
+                      );
 
-                                if (success && context.mounted) {
-                                  requestsCubit.markAsAttended(request.id);
-                                }
-                              },
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Expanded(
-                            child: AppButton(
-                              text: AppStrings.approveRequest,
-                              icon: Icons.check_rounded,
-                              variant: AppButtonVariant.primary,
-                              height: 34.h,
-                              onPressed: () async {
-                                final firstItem = request.metadata.items.isNotEmpty ? request.metadata.items.first : <String, dynamic>{};
-                                final reqMins = (firstItem['requested_minutes'] ?? firstItem['minutes'] as num?)?.toInt() ?? 30;
-                                final curDuration = (firstItem['current_duration'] as num?)?.toInt() ?? 60;
-                                final bookingId = request.bookingId ?? request.id.replaceFirst('ext_', '');
+                      if (success && context.mounted) {
+                        requestsCubit.markAsAttended(request.id);
+                      }
+                    },
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: AppButton(
+                    text: AppStrings.approveRequest,
+                    icon: Icons.check_rounded,
+                    variant: AppButtonVariant.primary,
+                    height: 34.h,
+                    onPressed: () async {
+                      final firstItem = request.metadata.items.isNotEmpty ? request.metadata.items.first : <String, dynamic>{};
+                      final reqMins = (firstItem['requested_minutes'] ?? firstItem['minutes'] as num?)?.toInt() ?? 30;
+                      final curDuration = (firstItem['current_duration'] as num?)?.toInt() ?? 60;
+                      final bookingId = request.bookingId ?? request.id.replaceFirst('ext_', '');
 
-                                final success = await dashboardCubit.reviewExtensionRequest(
-                                  bookingId: bookingId,
-                                  isApproved: true,
-                                  requestedMinutes: reqMins,
-                                  currentDurationMinutes: curDuration,
-                                );
+                      final success = await dashboardCubit.reviewExtensionRequest(
+                        bookingId: bookingId,
+                        isApproved: true,
+                        requestedMinutes: reqMins,
+                        currentDurationMinutes: curDuration,
+                      );
 
-                                if (success && context.mounted) {
-                                  requestsCubit.markAsAttended(request.id);
-                                }
-                              },
-                            ),
-                          ),
-                        ],
-                      )
-                    : AppButton(
-                        text: AppStrings.markAsAttended,
-                        icon: Icons.done_all_rounded,
-                        variant: AppButtonVariant.primary,
-                        height: 34.h,
-                        onPressed: () {
-                          requestsCubit.markAsAttended(
-                            request.id,
-                            isCanteenOrder: isCanteen,
-                          );
-                        },
-                      ),
+                      if (success && context.mounted) {
+                        requestsCubit.markAsAttended(request.id);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            )
+                : AppButton(
+              text: AppStrings.markAsAttended,
+              icon: Icons.done_all_rounded,
+              variant: AppButtonVariant.primary,
+              height: 34.h,
+              onPressed: () {
+                requestsCubit.markAsAttended(
+                  request.id,
+                  isCanteenOrder: isCanteen,
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -605,21 +608,21 @@ class RequestUserAvatar extends StatelessWidget {
         color: AppColors.cardBackground,
         image: (hasAvatar && provider != null)
             ? DecorationImage(
-                image: provider,
-                fit: BoxFit.cover,
-              )
+          image: provider,
+          fit: BoxFit.cover,
+        )
             : null,
       ),
       alignment: Alignment.center,
       child: (!hasAvatar || provider == null)
           ? Text(
-              initial,
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-                fontSize: 12.sp,
-              ),
-            )
+        initial,
+        style: TextStyle(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.bold,
+          fontSize: 12.sp,
+        ),
+      )
           : null,
     );
   }
@@ -637,7 +640,7 @@ class ExtensionDetailsRow extends StatelessWidget {
         : <String, dynamic>{};
 
     final int requestedMinutes = (firstMetadataItem['requested_minutes'] ??
-            firstMetadataItem['minutes'] as num?)
+        firstMetadataItem['minutes'] as num?)
         ?.toInt() ??
         30;
 

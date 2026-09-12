@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -17,6 +18,7 @@ class LiveBookingsFeed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final _ = context.locale;
     return BlocBuilder<DashboardCubit, DashboardState>(
       buildWhen: (prev, curr) =>
           prev.status != curr.status ||
