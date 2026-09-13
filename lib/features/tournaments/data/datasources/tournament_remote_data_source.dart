@@ -89,99 +89,114 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
 
   @override
   Future<TournamentModel> createTournament(TournamentModel tournament) async {
+    String? createdId;
     try {
       final response = await client.rpc('create_tournament', params: {
         'p_lounge_id': tournament.loungeId,
         'p_city_id': tournament.cityId,
-        'p_title': tournament.title,
         'p_title_ar': tournament.titleAr ?? tournament.title,
         'p_title_en': tournament.titleEn ?? tournament.title,
-        'p_description_ar': tournament.descriptionAr ?? tournament.rules,
-        'p_description_en': tournament.descriptionEn ?? tournament.rules,
-        'p_game_title': tournament.gameTitle,
         'p_game_name': tournament.gameTitle,
-        'p_banner_url': tournament.bannerUrl,
-        'p_tree_size': tournament.treeSize,
         'p_bracket_size': tournament.treeSize,
-        'p_entry_fee': tournament.entryFee,
-        'p_prize_pool': tournament.prizePool,
-        'p_start_date': tournament.startDate.toIso8601String(),
-        'p_end_date': tournament.endDate.toIso8601String(),
-        'p_registration_deadline': tournament.registrationDeadline.toIso8601String(),
-        if (tournament.registrationOpensAt != null)
-          'p_registration_opens_at': tournament.registrationOpensAt!.toIso8601String(),
-        'p_registration_closes_at':
-            (tournament.registrationClosesAt ?? tournament.registrationDeadline).toIso8601String(),
-        'p_payment_deadline_minutes': tournament.paymentDeadlineMinutes,
-        if (tournament.checkInOpensAt != null)
-          'p_check_in_opens_at': tournament.checkInOpensAt!.toIso8601String(),
-        if (tournament.checkInClosesAt != null)
-          'p_check_in_closes_at': tournament.checkInClosesAt!.toIso8601String(),
-        'p_tournament_starts_at':
-            (tournament.tournamentStartsAt ?? tournament.startDate).toIso8601String(),
-        'p_min_players': tournament.minPlayers,
-        'p_max_players': tournament.maxPlayers,
         'p_max_participants': tournament.maxPlayers,
-        'p_rules': tournament.rules,
+        'p_entry_fee': tournament.entryFee,
+        'p_registration_opens_at': tournament.registrationOpensAt?.toUtc().toIso8601String() ?? tournament.startDate.toUtc().toIso8601String(),
+        'p_registration_closes_at': (tournament.registrationClosesAt ?? tournament.registrationDeadline).toUtc().toIso8601String(),
+        'p_payment_deadline_minutes': tournament.paymentDeadlineMinutes,
+        'p_check_in_opens_at': tournament.checkInOpensAt?.toUtc().toIso8601String() ?? tournament.startDate.toUtc().toIso8601String(),
+        'p_check_in_closes_at': tournament.checkInClosesAt?.toUtc().toIso8601String() ?? tournament.endDate.toUtc().toIso8601String(),
+        'p_tournament_starts_at': (tournament.tournamentStartsAt ?? tournament.startDate).toUtc().toIso8601String(),
       });
 
-      if (response != null && response is Map) {
-        return TournamentModel.fromJson(Map<String, dynamic>.from(response));
+      if (response != null) {
+        if (response is Map) {
+          final model = TournamentModel.fromJson(Map<String, dynamic>.from(response));
+          createdId = model.id;
+        } else if (response is String) {
+          createdId = response;
+        }
       }
     } catch (e) {
       debugPrint('⚠️ [TOURNAMENTS_REMOTE] create_tournament RPC error: $e, falling back to direct insert');
     }
 
-    final insertMap = tournament.toJson();
-    final inserted = await client.from('tournaments').insert(insertMap).select().single();
-    return TournamentModel.fromJson(Map<String, dynamic>.from(inserted));
+    if (createdId == null || createdId.isEmpty) {
+      final insertMap = tournament.toJson();
+      final inserted = await client.from('tournaments').insert(insertMap).select().single();
+      final model = TournamentModel.fromJson(Map<String, dynamic>.from(inserted));
+      createdId = model.id;
+    }
+
+    if (tournament.bannerUrl != null && tournament.bannerUrl!.isNotEmpty && createdId != null && createdId.isNotEmpty) {
+      await client.from('tournaments').update({
+        'banner_url': tournament.bannerUrl,
+      }).eq('id', createdId);
+    }
+
+    final finalRes = await client.from('tournaments').select('''
+      *,
+      lounges(name),
+      tournament_participants(id)
+    ''').eq('id', createdId!).single();
+
+    return TournamentModel.fromJson(Map<String, dynamic>.from(finalRes));
   }
 
   @override
   Future<TournamentModel> updateTournament(TournamentModel tournament) async {
     try {
-      final response = await client.rpc('update_tournament', params: {
+      await client.rpc('update_tournament', params: {
         'p_tournament_id': tournament.id,
-        'p_title': tournament.title,
-        'p_game_title': tournament.gameTitle,
-        'p_banner_url': tournament.bannerUrl,
-        'p_tree_size': tournament.treeSize,
+        'p_title_ar': tournament.titleAr ?? tournament.title,
+        'p_title_en': tournament.titleEn ?? tournament.title,
+        'p_description_ar': tournament.descriptionAr ?? tournament.rules,
+        'p_description_en': tournament.descriptionEn ?? tournament.rules,
+        'p_game_name': tournament.gameTitle,
+        'p_max_participants': tournament.maxPlayers,
         'p_entry_fee': tournament.entryFee,
-        'p_prize_pool': tournament.prizePool,
-        'p_start_date': tournament.startDate.toIso8601String(),
-        'p_end_date': tournament.endDate.toIso8601String(),
-        'p_registration_deadline': tournament.registrationDeadline.toIso8601String(),
-        'p_min_players': tournament.minPlayers,
-        'p_max_players': tournament.maxPlayers,
-        'p_rules': tournament.rules,
+        'p_registration_opens_at': tournament.registrationOpensAt?.toUtc().toIso8601String() ?? tournament.startDate.toUtc().toIso8601String(),
+        'p_registration_closes_at': (tournament.registrationClosesAt ?? tournament.registrationDeadline).toUtc().toIso8601String(),
+        'p_payment_deadline_minutes': tournament.paymentDeadlineMinutes,
+        'p_check_in_opens_at': tournament.checkInOpensAt?.toUtc().toIso8601String() ?? tournament.startDate.toUtc().toIso8601String(),
+        'p_check_in_closes_at': tournament.checkInClosesAt?.toUtc().toIso8601String() ?? tournament.endDate.toUtc().toIso8601String(),
+        'p_tournament_starts_at': (tournament.tournamentStartsAt ?? tournament.startDate).toUtc().toIso8601String(),
       });
-
-      if (response != null && response is Map) {
-        return TournamentModel.fromJson(Map<String, dynamic>.from(response));
-      }
     } catch (e) {
       debugPrint('⚠️ [TOURNAMENTS_REMOTE] update_tournament RPC error: $e, falling back to direct update');
+      final updateMap = tournament.toJson();
+      await client
+          .from('tournaments')
+          .update(updateMap)
+          .eq('id', tournament.id);
     }
 
-    final updateMap = tournament.toJson();
-    final updated = await client
-        .from('tournaments')
-        .update(updateMap)
-        .eq('id', tournament.id)
-        .select()
-        .single();
-    return TournamentModel.fromJson(Map<String, dynamic>.from(updated));
+    if (tournament.bannerUrl != null && tournament.bannerUrl!.isNotEmpty) {
+      await client.from('tournaments').update({
+        'banner_url': tournament.bannerUrl,
+      }).eq('id', tournament.id);
+    }
+
+    final updatedRes = await client.from('tournaments').select('''
+      *,
+      lounges(name),
+      tournament_participants(id)
+    ''').eq('id', tournament.id).single();
+
+    return TournamentModel.fromJson(Map<String, dynamic>.from(updatedRes));
   }
 
   @override
   Future<void> publishTournament(String tournamentId) async {
     try {
-      await client.rpc('publish_tournament', params: {'p_tournament_id': tournamentId});
+      await client.rpc('publish_tournament', params: {
+        'p_tournament_id': tournamentId,
+        'p_open': true,
+      });
     } catch (e) {
       debugPrint('⚠️ [TOURNAMENTS_REMOTE] publish_tournament RPC error: $e, fallback update');
       await client
           .from('tournaments')
-          .update({'status': 'published'})
+          .update({'status': 'registration_open'})
           .eq('id', tournamentId);
     }
   }
@@ -217,12 +232,9 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
     try {
       final response = await client
           .from('tournament_participants')
-          .select('''
-            *,
-            profiles(full_name, phone, email)
-          ''')
+          .select()
           .eq('tournament_id', tournamentId)
-          .order('registered_at', ascending: false);
+          .order('created_at', ascending: false);
 
       final list = (response as List).map((json) {
         return TournamentParticipantModel.fromJson(Map<String, dynamic>.from(json));
@@ -246,15 +258,19 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
       return resultWithSignedUrls;
     } catch (e) {
       debugPrint('⚠️ [TOURNAMENTS_REMOTE] getParticipants error: $e');
-      final plainResponse = await client
-          .from('tournament_participants')
-          .select()
-          .eq('tournament_id', tournamentId)
-          .order('registered_at', ascending: false);
+      try {
+        final plainResponse = await client
+            .from('tournament_participants')
+            .select()
+            .eq('tournament_id', tournamentId)
+            .order('created_at', ascending: false);
 
-      return (plainResponse as List).map((json) {
-        return TournamentParticipantModel.fromJson(Map<String, dynamic>.from(json));
-      }).toList();
+        return (plainResponse as List).map((json) {
+          return TournamentParticipantModel.fromJson(Map<String, dynamic>.from(json));
+        }).toList();
+      } catch (_) {
+        return [];
+      }
     }
   }
 
@@ -339,29 +355,31 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
           .from('tournament_matches')
           .select('''
             *,
-            p1_profile:profiles!tournament_matches_player1_id_fkey(full_name),
-            p2_profile:profiles!tournament_matches_player2_id_fkey(full_name),
+            player1:tournament_participants!tournament_matches_player1_id_fkey(*),
+            player2:tournament_participants!tournament_matches_player2_id_fkey(*),
             rooms(name)
           ''')
           .eq('tournament_id', tournamentId)
-          .order('round', ascending: true)
-          .order('match_number', ascending: true);
+          .order('round_number', ascending: true);
 
       return (response as List).map((json) {
         return TournamentMatchModel.fromJson(Map<String, dynamic>.from(json));
       }).toList();
     } catch (e) {
       debugPrint('⚠️ [TOURNAMENTS_REMOTE] getMatches join query error: $e');
-      final plainResponse = await client
-          .from('tournament_matches')
-          .select()
-          .eq('tournament_id', tournamentId)
-          .order('round', ascending: true)
-          .order('match_number', ascending: true);
+      try {
+        final plainResponse = await client
+            .from('tournament_matches')
+            .select()
+            .eq('tournament_id', tournamentId)
+            .order('round_number', ascending: true);
 
-      return (plainResponse as List).map((json) {
-        return TournamentMatchModel.fromJson(Map<String, dynamic>.from(json));
-      }).toList();
+        return (plainResponse as List).map((json) {
+          return TournamentMatchModel.fromJson(Map<String, dynamic>.from(json));
+        }).toList();
+      } catch (_) {
+        return [];
+      }
     }
   }
 

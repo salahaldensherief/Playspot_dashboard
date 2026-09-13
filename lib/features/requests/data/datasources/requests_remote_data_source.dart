@@ -133,7 +133,13 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
 
     final typeStr = (map['type'] ?? map['request_type'] ?? '').toString().toLowerCase();
 
-    if (typeStr.contains('canteen') || typeStr.contains('order')) {
+    if (typeStr.contains('canteen') ||
+        typeStr.contains('order') ||
+        typeStr.contains('item') ||
+        map.containsKey('canteen_orders') ||
+        map.containsKey('canteen_items') ||
+        map.containsKey('booking_items') ||
+        map.containsKey('canteen_order_items')) {
       return ClientRequestModel.fromCanteenOrderJson(map);
     } else if (typeStr.contains('extend') || typeStr.contains('extension')) {
       return ClientRequestModel.fromBookingExtensionJson(map);
@@ -242,41 +248,47 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     }
 
     try {
+      List? response;
       if (id.startsWith('sc_')) {
-        await client.from('service_calls').update({
+        response = await client.from('service_calls').update({
           'status': 'resolved',
           'is_attended': true,
           'is_read': true,
-        }).eq('id', rawDbId);
+        }).eq('id', rawDbId).select('id');
       } else if (id.startsWith('canteen_') || isCanteenOrder) {
-        await client.from('canteen_orders').update({
+        response = await client.from('canteen_orders').update({
           'status': 'completed',
           'is_attended': true,
           'is_read': true,
-        }).eq('id', rawDbId);
+        }).eq('id', rawDbId).select('id');
       } else if (id.startsWith('item_')) {
-        await client.from('booking_items').update({
+        response = await client.from('booking_items').update({
           'status': 'completed',
           'is_attended': true,
           'is_read': true,
-        }).eq('id', rawDbId);
+        }).eq('id', rawDbId).select('id');
       } else if (id.startsWith('req_')) {
-        await client.from('client_requests').update({
+        response = await client.from('client_requests').update({
           'status': 'resolved',
           'is_attended': true,
           'is_read': true,
-        }).eq('id', rawDbId);
+        }).eq('id', rawDbId).select('id');
       } else if (id.startsWith('ext_')) {
-        await client.from('bookings').update({
+        response = await client.from('bookings').update({
           'extension_status': 'approved',
-        }).eq('id', rawDbId);
+        }).eq('id', rawDbId).select('id');
       } else {
-        await client.from('notifications').update({
+        response = await client.from('notifications').update({
           'is_read': true,
           'is_attended': true,
-        }).eq('id', rawDbId);
+        }).eq('id', rawDbId).select('id');
       }
-      debugPrint('🟢 [REQUESTS_DATA_SOURCE] Successfully marked request $id as attended');
+
+      if (response != null && response.isEmpty) {
+        debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Warning: Request $rawDbId update affected 0 rows (possible RLS restriction)');
+      } else {
+        debugPrint('🟢 [REQUESTS_DATA_SOURCE] Successfully marked request $id as attended');
+      }
     } catch (e) {
       debugPrint('⚠️ [REQUESTS_DATA_SOURCE] markRequestAsAttended Error for $id: $e');
     }

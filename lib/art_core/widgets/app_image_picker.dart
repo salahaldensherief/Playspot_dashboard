@@ -4,17 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../app_strings.dart';
 import '../theme/app_colors.dart';
+import 'app_cached_image.dart';
 
 class AppImagePicker extends StatefulWidget {
   final String label;
   final Function(Uint8List? bytes, String? name) onImageSelected;
   final double? height;
+  final String? initialImageUrl;
 
   const AppImagePicker({
     super.key,
     required this.label,
     required this.onImageSelected,
     this.height,
+    this.initialImageUrl,
   });
 
   @override
@@ -50,6 +53,9 @@ class _AppImagePickerState extends State<AppImagePicker> {
 
   @override
   Widget build(BuildContext context) {
+    final hasInitialImage = widget.initialImageUrl != null && widget.initialImageUrl!.trim().isNotEmpty;
+    final hasImage = _selectedBytes != null || hasInitialImage;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -72,7 +78,7 @@ class _AppImagePickerState extends State<AppImagePicker> {
               color: AppColors.mutedBackground,
               borderRadius: BorderRadius.circular(12.r),
               border: Border.all(
-                color: _selectedBytes != null ? AppColors.neonBlue : AppColors.borderDefault,
+                color: hasImage ? AppColors.neonBlue : AppColors.borderDefault,
                 style: BorderStyle.solid,
               ),
             ),
@@ -81,17 +87,24 @@ class _AppImagePickerState extends State<AppImagePicker> {
                     borderRadius: BorderRadius.circular(12.r),
                     child: Image.memory(_selectedBytes!, fit: BoxFit.cover),
                   )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.add_a_photo_outlined, color: AppColors.textSecondary, size: 32.r),
-                      SizedBox(height: 8.h),
-                      Text(
-                        AppStrings.uploadInstruction,
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                : hasInitialImage
+                    ? AppCachedImage(
+                        imageUrl: widget.initialImageUrl,
+                        height: widget.height ?? 150.h,
+                        borderRadius: 12.r,
+                        fit: BoxFit.cover,
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_a_photo_outlined, color: AppColors.textSecondary, size: 32.r),
+                          SizedBox(height: 8.h),
+                          Text(
+                            AppStrings.uploadInstruction,
+                            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
           ),
         ),
       ],

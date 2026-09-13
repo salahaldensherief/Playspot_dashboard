@@ -7,6 +7,7 @@ abstract class StorageService {
   Future<List<String>> uploadLoungeImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId);
   Future<String> uploadRoomImage(Uint8List fileBytes, String fileName, String loungeId);
   Future<List<String>> uploadRoomImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId);
+  Future<String> uploadTournamentBanner(Uint8List fileBytes, String fileName, String tournamentId);
 }
 
 class StorageServiceImpl implements StorageService {
@@ -57,5 +58,18 @@ class StorageServiceImpl implements StorageService {
       urls.add(url);
     }
     return urls;
+  }
+
+  @override
+  Future<String> uploadTournamentBanner(Uint8List fileBytes, String fileName, String tournamentId) async {
+    final extension = fileName.contains('.') ? fileName.split('.').last : 'webp';
+    final path = '$tournamentId/banner.$extension';
+
+    await _supabase.storage.from('tournament-assets').uploadBinary(
+      path,
+      fileBytes,
+      fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+    );
+    return _supabase.storage.from('tournament-assets').getPublicUrl(path);
   }
 }

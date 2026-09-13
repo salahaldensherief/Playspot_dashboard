@@ -521,6 +521,8 @@
   "create_tournament": "إنشاء بطولة",
   "edit_tournament": "تعديل البطولة",
   "tournament_title": "عنوان البطولة",
+  "tournament_banner": "صورة بانر أو إعلان البطولة",
+  "tournament_banner_required": "يجب رفع صورة بانر أو إعلان للبطولة",
   "game_title": "اسم اللعبة",
   "tree_size": "حجم الشجرة",
   "entry_fee": "رسوم الاشتراك",

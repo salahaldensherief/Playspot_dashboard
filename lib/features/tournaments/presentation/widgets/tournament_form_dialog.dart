@@ -1,11 +1,16 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_dialog.dart';
+import '../../../../art_core/widgets/app_image_picker.dart';
 import '../../../../art_core/widgets/app_text_field.dart';
+import '../../../../core/di/di.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../domain/entities/tournament_entity.dart';
 
 class TournamentFormDialog extends StatefulWidget {
@@ -31,6 +36,10 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
   late TextEditingController _minPlayersController;
   late TextEditingController _maxPlayersController;
   late TextEditingController _rulesController;
+
+  Uint8List? _bannerBytes;
+  String? _bannerName;
+  bool _isUploading = false;
 
   int _treeSize = 16;
   DateTime _registrationOpensAt = DateTime.now();
@@ -75,8 +84,8 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context, DateTime initial, Function(DateTime) onPicked) async {
-    final picked = await showDatePicker(
+  Future<void> _selectDateTime(BuildContext context, DateTime initial, Function(DateTime) onPicked) async {
+    final pickedDate = await showDatePicker(
       context: context,
       initialDate: initial,
       firstDate: DateTime.now().subtract(const Duration(days: 30)),
@@ -95,13 +104,66 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
         );
       },
     );
-    if (picked != null) {
-      onPicked(picked);
+
+    if (pickedDate != null && mounted) {
+      final pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(initial),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.dark(
+                primary: AppColors.neonBlue,
+                onPrimary: Colors.black,
+                surface: AppColors.cardBackground,
+                onSurface: AppColors.textPrimary,
+              ),
+            ),
+            child: child ?? const SizedBox(),
+          );
+        },
+      );
+
+      final finalDateTime = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        pickedTime?.hour ?? initial.hour,
+        pickedTime?.minute ?? initial.minute,
+      );
+      onPicked(finalDateTime);
     }
   }
 
-  void _handleSubmit() {
+  Widget _buildDateTimeField(String label, DateTime value, Function(DateTime) onPicked) {
+    final dateFormat = DateFormat('yyyy/MM/dd HH:mm');
+    return InkWell(
+      onTap: () => _selectDateTime(context, value, (newDate) {
+        onPicked(newDate);
+      }),
+      child: AbsorbPointer(
+        child: AppTextField(
+          controller: TextEditingController(text: dateFormat.format(value)),
+          label: label,
+          enabled: false,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleSubmit() async {
     if (_formKey.currentState?.validate() ?? false) {
+      // Validate banner image requirement for new tournament creation
+      if (widget.tournament == null && _bannerBytes == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppStrings.tournamentBannerRequired),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+        return;
+      }
+
       // Client Validations according to pre-launch checklist & spec
       if (_registrationClosesAt.isBefore(_registrationOpensAt) ||
           _registrationClosesAt.isAtSameMomentAs(_registrationOpensAt)) {
@@ -144,43 +206,73 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
         return;
       }
 
-      final entity = TournamentEntity(
-        id: widget.tournament?.id ?? '',
-        title: _titleController.text.trim(),
-        titleAr: _titleController.text.trim(),
-        titleEn: _titleController.text.trim(),
-        descriptionAr: _rulesController.text.trim(),
-        descriptionEn: _rulesController.text.trim(),
-        gameTitle: _gameTitleController.text.trim(),
-        treeSize: _treeSize,
-        status: widget.tournament?.status ?? TournamentStatus.draft,
-        entryFee: double.tryParse(_entryFeeController.text.trim()) ?? 0.0,
-        prizePool: double.tryParse(_prizePoolController.text.trim()) ?? 0.0,
-        startDate: _startDate,
-        endDate: _endDate,
-        registrationDeadline: _registrationClosesAt,
-        registrationOpensAt: _registrationOpensAt,
-        registrationClosesAt: _registrationClosesAt,
-        checkInOpensAt: _checkInOpensAt,
-        checkInClosesAt: _checkInClosesAt,
-        tournamentStartsAt: _startDate,
-        minPlayers: int.tryParse(_minPlayersController.text.trim()) ?? 4,
-        maxPlayers: int.tryParse(_maxPlayersController.text.trim()) ?? _treeSize,
-        rules: _rulesController.text.trim(),
-        registeredCount: widget.tournament?.registeredCount ?? 0,
-        loungeId: widget.tournament?.loungeId,
-        cityId: widget.tournament?.cityId,
-      );
+      setState(() => _isUploading = true);
 
-      widget.onSubmit(entity);
-      Navigator.pop(context);
+      try {
+        String? bannerUrl = widget.tournament?.bannerUrl;
+        final tournamentId = widget.tournament?.id ?? const Uuid().v4();
+
+        if (_bannerBytes != null && _bannerName != null) {
+          bannerUrl = await sl<StorageService>().uploadTournamentBanner(
+            _bannerBytes!,
+            _bannerName!,
+            tournamentId,
+          );
+        }
+
+        if (mounted) {
+          final entity = TournamentEntity(
+            id: widget.tournament?.id ?? tournamentId,
+            title: _titleController.text.trim(),
+            titleAr: _titleController.text.trim(),
+            titleEn: _titleController.text.trim(),
+            descriptionAr: _rulesController.text.trim(),
+            descriptionEn: _rulesController.text.trim(),
+            gameTitle: _gameTitleController.text.trim(),
+            bannerUrl: bannerUrl,
+            treeSize: _treeSize,
+            status: widget.tournament?.status ?? TournamentStatus.draft,
+            entryFee: double.tryParse(_entryFeeController.text.trim()) ?? 0.0,
+            prizePool: double.tryParse(_prizePoolController.text.trim()) ?? 0.0,
+            startDate: _startDate,
+            endDate: _endDate,
+            registrationDeadline: _registrationClosesAt,
+            registrationOpensAt: _registrationOpensAt,
+            registrationClosesAt: _registrationClosesAt,
+            checkInOpensAt: _checkInOpensAt,
+            checkInClosesAt: _checkInClosesAt,
+            tournamentStartsAt: _startDate,
+            minPlayers: int.tryParse(_minPlayersController.text.trim()) ?? 4,
+            maxPlayers: int.tryParse(_maxPlayersController.text.trim()) ?? _treeSize,
+            rules: _rulesController.text.trim(),
+            registeredCount: widget.tournament?.registeredCount ?? 0,
+            loungeId: widget.tournament?.loungeId,
+            cityId: widget.tournament?.cityId,
+          );
+
+          widget.onSubmit(entity);
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${AppStrings.error}: $e'),
+              backgroundColor: AppColors.danger,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isUploading = false);
+        }
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.tournament != null;
-    final dateFormat = DateFormat('yyyy/MM/dd HH:mm');
 
     return AppDialog(
       title: isEdit ? AppStrings.editTournament : AppStrings.createTournament,
@@ -194,6 +286,7 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
         SizedBox(width: 12.w),
         AppButton(
           text: isEdit ? AppStrings.saveChanges : AppStrings.createTournament,
+          isLoading: _isUploading,
           onPressed: _handleSubmit,
         ),
       ],
@@ -202,6 +295,17 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            AppImagePicker(
+              label: AppStrings.tournamentBanner,
+              initialImageUrl: widget.tournament?.bannerUrl,
+              onImageSelected: (bytes, name) {
+                setState(() {
+                  _bannerBytes = bytes;
+                  _bannerName = name;
+                });
+              },
+            ),
+            SizedBox(height: 16.h),
             AppTextField(
               controller: _titleController,
               label: AppStrings.tournamentTitle,
@@ -306,61 +410,19 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
               style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 12.h),
-            // Schedule Dates Pickers using standardized AppButton
+            // Schedule Date & Time Text Fields
             Wrap(
-              spacing: 12.w,
-              runSpacing: 12.h,
+              spacing: 16.w,
+              runSpacing: 16.h,
               children: [
                 SizedBox(
-                  width: 210.w,
-                  child: AppButton(
-                    icon: Icons.timer_outlined,
-                    text: '${AppStrings.regOpensAt}\n${dateFormat.format(_registrationOpensAt)}',
-                    variant: AppButtonVariant.outlined,
-                    fontSize: 12.sp,
-                    onPressed: () => _selectDate(context, _registrationOpensAt, (d) => setState(() => _registrationOpensAt = d)),
-                  ),
+                  width: 320.w,
+                  child: _buildDateTimeField(AppStrings.regOpensAt, _registrationOpensAt, (d) => setState(() => _registrationOpensAt = d)),
                 ),
-                SizedBox(
-                  width: 210.w,
-                  child: AppButton(
-                    icon: Icons.timer_off_outlined,
-                    text: '${AppStrings.regClosesAt}\n${dateFormat.format(_registrationClosesAt)}',
-                    variant: AppButtonVariant.outlined,
-                    fontSize: 12.sp,
-                    onPressed: () => _selectDate(context, _registrationClosesAt, (d) => setState(() => _registrationClosesAt = d)),
-                  ),
-                ),
-                SizedBox(
-                  width: 210.w,
-                  child: AppButton(
-                    icon: Icons.check_circle_outline,
-                    text: '${AppStrings.checkInOpensAt}\n${dateFormat.format(_checkInOpensAt)}',
-                    variant: AppButtonVariant.outlined,
-                    fontSize: 12.sp,
-                    onPressed: () => _selectDate(context, _checkInOpensAt, (d) => setState(() => _checkInOpensAt = d)),
-                  ),
-                ),
-                SizedBox(
-                  width: 210.w,
-                  child: AppButton(
-                    icon: Icons.play_circle_fill,
-                    text: '${AppStrings.startDate}\n${dateFormat.format(_startDate)}',
-                    variant: AppButtonVariant.outlined,
-                    fontSize: 12.sp,
-                    onPressed: () => _selectDate(context, _startDate, (d) => setState(() => _startDate = d)),
-                  ),
-                ),
-                SizedBox(
-                  width: 210.w,
-                  child: AppButton(
-                    icon: Icons.flag_outlined,
-                    text: '${AppStrings.endDate}\n${dateFormat.format(_endDate)}',
-                    variant: AppButtonVariant.outlined,
-                    fontSize: 12.sp,
-                    onPressed: () => _selectDate(context, _endDate, (d) => setState(() => _endDate = d)),
-                  ),
-                ),
+                SizedBox(width: 320.w, child: _buildDateTimeField(AppStrings.regClosesAt, _registrationClosesAt, (d) => setState(() => _registrationClosesAt = d))),
+                SizedBox(width: 320.w, child: _buildDateTimeField(AppStrings.checkInOpensAt, _checkInOpensAt, (d) => setState(() => _checkInOpensAt = d))),
+                SizedBox(width: 320.w, child: _buildDateTimeField(AppStrings.startDate, _startDate, (d) => setState(() => _startDate = d))),
+                SizedBox(width: 320.w, child: _buildDateTimeField(AppStrings.endDate, _endDate, (d) => setState(() => _endDate = d))),
               ],
             ),
             SizedBox(height: 20.h),

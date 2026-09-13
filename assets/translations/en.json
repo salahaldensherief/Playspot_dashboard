@@ -510,6 +510,8 @@
   "create_tournament": "Create Tournament",
   "edit_tournament": "Edit Tournament",
   "tournament_title": "Tournament Title",
+  "tournament_banner": "Tournament Banner / Ad Image",
+  "tournament_banner_required": "Tournament banner or ad image is required",
   "game_title": "Game Title",
   "tree_size": "Bracket Size",
   "entry_fee": "Entry Fee",
