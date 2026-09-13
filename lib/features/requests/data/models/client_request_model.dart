@@ -1,3 +1,4 @@
+import 'dart:convert';
 import '../../domain/entities/client_request_entity.dart';
 import '../../domain/entities/notification_metadata.dart';
 
@@ -176,23 +177,66 @@ class ClientRequestModel extends ClientRequestEntity {
 
     final metadataObj = NotificationMetadata.fromJson(json['metadata']);
 
+    void extractItems(dynamic rawItems, List<Map<String, dynamic>> targetList) {
+      if (rawItems == null) return;
+      if (rawItems is String) {
+        try {
+          final decoded = jsonDecode(rawItems);
+          if (decoded is List) {
+            for (var i in decoded) {
+              if (i is Map) {
+                final itemMap = Map<String, dynamic>.from(i);
+                final extraObj = itemMap['extras'] ?? itemMap['canteen_items'] ?? itemMap['extra'];
+                if (extraObj is Map) {
+                  itemMap['name'] = extraObj['name'] ?? extraObj['name_ar'] ?? itemMap['name'];
+                  itemMap['name_ar'] = extraObj['name_ar'] ?? extraObj['name'] ?? itemMap['name_ar'];
+                  itemMap['price'] = extraObj['price'] ?? itemMap['price'];
+                }
+                targetList.add(itemMap);
+              }
+            }
+          } else if (decoded is Map) {
+            targetList.add(Map<String, dynamic>.from(decoded));
+          }
+        } catch (_) {}
+      } else if (rawItems is List) {
+        for (var i in rawItems) {
+          if (i is Map) {
+            final itemMap = Map<String, dynamic>.from(i);
+            final extraObj = itemMap['extras'] ?? itemMap['canteen_items'] ?? itemMap['extra'];
+            if (extraObj is Map) {
+              itemMap['name'] = extraObj['name'] ?? extraObj['name_ar'] ?? itemMap['name'];
+              itemMap['name_ar'] = extraObj['name_ar'] ?? extraObj['name'] ?? itemMap['name_ar'];
+              itemMap['price'] = extraObj['price'] ?? itemMap['price'];
+            }
+            targetList.add(itemMap);
+          }
+        }
+      } else if (rawItems is Map) {
+        targetList.add(Map<String, dynamic>.from(rawItems));
+      }
+    }
+
     List<Map<String, dynamic>> parsedItems = [];
-    if (json['canteen_order_items'] != null && json['canteen_order_items'] is List) {
-      parsedItems = (json['canteen_order_items'] as List)
-          .whereType<Map>()
-          .map((i) => Map<String, dynamic>.from(i))
-          .toList();
-    } else if (json['items'] != null && json['items'] is List) {
-      parsedItems = (json['items'] as List)
-          .whereType<Map>()
-          .map((i) => Map<String, dynamic>.from(i))
-          .toList();
-    } else if (json['canteen_items'] != null && json['canteen_items'] is List) {
-      parsedItems = (json['canteen_items'] as List)
-          .whereType<Map>()
-          .map((i) => Map<String, dynamic>.from(i))
-          .toList();
-    } else if (metadataObj.items.isNotEmpty) {
+    extractItems(json['canteen_order_items'], parsedItems);
+    extractItems(json['items'], parsedItems);
+    extractItems(json['canteen_items'], parsedItems);
+    extractItems(json['booking_items'], parsedItems);
+
+    if (json['canteen_orders'] != null) {
+      if (json['canteen_orders'] is List) {
+        for (var order in (json['canteen_orders'] as List)) {
+          if (order is Map) {
+            extractItems(order['items'], parsedItems);
+            extractItems(order['canteen_order_items'], parsedItems);
+          }
+        }
+      } else if (json['canteen_orders'] is Map) {
+        extractItems((json['canteen_orders'] as Map)['items'], parsedItems);
+      }
+    }
+
+    if (parsedItems.isEmpty && metadataObj.items.isNotEmpty) {
       parsedItems = metadataObj.items;
     }
 
@@ -204,26 +248,29 @@ class ClientRequestModel extends ClientRequestEntity {
         _parseBool(json['is_attended']) ||
         _parseBool(json['attended']);
 
-    final String roomName = (json['room_name'] ?? json['roomName'] ?? json['room'] ?? metadataObj.roomName ?? 'Gaming Station').toString();
-    final String userName = (json['user_name'] ?? json['userName'] ?? json['user'] ?? json['full_name'] ?? metadataObj.userName ?? 'Client').toString();
-    final String userPhone = (json['user_phone'] ?? json['userPhone'] ?? json['phone'] ?? metadataObj.userPhone ?? '').toString();
-    final String? userAvatarUrl = (json['user_avatar'] ?? json['user_avatar_url'] ?? json['avatar_url'] ?? metadataObj.userAvatar)?.toString();
+    final bookingObj = _parseMap(json['bookings']);
+    final roomName = (json['room_name'] ?? json['roomName'] ?? json['room'] ?? bookingObj?['room_name'] ?? metadataObj.roomName ?? 'Gaming Station').toString();
+    final userName = (json['user_name'] ?? json['userName'] ?? json['user'] ?? json['full_name'] ?? bookingObj?['user_name'] ?? metadataObj.userName ?? 'Client').toString();
+    final userPhone = (json['user_phone'] ?? json['userPhone'] ?? json['phone'] ?? bookingObj?['user_phone'] ?? metadataObj.userPhone ?? '').toString();
+    final userAvatarUrl = (json['user_avatar'] ?? json['user_avatar_url'] ?? json['avatar_url'] ?? bookingObj?['avatar_url'] ?? metadataObj.userAvatar)?.toString();
 
     final String reqId = (json['id'] ?? '').toString();
 
     return ClientRequestModel(
       id: reqId,
-      loungeId: (json['lounge_id'] ?? json['loungeId'] ?? metadataObj.loungeId ?? '').toString(),
-      bookingId: (json['booking_id'] ?? json['bookingId'] ?? metadataObj.bookingId)?.toString(),
-      userId: (json['user_id'] ?? json['userId'] ?? metadataObj.userId)?.toString(),
+      loungeId: (json['lounge_id'] ?? json['loungeId'] ?? bookingObj?['lounge_id'] ?? metadataObj.loungeId ?? '').toString(),
+      bookingId: (json['booking_id'] ?? json['bookingId'] ?? bookingObj?['id'] ?? metadataObj.bookingId)?.toString(),
+      userId: (json['user_id'] ?? json['userId'] ?? bookingObj?['user_id'] ?? metadataObj.userId)?.toString(),
       userName: userName,
       userPhone: userPhone,
       userAvatarUrl: userAvatarUrl,
-      roomId: (json['room_id'] ?? json['roomId'] ?? metadataObj.roomId)?.toString(),
+      roomId: (json['room_id'] ?? json['roomId'] ?? bookingObj?['room_id'] ?? metadataObj.roomId)?.toString(),
       roomName: roomName,
       titleAr: 'طلب كافيتريا ($roomName)',
       titleEn: 'Canteen Order ($roomName)',
-      bodyAr: 'العميل $userName طلب أصناف من المنيو',
+      bodyAr: parsedItems.isNotEmpty
+          ? 'العميل $userName طلب أصناف من المنيو (${parsedItems.length} صنف)'
+          : 'العميل $userName طلب أصناف من المنيو',
       bodyEn: 'Client $userName ordered menu items',
       type: ClientRequestType.canteenOrder,
       isRead: isAttended,

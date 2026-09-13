@@ -562,6 +562,14 @@ class AppStrings {
   static String get createTournament => 'create_tournament'.tr();
   static String get editTournament => 'edit_tournament'.tr();
   static String get tournamentTitle => 'tournament_title'.tr();
+  static String get tournamentBanner {
+    final val = 'tournament_banner'.tr();
+    return val == 'tournament_banner' ? 'صورة بانر أو إعلان البطولة' : val;
+  }
+  static String get tournamentBannerRequired {
+    final val = 'tournament_banner_required'.tr();
+    return val == 'tournament_banner_required' ? 'يجب رفع صورة بانر أو إعلان للبطولة' : val;
+  }
   static String get gameTitle => 'game_title'.tr();
   static String get treeSize => 'tree_size'.tr();
   static String get entryFee => 'entry_fee'.tr();

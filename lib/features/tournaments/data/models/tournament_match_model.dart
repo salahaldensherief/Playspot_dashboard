@@ -29,20 +29,26 @@ class TournamentMatchModel extends TournamentMatchEntity {
     String? p2Name;
     String? roomNameVal;
 
-    if (json['p1_profile'] != null && json['p1_profile'] is Map) {
+    if (json['player1'] != null && json['player1'] is Map) {
+      p1Name = json['player1']['user_name'] as String? ?? json['player1']['full_name'] as String?;
+    } else if (json['p1_profile'] != null && json['p1_profile'] is Map) {
       p1Name = json['p1_profile']['full_name'] as String?;
     }
-    if (json['p2_profile'] != null && json['p2_profile'] is Map) {
+    if (json['player2'] != null && json['player2'] is Map) {
+      p2Name = json['player2']['user_name'] as String? ?? json['player2']['full_name'] as String?;
+    } else if (json['p2_profile'] != null && json['p2_profile'] is Map) {
       p2Name = json['p2_profile']['full_name'] as String?;
     }
     if (json['rooms'] != null && json['rooms'] is Map) {
       roomNameVal = json['rooms']['name'] as String?;
     }
 
+    final roundVal = json['round_number'] as int? ?? json['round'] as int? ?? 1;
+
     return TournamentMatchModel(
       id: json['id'] as String? ?? '',
       tournamentId: json['tournament_id'] as String? ?? '',
-      round: json['round'] as int? ?? 1,
+      round: roundVal,
       matchNumber: json['match_number'] as int? ?? 1,
       player1Id: json['player1_id'] as String?,
       player1Name: p1Name ?? json['player1_name'] as String?,
