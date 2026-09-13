@@ -8,7 +8,7 @@ class CloseShiftUseCase {
 
   CloseShiftUseCase(this.repository);
 
-  Future<Either<Failure, ShiftEntity>> call(String shiftId, double actualCash, String? notes) async {
-    return await repository.closeShift(shiftId, actualCash, notes);
+  Future<Either<Failure, ShiftEntity>> call(String shiftId, double actualCash, String? notes, {String? loungeId}) async {
+    return await repository.closeShift(shiftId, actualCash, notes, loungeId: loungeId);
   }
 }

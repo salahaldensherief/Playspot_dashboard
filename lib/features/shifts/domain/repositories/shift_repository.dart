@@ -7,9 +7,9 @@ import '../entities/shift_expense_entity.dart';
 abstract class ShiftRepository {
   Future<Either<Failure, ShiftEntity?>> getActiveShift(String loungeId);
   Future<Either<Failure, LiveShiftOverviewEntity>> getLoungeLiveShiftOverview(String loungeId);
-  Future<Either<Failure, void>> openShift(String loungeId, double startingCash);
-  Future<Either<Failure, void>> quickOpenShift(String loungeId, [double startingCash = 0.0]);
-  Future<Either<Failure, ShiftEntity>> closeShift(String shiftId, double actualCash, String? notes);
+  Future<Either<Failure, void>> openShift(String loungeId, double startingCash, {String? notes});
+  Future<Either<Failure, void>> quickOpenShift(String loungeId, [double startingCash = 0.0, String? notes]);
+  Future<Either<Failure, ShiftEntity>> closeShift(String shiftId, double actualCash, String? notes, {String? loungeId});
   Future<Either<Failure, List<ShiftEntity>>> getShiftHistory({String? loungeId});
   Future<Either<Failure, void>> approveShift(String shiftId, String managerId, String? notes);
   Future<Either<Failure, void>> addShiftExpense(ShiftExpenseEntity expense);

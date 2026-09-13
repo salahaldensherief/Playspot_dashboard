@@ -183,6 +183,32 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
 
   @override
   Future<LoungeModel?> getLoungeById(String id) async {
+    try {
+      final rpcResponse = await client.rpc('get_lounge_details', params: {
+        'p_lounge_id': id,
+      });
+
+      if (rpcResponse != null) {
+        Map<String, dynamic> json = {};
+        if (rpcResponse is List && rpcResponse.isNotEmpty) {
+          json = Map<String, dynamic>.from(rpcResponse.first as Map);
+        } else if (rpcResponse is Map) {
+          json = Map<String, dynamic>.from(rpcResponse as Map);
+        }
+
+        if (json.isNotEmpty) {
+          if (json.containsKey('lounge') && json['lounge'] is Map) {
+            json = Map<String, dynamic>.from(json['lounge'] as Map);
+          }
+          if (json.containsKey('id')) {
+            return LoungeModel.fromJson(json);
+          }
+        }
+      }
+    } catch (e) {
+      AppLogger.warning('get_lounge_details RPC failed ($e), falling back to direct table query');
+    }
+
     final response = await client.from('lounges').select().eq('id', id).maybeSingle();
     if (response == null) return null;
     return LoungeModel.fromJson(Map<String, dynamic>.from(response));
@@ -431,14 +457,32 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   @override
   Future<void> toggleLoungeOpenStatus(String loungeId, bool isOpen) async {
     try {
-      await client.from('lounges').update({'is_open': isOpen}).eq('id', loungeId);
-      AppLogger.info('toggleLoungeOpenStatus Succeeded for loungeId: $loungeId, isOpen: $isOpen');
-    } on PostgrestException catch (e) {
-      AppLogger.error('toggleLoungeOpenStatus PostgrestException: ${e.message} (code: ${e.code})');
-      rethrow;
+      if (isOpen) {
+        await client.rpc('open_lounge_shift', params: {
+          'p_lounge_id': loungeId,
+          'p_starting_cash': 0,
+          'p_notes': null,
+        });
+      } else {
+        await client.rpc('close_lounge_shift', params: {
+          'p_lounge_id': loungeId,
+          'p_actual_cash_counted': 0,
+          'p_notes': 'Closed via Lounge Toggle',
+        });
+      }
+      AppLogger.info('toggleLoungeOpenStatus RPC Succeeded for loungeId: $loungeId, isOpen: $isOpen');
     } catch (e) {
-      AppLogger.error('toggleLoungeOpenStatus Error: $e');
-      rethrow;
+      AppLogger.warning('toggleLoungeOpenStatus RPC failed ($e), falling back to direct table update...');
+      try {
+        await client.from('lounges').update({'is_open': isOpen}).eq('id', loungeId);
+        AppLogger.info('toggleLoungeOpenStatus direct update succeeded for loungeId: $loungeId, isOpen: $isOpen');
+      } on PostgrestException catch (pe) {
+        AppLogger.error('toggleLoungeOpenStatus PostgrestException: ${pe.message} (code: ${pe.code})');
+        rethrow;
+      } catch (e2) {
+        AppLogger.error('toggleLoungeOpenStatus Error: $e2');
+        rethrow;
+      }
     }
   }
 

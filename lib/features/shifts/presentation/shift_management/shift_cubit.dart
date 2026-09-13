@@ -189,7 +189,7 @@ class ShiftCubit extends Cubit<ShiftState> {
     emit(state.copyWith(status: ShiftStatus.loading));
     
     try {
-      final result = await closeShiftUseCase(shiftId, actualCash, notes);
+      final result = await closeShiftUseCase(shiftId, actualCash, notes, loungeId: loungeId);
       
       if (isClosed) return;
       result.fold(
