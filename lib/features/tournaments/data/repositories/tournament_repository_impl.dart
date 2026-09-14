@@ -16,6 +16,8 @@ class TournamentRepositoryImpl implements TournamentRepository {
 
   @override
   Future<Either<Failure, List<TournamentEntity>>> getTournaments({
+    double? latitude,
+    double? longitude,
     String? loungeId,
     String? status,
   }) async {
@@ -23,6 +25,8 @@ class TournamentRepositoryImpl implements TournamentRepository {
       final result = await remoteDataSource.getTournaments(
         loungeId: loungeId,
         status: status,
+        latitude: latitude,
+        longitude: longitude,
       );
       return Right(result);
     } catch (e) {

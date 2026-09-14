@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../art_core/app_strings.dart';
 import '../../../art_core/layouts/dashboard_layout.dart';
 import '../../../art_core/theme/app_colors.dart';
@@ -9,6 +10,7 @@ import '../../../art_core/widgets/app_dialog.dart';
 import '../../../art_core/widgets/section_container.dart';
 import '../../../art_core/widgets/status_badge.dart';
 import '../../../core/responsive/responsive.dart';
+import '../../auth/presentation/login/login_cubit.dart';
 import '../domain/entities/tournament_entity.dart';
 import 'tournament_cubit.dart';
 import 'tournament_state.dart';
@@ -50,23 +52,38 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
   }
 
   void _openCreateDialog() {
+    final loginState = context.read<LoginCubit>().state;
+    final loungeId = loginState.user?.loungeId ?? loginState.userLounge?.id;
+    final tournamentCubit = context.read<TournamentCubit>();
+
     showDialog(
       context: context,
       builder: (ctx) => TournamentFormDialog(
-        onSubmit: (entity) {
-          context.read<TournamentCubit>().createTournament(entity);
+        defaultLoungeId: loungeId,
+        onSubmit: (entity, bannerBytes, bannerName) {
+          return tournamentCubit.createTournament(
+            entity,
+            bannerBytes: bannerBytes,
+            bannerName: bannerName,
+          );
         },
       ),
     );
   }
 
   void _openEditDialog(TournamentEntity tournament) {
+    final tournamentCubit = context.read<TournamentCubit>();
+
     showDialog(
       context: context,
       builder: (ctx) => TournamentFormDialog(
         tournament: tournament,
-        onSubmit: (entity) {
-          context.read<TournamentCubit>().updateTournament(entity);
+        onSubmit: (entity, bannerBytes, bannerName) {
+          return tournamentCubit.updateTournament(
+            entity,
+            bannerBytes: bannerBytes,
+            bannerName: bannerName,
+          );
         },
       ),
     );
@@ -547,16 +564,22 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
   }
 
   Widget _buildAuditLogsTab(BuildContext context, TournamentState state) {
+    final dateFormat = DateFormat('yyyy/MM/dd HH:mm:ss');
+
     return SectionContainer(
       title: AppStrings.auditTrail,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(AppStrings.auditTrail, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16.sp)),
+            Text(
+              '${AppStrings.auditTrail} (${state.auditLogs.length})',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp, fontWeight: FontWeight.bold),
+            ),
             AppButton(
               text: AppStrings.viewAll,
               variant: AppButtonVariant.outlined,
+              icon: Icons.open_in_new_rounded,
               onPressed: () {
                 showDialog(
                   context: context,
@@ -567,19 +590,79 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
           ],
         ),
         SizedBox(height: 16.h),
-        SizedBox(
-          height: 400.h,
-          child: ListView.builder(
-            itemCount: state.auditLogs.length,
-            itemBuilder: (context, index) {
-              final log = state.auditLogs[index];
-              return ListTile(
-                title: Text(log.actionType, style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp)),
-                subtitle: Text(log.performedByName ?? log.performedBy, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
-              );
-            },
-          ),
-        ),
+        state.auditLogs.isEmpty
+            ? Container(
+                height: 250.h,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.cardBackground,
+                  borderRadius: BorderRadius.circular(10.r),
+                  border: Border.all(color: AppColors.borderDefault),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.history_toggle_off_rounded, color: AppColors.textSecondary, size: 48),
+                    SizedBox(height: 12.h),
+                    Text(
+                      'لا توجد سجلات تتبع لهذه البطولة بعد',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 15.sp),
+                    ),
+                  ],
+                ),
+              )
+            : Container(
+                height: 480.h,
+                decoration: BoxDecoration(
+                  color: AppColors.cardBackground,
+                  borderRadius: BorderRadius.circular(10.r),
+                  border: Border.all(color: AppColors.borderDefault),
+                ),
+                child: ListView.separated(
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  itemCount: state.auditLogs.length,
+                  separatorBuilder: (ctx, i) => const Divider(color: AppColors.borderDefault, height: 1),
+                  itemBuilder: (context, index) {
+                    final log = state.auditLogs[index];
+                    final performer = log.performedByName ?? (log.performedBy.isNotEmpty ? log.performedBy : 'النظام');
+
+                    return ListTile(
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+                      leading: CircleAvatar(
+                        backgroundColor: AppColors.neonBlue.withAlpha(25),
+                        child: const Icon(Icons.history_rounded, color: AppColors.neonBlue, size: 20),
+                      ),
+                      title: Text(
+                        formatAuditActionType(log.actionType),
+                        style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 4.h),
+                          Text(
+                            'بواسطة: $performer',
+                            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                          ),
+                          if (log.details != null && log.details!.isNotEmpty) ...[
+                            SizedBox(height: 2.h),
+                            Text(
+                              'التفاصيل: ${log.details}',
+                              style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                      trailing: Text(
+                        dateFormat.format(log.createdAt.toLocal()),
+                        style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp),
+                      ),
+                    );
+                  },
+                ),
+              ),
       ],
     );
   }
@@ -587,7 +670,12 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
   Widget _buildTournamentStatusBadge(TournamentStatus status) {
     switch (status) {
       case TournamentStatus.published:
+      case TournamentStatus.registrationOpen:
         return StatusBadge(text: AppStrings.active, color: AppColors.success);
+      case TournamentStatus.registrationClosed:
+      case TournamentStatus.checkInOpen:
+      case TournamentStatus.checkInClosed:
+      case TournamentStatus.drawCompleted:
       case TournamentStatus.inProgress:
         return StatusBadge(text: AppStrings.inProgress, color: AppColors.neonBlue);
       case TournamentStatus.completed:
@@ -595,7 +683,6 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
       case TournamentStatus.cancelled:
         return StatusBadge(text: AppStrings.cancelled, color: AppColors.danger);
       case TournamentStatus.draft:
-      default:
         return StatusBadge(text: AppStrings.pending, color: AppColors.warning);
     }
   }

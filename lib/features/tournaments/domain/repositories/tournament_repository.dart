@@ -8,6 +8,8 @@ import '../entities/tournament_participant_entity.dart';
 
 abstract class TournamentRepository {
   Future<Either<Failure, List<TournamentEntity>>> getTournaments({
+    double? latitude,
+    double? longitude,
     String? loungeId,
     String? status,
   });

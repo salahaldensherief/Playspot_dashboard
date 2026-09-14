@@ -13,6 +13,11 @@ abstract class AuthRemoteDataSource {
   Future<UserModel?> getCurrentUser({String? userId});
   
   Future<bool> checkSetupStatus(String loungeId);
+
+  Future<UserModel> updateProfileCity({
+    required String userId,
+    required String cityId,
+  });
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -118,5 +123,22 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         .maybeSingle();
     
     return response?['is_setup_completed'] == true;
+  }
+
+  @override
+  Future<UserModel> updateProfileCity({
+    required String userId,
+    required String cityId,
+  }) async {
+    await supabaseClient
+        .from('profiles')
+        .update({'city_id': cityId})
+        .eq('id', userId);
+
+    final updated = await getCurrentUser(userId: userId);
+    if (updated == null) {
+      throw Exception('Failed to fetch updated profile');
+    }
+    return updated;
   }
 }

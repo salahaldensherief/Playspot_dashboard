@@ -598,6 +598,15 @@ class AppStrings {
   static String get auditTrail => 'audit_trail'.tr();
   static String get publishTournament => 'publish_tournament'.tr();
   static String get cancelTournament => 'cancel_tournament'.tr();
+  static String get visibilityScope => 'visibility_scope'.tr();
+  static String get visibilityAll => 'visibility_all'.tr();
+  static String get visibilityCity => 'visibility_city'.tr();
+  static String get visibilityRadius => 'visibility_radius'.tr();
+  static String get visibilityRadiusKm => 'visibility_radius_km'.tr();
+  static String get selectCity => 'select_city'.tr();
+  static String get cityRequiredError => 'city_required_error'.tr();
+  static String get radiusRequiredError => 'radius_required_error'.tr();
+  static String get userCity => 'user_city'.tr();
   static String get deleteDraft => 'delete_draft'.tr();
   static String get roundLabel => 'round'.tr();
   static String get finalRound => 'final_round'.tr();

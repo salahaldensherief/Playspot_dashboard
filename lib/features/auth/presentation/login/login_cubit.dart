@@ -6,6 +6,7 @@ import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/get_current_user_usecase.dart';
 import '../../domain/entities/user_entity.dart';
+import '../../domain/repositories/auth_repository.dart';
 import '../../../lounges/domain/repositories/lounge_repository.dart';
 import '../../../../core/usecases/base_usecase.dart';
 import 'login_state.dart';
@@ -16,6 +17,7 @@ class LoginCubit extends Cubit<LoginState> {
   final GetCurrentUserUseCase getCurrentUserUseCase;
   final LoungeRepository loungeRepository;
   final LocationService locationService;
+  final AuthRepository authRepository;
 
   LoginCubit({
     required this.loginUseCase,
@@ -23,6 +25,7 @@ class LoginCubit extends Cubit<LoginState> {
     required this.getCurrentUserUseCase,
     required this.loungeRepository,
     required this.locationService,
+    required this.authRepository,
   }) : super(const LoginState());
 
   Future<void> checkInitialAuth({BuildContext? context}) async {
@@ -110,6 +113,21 @@ class LoginCubit extends Cubit<LoginState> {
 
   void updateUser(UserEntity user) {
     emit(state.copyWith(user: user, isSetupCompleted: user.isSetupCompleted));
+  }
+
+  Future<void> updateUserCity(String cityId) async {
+    final currentUser = state.user;
+    if (currentUser == null) return;
+
+    final result = await authRepository.updateProfileCity(
+      userId: currentUser.id,
+      cityId: cityId,
+    );
+
+    result.fold(
+      (failure) => emit(state.copyWith(errorMessage: failure.message)),
+      (updatedUser) => emit(state.copyWith(user: updatedUser)),
+    );
   }
 
   void markLocationCaptured() {

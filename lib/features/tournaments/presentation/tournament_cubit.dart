@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/core/services/location_service.dart';
+import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import '../domain/entities/tournament_entity.dart';
 import '../domain/entities/tournament_match_entity.dart';
 import '../domain/repositories/tournament_repository.dart';
@@ -7,19 +10,43 @@ import 'tournament_state.dart';
 
 class TournamentCubit extends Cubit<TournamentState> {
   final TournamentRepository repository;
+  final LocationService locationService;
+  final StorageService storageService;
   StreamSubscription<List<TournamentMatchEntity>>? _disputesSubscription;
 
-  TournamentCubit(this.repository) : super(const TournamentState());
+  TournamentCubit(this.repository, this.locationService, this.storageService) : super(const TournamentState());
 
   void setTab(int index) {
     emit(state.copyWith(selectedTab: index));
   }
 
-  Future<void> loadTournaments({String? loungeId, String? status}) async {
+  Future<void> loadTournaments({
+    String? loungeId,
+    String? status,
+    bool requestLocation = true,
+  }) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
+
+    double? userLat;
+    double? userLng;
+
+    if (requestLocation) {
+      try {
+        final position = await locationService.getCurrentPosition();
+        if (position != null) {
+          userLat = position.latitude;
+          userLng = position.longitude;
+        }
+      } catch (e) {
+        debugPrint('⚠️ [TOURNAMENT_CUBIT] Location request error: $e');
+      }
+    }
+
     final result = await repository.getTournaments(
       loungeId: loungeId,
       status: status,
+      latitude: userLat,
+      longitude: userLng,
     );
 
     result.fold(
@@ -63,15 +90,43 @@ class TournamentCubit extends Cubit<TournamentState> {
     startWatchingDisputes(tournamentId);
   }
 
-  Future<void> createTournament(TournamentEntity tournament) async {
+  Future<bool> createTournament(
+    TournamentEntity tournament, {
+    Uint8List? bannerBytes,
+    String? bannerName,
+  }) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.createTournament(tournament);
 
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
-      )),
+    TournamentEntity tournamentToCreate = tournament;
+
+    if (bannerBytes != null && bannerName != null) {
+      try {
+        final bannerUrl = await storageService.uploadTournamentBanner(
+          bannerBytes,
+          bannerName,
+          tournament.id,
+        );
+        tournamentToCreate = tournament.copyWith(bannerUrl: bannerUrl);
+      } catch (e) {
+        debugPrint('⚠️ [TOURNAMENT_CUBIT] Banner upload failed: $e');
+        emit(state.copyWith(
+          status: TournamentCubitStatus.failure,
+          errorMessage: 'فشل رفع صورة الإعلان: $e',
+        ));
+        return false;
+      }
+    }
+
+    final result = await repository.createTournament(tournamentToCreate);
+
+    return result.fold(
+      (failure) {
+        emit(state.copyWith(
+          status: TournamentCubitStatus.failure,
+          errorMessage: failure.message,
+        ));
+        return false;
+      },
       (created) {
         final updatedList = [created, ...state.tournaments];
         emit(state.copyWith(
@@ -81,19 +136,48 @@ class TournamentCubit extends Cubit<TournamentState> {
           successMessage: 'تم إنشاء البطولة بنجاح',
         ));
         _refreshSelectedTournamentData(created.id);
+        return true;
       },
     );
   }
 
-  Future<void> updateTournament(TournamentEntity tournament) async {
+  Future<bool> updateTournament(
+    TournamentEntity tournament, {
+    Uint8List? bannerBytes,
+    String? bannerName,
+  }) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.updateTournament(tournament);
 
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
-      )),
+    TournamentEntity tournamentToUpdate = tournament;
+
+    if (bannerBytes != null && bannerName != null) {
+      try {
+        final bannerUrl = await storageService.uploadTournamentBanner(
+          bannerBytes,
+          bannerName,
+          tournament.id,
+        );
+        tournamentToUpdate = tournament.copyWith(bannerUrl: bannerUrl);
+      } catch (e) {
+        debugPrint('⚠️ [TOURNAMENT_CUBIT] Banner upload failed: $e');
+        emit(state.copyWith(
+          status: TournamentCubitStatus.failure,
+          errorMessage: 'فشل رفع صورة الإعلان: $e',
+        ));
+        return false;
+      }
+    }
+
+    final result = await repository.updateTournament(tournamentToUpdate);
+
+    return result.fold(
+      (failure) {
+        emit(state.copyWith(
+          status: TournamentCubitStatus.failure,
+          errorMessage: failure.message,
+        ));
+        return false;
+      },
       (updated) {
         final list = state.tournaments.map((t) => t.id == updated.id ? updated : t).toList();
         emit(state.copyWith(
@@ -102,6 +186,7 @@ class TournamentCubit extends Cubit<TournamentState> {
           selectedTournament: updated,
           successMessage: 'تم تعديل بيانات البطولة بنجاح',
         ));
+        return true;
       },
     );
   }

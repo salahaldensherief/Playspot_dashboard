@@ -1,16 +1,133 @@
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:dartz/dartz.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
+import 'package:play_spot_dashboard/core/services/location_service.dart';
+import 'package:play_spot_dashboard/core/services/storage_service.dart';
+import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_audit_log_entity.dart';
 import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_entity.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_match_entity.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_participant_entity.dart';
 import 'package:play_spot_dashboard/features/tournaments/domain/repositories/tournament_repository.dart';
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_cubit.dart';
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_state.dart';
 
-class MockTournamentRepository extends Mock implements TournamentRepository {}
+class FakeLocationService implements LocationService {
+  @override
+  Future<bool> checkPermissions() async => true;
+
+  @override
+  Future<Position?> getCurrentPosition() async => null;
+
+  @override
+  Future<String?> getCityFromPosition(Position position, BuildContext context) async => null;
+}
+
+class FakeStorageService implements StorageService {
+  @override
+  Future<String> uploadLoungeImage(Uint8List fileBytes, String fileName, String loungeId) async => '';
+  @override
+  Future<List<String>> uploadLoungeImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId) async => [];
+  @override
+  Future<String> uploadRoomImage(Uint8List fileBytes, String fileName, String loungeId) async => '';
+  @override
+  Future<List<String>> uploadRoomImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId) async => [];
+  @override
+  Future<String> uploadTournamentBanner(Uint8List fileBytes, String fileName, String tournamentId) async => 'http://banner.url';
+}
+
+class FakeTournamentRepository implements TournamentRepository {
+  Either<Failure, List<TournamentEntity>> getTournamentsResult = const Right([]);
+  Either<Failure, TournamentEntity>? createTournamentResult;
+  Either<Failure, void>? deleteDraftResult;
+
+  @override
+  Future<Either<Failure, List<TournamentEntity>>> getTournaments({
+    double? latitude,
+    double? longitude,
+    String? loungeId,
+    String? status,
+  }) async => getTournamentsResult;
+
+  @override
+  Future<Either<Failure, TournamentEntity>> createTournament(TournamentEntity tournament) async {
+    return createTournamentResult ?? Right(tournament);
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteDraftTournament(String tournamentId) async {
+    return deleteDraftResult ?? const Right(null);
+  }
+
+  @override
+  Future<Either<Failure, TournamentEntity>> updateTournament(TournamentEntity tournament) async => Right(tournament);
+
+  @override
+  Future<Either<Failure, void>> publishTournament(String tournamentId) async => const Right(null);
+
+  @override
+  Future<Either<Failure, void>> cancelTournament(String tournamentId, String reason) async => const Right(null);
+
+  @override
+  Future<Either<Failure, List<TournamentParticipantEntity>>> getParticipants(String tournamentId) async => const Right([]);
+
+  @override
+  Future<Either<Failure, void>> approvePayment(String participantId) async => const Right(null);
+
+  @override
+  Future<Either<Failure, void>> rejectPayment(String participantId, String reason) async => const Right(null);
+
+  @override
+  Future<Either<Failure, void>> recordCashPayment(String participantId) async => const Right(null);
+
+  @override
+  Future<Either<Failure, void>> checkInParticipant(String participantId) async => const Right(null);
+
+  @override
+  Future<Either<Failure, List<TournamentMatchEntity>>> drawBracket(String tournamentId) async => const Right([]);
+
+  @override
+  Future<Either<Failure, List<TournamentMatchEntity>>> getMatches(String tournamentId) async => const Right([]);
+
+  @override
+  Future<Either<Failure, void>> startMatch(String matchId, {String? roomId}) async => const Right(null);
+
+  @override
+  Future<Either<Failure, void>> resolveDispute(
+    String matchId, {
+    required String winnerId,
+    required int p1Score,
+    required int p2Score,
+    required String resolutionNotes,
+  }) async => const Right(null);
+
+  @override
+  Future<Either<Failure, void>> completeTournament(String tournamentId) async => const Right(null);
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> awardPrizes(String tournamentId) async => const Right({});
+
+  @override
+  Future<Either<Failure, List<TournamentAuditLogEntity>>> getAuditLogs(String tournamentId) async => const Right([]);
+
+  @override
+  Future<Either<Failure, PaginatedResult<TournamentAuditLogEntity>>> getTournamentAuditLogsPage({
+    required String tournamentId,
+    int page = 1,
+    int pageSize = 50,
+  }) async => Right(PaginatedResult.empty(requestedPage: page, requestedPageSize: pageSize));
+
+  @override
+  Stream<List<TournamentMatchEntity>> watchDisputedMatches(String tournamentId) => const Stream.empty();
+}
 
 void main() {
-  late MockTournamentRepository mockRepository;
+  late FakeTournamentRepository fakeRepository;
+  late FakeLocationService fakeLocationService;
+  late FakeStorageService fakeStorageService;
   late TournamentCubit cubit;
 
   final tTournament = TournamentEntity(
@@ -29,8 +146,10 @@ void main() {
   );
 
   setUp(() {
-    mockRepository = MockTournamentRepository();
-    cubit = TournamentCubit(mockRepository);
+    fakeRepository = FakeTournamentRepository();
+    fakeLocationService = FakeLocationService();
+    fakeStorageService = FakeStorageService();
+    cubit = TournamentCubit(fakeRepository, fakeLocationService, fakeStorageService);
   });
 
   tearDown(() {
@@ -42,12 +161,7 @@ void main() {
   });
 
   test('loadTournaments emits success state with loaded list', () async {
-    when(() => mockRepository.getTournaments(loungeId: any(named: 'loungeId'), status: any(named: 'status')))
-        .thenAnswer((_) async => Right([tTournament]));
-    when(() => mockRepository.getParticipants(any())).thenAnswer((_) async => const Right([]));
-    when(() => mockRepository.getMatches(any())).thenAnswer((_) async => const Right([]));
-    when(() => mockRepository.getAuditLogs(any())).thenAnswer((_) async => const Right([]));
-    when(() => mockRepository.watchDisputedMatches(any())).thenAnswer((_) => const Stream.empty());
+    fakeRepository.getTournamentsResult = Right([tTournament]);
 
     await cubit.loadTournaments();
 
@@ -56,12 +170,7 @@ void main() {
   });
 
   test('createTournament emits actionSuccess on success', () async {
-    when(() => mockRepository.createTournament(any()))
-        .thenAnswer((_) async => Right(tTournament));
-    when(() => mockRepository.getParticipants(any())).thenAnswer((_) async => const Right([]));
-    when(() => mockRepository.getMatches(any())).thenAnswer((_) async => const Right([]));
-    when(() => mockRepository.getAuditLogs(any())).thenAnswer((_) async => const Right([]));
-    when(() => mockRepository.watchDisputedMatches(any())).thenAnswer((_) => const Stream.empty());
+    fakeRepository.createTournamentResult = Right(tTournament);
 
     await cubit.createTournament(tTournament);
 
@@ -70,8 +179,7 @@ void main() {
   });
 
   test('deleteDraftTournament handles failure correctly', () async {
-    when(() => mockRepository.deleteDraftTournament(any()))
-        .thenAnswer((_) async => const Left(ServerFailure('Cannot delete draft with participants')));
+    fakeRepository.deleteDraftResult = const Left(ServerFailure('Cannot delete draft with participants'));
 
     await cubit.deleteDraftTournament('t-1');
 

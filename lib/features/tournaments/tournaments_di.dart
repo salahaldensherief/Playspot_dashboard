@@ -17,6 +17,6 @@ void initTournamentsDI(GetIt sl) {
 
   // Cubit
   sl.registerFactory<TournamentCubit>(
-    () => TournamentCubit(sl()),
+    () => TournamentCubit(sl(), sl(), sl()),
   );
 }

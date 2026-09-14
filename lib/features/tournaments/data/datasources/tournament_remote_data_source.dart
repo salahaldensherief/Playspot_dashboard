@@ -8,7 +8,12 @@ import '../models/tournament_model.dart';
 import '../models/tournament_participant_model.dart';
 
 abstract class TournamentRemoteDataSource {
-  Future<List<TournamentModel>> getTournaments({String? loungeId, String? status});
+  Future<List<TournamentModel>> getTournaments({
+    String? loungeId,
+    String? status,
+    double? latitude,
+    double? longitude,
+  });
   Future<TournamentModel> createTournament(TournamentModel tournament);
   Future<TournamentModel> updateTournament(TournamentModel tournament);
   Future<void> publishTournament(String tournamentId);
@@ -51,51 +56,110 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
   TournamentRemoteDataSourceImpl(this.client);
 
   @override
-  Future<List<TournamentModel>> getTournaments({String? loungeId, String? status}) async {
+  Future<List<TournamentModel>> getTournaments({
+    String? loungeId,
+    String? status,
+    double? latitude,
+    double? longitude,
+  }) async {
     try {
-      var query = client.from('tournaments').select('''
-        *,
-        lounges(name),
-        tournament_participants(id)
-      ''');
+      final rpcParams = <String, dynamic>{
+        'p_latitude': latitude,
+        'p_longitude': longitude,
+      };
 
-      if (loungeId != null && loungeId.trim().isNotEmpty) {
-        query = query.eq('lounge_id', loungeId.trim());
-      }
-      if (status != null && status.trim().isNotEmpty) {
-        query = query.eq('status', status.trim());
-      }
+      debugPrint('🔵 [TOURNAMENTS_REMOTE] Calling get_visible_tournaments RPC with params: $rpcParams');
+      final response = await client.rpc('get_visible_tournaments', params: rpcParams);
 
-      final response = await query.order('created_at', ascending: false);
-      return (response as List).map((json) {
-        return TournamentModel.fromJson(Map<String, dynamic>.from(json));
-      }).toList();
+      if (response != null && response is List) {
+        var list = (response as List).map((json) {
+          return TournamentModel.fromJson(Map<String, dynamic>.from(json));
+        }).toList();
+
+        if (loungeId != null && loungeId.trim().isNotEmpty) {
+          list = list.where((t) => t.loungeId == loungeId.trim()).toList();
+        }
+        if (status != null && status.trim().isNotEmpty) {
+          list = list.where((t) => t.status.toDbString() == status.trim() || t.status.name == status.trim()).toList();
+        }
+        return list;
+      }
     } catch (e) {
-      debugPrint('⚠️ [TOURNAMENTS_REMOTE] getTournaments query error: $e');
-      // Fallback plain query without joins
-      var plainQuery = client.from('tournaments').select();
-      if (loungeId != null && loungeId.trim().isNotEmpty) {
-        plainQuery = plainQuery.eq('lounge_id', loungeId.trim());
-      }
-      if (status != null && status.trim().isNotEmpty) {
-        plainQuery = plainQuery.eq('status', status.trim());
-      }
-      final response = await plainQuery.order('created_at', ascending: false);
-      return (response as List).map((json) {
-        return TournamentModel.fromJson(Map<String, dynamic>.from(json));
-      }).toList();
+      debugPrint('⚠️ [TOURNAMENTS_REMOTE] get_visible_tournaments RPC query error: $e');
     }
+
+    // Fallback plain query without joins
+    var query = client.from('tournaments').select('''
+      *,
+      lounges(name),
+      tournament_participants(id)
+    ''');
+
+    if (loungeId != null && loungeId.trim().isNotEmpty) {
+      query = query.eq('lounge_id', loungeId.trim());
+    }
+    if (status != null && status.trim().isNotEmpty) {
+      query = query.eq('status', status.trim());
+    }
+
+    final response = await query.order('created_at', ascending: false);
+    return (response as List).map((json) {
+      return TournamentModel.fromJson(Map<String, dynamic>.from(json));
+    }).toList();
+  }
+
+  bool _isValidUuid(String? str) {
+    if (str == null || str.trim().isEmpty) return false;
+    return RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(str.trim());
   }
 
   @override
   Future<TournamentModel> createTournament(TournamentModel tournament) async {
     String? createdId;
+
+    // Resolve a valid city_id UUID to satisfy NOT NULL constraint on tournaments.city_id
+    String? resolvedCityId = tournament.cityId;
+    if (resolvedCityId == null || !_isValidUuid(resolvedCityId)) {
+      try {
+        if (tournament.loungeId != null && _isValidUuid(tournament.loungeId)) {
+          final loungeRes = await client.from('lounges').select('city').eq('id', tournament.loungeId!).maybeSingle();
+          if (loungeRes != null && loungeRes['city'] != null) {
+            final cityName = loungeRes['city'].toString().trim();
+            if (cityName.isNotEmpty) {
+              final cityRes = await client
+                  .from('cities')
+                  .select('id')
+                  .or('name_ar.ilike.%$cityName%,name_en.ilike.%$cityName%')
+                  .limit(1)
+                  .maybeSingle();
+              if (cityRes != null && cityRes['id'] != null) {
+                resolvedCityId = cityRes['id'].toString();
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('⚠️ [TOURNAMENTS_REMOTE] Failed to lookup city by lounge city name: $e');
+      }
+
+      if (resolvedCityId == null || !_isValidUuid(resolvedCityId)) {
+        try {
+          final firstCity = await client.from('cities').select('id').limit(1).maybeSingle();
+          if (firstCity != null && firstCity['id'] != null) {
+            resolvedCityId = firstCity['id'].toString();
+          }
+        } catch (e) {
+          debugPrint('⚠️ [TOURNAMENTS_REMOTE] Failed to fetch fallback city: $e');
+        }
+      }
+    }
+
     try {
-      final response = await client.rpc('create_tournament', params: {
-        'p_lounge_id': tournament.loungeId,
-        'p_city_id': tournament.cityId,
-        'p_title_ar': tournament.titleAr ?? tournament.title,
-        'p_title_en': tournament.titleEn ?? tournament.title,
+      final Map<String, dynamic> rpcParams = {
+        'p_title_ar': (tournament.titleAr != null && tournament.titleAr!.isNotEmpty) ? tournament.titleAr : tournament.title,
+        'p_title_en': (tournament.titleEn != null && tournament.titleEn!.isNotEmpty) ? tournament.titleEn : tournament.title,
+        'p_description_ar': tournament.descriptionAr ?? tournament.rules,
+        'p_description_en': tournament.descriptionEn ?? tournament.rules,
         'p_game_name': tournament.gameTitle,
         'p_bracket_size': tournament.treeSize,
         'p_max_participants': tournament.maxPlayers,
@@ -104,9 +168,20 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
         'p_registration_closes_at': (tournament.registrationClosesAt ?? tournament.registrationDeadline).toUtc().toIso8601String(),
         'p_payment_deadline_minutes': tournament.paymentDeadlineMinutes,
         'p_check_in_opens_at': tournament.checkInOpensAt?.toUtc().toIso8601String() ?? tournament.startDate.toUtc().toIso8601String(),
-        'p_check_in_closes_at': tournament.checkInClosesAt?.toUtc().toIso8601String() ?? tournament.endDate.toUtc().toIso8601String(),
+        'p_check_in_closes_at': tournament.checkInClosesAt?.toUtc().toIso8601String() ?? tournament.startDate.toUtc().toIso8601String(),
         'p_tournament_starts_at': (tournament.tournamentStartsAt ?? tournament.startDate).toUtc().toIso8601String(),
-      });
+        'p_visibility_scope': tournament.visibilityScope,
+        'p_visibility_radius_km': tournament.visibilityScope == 'radius' ? tournament.visibilityRadiusKm : null,
+      };
+
+      if (_isValidUuid(tournament.loungeId)) {
+        rpcParams['p_lounge_id'] = tournament.loungeId;
+      }
+      if (_isValidUuid(resolvedCityId)) {
+        rpcParams['p_city_id'] = resolvedCityId;
+      }
+
+      final response = await client.rpc('create_tournament', params: rpcParams);
 
       if (response != null) {
         if (response is Map) {
@@ -122,6 +197,17 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
 
     if (createdId == null || createdId.isEmpty) {
       final insertMap = tournament.toJson();
+      if (_isValidUuid(resolvedCityId)) {
+        insertMap['city_id'] = resolvedCityId;
+      }
+      insertMap['visibility_scope'] = tournament.visibilityScope;
+      insertMap['visibility_radius_km'] = tournament.visibilityScope == 'radius' ? tournament.visibilityRadiusKm : null;
+
+      final currentUserId = client.auth.currentUser?.id;
+      if (currentUserId != null && _isValidUuid(currentUserId)) {
+        insertMap['created_by'] = currentUserId;
+      }
+      debugPrint('🔵 [TOURNAMENTS_REMOTE] Executing direct insert: $insertMap');
       final inserted = await client.from('tournaments').insert(insertMap).select().single();
       final model = TournamentModel.fromJson(Map<String, dynamic>.from(inserted));
       createdId = model.id;
@@ -145,10 +231,10 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
   @override
   Future<TournamentModel> updateTournament(TournamentModel tournament) async {
     try {
-      await client.rpc('update_tournament', params: {
+      final rpcParams = <String, dynamic>{
         'p_tournament_id': tournament.id,
-        'p_title_ar': tournament.titleAr ?? tournament.title,
-        'p_title_en': tournament.titleEn ?? tournament.title,
+        'p_title_ar': (tournament.titleAr != null && tournament.titleAr!.isNotEmpty) ? tournament.titleAr : tournament.title,
+        'p_title_en': (tournament.titleEn != null && tournament.titleEn!.isNotEmpty) ? tournament.titleEn : tournament.title,
         'p_description_ar': tournament.descriptionAr ?? tournament.rules,
         'p_description_en': tournament.descriptionEn ?? tournament.rules,
         'p_game_name': tournament.gameTitle,
@@ -158,12 +244,25 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
         'p_registration_closes_at': (tournament.registrationClosesAt ?? tournament.registrationDeadline).toUtc().toIso8601String(),
         'p_payment_deadline_minutes': tournament.paymentDeadlineMinutes,
         'p_check_in_opens_at': tournament.checkInOpensAt?.toUtc().toIso8601String() ?? tournament.startDate.toUtc().toIso8601String(),
-        'p_check_in_closes_at': tournament.checkInClosesAt?.toUtc().toIso8601String() ?? tournament.endDate.toUtc().toIso8601String(),
+        'p_check_in_closes_at': tournament.checkInClosesAt?.toUtc().toIso8601String() ?? tournament.startDate.toUtc().toIso8601String(),
         'p_tournament_starts_at': (tournament.tournamentStartsAt ?? tournament.startDate).toUtc().toIso8601String(),
-      });
+        'p_visibility_scope': tournament.visibilityScope,
+        'p_visibility_radius_km': tournament.visibilityScope == 'radius' ? tournament.visibilityRadiusKm : null,
+      };
+
+      if (_isValidUuid(tournament.cityId)) {
+        rpcParams['p_city_id'] = tournament.cityId;
+      }
+
+      await client.rpc('update_tournament', params: rpcParams);
     } catch (e) {
       debugPrint('⚠️ [TOURNAMENTS_REMOTE] update_tournament RPC error: $e, falling back to direct update');
       final updateMap = tournament.toJson();
+      updateMap['visibility_scope'] = tournament.visibilityScope;
+      updateMap['visibility_radius_km'] = tournament.visibilityScope == 'radius' ? tournament.visibilityRadiusKm : null;
+      if (tournament.cityId != null && _isValidUuid(tournament.cityId)) {
+        updateMap['city_id'] = tournament.cityId;
+      }
       await client
           .from('tournaments')
           .update(updateMap)
