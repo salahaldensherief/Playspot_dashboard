@@ -47,24 +47,22 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
           .select('*, profiles(id, full_name, email, phone, role, is_active, avatar_url, created_at)')
           .eq('lounge_id', cleanLoungeId);
 
-      if (response is List) {
-        for (final item in response) {
-          final map = Map<String, dynamic>.from(item as Map);
-          final profileMap = map['profiles'] as Map<String, dynamic>?;
-          final id = (map['staff_id'] ?? map['user_id'] ?? profileMap?['id'] ?? map['id'])?.toString() ?? '';
-          if (id.isNotEmpty && !staffMap.containsKey(id)) {
-            final model = StaffModel.fromJson({
-              'id': id,
-              'full_name': profileMap?['full_name'] ?? map['name'] ?? map['full_name'] ?? 'Staff Member',
-              'email': profileMap?['email'] ?? map['email'] ?? '',
-              'phone': profileMap?['phone'] ?? map['phone'] ?? '',
-              'role': map['role'] ?? profileMap?['role'] ?? 'staff',
-              'lounge_id': cleanLoungeId,
-              'is_active': map['is_active'] ?? profileMap?['is_active'] ?? true,
-              'created_at': map['created_at'] ?? profileMap?['created_at'],
-            });
-            staffMap[id] = model;
-          }
+      for (final dynamic item in (response as List)) {
+        final map = Map<String, dynamic>.from(item as Map);
+        final profileMap = map['profiles'] as Map<String, dynamic>?;
+        final id = (map['staff_id'] ?? map['user_id'] ?? profileMap?['id'] ?? map['id'])?.toString() ?? '';
+        if (id.isNotEmpty && !staffMap.containsKey(id)) {
+          final model = StaffModel.fromJson({
+            'id': id,
+            'full_name': profileMap?['full_name'] ?? map['name'] ?? map['full_name'] ?? 'Staff Member',
+            'email': profileMap?['email'] ?? map['email'] ?? '',
+            'phone': profileMap?['phone'] ?? map['phone'] ?? '',
+            'role': map['role'] ?? profileMap?['role'] ?? 'staff',
+            'lounge_id': cleanLoungeId,
+            'is_active': map['is_active'] ?? profileMap?['is_active'] ?? true,
+            'created_at': map['created_at'] ?? profileMap?['created_at'],
+          });
+          staffMap[id] = model;
         }
       }
     } catch (e) {
@@ -80,12 +78,10 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
           .neq('role', 'super_admin')
           .order('full_name');
 
-      if (response is List) {
-        for (final item in response) {
-          final model = StaffModel.fromJson(Map<String, dynamic>.from(item as Map));
-          if (model.id.isNotEmpty && !staffMap.containsKey(model.id)) {
-            staffMap[model.id] = model;
-          }
+      for (final dynamic item in (response as List)) {
+        final model = StaffModel.fromJson(Map<String, dynamic>.from(item as Map));
+        if (model.id.isNotEmpty && !staffMap.containsKey(model.id)) {
+          staffMap[model.id] = model;
         }
       }
     } catch (e) {
@@ -152,7 +148,7 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
     final updates = <String, dynamic>{
       if (data.containsKey('name') && data['name'] != null) 'full_name': data['name'],
       if (data.containsKey('phone') && data['phone'] != null) 'phone': data['phone'],
-      if (mappedRole != null) 'role': mappedRole,
+      'role':? mappedRole,
       if (data.containsKey('email') && data['email'] != null) 'email': data['email'],
       if (data.containsKey('national_id_number') && data['national_id_number'] != null) 'national_id_number': data['national_id_number'],
       if (data.containsKey('id_front_url') && data['id_front_url'] != null) 'id_front_url': data['id_front_url'],

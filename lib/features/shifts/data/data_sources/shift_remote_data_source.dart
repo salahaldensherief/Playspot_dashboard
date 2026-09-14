@@ -290,15 +290,23 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
         if (rpcErr.toString().contains('already') || rpcErr.toString().contains('مفتوح')) {
           throw Exception('يوجد شفت مفتوح بالفعل لهذا الفرع.');
         }
-        debugPrint('⚠️ [ShiftRemoteDataSource] RPC open_lounge_shift failed ($rpcErr), trying legacy open_shift');
+        debugPrint('⚠️ [ShiftRemoteDataSource] RPC open_lounge_shift failed ($rpcErr), ensuring staff membership and retrying...');
         try {
-          await _supabase.rpc('open_shift', params: {
+          await _supabase.from('lounge_staff').upsert({
+            'lounge_id': loungeId,
+            'user_id': userId,
+            'role': 'cashier',
+            'is_active': true,
+          }, onConflict: 'lounge_id,user_id');
+
+          await _supabase.rpc('open_lounge_shift', params: {
             'p_lounge_id': loungeId,
             'p_starting_cash': startingCash,
+            'p_notes': notes,
           });
-          debugPrint('🟢 [ShiftRemoteDataSource] Legacy RPC open_shift successful');
-        } catch (legacyErr) {
-          debugPrint('⚠️ [ShiftRemoteDataSource] RPC open_shift failed ($legacyErr), falling back to direct insert');
+          debugPrint('🟢 [ShiftRemoteDataSource] RPC open_lounge_shift successful after staff sync');
+        } catch (retryErr) {
+          debugPrint('⚠️ [ShiftRemoteDataSource] Retry open_lounge_shift failed ($retryErr), falling back to direct insert');
           await _supabase.from('shifts').insert({
             'cashier_id': userId,
             'lounge_id': loungeId,

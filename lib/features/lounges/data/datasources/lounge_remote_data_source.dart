@@ -143,11 +143,12 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
         .toList();
 
     final Map<String, int> roomCountsMap = {};
+    final Map<String, double> loungeMinPriceMap = {};
     if (loungeIds.isNotEmpty) {
       try {
         final roomsResponse = await client
             .from('rooms')
-            .select('lounge_id, status')
+            .select('lounge_id, status, hourly_rate_single, hourly_rate_multi, hourly_rate, price')
             .inFilter('lounge_id', loungeIds);
 
         for (final r in roomsResponse as List) {
@@ -156,19 +157,41 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
           final status = rMap['status']?.toString();
           if (lId != null && status != 'deleted') {
             roomCountsMap[lId] = (roomCountsMap[lId] ?? 0) + 1;
+
+            final double roomPrice = (rMap['hourly_rate_single'] ?? 
+                                      rMap['hourly_rate'] ?? 
+                                      rMap['price'] as num?)?.toDouble() ?? 0.0;
+            if (roomPrice > 0) {
+              final currentMin = loungeMinPriceMap[lId] ?? double.infinity;
+              if (roomPrice < currentMin) {
+                loungeMinPriceMap[lId] = roomPrice;
+              }
+            }
           }
         }
       } catch (e, stackTrace) {
-        AppLogger.warning('Room counts batch fetch failed', e, stackTrace);
+        AppLogger.warning('Room counts & prices batch fetch failed', e, stackTrace);
       }
     }
 
-    // 4. Map lounges and attach owner profile details & room count
+    // 4. Map lounges and attach owner profile details & room count & price fallback
     return rawList.map((json) {
       final lId = (json['id'] ?? json['lounge_id'])?.toString();
-      if (lId != null && roomCountsMap.containsKey(lId)) {
-        json['available_rooms'] ??= roomCountsMap[lId];
-        json['rooms_count'] ??= roomCountsMap[lId];
+      if (lId != null) {
+        if (roomCountsMap.containsKey(lId)) {
+          json['available_rooms'] = roomCountsMap[lId];
+          json['rooms_count'] = roomCountsMap[lId];
+        } else {
+          json['available_rooms'] ??= 0;
+        }
+
+        final double currentPrice = (json['price_per_hour'] ?? json['price'] ?? 0.0) is num 
+            ? (json['price_per_hour'] ?? json['price'] ?? 0.0).toDouble() 
+            : double.tryParse((json['price_per_hour'] ?? json['price'] ?? '0').toString()) ?? 0.0;
+        
+        if (currentPrice <= 0 && loungeMinPriceMap.containsKey(lId)) {
+          json['price_per_hour'] = loungeMinPriceMap[lId];
+        }
       }
 
       final ownerId = json['owner_id']?.toString();
@@ -193,7 +216,7 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
         if (rpcResponse is List && rpcResponse.isNotEmpty) {
           json = Map<String, dynamic>.from(rpcResponse.first as Map);
         } else if (rpcResponse is Map) {
-          json = Map<String, dynamic>.from(rpcResponse as Map);
+          json = Map<String, dynamic>.from(rpcResponse);
         }
 
         if (json.isNotEmpty) {

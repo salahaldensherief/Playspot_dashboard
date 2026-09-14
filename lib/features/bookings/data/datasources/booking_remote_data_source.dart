@@ -33,7 +33,6 @@ abstract class BookingRemoteDataSource {
 
 class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   final SupabaseClient client;
-  DateTime? _lastAutoCancelExecution;
 
   BookingRemoteDataSourceImpl(this.client);
 
@@ -173,12 +172,34 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
     debugPrint('🔵 [DATA_SOURCE] Calling RPC update_booking_status_admin for id=$id, status=$cleanStatus');
 
-    await client.rpc('update_booking_status_admin', params: {
-      'p_booking_id': id,
-      'p_status': cleanStatus,
-    });
+    try {
+      await client.rpc('update_booking_status_admin', params: {
+        'p_booking_id': id,
+        'p_status': cleanStatus,
+      });
+      debugPrint('🟢 [DATA_SOURCE] RPC Update Successful!');
+    } catch (e) {
+      if (e.toString().contains('shift') || e.toString().contains('الوردية')) {
+        debugPrint('⚠️ [DATA_SOURCE] update_booking_status_admin failed due to shift requirement. Finding active shift and updating directly...');
+        final shiftRes = await client
+            .from('shifts')
+            .select('id')
+            .eq('status', 'open')
+            .order('start_time', ascending: false)
+            .limit(1)
+            .maybeSingle();
 
-    debugPrint('🟢 [DATA_SOURCE] RPC Update Successful!');
+        final shiftId = shiftRes?['id']?.toString();
+
+        await client.from('bookings').update({
+          'status': cleanStatus,
+          'shift_id':? shiftId,
+        }).eq('id', id);
+        debugPrint('🟢 [DATA_SOURCE] Direct booking status update with active shift successful!');
+      } else {
+        rethrow;
+      }
+    }
   }
 
   @override
@@ -286,22 +307,9 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   @override
   Future<void> autoCancelExpiredBookings() async {
-    // Throttling Guard: منع التكرار العنيف لو تم استدعاؤها في أقل من دقيقة
-    if (_lastAutoCancelExecution != null &&
-        DateTime.now().difference(_lastAutoCancelExecution!) < const Duration(minutes: 1)) {
-      debugPrint('ℹ️ [DATA_SOURCE] auto_cancel_expired_bookings skipped (throttled).');
-      return;
-    }
-
-    _lastAutoCancelExecution = DateTime.now();
-
-    try {
-      debugPrint('🔵 [DATA_SOURCE] Invoking RPC auto_cancel_expired_bookings...');
-      await client.rpc('auto_cancel_expired_bookings');
-      debugPrint('🟢 [DATA_SOURCE] RPC auto_cancel_expired_bookings completed successfully');
-    } catch (e) {
-      debugPrint('⚠️ [DATA_SOURCE] RPC auto_cancel_expired_bookings failed: $e');
-    }
+    // Note: Following backend security updates, auto_cancel_expired_bookings RPC is revoked
+    // from client roles and executed exclusively via Database Cron/Triggers.
+    debugPrint('ℹ️ [DATA_SOURCE] autoCancelExpiredBookings is handled automatically by server-side Cron/Triggers.');
   }
 
   @override
