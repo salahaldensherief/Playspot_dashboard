@@ -32,6 +32,8 @@ abstract class TournamentRepository {
 
   Future<Either<Failure, void>> recordCashPayment(String participantId);
 
+  Future<Either<Failure, void>> promoteWaitlist(String tournamentId);
+
   Future<Either<Failure, void>> checkInParticipant(String participantId);
 
   Future<Either<Failure, List<TournamentMatchEntity>>> drawBracket(String tournamentId);

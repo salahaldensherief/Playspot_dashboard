@@ -321,6 +321,25 @@ class TournamentCubit extends Cubit<TournamentState> {
     );
   }
 
+  Future<void> promoteWaitlist(String tournamentId) async {
+    emit(state.copyWith(status: TournamentCubitStatus.loading));
+    final result = await repository.promoteWaitlist(tournamentId);
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: TournamentCubitStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) {
+        emit(state.copyWith(
+          status: TournamentCubitStatus.actionSuccess,
+          successMessage: 'تم ترقية أول لاعب في قائمة الانتظار بنجاح',
+        ));
+        loadParticipants(tournamentId);
+      },
+    );
+  }
+
   Future<void> checkInParticipant(String participantId) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
     final result = await repository.checkInParticipant(participantId);

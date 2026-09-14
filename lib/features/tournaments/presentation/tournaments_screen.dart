@@ -406,6 +406,9 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                         onRejectPayment: (p, reason) => context.read<TournamentCubit>().rejectPayment(p.id, reason),
                         onRecordCash: (p) => context.read<TournamentCubit>().recordCashPayment(p.id),
                         onCheckIn: (p) => context.read<TournamentCubit>().checkInParticipant(p.id),
+                        onPromoteWaitlist: selected != null
+                            ? () => context.read<TournamentCubit>().promoteWaitlist(selected.id)
+                            : null,
                       ),
                       // Tab 2: Bracket Tree (Lazy Built)
                       _tabController.index == 2

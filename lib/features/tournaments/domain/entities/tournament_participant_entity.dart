@@ -42,6 +42,7 @@ class TournamentParticipantEntity extends Equatable {
   final String? userPhone;
   final String? userEmail;
   final ParticipantPaymentStatus paymentStatus;
+  final String status; // 'pending_payment' | 'confirmed' | 'waitlist' | 'checked_in' | 'withdrawn' | 'disqualified' | 'cancelled'
   final String? receiptPath;
   final String? signedReceiptUrl;
   final String? rejectionReason;
@@ -57,6 +58,7 @@ class TournamentParticipantEntity extends Equatable {
     this.userPhone,
     this.userEmail,
     required this.paymentStatus,
+    this.status = 'confirmed',
     this.receiptPath,
     this.signedReceiptUrl,
     this.rejectionReason,
@@ -67,6 +69,8 @@ class TournamentParticipantEntity extends Equatable {
 
   bool get isPaymentApproved => paymentStatus == ParticipantPaymentStatus.approved;
   bool get isPaymentPending => paymentStatus == ParticipantPaymentStatus.pending;
+  bool get isWaitlist => status == 'waitlist';
+  bool get isConfirmed => status == 'confirmed';
 
   @override
   List<Object?> get props => [
@@ -77,6 +81,7 @@ class TournamentParticipantEntity extends Equatable {
         userPhone,
         userEmail,
         paymentStatus,
+        status,
         receiptPath,
         signedReceiptUrl,
         rejectionReason,

@@ -3,9 +3,28 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/shift_model.dart';
 import '../models/live_shift_overview_model.dart';
 import '../models/shift_expense_model.dart';
+import '../models/shift_payment_model.dart';
+import '../models/cashier_performance_model.dart';
+import '../models/lounge_comparison_model.dart';
+import '../models/shift_audit_log_model.dart';
 
 abstract class ShiftRemoteDataSource {
   Future<List<ShiftModel>> getShifts({String? loungeId});
+  Future<List<ShiftModel>> getShiftReport({
+    String? loungeId,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? cashierId,
+  });
+  Future<List<CashierPerformanceModel>> getCashierPerformance({
+    String? loungeId,
+    DateTime? startDate,
+    DateTime? endDate,
+  });
+  Future<List<LoungeComparisonModel>> getLoungeComparison({
+    DateTime? startDate,
+    DateTime? endDate,
+  });
   Future<ShiftModel?> getActiveShift(String loungeId);
   Future<LiveShiftOverviewModel> getLoungeLiveShiftOverview(String loungeId);
   Future<void> openShift(String loungeId, double startingCash, {String? notes});
@@ -13,6 +32,9 @@ abstract class ShiftRemoteDataSource {
   Future<void> approveShift(String shiftId, String managerId, String? notes);
   Future<void> addShiftExpense(ShiftExpenseModel expense);
   Future<List<ShiftExpenseModel>> fetchShiftExpenses(String shiftId);
+  Future<List<ShiftPaymentModel>> fetchShiftPayments(String shiftId);
+  Future<List<Map<String, dynamic>>> fetchShiftBookings(String shiftId);
+  Future<List<ShiftAuditLogModel>> fetchShiftAuditLogs(String shiftId);
 }
 
 class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
@@ -22,15 +44,86 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
 
   @override
   Future<List<ShiftModel>> getShifts({String? loungeId}) async {
-    // Fetch shifts with cashier name from profiles table
     var query = _supabase.from('shifts').select('*, profiles:cashier_id(full_name)');
     
-    if (loungeId != null) {
+    if (loungeId != null && loungeId.isNotEmpty) {
       query = query.eq('lounge_id', loungeId);
     }
 
     final response = await query.order('start_time', ascending: false);
     return (response as List).map((json) => ShiftModel.fromJson(json)).toList();
+  }
+
+  @override
+  Future<List<ShiftModel>> getShiftReport({
+    String? loungeId,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? cashierId,
+  }) async {
+    try {
+      debugPrint('🔵 [ShiftRemoteDataSource] Calling RPC get_shift_report');
+      final response = await _supabase.rpc('get_shift_report', params: {
+        if (loungeId != null && loungeId.isNotEmpty) 'p_lounge_id': loungeId,
+        if (startDate != null) 'p_start_date': startDate.toIso8601String(),
+        if (endDate != null) 'p_end_date': endDate.toIso8601String(),
+        if (cashierId != null && cashierId.isNotEmpty) 'p_cashier_id': cashierId,
+      });
+
+      if (response != null && response is List) {
+        return response.map((json) => ShiftModel.fromJson(Map<String, dynamic>.from(json as Map))).toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('⚠️ [ShiftRemoteDataSource] RPC get_shift_report error ($e), falling back to getShifts');
+      return await getShifts(loungeId: loungeId);
+    }
+  }
+
+  @override
+  Future<List<CashierPerformanceModel>> getCashierPerformance({
+    String? loungeId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      debugPrint('🔵 [ShiftRemoteDataSource] Calling RPC get_cashier_performance');
+      final response = await _supabase.rpc('get_cashier_performance', params: {
+        if (loungeId != null && loungeId.isNotEmpty) 'p_lounge_id': loungeId,
+        if (startDate != null) 'p_start_date': startDate.toIso8601String(),
+        if (endDate != null) 'p_end_date': endDate.toIso8601String(),
+      });
+
+      if (response != null && response is List) {
+        return response.map((json) => CashierPerformanceModel.fromJson(Map<String, dynamic>.from(json as Map))).toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('⚠️ [ShiftRemoteDataSource] RPC get_cashier_performance error: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<List<LoungeComparisonModel>> getLoungeComparison({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      debugPrint('🔵 [ShiftRemoteDataSource] Calling RPC get_lounge_comparison');
+      final response = await _supabase.rpc('get_lounge_comparison', params: {
+        if (startDate != null) 'p_start_date': startDate.toIso8601String(),
+        if (endDate != null) 'p_end_date': endDate.toIso8601String(),
+      });
+
+      if (response != null && response is List) {
+        return response.map((json) => LoungeComparisonModel.fromJson(Map<String, dynamic>.from(json as Map))).toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('⚠️ [ShiftRemoteDataSource] RPC get_lounge_comparison error: $e');
+      return [];
+    }
   }
 
   @override
@@ -44,32 +137,6 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
 
       debugPrint('🔵 [ShiftRemoteDataSource] Fetching active shift for user: $userId (loungeId: $loungeId)');
 
-      // 1. Try get_lounge_details RPC first if loungeId is available
-      if (loungeId.isNotEmpty) {
-        try {
-          final detailsResponse = await _supabase.rpc('get_lounge_details', params: {
-            'p_lounge_id': loungeId,
-          });
-
-          if (detailsResponse != null) {
-            Map<String, dynamic> data = {};
-            if (detailsResponse is List && detailsResponse.isNotEmpty) {
-              data = Map<String, dynamic>.from(detailsResponse.first as Map);
-            } else if (detailsResponse is Map) {
-              data = Map<String, dynamic>.from(detailsResponse as Map);
-            }
-
-            final currentShift = data['current_shift'] ?? data['active_shift'] ?? data['shift'];
-            if (currentShift != null && currentShift is Map && currentShift.isNotEmpty) {
-              return ShiftModel.fromJson(Map<String, dynamic>.from(currentShift as Map));
-            }
-          }
-        } catch (e) {
-          debugPrint('⚠️ [ShiftRemoteDataSource] get_lounge_details RPC failed in getActiveShift ($e), falling back to query');
-        }
-      }
-
-      // 2. Query shifts table where status = 'open' and closed_at IS NULL
       var query = _supabase
           .from('shifts')
           .select('*, profiles:cashier_id(full_name)')
@@ -88,7 +155,49 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
           .maybeSingle();
 
       if (response == null) return null;
-      return ShiftModel.fromJson(response);
+      var model = ShiftModel.fromJson(response);
+
+      if ((model.cashierName == null || model.cashierName == 'N/A' || model.cashierName!.trim().isEmpty) && model.cashierId.isNotEmpty) {
+        try {
+          final profileRes = await _supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('id', model.cashierId)
+              .maybeSingle();
+
+          if (profileRes != null && profileRes['full_name'] != null) {
+            final name = profileRes['full_name'].toString().trim();
+            if (name.isNotEmpty) {
+              model = ShiftModel(
+                id: model.id,
+                loungeId: model.loungeId,
+                cashierId: model.cashierId,
+                cashierName: name,
+                startingCash: model.startingCash,
+                cashRevenue: model.cashRevenue,
+                digitalRevenue: model.digitalRevenue,
+                expensesTotal: model.expensesTotal,
+                cashDropsTotal: model.cashDropsTotal,
+                expectedCash: model.expectedCash,
+                actualCash: model.actualCash,
+                discrepancy: model.discrepancy,
+                status: model.status,
+                startTime: model.startTime,
+                endTime: model.endTime,
+                notes: model.notes,
+                isApproved: model.isApproved,
+                approvedBy: model.approvedBy,
+                approvedAt: model.approvedAt,
+                managerNotes: model.managerNotes,
+              );
+            }
+          }
+        } catch (profileErr) {
+          debugPrint('⚠️ [ShiftRemoteDataSource] Cashier name profile lookup failed: $profileErr');
+        }
+      }
+
+      return model;
     } catch (e, stack) {
       debugPrint('🔴 [ShiftRemoteDataSource] Exception in getActiveShift: $e');
       debugPrint('🔴 [ShiftRemoteDataSource] StackTrace: $stack');
@@ -98,10 +207,56 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
 
   @override
   Future<LiveShiftOverviewModel> getLoungeLiveShiftOverview(String loungeId) async {
-    final response = await _supabase.rpc('get_lounge_live_shift_overview', params: {
-      'p_lounge_id': loungeId,
-    });
-    return LiveShiftOverviewModel.fromJson(response);
+    try {
+      final response = await _supabase.rpc('get_lounge_live_shift_overview', params: {
+        'p_lounge_id': loungeId,
+      });
+      if (response != null) {
+        final jsonMap = Map<String, dynamic>.from(response is List && response.isNotEmpty ? response.first as Map : response as Map);
+        var overview = LiveShiftOverviewModel.fromJson(jsonMap);
+
+        if (overview.hasActiveShift && (overview.cashierName == null || overview.cashierName == 'N/A' || overview.cashierName!.trim().isEmpty)) {
+          try {
+            final activeShift = await getActiveShift(loungeId);
+            if (activeShift != null && activeShift.cashierName != 'N/A') {
+              overview = LiveShiftOverviewModel(
+                hasActiveShift: overview.hasActiveShift,
+                shiftId: overview.shiftId ?? activeShift.id,
+                cashierName: activeShift.cashierName,
+                cashierAvatar: overview.cashierAvatar,
+                cashierPhone: overview.cashierPhone,
+                startTime: overview.startTime ?? activeShift.startTime,
+                startingCash: overview.startingCash ?? activeShift.startingCash,
+                cashInDrawer: overview.cashInDrawer,
+                digitalPayments: overview.digitalPayments,
+                activeSessions: overview.activeSessions,
+                closedBookings: overview.closedBookings,
+              );
+            }
+          } catch (e) {
+            debugPrint('⚠️ [ShiftRemoteDataSource] Cashier name overview resolution error: $e');
+          }
+        }
+
+        return overview;
+      }
+    } catch (e) {
+      debugPrint('⚠️ [ShiftRemoteDataSource] RPC get_lounge_live_shift_overview error ($e)');
+    }
+
+    return LiveShiftOverviewModel(
+      hasActiveShift: false,
+      shiftId: null,
+      cashierName: null,
+      cashierAvatar: null,
+      cashierPhone: null,
+      startTime: null,
+      startingCash: 0.0,
+      cashInDrawer: 0.0,
+      digitalPayments: 0.0,
+      activeSessions: 0,
+      closedBookings: 0,
+    );
   }
 
   @override
@@ -112,6 +267,18 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
 
       debugPrint('🔵 [ShiftRemoteDataSource] Opening shift - User: $userId, Lounge: $loungeId, Float: $startingCash');
 
+      // Check if there is already an open shift for this lounge
+      final existingOpenShift = await _supabase
+          .from('shifts')
+          .select('id')
+          .eq('lounge_id', loungeId)
+          .eq('status', 'open')
+          .maybeSingle();
+
+      if (existingOpenShift != null) {
+        throw Exception('يوجد شفت مفتوح بالفعل لهذا الفرع.');
+      }
+
       try {
         await _supabase.rpc('open_lounge_shift', params: {
           'p_lounge_id': loungeId,
@@ -120,6 +287,9 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
         });
         debugPrint('🟢 [ShiftRemoteDataSource] RPC open_lounge_shift successful');
       } catch (rpcErr) {
+        if (rpcErr.toString().contains('already') || rpcErr.toString().contains('مفتوح')) {
+          throw Exception('يوجد شفت مفتوح بالفعل لهذا الفرع.');
+        }
         debugPrint('⚠️ [ShiftRemoteDataSource] RPC open_lounge_shift failed ($rpcErr), trying legacy open_shift');
         try {
           await _supabase.rpc('open_shift', params: {
@@ -167,7 +337,7 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
             if (response is List && response.isNotEmpty) {
               shiftJson = Map<String, dynamic>.from(response.first as Map);
             } else if (response is Map) {
-              shiftJson = Map<String, dynamic>.from(response as Map);
+              shiftJson = Map<String, dynamic>.from(response);
             }
 
             if (shiftJson.containsKey('current_shift') && shiftJson['current_shift'] is Map) {
@@ -186,60 +356,38 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
       }
 
       try {
-        final response = await _supabase.rpc('close_shift_and_calculate_z_report', params: {
+        final response = await _supabase.rpc('close_shift', params: {
           'p_shift_id': shiftId,
           'p_actual_cash': actualCash,
           'p_notes': notes,
         });
 
-        debugPrint('🔵 [ShiftRemoteDataSource] close_shift_and_calculate_z_report RPC response: $response');
+        debugPrint('🔵 [ShiftRemoteDataSource] close_shift RPC response: $response');
 
         if (response != null) {
-          return ShiftModel.fromJson(Map<String, dynamic>.from(response));
+          return ShiftModel.fromJson(Map<String, dynamic>.from(response as Map));
         }
       } catch (rpcErr) {
-        debugPrint('⚠️ [ShiftRemoteDataSource] RPC close_shift_and_calculate_z_report failed ($rpcErr), attempting direct table update fallback...');
+        debugPrint('⚠️ [ShiftRemoteDataSource] RPC close_shift failed ($rpcErr), attempting direct table update fallback...');
       }
 
-      // Direct Table Fallback
       final nowIso = DateTime.now().toIso8601String();
 
-      try {
-        final List<dynamic> updatedList = await _supabase
-            .from('shifts')
-            .update({
-              'status': 'closed',
-              'actual_cash_counted': actualCash,
-              'end_time': nowIso,
-              'closed_at': nowIso,
-              if (notes != null && notes.isNotEmpty) 'notes': notes,
-            })
-            .eq('id', shiftId)
-            .select('*, profiles:cashier_id(full_name)');
+      final List<dynamic> updatedList = await _supabase
+          .from('shifts')
+          .update({
+            'status': 'closed',
+            'actual_cash_counted': actualCash,
+            'end_time': nowIso,
+            'closed_at': nowIso,
+            if (notes != null && notes.isNotEmpty) 'notes': notes,
+          })
+          .eq('id', shiftId)
+          .select('*, profiles:cashier_id(full_name)');
 
-        if (updatedList.isNotEmpty) {
-          debugPrint('🟢 [ShiftRemoteDataSource] Direct table update closeShift successful!');
-          return ShiftModel.fromJson(Map<String, dynamic>.from(updatedList.first));
-        }
-      } catch (e1) {
-        debugPrint('⚠️ [ShiftRemoteDataSource] First update attempt failed ($e1), trying simpler fallback...');
-        try {
-          final List<dynamic> updatedList = await _supabase
-              .from('shifts')
-              .update({
-                'status': 'closed',
-                if (notes != null && notes.isNotEmpty) 'notes': notes,
-              })
-              .eq('id', shiftId)
-              .select('*, profiles:cashier_id(full_name)');
-
-          if (updatedList.isNotEmpty) {
-            debugPrint('🟢 [ShiftRemoteDataSource] Simple table update closeShift successful!');
-            return ShiftModel.fromJson(Map<String, dynamic>.from(updatedList.first));
-          }
-        } catch (e2) {
-          debugPrint('⚠️ [ShiftRemoteDataSource] Simple table update failed: $e2');
-        }
+      if (updatedList.isNotEmpty) {
+        debugPrint('🟢 [ShiftRemoteDataSource] Direct table update closeShift successful!');
+        return ShiftModel.fromJson(Map<String, dynamic>.from(updatedList.first as Map));
       }
 
       throw Exception('فشل تقفيل الشيفت: يرجى التأكد من صلاحيات قاعدة البيانات');
@@ -261,6 +409,17 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
 
   @override
   Future<void> addShiftExpense(ShiftExpenseModel expense) async {
+    // Check if shift is open
+    final shiftRes = await _supabase
+        .from('shifts')
+        .select('status')
+        .eq('id', expense.shiftId)
+        .maybeSingle();
+
+    if (shiftRes != null && shiftRes['status'] != 'open') {
+      throw Exception('لا يمكن إضافة مصروفات أو مدفوعات على شفت مغلق.');
+    }
+
     final userId = _supabase.auth.currentUser?.id;
     final payload = expense.toJson();
     if (userId != null) {
@@ -285,7 +444,87 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
         .order('created_at', ascending: false);
 
     return (response as List)
-        .map((json) => ShiftExpenseModel.fromJson(Map<String, dynamic>.from(json)))
+        .map((json) => ShiftExpenseModel.fromJson(Map<String, dynamic>.from(json as Map)))
         .toList();
+  }
+
+  @override
+  Future<List<ShiftPaymentModel>> fetchShiftPayments(String shiftId) async {
+    try {
+      debugPrint('🔵 [ShiftRemoteDataSource] Fetching shift payments for shiftId: $shiftId');
+      final response = await _supabase
+          .from('shift_payments')
+          .select('*')
+          .eq('shift_id', shiftId)
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => ShiftPaymentModel.fromJson(Map<String, dynamic>.from(json as Map)))
+          .toList();
+    } catch (e) {
+      debugPrint('⚠️ [ShiftRemoteDataSource] fetchShiftPayments table query failed ($e), falling back to bookings query');
+      try {
+        final response = await _supabase
+            .from('bookings')
+            .select('*')
+            .eq('shift_id', shiftId)
+            .order('created_at', ascending: false);
+
+        return (response as List).map((b) {
+          final amount = (b['total_price'] ?? b['price'] ?? 0).toDouble();
+          final method = (b['payment_method'] ?? 'cash').toString();
+          return ShiftPaymentModel(
+            id: (b['id'] ?? '').toString(),
+            shiftId: shiftId,
+            amount: amount,
+            paymentMethod: method,
+            category: 'play_time',
+            bookingId: (b['id'] ?? '').toString(),
+            createdAt: b['created_at'] != null ? DateTime.parse(b['created_at'].toString()) : DateTime.now(),
+          );
+        }).toList();
+      } catch (fallbackErr) {
+        debugPrint('⚠️ [ShiftRemoteDataSource] Fallback fetchShiftPayments failed: $fallbackErr');
+        return [];
+      }
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchShiftBookings(String shiftId) async {
+    try {
+      debugPrint('🔵 [ShiftRemoteDataSource] Fetching shift bookings for shiftId: $shiftId');
+      final response = await _supabase
+          .from('bookings')
+          .select('*, profiles:user_id(full_name, phone_number), rooms:room_id(name)')
+          .eq('shift_id', shiftId)
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => Map<String, dynamic>.from(json as Map))
+          .toList();
+    } catch (e) {
+      debugPrint('⚠️ [ShiftRemoteDataSource] fetchShiftBookings error: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<List<ShiftAuditLogModel>> fetchShiftAuditLogs(String shiftId) async {
+    try {
+      debugPrint('🔵 [ShiftRemoteDataSource] Fetching shift audit logs for shiftId: $shiftId');
+      final response = await _supabase
+          .from('shift_audit_logs')
+          .select('*, profiles:actor_user_id(full_name)')
+          .eq('shift_id', shiftId)
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => ShiftAuditLogModel.fromJson(Map<String, dynamic>.from(json as Map)))
+          .toList();
+    } catch (e) {
+      debugPrint('⚠️ [ShiftRemoteDataSource] fetchShiftAuditLogs error: $e');
+      return [];
+    }
   }
 }

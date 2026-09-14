@@ -58,10 +58,10 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
         if (success) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('تم تسجيل المصروفات / السحب النقدي بنجاح'),
+            SnackBar(
+              content: Text(AppStrings.expenseRegisteredSuccess),
               backgroundColor: AppColors.success,
-              duration: Duration(seconds: 3),
+              duration: const Duration(seconds: 3),
             ),
           );
         }
@@ -101,7 +101,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                   SizedBox(width: 12.w),
                   Expanded(
                     child: AppText.heading(
-                      'تسجيل مصروفات / سحب نقدي',
+                      AppStrings.registerExpenseTitle,
                       fontSize: 18.sp,
                     ),
                   ),
@@ -114,7 +114,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
               SizedBox(height: 20.h),
 
               // Type Selector (Expense vs Cash Drop)
-              AppText.body('نوع العملية', fontWeight: FontWeight.bold, fontSize: 12.sp),
+              AppText.body(AppStrings.operationType, fontWeight: FontWeight.bold, fontSize: 12.sp),
               SizedBox(height: 8.h),
               Row(
                 children: [
@@ -122,7 +122,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                     child: ChoiceChip(
                       label: Center(
                         child: AppText.body(
-                          'مصروفات تشغيلية',
+                          AppStrings.operationalExpense,
                           color: _selectedType == 'expense' ? Colors.white : AppColors.textPrimary,
                           fontSize: 12.sp,
                           fontWeight: FontWeight.bold,
@@ -144,7 +144,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                     child: ChoiceChip(
                       label: Center(
                         child: AppText.body(
-                          'سحب نقدي للفرع/الخزينة',
+                          AppStrings.cashDrop,
                           color: _selectedType == 'cash_drop' ? Colors.white : AppColors.textPrimary,
                           fontSize: 12.sp,
                           fontWeight: FontWeight.bold,
@@ -167,7 +167,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
 
               // Amount Field
               AppTextField(
-                label: 'المبلغ (جنيه)',
+                label: AppStrings.amountEgp,
                 hintText: '0.00',
                 controller: _amountController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -177,8 +177,8 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
 
               // Reason / Purpose Field
               AppTextField(
-                label: 'السبب / التفاصيل',
-                hintText: 'أدخل سبب إخراج النقدية (مثال: شراء مستلزمات / سحب للخزنة)',
+                label: AppStrings.reasonDetails,
+                hintText: AppStrings.expenseReasonHint,
                 controller: _reasonController,
                 maxLines: 2,
                 validator: AppValidator.validateRequired,
@@ -196,7 +196,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                   ),
                   SizedBox(width: 12.w),
                   AppButton(
-                    text: 'تأكيد التسجيل',
+                    text: AppStrings.confirmRegistration,
                     isLoading: _isSubmitting,
                     onPressed: _submit,
                   ),

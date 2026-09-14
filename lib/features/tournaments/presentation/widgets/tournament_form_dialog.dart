@@ -350,10 +350,10 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
 
     if (_visibilityScope == 'radius') {
       final radiusVal = double.tryParse(_radiusController.text.trim());
-      if (radiusVal == null || radiusVal <= 0) {
+      if (radiusVal == null || radiusVal < 1 || radiusVal > 500) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppStrings.radiusRequiredError),
+          const SnackBar(
+            content: Text('نطاق المسافة يجب أن يكون بين 1 و 500 كم'),
             backgroundColor: AppColors.danger,
           ),
         );

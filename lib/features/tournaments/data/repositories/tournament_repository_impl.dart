@@ -127,6 +127,16 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
+  Future<Either<Failure, void>> promoteWaitlist(String tournamentId) async {
+    try {
+      await remoteDataSource.promoteWaitlist(tournamentId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> checkInParticipant(String participantId) async {
     try {
       await remoteDataSource.checkInParticipant(participantId);

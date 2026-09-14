@@ -8,10 +8,12 @@ class ShiftEntity extends Equatable {
   final double startingCash;
   final double? cashRevenue;
   final double? digitalRevenue;
+  final double? expensesTotal;
+  final double? cashDropsTotal;
   final double? expectedCash;
   final double? actualCash;
   final double? discrepancy;
-  final String status; // 'open' or 'closed' or 'active'
+  final String status; // 'open' or 'closed'
   final DateTime startTime;
   final DateTime? endTime;
   final String? notes;
@@ -27,6 +29,20 @@ class ShiftEntity extends Equatable {
 
   double get totalRevenue => (cashRevenue ?? 0) + (digitalRevenue ?? 0);
 
+  /// Unified Expected Cash Calculation:
+  /// Expected Cash = Starting Cash + Cash Revenue - Expenses - Cash Drops
+  double get calculatedExpectedCash {
+    if (expectedCash != null && expectedCash! > 0) return expectedCash!;
+    return startingCash + (cashRevenue ?? 0) - (expensesTotal ?? 0) - (cashDropsTotal ?? 0);
+  }
+
+  /// Unified Discrepancy Calculation:
+  /// Discrepancy = Actual Cash Counted - Expected Cash
+  double get calculatedDiscrepancy {
+    if (actualCash == null) return 0.0;
+    return actualCash! - calculatedExpectedCash;
+  }
+
   const ShiftEntity({
     required this.id,
     this.loungeId,
@@ -35,6 +51,8 @@ class ShiftEntity extends Equatable {
     required this.startingCash,
     this.cashRevenue,
     this.digitalRevenue,
+    this.expensesTotal,
+    this.cashDropsTotal,
     this.expectedCash,
     this.actualCash,
     this.discrepancy,
@@ -57,6 +75,8 @@ class ShiftEntity extends Equatable {
         startingCash,
         cashRevenue,
         digitalRevenue,
+        expensesTotal,
+        cashDropsTotal,
         expectedCash,
         actualCash,
         discrepancy,

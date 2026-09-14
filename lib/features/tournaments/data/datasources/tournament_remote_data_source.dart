@@ -24,6 +24,7 @@ abstract class TournamentRemoteDataSource {
   Future<void> approvePayment(String participantId);
   Future<void> rejectPayment(String participantId, String reason);
   Future<void> recordCashPayment(String participantId);
+  Future<void> promoteWaitlist(String tournamentId);
   Future<void> checkInParticipant(String participantId);
 
   Future<List<TournamentMatchModel>> drawBracket(String tournamentId);
@@ -181,7 +182,14 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
         rpcParams['p_city_id'] = resolvedCityId;
       }
 
-      final response = await client.rpc('create_tournament', params: rpcParams);
+      dynamic response;
+      try {
+        debugPrint('🔵 [TOURNAMENTS_REMOTE] Calling create_tournament_with_visibility RPC with params: $rpcParams');
+        response = await client.rpc('create_tournament_with_visibility', params: rpcParams);
+      } catch (e) {
+        debugPrint('⚠️ [TOURNAMENTS_REMOTE] create_tournament_with_visibility RPC error ($e), trying create_tournament');
+        response = await client.rpc('create_tournament', params: rpcParams);
+      }
 
       if (response != null) {
         if (response is Map) {
@@ -254,7 +262,13 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
         rpcParams['p_city_id'] = tournament.cityId;
       }
 
-      await client.rpc('update_tournament', params: rpcParams);
+      try {
+        debugPrint('🔵 [TOURNAMENTS_REMOTE] Calling update_tournament_with_visibility RPC');
+        await client.rpc('update_tournament_with_visibility', params: rpcParams);
+      } catch (e) {
+        debugPrint('⚠️ [TOURNAMENTS_REMOTE] update_tournament_with_visibility RPC error ($e), trying update_tournament');
+        await client.rpc('update_tournament', params: rpcParams);
+      }
     } catch (e) {
       debugPrint('⚠️ [TOURNAMENTS_REMOTE] update_tournament RPC error: $e, falling back to direct update');
       final updateMap = tournament.toJson();
@@ -412,6 +426,16 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
           .from('tournament_participants')
           .update({'payment_status': 'approved'})
           .eq('id', participantId);
+    }
+  }
+
+  @override
+  Future<void> promoteWaitlist(String tournamentId) async {
+    try {
+      await client.rpc('promote_tournament_waitlist', params: {'p_tournament_id': tournamentId});
+    } catch (e) {
+      debugPrint('⚠️ [TOURNAMENTS_REMOTE] promote_tournament_waitlist RPC error: $e');
+      rethrow;
     }
   }
 
