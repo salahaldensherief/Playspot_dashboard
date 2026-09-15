@@ -65,11 +65,6 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
             event: PostgresChangeEvent.all,
             schema: 'public',
             table: 'service_calls',
-            filter: PostgresChangeFilter(
-              type: PostgresChangeFilterType.eq,
-              column: 'lounge_id',
-              value: cleanLoungeId,
-            ),
             callback: (_) => fetchAndEmit(),
           )
               .onPostgresChanges(
@@ -284,7 +279,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         }).eq('id', rawDbId).select('id');
       }
 
-      if (response != null && response.isEmpty) {
+      if (response.isEmpty) {
         debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Warning: Request $rawDbId update affected 0 rows (possible RLS restriction)');
       } else {
         debugPrint('🟢 [REQUESTS_DATA_SOURCE] Successfully marked request $id as attended');

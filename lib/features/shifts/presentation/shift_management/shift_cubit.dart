@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../domain/entities/shift_entity.dart';
 import '../../domain/entities/shift_expense_entity.dart';
 import '../../domain/use_cases/get_active_shift_use_case.dart';
 import '../../domain/use_cases/get_lounge_live_shift_overview_use_case.dart';
@@ -14,6 +17,9 @@ class ShiftCubit extends Cubit<ShiftState> {
   final OpenShiftUseCase openShiftUseCase;
   final CloseShiftUseCase closeShiftUseCase;
   final ShiftRepository repository;
+  final SupabaseClient? supabaseClient;
+
+  RealtimeChannel? _realtimeChannel;
 
   ShiftCubit({
     required this.getActiveShiftUseCase,
@@ -21,7 +27,62 @@ class ShiftCubit extends Cubit<ShiftState> {
     required this.openShiftUseCase,
     required this.closeShiftUseCase,
     required this.repository,
+    this.supabaseClient,
   }) : super(ShiftState.initial());
+
+  /// Setup Realtime Subscriptions for live updates
+  void setupRealtimeSubscription(String loungeId) {
+    if (loungeId.isEmpty) return;
+    _realtimeChannel?.unsubscribe();
+
+    try {
+      final client = supabaseClient ?? Supabase.instance.client;
+      _realtimeChannel = client
+          .channel('shifts_realtime_$loungeId')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'shifts',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'lounge_id',
+              value: loungeId,
+            ),
+            callback: (payload) {
+              debugPrint('⚡ [Realtime] Shift event received: ${payload.eventType}');
+              getLiveShiftOverview(loungeId);
+              checkActiveShift(loungeId);
+            },
+          )
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'shift_payments',
+            callback: (payload) {
+              debugPrint('⚡ [Realtime] Shift payment event received: ${payload.eventType}');
+              getLiveShiftOverview(loungeId);
+            },
+          )
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'shift_expenses',
+            callback: (payload) {
+              debugPrint('⚡ [Realtime] Shift expense event received: ${payload.eventType}');
+              getLiveShiftOverview(loungeId);
+            },
+          )
+          .subscribe();
+    } catch (e) {
+      debugPrint('⚠️ [ShiftCubit] Realtime setup error: $e');
+    }
+  }
+
+  @override
+  Future<void> close() {
+    _realtimeChannel?.unsubscribe();
+    return super.close();
+  }
 
   /// Fetches a high-level overview for Admins
   Future<void> getLiveShiftOverview(String loungeId) async {
@@ -60,7 +121,6 @@ class ShiftCubit extends Cubit<ShiftState> {
           if (shift != null) {
             emit(state.copyWith(status: ShiftStatus.active, activeShift: shift));
           } else {
-            // No shift found - purely informative reset to initial
             emit(state.copyWith(status: ShiftStatus.initial, activeShift: null));
           }
         },
@@ -70,7 +130,7 @@ class ShiftCubit extends Cubit<ShiftState> {
     }
   }
 
-  /// Combined Open & Verify logic to break silent failure loops
+  /// Combined Open & Verify logic
   Future<void> openShift(String loungeId, double startingCash) async {
     if (isClosed) return;
     
@@ -85,7 +145,6 @@ class ShiftCubit extends Cubit<ShiftState> {
     emit(state.copyWith(status: ShiftStatus.loading));
     
     try {
-      // 1. Attempt to open/insert shift
       final openResult = await openShiftUseCase(loungeId, startingCash);
       
       if (isClosed) return;
@@ -95,7 +154,6 @@ class ShiftCubit extends Cubit<ShiftState> {
           emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message));
         },
         (_) async {
-          // 2. Immediately verify if the shift is now visible/queryable
           debugPrint('🔵 [ShiftCubit] Open success, verifying shift sync...');
           final verifyResult = await getActiveShiftUseCase(loungeId);
           
@@ -107,13 +165,12 @@ class ShiftCubit extends Cubit<ShiftState> {
               if (shift != null) {
                 debugPrint('🟢 [ShiftCubit] Shift verified and synced.');
                 emit(state.copyWith(status: ShiftStatus.active, activeShift: shift));
+                getLiveShiftOverview(loungeId);
               } else {
-                // BREAK THE LOOP: If DB said OK but verify says Null, it's an RLS/Sync error.
-                // Do not emit .initial as it triggers the dialog again.
                 debugPrint('🔴 [ShiftCubit] Shift was created but sync returned null.');
                 emit(state.copyWith(
                   status: ShiftStatus.error, 
-                  errorMessage: 'Shift created but failed to sync from database. Check Supabase RLS policies.'
+                  errorMessage: 'Shift created but failed to sync from database.'
                 ));
               }
             },
@@ -125,7 +182,7 @@ class ShiftCubit extends Cubit<ShiftState> {
     }
   }
 
-  /// Quick Open Shift for Manager/Cashier workflow recovery (returns true on success)
+  /// Quick Open Shift for Manager/Cashier workflow recovery
   Future<bool> quickOpenShift(String loungeId, [double startingCash = 0.0]) async {
     if (isClosed) return false;
 
@@ -189,7 +246,7 @@ class ShiftCubit extends Cubit<ShiftState> {
     emit(state.copyWith(status: ShiftStatus.loading));
     
     try {
-      final result = await closeShiftUseCase(shiftId, actualCash, notes);
+      final result = await closeShiftUseCase(shiftId, actualCash, notes, loungeId: loungeId);
       
       if (isClosed) return;
       result.fold(
@@ -200,6 +257,7 @@ class ShiftCubit extends Cubit<ShiftState> {
             lastClosedShift: closedShift,
             activeShift: null,
           ));
+          getLiveShiftOverview(loungeId);
         },
       );
     } catch (e) {
@@ -208,10 +266,6 @@ class ShiftCubit extends Cubit<ShiftState> {
   }
 
   Future<void> fetchShiftHistory({String? loungeId}) async {
-    if (loungeId == null || loungeId.isEmpty) {
-      emit(state.copyWith(status: ShiftStatus.initial, shifts: []));
-      return;
-    }
     if (isClosed) return;
     emit(state.copyWith(status: ShiftStatus.loading));
     final result = await repository.getShiftHistory(loungeId: loungeId);
@@ -221,6 +275,89 @@ class ShiftCubit extends Cubit<ShiftState> {
       (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
       (shifts) => emit(state.copyWith(status: ShiftStatus.active, shifts: shifts)),
     );
+  }
+
+  Future<void> fetchShiftReport({
+    String? loungeId,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? cashierId,
+  }) async {
+    if (isClosed) return;
+    emit(state.copyWith(status: ShiftStatus.loading));
+    final result = await repository.getShiftReport(
+      loungeId: loungeId,
+      startDate: startDate,
+      endDate: endDate,
+      cashierId: cashierId,
+    );
+
+    if (isClosed) return;
+    result.fold(
+      (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
+      (shifts) => emit(state.copyWith(status: ShiftStatus.active, shifts: shifts)),
+    );
+  }
+
+  Future<void> getCashierPerformance({
+    String? loungeId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    if (isClosed) return;
+    final result = await repository.getCashierPerformance(
+      loungeId: loungeId,
+      startDate: startDate,
+      endDate: endDate,
+    );
+
+    if (isClosed) return;
+    result.fold(
+      (failure) => debugPrint('🔴 [ShiftCubit] Cashier performance failed: ${failure.message}'),
+      (list) => emit(state.copyWith(cashierPerformances: list)),
+    );
+  }
+
+  Future<void> getLoungeComparison({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    if (isClosed) return;
+    final result = await repository.getLoungeComparison(
+      startDate: startDate,
+      endDate: endDate,
+    );
+
+    if (isClosed) return;
+    result.fold(
+      (failure) => debugPrint('🔴 [ShiftCubit] Lounge comparison failed: ${failure.message}'),
+      (list) => emit(state.copyWith(loungeComparisons: list)),
+    );
+  }
+
+  Future<void> fetchShiftDetails(ShiftEntity shift) async {
+    if (isClosed) return;
+    emit(state.copyWith(selectedShiftDetails: shift));
+
+    final expensesRes = await repository.fetchShiftExpenses(shift.id);
+    final paymentsRes = await repository.fetchShiftPayments(shift.id);
+    final bookingsRes = await repository.fetchShiftBookings(shift.id);
+    final auditLogsRes = await repository.fetchShiftAuditLogs(shift.id);
+
+    if (isClosed) return;
+
+    final expensesList = expensesRes.getOrElse(() => []);
+    final paymentsList = paymentsRes.getOrElse(() => []);
+    final bookingsList = bookingsRes.getOrElse(() => []);
+    final auditLogsList = auditLogsRes.getOrElse(() => []);
+
+    emit(state.copyWith(
+      selectedShiftDetails: shift,
+      expenses: expensesList,
+      payments: paymentsList,
+      shiftBookings: bookingsList,
+      auditLogs: auditLogsList,
+    ));
   }
 
   Future<void> fetchShiftExpenses(String shiftId) async {
@@ -268,6 +405,7 @@ class ShiftCubit extends Cubit<ShiftState> {
       (_) async {
         debugPrint('🟢 [ShiftCubit] Add Expense Succeeded');
         await fetchShiftExpenses(shiftId);
+        getLiveShiftOverview(loungeId);
         return true;
       },
     );
@@ -284,6 +422,7 @@ class ShiftCubit extends Cubit<ShiftState> {
       (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
       (_) {
         fetchShiftHistory(loungeId: loungeId);
+        if (loungeId != null) getLiveShiftOverview(loungeId);
       },
     );
   }

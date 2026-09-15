@@ -18,6 +18,8 @@ class TournamentRepositoryImpl implements TournamentRepository {
 
   @override
   Future<Either<Failure, List<TournamentEntity>>> getTournaments({
+    double? latitude,
+    double? longitude,
     String? loungeId,
     String? status,
   }) async {
@@ -25,6 +27,8 @@ class TournamentRepositoryImpl implements TournamentRepository {
       final result = await remoteDataSource.getTournaments(
         loungeId: loungeId,
         status: status,
+        latitude: latitude,
+        longitude: longitude,
       );
       return Right(result);
     } catch (e) {
@@ -142,6 +146,16 @@ class TournamentRepositoryImpl implements TournamentRepository {
   Future<Either<Failure, void>> recordCashPayment(String participantId) async {
     try {
       await remoteDataSource.recordCashPayment(participantId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> promoteWaitlist(String tournamentId) async {
+    try {
+      await remoteDataSource.promoteWaitlist(tournamentId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

@@ -143,11 +143,12 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
         .toList();
 
     final Map<String, int> roomCountsMap = {};
+    final Map<String, double> loungeMinPriceMap = {};
     if (loungeIds.isNotEmpty) {
       try {
         final roomsResponse = await client
             .from('rooms')
-            .select('lounge_id, status')
+            .select('lounge_id, status, hourly_rate_single, hourly_rate_multi, hourly_rate, price')
             .inFilter('lounge_id', loungeIds);
 
         for (final r in roomsResponse as List) {
@@ -156,19 +157,41 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
           final status = rMap['status']?.toString();
           if (lId != null && status != 'deleted') {
             roomCountsMap[lId] = (roomCountsMap[lId] ?? 0) + 1;
+
+            final double roomPrice = (rMap['hourly_rate_single'] ?? 
+                                      rMap['hourly_rate'] ?? 
+                                      rMap['price'] as num?)?.toDouble() ?? 0.0;
+            if (roomPrice > 0) {
+              final currentMin = loungeMinPriceMap[lId] ?? double.infinity;
+              if (roomPrice < currentMin) {
+                loungeMinPriceMap[lId] = roomPrice;
+              }
+            }
           }
         }
       } catch (e, stackTrace) {
-        AppLogger.warning('Room counts batch fetch failed', e, stackTrace);
+        AppLogger.warning('Room counts & prices batch fetch failed', e, stackTrace);
       }
     }
 
-    // 4. Map lounges and attach owner profile details & room count
+    // 4. Map lounges and attach owner profile details & room count & price fallback
     return rawList.map((json) {
       final lId = (json['id'] ?? json['lounge_id'])?.toString();
-      if (lId != null && roomCountsMap.containsKey(lId)) {
-        json['available_rooms'] ??= roomCountsMap[lId];
-        json['rooms_count'] ??= roomCountsMap[lId];
+      if (lId != null) {
+        if (roomCountsMap.containsKey(lId)) {
+          json['available_rooms'] = roomCountsMap[lId];
+          json['rooms_count'] = roomCountsMap[lId];
+        } else {
+          json['available_rooms'] ??= 0;
+        }
+
+        final double currentPrice = (json['price_per_hour'] ?? json['price'] ?? 0.0) is num 
+            ? (json['price_per_hour'] ?? json['price'] ?? 0.0).toDouble() 
+            : double.tryParse((json['price_per_hour'] ?? json['price'] ?? '0').toString()) ?? 0.0;
+        
+        if (currentPrice <= 0 && loungeMinPriceMap.containsKey(lId)) {
+          json['price_per_hour'] = loungeMinPriceMap[lId];
+        }
       }
 
       final ownerId = json['owner_id']?.toString();
@@ -183,6 +206,32 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
 
   @override
   Future<LoungeModel?> getLoungeById(String id) async {
+    try {
+      final rpcResponse = await client.rpc('get_lounge_details', params: {
+        'p_lounge_id': id,
+      });
+
+      if (rpcResponse != null) {
+        Map<String, dynamic> json = {};
+        if (rpcResponse is List && rpcResponse.isNotEmpty) {
+          json = Map<String, dynamic>.from(rpcResponse.first as Map);
+        } else if (rpcResponse is Map) {
+          json = Map<String, dynamic>.from(rpcResponse);
+        }
+
+        if (json.isNotEmpty) {
+          if (json.containsKey('lounge') && json['lounge'] is Map) {
+            json = Map<String, dynamic>.from(json['lounge'] as Map);
+          }
+          if (json.containsKey('id')) {
+            return LoungeModel.fromJson(json);
+          }
+        }
+      }
+    } catch (e) {
+      AppLogger.warning('get_lounge_details RPC failed ($e), falling back to direct table query');
+    }
+
     final response = await client.from('lounges').select().eq('id', id).maybeSingle();
     if (response == null) return null;
     return LoungeModel.fromJson(Map<String, dynamic>.from(response));
@@ -450,14 +499,32 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   @override
   Future<void> toggleLoungeOpenStatus(String loungeId, bool isOpen) async {
     try {
-      await client.from('lounges').update({'is_open': isOpen}).eq('id', loungeId);
-      AppLogger.info('toggleLoungeOpenStatus Succeeded for loungeId: $loungeId, isOpen: $isOpen');
-    } on PostgrestException catch (e) {
-      AppLogger.error('toggleLoungeOpenStatus PostgrestException: ${e.message} (code: ${e.code})');
-      rethrow;
+      if (isOpen) {
+        await client.rpc('open_lounge_shift', params: {
+          'p_lounge_id': loungeId,
+          'p_starting_cash': 0,
+          'p_notes': null,
+        });
+      } else {
+        await client.rpc('close_lounge_shift', params: {
+          'p_lounge_id': loungeId,
+          'p_actual_cash_counted': 0,
+          'p_notes': 'Closed via Lounge Toggle',
+        });
+      }
+      AppLogger.info('toggleLoungeOpenStatus RPC Succeeded for loungeId: $loungeId, isOpen: $isOpen');
     } catch (e) {
-      AppLogger.error('toggleLoungeOpenStatus Error: $e');
-      rethrow;
+      AppLogger.warning('toggleLoungeOpenStatus RPC failed ($e), falling back to direct table update...');
+      try {
+        await client.from('lounges').update({'is_open': isOpen}).eq('id', loungeId);
+        AppLogger.info('toggleLoungeOpenStatus direct update succeeded for loungeId: $loungeId, isOpen: $isOpen');
+      } on PostgrestException catch (pe) {
+        AppLogger.error('toggleLoungeOpenStatus PostgrestException: ${pe.message} (code: ${pe.code})');
+        rethrow;
+      } catch (e2) {
+        AppLogger.error('toggleLoungeOpenStatus Error: $e2');
+        rethrow;
+      }
     }
   }
 

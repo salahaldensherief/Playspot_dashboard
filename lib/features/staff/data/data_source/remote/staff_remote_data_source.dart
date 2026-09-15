@@ -21,37 +21,39 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
     final cleanLoungeId = loungeId.trim();
     if (cleanLoungeId.isEmpty) return [];
 
-    // Stage 1: Direct query on profiles table (filtered by lounge_id)
+    final Map<String, StaffModel> staffMap = {};
+
+    // 1. Try RPC get_lounge_staff
     try {
-      final response = await _supabase
-          .from('profiles')
-          .select()
-          .eq('lounge_id', cleanLoungeId)
-          .neq('role', 'super_admin')
-          .order('full_name');
-
-      final list = (response as List)
-          .map((json) => StaffModel.fromJson(Map<String, dynamic>.from(json as Map)))
-          .toList();
-
-      if (list.isNotEmpty) return list;
-    } catch (e1) {
-      debugPrint('⚠️ [STAFF_REMOTE_SOURCE] Profiles query failed ($e1), trying lounge_staff join...');
+      final response = await _supabase.rpc('get_lounge_staff', params: {
+        'p_lounge_id': cleanLoungeId,
+      });
+      if (response != null && response is List) {
+        for (final item in response) {
+          final model = StaffModel.fromJson(Map<String, dynamic>.from(item as Map));
+          if (model.id.isNotEmpty) {
+            staffMap[model.id] = model;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ [STAFF_REMOTE_SOURCE] RPC get_lounge_staff error ($e)');
     }
 
-    // Stage 2: Query lounge_staff joined with profiles
+    // 2. Query lounge_staff joined with profiles
     try {
       final response = await _supabase
           .from('lounge_staff')
           .select('*, profiles(id, full_name, email, phone, role, is_active, avatar_url, created_at)')
           .eq('lounge_id', cleanLoungeId);
 
-      if ((response as List).isNotEmpty) {
-        return (response as List).map((item) {
-          final map = Map<String, dynamic>.from(item as Map);
-          final profileMap = map['profiles'] as Map<String, dynamic>?;
-          return StaffModel.fromJson({
-            'id': map['staff_id'] ?? map['user_id'] ?? profileMap?['id'] ?? map['id'],
+      for (final dynamic item in (response as List)) {
+        final map = Map<String, dynamic>.from(item as Map);
+        final profileMap = map['profiles'] as Map<String, dynamic>?;
+        final id = (map['staff_id'] ?? map['user_id'] ?? profileMap?['id'] ?? map['id'])?.toString() ?? '';
+        if (id.isNotEmpty && !staffMap.containsKey(id)) {
+          final model = StaffModel.fromJson({
+            'id': id,
             'full_name': profileMap?['full_name'] ?? map['name'] ?? map['full_name'] ?? 'Staff Member',
             'email': profileMap?['email'] ?? map['email'] ?? '',
             'phone': profileMap?['phone'] ?? map['phone'] ?? '',
@@ -60,25 +62,34 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
             'is_active': map['is_active'] ?? profileMap?['is_active'] ?? true,
             'created_at': map['created_at'] ?? profileMap?['created_at'],
           });
-        }).toList();
+          staffMap[id] = model;
+        }
       }
-    } catch (e2) {
-      debugPrint('⚠️ [STAFF_REMOTE_SOURCE] lounge_staff join query failed ($e2)');
+    } catch (e) {
+      debugPrint('⚠️ [STAFF_REMOTE_SOURCE] lounge_staff join query error ($e)');
     }
 
-    // Stage 3: Fallback RPC call
+    // 3. Direct query on profiles table (filtered by lounge_id)
     try {
-      final response = await _supabase.rpc('get_lounge_staff', params: {
-        'p_lounge_id': cleanLoungeId,
-      });
-      if (response == null) return [];
-      return (response as List)
-          .map((json) => StaffModel.fromJson(Map<String, dynamic>.from(json as Map)))
-          .toList();
-    } catch (e3) {
-      debugPrint('🔴 [STAFF_REMOTE_SOURCE] All staff queries failed: $e3');
-      rethrow;
+      final response = await _supabase
+          .from('profiles')
+          .select()
+          .eq('lounge_id', cleanLoungeId)
+          .neq('role', 'super_admin')
+          .order('full_name');
+
+      for (final dynamic item in (response as List)) {
+        final model = StaffModel.fromJson(Map<String, dynamic>.from(item as Map));
+        if (model.id.isNotEmpty && !staffMap.containsKey(model.id)) {
+          staffMap[model.id] = model;
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ [STAFF_REMOTE_SOURCE] profiles query error ($e)');
     }
+
+    debugPrint('🟢 [STAFF_REMOTE_SOURCE] getLoungeStaff fetched ${staffMap.length} staff members');
+    return staffMap.values.toList();
   }
 
   @override
@@ -137,7 +148,7 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
     final updates = <String, dynamic>{
       if (data.containsKey('name') && data['name'] != null) 'full_name': data['name'],
       if (data.containsKey('phone') && data['phone'] != null) 'phone': data['phone'],
-      if (mappedRole != null) 'role': mappedRole,
+      'role':? mappedRole,
       if (data.containsKey('email') && data['email'] != null) 'email': data['email'],
       if (data.containsKey('national_id_number') && data['national_id_number'] != null) 'national_id_number': data['national_id_number'],
       if (data.containsKey('id_front_url') && data['id_front_url'] != null) 'id_front_url': data['id_front_url'],

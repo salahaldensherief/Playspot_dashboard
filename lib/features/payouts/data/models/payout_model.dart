@@ -11,6 +11,10 @@ class PayoutModel extends PayoutEntity {
     required super.status,
     super.notes,
     required super.createdAt,
+    super.paidAt,
+    super.transferReference,
+    super.transferMethod,
+    super.paymentCount,
   });
 
   factory PayoutModel.fromJson(Map<String, dynamic> json) {
@@ -20,10 +24,22 @@ class PayoutModel extends PayoutEntity {
       return double.tryParse(value.toString()) ?? 0.0;
     }
 
+    int? parseInt(dynamic value) {
+      if (value == null) return null;
+      if (value is num) return value.toInt();
+      return int.tryParse(value.toString());
+    }
+
+    // Support joined lounge name or lounge object
+    String? loungeName = json['lounge_name']?.toString();
+    if (loungeName == null && json['lounges'] is Map) {
+      loungeName = json['lounges']['name']?.toString();
+    }
+
     return PayoutModel(
       id: (json['id'] ?? '').toString(),
       loungeId: (json['lounge_id'] ?? '').toString(),
-      loungeName: json['lounge_name']?.toString(),
+      loungeName: loungeName,
       amount: parseDouble(json['total_amount'] ?? json['amount']),
       periodStart: (json['period_start'] ?? '').toString(),
       periodEnd: (json['period_end'] ?? '').toString(),
@@ -32,6 +48,10 @@ class PayoutModel extends PayoutEntity {
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'].toString())
           : DateTime.now(),
+      paidAt: json['paid_at'] != null ? DateTime.parse(json['paid_at'].toString()) : null,
+      transferReference: json['transfer_reference']?.toString(),
+      transferMethod: json['transfer_method']?.toString(),
+      paymentCount: parseInt(json['payment_count']),
     );
   }
 }

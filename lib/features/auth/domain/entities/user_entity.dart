@@ -18,6 +18,7 @@ class UserEntity extends Equatable {
   final String? rawRole;
   final String? loungeId;
   final String? avatarUrl;
+  final String? cityId;
   final bool isSetupCompleted;
   final int pointsBalance;
   final int referralCount;
@@ -30,6 +31,7 @@ class UserEntity extends Equatable {
     this.rawRole,
     this.loungeId,
     this.avatarUrl,
+    this.cityId,
     this.isSetupCompleted = false,
     this.pointsBalance = 0,
     this.referralCount = 0,
@@ -64,6 +66,34 @@ class UserEntity extends Equatable {
   bool get canManageMenuStructure => permissions.canManageMenuStructure;
   bool get canUpdateStockOnly => permissions.canUpdateStockOnly;
 
+  UserEntity copyWith({
+    String? id,
+    String? email,
+    String? name,
+    UserRole? role,
+    String? rawRole,
+    String? loungeId,
+    String? avatarUrl,
+    String? cityId,
+    bool? isSetupCompleted,
+    int? pointsBalance,
+    int? referralCount,
+  }) {
+    return UserEntity(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      name: name ?? this.name,
+      role: role ?? this.role,
+      rawRole: rawRole ?? this.rawRole,
+      loungeId: loungeId ?? this.loungeId,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      cityId: cityId ?? this.cityId,
+      isSetupCompleted: isSetupCompleted ?? this.isSetupCompleted,
+      pointsBalance: pointsBalance ?? this.pointsBalance,
+      referralCount: referralCount ?? this.referralCount,
+    );
+  }
+
   @override
   List<Object?> get props => [
         id,
@@ -73,6 +103,7 @@ class UserEntity extends Equatable {
         rawRole,
         loungeId,
         avatarUrl,
+        cityId,
         isSetupCompleted,
         pointsBalance,
         referralCount,

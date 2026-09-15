@@ -4,6 +4,11 @@ import 'tournament_prize_entity.dart';
 enum TournamentStatus {
   draft,
   published,
+  registrationOpen,
+  registrationClosed,
+  checkInOpen,
+  checkInClosed,
+  drawCompleted,
   inProgress,
   completed,
   cancelled;
@@ -12,6 +17,16 @@ enum TournamentStatus {
     switch (value) {
       case 'published':
         return TournamentStatus.published;
+      case 'registration_open':
+        return TournamentStatus.registrationOpen;
+      case 'registration_closed':
+        return TournamentStatus.registrationClosed;
+      case 'check_in_open':
+        return TournamentStatus.checkInOpen;
+      case 'check_in_closed':
+        return TournamentStatus.checkInClosed;
+      case 'draw_completed':
+        return TournamentStatus.drawCompleted;
       case 'in_progress':
         return TournamentStatus.inProgress;
       case 'completed':
@@ -28,6 +43,16 @@ enum TournamentStatus {
     switch (this) {
       case TournamentStatus.published:
         return 'published';
+      case TournamentStatus.registrationOpen:
+        return 'registration_open';
+      case TournamentStatus.registrationClosed:
+        return 'registration_closed';
+      case TournamentStatus.checkInOpen:
+        return 'check_in_open';
+      case TournamentStatus.checkInClosed:
+        return 'check_in_closed';
+      case TournamentStatus.drawCompleted:
+        return 'draw_completed';
       case TournamentStatus.inProgress:
         return 'in_progress';
       case TournamentStatus.completed:
@@ -45,6 +70,8 @@ class TournamentEntity extends Equatable {
   final String? loungeId;
   final String? loungeName;
   final String? cityId;
+  final String visibilityScope; // 'all' | 'city' | 'radius'
+  final double? visibilityRadiusKm;
   final String title;
   final String? titleAr;
   final String? titleEn;
@@ -77,6 +104,8 @@ class TournamentEntity extends Equatable {
     this.loungeId,
     this.loungeName,
     this.cityId,
+    this.visibilityScope = 'all',
+    this.visibilityRadiusKm,
     required this.title,
     this.titleAr,
     this.titleEn,
@@ -112,7 +141,75 @@ class TournamentEntity extends Equatable {
   bool get isCancelled => status == TournamentStatus.cancelled;
 
   bool get canDeleteDraft => isDraft && registeredCount == 0;
-  bool get canDrawBracket => (isPublished || isDraft) && registeredCount >= minPlayers;
+  bool get canDrawBracket => (isPublished || isDraft || status == TournamentStatus.registrationClosed || status == TournamentStatus.checkInClosed) && registeredCount >= minPlayers;
+
+  TournamentEntity copyWith({
+    String? id,
+    String? loungeId,
+    String? loungeName,
+    String? cityId,
+    String? visibilityScope,
+    double? visibilityRadiusKm,
+    String? title,
+    String? titleAr,
+    String? titleEn,
+    String? descriptionAr,
+    String? descriptionEn,
+    String? gameTitle,
+    String? bannerUrl,
+    int? treeSize,
+    TournamentStatus? status,
+    double? entryFee,
+    double? prizePool,
+    DateTime? startDate,
+    DateTime? endDate,
+    DateTime? registrationDeadline,
+    DateTime? registrationOpensAt,
+    DateTime? registrationClosesAt,
+    int? paymentDeadlineMinutes,
+    DateTime? checkInOpensAt,
+    DateTime? checkInClosesAt,
+    DateTime? tournamentStartsAt,
+    int? minPlayers,
+    int? maxPlayers,
+    String? rules,
+    int? registeredCount,
+    DateTime? createdAt,
+  }) {
+    return TournamentEntity(
+      id: id ?? this.id,
+      loungeId: loungeId ?? this.loungeId,
+      loungeName: loungeName ?? this.loungeName,
+      cityId: cityId ?? this.cityId,
+      visibilityScope: visibilityScope ?? this.visibilityScope,
+      visibilityRadiusKm: visibilityRadiusKm ?? this.visibilityRadiusKm,
+      title: title ?? this.title,
+      titleAr: titleAr ?? this.titleAr,
+      titleEn: titleEn ?? this.titleEn,
+      descriptionAr: descriptionAr ?? this.descriptionAr,
+      descriptionEn: descriptionEn ?? this.descriptionEn,
+      gameTitle: gameTitle ?? this.gameTitle,
+      bannerUrl: bannerUrl ?? this.bannerUrl,
+      treeSize: treeSize ?? this.treeSize,
+      status: status ?? this.status,
+      entryFee: entryFee ?? this.entryFee,
+      prizePool: prizePool ?? this.prizePool,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      registrationDeadline: registrationDeadline ?? this.registrationDeadline,
+      registrationOpensAt: registrationOpensAt ?? this.registrationOpensAt,
+      registrationClosesAt: registrationClosesAt ?? this.registrationClosesAt,
+      paymentDeadlineMinutes: paymentDeadlineMinutes ?? this.paymentDeadlineMinutes,
+      checkInOpensAt: checkInOpensAt ?? this.checkInOpensAt,
+      checkInClosesAt: checkInClosesAt ?? this.checkInClosesAt,
+      tournamentStartsAt: tournamentStartsAt ?? this.tournamentStartsAt,
+      minPlayers: minPlayers ?? this.minPlayers,
+      maxPlayers: maxPlayers ?? this.maxPlayers,
+      rules: rules ?? this.rules,
+      registeredCount: registeredCount ?? this.registeredCount,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 
   TournamentEntity copyWith({
     String? id,
@@ -186,6 +283,8 @@ class TournamentEntity extends Equatable {
         loungeId,
         loungeName,
         cityId,
+        visibilityScope,
+        visibilityRadiusKm,
         title,
         titleAr,
         titleEn,

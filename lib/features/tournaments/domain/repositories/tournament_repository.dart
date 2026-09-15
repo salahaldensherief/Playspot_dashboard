@@ -9,6 +9,8 @@ import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournam
 
 abstract class TournamentRepository {
   Future<Either<Failure, List<TournamentEntity>>> getTournaments({
+    double? latitude,
+    double? longitude,
     String? loungeId,
     String? status,
   });
@@ -37,6 +39,8 @@ abstract class TournamentRepository {
   Future<Either<Failure, void>> rejectPayment(String participantId, String reason);
 
   Future<Either<Failure, void>> recordCashPayment(String participantId);
+
+  Future<Either<Failure, void>> promoteWaitlist(String tournamentId);
 
   Future<Either<Failure, void>> checkInParticipant(String participantId);
 

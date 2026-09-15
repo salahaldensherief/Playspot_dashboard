@@ -7,7 +7,7 @@ class OpenShiftUseCase {
 
   OpenShiftUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(String loungeId, double startingCash) async {
-    return await repository.openShift(loungeId, startingCash);
+  Future<Either<Failure, void>> call(String loungeId, double startingCash, {String? notes}) async {
+    return await repository.openShift(loungeId, startingCash, notes: notes);
   }
 }
