@@ -347,21 +347,40 @@ class RequestCard extends StatelessWidget {
     final userDisplayName = (request.userName != null && request.userName!.isNotEmpty) ? request.userName! : 'عميل';
 
     return Container(
-      padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
         color: request.isAttended
             ? AppColors.cardBackground.withValues(alpha: 0.4)
             : AppColors.cardBackground,
         borderRadius: BorderRadius.circular(14.r),
         border: Border.all(
-          color: AppColors.borderDefault,
-          width: 1.0,
+          color: request.isAttended ? AppColors.borderDefault.withValues(alpha: 0.5) : themeColor.withValues(alpha: 0.35),
+          width: 1.2,
         ),
+        boxShadow: [
+          if (!request.isAttended)
+            BoxShadow(
+              color: themeColor.withValues(alpha: 0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14.r),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              right: BorderSide(
+                color: themeColor,
+                width: 4.r,
+              ),
+            ),
+          ),
+          padding: EdgeInsets.all(14.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
           // 1. Top Bar: Type Tag + Time
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -526,6 +545,9 @@ class RequestCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
+
+          ),
     );
   }
 }
@@ -694,36 +716,68 @@ class CanteenItemsDetailsBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+      padding: EdgeInsets.all(10.r),
       decoration: BoxDecoration(
         color: AppColors.mutedBackground,
-        borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: AppColors.borderDefault.withValues(alpha: 0.6)),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: AppColors.borderDefault.withValues(alpha: 0.8)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Icon(Icons.restaurant_menu_rounded, size: 14.r, color: AppColors.success),
+              SizedBox(width: 6.w),
+              AppText.subHeading(
+                'تفاصيل طلب الكافيتريا',
+                fontSize: 12.sp,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
           ...items.map((item) {
             final name = item['name_ar'] ?? item['name'] ?? item['name_en'] ?? item['item_name'] ?? 'صنف';
             final qty = item['quantity'] ?? item['qty'] ?? 1;
             final price = (item['price'] ?? item['unit_price'] as num?)?.toDouble() ?? 0.0;
 
             return Padding(
-              padding: EdgeInsets.symmetric(vertical: 2.h),
+              padding: EdgeInsets.symmetric(vertical: 3.h),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  AppText.body(
-                    '${qty}x $name',
-                    fontSize: 11.sp,
-                    color: AppColors.textPrimary,
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: AppText.body(
+                          '${qty}x',
+                          fontSize: 11.sp,
+                          color: AppColors.success,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      AppText.body(
+                        name,
+                        fontSize: 12.sp,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ],
                   ),
                   if (price > 0)
                     AppText.body(
                       '${(price * qty).toStringAsFixed(0)} ${AppStrings.egp}',
-                      fontSize: 11.sp,
+                      fontSize: 12.sp,
                       color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                     ),
                 ],
               ),
@@ -731,18 +785,30 @@ class CanteenItemsDetailsBox extends StatelessWidget {
           }),
           if (totalPrice != null && totalPrice! > 0) ...[
             Padding(
-              padding: EdgeInsets.symmetric(vertical: 4.h),
-              child: Divider(color: AppColors.borderDefault.withValues(alpha: 0.5), height: 1.h),
+              padding: EdgeInsets.symmetric(vertical: 6.h),
+              child: Divider(color: AppColors.borderDefault, height: 1.h),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                AppText.body(AppStrings.extrasTotal, fontSize: 11.sp, color: AppColors.textMuted),
-                AppText.subHeading(
-                  '${totalPrice!.toStringAsFixed(0)} ${AppStrings.egp}',
+                AppText.body(
+                  AppStrings.extrasTotal,
                   fontSize: 11.sp,
-                  color: AppColors.neonBlue,
-                  fontWeight: FontWeight.bold,
+                  color: AppColors.textMuted,
+                  fontWeight: FontWeight.w600,
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6.r),
+                  ),
+                  child: AppText.subHeading(
+                    '${totalPrice!.toStringAsFixed(0)} ${AppStrings.egp}',
+                    fontSize: 12.sp,
+                    color: AppColors.success,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),

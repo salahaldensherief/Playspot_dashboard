@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/client_request_entity.dart';
 import '../../domain/entities/notification_metadata.dart';
 
@@ -169,6 +170,9 @@ class ClientRequestModel extends ClientRequestEntity {
   }
 
   factory ClientRequestModel.fromCanteenOrderJson(Map<String, dynamic> json) {
+    debugPrint('📦 [CLIENT_REQUEST_MODEL] Parsing canteen order JSON keys: ${json.keys.toList()}');
+    debugPrint('📦 [CLIENT_REQUEST_MODEL] Raw JSON: $json');
+
     double parseDouble(dynamic val) {
       if (val == null) return 0.0;
       if (val is num) return val.toDouble();
@@ -179,45 +183,48 @@ class ClientRequestModel extends ClientRequestEntity {
 
     void extractItems(dynamic rawItems, List<Map<String, dynamic>> targetList) {
       if (rawItems == null) return;
+
+      void processItem(Map<String, dynamic> itemMap) {
+        final extraObj = itemMap['extras'] ?? itemMap['canteen_items'] ?? itemMap['extra'] ?? itemMap['item'];
+        if (extraObj is Map) {
+          itemMap['name'] = extraObj['name'] ?? extraObj['name_ar'] ?? extraObj['name_en'] ?? itemMap['name'];
+          itemMap['name_ar'] = extraObj['name_ar'] ?? extraObj['name'] ?? itemMap['name_ar'];
+          itemMap['price'] = extraObj['price'] ?? itemMap['unit_price'] ?? itemMap['price'];
+        }
+
+        itemMap['name'] = itemMap['name'] ?? itemMap['name_ar'] ?? itemMap['name_en'] ?? itemMap['item_name'] ?? itemMap['title'] ?? itemMap['extra_name'] ?? 'Extra Item';
+        itemMap['quantity'] = itemMap['quantity'] ?? itemMap['qty'] ?? itemMap['count'] ?? 1;
+        itemMap['price'] = itemMap['price'] ?? itemMap['unit_price'] ?? itemMap['unitPrice'] ?? 0.0;
+
+        targetList.add(itemMap);
+      }
+
       if (rawItems is String) {
         try {
           final decoded = jsonDecode(rawItems);
           if (decoded is List) {
             for (var i in decoded) {
               if (i is Map) {
-                final itemMap = Map<String, dynamic>.from(i);
-                final extraObj = itemMap['extras'] ?? itemMap['canteen_items'] ?? itemMap['extra'];
-                if (extraObj is Map) {
-                  itemMap['name'] = extraObj['name'] ?? extraObj['name_ar'] ?? itemMap['name'];
-                  itemMap['name_ar'] = extraObj['name_ar'] ?? extraObj['name'] ?? itemMap['name_ar'];
-                  itemMap['price'] = extraObj['price'] ?? itemMap['price'];
-                }
-                targetList.add(itemMap);
+                processItem(Map<String, dynamic>.from(i));
               }
             }
           } else if (decoded is Map) {
-            targetList.add(Map<String, dynamic>.from(decoded));
+            processItem(Map<String, dynamic>.from(decoded));
           }
         } catch (_) {}
       } else if (rawItems is List) {
         for (var i in rawItems) {
           if (i is Map) {
-            final itemMap = Map<String, dynamic>.from(i);
-            final extraObj = itemMap['extras'] ?? itemMap['canteen_items'] ?? itemMap['extra'];
-            if (extraObj is Map) {
-              itemMap['name'] = extraObj['name'] ?? extraObj['name_ar'] ?? itemMap['name'];
-              itemMap['name_ar'] = extraObj['name_ar'] ?? extraObj['name'] ?? itemMap['name_ar'];
-              itemMap['price'] = extraObj['price'] ?? itemMap['price'];
-            }
-            targetList.add(itemMap);
+            processItem(Map<String, dynamic>.from(i));
           }
         }
       } else if (rawItems is Map) {
-        targetList.add(Map<String, dynamic>.from(rawItems));
+        processItem(Map<String, dynamic>.from(rawItems));
       }
     }
 
     List<Map<String, dynamic>> parsedItems = [];
+    extractItems(json['request_data'], parsedItems);
     extractItems(json['canteen_order_items'], parsedItems);
     extractItems(json['items'], parsedItems);
     extractItems(json['canteen_items'], parsedItems);

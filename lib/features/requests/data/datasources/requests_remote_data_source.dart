@@ -243,46 +243,42 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     }
 
     try {
-      List? response;
-      if (id.startsWith('sc_')) {
-        response = await client.from('service_calls').update({
-          'status': 'resolved',
-          'is_attended': true,
-          'is_read': true,
-        }).eq('id', rawDbId).select('id');
-      } else if (id.startsWith('canteen_') || isCanteenOrder) {
-        response = await client.from('canteen_orders').update({
-          'status': 'completed',
-          'is_attended': true,
-          'is_read': true,
-        }).eq('id', rawDbId).select('id');
-      } else if (id.startsWith('item_')) {
-        response = await client.from('booking_items').update({
-          'status': 'completed',
-          'is_attended': true,
-          'is_read': true,
-        }).eq('id', rawDbId).select('id');
-      } else if (id.startsWith('req_')) {
-        response = await client.from('client_requests').update({
-          'status': 'resolved',
-          'is_attended': true,
-          'is_read': true,
-        }).eq('id', rawDbId).select('id');
-      } else if (id.startsWith('ext_')) {
-        response = await client.from('bookings').update({
-          'extension_status': 'approved',
-        }).eq('id', rawDbId).select('id');
-      } else {
-        response = await client.from('notifications').update({
-          'is_read': true,
-          'is_attended': true,
-        }).eq('id', rawDbId).select('id');
+      final tables = ['booking_items', 'canteen_orders', 'service_calls', 'client_requests', 'bookings', 'notifications'];
+      final idCols = ['id', 'call_id', 'order_id', 'request_id', 'booking_id'];
+      bool success = false;
+
+      for (final table in tables) {
+        for (final col in idCols) {
+          try {
+            Map<String, dynamic> updatePayload;
+            if (table == 'bookings') {
+              updatePayload = {'extension_status': 'approved'};
+            } else if (table == 'canteen_orders') {
+              updatePayload = {'status': 'completed'};
+            } else if (table == 'booking_items') {
+              updatePayload = {'status': 'completed', 'is_attended': true, 'is_read': true};
+            } else if (table == 'notifications') {
+              updatePayload = {'is_read': true};
+            } else {
+              updatePayload = {'status': 'resolved', 'is_attended': true, 'is_read': true};
+            }
+
+            final response = await client
+                .from(table)
+                .update(updatePayload)
+                .eq(col, rawDbId)
+                .select();
+
+            if (response != null && (response as List).isNotEmpty) {
+              debugPrint('🟢 [REQUESTS_DATA_SOURCE] Successfully marked request $id as attended in table $table using column $col');
+              success = true;
+            }
+          } catch (_) {}
+        }
       }
 
-      if (response.isEmpty) {
-        debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Warning: Request $rawDbId update affected 0 rows (possible RLS restriction)');
-      } else {
-        debugPrint('🟢 [REQUESTS_DATA_SOURCE] Successfully marked request $id as attended');
+      if (!success) {
+        debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Warning: Request $rawDbId update affected 0 rows across all tables/columns');
       }
     } catch (e) {
       debugPrint('⚠️ [REQUESTS_DATA_SOURCE] markRequestAsAttended Error for $id: $e');

@@ -148,7 +148,7 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
       try {
         final roomsResponse = await client
             .from('rooms')
-            .select('lounge_id, status, hourly_rate_single, hourly_rate_multi, hourly_rate, price')
+            .select('lounge_id, status')
             .inFilter('lounge_id', loungeIds);
 
         for (final r in roomsResponse as List) {
@@ -157,16 +157,6 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
           final status = rMap['status']?.toString();
           if (lId != null && status != 'deleted') {
             roomCountsMap[lId] = (roomCountsMap[lId] ?? 0) + 1;
-
-            final double roomPrice = (rMap['hourly_rate_single'] ?? 
-                                      rMap['hourly_rate'] ?? 
-                                      rMap['price'] as num?)?.toDouble() ?? 0.0;
-            if (roomPrice > 0) {
-              final currentMin = loungeMinPriceMap[lId] ?? double.infinity;
-              if (roomPrice < currentMin) {
-                loungeMinPriceMap[lId] = roomPrice;
-              }
-            }
           }
         }
       } catch (e, stackTrace) {
@@ -325,25 +315,6 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     }
 
     cleanData.removeWhere((key, value) => value == null);
-
-    if (cleanData.containsKey('city') && cleanData['city'] != null) {
-      final cityName = cleanData['city'].toString().trim();
-      if (cityName.isNotEmpty) {
-        try {
-          final cityRes = await client
-              .from('cities')
-              .select('id, name_en, name_ar')
-              .or('name_en.ilike.%$cityName%,name_ar.ilike.%$cityName%')
-              .maybeSingle();
-          if (cityRes != null) {
-            cleanData['city_id'] = cityRes['id'];
-            cleanData['city'] = cityRes['name_en'] ?? cityName;
-          }
-        } catch (e) {
-          AppLogger.error('Failed to resolve city_id from city name $cityName', e);
-        }
-      }
-    }
 
     try {
       await client.from('lounges').update(cleanData).eq('id', id);

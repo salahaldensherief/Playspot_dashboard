@@ -1,5 +1,5 @@
 import 'dart:async';
-import '../../../../core/utils/app_logger.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/features/bookings/data/models/booking_model.dart';
 import 'package:play_spot_dashboard/features/analytics/data/models/lounge_stats_model.dart';
@@ -75,10 +75,10 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
               .listen((_) {
                 _fetchAndEmitActiveSessions(controller, cleanLoungeId);
               }, onError: (e) {
-                AppLogger.warning('[DASHBOARD_DATA_SOURCE] Active Sessions Realtime Error: $e');
+                debugPrint('⚠️ [DASHBOARD_DATA_SOURCE] Active Sessions Realtime Error: $e');
               });
         } catch (e) {
-          AppLogger.warning('[DASHBOARD_DATA_SOURCE] Active Sessions Stream Listener Exception: $e');
+          debugPrint('⚠️ [DASHBOARD_DATA_SOURCE] Active Sessions Stream Listener Exception: $e');
         }
 
         heartbeatTimer = Timer.periodic(const Duration(seconds: 5), (_) {
@@ -126,7 +126,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
               .toList();
           controller.add(list);
         } catch (e2) {
-          AppLogger.error('[DASHBOARD_DATA_SOURCE] _fetchAndEmitActiveSessions Fallback Error: $e2');
+          debugPrint('🔴 [DASHBOARD_DATA_SOURCE] _fetchAndEmitActiveSessions Fallback Error: $e2');
           controller.addError(e2);
         }
       }
@@ -157,19 +157,27 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
 
     final newTotalPrice = currentPrice + addedCost;
 
-    AppLogger.info('[DASHBOARD_DATA_SOURCE] Extending booking $bookingId by $additionalMinutes mins to $newMinutes mins, new price: $newTotalPrice');
+    debugPrint('🔵 [DASHBOARD_DATA_SOURCE] Extending booking $bookingId by $additionalMinutes mins to $newMinutes mins, new price: $newTotalPrice');
 
     await supabaseClient.from('bookings').update({
       'duration_minutes': newMinutes,
       'total_price': newTotalPrice,
     }).eq('id', bookingId);
 
-    AppLogger.info('[DASHBOARD_DATA_SOURCE] Session extension saved successfully!');
+    debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Session extension saved successfully!');
   }
 
   @override
   Future<void> addExtrasToSession(String bookingId, List<Map<String, dynamic>> extras, double additionalCost) async {
-    AppLogger.info('[CANTEEN_ORDER_SYNC] Executing addExtrasToSession... Booking ID: $bookingId, Cost: $additionalCost, Extras: ${extras.length} items');
+    debugPrint('====================================================');
+    debugPrint('🚀 [CANTEEN_ORDER_SYNC] Executing addExtrasToSession...');
+    debugPrint('📌 [CANTEEN_ORDER_SYNC] Booking ID: $bookingId');
+    debugPrint('💰 [CANTEEN_ORDER_SYNC] Additional Cost: $additionalCost');
+    debugPrint('📦 [CANTEEN_ORDER_SYNC] Incoming Extras Payload (${extras.length} items):');
+    for (int i = 0; i < extras.length; i++) {
+      debugPrint('   - Item [$i]: ${extras[i]}');
+    }
+    debugPrint('====================================================');
 
     try {
       if (extras.isNotEmpty) {
@@ -185,8 +193,20 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
         final currentTotalPrice = (bookingDetails?['total_price'] as num?)?.toDouble() ?? 0.0;
         final currentAddonsPrice = (bookingDetails?['addons_price'] as num?)?.toDouble() ?? 0.0;
 
-        // 2. Insert into canteen_orders table
-        if (loungeId != null && loungeId.isNotEmpty) {
+        // 2. Place canteen order via RPC place_canteen_order (preferred) with direct insert fallback
+        bool rpcSuccess = false;
+        try {
+          final rpcRes = await supabaseClient.rpc('place_canteen_order', params: {
+            'p_booking_id': bookingId,
+            'p_items': extras,
+          });
+          debugPrint('🟢 [CANTEEN_ORDER_SYNC] Successfully placed canteen order via RPC place_canteen_order: $rpcRes');
+          rpcSuccess = true;
+        } catch (rpcErr) {
+          debugPrint('⚠️ [CANTEEN_ORDER_SYNC] place_canteen_order RPC failed ($rpcErr), falling back to direct insert');
+        }
+
+        if (!rpcSuccess && loungeId != null && loungeId.isNotEmpty) {
           try {
             await supabaseClient.from('canteen_orders').insert({
               'lounge_id': loungeId,
@@ -196,9 +216,9 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
               'total_price': additionalCost,
               'status': 'completed',
             });
-            AppLogger.info('[CANTEEN_ORDER_SYNC] Successfully inserted into `canteen_orders`!');
+            debugPrint('🟢 [CANTEEN_ORDER_SYNC] Successfully inserted into `canteen_orders`!');
           } catch (e) {
-            AppLogger.warning('[CANTEEN_ORDER_SYNC] canteen_orders insert warning: $e');
+            debugPrint('⚠️ [CANTEEN_ORDER_SYNC] canteen_orders insert warning: $e');
             try {
               await supabaseClient.from('canteen_orders').insert({
                 'lounge_id': loungeId,
@@ -214,7 +234,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
         final updatedTotalPrice = currentTotalPrice + additionalCost;
         final updatedAddonsPrice = currentAddonsPrice + additionalCost;
 
-        AppLogger.info('[CANTEEN_ORDER_SYNC] Updating `total_price` ($updatedTotalPrice) and `addons_price` ($updatedAddonsPrice) on `bookings`...');
+        debugPrint('🔵 [CANTEEN_ORDER_SYNC] Updating `total_price` ($updatedTotalPrice) and `addons_price` ($updatedAddonsPrice) on `bookings`...');
         try {
           await supabaseClient.from('bookings').update({
             'total_price': updatedTotalPrice,
@@ -243,41 +263,43 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
           }).toList();
           await supabaseClient.from('booking_items').insert(bookingItemsToInsert);
         } catch (e) {
-          AppLogger.info('[CANTEEN_ORDER_SYNC] booking_items optional insert skipped: $e');
+          debugPrint('ℹ️ [CANTEEN_ORDER_SYNC] booking_items optional insert skipped: $e');
         }
       }
 
-      AppLogger.info('[CANTEEN_ORDER_SYNC] Successfully added extras to session!');
+      debugPrint('🟢 [CANTEEN_ORDER_SYNC] Successfully added extras to session!');
+      debugPrint('====================================================');
     } catch (e) {
-      AppLogger.error('[CANTEEN_ORDER_SYNC] Error in addExtrasToSession', e);
+      debugPrint('🔴 [CANTEEN_ORDER_SYNC] Error in addExtrasToSession: $e');
+      debugPrint('====================================================');
       rethrow;
     }
   }
 
   @override
   Future<void> endSession(String bookingId) async {
-    AppLogger.info('[DASHBOARD_DATA_SOURCE] Ending active session: $bookingId');
+    debugPrint('🔵 [DASHBOARD_DATA_SOURCE] Ending active session: $bookingId');
     final userId = supabaseClient.auth.currentUser?.id;
     try {
       await supabaseClient.rpc('complete_booking_session', params: {
         'p_booking_id': bookingId,
         'p_action_by': userId ?? '',
       });
-      AppLogger.info('[DASHBOARD_DATA_SOURCE] Session ended via RPC complete_booking_session!');
+      debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Session ended via RPC complete_booking_session!');
     } catch (e) {
-      AppLogger.warning('[DASHBOARD_DATA_SOURCE] RPC complete_booking_session failed ($e), falling back to update_booking_status_admin...');
+      debugPrint('⚠️ [DASHBOARD_DATA_SOURCE] RPC complete_booking_session failed ($e), falling back to update_booking_status_admin...');
       try {
         await supabaseClient.rpc('update_booking_status_admin', params: {
           'p_booking_id': bookingId,
           'p_status': 'completed',
         });
-        AppLogger.info('[DASHBOARD_DATA_SOURCE] Session ended via update_booking_status_admin!');
+        debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Session ended via update_booking_status_admin!');
       } catch (_) {
         await supabaseClient
             .from('bookings')
             .update({'status': 'completed'})
             .eq('id', bookingId);
-        AppLogger.info('[DASHBOARD_DATA_SOURCE] Direct update endSession completed!');
+        debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Direct update endSession completed!');
       }
     }
   }
@@ -289,7 +311,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
     required int requestedMinutes,
     required int currentDurationMinutes,
   }) async {
-    AppLogger.info('[DASHBOARD_DATA_SOURCE] reviewExtensionRequest: bookingId=$bookingId, isApproved=$isApproved, requestedMinutes=$requestedMinutes, currentDurationMinutes=$currentDurationMinutes');
+    debugPrint('🔵 [DASHBOARD_DATA_SOURCE] reviewExtensionRequest: bookingId=$bookingId, isApproved=$isApproved, requestedMinutes=$requestedMinutes, currentDurationMinutes=$currentDurationMinutes');
 
     if (isApproved) {
       final newDuration = currentDurationMinutes + requestedMinutes;
@@ -297,12 +319,12 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
         'duration_minutes': newDuration,
         'extension_status': 'approved',
       }).eq('id', bookingId);
-      AppLogger.info('[DASHBOARD_DATA_SOURCE] Extension request approved: duration updated to $newDuration mins');
+      debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Extension request approved: duration updated to $newDuration mins');
     } else {
       await supabaseClient.from('bookings').update({
         'extension_status': 'rejected',
       }).eq('id', bookingId);
-      AppLogger.info('[DASHBOARD_DATA_SOURCE] Extension request rejected');
+      debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Extension request rejected');
     }
   }
 
@@ -316,9 +338,9 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
     List<Map<String, dynamic>>? extraItems,
     double? extraCost,
   }) async {
-    AppLogger.info('[DASHBOARD_DATA_SOURCE] handleClientRequestAction: id=$requestId, approve=$approve, bookingId=$bookingId');
-    if (approve) {
-      if (bookingId != null && bookingId.isNotEmpty) {
+    debugPrint('🔵 [DASHBOARD_DATA_SOURCE] handleClientRequestAction: id=$requestId, approve=$approve, bookingId=$bookingId');
+    if (bookingId != null && bookingId.isNotEmpty) {
+      if (approve) {
         if (extensionMinutes != null && extensionMinutes > 0) {
           await extendSession(bookingId, extensionMinutes, additionalCost: extraCost);
         }
@@ -326,58 +348,54 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
           await addExtrasToSession(bookingId, extraItems, extraCost ?? 0.0);
         }
       }
+    }
 
-      if (requestId.startsWith('sc_')) {
-        final scId = requestId.replaceFirst('sc_', '');
+    final String rawDbId = requestId
+        .replaceFirst('canteen_', '')
+        .replaceFirst('notif_', '')
+        .replaceFirst('sc_', '')
+        .replaceFirst('item_', '')
+        .replaceFirst('req_', '')
+        .replaceFirst('ext_', '');
+
+    if (rawDbId.isEmpty) return;
+
+    final tables = ['booking_items', 'canteen_orders', 'service_calls', 'client_requests', 'bookings', 'notifications'];
+    final idCols = ['id', 'call_id', 'order_id', 'request_id', 'booking_id'];
+    bool success = false;
+
+    for (final table in tables) {
+      for (final col in idCols) {
         try {
-          await supabaseClient
-              .from('service_calls')
-              .update({'status': approve ? 'resolved' : 'rejected', 'is_attended': true, 'is_read': true})
-              .eq('id', scId);
-        } catch (_) {
-          await supabaseClient
-              .from('service_calls')
-              .update({'status': approve ? 'resolved' : 'rejected'})
-              .eq('id', scId);
-        }
-      } else if (isCanteenOrder) {
-        await supabaseClient
-            .from('canteen_orders')
-            .update({'status': 'completed', 'is_attended': true})
-            .eq('id', requestId);
-      } else {
-        await supabaseClient
-            .from('notifications')
-            .update({'is_read': true, 'is_attended': true})
-            .eq('id', requestId);
+          Map<String, dynamic> updatePayload;
+          if (table == 'bookings') {
+            updatePayload = {'extension_status': approve ? 'approved' : 'rejected'};
+          } else if (table == 'canteen_orders') {
+            updatePayload = {'status': approve ? 'completed' : 'cancelled'};
+          } else if (table == 'booking_items') {
+            updatePayload = {'status': approve ? 'completed' : 'cancelled', 'is_attended': true, 'is_read': true};
+          } else if (table == 'notifications') {
+            updatePayload = {'is_read': true};
+          } else {
+            updatePayload ={'status': approve ? 'resolved' : 'rejected', 'is_attended': true, 'is_read': true};
+          }
+
+          final response = await supabaseClient
+              .from(table)
+              .update(updatePayload)
+              .eq(col, rawDbId)
+              .select();
+
+          if (response != null && (response as List).isNotEmpty) {
+            debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Successfully updated request $requestId in table $table using column $col');
+            success = true;
+          }
+        } catch (_) {}
       }
-      AppLogger.info('[DASHBOARD_DATA_SOURCE] Client request approved and session updated');
-    } else {
-      if (requestId.startsWith('sc_')) {
-        final scId = requestId.replaceFirst('sc_', '');
-        try {
-          await supabaseClient
-              .from('service_calls')
-              .update({'status': 'rejected', 'is_attended': true, 'is_read': true})
-              .eq('id', scId);
-        } catch (_) {
-          await supabaseClient
-              .from('service_calls')
-              .update({'status': 'rejected'})
-              .eq('id', scId);
-        }
-      } else if (isCanteenOrder) {
-        await supabaseClient
-            .from('canteen_orders')
-            .update({'status': 'rejected', 'is_attended': true})
-            .eq('id', requestId);
-      } else {
-        await supabaseClient
-            .from('notifications')
-            .update({'is_read': true, 'is_attended': true})
-            .eq('id', requestId);
-      }
-      AppLogger.info('[DASHBOARD_DATA_SOURCE] Client request rejected');
+    }
+
+    if (!success) {
+      debugPrint('⚠️ [DASHBOARD_DATA_SOURCE] Warning: handleClientRequestAction update affected 0 rows for $requestId');
     }
   }
 }
