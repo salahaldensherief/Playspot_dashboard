@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
+import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import 'package:play_spot_dashboard/features/reviews/domain/entities/lounge_review_entity.dart';
 import 'package:play_spot_dashboard/features/reviews/domain/repositories/reviews_repository.dart';
 import 'package:play_spot_dashboard/features/reviews/domain/usecases/watch_lounge_reviews_usecase.dart';
@@ -18,6 +19,20 @@ class FakeReviewsRepository implements ReviewsRepository {
   @override
   Future<Either<Failure, List<LoungeReviewEntity>>> getLoungeReviews({required String loungeId}) async {
     return Right(reviewsToEmit);
+  }
+
+  @override
+  Future<Either<Failure, PaginatedResult<LoungeReviewEntity>>> getLoungeReviewsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    return Right(PaginatedResult<LoungeReviewEntity>(
+      items: reviewsToEmit,
+      totalCount: reviewsToEmit.length,
+      page: page,
+      pageSize: pageSize,
+    ));
   }
 }
 

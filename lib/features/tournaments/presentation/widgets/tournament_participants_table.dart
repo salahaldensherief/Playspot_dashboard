@@ -14,6 +14,7 @@ class TournamentParticipantsTable extends StatelessWidget {
   final Function(TournamentParticipantEntity, String reason) onRejectPayment;
   final Function(TournamentParticipantEntity) onRecordCash;
   final Function(TournamentParticipantEntity) onCheckIn;
+  final Function(TournamentParticipantEntity) onWithdraw;
 
   const TournamentParticipantsTable({
     super.key,
@@ -22,6 +23,7 @@ class TournamentParticipantsTable extends StatelessWidget {
     required this.onRejectPayment,
     required this.onRecordCash,
     required this.onCheckIn,
+    required this.onWithdraw,
   });
 
   @override
@@ -65,6 +67,7 @@ class TournamentParticipantsTable extends StatelessWidget {
           columns: [
             DataColumn(label: Text(AppStrings.customerName, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
             DataColumn(label: Text(AppStrings.phoneNumber, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
+            DataColumn(label: Text('الحالة', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
             DataColumn(label: Text(AppStrings.payment, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
             DataColumn(label: Text(AppStrings.checkIn, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
             DataColumn(label: Text(AppStrings.date, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
@@ -89,6 +92,7 @@ class TournamentParticipantsTable extends StatelessWidget {
                   ),
                 ),
                 DataCell(Text(p.userPhone ?? '--', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp))),
+                DataCell(_buildParticipantStatusBadge(p.participantStatus)),
                 DataCell(_buildPaymentBadge(p.paymentStatus)),
                 DataCell(
                   p.isCheckedIn
@@ -105,6 +109,16 @@ class TournamentParticipantsTable extends StatelessWidget {
                 DataCell(
                   Row(
                     children: [
+                      if (!p.isWithdrawn) ...[
+                        AppButton(
+                          text: 'انسحاب',
+                          backgroundColor: AppColors.danger,
+                          fontSize: 12.sp,
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                          onPressed: () => onWithdraw(p),
+                        ),
+                        SizedBox(width: 8.w),
+                      ],
                       if (p.receiptPath != null && p.receiptPath!.isNotEmpty) ...[
                         AppButton(
                           text: AppStrings.reviewReceipt,
@@ -124,7 +138,7 @@ class TournamentParticipantsTable extends StatelessWidget {
                         ),
                         SizedBox(width: 8.w),
                       ],
-                      if (!p.isPaymentApproved) ...[
+                      if (!p.isPaymentApproved && !p.isWithdrawn) ...[
                         AppButton(
                           text: AppStrings.cashPayment,
                           variant: AppButtonVariant.primary,
@@ -134,7 +148,7 @@ class TournamentParticipantsTable extends StatelessWidget {
                         ),
                         SizedBox(width: 8.w),
                       ],
-                      if (p.isPaymentApproved && !p.isCheckedIn) ...[
+                      if (p.isPaymentApproved && !p.isCheckedIn && !p.isWithdrawn) ...[
                         AppButton(
                           text: AppStrings.checkIn,
                           backgroundColor: AppColors.success,
@@ -152,6 +166,20 @@ class TournamentParticipantsTable extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildParticipantStatusBadge(ParticipantStatus status) {
+    switch (status) {
+      case ParticipantStatus.confirmed:
+        return StatusBadge(text: 'مؤكد', color: AppColors.success);
+      case ParticipantStatus.expired:
+        return StatusBadge(text: 'منتهي', color: AppColors.danger);
+      case ParticipantStatus.withdrawn:
+        return StatusBadge(text: 'منسحب', color: AppColors.warning);
+      case ParticipantStatus.registered:
+      default:
+        return StatusBadge(text: 'مسجل', color: AppColors.neonBlue);
+    }
   }
 
   Widget _buildPaymentBadge(ParticipantPaymentStatus status) {

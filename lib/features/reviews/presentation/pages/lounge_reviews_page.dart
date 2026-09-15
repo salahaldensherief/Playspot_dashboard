@@ -170,9 +170,9 @@ class _LoungeReviewsPageState extends State<LoungeReviewsPage> {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFB800).withValues(alpha: 0.12),
+            color: AppColors.starRating.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFFFFB800).withValues(alpha: 0.3)),
+            border: Border.all(color: AppColors.starRating.withValues(alpha: 0.3)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -180,7 +180,7 @@ class _LoungeReviewsPageState extends State<LoungeReviewsPage> {
               AppText.subHeading(
                 avgRating.toStringAsFixed(1),
                 fontSize: 36.sp,
-                color: const Color(0xFFFFB800),
+                color: AppColors.starRating,
                 fontWeight: FontWeight.bold,
               ),
               AppText.body(
@@ -225,7 +225,7 @@ class _LoungeReviewsPageState extends State<LoungeReviewsPage> {
                   children: [
                     AppText.body('$star', fontSize: 11.sp, color: AppColors.textSecondary),
                     SizedBox(width: 2.w),
-                    Icon(Icons.star_rounded, size: 12.r, color: const Color(0xFFFFB800)),
+                    Icon(Icons.star_rounded, size: 12.r, color: AppColors.starRating),
                   ],
                 ),
               ),
@@ -237,7 +237,7 @@ class _LoungeReviewsPageState extends State<LoungeReviewsPage> {
                     value: ratio,
                     minHeight: 8.h,
                     backgroundColor: AppColors.mutedBackground,
-                    color: const Color(0xFFFFB800),
+                    color: AppColors.starRating,
                   ),
                 ),
               ),
@@ -347,7 +347,7 @@ class _LoungeReviewsPageState extends State<LoungeReviewsPage> {
               AppText.body(
                 review.rating.toStringAsFixed(1),
                 fontSize: 11.sp,
-                color: const Color(0xFFFFB800),
+                color: AppColors.starRating,
                 fontWeight: FontWeight.bold,
               ),
             ],

@@ -303,7 +303,8 @@ class ClientRequestModel extends ClientRequestEntity {
     final String extStatus = (json['extension_status'] ?? 'pending').toString().toLowerCase();
     final bool isAttended = extStatus != 'pending';
 
-    final String reqId = (json['id'] ?? '').toString();
+    final String rawId = (json['id'] ?? '').toString();
+    final String reqId = rawId.startsWith('ext_') ? rawId : 'ext_$rawId';
 
     return ClientRequestModel(
       id: reqId,

@@ -2,24 +2,30 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../models/tournament_audit_log_model.dart';
 import '../models/tournament_match_model.dart';
 import '../models/tournament_model.dart';
 import '../models/tournament_participant_model.dart';
+import '../models/tournament_prize_model.dart';
+import '../models/tournament_prize_reward_model.dart';
 
 abstract class TournamentRemoteDataSource {
   Future<List<TournamentModel>> getTournaments({String? loungeId, String? status});
   Future<TournamentModel> createTournament(TournamentModel tournament);
   Future<TournamentModel> updateTournament(TournamentModel tournament);
+  Future<void> saveTournamentPrizes(String tournamentId, List<TournamentPrizeModel> prizes);
   Future<void> publishTournament(String tournamentId);
   Future<void> cancelTournament(String tournamentId, String reason);
   Future<void> deleteDraftTournament(String tournamentId);
+  Future<void> deleteTournament(String tournamentId);
 
   Future<List<TournamentParticipantModel>> getParticipants(String tournamentId);
   Future<void> approvePayment(String participantId);
   Future<void> rejectPayment(String participantId, String reason);
   Future<void> recordCashPayment(String participantId);
   Future<void> checkInParticipant(String participantId);
+  Future<void> withdrawParticipant(String participantId);
 
   Future<List<TournamentMatchModel>> drawBracket(String tournamentId);
   Future<List<TournamentMatchModel>> getMatches(String tournamentId);
@@ -56,7 +62,13 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
       var query = client.from('tournaments').select('''
         *,
         lounges(name),
-        tournament_participants(id)
+        tournament_participants(id),
+        tournament_prizes (
+          id,
+          tournament_id,
+          placement,
+          tournament_prize_rewards (*)
+        )
       ''');
 
       if (loungeId != null && loungeId.trim().isNotEmpty) {
@@ -89,11 +101,26 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
 
   @override
   Future<TournamentModel> createTournament(TournamentModel tournament) async {
-    String? createdId;
+    String? cityId = tournament.cityId;
+    if ((cityId == null || cityId.isEmpty) && tournament.loungeId != null) {
+      try {
+        final loungeData = await client.from('lounges').select('city_id').eq('id', tournament.loungeId!).maybeSingle();
+        if (loungeData != null && loungeData['city_id'] != null) {
+          cityId = loungeData['city_id'].toString();
+        }
+      } catch (e) {
+        AppLogger.error('Failed to fetch city_id for lounge', e);
+      }
+    }
+
+    if (cityId == null || cityId.isEmpty) {
+      throw Exception('Lounge city is not configured');
+    }
+
     try {
       final response = await client.rpc('create_tournament', params: {
         'p_lounge_id': tournament.loungeId,
-        'p_city_id': tournament.cityId,
+        'p_city_id': cityId,
         'p_title_ar': tournament.titleAr ?? tournament.title,
         'p_title_en': tournament.titleEn ?? tournament.title,
         'p_game_name': tournament.gameTitle,
@@ -108,6 +135,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
         'p_tournament_starts_at': (tournament.tournamentStartsAt ?? tournament.startDate).toUtc().toIso8601String(),
       });
 
+      String? createdId;
       if (response != null) {
         if (response is Map) {
           final model = TournamentModel.fromJson(Map<String, dynamic>.from(response));
@@ -116,30 +144,44 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
           createdId = response;
         }
       }
+
+      if (createdId == null || createdId.isEmpty) {
+        throw Exception('Failed to create tournament via RPC');
+      }
+
+      if (tournament.bannerUrl != null && tournament.bannerUrl!.isNotEmpty) {
+        await client.from('tournaments').update({
+          'banner_url': tournament.bannerUrl,
+        }).eq('id', createdId);
+      }
+
+      if (tournament.prizes.isNotEmpty) {
+        await saveTournamentPrizes(
+          createdId,
+          tournament.prizes.map((p) => TournamentPrizeModel.fromEntity(p)).toList(),
+        );
+      }
+
+      final finalRes = await client.from('tournaments').select('''
+        *,
+        lounges(name),
+        tournament_participants(id),
+        tournament_prizes (
+          id,
+          tournament_id,
+          placement,
+          tournament_prize_rewards (*)
+        )
+      ''').eq('id', createdId).single();
+
+      return TournamentModel.fromJson(Map<String, dynamic>.from(finalRes));
+    } on PostgrestException catch (error) {
+      AppLogger.error('create_tournament RPC error: ${error.message}', error);
+      throw Exception(error.message);
     } catch (e) {
-      debugPrint('⚠️ [TOURNAMENTS_REMOTE] create_tournament RPC error: $e, falling back to direct insert');
+      AppLogger.error('createTournament error: $e', e);
+      rethrow;
     }
-
-    if (createdId == null || createdId.isEmpty) {
-      final insertMap = tournament.toJson();
-      final inserted = await client.from('tournaments').insert(insertMap).select().single();
-      final model = TournamentModel.fromJson(Map<String, dynamic>.from(inserted));
-      createdId = model.id;
-    }
-
-    if (tournament.bannerUrl != null && tournament.bannerUrl!.isNotEmpty && createdId != null && createdId.isNotEmpty) {
-      await client.from('tournaments').update({
-        'banner_url': tournament.bannerUrl,
-      }).eq('id', createdId);
-    }
-
-    final finalRes = await client.from('tournaments').select('''
-      *,
-      lounges(name),
-      tournament_participants(id)
-    ''').eq('id', createdId!).single();
-
-    return TournamentModel.fromJson(Map<String, dynamic>.from(finalRes));
   }
 
   @override
@@ -176,13 +218,88 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
       }).eq('id', tournament.id);
     }
 
+    if (tournament.prizes.isNotEmpty) {
+      await saveTournamentPrizes(
+        tournament.id,
+        tournament.prizes.map((p) => TournamentPrizeModel.fromEntity(p)).toList(),
+      );
+    }
+
     final updatedRes = await client.from('tournaments').select('''
       *,
       lounges(name),
-      tournament_participants(id)
+      tournament_participants(id),
+      tournament_prizes (
+        id,
+        tournament_id,
+        placement,
+        tournament_prize_rewards (*)
+      )
     ''').eq('id', tournament.id).single();
 
     return TournamentModel.fromJson(Map<String, dynamic>.from(updatedRes));
+  }
+
+  @override
+  Future<void> saveTournamentPrizes(String tournamentId, List<TournamentPrizeModel> prizes) async {
+    try {
+      try {
+        final existingPrizes = await client
+            .from('tournament_prizes')
+            .select('id')
+            .eq('tournament_id', tournamentId);
+        final existingIds = (existingPrizes as List)
+            .map((p) => p['id'] as String)
+            .where((id) => id.isNotEmpty)
+            .toList();
+        if (existingIds.isNotEmpty) {
+          await client
+              .from('tournament_prize_rewards')
+              .delete()
+              .inFilter('prize_id', existingIds);
+        }
+        await client
+            .from('tournament_prizes')
+            .delete()
+            .eq('tournament_id', tournamentId);
+      } catch (delErr) {
+        debugPrint('⚠️ [TOURNAMENTS_REMOTE] delete existing prizes error: $delErr');
+      }
+
+      for (final prize in prizes) {
+        final prizeInsertRes = await client.from('tournament_prizes').insert({
+          'tournament_id': tournamentId,
+          'placement': prize.placement,
+        }).select().single();
+
+        final prizeId = prizeInsertRes['id'] as String;
+
+        if (prize.rewards.isNotEmpty) {
+          final rewardsData = prize.rewards.map((r) {
+            final rewardModel = TournamentPrizeRewardModel.fromEntity(r);
+            return {
+              'prize_id': prizeId,
+              'type': rewardModel.type.toDbString(),
+              if (rewardModel.title != null && rewardModel.title!.isNotEmpty) 'title': rewardModel.title,
+              if (rewardModel.titleAr != null && rewardModel.titleAr!.isNotEmpty) 'title_ar': rewardModel.titleAr,
+              if (rewardModel.titleEn != null && rewardModel.titleEn!.isNotEmpty) 'title_en': rewardModel.titleEn,
+              if (rewardModel.description != null && rewardModel.description!.isNotEmpty) 'description': rewardModel.description,
+              if (rewardModel.descriptionAr != null && rewardModel.descriptionAr!.isNotEmpty) 'description_ar': rewardModel.descriptionAr,
+              if (rewardModel.descriptionEn != null && rewardModel.descriptionEn!.isNotEmpty) 'description_en': rewardModel.descriptionEn,
+              if (rewardModel.value != null) 'value': rewardModel.value,
+              if (rewardModel.currency != null && rewardModel.currency!.isNotEmpty) 'currency': rewardModel.currency,
+              if (rewardModel.metadata != null) 'metadata': rewardModel.metadata,
+              if (rewardModel.deliveryStatus != null) 'delivery_status': rewardModel.deliveryStatus,
+            };
+          }).toList();
+
+          await client.from('tournament_prize_rewards').insert(rewardsData);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ [TOURNAMENTS_REMOTE] saveTournamentPrizes error: $e');
+      rethrow;
+    }
   }
 
   @override
@@ -228,6 +345,32 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
   }
 
   @override
+  Future<void> deleteTournament(String tournamentId) async {
+    try {
+      try {
+        await client.rpc('delete_draft_tournament', params: {'p_tournament_id': tournamentId});
+        return;
+      } catch (_) {}
+
+      try {
+        await client.rpc('cancel_tournament', params: {
+          'p_tournament_id': tournamentId,
+          'p_reason': 'Cancelled / Archived by admin',
+        });
+        return;
+      } catch (_) {}
+
+      await client
+          .from('tournaments')
+          .update({'status': 'cancelled'})
+          .eq('id', tournamentId);
+    } catch (e) {
+      debugPrint('⚠️ [TOURNAMENTS_REMOTE] deleteTournament error: $e');
+      rethrow;
+    }
+  }
+
+  @override
   Future<List<TournamentParticipantModel>> getParticipants(String tournamentId) async {
     try {
       final response = await client
@@ -236,8 +379,42 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
           .eq('tournament_id', tournamentId)
           .order('created_at', ascending: false);
 
-      final list = (response as List).map((json) {
-        return TournamentParticipantModel.fromJson(Map<String, dynamic>.from(json));
+      final rawList = (response as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      if (rawList.isEmpty) return [];
+
+      final userIds = rawList
+          .map((json) => json['user_id']?.toString())
+          .where((id) => id != null && id.trim().isNotEmpty)
+          .cast<String>()
+          .toSet()
+          .toList();
+
+      final Map<String, Map<String, dynamic>> profilesMap = {};
+      if (userIds.isNotEmpty) {
+        try {
+          final profilesResponse = await client
+              .from('profiles')
+              .select('id, full_name, phone, email, avatar_url')
+              .inFilter('id', userIds);
+
+          for (final p in profilesResponse as List) {
+            final pMap = Map<String, dynamic>.from(p as Map);
+            final pId = pMap['id']?.toString();
+            if (pId != null) {
+              profilesMap[pId] = pMap;
+            }
+          }
+        } catch (e) {
+          AppLogger.error('Profiles batch fetch failed for participants', e);
+        }
+      }
+
+      final list = rawList.map((json) {
+        final uId = json['user_id']?.toString();
+        if (uId != null && profilesMap.containsKey(uId)) {
+          json['profiles'] = profilesMap[uId];
+        }
+        return TournamentParticipantModel.fromJson(json);
       }).toList();
 
       // Resolve signed URLs for receipts if available
@@ -249,7 +426,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
                 .createSignedUrl(p.receiptPath!, 3600);
             return p.copyWithSignedUrl(signedUrl);
           } catch (storageErr) {
-            debugPrint('⚠️ [TOURNAMENTS_REMOTE] Failed to generate signed URL for receipt: $storageErr');
+            AppLogger.error('Failed to generate signed URL for receipt', storageErr);
           }
         }
         return p;
@@ -257,20 +434,8 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
 
       return resultWithSignedUrls;
     } catch (e) {
-      debugPrint('⚠️ [TOURNAMENTS_REMOTE] getParticipants error: $e');
-      try {
-        final plainResponse = await client
-            .from('tournament_participants')
-            .select()
-            .eq('tournament_id', tournamentId)
-            .order('created_at', ascending: false);
-
-        return (plainResponse as List).map((json) {
-          return TournamentParticipantModel.fromJson(Map<String, dynamic>.from(json));
-        }).toList();
-      } catch (_) {
-        return [];
-      }
+      AppLogger.error('getParticipants error: $e', e);
+      return [];
     }
   }
 
@@ -279,11 +444,12 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
     try {
       await client.rpc('approve_tournament_payment', params: {'p_participant_id': participantId});
     } catch (e) {
-      debugPrint('⚠️ [TOURNAMENTS_REMOTE] approve_tournament_payment RPC error: $e, fallback update');
-      await client
-          .from('tournament_participants')
-          .update({'payment_status': 'approved'})
-          .eq('id', participantId);
+      try {
+        await client.rpc('approve_tournament_payment', params: {'participant_id': participantId});
+      } catch (e2) {
+        debugPrint('⚠️ [TOURNAMENTS_REMOTE] approve_tournament_payment error: $e2');
+        rethrow;
+      }
     }
   }
 
@@ -295,24 +461,61 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
         'p_reason': reason,
       });
     } catch (e) {
-      debugPrint('⚠️ [TOURNAMENTS_REMOTE] reject_tournament_payment RPC error: $e, fallback update');
-      await client.from('tournament_participants').update({
-        'payment_status': 'rejected',
-        'rejection_reason': reason,
-      }).eq('id', participantId);
+      try {
+        await client.rpc('reject_tournament_payment', params: {
+          'participant_id': participantId,
+          'reason': reason,
+        });
+      } catch (e2) {
+        debugPrint('⚠️ [TOURNAMENTS_REMOTE] reject_tournament_payment error: $e2');
+        rethrow;
+      }
     }
   }
 
   @override
   Future<void> recordCashPayment(String participantId) async {
     try {
-      await client.rpc('record_cash_tournament_payment', params: {'p_participant_id': participantId});
-    } catch (e) {
-      debugPrint('⚠️ [TOURNAMENTS_REMOTE] record_cash_tournament_payment RPC error: $e, fallback update');
-      await client
+      final participantRes = await client
           .from('tournament_participants')
-          .update({'payment_status': 'approved'})
-          .eq('id', participantId);
+          .select('tournament_id, registration_status, payment_status, tournaments(entry_fee)')
+          .eq('id', participantId)
+          .maybeSingle();
+
+      double amount = 0.0;
+      String registrationStatus = 'unknown';
+      String paymentStatus = 'unknown';
+
+      if (participantRes != null) {
+        registrationStatus = participantRes['registration_status']?.toString() ?? participantRes['status']?.toString() ?? 'unknown';
+        paymentStatus = participantRes['payment_status']?.toString() ?? 'unknown';
+        final tData = participantRes['tournaments'];
+        if (tData is Map) {
+          amount = (tData['entry_fee'] as num?)?.toDouble() ?? 0.0;
+        }
+      }
+
+      debugPrint(
+        '[CASH_PAYMENT] '
+        'participantId=$participantId '
+        'amount=$amount '
+        'registrationStatus=$registrationStatus '
+        'paymentStatus=$paymentStatus',
+      );
+
+      await client.rpc('record_cash_tournament_payment', params: {
+        'p_participant_id': participantId,
+        'p_amount': amount,
+        'p_reference_note': 'Cash payment recorded by admin',
+      });
+    } on PostgrestException catch (e) {
+      if (e.code == 'P0001' && (e.message == 'payment_not_allowed' || e.message.contains('payment_not_allowed'))) {
+        throw Exception('Payment is not allowed: Participant registration has expired or payment deadline has passed.');
+      }
+      rethrow;
+    } catch (e) {
+      AppLogger.error('recordCashPayment failed', e);
+      rethrow;
     }
   }
 
@@ -321,11 +524,29 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
     try {
       await client.rpc('check_in_tournament_participant', params: {'p_participant_id': participantId});
     } catch (e) {
-      debugPrint('⚠️ [TOURNAMENTS_REMOTE] check_in_tournament_participant RPC error: $e, fallback update');
-      await client.from('tournament_participants').update({
-        'is_checked_in': true,
-        'checked_in_at': DateTime.now().toIso8601String(),
-      }).eq('id', participantId);
+      try {
+        await client.rpc('check_in_tournament_participant', params: {'participant_id': participantId});
+      } catch (e2) {
+        debugPrint('⚠️ [TOURNAMENTS_REMOTE] check_in_tournament_participant error: $e2');
+        rethrow;
+      }
+    }
+  }
+
+  @override
+  Future<void> withdrawParticipant(String participantId) async {
+    try {
+      await client.rpc('withdraw_from_tournament', params: {'p_participant_id': participantId});
+    } catch (e) {
+      try {
+        await client.rpc('withdraw_from_tournament', params: {'participant_id': participantId});
+      } catch (e2) {
+        debugPrint('⚠️ [TOURNAMENTS_REMOTE] withdraw_from_tournament error: $e2, falling back to update status');
+        await client
+            .from('tournament_participants')
+            .update({'registration_status': 'withdrawn'})
+            .eq('id', participantId);
+      }
     }
   }
 
@@ -391,12 +612,15 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
         'p_room_id': roomId,
       });
     } catch (e) {
-      debugPrint('⚠️ [TOURNAMENTS_REMOTE] start_tournament_match RPC error: $e, fallback update');
-      await client.from('tournament_matches').update({
-        'status': 'in_progress',
-        if (roomId != null) 'room_id': roomId,
-        'started_at': DateTime.now().toIso8601String(),
-      }).eq('id', matchId);
+      try {
+        await client.rpc('start_tournament_match', params: {
+          'match_id': matchId,
+          'room_id': roomId,
+        });
+      } catch (e2) {
+        debugPrint('⚠️ [TOURNAMENTS_REMOTE] start_tournament_match error: $e2');
+        rethrow;
+      }
     }
   }
 

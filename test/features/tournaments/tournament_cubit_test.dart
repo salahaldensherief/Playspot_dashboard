@@ -2,12 +2,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
+import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_audit_log_entity.dart';
 import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_entity.dart';
 import 'package:play_spot_dashboard/features/tournaments/domain/repositories/tournament_repository.dart';
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_cubit.dart';
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_state.dart';
 
 class MockTournamentRepository extends Mock implements TournamentRepository {}
+
+class FakeTournamentEntity extends Fake implements TournamentEntity {}
 
 void main() {
   late MockTournamentRepository mockRepository;
@@ -28,6 +32,10 @@ void main() {
     maxPlayers: 16,
   );
 
+  setUpAll(() {
+    registerFallbackValue(FakeTournamentEntity());
+  });
+
   setUp(() {
     mockRepository = MockTournamentRepository();
     cubit = TournamentCubit(mockRepository);
@@ -47,6 +55,16 @@ void main() {
     when(() => mockRepository.getParticipants(any())).thenAnswer((_) async => const Right([]));
     when(() => mockRepository.getMatches(any())).thenAnswer((_) async => const Right([]));
     when(() => mockRepository.getAuditLogs(any())).thenAnswer((_) async => const Right([]));
+    when(() => mockRepository.getTournamentAuditLogsPage(
+          tournamentId: any(named: 'tournamentId'),
+          page: any(named: 'page'),
+          pageSize: any(named: 'pageSize'),
+        )).thenAnswer((_) async => Right(PaginatedResult<TournamentAuditLogEntity>(
+          items: const [],
+          totalCount: 0,
+          page: 1,
+          pageSize: 20,
+        )));
     when(() => mockRepository.watchDisputedMatches(any())).thenAnswer((_) => const Stream.empty());
 
     await cubit.loadTournaments();
@@ -61,6 +79,16 @@ void main() {
     when(() => mockRepository.getParticipants(any())).thenAnswer((_) async => const Right([]));
     when(() => mockRepository.getMatches(any())).thenAnswer((_) async => const Right([]));
     when(() => mockRepository.getAuditLogs(any())).thenAnswer((_) async => const Right([]));
+    when(() => mockRepository.getTournamentAuditLogsPage(
+          tournamentId: any(named: 'tournamentId'),
+          page: any(named: 'page'),
+          pageSize: any(named: 'pageSize'),
+        )).thenAnswer((_) async => Right(PaginatedResult<TournamentAuditLogEntity>(
+          items: const [],
+          totalCount: 0,
+          page: 1,
+          pageSize: 20,
+        )));
     when(() => mockRepository.watchDisputedMatches(any())).thenAnswer((_) => const Stream.empty());
 
     await cubit.createTournament(tTournament);

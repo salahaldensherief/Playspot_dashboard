@@ -1,142 +1,218 @@
 # AGENT CODING RULES & ARCHITECTURAL GUIDELINES (Web Dashboard)
 
-You must strictly adhere to the following rules for ALL code generation, refactoring, and feature implementations in this **Flutter Web Dashboard** project (Flutter Web + Supabase, Clean Architecture, BLoC/Cubit).
+> **Context & Ecosystem:** > This project is a **Flutter Web Dashboard** (Flutter Web + Supabase, Clean Architecture, BLoC/Cubit).  
+> It shares architecture, domain/data-layer contracts, and conventions with a companion **Mobile App** repository. Assume all core patterns (Failure types, RPC contracts, caching, naming) must match the mobile repo, diverging **only** on platform-specific `presentation/` widgets.
 
-> This project shares its architecture, domain/data-layer contracts, and naming conventions with a companion **Mobile App** repository (governed by its own `AGENTS.md`). If you are ever unsure whether a decision here (a `Failure` type, an RPC contract, a caching strategy, a naming convention) should match the mobile side, assume it should — the two repos are meant to stay in lockstep on everything except platform-specific `presentation/` widgets.
-
-⚠️ **MANDATORY CHECKPOINT:** Before starting any new feature, task, or refactoring step, you MUST re-read and validate your code against these guidelines to ensure zero regressions, zero infinite loops, zero UI crashes, and strict architectural integrity.
+⚠️ **MANDATORY CHECKPOINT:** Before starting any new feature, task, or refactoring step, you MUST validate your code against these guidelines to ensure zero regressions, zero infinite loops, zero UI crashes, and strict architectural integrity.
 
 ---
 
 ## 1. Localization & String Handling
-- **NO HARDCODED STRINGS:** Never write raw strings directly in UI widgets, logic layers, or error messages (e.g., no `Text('Dashboard')` or `errorMessage = 'Failed'`).
-- **Use Localization Files:** All user-facing text, error messages, placeholders, and labels MUST be added to and referenced from the app's localization files (e.g., `AppLocalizations.of(context)!` or `easy_localization` / `slang` syntax used in the project).
-- **RTL/LTR Safety:** Never hardcode directional values (`left`, `right`, `EdgeInsets.only(left: ...)`). Always use directional-aware widgets/properties (`EdgeInsetsDirectional`, `Alignment.centerStart/End`) since the dashboard supports both English and Arabic.
-
-## 2. GoRouter & Provider Scoping
-- **No In-View Providers:** NEVER declare `BlocProvider` inside the `build()` method of UI View classes, inside custom widgets, or at the top of page screens.
-- **Route-Level Scope:** ALL `BlocProvider` instances MUST be provided strictly inside the `GoRoute.builder`/`pageBuilder` mapping within the `app_router.dart` configuration file.
-- **Global / Shell Scoping:** Persistent Cubits (such as `ShiftCubit`, `LoungeStatsCubit`, `DashboardCubit`) MUST be initialized at the `ShellRoute` level and accessed via `context.read<YourCubit>()` in sub-views. NEVER re-instantiate them across child routes.
-- **No Side-Effects in Creation:** NEVER trigger API requests, async fetches, or side-effects inside the `create: (context) => ...` callback of a `BlocProvider`. Instantiation must be pure.
-  - **🆕 This rule is currently violated in `app_router.dart` in at least 7 places** (`sl<CategoryCubit>()..loadCategories()`, `sl<MarketingCubit>()..loadPromotions()`, `sl<AdminManagementCubit>()..fetchAdmins()`, the `PermissionsCubit` `create:` block calling `fetchPermissions()`, etc.). These are not exceptions — they are defects to fix. **Correct pattern:** trigger the fetch from the *screen's* `initState()`/`didChangeDependencies()` after reading the already-provided Cubit (`context.read<T>().loadX()`), not from the provider's `create:` callback. This keeps `create:` pure while still loading data as soon as the screen mounts.
-- **Pure Const Views:** UI View widgets must accept `const` constructors where possible, remaining completely agnostic of how their Cubit/Bloc was created or provided.
-- **Provider Restrictions:**
-  - **No `MultiBlocProvider` / No Ad-Hoc Pyramid Nesting — Use a Shared `AppProviderScope` Helper:** Manually nesting `BlocProvider` inside `BlocProvider` inside `BlocProvider` (as currently done 8 levels deep in the main `ShellRoute` builder for `ShiftCubit → BookingCubit → LoungeCubit → RoomCubit → LoungeStatsCubit → DashboardCubit → ExtrasCubit → PermissionsCubit`) is prohibited going forward. Instead, compose `ShellRoute`-level persistent Cubits via a single shared helper widget (e.g. `MultiBlocProviderScope` in `art_core/di/provider_scope.dart`) that internally folds a `List<BlocProvider>` into a nested tree. This keeps the *call site* flat (one widget, one list) while avoiding the banned `MultiBlocProvider` API directly.
-  - **🆕 Re-evaluate Eager Shell-Level Cubit Creation:** Before adding a new Cubit to the main dashboard `ShellRoute`, ask whether it is genuinely needed on *every* page under that shell (as `PermissionsCubit` and `DashboardCubit` plausibly are) or only on specific routes (as `ShiftCubit`, `ExtrasCubit` likely are). Cubits only needed by 1–2 specific routes belong in that `GoRoute`'s own `pageBuilder`, not hoisted to the shell — hoisting them to the shell means they are constructed on every navigation under that shell, including pages that never use them.
-  - **`BlocProvider.value` Exception — Overlays Only:** `BlocProvider.value` is permitted in exactly one case: making an already-provided Cubit available inside a `showDialog`, `showModalBottomSheet`, or other `Navigator` overlay builder, since these build a widget subtree outside the calling context's tree. Usage outside this exception remains strictly prohibited.
-- **Route Guards:** Auth/role/onboarding-based route protection MUST be implemented via `GoRouter.redirect` at the router configuration level, NEVER via conditional checks scattered inside individual screens. (The existing `redirect` callback in `app_router.dart` handling auth/role/onboarding/permission gating is the correct reference pattern — keep new route guards consistent with it.)
-
-## 3. UI Engineering & Web Stability Rules (CRITICAL)
-- **Zero Force-Unwrapping (`!` Ban):** NEVER use the bang operator `!` on entity/model properties inside widgets (e.g., avoid `state.overview!.startTime!`). Always provide explicit fallback values (e.g., `overview?.cashierName ?? 'N/A'`, `overview?.startTime != null ? DateFormat.jm().format(overview!.startTime!) : '--:--'`).
-  - **🆕 Explicit Exception — `GlobalKey.currentState!`:** The idiom `_formKey.currentState!.validate()` (and equivalent `GlobalKey<FormState>.currentState!` usage) is exempt from this rule. `currentState` is guaranteed non-null whenever the callback referencing it can run (the widget is already built and attached), and forcing a null-check workaround around it produces worse code, not safer code. This exception applies **only** to `GlobalKey.currentState!` immediately after the widget is known to be mounted — it does not extend to entity/model/API-response properties.
-- **Web Layout & Hit-Testing Safety:** Never perform gesture handling or size queries during unconstrained layout passes. Ensure all parent containers inside Web Dashboards have bounded constraints or wrapped inside `Expanded` / `Flexible` to prevent `Cannot hit test a render box that has never been laid out`.
-- **Loading & Skeleton Shimmers:** Never display empty blank screens while states are loading. Always show a dedicated lightweight shimmer/skeleton loader that respects the widget's exact dimensions.
-- **Empty & Error UI States:** Every list, table, or card collection MUST render a clean, localized empty-state placeholder or error fallback widget with an explicit retry action button.
-- **CanvasKit Context Loss Protection:** Do not trigger continuous micro-animations or unbounded canvas repaints during data fetches to avoid browser WebGL crashes.
-- **🆕 Breakpoint Transitions Must Not Force a Full Tree Rebuild:** The current `ScreenUtilInit(key: ValueKey(designSize.width), ...)` pattern in `app.dart` intentionally forces a full teardown/rebuild of the entire app tree every time the browser window crosses a phone/tablet/desktop breakpoint, discarding scroll positions and local widget state in the process. This is acceptable only as a documented, deliberate trade-off for a dashboard that is rarely resized live — it must not be copied into other breakpoint-driven `LayoutBuilder`/`ScreenUtilInit` usages without the same justification. Where a widget subtree only needs to re-layout (not fully rebuild) across breakpoints, prefer `RepaintBoundary` + conditional layout logic over remounting via `ValueKey`.
-
-## 4. UI Performance, Minimal Rebuilds & When Predicates
-- **Targeted Rebuilds Only:** Wrap ONLY the specific component or leaf widget that actually needs to re-render with `BlocBuilder` or `BlocSelector`.
-- **Mandatory `buildWhen` Condition:** ALL `BlocBuilder` instances MUST explicitly define a `buildWhen` predicate to ensure the widget ONLY rebuilds when the relevant subset of state actually changes.
-- **Mandatory `listenWhen` Condition:** ALL `BlocListener` instances MUST explicitly define a `listenWhen` predicate to prevent redundant side-effects.
-- **NO AUTOMATIC RETRIES IN LISTENERS:** NEVER trigger automatic data re-fetching inside a `BlocListener` when a `failure` / `error` state is caught. Retries must strictly be user-initiated (e.g., via a "Try Again" button) to prevent infinite re-render / retry loops.
-- **No Global/Screen-Level Rebuilds:** NEVER wrap an entire Screen, Scaffold, Layout Shell, Sidebar, Navigation Bar, or Header inside a `BlocBuilder`.
-- **Aggressive Const Usage:** Use `const` constructors aggressively across all UI widgets to prevent unnecessary paint cycles on rebuild.
-- **🆕 Repository-Level Caching for Repeatedly-Visited Reference Data:** Data that rarely changes and is reloaded on every visit to a route (e.g. `CategoryCubit.loadCategories()` currently re-fetching on `super-admin/categories`, `lounge-admin/rooms`, and onboarding every single time) MUST use a Cache-First strategy at the repository level (see Section 7) instead of relying on "reload on every mount." A Cubit calling its own load method on every screen mount is not wrong by itself, but the underlying repository must serve cached data instantly and refresh in the background — not re-hit Supabase from a cold state on every navigation.
-
-## 5. State Management, Value Equality & Equatable
-- **Enum-Based States:** Use an `enum` to represent status (e.g., `enum RequestStatus { initial, loading, success, failure }`) instead of creating multiple state classes per feature.
-- **Single State Class:** Each feature Cubit must have a single immutable State class holding the status enum, data properties, and optional localized failure objects/keys.
-- **Mandatory `Equatable` on All States and Models:** ALL State classes, Entities, and Models MUST extend `Equatable` and implement `List<Object?> get props` accurately. Emitting a state with identical values must NOT trigger listeners or rebuilds.
-- **`copyWith` Pattern:** Always use `copyWith` to emit new state instances cleanly.
-- **🆕 Stream & Controller Disposal:** Any `StreamSubscription`, `TextEditingController`, Supabase Realtime channel (e.g. in `booking_realtime_datasource.dart`), or `AnimationController` created inside a Cubit/Widget MUST be explicitly cancelled/disposed in `close()`/`dispose()`. No exceptions.
-- **🆕 Idempotent Stream Subscriptions:** Any Cubit method that starts a realtime subscription (e.g. `watchBookings`) MUST cancel any existing subscription it already holds before creating a new one, and must guard against redundant re-subscription with identical parameters.
-
-## 6. Clean Architecture Purity & Directory Scaffolding (Flat Presentation)
-- **No Duplicate Data Sources / Repositories:** NEVER create duplicate files or competing folders (e.g., do NOT create both `data_source` and `data_sources`, or `repos` and `repositories`).
-- **Standard Feature Scaffolding:**
-  ```text
-  feature_name/
-  ├── data/
-  │   ├── datasources/                # Single Remote / Local Data Source files
-  │   ├── models/                     # Data transfer objects extending Entities
-  │   └── repositories/               # Concrete Repository implementations (*_repository_impl.dart)
-  ├── domain/
-  │   ├── entities/                   # Pure business models extending Equatable
-  │   ├── repositories/               # Abstract repository interfaces (*_repository.dart)
-  │   └── usecases/                   # Individual callable use case classes
-  └── presentation/
-      ├── feature_screen.dart         # Direct Screen / View file (NO screens/ subfolder)
-      ├── feature_cubit.dart          # Direct Cubit file (NO cubit/ subfolder)
-      ├── feature_state.dart          # Direct State file (NO cubit/ subfolder)
-      └── widgets/                    # Dedicated folder strictly for reusable private UI widgets
-  ```
-- **Strict Entity Location:** Entities MUST reside in `domain/entities/`, NEVER inside `data/entities/`.
-- **One Class Per File:** Every file must contain EXACTLY ONE class.
-- **🆕 Current Compliance Status (for reference):** 13 of 16 features already follow this scaffolding correctly (`auth`, `bookings`, `lounges`, `rooms`, `onboarding`, `users`, `analytics`, `marketing`, `payouts`, `kyc`, `loyalty`, `shifts`, `permissions`) — this is the reference standard, keep matching it. `categories` and `staff` still use the old flat pattern (`data/entities/`, `data/data_source/remote/`, `data/repos/`, no `domain/` layer at all). The next non-trivial change to either of those two features MUST migrate it to the full 3-layer scaffolding (introduce `domain/entities`, `domain/repositories`, `domain/usecases`, move the repository implementation under `data/repositories/`) as part of that change, rather than adding to the old structure.
-
-## 7. Supabase Queries & Database Safety Rules
-- **No Nested / Recursive Table Joins:** In Remote Data Sources, do NOT perform joins that traverse recursive foreign keys (e.g., avoid `.select('*, profiles(full_name)')` if `profiles` has circular relations). Perform flat, indexed selects or delegate to dedicated RPC functions.
-- **Column Verification:** Always verify exact column names before executing queries (e.g., do NOT guess `user_id` when the schema uses `cashier_id` or `staff_user_id`).
-- **Safe RPC Over Complex Selects:** For aggregate stats, dashboard overviews, or complex multi-table checks, always call dedicated `SECURITY DEFINER` Postgres functions with `SET search_path = public` and `SET row_security = off` to eliminate `PostgreSQL 54001: stack depth limit exceeded` recursion errors.
-- **Location Updates Isolation:** Functions that update hardware/device state (e.g., GPS location, device info) MUST be called exactly once during bootstrap/login with an explicit execution flag. NEVER trigger updates inside `build()` methods or reactive listeners.
-- **🆕 RLS Awareness (elevated priority):** Never assume a table is protected — every Supabase table accessed from this dashboard MUST have Row Level Security policies verified/documented, especially since the client uses the public anon key (see Section 14). Never bypass RLS from the client using the service role key.
-- **🆕 Pagination for Large Datasets:** Any list-returning query expected to grow beyond ~50 rows (bookings, KYC reviews, staff, loyalty transactions) MUST use `.range()`-based pagination. `BookingRepository.getBookings` already does this correctly (`limit`/`offset` params) — use it as the reference pattern for other list endpoints.
-- **🆕 Cache-First for Reference/Config Data:** Repositories serving data that changes infrequently but is read on every navigation (categories, cities, activity types, permission definitions) MUST implement a Cache-First strategy: emit cached data instantly, refresh from Supabase in the background, update the cache, and emit fresh state. This directly addresses the `CategoryCubit` re-fetch-on-every-visit issue noted in Section 4.
-
-## 8. Feature-Level Dependency Injection (GetIt)
-- **Modular DI:** Every feature MUST have its own dedicated DI setup file (e.g., `auth_di.dart`, `shifts_di.dart`).
-- **Explicit Type Registration:** Always register dependencies via their abstract interfaces (e.g., `sl.registerLazySingleton<ShiftRepository>(() => ShiftRepositoryImpl(sl()))`).
-- **No Dead Registrations:** When removing or refactoring duplicate data sources/repositories, immediately clean up and sync the feature DI file and `injection_container.dart`.
-
-## 9. Execution Discipline
-- **One Micro-Step at a Time:** Execute refactoring or creation ONE MICRO-STEP at a time to maintain context and code quality.
-- **Verify Existing Code First:** Before creating any new file, inspect existing directories to prevent duplicating classes that already exist under slightly different names.
-- **No Unsolicited Scope Changes:** Do not modify unrelated files or change project structure unless explicitly instructed.
-- **🆕 No Unused Constructor Parameters or Fields:** If a class declares a constructor parameter or a field, it MUST be read/used somewhere in that class's logic. An accepted-but-unused parameter is a defect, not a stylistic nitpick.
-
-## 🆕 10. Design Tokens & Component Reuse (MANDATORY)
-- **Design Tokens Only:** Colors, spacing, radii, font sizes, and shadows MUST always come from the shared theme/design-tokens file (`AppColors` and equivalents in `art_core/theme/`). Raw hex codes (`Color(0xFF...)`) or inline `TextStyle(fontSize: 14)` are forbidden inside feature code. **This is already well-followed in this codebase (zero raw hex colors found in `lib/features/`) — keep it that way as new features are added.**
-- **Shared Component Reuse:** Any UI widget, card, data-table row, badge, dialog, or form pattern that appears in more than one feature MUST be extracted to `art_core/widgets/`. Two occurrences is the trigger, not three.
-- **Single Standardized Button/Table Components:** All buttons MUST use the shared `AppButton` (`art_core/widgets/app_button.dart`). All tabular data MUST use a shared data-table component rather than each feature (bookings, staff, users, KYC) reimplementing its own table layout independently — audit `bookings_data_table.dart` and similar per-feature table widgets for consolidation opportunities.
-
-## 11. Error Handling & Result Pattern
-- **Unified Failure Type:** All repositories return `Either<Failure, T>` using the shared `Failure` hierarchy in `core/error/failures.dart` (`ServerFailure`, `CacheFailure`, `NetworkFailure`, `AuthFailure`). **This is already correctly implemented project-wide — no `Either<String, T>` or `Left(e.toString())` instances found.** Keep all new repository methods consistent with this pattern; do not regress to string-based errors.
-- **Exception-to-Failure Mapping:** Data sources are the ONLY layer allowed to catch raw exceptions (`PostgrestException`, `SocketException`, `AuthException`, etc.) and must map them to the appropriate `Failure` subtype before they cross into the Repository layer.
-- **Localized Failure Messages:** Every `Failure` must carry a localization key (not a raw English string) so the presentation layer can render it via the localization system from Section 1.
-
-## 🆕 12. Logging & Debugging Discipline
-- **No `print()` in Production Code:** `print()` calls currently exist in `permissions_cubit.dart`, `permission_item_model.dart`, `permissions_remote_data_source.dart`, and `loyalty_remote_data_source.dart` (10 occurrences total, several tagged `'DEBUG: ...'`). These must be removed and replaced with the project's shared `AppLogger` using proper log levels (`info`, `warning`, `error`), gated by `kDebugMode` where appropriate.
-- **Consolidate `debugPrint` Usage:** 53 `debugPrint()` calls currently exist scattered across features with no consistent format or log level. Route all of these through a single `AppLogger` service so logging can be filtered, disabled in production builds, or redirected to a monitoring service later without touching every call site.
-- **No Sensitive Data in Logs:** Never log tokens, passwords, full user objects, or raw Supabase auth sessions, even at debug level.
-- **Clean Before Commit:** Any temporary debug logging added during a task MUST be removed before considering the task complete.
-
-## 13. Testing Requirements
-- **Usecases Must Be Testable & Tested:** Every Usecase MUST have at least one corresponding unit test covering the success path and at least one failure path, using mocked Repository interfaces (`mocktail`/`mockito`).
-- **Cubit Testing:** Every Cubit MUST have `bloc_test` coverage for its primary state transitions (initial → loading → success/failure), using a mocked Usecase layer.
-- **No Live Network Calls in Tests:** Tests MUST NEVER hit the real Supabase project. All data sources are mocked at the Repository or Datasource boundary.
-- **Widget Tests for Shared Components:** Any component under `art_core/widgets/` reused in 3+ places MUST include a basic widget test verifying it renders without exceptions.
-
-## 🆕 14. Security & Configuration
-- **No Hardcoded Secrets:** The Supabase URL and anon key are currently hardcoded directly in `core/di/di.dart`. Even though the anon key is designed to be client-visible (RLS-protected), it MUST be injected via `--dart-define` or a build-time config, not committed to source — this decouples staging/production environments and avoids permanently baking a specific project's key into git history.
-- **RLS Verification Is Non-Negotiable Given Public Key Exposure:** Because this repository's anon key is committed to version control, treat every table it can reach as if its RLS policies will be read and tested by an outside party — verify and document RLS policies for every table before shipping a new data source that touches it.
-- **Client Never Uses Service Role Key:** The Supabase service role key must never appear anywhere in client-side (Flutter Web) code, under any circumstance.
-- **Input Validation Before Mutation:** Any form or input feeding a Supabase write MUST be validated on the client before the mutation call is dispatched.
-
-## 🆕 15. Naming Conventions
-- **Files:** `snake_case.dart` matching the primary class name (e.g., `booking_repository_impl.dart` → `BookingRepositoryImpl`).
-- **Classes:** `PascalCase`, suffixed by role — `*RepositoryImpl`, `*RemoteDataSource`, `*Usecase`, `*Cubit`, `*State`.
-- **Usecase Naming:** Verb-first, feature-scoped (e.g., `ConfirmCashPayment`, `UpdateBookingStatus` — the existing `bookings/domain/usecases/` files are the correct reference pattern for naming).
-- **No Ambiguous/Abbreviated Names:** Avoid unclear shorthand. Names must describe intent, not implementation detail.
-
-## 🆕 16. Problem Diagnosis & Root Cause Verification Before Execution
-- **MANDATORY DIAGNOSIS FIRST:** Before attempting any bug fix, confirm whether the root cause is Frontend (Flutter UI, BLoC state, router) or Backend (Supabase schema, RLS, RPC functions) by tracing logs and network/database responses first.
-- **Clear Root Cause Explanation:** Present diagnostic findings clearly before applying or proposing any solution.
-
-## 🆕 17. Dependency Declaration Integrity
-- **Explicit `pubspec.yaml` Declaration:** Any package imported and used directly in Dart source MUST be explicitly listed under `dependencies`/`dev_dependencies` in `pubspec.yaml`, never relied upon only as a transitive dependency resolved via `pubspec.lock`.
-- **Watch the `dependency_overrides` block:** The current `dependency_overrides: intl: any` is a broad override with no version constraint — this should carry a comment explaining why it's needed (likely a transitive version conflict) so it isn't silently forgotten or copy-pasted into unrelated projects.
+* **No Hardcoded Strings:** Never write raw strings directly in UI widgets, logic layers, or error messages (e.g., no `Text('Dashboard')` or `errorMessage = 'Failed'`).
+* **Localization Source of Truth:** All user-facing text, error messages, placeholders, and labels MUST be referenced from localization files (e.g., `AppLocalizations.of(context)!`).
+* **RTL/LTR Safety:** Never hardcode directional values (`left`, `right`, `EdgeInsets.only(left: ...)`). Always use directional-aware properties (`EdgeInsetsDirectional`, `AlignmentDirectional.centerStart/centerEnd`).
 
 ---
 
-**Cross-Repo Consistency Note:** This dashboard is currently **ahead of** the mobile app on: Clean Architecture completeness (13/16 vs 0/1 features with a full `domain/` layer), error handling (`Either<Failure,T>` fully adopted vs `Either<String,T>` in mobile), and design-token discipline (zero raw hex colors in features vs several in mobile). When updating either repo's rules or code, treat this dashboard's `bookings` feature and `core/error/failures.dart` as the reference implementation to bring the mobile app up to, rather than re-deriving the pattern independently on the mobile side.
+## 2. GoRouter & Provider Scoping
+* **No In-View Providers:** NEVER declare `BlocProvider` inside the `build()` method, custom widgets, or screen files.
+* **Route-Level Scope:** ALL `BlocProvider` instances MUST be provided strictly inside `GoRoute.builder` or `pageBuilder` within `app_router.dart`.
+* **Global / Shell Scoping:** Persistent Cubits (e.g., `ShiftCubit`, `LoungeStatsCubit`, `DashboardCubit`) MUST be initialized at the `ShellRoute` level and read via `context.read<T>()`. NEVER re-instantiate them in child routes.
+* **No Side-Effects in Creation:** Instantiation inside `create: (context) => ...` must remain purely synchronous. NEVER call API triggers or methods with side-effects inside `create:`.
+  * *Violation Fix:* Do not call `sl<X>()..loadX()` inside `app_router.dart`. Trigger fetching inside the target screen's `initState()` or `didChangeDependencies()` after mounting.
+* **Provider Tree Restrictions:**
+  * **No Manual Pyramid Nesting:** Avoid deep manual nesting of `BlocProvider`s. Use a shared tree-folding helper (e.g., `AppProviderScope` or `MultiBlocProviderScope` in `art_core/di/provider_scope.dart`).
+  * **Eager Shell Cubit Audit:** Only hoist Cubits to `ShellRoute` if used globally across all sub-routes. Route-specific Cubits belong exclusively in their respective `GoRoute.pageBuilder`.
+  * **`BlocProvider.value` Scope:** Permitted **exclusively** when passing an existing Cubit into a `showDialog`, `showModalBottomSheet`, or overlay context.
+* **Route Guards:** Auth, role, and onboarding protection MUST be executed strictly inside `GoRouter.redirect`, never via conditional UI branching inside screens.
+
+---
+
+## 3. UI Engineering & Web Stability (CRITICAL)
+* **Zero Force-Unwrapping (`!` Ban):** NEVER use `!` on nullable model/entity properties. Always provide explicit fallbacks (e.g., `overview?.cashierName ?? 'N/A'`).
+  * *Exemption:* `_formKey.currentState!.validate()` (and equivalent `GlobalKey<FormState>` operations) is explicitly allowed when the widget is mounted.
+* **Web Layout & Hit-Testing Safety:** Ensure all parent containers inside responsive/web dashboard views have bounded constraints or are wrapped in `Expanded`/`Flexible` to prevent `Cannot hit test a render box that has never been laid out`.
+* **Loading Skeletons:** Never show blank screens during asynchronous calls. Render dedicated shimmer skeletons matching the target component dimensions.
+* **Empty & Error UI States:** Every list, table, or card collection MUST handle empty and error states explicitly with localized messages and a retry action button.
+* **CanvasKit Context Protection:** Do not run unbounded micro-animations or infinite canvas repaints to prevent browser WebGL context loss crashes.
+* **Breakpoint Transitions:** Avoid rebuilding the full application tree on window resize (e.g., avoid `ScreenUtilInit(key: ValueKey(...))`). Use `LayoutBuilder`, `RepaintBoundary`, and responsive breakpoints without tearing down the widget tree.
+
+---
+
+## 4. UI Performance & Minimal Rebuilds
+* **Targeted Rebuilds Only:** Wrap only the specific leaf widget requiring updates with `BlocBuilder` or `BlocSelector`.
+* **Mandatory Predicates:**
+  * Every `BlocBuilder` MUST implement `buildWhen`.
+  * Every `BlocListener` MUST implement `listenWhen`.
+* **No Automatic Retries in Listeners:** NEVER re-fetch data automatically inside a `BlocListener` upon error. Retries must be strictly user-driven.
+* **No Screen-Level Rebuilds:** NEVER wrap a Scaffold, Screen Shell, Sidebar, or App Bar in a global `BlocBuilder`.
+* **Aggressive Const Usage:** Enforce `const` constructors on all immutable UI subtrees.
+
+---
+
+## 5. State Management & Value Equality
+* **Enum-Based Status:** Model request cycles with an enum (e.g., `RequestStatus { initial, loading, success, failure }`) within a single immutable state class per feature.
+* **Mandatory Equatable:** All State classes, Entities, and Models MUST extend `Equatable` and implement `List<Object?> get props`. Emitting identical data must not trigger rebuilds.
+* **State Emission:** Always use `copyWith` to generate next-state instances.
+* **Disposal Discipline:** Every `StreamSubscription`, `TextEditingController`, Supabase Realtime channel, and `AnimationController` MUST be cancelled/disposed in `close()` or `dispose()`.
+* **Idempotent Realtime Subscriptions:** Before opening a new Supabase realtime subscription inside a Cubit, explicitly cancel and clean up any existing subscription.
+
+---
+
+## 6. Clean Architecture Scaffolding (Flat Presentation)
+* **Standard Directory Structure:**
+  ```text
+  feature_name/
+  ├── data/
+  │   ├── datasources/        # Remote & Local data sources
+  │   ├── models/             # Data Transfer Objects (DTOs extending Entities)
+  │   └── repositories/       # Repository implementations (*_repository_impl.dart)
+  ├── domain/
+  │   ├── entities/           # Pure business models extending Equatable
+  │   ├── repositories/       # Abstract repository contracts (*_repository.dart)
+  │   └── usecases/           # Single-responsibility callable use cases
+  └── presentation/
+      ├── feature_screen.dart # Screen / Page entry point (NO screens/ subfolder)
+      ├── feature_cubit.dart  # Business logic Cubit (NO cubit/ subfolder)
+      ├── feature_state.dart  # State definition (NO cubit/ subfolder)
+      └── widgets/            # Reusable private feature widgets
+Strict Entity Isolation: Entities MUST live in domain/entities/, never in data/.
+
+One Class Per File: Every file must contain exactly one public class.
+
+Migration Rule: When modifying legacy features lacking full Clean Architecture (categories, staff), migrate them into the standard 3-layer structure as part of the PR.
+
+7. Supabase & Database Integrity
+   No Recursive Foreign Joins: Avoid deep recursive joins in queries. Use indexed, flat selects or delegate complex queries to Postgres RPC functions.
+
+Column Name Verification: Verify exact schema column names before composing queries (e.g., distinguish staff_user_id from user_id).
+
+Security Definer RPCs: For aggregations, complex stats, or multi-table mutations, use SECURITY DEFINER Postgres functions with SET search_path = public and SET row_security = off to eliminate PostgreSQL recursion errors.
+
+One-Time Bootstrap Updates: Device and hardware state updates (e.g., geolocation, system metadata) must execute exactly once per session via a guarded bootstrap call.
+
+Enforce RLS: Every accessed table MUST have Row Level Security enabled and verified. Never bypass RLS using the service role key on the client.
+
+Mandatory Pagination: Queries expected to return > 50 rows must use .range(from, to) pagination.
+
+Cache-First for Reference Data: Infrequently changing reference data (categories, roles, system flags) must be served from local cache first and refreshed in the background.
+
+8. Dependency Injection (GetIt)
+   Feature DI Modules: Each feature must register its dependencies via an isolated module file (e.g., auth_di.dart, shifts_di.dart).
+
+Interface Registration: Always register implementations against their abstract contracts:
+
+Dart
+sl.registerLazySingleton<ShiftRepository>(() => ShiftRepositoryImpl(sl()));
+Zero Dead Registrations: When removing or refactoring classes, immediately prune their registrations from DI containers.
+
+9. Design Tokens & Component Reuse
+   Strict Token Discipline: Colors, typography, spacing, border radii, and shadows must originate exclusively from AppColors and shared design tokens (art_core/theme/). Zero raw Color(0x...) or inline TextStyle in feature code.
+
+Two-Occurrence Rule (UI): If any UI pattern, card, table row, badge, or modal appears in 2 or more places, it MUST be extracted to art_core/widgets/.
+
+Standardized Controls: All buttons must use AppButton. All tabular data must use the shared core data-table component.
+
+10. Error Handling & Result Pattern
+    Unified Failure Hierarchy: All repositories must return Either<Failure, T> using standard Failure classes (core/error/failures.dart). Never return raw Strings or throw untyped exceptions into the domain layer.
+
+Boundary Mapping: Data sources are the only layer catching raw exceptions (PostgrestException, SocketException, AuthException), converting them to concrete Failure models before reaching the repository.
+
+Localized Failure Keys: Every Failure must contain a localization translation key, never a hardcoded English error string.
+
+11. Logging & Observability
+    No Production print(): Do not use print() or untagged debugPrint(). Use the centralized AppLogger with appropriate levels (info, warning, error).
+
+Zero Sensitive Data Logging: Never log auth tokens, passwords, session secrets, or full PII payload objects.
+
+Clean Commits: Strip all temporary debugging instrumentation before committing code.
+
+12. Testing Requirements
+    Usecase Testing: Every Usecase must have unit test coverage for success and failure paths using mocked repositories (mocktail/mockito).
+
+Cubit State Testing: Every Cubit must have bloc_test suites covering full state transitions (initial → loading → success/failure).
+
+Zero Network Tests: Tests must run fully offline using mocked data sources.
+
+Component Testing: Shared widgets under art_core/widgets/ reused across 3+ features must include basic widget rendering tests.
+
+13. Security & Environment Configuration
+    No Hardcoded Secrets: Client keys (Supabase URL, Anon Key) must be injected via compile-time variables (--dart-define), never hardcoded in git.
+
+Service Role Isolation: The Supabase service_role secret must NEVER exist in client-side code.
+
+Client-Side Validation: All forms and payloads must pass client validation before dispatching mutations to the backend.
+
+14. Naming Conventions
+    Files: snake_case.dart reflecting the primary class name.
+
+Classes: PascalCase with structural role suffix (*RepositoryImpl, *RemoteDataSource, *Usecase, *Cubit, *State).
+
+Usecases: Verb-first, feature-scoped naming (e.g., ConfirmCashPayment, UpdateBookingStatus).
+
+Self-Explanatory Identifiers: Avoid cryptic abbreviations. Variable and function names must denote explicit intent.
+
+15. Problem Diagnosis Before Execution
+    Root Cause First: Before touching code for any bug fix, verify whether the fault lies in Frontend state/routing or Backend RLS/Postgres schema via network traces and server logs.
+
+Explicit Diagnostic Summaries: State the root cause clearly before proposing or applying code modifications.
+
+16. Dependency Declaration Integrity
+    Explicit Dependencies: Any package imported into code MUST be explicitly listed under dependencies or dev_dependencies in pubspec.yaml, never relied upon as a transitive artifact.
+
+Documented Overrides: Any declaration inside dependency_overrides must contain an inline comment detailing the upstream conflict requiring it.
+
+17. Single Responsibility, File Size & Self-Documenting Code
+    17.1 Single Responsibility Principle (SRP)
+    One Reason to Change: Classes, Cubits, functions, and widgets must fulfill a single distinct responsibility. If describing its function requires "and", decompose it.
+
+Cubits Orchestrate, Not Implement: Cubits call use cases, map results, and emit states. They must contain zero data parsing, string formatting, or validation logic.
+
+Widgets Render, Not Decide: Widget build() methods must not contain business logic or raw data transformations. Compute presentation data inside the State or Entity getters.
+
+Extract Over Flags: Do not add boolean switch parameters to alter a function's core operation. Create distinct, dedicated functions instead.
+
+17.2 Size Constraints & Decomposition
+Method Length: Target ~25 lines; hard cap at 40 lines (excluding braces and switch statements).
+
+File Length: Target < 200 lines; hard cap at 300 lines (excluding imports and .g.dart/.freezed.dart generated sections).
+
+Widget Tree Decomposition: Any build() method exceeding 60–80 lines or nesting deeper than 4 levels MUST be extracted into named private StatelessWidget classes (class _ItemCard extends StatelessWidget), not private helper methods (Widget _buildCard()).
+
+One Class Per File Absolute: Every model, state, and utility class requires its own file. Private enums are the only exception if strictly used within that file.
+
+17.3 Self-Documenting Code Standards
+Rename Instead of Comment: Replace explanatory comments by extracting logic into descriptively named variables and functions (e.g., extract an if expression to bool canUserCancelBooking(Booking b)).
+
+No Code-Restating Comments: Comments simply rephrasing syntax are forbidden.
+
+Permitted Comments (Narrow Exceptions):
+
+Non-obvious regular expressions (with sample inputs/outputs).
+
+Upstream bug workarounds (citing issue tracking URLs).
+
+Required copyright/license notices.
+
+Line-specific // ignore: lint_rule_name declarations paired with a justification.
+
+No Dead Code: Commented-out code and untracked // TODO items are strictly prohibited.
+
+17.4 DRY Logic & Project-Wide Consistency
+Two-Occurrence Rule (Logic): If non-trivial logic (validation, transformations, currency math) appears in 2 places, extract it to core/utils/.
+
+Universal Domain Vocabulary: Maintain identical naming for domain concepts across the application (e.g., standardise on loungeId across all files; do not mix lounge_id and currentLoungeId).
+
+Zero Parallel Implementations: Check for existing use cases, utilities, and RPC wrappers before writing new ones.
+
+17.5 Readability & Control Flow
+Guard Clauses: Use early returns to maintain shallow indent levels. Nesting depth must not exceed 3 levels.
+
+No Parameter Soup: Functions requiring > 2 boolean arguments must be refactored to use a configuration class or an enum.
+
+Positive Boolean Naming: Name boolean properties for what true represents (e.g., isEnabled, never isNotDisabled).
+
+18. Cross-Repository Alignment
+    The Web Dashboard is the reference benchmark for Clean Architecture completeness, Either<Failure, T> error modeling, and strict Design Token usage.
+
+Keep domain contracts, usecase interfaces, and failure classes synchronized in lockstep with the companion Mobile App repository.

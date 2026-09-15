@@ -9,6 +9,7 @@ import '../../../art_core/widgets/app_dialog.dart';
 import '../../../art_core/widgets/section_container.dart';
 import '../../../art_core/widgets/status_badge.dart';
 import '../../../core/responsive/responsive.dart';
+import '../../auth/presentation/login/login_cubit.dart';
 import '../domain/entities/tournament_entity.dart';
 import 'tournament_cubit.dart';
 import 'tournament_state.dart';
@@ -17,6 +18,7 @@ import 'widgets/dispute_resolution_dialog.dart';
 import 'widgets/tournament_bracket_view.dart';
 import 'widgets/tournament_form_dialog.dart';
 import 'widgets/tournament_participants_table.dart';
+import 'widgets/tournament_prizes_dialog.dart';
 
 class TournamentsScreen extends StatefulWidget {
   const TournamentsScreen({super.key});
@@ -39,7 +41,9 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TournamentCubit>().loadTournaments();
+      final loungeId = context.read<LoginCubit>().state.userLounge?.id ??
+          context.read<LoginCubit>().state.user?.loungeId;
+      context.read<TournamentCubit>().loadTournaments(loungeId: loungeId);
     });
   }
 
@@ -50,9 +54,12 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
   }
 
   void _openCreateDialog() {
+    final activeLoungeId = context.read<LoginCubit>().state.userLounge?.id ??
+        context.read<LoginCubit>().state.user?.loungeId;
     showDialog(
       context: context,
       builder: (ctx) => TournamentFormDialog(
+        loungeId: activeLoungeId,
         onSubmit: (entity) {
           context.read<TournamentCubit>().createTournament(entity);
         },
@@ -67,6 +74,18 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
         tournament: tournament,
         onSubmit: (entity) {
           context.read<TournamentCubit>().updateTournament(entity);
+        },
+      ),
+    );
+  }
+
+  void _openPrizesDialog(TournamentEntity tournament) {
+    showDialog(
+      context: context,
+      builder: (ctx) => TournamentPrizesDialog(
+        tournament: tournament,
+        onSave: (prizes) {
+          context.read<TournamentCubit>().saveTournamentPrizes(tournament.id, prizes);
         },
       ),
     );
@@ -132,6 +151,20 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
 
     if (confirmed == true && mounted) {
       context.read<TournamentCubit>().deleteDraftTournament(tournament.id);
+    }
+  }
+
+  void _confirmDelete(TournamentEntity tournament) async {
+    final confirmed = await AppDialog.confirm(
+      context: context,
+      title: AppStrings.deleteTournament,
+      message: '${AppStrings.deleteTournamentConfirm} "${tournament.title}"؟',
+      confirmText: AppStrings.deleteTournament,
+      confirmColor: AppColors.danger,
+    );
+
+    if (confirmed == true && mounted) {
+      context.read<TournamentCubit>().deleteTournament(tournament.id);
     }
   }
 
@@ -204,7 +237,11 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                           text: AppStrings.refresh,
                           variant: AppButtonVariant.outlined,
                           icon: Icons.refresh,
-                          onPressed: () => context.read<TournamentCubit>().loadTournaments(),
+                          onPressed: () {
+                            final loungeId = context.read<LoginCubit>().state.userLounge?.id ??
+                                context.read<LoginCubit>().state.user?.loungeId;
+                            context.read<TournamentCubit>().loadTournaments(loungeId: loungeId);
+                          },
                         ),
                         SizedBox(width: 12.w),
                         AppButton(
@@ -216,7 +253,14 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                     ),
                   ],
                 ),
-                SizedBox(height: 24.h),
+                SizedBox(height: 16.h),
+                if (state.status == TournamentCubitStatus.loading) ...[
+                  LinearProgressIndicator(
+                    color: AppColors.neonBlue,
+                    backgroundColor: AppColors.mutedBackground,
+                  ),
+                  SizedBox(height: 16.h),
+                ],
 
                 // Prominent Open Disputes Alert Banner
                 if (disputedCount > 0) ...[
@@ -300,7 +344,16 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                         ),
                         if (selected != null) ...[
                           _buildTournamentStatusBadge(selected.status),
-                          SizedBox(width: 12.w),
+                          SizedBox(width: 8.w),
+                          AppButton(
+                            text: AppStrings.managePrizes,
+                            icon: Icons.emoji_events_outlined,
+                            variant: AppButtonVariant.outlined,
+                            fontSize: 12.sp,
+                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                            onPressed: () => _openPrizesDialog(selected),
+                          ),
+                          SizedBox(width: 8.w),
                           if (selected.isDraft) ...[
                             AppButton(
                               text: AppStrings.publishTournament,
@@ -336,6 +389,14 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                               onPressed: () => context.read<TournamentCubit>().awardPrizes(selected.id),
                             ),
                           ],
+                          SizedBox(width: 8.w),
+                          AppButton(
+                            text: AppStrings.deleteTournament,
+                            variant: AppButtonVariant.danger,
+                            fontSize: 12.sp,
+                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                            onPressed: () => _confirmDelete(selected),
+                          ),
                         ],
                       ],
                     ),
@@ -389,6 +450,7 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                         onRejectPayment: (p, reason) => context.read<TournamentCubit>().rejectPayment(p.id, reason),
                         onRecordCash: (p) => context.read<TournamentCubit>().recordCashPayment(p.id),
                         onCheckIn: (p) => context.read<TournamentCubit>().checkInParticipant(p.id),
+                        onWithdraw: (p) => context.read<TournamentCubit>().withdrawParticipant(p.id),
                       ),
                       // Tab 2: Bracket Tree (Lazy Built)
                       _tabController.index == 2
@@ -424,7 +486,7 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
         title: AppStrings.tournaments,
         children: [
           Center(
-            child: Text(AppStrings.noPromotions, style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp)),
+            child: Text(AppStrings.noTournaments, style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp)),
           ),
         ],
       );
@@ -459,16 +521,74 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                 Text('${AppStrings.gameTitle}: ${t.gameTitle ?? "eSports"} | ${AppStrings.entryFee}: ${t.entryFee} | ${AppStrings.prizePool}: ${t.prizePool}', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
                 SizedBox(height: 4.h),
                 Text('${AppStrings.maxPlayers}: ${t.registeredCount} / ${t.maxPlayers} (${AppStrings.treeSize}: ${t.treeSize})', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
+                if (t.prizes.isNotEmpty) ...[
+                  SizedBox(height: 8.h),
+                  Wrap(
+                    spacing: 8.w,
+                    runSpacing: 4.h,
+                    children: t.prizes.map((p) {
+                      final rewardsSummary = p.rewards.map((r) {
+                        final icon = r.isTrophy
+                            ? '🏆'
+                            : r.isCash
+                                ? '💵 ${r.value ?? ""} ${r.currency ?? "EGP"}'
+                                : r.isPoints
+                                    ? '⭐ ${r.value ?? ""} pts'
+                                    : r.isVoucher
+                                        ? '🎟️ ${r.value ?? ""}%'
+                                        : '🎁';
+                        final title = r.titleAr ?? r.title ?? icon;
+                        return '$title ($icon)';
+                      }).join(' + ');
+
+                      final placementLabel = p.placement == 1
+                          ? '🥇'
+                          : p.placement == 2
+                              ? '🥈'
+                              : p.placement == 3
+                                  ? '🥉'
+                                  : '#${p.placement}';
+
+                      return Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: AppColors.mutedBackground,
+                          borderRadius: BorderRadius.circular(6.r),
+                          border: Border.all(color: AppColors.borderDefault.withAlpha(80)),
+                        ),
+                        child: Text(
+                          '$placementLabel $rewardsSummary',
+                          style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
               ],
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 AppButton(
+                  text: AppStrings.managePrizes,
+                  icon: Icons.emoji_events_outlined,
+                  variant: AppButtonVariant.outlined,
+                  fontSize: 12.sp,
+                  onPressed: () => _openPrizesDialog(t),
+                ),
+                SizedBox(width: 8.w),
+                AppButton(
                   text: AppStrings.edit,
                   variant: AppButtonVariant.outlined,
                   fontSize: 12.sp,
                   onPressed: () => _openEditDialog(t),
+                ),
+                SizedBox(width: 8.w),
+                AppButton(
+                  text: AppStrings.deleteTournament,
+                  variant: AppButtonVariant.danger,
+                  fontSize: 12.sp,
+                  onPressed: () => _confirmDelete(t),
                 ),
                 SizedBox(width: 8.w),
                 AppButton(
@@ -595,7 +715,6 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
       case TournamentStatus.cancelled:
         return StatusBadge(text: AppStrings.cancelled, color: AppColors.danger);
       case TournamentStatus.draft:
-      default:
         return StatusBadge(text: AppStrings.pending, color: AppColors.warning);
     }
   }

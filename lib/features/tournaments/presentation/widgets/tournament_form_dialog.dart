@@ -12,14 +12,18 @@ import '../../../../art_core/widgets/app_text_field.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../domain/entities/tournament_entity.dart';
+import '../../domain/entities/tournament_prize_entity.dart';
+import 'tournament_prizes_dialog.dart';
 
 class TournamentFormDialog extends StatefulWidget {
   final TournamentEntity? tournament;
+  final String? loungeId;
   final Function(TournamentEntity) onSubmit;
 
   const TournamentFormDialog({
     super.key,
     this.tournament,
+    this.loungeId,
     required this.onSubmit,
   });
 
@@ -48,6 +52,7 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
   DateTime _checkInClosesAt = DateTime.now().add(const Duration(days: 7, hours: -1));
   DateTime _startDate = DateTime.now().add(const Duration(days: 7));
   DateTime _endDate = DateTime.now().add(const Duration(days: 8));
+  List<TournamentPrizeEntity> _prizes = [];
 
   @override
   void initState() {
@@ -69,6 +74,7 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
       _registrationClosesAt = t.registrationClosesAt ?? t.registrationDeadline;
       _checkInOpensAt = t.checkInOpensAt ?? t.registrationDeadline.add(const Duration(hours: 1));
       _checkInClosesAt = t.checkInClosesAt ?? t.startDate.subtract(const Duration(hours: 1));
+      _prizes = t.prizes;
     }
   }
 
@@ -246,7 +252,8 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
             maxPlayers: int.tryParse(_maxPlayersController.text.trim()) ?? _treeSize,
             rules: _rulesController.text.trim(),
             registeredCount: widget.tournament?.registeredCount ?? 0,
-            loungeId: widget.tournament?.loungeId,
+            prizes: _prizes,
+            loungeId: widget.tournament?.loungeId ?? widget.loungeId,
             cityId: widget.tournament?.cityId,
           );
 
@@ -332,7 +339,7 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
                       ),
                       SizedBox(height: 8.h),
                       DropdownButtonFormField<int>(
-                        value: _treeSize,
+                        initialValue: _treeSize,
                         dropdownColor: AppColors.cardBackground,
                         style: const TextStyle(color: AppColors.textPrimary),
                         decoration: InputDecoration(
@@ -383,6 +390,79 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
                   ),
                 ),
               ],
+            ),
+            SizedBox(height: 12.h),
+            Container(
+              padding: EdgeInsets.all(12.r),
+              decoration: BoxDecoration(
+                color: AppColors.mutedBackground,
+                borderRadius: BorderRadius.circular(10.r),
+                border: Border.all(color: AppColors.borderDefault),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppStrings.tournamentPrizes,
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        _prizes.isEmpty
+                            ? 'لم يتم تخصيص جوائز للمراكز بعد'
+                            : 'تم تخصيص ${_prizes.length} مراكز للجوائز',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                    ],
+                  ),
+                  AppButton(
+                    text: AppStrings.managePrizes,
+                    icon: Icons.emoji_events_outlined,
+                    variant: AppButtonVariant.outlined,
+                    fontSize: 12.sp,
+                    onPressed: () {
+                      final currentEntity = TournamentEntity(
+                        id: widget.tournament?.id ?? const Uuid().v4(),
+                        title: _titleController.text.trim().isNotEmpty
+                            ? _titleController.text.trim()
+                            : 'البطولة',
+                        treeSize: _treeSize,
+                        status: widget.tournament?.status ?? TournamentStatus.draft,
+                        entryFee: double.tryParse(_entryFeeController.text.trim()) ?? 0.0,
+                        prizePool: double.tryParse(_prizePoolController.text.trim()) ?? 0.0,
+                        startDate: _startDate,
+                        endDate: _endDate,
+                        registrationDeadline: _registrationClosesAt,
+                        minPlayers: int.tryParse(_minPlayersController.text.trim()) ?? 4,
+                        maxPlayers: int.tryParse(_maxPlayersController.text.trim()) ?? _treeSize,
+                        prizes: _prizes,
+                        loungeId: widget.tournament?.loungeId ?? widget.loungeId,
+                      );
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => TournamentPrizesDialog(
+                          tournament: currentEntity,
+                          onSave: (updatedPrizes) {
+                            setState(() {
+                              _prizes = updatedPrizes;
+                            });
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
             SizedBox(height: 16.h),
             Row(

@@ -114,16 +114,16 @@ class LoyaltyStatsTab extends StatelessWidget {
     String localizedName = levelName;
 
     if (levelName.contains('برونزي') || levelName.toLowerCase().contains('bronze')) {
-      badgeColor = const Color(0xFFCD7F32);
+      badgeColor = AppColors.bronzeTier;
       localizedName = AppStrings.levelBronze;
     } else if (levelName.contains('فضي') || levelName.toLowerCase().contains('silver')) {
-      badgeColor = const Color(0xFFC0C0C0);
+      badgeColor = AppColors.silverTier;
       localizedName = AppStrings.levelSilver;
     } else if (levelName.contains('ذهبي') || levelName.toLowerCase().contains('gold')) {
-      badgeColor = const Color(0xFFFFD700);
+      badgeColor = AppColors.goldTier;
       localizedName = AppStrings.levelGold;
     } else if (levelName.contains('بلاتيني') || levelName.toLowerCase().contains('platinum')) {
-      badgeColor = const Color(0xEFE5E4E2);
+      badgeColor = AppColors.platinumTier;
       localizedName = AppStrings.levelPlatinum;
     }
 

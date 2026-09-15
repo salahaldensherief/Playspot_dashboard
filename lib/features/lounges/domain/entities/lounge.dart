@@ -11,6 +11,7 @@ class Lounge extends Equatable {
   final bool isOpen;
   final String? location;
   final String? city;
+  final String? cityId;
   final int? totalReviews;
   final int? availableRooms;
   final String? descriptionAr;
@@ -41,6 +42,7 @@ class Lounge extends Equatable {
     this.isOpen = true,
     this.location,
     this.city,
+    this.cityId,
     this.totalReviews,
     this.availableRooms,
     this.descriptionAr,
@@ -100,6 +102,7 @@ class Lounge extends Equatable {
         isOpen,
         location,
         city,
+        cityId,
         totalReviews,
         availableRooms,
         descriptionAr,
@@ -131,6 +134,7 @@ class Lounge extends Equatable {
     bool? isOpen,
     String? location,
     String? city,
+    String? cityId,
     int? totalReviews,
     int? availableRooms,
     String? descriptionAr,
@@ -161,6 +165,7 @@ class Lounge extends Equatable {
       isOpen: isOpen ?? this.isOpen,
       location: location ?? this.location,
       city: city ?? this.city,
+      cityId: cityId ?? this.cityId,
       totalReviews: totalReviews ?? this.totalReviews,
       availableRooms: availableRooms ?? this.availableRooms,
       descriptionAr: descriptionAr ?? this.descriptionAr,

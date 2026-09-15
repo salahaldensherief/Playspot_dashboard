@@ -5,6 +5,7 @@ import '../theme/app_colors.dart';
 class AppTextField extends StatelessWidget {
   final String label;
   final String? hintText;
+  final String? initialValue;
   final TextEditingController? controller;
   final bool isPassword;
   final TextInputType keyboardType;
@@ -21,6 +22,7 @@ class AppTextField extends StatelessWidget {
     super.key,
     this.label = '',
     this.hintText,
+    this.initialValue,
     this.controller,
     this.isPassword = false,
     this.keyboardType = TextInputType.text,
@@ -51,6 +53,7 @@ class AppTextField extends StatelessWidget {
           SizedBox(height: 8.h),
         ],
         TextFormField(
+          initialValue: controller == null ? initialValue : null,
           controller: controller,
           obscureText: isPassword,
           keyboardType: keyboardType,
@@ -70,7 +73,7 @@ class AppTextField extends StatelessWidget {
             prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppColors.textSecondary, size: 20.r) : null,
             suffixIcon: suffix,
             filled: true,
-            fillColor: enabled ? AppColors.mutedBackground : AppColors.cardBackground.withOpacity(0.5),
+            fillColor: enabled ? AppColors.mutedBackground : AppColors.cardBackground.withAlpha(128),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),
               borderSide: const BorderSide(color: AppColors.borderDefault),
@@ -81,7 +84,7 @@ class AppTextField extends StatelessWidget {
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),
-              borderSide: BorderSide(color: AppColors.borderDefault.withOpacity(0.5)),
+              borderSide: BorderSide(color: AppColors.borderDefault.withAlpha(128)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),

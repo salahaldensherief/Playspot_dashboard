@@ -45,12 +45,12 @@ class LoungeReviewsCard extends StatelessWidget {
                       Container(
                         padding: EdgeInsets.all(8.r),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFB800).withValues(alpha: 0.15),
+                          color: AppColors.starRating.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.star_rounded,
-                          color: const Color(0xFFFFB800),
+                          color: AppColors.starRating,
                           size: 20.r,
                         ),
                       ),
@@ -85,10 +85,10 @@ class LoungeReviewsCard extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFB800).withValues(alpha: 0.12),
+                        color: AppColors.starRating.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
-                          color: const Color(0xFFFFB800).withValues(alpha: 0.3),
+                          color: AppColors.starRating.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Column(
@@ -97,7 +97,7 @@ class LoungeReviewsCard extends StatelessWidget {
                           AppText.subHeading(
                             avgRating.toStringAsFixed(1),
                             fontSize: 28.sp,
-                            color: const Color(0xFFFFB800),
+                            color: AppColors.starRating,
                             fontWeight: FontWeight.bold,
                           ),
                           AppText.body(
@@ -131,7 +131,7 @@ class LoungeReviewsCard extends StatelessWidget {
                               AppText.body(
                                 '(${avgRating.toStringAsFixed(1)})',
                                 fontSize: 13.sp,
-                                color: const Color(0xFFFFB800),
+                                color: AppColors.starRating,
                                 fontWeight: FontWeight.bold,
                               ),
                             ],
@@ -255,7 +255,7 @@ class LoungeReviewsCard extends StatelessWidget {
                     AppText.body(
                       '${review.rating.toStringAsFixed(1)} / 5.0',
                       fontSize: 11.sp,
-                      color: const Color(0xFFFFB800),
+                      color: AppColors.starRating,
                       fontWeight: FontWeight.bold,
                     ),
                   ],

@@ -1,10 +1,11 @@
 import 'package:dartz/dartz.dart';
+import 'package:play_spot_dashboard/core/error/failures.dart';
 import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
-import '../../../../core/error/failures.dart';
-import '../entities/tournament_audit_log_entity.dart';
-import '../entities/tournament_entity.dart';
-import '../entities/tournament_match_entity.dart';
-import '../entities/tournament_participant_entity.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_audit_log_entity.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_entity.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_match_entity.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_participant_entity.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_prize_entity.dart';
 
 abstract class TournamentRepository {
   Future<Either<Failure, List<TournamentEntity>>> getTournaments({
@@ -16,11 +17,18 @@ abstract class TournamentRepository {
 
   Future<Either<Failure, TournamentEntity>> updateTournament(TournamentEntity tournament);
 
+  Future<Either<Failure, void>> saveTournamentPrizes(
+    String tournamentId,
+    List<TournamentPrizeEntity> prizes,
+  );
+
   Future<Either<Failure, void>> publishTournament(String tournamentId);
 
   Future<Either<Failure, void>> cancelTournament(String tournamentId, String reason);
 
   Future<Either<Failure, void>> deleteDraftTournament(String tournamentId);
+
+  Future<Either<Failure, void>> deleteTournament(String tournamentId);
 
   Future<Either<Failure, List<TournamentParticipantEntity>>> getParticipants(String tournamentId);
 
@@ -31,6 +39,8 @@ abstract class TournamentRepository {
   Future<Either<Failure, void>> recordCashPayment(String participantId);
 
   Future<Either<Failure, void>> checkInParticipant(String participantId);
+
+  Future<Either<Failure, void>> withdrawParticipant(String participantId);
 
   Future<Either<Failure, List<TournamentMatchEntity>>> drawBracket(String tournamentId);
 

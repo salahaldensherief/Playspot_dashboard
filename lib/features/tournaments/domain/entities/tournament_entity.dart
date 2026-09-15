@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'tournament_prize_entity.dart';
 
 enum TournamentStatus {
   draft,
@@ -68,6 +69,7 @@ class TournamentEntity extends Equatable {
   final int maxPlayers;
   final String? rules;
   final int registeredCount;
+  final List<TournamentPrizeEntity> prizes;
   final DateTime? createdAt;
 
   const TournamentEntity({
@@ -99,6 +101,7 @@ class TournamentEntity extends Equatable {
     required this.maxPlayers,
     this.rules,
     this.registeredCount = 0,
+    this.prizes = const [],
     this.createdAt,
   });
 
@@ -110,6 +113,72 @@ class TournamentEntity extends Equatable {
 
   bool get canDeleteDraft => isDraft && registeredCount == 0;
   bool get canDrawBracket => (isPublished || isDraft) && registeredCount >= minPlayers;
+
+  TournamentEntity copyWith({
+    String? id,
+    String? loungeId,
+    String? loungeName,
+    String? cityId,
+    String? title,
+    String? titleAr,
+    String? titleEn,
+    String? descriptionAr,
+    String? descriptionEn,
+    String? gameTitle,
+    String? bannerUrl,
+    int? treeSize,
+    TournamentStatus? status,
+    double? entryFee,
+    double? prizePool,
+    DateTime? startDate,
+    DateTime? endDate,
+    DateTime? registrationDeadline,
+    DateTime? registrationOpensAt,
+    DateTime? registrationClosesAt,
+    int? paymentDeadlineMinutes,
+    DateTime? checkInOpensAt,
+    DateTime? checkInClosesAt,
+    DateTime? tournamentStartsAt,
+    int? minPlayers,
+    int? maxPlayers,
+    String? rules,
+    int? registeredCount,
+    List<TournamentPrizeEntity>? prizes,
+    DateTime? createdAt,
+  }) {
+    return TournamentEntity(
+      id: id ?? this.id,
+      loungeId: loungeId ?? this.loungeId,
+      loungeName: loungeName ?? this.loungeName,
+      cityId: cityId ?? this.cityId,
+      title: title ?? this.title,
+      titleAr: titleAr ?? this.titleAr,
+      titleEn: titleEn ?? this.titleEn,
+      descriptionAr: descriptionAr ?? this.descriptionAr,
+      descriptionEn: descriptionEn ?? this.descriptionEn,
+      gameTitle: gameTitle ?? this.gameTitle,
+      bannerUrl: bannerUrl ?? this.bannerUrl,
+      treeSize: treeSize ?? this.treeSize,
+      status: status ?? this.status,
+      entryFee: entryFee ?? this.entryFee,
+      prizePool: prizePool ?? this.prizePool,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      registrationDeadline: registrationDeadline ?? this.registrationDeadline,
+      registrationOpensAt: registrationOpensAt ?? this.registrationOpensAt,
+      registrationClosesAt: registrationClosesAt ?? this.registrationClosesAt,
+      paymentDeadlineMinutes: paymentDeadlineMinutes ?? this.paymentDeadlineMinutes,
+      checkInOpensAt: checkInOpensAt ?? this.checkInOpensAt,
+      checkInClosesAt: checkInClosesAt ?? this.checkInClosesAt,
+      tournamentStartsAt: tournamentStartsAt ?? this.tournamentStartsAt,
+      minPlayers: minPlayers ?? this.minPlayers,
+      maxPlayers: maxPlayers ?? this.maxPlayers,
+      rules: rules ?? this.rules,
+      registeredCount: registeredCount ?? this.registeredCount,
+      prizes: prizes ?? this.prizes,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -141,6 +210,7 @@ class TournamentEntity extends Equatable {
         maxPlayers,
         rules,
         registeredCount,
+        prizes,
         createdAt,
       ];
 }

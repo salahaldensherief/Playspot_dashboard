@@ -1,13 +1,15 @@
 import 'package:dartz/dartz.dart';
+import 'package:play_spot_dashboard/core/error/failures.dart';
 import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
-import '../../../../core/error/failures.dart';
-import '../../domain/entities/tournament_audit_log_entity.dart';
-import '../../domain/entities/tournament_entity.dart';
-import '../../domain/entities/tournament_match_entity.dart';
-import '../../domain/entities/tournament_participant_entity.dart';
-import '../../domain/repositories/tournament_repository.dart';
-import '../datasources/tournament_remote_data_source.dart';
-import '../models/tournament_model.dart';
+import 'package:play_spot_dashboard/features/tournaments/data/datasources/tournament_remote_data_source.dart';
+import 'package:play_spot_dashboard/features/tournaments/data/models/tournament_model.dart';
+import 'package:play_spot_dashboard/features/tournaments/data/models/tournament_prize_model.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_audit_log_entity.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_entity.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_match_entity.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_participant_entity.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_prize_entity.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/repositories/tournament_repository.dart';
 
 class TournamentRepositoryImpl implements TournamentRepository {
   final TournamentRemoteDataSource remoteDataSource;
@@ -53,6 +55,20 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
+  Future<Either<Failure, void>> saveTournamentPrizes(
+    String tournamentId,
+    List<TournamentPrizeEntity> prizes,
+  ) async {
+    try {
+      final models = prizes.map((p) => TournamentPrizeModel.fromEntity(p)).toList();
+      await remoteDataSource.saveTournamentPrizes(tournamentId, models);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> publishTournament(String tournamentId) async {
     try {
       await remoteDataSource.publishTournament(tournamentId);
@@ -76,6 +92,16 @@ class TournamentRepositoryImpl implements TournamentRepository {
   Future<Either<Failure, void>> deleteDraftTournament(String tournamentId) async {
     try {
       await remoteDataSource.deleteDraftTournament(tournamentId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteTournament(String tournamentId) async {
+    try {
+      await remoteDataSource.deleteTournament(tournamentId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -126,6 +152,16 @@ class TournamentRepositoryImpl implements TournamentRepository {
   Future<Either<Failure, void>> checkInParticipant(String participantId) async {
     try {
       await remoteDataSource.checkInParticipant(participantId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> withdrawParticipant(String participantId) async {
+    try {
+      await remoteDataSource.withdrawParticipant(participantId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

@@ -34,6 +34,45 @@ enum ParticipantPaymentStatus {
   }
 }
 
+enum ParticipantStatus {
+  registered,
+  confirmed,
+  expired,
+  withdrawn,
+  unknown;
+
+  static ParticipantStatus fromString(String? value) {
+    switch (value?.toLowerCase()) {
+      case 'registered':
+        return ParticipantStatus.registered;
+      case 'confirmed':
+      case 'approved':
+        return ParticipantStatus.confirmed;
+      case 'expired':
+        return ParticipantStatus.expired;
+      case 'withdrawn':
+        return ParticipantStatus.withdrawn;
+      default:
+        return ParticipantStatus.unknown;
+    }
+  }
+
+  String toDbString() {
+    switch (this) {
+      case ParticipantStatus.registered:
+        return 'registered';
+      case ParticipantStatus.confirmed:
+        return 'confirmed';
+      case ParticipantStatus.expired:
+        return 'expired';
+      case ParticipantStatus.withdrawn:
+        return 'withdrawn';
+      case ParticipantStatus.unknown:
+        return 'registered';
+    }
+  }
+}
+
 class TournamentParticipantEntity extends Equatable {
   final String id;
   final String tournamentId;
@@ -42,6 +81,7 @@ class TournamentParticipantEntity extends Equatable {
   final String? userPhone;
   final String? userEmail;
   final ParticipantPaymentStatus paymentStatus;
+  final ParticipantStatus participantStatus;
   final String? receiptPath;
   final String? signedReceiptUrl;
   final String? rejectionReason;
@@ -57,6 +97,7 @@ class TournamentParticipantEntity extends Equatable {
     this.userPhone,
     this.userEmail,
     required this.paymentStatus,
+    this.participantStatus = ParticipantStatus.registered,
     this.receiptPath,
     this.signedReceiptUrl,
     this.rejectionReason,
@@ -67,6 +108,9 @@ class TournamentParticipantEntity extends Equatable {
 
   bool get isPaymentApproved => paymentStatus == ParticipantPaymentStatus.approved;
   bool get isPaymentPending => paymentStatus == ParticipantPaymentStatus.pending;
+  bool get isWithdrawn => participantStatus == ParticipantStatus.withdrawn;
+  bool get isExpired => participantStatus == ParticipantStatus.expired;
+  bool get isConfirmed => participantStatus == ParticipantStatus.confirmed;
 
   @override
   List<Object?> get props => [
@@ -77,6 +121,7 @@ class TournamentParticipantEntity extends Equatable {
         userPhone,
         userEmail,
         paymentStatus,
+        participantStatus,
         receiptPath,
         signedReceiptUrl,
         rejectionReason,

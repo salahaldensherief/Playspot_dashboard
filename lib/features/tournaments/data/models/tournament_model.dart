@@ -1,4 +1,5 @@
 import '../../domain/entities/tournament_entity.dart';
+import 'tournament_prize_model.dart';
 
 class TournamentModel extends TournamentEntity {
   const TournamentModel({
@@ -30,6 +31,7 @@ class TournamentModel extends TournamentEntity {
     required super.maxPlayers,
     super.rules,
     super.registeredCount = 0,
+    super.prizes = const [],
     super.createdAt,
   });
 
@@ -58,6 +60,14 @@ class TournamentModel extends TournamentEntity {
         : (json['registration_closes_at'] != null
             ? DateTime.tryParse(json['registration_closes_at'].toString())
             : null);
+
+    List<TournamentPrizeModel> prizesVal = [];
+    if (json['tournament_prizes'] != null && json['tournament_prizes'] is List) {
+      prizesVal = (json['tournament_prizes'] as List)
+          .map((item) => TournamentPrizeModel.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+      prizesVal.sort((a, b) => a.placement.compareTo(b.placement));
+    }
 
     return TournamentModel(
       id: json['id'] as String? ?? '',
@@ -101,6 +111,7 @@ class TournamentModel extends TournamentEntity {
       rules: json['rules'] as String?,
       registeredCount: json['registered_count'] as int? ??
           (json['tournament_participants'] is List ? (json['tournament_participants'] as List).length : 0),
+      prizes: prizesVal,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
@@ -112,32 +123,22 @@ class TournamentModel extends TournamentEntity {
       if (id.isNotEmpty) 'id': id,
       if (loungeId != null) 'lounge_id': loungeId,
       if (cityId != null) 'city_id': cityId,
-      'title': title,
       if (titleAr != null) 'title_ar': titleAr,
       if (titleEn != null) 'title_en': titleEn,
       if (descriptionAr != null) 'description_ar': descriptionAr,
       if (descriptionEn != null) 'description_en': descriptionEn,
-      'game_title': gameTitle,
       'game_name': gameTitle,
       'banner_url': bannerUrl,
-      'tree_size': treeSize,
       'bracket_size': treeSize,
       'status': status.toDbString(),
       'entry_fee': entryFee,
-      'prize_pool': prizePool,
-      'start_date': startDate.toIso8601String(),
-      'end_date': endDate.toIso8601String(),
-      'registration_deadline': registrationDeadline.toIso8601String(),
+      'registration_closes_at': (registrationClosesAt ?? registrationDeadline).toIso8601String(),
       if (registrationOpensAt != null) 'registration_opens_at': registrationOpensAt!.toIso8601String(),
-      if (registrationClosesAt != null) 'registration_closes_at': registrationClosesAt!.toIso8601String(),
       'payment_deadline_minutes': paymentDeadlineMinutes,
       if (checkInOpensAt != null) 'check_in_opens_at': checkInOpensAt!.toIso8601String(),
       if (checkInClosesAt != null) 'check_in_closes_at': checkInClosesAt!.toIso8601String(),
       'tournament_starts_at': (tournamentStartsAt ?? startDate).toIso8601String(),
-      'min_players': minPlayers,
-      'max_players': maxPlayers,
       'max_participants': maxPlayers,
-      'rules': rules,
     };
   }
 
@@ -171,6 +172,7 @@ class TournamentModel extends TournamentEntity {
       maxPlayers: entity.maxPlayers,
       rules: entity.rules,
       registeredCount: entity.registeredCount,
+      prizes: entity.prizes,
       createdAt: entity.createdAt,
     );
   }

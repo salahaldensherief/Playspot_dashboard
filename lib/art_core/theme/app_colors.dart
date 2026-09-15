@@ -24,4 +24,11 @@ class AppColors {
   
   static const Color sidebarActiveBorder = Color(0xFF00D9FF);
   static const Color sidebarActiveBg = Color(0x1000D9FF);
+
+  // Rating & Tier Colors
+  static const Color starRating = Color(0xFFFFB800);
+  static const Color bronzeTier = Color(0xFFCD7F32);
+  static const Color silverTier = Color(0xFFC0C0C0);
+  static const Color goldTier = Color(0xFFFFD700);
+  static const Color platinumTier = Color(0xEFE5E4E2);
 }

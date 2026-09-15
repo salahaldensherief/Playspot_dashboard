@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../domain/entities/tournament_entity.dart';
 import '../domain/entities/tournament_match_entity.dart';
+import '../domain/entities/tournament_prize_entity.dart';
 import '../domain/repositories/tournament_repository.dart';
 import 'tournament_state.dart';
 
@@ -106,6 +107,25 @@ class TournamentCubit extends Cubit<TournamentState> {
     );
   }
 
+  Future<void> saveTournamentPrizes(String tournamentId, List<TournamentPrizeEntity> prizes) async {
+    emit(state.copyWith(status: TournamentCubitStatus.loading));
+    final result = await repository.saveTournamentPrizes(tournamentId, prizes);
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: TournamentCubitStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) {
+        emit(state.copyWith(
+          status: TournamentCubitStatus.actionSuccess,
+          successMessage: 'تم حفظ جوائز البطولة بنجاح',
+        ));
+        loadTournaments();
+      },
+    );
+  }
+
   Future<void> publishTournament(String tournamentId) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
     final result = await repository.publishTournament(tournamentId);
@@ -116,8 +136,20 @@ class TournamentCubit extends Cubit<TournamentState> {
         errorMessage: failure.message,
       )),
       (_) {
+        final updatedList = state.tournaments.map((t) {
+          if (t.id == tournamentId) {
+            return t.copyWith(status: TournamentStatus.published);
+          }
+          return t;
+        }).toList();
+        final updatedSelected = state.selectedTournament?.id == tournamentId
+            ? state.selectedTournament?.copyWith(status: TournamentStatus.published)
+            : state.selectedTournament;
+
         emit(state.copyWith(
           status: TournamentCubitStatus.actionSuccess,
+          tournaments: updatedList,
+          selectedTournament: updatedSelected,
           successMessage: 'تم نشر البطولة بنجاح',
         ));
         loadTournaments();
@@ -135,8 +167,20 @@ class TournamentCubit extends Cubit<TournamentState> {
         errorMessage: failure.message,
       )),
       (_) {
+        final updatedList = state.tournaments.map((t) {
+          if (t.id == tournamentId) {
+            return t.copyWith(status: TournamentStatus.cancelled);
+          }
+          return t;
+        }).toList();
+        final updatedSelected = state.selectedTournament?.id == tournamentId
+            ? state.selectedTournament?.copyWith(status: TournamentStatus.cancelled)
+            : state.selectedTournament;
+
         emit(state.copyWith(
           status: TournamentCubitStatus.actionSuccess,
+          tournaments: updatedList,
+          selectedTournament: updatedSelected,
           successMessage: 'تم إلغاء البطولة',
         ));
         loadTournaments();
@@ -160,6 +204,27 @@ class TournamentCubit extends Cubit<TournamentState> {
           tournaments: list,
           clearSelectedTournament: state.selectedTournament?.id == tournamentId,
           successMessage: 'تم حذف مسودة البطولة بنجاح',
+        ));
+      },
+    );
+  }
+
+  Future<void> deleteTournament(String tournamentId) async {
+    emit(state.copyWith(status: TournamentCubitStatus.loading));
+    final result = await repository.deleteTournament(tournamentId);
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: TournamentCubitStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) {
+        final list = state.tournaments.where((t) => t.id != tournamentId).toList();
+        emit(state.copyWith(
+          status: TournamentCubitStatus.actionSuccess,
+          tournaments: list,
+          clearSelectedTournament: state.selectedTournament?.id == tournamentId,
+          successMessage: 'تم حذف البطولة بنجاح',
         ));
       },
     );
@@ -257,6 +322,27 @@ class TournamentCubit extends Cubit<TournamentState> {
     );
   }
 
+  Future<void> withdrawParticipant(String participantId) async {
+    emit(state.copyWith(status: TournamentCubitStatus.loading));
+    final result = await repository.withdrawParticipant(participantId);
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: TournamentCubitStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) {
+        emit(state.copyWith(
+          status: TournamentCubitStatus.actionSuccess,
+          successMessage: 'تم انسحاب المشارك بنجاح',
+        ));
+        if (state.selectedTournament != null) {
+          loadParticipants(state.selectedTournament!.id);
+        }
+      },
+    );
+  }
+
   Future<void> drawBracket(String tournamentId) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
     final result = await repository.drawBracket(tournamentId);
@@ -267,8 +353,20 @@ class TournamentCubit extends Cubit<TournamentState> {
         errorMessage: failure.message,
       )),
       (matchesList) {
+        final updatedList = state.tournaments.map((t) {
+          if (t.id == tournamentId) {
+            return t.copyWith(status: TournamentStatus.inProgress);
+          }
+          return t;
+        }).toList();
+        final updatedSelected = state.selectedTournament?.id == tournamentId
+            ? state.selectedTournament?.copyWith(status: TournamentStatus.inProgress)
+            : state.selectedTournament;
+
         emit(state.copyWith(
           status: TournamentCubitStatus.actionSuccess,
+          tournaments: updatedList,
+          selectedTournament: updatedSelected,
           matches: matchesList,
           successMessage: 'تمت إقامة القرعة وتوليد الشجرة بنجاح',
         ));
@@ -353,8 +451,20 @@ class TournamentCubit extends Cubit<TournamentState> {
         errorMessage: failure.message,
       )),
       (_) {
+        final updatedList = state.tournaments.map((t) {
+          if (t.id == tournamentId) {
+            return t.copyWith(status: TournamentStatus.completed);
+          }
+          return t;
+        }).toList();
+        final updatedSelected = state.selectedTournament?.id == tournamentId
+            ? state.selectedTournament?.copyWith(status: TournamentStatus.completed)
+            : state.selectedTournament;
+
         emit(state.copyWith(
           status: TournamentCubitStatus.actionSuccess,
+          tournaments: updatedList,
+          selectedTournament: updatedSelected,
           successMessage: 'تم إنهاء البطولة بنجاح',
         ));
         loadTournaments();

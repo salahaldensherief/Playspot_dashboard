@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../art_core/theme/app_colors.dart';
 
 class StarRatingBar extends StatelessWidget {
   final double rating;
@@ -12,8 +13,8 @@ class StarRatingBar extends StatelessWidget {
     super.key,
     required this.rating,
     this.size = 18.0,
-    this.filledColor = const Color(0xFFFFB800),
-    this.unfilledColor = const Color(0xFF3F3F46),
+    this.filledColor = AppColors.starRating,
+    this.unfilledColor = AppColors.textMuted,
     this.maxRating = 5,
   });
 

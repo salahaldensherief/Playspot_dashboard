@@ -20,7 +20,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/pages/booking
 import 'package:play_spot_dashboard/features/rooms/presentation/pages/room_management_page.dart' as rooms;
 import 'package:play_spot_dashboard/features/onboarding/presentation/pages/lounge_setup_page.dart' as onboarding;
 import 'package:play_spot_dashboard/features/lounges/presentation/pages/extras_management_page.dart' as extras;
-import 'package:play_spot_dashboard/features/reviews/presentation/pages/lounge_reviews_page.dart' as reviews_page;
+import 'package:play_spot_dashboard/features/reviews/presentation/reviews_screen.dart' as reviews_page;
 import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounge_profile_page.dart' as lounge_profile;
 import 'package:play_spot_dashboard/features/auth/presentation/profile/profile_page.dart' as profile;
 import 'package:play_spot_dashboard/features/kyc/presentation/pages/kyc_reviews_page.dart' as kyc_reviews;

@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/utils/app_logger.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/repositories/lounge_repository.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/watch_active_sessions_usecase.dart';
@@ -75,7 +75,7 @@ class DashboardCubit extends Cubit<DashboardState> {
       },
       onError: (error) {
         if (isClosed) return;
-        debugPrint('🔴 [DASHBOARD_CUBIT] watchActiveSessions Error: $error');
+        AppLogger.error('[DASHBOARD_CUBIT] watchActiveSessions Error', error);
         emit(state.copyWith(
           status: FeatureStatus.failure,
           errorMessage: error.toString(),
@@ -90,7 +90,7 @@ class DashboardCubit extends Cubit<DashboardState> {
 
     return result.fold(
       (failure) {
-        debugPrint('🔴 [DASHBOARD_CUBIT] extendSession Failed: ${failure.message}');
+        AppLogger.error('[DASHBOARD_CUBIT] extendSession Failed: ${failure.message}');
         emit(state.copyWith(
           status: FeatureStatus.failure,
           errorMessage: failure.message,
@@ -98,7 +98,7 @@ class DashboardCubit extends Cubit<DashboardState> {
         return false;
       },
       (_) {
-        debugPrint('🟢 [DASHBOARD_CUBIT] extendSession Succeeded');
+        AppLogger.info('[DASHBOARD_CUBIT] extendSession Succeeded');
         return true;
       },
     );
@@ -110,7 +110,7 @@ class DashboardCubit extends Cubit<DashboardState> {
 
     return result.fold(
       (failure) {
-        debugPrint('🔴 [DASHBOARD_CUBIT] addExtrasToSession Failed: ${failure.message}');
+        AppLogger.error('[DASHBOARD_CUBIT] addExtrasToSession Failed: ${failure.message}');
         emit(state.copyWith(
           status: FeatureStatus.failure,
           errorMessage: failure.message,
@@ -118,7 +118,7 @@ class DashboardCubit extends Cubit<DashboardState> {
         return false;
       },
       (_) {
-        debugPrint('🟢 [DASHBOARD_CUBIT] addExtrasToSession Succeeded');
+        AppLogger.info('[DASHBOARD_CUBIT] addExtrasToSession Succeeded');
         return true;
       },
     );
@@ -130,7 +130,7 @@ class DashboardCubit extends Cubit<DashboardState> {
 
     return result.fold(
       (failure) {
-        debugPrint('🔴 [DASHBOARD_CUBIT] endSession Failed: ${failure.message}');
+        AppLogger.error('[DASHBOARD_CUBIT] endSession Failed: ${failure.message}');
         emit(state.copyWith(
           status: FeatureStatus.failure,
           errorMessage: failure.message,
@@ -138,7 +138,7 @@ class DashboardCubit extends Cubit<DashboardState> {
         return false;
       },
       (_) {
-        debugPrint('🟢 [DASHBOARD_CUBIT] endSession Succeeded');
+        AppLogger.info('[DASHBOARD_CUBIT] endSession Succeeded');
         return true;
       },
     );
@@ -161,7 +161,7 @@ class DashboardCubit extends Cubit<DashboardState> {
 
     return result.fold(
       (failure) {
-        debugPrint('🔴 [DASHBOARD_CUBIT] reviewExtensionRequest Failed: ${failure.message}');
+        AppLogger.error('[DASHBOARD_CUBIT] reviewExtensionRequest Failed: ${failure.message}');
         emit(state.copyWith(
           status: FeatureStatus.failure,
           errorMessage: failure.message,
@@ -169,7 +169,7 @@ class DashboardCubit extends Cubit<DashboardState> {
         return false;
       },
       (_) {
-        debugPrint('🟢 [DASHBOARD_CUBIT] reviewExtensionRequest Succeeded');
+        AppLogger.info('[DASHBOARD_CUBIT] reviewExtensionRequest Succeeded');
         return true;
       },
     );
@@ -198,7 +198,7 @@ class DashboardCubit extends Cubit<DashboardState> {
 
     return result.fold(
       (failure) {
-        debugPrint('🔴 [DASHBOARD_CUBIT] handleClientRequestAction Failed: ${failure.message}');
+        AppLogger.error('[DASHBOARD_CUBIT] handleClientRequestAction Failed: ${failure.message}');
         emit(state.copyWith(
           status: FeatureStatus.failure,
           errorMessage: failure.message,
@@ -206,7 +206,7 @@ class DashboardCubit extends Cubit<DashboardState> {
         return false;
       },
       (_) {
-        debugPrint('🟢 [DASHBOARD_CUBIT] handleClientRequestAction Succeeded');
+        AppLogger.info('[DASHBOARD_CUBIT] handleClientRequestAction Succeeded');
         return true;
       },
     );

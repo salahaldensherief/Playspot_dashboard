@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/utils/app_logger.dart';
 import 'package:play_spot_dashboard/core/services/location_service.dart';
 import '../../domain/usecases/login_params.dart';
 import '../../domain/usecases/login_usecase.dart';
@@ -26,16 +27,16 @@ class LoginCubit extends Cubit<LoginState> {
   }) : super(const LoginState());
 
   Future<void> checkInitialAuth({BuildContext? context}) async {
-    debugPrint('LoginCubit: checking initial auth');
+    AppLogger.info('LoginCubit: checking initial auth');
     emit(state.copyWith(status: LoginStatus.checking));
     final result = await getCurrentUserUseCase(NoParams());
     result.fold(
       (failure) {
-        debugPrint('LoginCubit: initial auth check failed: ${failure.message}');
+        AppLogger.error('LoginCubit: initial auth check failed: ${failure.message}');
         emit(state.copyWith(status: LoginStatus.unauthenticated));
       },
       (user) async {
-        debugPrint('LoginCubit: user found: ${user?.email}, role: ${user?.role}');
+        AppLogger.info('LoginCubit: user role: ${user?.role}');
         if (user != null) {
           emit(state.copyWith(
             status: LoginStatus.authenticated,
@@ -54,16 +55,16 @@ class LoginCubit extends Cubit<LoginState> {
   }
 
   Future<void> login(String email, String password, { BuildContext? context}) async {
-    debugPrint('LoginCubit: logging in for $email');
+    AppLogger.info('LoginCubit: logging in');
     emit(state.copyWith(status: LoginStatus.loading));
     final result = await loginUseCase(LoginParams(email: email, password: password));
     result.fold(
       (failure) {
-        debugPrint('LoginCubit: login failed: ${failure.message}');
+        AppLogger.error('LoginCubit: login failed: ${failure.message}');
         emit(state.copyWith(status: LoginStatus.failure, errorMessage: failure.message));
       },
       (user) async {
-        debugPrint('LoginCubit: login success for ${user.email}');
+        AppLogger.info('LoginCubit: login success');
         emit(state.copyWith(
           status: LoginStatus.authenticated,
           user: user,

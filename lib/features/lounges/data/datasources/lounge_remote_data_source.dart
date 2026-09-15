@@ -277,6 +277,25 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
 
     cleanData.removeWhere((key, value) => value == null);
 
+    if (cleanData.containsKey('city') && cleanData['city'] != null) {
+      final cityName = cleanData['city'].toString().trim();
+      if (cityName.isNotEmpty) {
+        try {
+          final cityRes = await client
+              .from('cities')
+              .select('id, name_en, name_ar')
+              .or('name_en.ilike.%$cityName%,name_ar.ilike.%$cityName%')
+              .maybeSingle();
+          if (cityRes != null) {
+            cleanData['city_id'] = cityRes['id'];
+            cleanData['city'] = cityRes['name_en'] ?? cityName;
+          }
+        } catch (e) {
+          AppLogger.error('Failed to resolve city_id from city name $cityName', e);
+        }
+      }
+    }
+
     try {
       await client.from('lounges').update(cleanData).eq('id', id);
       AppLogger.info('updateLounge Succeeded for id: $id');

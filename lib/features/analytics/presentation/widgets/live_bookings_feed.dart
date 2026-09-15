@@ -12,6 +12,8 @@ import '../dashboard_cubit.dart';
 import '../dashboard_state.dart';
 import 'live_booking_item.dart';
 
+/// Refactored, high-performance Live Operations Feed displaying active gaming sessions,
+/// real-time revenue stats, and incoming booking requests.
 class LiveBookingsFeed extends StatelessWidget {
   const LiveBookingsFeed({super.key});
 
@@ -26,7 +28,6 @@ class LiveBookingsFeed extends StatelessWidget {
         return BlocBuilder<BookingCubit, BookingState>(
           buildWhen: (prev, curr) => prev.status != curr.status || prev.bookings != curr.bookings,
           builder: (context, bookingState) {
-            // Combine active sessions from DashboardCubit or fallback to BookingCubit active bookings
             final List<Booking> activeSessions = dashState.activeSessionsList.isNotEmpty
                 ? dashState.activeSessionsList.where((b) => b.isBookingActive()).toList()
                 : bookingState.bookings.where((b) => b.isBookingActive()).toList();
@@ -47,121 +48,36 @@ class LiveBookingsFeed extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Section Header & Live Stats Badges
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 12.r,
-                            height: 12.r,
-                            decoration: const BoxDecoration(
-                              color: AppColors.success,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          SizedBox(width: 12.w),
-                          AppText.heading(
-                            AppStrings.activeSessions,
-                            fontSize: 18.sp,
-                          ),
-                          SizedBox(width: 8.w),
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                            decoration: BoxDecoration(
-                              color: AppColors.neonBlue.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                            child: AppText.body(
-                              '${activeSessions.length}',
-                              color: AppColors.neonBlue,
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (dashState.status == FeatureStatus.loading && activeSessions.isEmpty)
-                        SizedBox(width: 16.r, height: 16.r, child: const CircularProgressIndicator(strokeWidth: 2)),
-                    ],
+                  _LiveFeedHeader(
+                    activeCount: activeSessions.length,
+                    isLoading: dashState.status == FeatureStatus.loading && activeSessions.isEmpty,
                   ),
                   SizedBox(height: 16.h),
 
-                  // Active Stats Bar
                   if (activeSessions.isNotEmpty) ...[
-                    Container(
-                      padding: EdgeInsets.all(12.r),
-                      decoration: BoxDecoration(
-                        color: AppColors.mutedBackground.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(color: AppColors.borderDefault),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _buildMiniStatTile(
-                              title: AppStrings.activeSessions,
-                              value: '${activeSessions.length}',
-                              icon: Icons.sports_esports,
-                              color: AppColors.neonBlue,
-                            ),
-                          ),
-                          Container(width: 1.w, height: 28.h, color: AppColors.divider),
-                          Expanded(
-                            child: _buildMiniStatTile(
-                              title: AppStrings.activeSessionRevenue,
-                              value: '${activeRevenue.toStringAsFixed(0)} ${AppStrings.egp}',
-                              icon: Icons.account_balance_wallet,
-                              color: AppColors.neonGreen,
-                            ),
-                          ),
-                          Container(width: 1.w, height: 28.h, color: AppColors.divider),
-                          Expanded(
-                            child: _buildMiniStatTile(
-                              title: AppStrings.totalActiveExtras,
-                              value: '$activeExtrasCount',
-                              icon: Icons.restaurant,
-                              color: AppColors.neonCyan,
-                            ),
-                          ),
-                        ],
-                      ),
+                    _ActiveSessionsStatsBar(
+                      activeCount: activeSessions.length,
+                      totalRevenue: activeRevenue,
+                      extrasCount: activeExtrasCount,
                     ),
                     SizedBox(height: 20.h),
-
-                    // Active Session Cards Wrap
                     Wrap(
                       spacing: 16.r,
                       runSpacing: 16.r,
                       children: activeSessions.map((session) {
-                        return LiveSessionCard(
-                          key: ValueKey('dash_live_${session.id}'),
-                          booking: session,
-                          width: 320.w,
+                        return RepaintBoundary(
+                          child: LiveSessionCard(
+                            key: ValueKey('dash_live_${session.id}'),
+                            booking: session,
+                            width: 320.w,
+                          ),
                         );
                       }).toList(),
                     ),
                   ] else ...[
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: 24.h),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            Icon(Icons.sports_esports_outlined, size: 40.r, color: AppColors.textMuted),
-                            SizedBox(height: 8.h),
-                            AppText.body(
-                              AppStrings.noActiveSessions,
-                              color: AppColors.textSecondary,
-                              fontSize: 13.sp,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    const _EmptyActiveSessionsState(),
                   ],
 
-                  // Feed of recent upcoming or pending bookings below
                   if (bookingState.bookings.isNotEmpty) ...[
                     SizedBox(height: 24.h),
                     Divider(color: AppColors.divider),
@@ -191,13 +107,126 @@ class LiveBookingsFeed extends StatelessWidget {
       },
     );
   }
+}
 
-  Widget _buildMiniStatTile({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
+class _LiveFeedHeader extends StatelessWidget {
+  final int activeCount;
+  final bool isLoading;
+
+  const _LiveFeedHeader({required this.activeCount, required this.isLoading});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 12.r,
+              height: 12.r,
+              decoration: const BoxDecoration(
+                color: AppColors.success,
+                shape: BoxShape.circle,
+              ),
+            ),
+            SizedBox(width: 12.w),
+            AppText.heading(
+              AppStrings.activeSessions,
+              fontSize: 18.sp,
+            ),
+            SizedBox(width: 8.w),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+              decoration: BoxDecoration(
+                color: AppColors.neonBlue.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: AppText.body(
+                '$activeCount',
+                color: AppColors.neonBlue,
+                fontSize: 12.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        if (isLoading)
+          SizedBox(width: 16.r, height: 16.r, child: const CircularProgressIndicator(strokeWidth: 2)),
+      ],
+    );
+  }
+}
+
+class _ActiveSessionsStatsBar extends StatelessWidget {
+  final int activeCount;
+  final double totalRevenue;
+  final int extrasCount;
+
+  const _ActiveSessionsStatsBar({
+    required this.activeCount,
+    required this.totalRevenue,
+    required this.extrasCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(12.r),
+      decoration: BoxDecoration(
+        color: AppColors.mutedBackground.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _MiniStatTile(
+              title: AppStrings.activeSessions,
+              value: '$activeCount',
+              icon: Icons.sports_esports,
+              color: AppColors.neonBlue,
+            ),
+          ),
+          Container(width: 1.w, height: 28.h, color: AppColors.divider),
+          Expanded(
+            child: _MiniStatTile(
+              title: AppStrings.activeSessionRevenue,
+              value: '${totalRevenue.toStringAsFixed(0)} ${AppStrings.egp}',
+              icon: Icons.account_balance_wallet,
+              color: AppColors.neonGreen,
+            ),
+          ),
+          Container(width: 1.w, height: 28.h, color: AppColors.divider),
+          Expanded(
+            child: _MiniStatTile(
+              title: AppStrings.totalActiveExtras,
+              value: '$extrasCount',
+              icon: Icons.restaurant,
+              color: AppColors.neonCyan,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniStatTile extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _MiniStatTile({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -211,6 +240,30 @@ class LiveBookingsFeed extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _EmptyActiveSessionsState extends StatelessWidget {
+  const _EmptyActiveSessionsState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 24.h),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(Icons.sports_esports_outlined, size: 40.r, color: AppColors.textMuted),
+            SizedBox(height: 8.h),
+            AppText.body(
+              AppStrings.noActiveSessions,
+              color: AppColors.textSecondary,
+              fontSize: 13.sp,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
