@@ -11,7 +11,7 @@ import '../models/tournament_prize_model.dart';
 import '../models/tournament_prize_reward_model.dart';
 
 abstract class TournamentRemoteDataSource {
-  Future<List<TournamentModel>> getTournaments({String? loungeId, String? status});
+  Future<List<TournamentModel>> getTournaments({double? latitude, double? longitude, String? loungeId, String? status});
   Future<TournamentModel> createTournament(TournamentModel tournament);
   Future<TournamentModel> updateTournament(TournamentModel tournament);
   Future<void> saveTournamentPrizes(String tournamentId, List<TournamentPrizeModel> prizes);
@@ -24,6 +24,7 @@ abstract class TournamentRemoteDataSource {
   Future<void> approvePayment(String participantId);
   Future<void> rejectPayment(String participantId, String reason);
   Future<void> recordCashPayment(String participantId);
+  Future<void> promoteWaitlist(String tournamentId);
   Future<void> checkInParticipant(String participantId);
   Future<void> withdrawParticipant(String participantId);
 
@@ -57,7 +58,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
   TournamentRemoteDataSourceImpl(this.client);
 
   @override
-  Future<List<TournamentModel>> getTournaments({String? loungeId, String? status}) async {
+  Future<List<TournamentModel>> getTournaments({double? latitude, double? longitude, String? loungeId, String? status}) async {
     try {
       var query = client.from('tournaments').select('''
         *,
@@ -547,6 +548,16 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
             .update({'registration_status': 'withdrawn'})
             .eq('id', participantId);
       }
+    }
+  }
+
+  @override
+  Future<void> promoteWaitlist(String tournamentId) async {
+    try {
+      await client.rpc('promote_waitlist', params: {'p_tournament_id': tournamentId});
+    } catch (e) {
+      debugPrint('⚠️ [TOURNAMENTS_REMOTE] promote_waitlist RPC error: $e');
+      rethrow;
     }
   }
 

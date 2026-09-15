@@ -6,15 +6,23 @@ import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_audit_log_entity.dart';
 import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournament_entity.dart';
 import 'package:play_spot_dashboard/features/tournaments/domain/repositories/tournament_repository.dart';
+import 'package:play_spot_dashboard/core/services/location_service.dart';
+import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_cubit.dart';
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_state.dart';
 
 class MockTournamentRepository extends Mock implements TournamentRepository {}
 
+class MockLocationService extends Mock implements LocationService {}
+
+class MockStorageService extends Mock implements StorageService {}
+
 class FakeTournamentEntity extends Fake implements TournamentEntity {}
 
 void main() {
   late MockTournamentRepository mockRepository;
+  late MockLocationService mockLocationService;
+  late MockStorageService mockStorageService;
   late TournamentCubit cubit;
 
   final tTournament = TournamentEntity(
@@ -38,7 +46,10 @@ void main() {
 
   setUp(() {
     mockRepository = MockTournamentRepository();
-    cubit = TournamentCubit(mockRepository);
+    mockLocationService = MockLocationService();
+    mockStorageService = MockStorageService();
+    when(() => mockLocationService.getCurrentPosition()).thenAnswer((_) async => null);
+    cubit = TournamentCubit(mockRepository, mockLocationService, mockStorageService);
   });
 
   tearDown(() {

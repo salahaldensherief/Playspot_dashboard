@@ -14,6 +14,7 @@ class TournamentParticipantsTable extends StatelessWidget {
   final Function(TournamentParticipantEntity, String reason) onRejectPayment;
   final Function(TournamentParticipantEntity) onRecordCash;
   final Function(TournamentParticipantEntity) onCheckIn;
+  final Function(TournamentParticipantEntity)? onWithdraw;
   final VoidCallback? onPromoteWaitlist;
 
   const TournamentParticipantsTable({
@@ -23,6 +24,7 @@ class TournamentParticipantsTable extends StatelessWidget {
     required this.onRejectPayment,
     required this.onRecordCash,
     required this.onCheckIn,
+    this.onWithdraw,
     this.onPromoteWaitlist,
   });
 
@@ -199,6 +201,16 @@ class TournamentParticipantsTable extends StatelessWidget {
                               onPressed: () => onCheckIn(p),
                             ),
                           ],
+                          if (onWithdraw != null && !p.isWithdrawn) ...[
+                            SizedBox(width: 8.w),
+                            AppButton(
+                              text: AppStrings.withdraw,
+                              variant: AppButtonVariant.danger,
+                              fontSize: 12.sp,
+                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                              onPressed: () => onWithdraw!(p),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -221,7 +233,6 @@ class TournamentParticipantsTable extends StatelessWidget {
       case ParticipantPaymentStatus.cashPending:
         return StatusBadge(text: AppStrings.pending, color: AppColors.warning);
       case ParticipantPaymentStatus.pending:
-      default:
         return StatusBadge(text: AppStrings.pending, color: AppColors.warning);
     }
   }

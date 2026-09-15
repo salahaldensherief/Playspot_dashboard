@@ -37,6 +37,7 @@ enum ParticipantPaymentStatus {
 enum ParticipantStatus {
   registered,
   confirmed,
+  waitlist,
   expired,
   withdrawn,
   unknown;
@@ -48,6 +49,8 @@ enum ParticipantStatus {
       case 'confirmed':
       case 'approved':
         return ParticipantStatus.confirmed;
+      case 'waitlist':
+        return ParticipantStatus.waitlist;
       case 'expired':
         return ParticipantStatus.expired;
       case 'withdrawn':
@@ -63,6 +66,8 @@ enum ParticipantStatus {
         return 'registered';
       case ParticipantStatus.confirmed:
         return 'confirmed';
+      case ParticipantStatus.waitlist:
+        return 'waitlist';
       case ParticipantStatus.expired:
         return 'expired';
       case ParticipantStatus.withdrawn:
@@ -108,6 +113,7 @@ class TournamentParticipantEntity extends Equatable {
 
   bool get isPaymentApproved => paymentStatus == ParticipantPaymentStatus.approved;
   bool get isPaymentPending => paymentStatus == ParticipantPaymentStatus.pending;
+  bool get isWaitlist => participantStatus == ParticipantStatus.waitlist;
   bool get isWithdrawn => participantStatus == ParticipantStatus.withdrawn;
   bool get isExpired => participantStatus == ParticipantStatus.expired;
   bool get isConfirmed => participantStatus == ParticipantStatus.confirmed;

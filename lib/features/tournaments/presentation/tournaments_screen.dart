@@ -716,6 +716,12 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
         return StatusBadge(text: AppStrings.cancelled, color: AppColors.danger);
       case TournamentStatus.draft:
         return StatusBadge(text: AppStrings.pending, color: AppColors.warning);
+      case TournamentStatus.registrationOpen:
+      case TournamentStatus.registrationClosed:
+      case TournamentStatus.checkInOpen:
+      case TournamentStatus.checkInClosed:
+      case TournamentStatus.drawCompleted:
+        return StatusBadge(text: status.name, color: AppColors.neonCyan);
     }
   }
 }

@@ -152,6 +152,7 @@ class AppStrings {
   static String get screen4k => 'screen_4k'.tr();
   static String get status => 'status'.tr();
   static String get actions => 'actions'.tr();
+  static String get withdraw => 'withdraw'.tr();
 
   // Lounge Management
   static String get addNewLounge => 'add_new_lounge'.tr();
