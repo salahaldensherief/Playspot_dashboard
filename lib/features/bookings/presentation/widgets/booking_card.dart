@@ -1,4 +1,3 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,14 +7,14 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
-import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_details_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/start_session_button.dart';
 
-/// Redesigned Booking Card Widget accommodating all returned booking,
-/// user, room, schedule, extras, financial, and action data.
+/// Redesigned Compact Booking Card Widget (mainAxisExtent: 280.h)
+/// Displays core essentials (status, time, customer, room, price, primary actions).
+/// Detailed specs, extras, and full controls are accessible via BookingDetailsDialog on tap.
 class BookingCard extends StatefulWidget {
   final Booking booking;
   final VoidCallback? onApprove;
@@ -78,15 +77,26 @@ class _BookingCardState extends State<BookingCard> {
     final isPaid = booking.paymentStatus == PaymentStatus.paid;
     final isCanStartSession = isPending || booking.status == BookingStatus.upcoming;
     final isOverdue = _isPastStartTime(booking);
-    final bool canAddItems = context.hasPermission('pos_view_menu') &&
-        (booking.status == BookingStatus.upcoming || booking.status == BookingStatus.inProgress);
 
     final String durationHrsStr = (booking.durationMinutes / 60.0).toStringAsFixed(1).replaceAll('.0', '');
     final String userInitials = _getInitials(booking.userName);
     final String formattedDate = DateFormat('MMM dd').format(booking.date);
     final String shortId = booking.id.length > 8 ? booking.id.substring(0, 8) : booking.id;
 
-    // Card Border Color based on status
+    final bool hasExtras = booking.extras.isNotEmpty || booking.canteenOrders.isNotEmpty;
+    String extrasSummary = '';
+    if (booking.extras.isNotEmpty) {
+      final itemsStr = booking.extras.map((e) {
+        final name = e['name_ar'] ?? e['name'] ?? '';
+        final qty = e['quantity'] ?? e['qty'] ?? 1;
+        return '$qty $name';
+      }).take(2).join('، ');
+      extrasSummary = itemsStr;
+      if (booking.extras.length > 2) extrasSummary += '...';
+    } else if (booking.canteenOrders.isNotEmpty) {
+      extrasSummary = '${booking.canteenOrders.length} طلب كافيتريا';
+    }
+
     Color borderColor = AppColors.borderDefault;
     if (isOverdue) {
       borderColor = AppColors.danger.withValues(alpha: 0.8);
@@ -104,7 +114,7 @@ class _BookingCardState extends State<BookingCard> {
         width: widget.width ?? 320.w,
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(14.r),
           border: Border.all(color: borderColor, width: _isHovered || isOverdue ? 1.5 : 1.0),
           boxShadow: [
             BoxShadow(
@@ -113,40 +123,40 @@ class _BookingCardState extends State<BookingCard> {
                   : (_isHovered
                       ? AppColors.neonBlue.withValues(alpha: 0.12)
                       : Colors.black.withValues(alpha: 0.08)),
-              blurRadius: _isHovered ? 12 : 6,
-              offset: const Offset(0, 4),
+              blurRadius: _isHovered ? 10 : 4,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Material(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(14.r),
           child: InkWell(
             onTap: () => _openDetailsDialog(context),
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: BorderRadius.circular(14.r),
             child: Padding(
-              padding: EdgeInsets.all(16.r),
+              padding: EdgeInsets.all(12.r),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. Top Header Bar: Status Badge + ID + Time/Overdue
+                  // 1. Top Header: Status Badge + ID + Time
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
                           _getStatusBadge(booking.status),
-                          SizedBox(width: 8.w),
+                          SizedBox(width: 6.w),
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                            padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
                             decoration: BoxDecoration(
                               color: AppColors.mutedBackground,
                               borderRadius: BorderRadius.circular(4.r),
                             ),
                             child: AppText.body(
                               '#$shortId',
-                              fontSize: 10.sp,
+                              fontSize: 9.sp,
                               color: AppColors.textMuted,
                             ),
                           ),
@@ -155,12 +165,12 @@ class _BookingCardState extends State<BookingCard> {
                       Row(
                         children: [
                           if (isOverdue) ...[
-                            Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 14.r),
-                            SizedBox(width: 4.w),
+                            Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 13.r),
+                            SizedBox(width: 3.w),
                           ],
                           AppText.body(
                             _formatTime(booking.startTime),
-                            fontSize: 11.sp,
+                            fontSize: 10.sp,
                             color: isOverdue ? AppColors.danger : AppColors.textSecondary,
                             fontWeight: isOverdue ? FontWeight.bold : FontWeight.w500,
                           ),
@@ -168,14 +178,14 @@ class _BookingCardState extends State<BookingCard> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 8.h),
 
-                  // 2. Customer Section: Avatar + Name + Contact Info
+                  // 2. Customer Row: Avatar + Name + Contact
                   Row(
                     children: [
                       Container(
-                        width: 38.r,
-                        height: 38.r,
+                        width: 32.r,
+                        height: 32.r,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
@@ -191,215 +201,126 @@ class _BookingCardState extends State<BookingCard> {
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 14.sp,
+                            fontSize: 12.sp,
                           ),
                         ),
                       ),
-                      SizedBox(width: 12.w),
+                      SizedBox(width: 10.w),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             AppText.subHeading(
                               booking.userName ?? AppStrings.anonymous,
-                              fontSize: 14.sp,
+                              fontSize: 13.sp,
                               color: AppColors.textPrimary,
                               maxLines: 1,
                             ),
-                            SizedBox(height: 2.h),
-                            Row(
-                              children: [
-                                if (booking.userPhone != null && booking.userPhone!.isNotEmpty) ...[
-                                  Icon(Icons.phone_outlined, size: 12.r, color: AppColors.neonBlue),
-                                  SizedBox(width: 4.w),
-                                  Expanded(
-                                    child: AppText.body(
-                                      booking.userPhone!,
-                                      fontSize: 11.sp,
-                                      color: AppColors.neonBlue,
-                                      maxLines: 1,
-                                    ),
-                                  ),
-                                ] else if (booking.userEmail != null && booking.userEmail!.isNotEmpty) ...[
-                                  Icon(Icons.email_outlined, size: 12.r, color: AppColors.textSecondary),
-                                  SizedBox(width: 4.w),
-                                  Expanded(
-                                    child: AppText.body(
-                                      booking.userEmail!,
-                                      fontSize: 11.sp,
-                                      color: AppColors.textSecondary,
-                                      maxLines: 1,
-                                    ),
-                                  ),
-                                ] else ...[
-                                  AppText.body(
-                                    AppStrings.anonymous,
-                                    fontSize: 11.sp,
-                                    color: AppColors.textMuted,
-                                  ),
-                                ],
-                              ],
+                            SizedBox(height: 1.h),
+                            AppText.body(
+                              booking.userPhone ?? booking.userEmail ?? AppStrings.anonymous,
+                              fontSize: 10.sp,
+                              color: AppColors.neonBlue,
+                              maxLines: 1,
                             ),
                           ],
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 8.h),
 
-                  // 3. Booking Specifications Box: Lounge, Room, Specs, Date & Time
+                  // 3. Compact Room & Specs Box
                   Container(
-                    padding: EdgeInsets.all(10.r),
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
                     decoration: BoxDecoration(
                       color: AppColors.mutedBackground.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(10.r),
+                      borderRadius: BorderRadius.circular(8.r),
                       border: Border.all(color: AppColors.borderDefault),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Room & Controllers Info
                         Row(
                           children: [
-                            Icon(Icons.sports_esports_outlined, color: AppColors.neonPurple, size: 16.r),
-                            SizedBox(width: 6.w),
-                            Expanded(
-                              child: AppText.subHeading(
-                                booking.roomName.isNotEmpty ? booking.roomName : AppStrings.roomLabel,
-                                fontSize: 13.sp,
-                                color: AppColors.textPrimary,
-                                maxLines: 1,
-                              ),
+                            Icon(Icons.sports_esports_outlined, color: AppColors.neonPurple, size: 14.r),
+                            SizedBox(width: 4.w),
+                            AppText.subHeading(
+                              booking.roomName.isNotEmpty ? booking.roomName : AppStrings.roomLabel,
+                              fontSize: 11.sp,
+                              color: AppColors.textPrimary,
+                              maxLines: 1,
                             ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Icon(Icons.calendar_today_outlined, size: 10.r, color: AppColors.textMuted),
+                            SizedBox(width: 3.w),
+                            AppText.body(
+                              formattedDate,
+                              fontSize: 10.sp,
+                              color: AppColors.textMuted,
+                            ),
+                            SizedBox(width: 6.w),
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                              padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
                               decoration: BoxDecoration(
                                 color: AppColors.cardBackground,
                                 borderRadius: BorderRadius.circular(4.r),
                               ),
                               child: AppText.body(
                                 '$durationHrsStr ${AppStrings.hours}',
-                                fontSize: 10.sp,
+                                fontSize: 9.sp,
                                 color: AppColors.neonPurple,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 6.h),
-
-                        // Schedule & Specs Subtitle
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.calendar_today_outlined, size: 12.r, color: AppColors.textSecondary),
-                                SizedBox(width: 4.w),
-                                AppText.body(
-                                  formattedDate,
-                                  fontSize: 11.sp,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ],
-                            ),
-                            if (booking.controllersCount > 0)
-                              AppText.body(
-                                '${booking.controllersCount} ${AppStrings.controllers}',
-                                fontSize: 11.sp,
-                                color: AppColors.textMuted,
-                              ),
-                          ],
-                        ),
                       ],
                     ),
                   ),
-
-                  // 4. Extras Summary (if present)
-                  if (booking.extras.isNotEmpty) ...[
-                    SizedBox(height: 10.h),
+                  if (hasExtras) ...[
+                    SizedBox(height: 5.h),
                     Container(
-                      padding: EdgeInsets.all(8.r),
-                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.25),
-                        borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(color: AppColors.borderDefault.withValues(alpha: 0.5)),
+                        color: AppColors.neonPurple.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6.r),
+                        border: Border.all(color: AppColors.neonPurple.withValues(alpha: 0.3)),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              Icon(Icons.fastfood_outlined, size: 12.r, color: AppColors.neonBlue),
-                              SizedBox(width: 4.w),
-                              AppText.body(
-                                '${AppStrings.additionalItems} (${booking.extras.length})',
-                                fontSize: 10.sp,
-                                color: AppColors.neonBlue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            booking.extras
-                                .map((item) {
-                                  final qty = item['quantity'] ?? item['qty'] ?? item['count'] ?? 1;
-                                  final name = item['name'] ?? item['name_ar'] ?? item['name_en'] ?? item['title'] ?? 'إضافة';
-                                  return '${qty}x $name';
-                                })
-                                .join(' • '),
-                            style: TextStyle(
+                          Icon(Icons.restaurant_menu_rounded, size: 12.r, color: AppColors.neonPurple),
+                          SizedBox(width: 4.w),
+                          Expanded(
+                            child: AppText.body(
+                              'إضافات: $extrasSummary',
                               fontSize: 10.sp,
-                              color: AppColors.textSecondary,
+                              color: AppColors.neonPurple,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
                     ),
                   ],
+                  SizedBox(height: 8.h),
 
-                  SizedBox(height: 12.h),
-                  const Divider(color: AppColors.borderDefault, height: 1),
-                  SizedBox(height: 10.h),
-
-                  // 5. Price & Financials Bar
+                  // 4. Financials Bar: Price & Paid Badge
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
                         children: [
-                          AppText.body(AppStrings.totalPrice, fontSize: 10.sp, color: AppColors.textMuted),
-                          Row(
-                            children: [
-                              AppText.subHeading(
-                                '${booking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
-                                color: AppColors.neonBlue,
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              if ((booking.discountAmount ?? 0) > 0 || (booking.voucherDiscount ?? 0) > 0) ...[
-                                SizedBox(width: 6.w),
-                                Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.success.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(4.r),
-                                  ),
-                                  child: AppText.body(
-                                    AppStrings.discount,
-                                    fontSize: 9.sp,
-                                    color: AppColors.success,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ],
+                          AppText.body('${AppStrings.totalPrice}: ', fontSize: 10.sp, color: AppColors.textMuted),
+                          AppText.subHeading(
+                            '${booking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
+                            color: AppColors.neonBlue,
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.bold,
                           ),
                         ],
                       ),
@@ -408,97 +329,83 @@ class _BookingCardState extends State<BookingCard> {
                           : StatusBadge.warning(AppStrings.unpaid.toUpperCase()),
                     ],
                   ),
+                  const Spacer(),
 
-                  // 6. Interactive Actions Bar
-                  if (isPending || isCanStartSession || (!isPaid && widget.onConfirmPayment != null) || canAddItems) ...[
-                    SizedBox(height: 12.h),
-                    if (isCanStartSession)
-                      Padding(
-                        padding: EdgeInsets.only(bottom: 6.h),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: StartSessionButton(
-                                bookingId: booking.id,
-                                bookingDate: booking.date,
-                                startTime: booking.startTime,
-                                onSuccess: widget.onStartSession,
-                                height: 34.h,
-                              ),
-                            ),
-                            if (isCanStartSession) ...[
-                              SizedBox(width: 8.w),
-                              Expanded(
-                                flex: 2,
-                                child: AppButton(
-                                  text: AppStrings.noShow,
-                                  icon: Icons.person_off_outlined,
-                                  variant: AppButtonVariant.outlined,
-                                  height: 34.h,
-                                  onPressed: isOverdue ? () => _showNoShowConfirmDialog(context) : null,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    if (isPending)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: AppButton(
-                              text: AppStrings.approve,
-                              onPressed: () {
-                                if (widget.onApprove != null) {
-                                  widget.onApprove!();
-                                } else {
-                                  context.read<BookingCubit>().approveBooking(booking.id);
-                                }
-                              },
-                              height: 34.h,
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Expanded(
-                            child: AppButton(
-                              text: AppStrings.reject,
-                              variant: AppButtonVariant.outlined,
-                              onPressed: () {
-                                if (widget.onReject != null) {
-                                  widget.onReject!();
-                                } else {
-                                  context.read<BookingCubit>().rejectBooking(booking.id);
-                                }
-                              },
-                              height: 34.h,
-                            ),
-                          ),
-                        ],
-                      )
-                    else ...[
-                      if (canAddItems)
-                        Padding(
-                          padding: EdgeInsets.only(bottom: 6.h),
+                  // 5. Compact Action Buttons Bar
+                  if (isPending)
+                    Row(
+                      children: [
+                        Expanded(
                           child: AppButton(
-                            text: AppStrings.addNew,
-                            onPressed: () => _showAddExtrasDialog(context),
-                            width: double.infinity,
-                            height: 34.h,
-                            variant: AppButtonVariant.outlined,
-                            icon: Icons.add_shopping_cart,
+                            text: AppStrings.approve,
+                            onPressed: () {
+                              if (widget.onApprove != null) {
+                                widget.onApprove!();
+                              } else {
+                                context.read<BookingCubit>().approveBooking(booking.id);
+                              }
+                            },
+                            height: 30.h,
                           ),
                         ),
-                      if (!isPaid && widget.onConfirmPayment != null)
-                        AppButton(
-                          text: AppStrings.confirmCash,
-                          onPressed: widget.onConfirmPayment ?? () {},
-                          width: double.infinity,
-                          height: 34.h,
-                          icon: Icons.payments_outlined,
+                        SizedBox(width: 6.w),
+                        Expanded(
+                          child: AppButton(
+                            text: AppStrings.reject,
+                            variant: AppButtonVariant.outlined,
+                            onPressed: () {
+                              if (widget.onReject != null) {
+                                widget.onReject!();
+                              } else {
+                                context.read<BookingCubit>().rejectBooking(booking.id);
+                              }
+                            },
+                            height: 30.h,
+                          ),
                         ),
-                    ],
-                  ],
+                      ],
+                    )
+                  else if (isCanStartSession)
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: StartSessionButton(
+                            bookingId: booking.id,
+                            bookingDate: booking.date,
+                            startTime: booking.startTime,
+                            onSuccess: widget.onStartSession,
+                            height: 30.h,
+                          ),
+                        ),
+                        SizedBox(width: 6.w),
+                        Expanded(
+                          flex: 2,
+                          child: AppButton(
+                            text: AppStrings.noShow,
+                            variant: AppButtonVariant.outlined,
+                            height: 30.h,
+                            onPressed: isOverdue ? () => _showNoShowConfirmDialog(context) : null,
+                          ),
+                        ),
+                      ],
+                    )
+                  else if (!isPaid && widget.onConfirmPayment != null)
+                    AppButton(
+                      text: AppStrings.confirmCash,
+                      onPressed: widget.onConfirmPayment ?? () {},
+                      width: double.infinity,
+                      height: 30.h,
+                      icon: Icons.payments_outlined,
+                    )
+                  else
+                    AppButton(
+                      text: AppStrings.bookingDetails,
+                      variant: AppButtonVariant.outlined,
+                      onPressed: () => _openDetailsDialog(context),
+                      width: double.infinity,
+                      height: 30.h,
+                    ),
                 ],
               ),
             ),
@@ -540,14 +447,14 @@ class _BookingCardState extends State<BookingCard> {
               child: AppText.subHeading(
                 AppStrings.confirmNoShow,
                 color: AppColors.danger,
-                fontSize: 16.sp,
+                fontSize: 15.sp,
               ),
             ),
           ],
         ),
         content: AppText.body(
           AppStrings.confirmNoShowMessage,
-          fontSize: 13.sp,
+          fontSize: 12.sp,
           color: AppColors.textPrimary,
         ),
         actions: [
@@ -593,12 +500,6 @@ class _BookingCardState extends State<BookingCard> {
     } catch (e) {
       return timeStr;
     }
-  }
-
-  void _showAddExtrasDialog(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppStrings.underConstruction)),
-    );
   }
 
   Widget _getStatusBadge(BookingStatus status) {

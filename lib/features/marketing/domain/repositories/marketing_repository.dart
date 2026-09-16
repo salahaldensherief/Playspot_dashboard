@@ -8,6 +8,7 @@ import '../entities/notification_entity.dart';
 abstract class MarketingRepository {
   Future<Either<Failure, List<PromoEntity>>> getPromotions({String? loungeId, String? city});
   Future<Either<Failure, void>> createPromotion(PromoEntity promo);
+  Future<Either<Failure, void>> updatePromotion(PromoEntity promo);
   Future<Either<Failure, void>> deletePromotion(String id);
   Future<Either<Failure, String>> uploadPromoPoster(Uint8List fileBytes, String fileName);
 

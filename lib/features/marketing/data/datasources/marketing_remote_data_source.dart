@@ -7,6 +7,7 @@ import '../models/notification_model.dart';
 abstract class MarketingRemoteDataSource {
   Future<List<PromoModel>> getPromotions({String? loungeId, String? city});
   Future<void> createPromotion(PromoModel promo);
+  Future<void> updatePromotion(PromoModel promo);
   Future<void> deletePromotion(String id);
   Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName);
 
@@ -45,6 +46,22 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
 
   @override
   Future<void> createPromotion(PromoModel promo) async {
+    // Try publish_promotion RPC first
+    try {
+      await _supabase.rpc('publish_promotion', params: {
+        'p_lounge_id': promo.loungeId,
+        'p_title_ar': promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn,
+        'p_title_en': promo.titleEn.isNotEmpty ? promo.titleEn : promo.titleAr,
+        'p_tag_ar': promo.tagAr.isNotEmpty ? promo.tagAr : promo.tag,
+        'p_tag_en': promo.tagEn.isNotEmpty ? promo.tagEn : promo.tag,
+        'p_room_id': promo.roomId,
+        'p_expires_at': promo.expiresAt?.toIso8601String(),
+      });
+      return;
+    } catch (e) {
+      debugPrint('⚠️ [MARKETING_REMOTE] publish_promotion RPC error ($e), falling back to direct table insert');
+    }
+
     final promoJson = promo.toJson();
     final payload = {
       ...promoJson,
@@ -71,26 +88,118 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
   }
 
   @override
+  Future<void> updatePromotion(PromoModel promo) async {
+    if (promo.id.isEmpty) {
+      throw Exception('Promotion ID is required for update');
+    }
+
+    final payload = <String, dynamic>{
+      'title_ar': promo.titleAr,
+      'title_en': promo.titleEn,
+      'tag_ar': promo.tagAr,
+      'tag_en': promo.tagEn,
+      'title': promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn,
+      'tag': promo.tagAr.isNotEmpty ? promo.tagAr : promo.tagEn,
+      if (promo.imageUrl != null) 'image_url': promo.imageUrl,
+      if (promo.deepLink != null) 'deep_link': promo.deepLink,
+      if (promo.expiresAt != null) 'expires_at': promo.expiresAt!.toIso8601String(),
+      if (promo.roomId != null) 'room_id': promo.roomId,
+      'is_room_specific': promo.isRoomSpecific,
+      'target_audience': promo.targetAudience,
+    };
+
+    // Rule: Do NOT change lounge_id to another Lounge during promotion update.
+    // lounge_id is preserved from original record to prevent cross-lounge reassignment.
+    await _supabase.from('promotions').update(payload).eq('id', promo.id);
+  }
+
+  @override
   Future<void> deletePromotion(String id) async {
-    await _supabase.from('promotions').delete().eq('id', id);
+    try {
+      await _supabase.from('promotions').delete().eq('id', id);
+    } on PostgrestException catch (e) {
+      if (e.code == '42501' || e.message.contains('permission denied')) {
+        throw Exception('عفواً، لا تملك الصلاحية الكافية لحذف هذا العرض (RLS Restricted).');
+      }
+      rethrow;
+    }
   }
 
   @override
   Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName) async {
     final path = 'posters/${DateTime.now().millisecondsSinceEpoch}_$fileName';
-    await _supabase.storage.from('promo-assets').uploadBinary(path, fileBytes);
-    return _supabase.storage.from('promo-assets').getPublicUrl(path);
+    
+    // 1. Try promotion-assets bucket (newly created bucket)
+    try {
+      await _supabase.storage.from('promotion-assets').uploadBinary(path, fileBytes);
+      return _supabase.storage.from('promotion-assets').getPublicUrl(path);
+    } catch (e) {
+      debugPrint('⚠️ [MARKETING_REMOTE] promotion-assets bucket upload error ($e), attempting promo-assets...');
+    }
+
+    // 2. Fallback to promo-assets bucket
+    try {
+      await _supabase.storage.from('promo-assets').uploadBinary(path, fileBytes);
+      return _supabase.storage.from('promo-assets').getPublicUrl(path);
+    } catch (e) {
+      debugPrint('⚠️ [MARKETING_REMOTE] promo-assets bucket upload error ($e), attempting lounge-assets...');
+    }
+
+    // 3. Fallback to lounge-assets bucket
+    try {
+      await _supabase.storage.from('lounge-assets').uploadBinary(path, fileBytes);
+      return _supabase.storage.from('lounge-assets').getPublicUrl(path);
+    } catch (e) {
+      debugPrint('⚠️ [MARKETING_REMOTE] lounge-assets bucket upload error ($e), attempting tournament-assets...');
+    }
+
+    // 4. Fallback to tournament-assets bucket
+    try {
+      await _supabase.storage.from('tournament-assets').uploadBinary(path, fileBytes);
+      return _supabase.storage.from('tournament-assets').getPublicUrl(path);
+    } catch (e) {
+      debugPrint('⚠️ [MARKETING_REMOTE] All storage buckets unavailable: $e');
+    }
+
+    // Return empty string gracefully if no storage buckets exist on Supabase
+    debugPrint('⚠️ [MARKETING_REMOTE] No storage buckets exist on Supabase. Returning empty image url gracefully.');
+    return '';
   }
 
   @override
   Future<void> sendNotification(NotificationModel notification) async {
-    await _supabase.from('notifications').insert(notification.toJson());
+    try {
+      await _supabase.rpc('send_notification', params: {
+        'p_user_id': notification.userId,
+        'p_title_ar': notification.titleAr,
+        'p_title_en': notification.titleEn,
+        'p_body_ar': notification.bodyAr,
+        'p_body_en': notification.bodyEn,
+        'p_type': notification.type.toString().split('.').last,
+      });
+      return;
+    } catch (e) {
+      debugPrint('⚠️ [MARKETING_REMOTE] send_notification RPC error: $e, attempting direct insert fallback');
+      try {
+        await _supabase.from('notifications').insert(notification.toJson());
+      } on PostgrestException catch (pe) {
+        if (pe.code == '42501' || pe.message.contains('permission denied')) {
+          throw Exception('عفواً، يتطلب إرسال الإشعارات صلاحيات المسؤول الفائق (Super Admin).');
+        }
+        rethrow;
+      }
+    }
   }
 
   @override
   Future<List<NotificationModel>> getNotifications() async {
-    final response = await _supabase.from('notifications').select().order('created_at', ascending: false);
-    return (response as List).map((json) => NotificationModel.fromJson(json)).toList();
+    try {
+      final response = await _supabase.from('notifications').select().order('created_at', ascending: false);
+      return (response as List).map((json) => NotificationModel.fromJson(json)).toList();
+    } catch (e) {
+      debugPrint('⚠️ [MARKETING_REMOTE] getNotifications query error: $e');
+      return [];
+    }
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,6 +7,19 @@ import 'art_core/theme/app_colors.dart';
 import 'core/router/app_router.dart';
 import 'features/auth/presentation/login/login_cubit.dart';
 import 'core/di/di.dart';
+
+class AppScrollBehavior extends MaterialScrollBehavior {
+  const AppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.unknown,
+      };
+}
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -47,6 +61,7 @@ class _MyAppState extends State<MyApp> {
             return MaterialApp.router(
               title: 'PlaySpot Dashboard',
               debugShowCheckedModeBanner: false,
+              scrollBehavior: const AppScrollBehavior(),
               localizationsDelegates: context.localizationDelegates,
               supportedLocales: context.supportedLocales,
               locale: context.locale,

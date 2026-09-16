@@ -331,9 +331,18 @@ class AppStrings {
   static String get noPromotions => 'no_promotions'.tr();
   static String get noTournaments => 'no_tournaments'.tr();
   static String get noNotifications => 'no_notifications'.tr();
-  static String get promotionsTab => 'promotions_tab'.tr();
-  static String get notificationsTab => 'notifications_tab'.tr();
-  static String get newNotification => 'new_notification'.tr();
+  static String get promotionsTab {
+    final val = 'promotions_tab'.tr();
+    return (val == 'promotions_tab' || val.isEmpty) ? 'العروض الترويجية' : val;
+  }
+  static String get notificationsTab {
+    final val = 'notifications_tab'.tr();
+    return (val == 'notifications_tab' || val.isEmpty) ? 'سجل التنبيهات' : val;
+  }
+  static String get newNotification {
+    final val = 'new_notification'.tr();
+    return (val == 'new_notification' || val.isEmpty) ? 'تنبيه جديد' : val;
+  }
 
   // Lounge Profile
   static String get loungeProfile => 'lounge_profile'.tr();
@@ -724,6 +733,23 @@ class AppStrings {
   static String get loungeComparisonTitle => 'lounge_comparison_title'.tr();
   static String get auditLogTab => 'audit_log_tab'.tr();
   static String get noDataFound => 'no_data_found'.tr();
+  static String get clientRequestsAndAlerts => 'client_requests_and_alerts'.tr();
+  static String get quickOpenShiftInstant => 'quick_open_shift_instant'.tr();
+  static String get shiftOpenedSuccessMsg => 'shift_opened_success_msg'.tr();
+  static String get devicesAndRoomsMap => 'devices_and_rooms_map'.tr();
+  static String get finishedBookingsHistoryToday => 'finished_bookings_history_today'.tr();
+  static String get showAsTable => 'show_as_table'.tr();
+  static String get showAsCards => 'show_as_cards'.tr();
+  static String get customer => 'customer'.tr();
+  static String get time => 'time'.tr();
+  static String get amount => 'amount'.tr();
+  static String get paymentMethod => 'payment_method'.tr();
+  static String get morningPeriod => 'morning_period'.tr();
+  static String get eveningPeriod => 'evening_period'.tr();
+  static String get day => 'day'.tr();
+  static String get week => 'week'.tr();
+  static String get month => 'month'.tr();
+  static String newRequestsCount(String count) => 'new_requests_count'.tr(args: [count]);
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

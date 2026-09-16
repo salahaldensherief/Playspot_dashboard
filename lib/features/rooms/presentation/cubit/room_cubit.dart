@@ -11,8 +11,9 @@ class RoomCubit extends Cubit<RoomState> {
 
   RoomCubit(this._repository) : super(const RoomState());
 
-  void watchRooms(String loungeId, {bool forceRefresh = false}) {
-    if (loungeId.isEmpty) {
+  void watchRooms(String? loungeId, {bool forceRefresh = false}) {
+    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
+    if (cleanLoungeId == null) {
       emit(state.copyWith(
         status: RoomStatus.failure,
         errorMessage: 'Lounge ID is required to watch rooms',
@@ -20,14 +21,15 @@ class RoomCubit extends Cubit<RoomState> {
       return;
     }
 
-    if (!forceRefresh && _subscription != null && _watchedLoungeId == loungeId) {
+    // Idempotent stream subscription guard inside the Cubit
+    if (!forceRefresh && _subscription != null && _watchedLoungeId == cleanLoungeId) {
       return;
     }
 
-    _watchedLoungeId = loungeId;
+    _watchedLoungeId = cleanLoungeId;
     emit(state.copyWith(status: RoomStatus.loading));
     _subscription?.cancel();
-    _subscription = _repository.watchRooms(loungeId).listen(
+    _subscription = _repository.watchRooms(cleanLoungeId).listen(
       (rooms) {
         if (isClosed) return;
         emit(state.copyWith(

@@ -42,7 +42,9 @@ class MarketingCubit extends Cubit<MarketingState> {
 
   Future<void> createPromotion(PromoEntity promo) async {
     emit(state.copyWith(status: MarketingStatus.loading));
-    final result = await repository.createPromotion(promo);
+    final result = (promo.id.isNotEmpty)
+        ? await repository.updatePromotion(promo)
+        : await repository.createPromotion(promo);
     if (isClosed) return;
     result.fold(
       (failure) => emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message)),

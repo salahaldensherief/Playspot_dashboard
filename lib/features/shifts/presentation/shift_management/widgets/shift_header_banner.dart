@@ -30,11 +30,7 @@ class ShiftHeaderBanner extends StatelessWidget {
           builder: (context, state) {
             // If no active shift
             if (state.status == ShiftStatus.initial && state.activeShift == null) {
-              if (user.isCashier) {
-                return _buildNoActiveShiftBanner(context, loungeId);
-              } else {
-                return const SizedBox.shrink();
-              }
+              return _buildNoActiveShiftBanner(context, loungeId, isMandatory: user.isCashier);
             }
 
             // If there is an active shift
@@ -49,23 +45,31 @@ class ShiftHeaderBanner extends StatelessWidget {
     );
   }
 
-  Widget _buildNoActiveShiftBanner(BuildContext context, String loungeId) {
+  Widget _buildNoActiveShiftBanner(BuildContext context, String loungeId, {bool isMandatory = false}) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
-      color: AppColors.danger.withValues(alpha: 0.1),
+      color: (isMandatory ? AppColors.danger : AppColors.neonBlue).withValues(alpha: 0.1),
       child: Row(
         children: [
-          Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 20.r),
+          Icon(
+            isMandatory ? Icons.warning_amber_rounded : Icons.info_outline,
+            color: isMandatory ? AppColors.danger : AppColors.neonBlue,
+            size: 20.r,
+          ),
           SizedBox(width: 12.w),
           Text(
             AppStrings.noActiveShift,
-            style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold, fontSize: 14.sp),
+            style: TextStyle(
+              color: isMandatory ? AppColors.danger : AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 14.sp,
+            ),
           ),
           const Spacer(),
           AppButton(
             text: AppStrings.openNewShift,
-            onPressed: () => _showOpenShiftDialog(context, loungeId),
+            onPressed: () => _showOpenShiftDialog(context, loungeId, isDismissible: !isMandatory),
             variant: AppButtonVariant.primary,
             height: 32.h,
           ),
@@ -144,14 +148,14 @@ class ShiftHeaderBanner extends StatelessWidget {
     );
   }
 
-  void _showOpenShiftDialog(BuildContext context, String loungeId) {
+  void _showOpenShiftDialog(BuildContext context, String loungeId, {bool isDismissible = true}) {
     final shiftCubit = context.read<ShiftCubit>();
     final loginCubit = context.read<LoginCubit>();
     final permissionsCubit = context.read<PermissionsCubit>();
 
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: isDismissible,
       builder: (diagContext) => MultiBlocProvider(
         providers: [
           BlocProvider.value(value: shiftCubit),
@@ -159,6 +163,7 @@ class ShiftHeaderBanner extends StatelessWidget {
           BlocProvider.value(value: permissionsCubit),
         ],
         child: OpenShiftDialog(
+          isDismissible: isDismissible,
           onConfirm: (startingCash) {
             shiftCubit.openShift(loungeId, startingCash);
             Navigator.pop(diagContext);

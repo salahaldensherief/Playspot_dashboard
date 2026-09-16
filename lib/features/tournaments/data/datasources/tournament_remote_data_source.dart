@@ -321,50 +321,102 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
 
   @override
   Future<void> cancelTournament(String tournamentId, String reason) async {
+    final cleanReason = reason.trim();
+    if (cleanReason.isEmpty) {
+      throw Exception('سبب إلغاء البطولة إجباري ولا يمكن أن يكون فارغاً.');
+    }
+
     try {
       await client.rpc('cancel_tournament', params: {
         'p_tournament_id': tournamentId,
-        'p_reason': reason,
+        'p_reason': cleanReason,
       });
     } catch (e) {
       debugPrint('⚠️ [TOURNAMENTS_REMOTE] cancel_tournament RPC error: $e, fallback update');
       await client
           .from('tournaments')
-          .update({'status': 'cancelled'})
+          .update({
+            'status': 'cancelled',
+            'cancellation_reason': cleanReason,
+          })
           .eq('id', tournamentId);
     }
   }
 
   @override
   Future<void> deleteDraftTournament(String tournamentId) async {
+    // Rule: Do NOT delete draft if it has tournament_participants or tournament_matches
+    try {
+      final participantsRes = await client
+          .from('tournament_participants')
+          .select('id')
+          .eq('tournament_id', tournamentId)
+          .limit(1);
+
+      final matchesRes = await client
+          .from('tournament_matches')
+          .select('id')
+          .eq('tournament_id', tournamentId)
+          .limit(1);
+
+      final hasParticipants = (participantsRes as List).isNotEmpty;
+      final hasMatches = (matchesRes as List).isNotEmpty;
+
+      if (hasParticipants || hasMatches) {
+        throw Exception('لا يمكن حذف المسودة لوجود مشاركين أو مباريات مسجلة فيها. يجب استخدام الإلغاء بدلاً من الحذف.');
+      }
+    } catch (e) {
+      if (e.toString().contains('لا يمكن حذف المسودة')) rethrow;
+    }
+
     try {
       await client.rpc('delete_draft_tournament', params: {'p_tournament_id': tournamentId});
     } catch (e) {
-      debugPrint('⚠️ [TOURNAMENTS_REMOTE] delete_draft_tournament RPC error: $e, fallback delete');
+      debugPrint('⚠️ [TOURNAMENTS_REMOTE] delete_draft_tournament RPC error: $e, fallback delete for draft status');
       await client.from('tournaments').delete().eq('id', tournamentId).eq('status', 'draft');
     }
   }
 
   @override
-  Future<void> deleteTournament(String tournamentId) async {
+  Future<void> deleteTournament(String tournamentId, {String? cancelReason}) async {
+    // Rule: Check status first.
+    // If draft without participants/matches -> delete_draft_tournament.
+    // If published/started or has participants/matches -> cancel_tournament with non-empty reason.
     try {
-      try {
-        await client.rpc('delete_draft_tournament', params: {'p_tournament_id': tournamentId});
-        return;
-      } catch (_) {}
-
-      try {
-        await client.rpc('cancel_tournament', params: {
-          'p_tournament_id': tournamentId,
-          'p_reason': 'Cancelled / Archived by admin',
-        });
-        return;
-      } catch (_) {}
-
-      await client
+      final tData = await client
           .from('tournaments')
-          .update({'status': 'cancelled'})
-          .eq('id', tournamentId);
+          .select('status')
+          .eq('id', tournamentId)
+          .maybeSingle();
+
+      if (tData == null) {
+        throw Exception('البطولة غير موجودة');
+      }
+
+      final status = tData['status']?.toString() ?? 'draft';
+
+      if (status == 'draft') {
+        try {
+          await deleteDraftTournament(tournamentId);
+          return;
+        } catch (e) {
+          if (e.toString().contains('لا يمكن حذف المسودة')) {
+            final reason = (cancelReason != null && cancelReason.trim().isNotEmpty)
+                ? cancelReason.trim()
+                : 'إلغاء مسودة مرتبطة بمشاركين أو مباريات';
+            await cancelTournament(tournamentId, reason);
+            return;
+          }
+          rethrow;
+        }
+      }
+
+      // Non-draft tournament (published, in-progress, completed, etc.): MUST cancel, NEVER delete.
+      final reason = (cancelReason != null && cancelReason.trim().isNotEmpty)
+          ? cancelReason.trim()
+          : 'إلغاء البطولة بقرار من الإدارة';
+
+      await cancelTournament(tournamentId, reason);
     } catch (e) {
       debugPrint('⚠️ [TOURNAMENTS_REMOTE] deleteTournament error: $e');
       rethrow;

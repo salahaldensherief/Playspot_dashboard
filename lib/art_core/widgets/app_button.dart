@@ -66,30 +66,42 @@ class AppButton extends StatelessWidget {
 
     Widget buttonContent = isLoading
         ? SizedBox(
-            height: 20.r,
-            width: 20.r,
+            height: 18.r,
+            width: 18.r,
             child: CircularProgressIndicator(strokeWidth: 2, color: effectiveFg),
           )
         : Row(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (icon != null) Icon(icon, size: 18.r, color: effectiveFg),
-              if (icon != null) SizedBox(width: 8.w),
+              if (icon != null) ...[
+                Icon(icon, size: 16.r, color: effectiveFg),
+                SizedBox(width: 6.w),
+              ],
               Flexible(
-                child: Text(
-                  text,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: effectiveFg,
-                    fontWeight: FontWeight.bold,
-                    fontSize: fontSize ?? 14.sp,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.center,
+                  child: Text(
+                    text,
+                    maxLines: 1,
+                    style: TextStyle(
+                      color: effectiveFg,
+                      fontWeight: FontWeight.bold,
+                      fontSize: fontSize ?? 13.sp,
+                    ),
                   ),
                 ),
               ),
             ],
           );
+
+    final EdgeInsetsGeometry defaultPadding = padding ??
+        EdgeInsets.symmetric(
+          horizontal: 14.w,
+          vertical: height != null ? 4.h : 10.h,
+        );
 
     if (isGradient) {
       final Gradient effectiveGradient = gradient ??
@@ -103,7 +115,7 @@ class AppButton extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 4.h),
         child: Container(
           width: width,
-          height: height ?? 48.h,
+          height: height ?? 44.h,
           decoration: BoxDecoration(
             gradient: onPressed == null || isLoading ? null : effectiveGradient,
             color: onPressed == null || isLoading
@@ -116,8 +128,8 @@ class AppButton extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
-              padding: padding ?? EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-              minimumSize: Size(width ?? 0, height ?? 48.h),
+              padding: defaultPadding,
+              minimumSize: Size(width ?? 0, height ?? 44.h),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(effectiveRadius),
               ),
@@ -137,8 +149,8 @@ class AppButton extends StatelessWidget {
           foregroundColor: effectiveFg,
           disabledBackgroundColor: disabledBackgroundColor ?? AppColors.cardBackground,
           disabledForegroundColor: disabledForegroundColor ?? AppColors.textMuted,
-          padding: padding ?? (height != null ? EdgeInsets.zero : EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h)),
-          minimumSize: Size(width ?? 0, height ?? 48.h),
+          padding: defaultPadding,
+          minimumSize: Size(width ?? 0, height ?? 44.h),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(effectiveRadius),
             side: isOutlined

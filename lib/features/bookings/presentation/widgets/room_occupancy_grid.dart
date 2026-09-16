@@ -90,56 +90,71 @@ class _RoomOccupancyGridState extends State<RoomOccupancyGrid> {
               return true;
             }).toList();
 
+            final isNarrow = MediaQuery.sizeOf(context).width < 800;
+
+            final titleWidget = Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.meeting_room_outlined, color: AppColors.neonBlue, size: 20.r),
+                SizedBox(width: 8.w),
+                AppText.heading(
+                  AppStrings.roomUtilization,
+                  fontSize: 15.sp,
+                ),
+              ],
+            );
+
+            final filterChipsBar = SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: [
+                  _buildFilterChip(
+                    label: '${AppStrings.viewAll} (${rooms.length})',
+                    value: 'all',
+                    color: AppColors.neonBlue,
+                  ),
+                  SizedBox(width: 8.w),
+                  _buildFilterChip(
+                    label: 'خالية ($availableCount)',
+                    value: 'available',
+                    color: AppColors.success,
+                  ),
+                  SizedBox(width: 8.w),
+                  _buildFilterChip(
+                    label: 'مشغولة ($occupiedCount)',
+                    value: 'occupied',
+                    color: AppColors.danger,
+                  ),
+                  if (maintenanceCount > 0) ...[
+                    SizedBox(width: 8.w),
+                    _buildFilterChip(
+                      label: 'صيانة ($maintenanceCount)',
+                      value: 'maintenance',
+                      color: AppColors.warning,
+                    ),
+                  ],
+                ],
+              ),
+            );
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header & Filter Badges
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.meeting_room_outlined, color: AppColors.neonBlue, size: 20.r),
-                        SizedBox(width: 8.w),
-                        AppText.heading(
-                          AppStrings.roomUtilization,
-                          fontSize: 16.sp,
-                        ),
-                      ],
-                    ),
-
-                    // Filter Chips Bar
-                    Row(
-                      children: [
-                        _buildFilterChip(
-                          label: '${AppStrings.viewAll} (${rooms.length})',
-                          value: 'all',
-                          color: AppColors.neonBlue,
-                        ),
-                        SizedBox(width: 8.w),
-                        _buildFilterChip(
-                          label: 'خالية ($availableCount)',
-                          value: 'available',
-                          color: AppColors.success,
-                        ),
-                        SizedBox(width: 8.w),
-                        _buildFilterChip(
-                          label: 'مشغولة ($occupiedCount)',
-                          value: 'occupied',
-                          color: AppColors.danger,
-                        ),
-                        if (maintenanceCount > 0) ...[
-                          SizedBox(width: 8.w),
-                          _buildFilterChip(
-                            label: 'صيانة ($maintenanceCount)',
-                            value: 'maintenance',
-                            color: AppColors.warning,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
+                // Header & Filter Badges (Responsive)
+                if (isNarrow) ...[
+                  titleWidget,
+                  SizedBox(height: 10.h),
+                  filterChipsBar,
+                ] else ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      titleWidget,
+                      Flexible(child: filterChipsBar),
+                    ],
+                  ),
+                ],
                 SizedBox(height: 14.h),
 
                 // Rooms Grid / Wrap
@@ -288,8 +303,12 @@ class _RoomOccupancyCardState extends State<_RoomOccupancyCard> {
       isExpired = activeBooking.isSessionExpired();
     }
 
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final double cardWidth = screenWidth < 360 ? double.infinity : 320.w;
+
     return Container(
-      width: 320.w,
+      width: cardWidth,
+      constraints: BoxConstraints(maxWidth: 320.w),
       padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,

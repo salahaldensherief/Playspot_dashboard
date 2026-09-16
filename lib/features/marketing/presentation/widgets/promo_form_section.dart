@@ -121,7 +121,7 @@ class PromoFormSection extends StatelessWidget {
               child: CustomDropdown<String>(
                 label: AppStrings.tagCategory,
                 value: selectedTag,
-                items: const ['Offer', 'Event', 'Tournament', 'New'],
+                items: const ['Offer', 'Event', 'Tournament', 'New', '20% OFF'],
                 itemLabel: (s) => s,
                 onChanged: onTagChanged,
                 validator: (v) => v == null ? AppStrings.fieldRequired : null,
@@ -183,7 +183,7 @@ class PromoFormSection extends StatelessWidget {
         CustomDropdown<String>(
           label: AppStrings.deepLinkDest,
           value: selectedDeepLink,
-          items: const ['Specific Room', 'Lounge Profile', 'External Link'],
+          items: const ['Specific Room', 'Lounge Profile', 'External Link', '/offers'],
           itemLabel: (s) => s,
           onChanged: onDeepLinkChanged,
         ),

@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -21,13 +22,22 @@ class StorageServiceImpl implements StorageService {
     final extension = fileName.split('.').last;
     final path = '$loungeId/$fileId.$extension';
     
-    await _supabase.storage.from('lounge-assets').uploadBinary(
-      path, 
-      fileBytes,
-      fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
-    );
-    
-    return _supabase.storage.from('lounge-assets').getPublicUrl(path);
+    try {
+      await _supabase.storage.from('lounge-assets').uploadBinary(
+        path, 
+        fileBytes,
+        fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+      );
+      return _supabase.storage.from('lounge-assets').getPublicUrl(path);
+    } catch (e) {
+      debugPrint('⚠️ [STORAGE_SERVICE] lounge-assets upload error: $e. Attempting fallback...');
+      try {
+        await _supabase.storage.from('promo-assets').uploadBinary(path, fileBytes);
+        return _supabase.storage.from('promo-assets').getPublicUrl(path);
+      } catch (e2) {
+        throw Exception('عفواً، مجلد التخزين (Bucket) غير موجود في Supabase. يرجى إنشاء مجلد lounge-assets أو promo-assets وتحديده كـ Public.');
+      }
+    }
   }
 
   @override
@@ -46,8 +56,18 @@ class StorageServiceImpl implements StorageService {
     final extension = fileName.split('.').last;
     final path = '$loungeId/$fileId.$extension';
 
-    await _supabase.storage.from('room-assets').uploadBinary(path, fileBytes);
-    return _supabase.storage.from('room-assets').getPublicUrl(path);
+    try {
+      await _supabase.storage.from('room-assets').uploadBinary(path, fileBytes);
+      return _supabase.storage.from('room-assets').getPublicUrl(path);
+    } catch (e) {
+      debugPrint('⚠️ [STORAGE_SERVICE] room-assets upload error: $e. Attempting fallback...');
+      try {
+        await _supabase.storage.from('lounge-assets').uploadBinary(path, fileBytes);
+        return _supabase.storage.from('lounge-assets').getPublicUrl(path);
+      } catch (e2) {
+        throw Exception('عفواً، مجلد التخزين (Bucket) غير موجود في Supabase. يرجى إنشاء مجلد room-assets أو lounge-assets.');
+      }
+    }
   }
 
   @override
@@ -65,11 +85,21 @@ class StorageServiceImpl implements StorageService {
     final extension = fileName.contains('.') ? fileName.split('.').last : 'webp';
     final path = '$tournamentId/banner.$extension';
 
-    await _supabase.storage.from('tournament-assets').uploadBinary(
-      path,
-      fileBytes,
-      fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
-    );
-    return _supabase.storage.from('tournament-assets').getPublicUrl(path);
+    try {
+      await _supabase.storage.from('tournament-assets').uploadBinary(
+        path,
+        fileBytes,
+        fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+      );
+      return _supabase.storage.from('tournament-assets').getPublicUrl(path);
+    } catch (e) {
+      debugPrint('⚠️ [STORAGE_SERVICE] tournament-assets upload error: $e. Attempting fallback...');
+      try {
+        await _supabase.storage.from('promo-assets').uploadBinary(path, fileBytes);
+        return _supabase.storage.from('promo-assets').getPublicUrl(path);
+      } catch (e2) {
+        throw Exception('عفواً، مجلد التخزين (Bucket) غير موجود في Supabase. يرجى إنشاء مجلد tournament-assets أو promo-assets.');
+      }
+    }
   }
 }

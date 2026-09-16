@@ -670,6 +670,23 @@
   "cashier_performance_title": "تقرير أداء الكاشير",
   "lounge_comparison_title": "مقارنة أداء الفروع",
   "audit_log_tab": "سجل الحركات",
-  "no_data_found": "لا توجد بيانات متاحة"
+  "no_data_found": "لا توجد بيانات متاحة",
+  "client_requests_and_alerts": "طلبات العملاء والإنذارات",
+  "quick_open_shift_instant": "فتح وردية فورية",
+  "shift_opened_success_msg": "تم فتح الوردية بنجاح! يمكنك إضافة الحجز الآن.",
+  "devices_and_rooms_map": "خريطة الأجهزة والغرف",
+  "finished_bookings_history_today": "سجل الحجوزات المنتهية اليوم",
+  "show_as_table": "عرض كجدول",
+  "show_as_cards": "عرض ككروت",
+  "customer": "العميل",
+  "time": "الوقت",
+  "amount": "المبلغ",
+  "payment_method": "طريقة الدفع",
+  "morning_period": "الفترة الصباحية",
+  "evening_period": "الفترة المسائية",
+  "day": "يوم",
+  "week": "أسبوع",
+  "month": "شهر",
+  "new_requests_count": "{} طلب جديد"
 }
 

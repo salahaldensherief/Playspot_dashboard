@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_breakpoints.dart';
 
 class Responsive extends StatelessWidget {
   final Widget mobile;
@@ -12,22 +13,18 @@ class Responsive extends StatelessWidget {
     required this.desktop,
   });
 
-  static bool isMobile(BuildContext context) =>
-      MediaQuery.sizeOf(context).width < 850;
+  static bool isMobile(BuildContext context) => AppBreakpoints.isMobile(context);
 
-  static bool isTablet(BuildContext context) =>
-      MediaQuery.sizeOf(context).width < 1100 &&
-      MediaQuery.sizeOf(context).width >= 850;
+  static bool isTablet(BuildContext context) => AppBreakpoints.isTablet(context);
 
-  static bool isDesktop(BuildContext context) =>
-      MediaQuery.sizeOf(context).width >= 1100;
+  static bool isDesktop(BuildContext context) => AppBreakpoints.isDesktop(context);
 
   @override
   Widget build(BuildContext context) {
     final double width = MediaQuery.sizeOf(context).width;
-    if (width >= 1100) {
+    if (width >= AppBreakpoints.desktopMin) {
       return desktop;
-    } else if (width >= 850 && tablet != null) {
+    } else if (width >= AppBreakpoints.mobileMax && tablet != null) {
       return tablet!;
     } else {
       return mobile;

@@ -113,6 +113,8 @@ class Booking extends Equatable {
     this.roomPrice,
   });
 
+  bool get isOpenEnded => durationMinutes <= 0;
+
   @override
   List<Object?> get props => [
         id,

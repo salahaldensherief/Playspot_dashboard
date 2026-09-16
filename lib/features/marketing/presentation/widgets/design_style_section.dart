@@ -52,7 +52,7 @@ class DesignStyleSection extends StatelessWidget {
         CustomDropdown<String>(
           label: AppStrings.promoIcon,
           value: selectedIcon,
-          items: const ['Flash', 'Star', 'Gift', 'Hot'],
+          items: const ['Flash', 'Star', 'Gift', 'Hot', 'local_offer'],
           itemLabel: (s) => s,
           onChanged: onIconChanged,
         ),

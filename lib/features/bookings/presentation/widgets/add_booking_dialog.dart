@@ -14,6 +14,7 @@ import 'package:play_spot_dashboard/features/shifts/presentation/shift_managemen
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_extras_dialog.dart';
 
 class AddBookingDialog extends StatefulWidget {
   final String loungeId;
@@ -37,6 +38,8 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
   RoomEntity? _selectedRoom;
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _startTime = TimeOfDay.now();
+  List<Map<String, dynamic>> _selectedExtras = [];
+  double _extrasTotal = 0.0;
 
   @override
   void initState() {
@@ -210,7 +213,12 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                   },
                 ),
 
-                SizedBox(height: 32.h),
+                SizedBox(height: 20.h),
+
+                // Extras Section
+                _buildExtrasSection(),
+
+                SizedBox(height: 20.h),
 
                 // Price Calculation Summary
                 if (_selectedRoom != null) 
@@ -221,7 +229,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                     },
                   ),
 
-                SizedBox(height: 32.h),
+                SizedBox(height: 24.h),
 
                 // Action Buttons
                 Row(
@@ -317,9 +325,120 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     );
   }
 
+  Widget _buildExtrasSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.restaurant_menu_rounded, size: 18.r, color: AppColors.neonBlue),
+                SizedBox(width: 6.w),
+                AppText.body(AppStrings.extras, fontWeight: FontWeight.bold),
+              ],
+            ),
+            InkWell(
+              onTap: _openAddExtrasModal,
+              borderRadius: BorderRadius.circular(6.r),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                child: Row(
+                  children: [
+                    Icon(Icons.add_circle_outline, size: 16.r, color: AppColors.neonBlue),
+                    SizedBox(width: 4.w),
+                    AppText.body(
+                      AppStrings.addExtrasToSession,
+                      fontSize: 12.sp,
+                      color: AppColors.neonBlue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 8.h),
+        if (_selectedExtras.isEmpty)
+          Container(
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(
+              color: AppColors.cardBackground,
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: AppColors.borderDefault),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, size: 16.r, color: AppColors.textMuted),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: AppText.body(
+                    'لم يتم إضافة مشروبات أو مأكولات مع الحجز حتى الآن',
+                    fontSize: 12.sp,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: _selectedExtras.map((item) {
+              final name = item['name_ar'] ?? item['name'] ?? '';
+              final qty = item['quantity'] ?? item['qty'] ?? 1;
+              final price = (item['price'] ?? item['unit_price'] ?? 0.0) * qty;
+
+              return Chip(
+                backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
+                side: const BorderSide(color: AppColors.neonBlue),
+                avatar: CircleAvatar(
+                  backgroundColor: AppColors.neonBlue,
+                  child: Text('$qty', style: TextStyle(color: Colors.black, fontSize: 10.sp, fontWeight: FontWeight.bold)),
+                ),
+                label: Text(
+                  '$name (${price.toStringAsFixed(0)} ${AppStrings.egp})',
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 11.sp),
+                ),
+                deleteIcon: const Icon(Icons.close, size: 14),
+                deleteIconColor: AppColors.danger,
+                onDeleted: () {
+                  setState(() {
+                    _selectedExtras.remove(item);
+                    _extrasTotal -= price;
+                    if (_extrasTotal < 0) _extrasTotal = 0;
+                  });
+                },
+              );
+            }).toList(),
+          ),
+      ],
+    );
+  }
+
+  void _openAddExtrasModal() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AddExtrasDialog(
+        bookingId: '',
+        loungeId: widget.loungeId,
+        onConfirm: (extras, totalCost) {
+          setState(() {
+            _selectedExtras = extras;
+            _extrasTotal = totalCost;
+          });
+        },
+      ),
+    );
+  }
+
   Widget _buildSummaryCard(int durationMinutes) {
     final double durationHours = durationMinutes / 60.0;
-    final double totalPrice = durationHours * (_selectedRoom?.pricePerHour ?? 0);
+    final double roomTotal = durationHours * (_selectedRoom?.pricePerHour ?? 0);
+    final double grandTotal = roomTotal + _extrasTotal;
 
     return Container(
       padding: EdgeInsets.all(16.r),
@@ -336,13 +455,15 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
             children: [
               AppText.body("${AppStrings.schedule}: $durationHours ${AppStrings.gaming}", color: AppColors.textSecondary),
               AppText.body("${AppStrings.pricePerHour}: ${_selectedRoom?.pricePerHour} ${AppStrings.egp}", color: AppColors.textSecondary),
+              if (_extrasTotal > 0)
+                AppText.body("مجموع الإضافات: ${_extrasTotal.toStringAsFixed(0)} ${AppStrings.egp}", color: AppColors.neonPurple),
             ],
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               AppText.body(AppStrings.totalPrice, fontWeight: FontWeight.bold),
-              AppText.subHeading("${totalPrice.toStringAsFixed(2)} ${AppStrings.egp}", color: AppColors.neonBlue),
+              AppText.subHeading("${grandTotal.toStringAsFixed(2)} ${AppStrings.egp}", color: AppColors.neonBlue),
             ],
           ),
         ],
@@ -406,6 +527,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     }
 
     final activeShiftId = context.read<ShiftCubit>().state.activeShift?.id;
+    final double roomTotal = (durationMinutes / 60.0) * selectedRoom.pricePerHour;
 
     final booking = Booking(
       id: '', 
@@ -420,7 +542,9 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
       endTime: endTimeStr,
       durationMinutes: durationMinutes,
       status: BookingStatus.upcoming,
-      totalPrice: (durationMinutes / 60.0) * selectedRoom.pricePerHour,
+      totalPrice: roomTotal + _extrasTotal,
+      addonsPrice: _extrasTotal > 0 ? _extrasTotal : null,
+      extras: _selectedExtras,
       shiftId: activeShiftId,
     );
 

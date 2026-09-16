@@ -94,6 +94,11 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
 
   @override
   Future<void> addStaffMember(AddStaffParams params) async {
+    final roleClean = params.role.trim().toLowerCase();
+    if (roleClean == 'super_admin' || roleClean == 'system_admin') {
+      throw Exception('غير مسموح بإنشاء حساب super_admin من واجهة إدارة طاقم العمل.');
+    }
+
     try {
       debugPrint('Adding staff member via create_lounge_staff RPC with params: ${params.toJson()}');
       await _supabase.rpc('create_lounge_staff', params: params.toJson());
@@ -122,6 +127,9 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
     String? mappedRole;
     if (data.containsKey('role') && data['role'] != null) {
       final rawRole = data['role'].toString().toLowerCase().trim();
+      if (rawRole == 'super_admin' || rawRole == 'system_admin') {
+        throw Exception('غير مسموح برفع الحساب إلى super_admin من هذه الواجهة.');
+      }
       switch (rawRole) {
         case 'cashier':
         case 'role_cashier':
@@ -170,13 +178,41 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
   Future<void> updateStaffStatus(String staffId, bool isActive) async {
     final cleanStaffId = staffId.trim();
     if (cleanStaffId.isEmpty) return;
-    await _supabase.from('profiles').update({'is_active': isActive}).eq('id', cleanStaffId);
+    await _supabase.from('profiles').update({'is_active': isActive}).eq('id', cleanStaffId).neq('role', 'super_admin');
   }
 
   @override
   Future<void> deleteStaff(String staffId) async {
     final cleanStaffId = staffId.trim();
     if (cleanStaffId.isEmpty) return;
-    await _supabase.from('profiles').delete().eq('id', cleanStaffId);
+
+    // Rule: Never allow deleting super_admin or modifying system roles from UI
+    try {
+      final targetProfile = await _supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', cleanStaffId)
+          .maybeSingle();
+
+      if (targetProfile != null && (targetProfile['role'] == 'super_admin' || targetProfile['role'] == 'system_admin')) {
+        throw Exception('غير مسموح بحذف أو تعديل صلاحيات حساب super_admin.');
+      }
+    } catch (e) {
+      if (e.toString().contains('super_admin')) rethrow;
+    }
+
+    // 1. Delete staff record from lounge_staff
+    try {
+      await _supabase.from('lounge_staff').delete().or('id.eq.$cleanStaffId,user_id.eq.$cleanStaffId');
+    } catch (e) {
+      debugPrint('⚠️ [STAFF_REMOTE_SOURCE] lounge_staff deletion failed ($e)');
+    }
+
+    // 2. Deactivate profile instead of hard profile deletion
+    try {
+      await _supabase.from('profiles').update({'is_active': false}).eq('id', cleanStaffId).neq('role', 'super_admin');
+    } catch (e) {
+      debugPrint('⚠️ [STAFF_REMOTE_SOURCE] profile deactivation failed ($e)');
+    }
   }
 }

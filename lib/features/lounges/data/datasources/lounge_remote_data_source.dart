@@ -528,12 +528,14 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
 
   @override
   Future<void> deleteLounge(String id) async {
+    // Rule: Never perform hard DELETE on lounges table.
+    // Soft delete by updating status = 'deleted'.
     try {
       await client.from('lounges').update({'status': 'deleted'}).eq('id', id);
       AppLogger.info('deleteLounge soft delete succeeded for id: $id');
       return;
     } catch (e) {
-      AppLogger.warning('deleteLounge soft delete failed ($e), attempting RPC delete...');
+      AppLogger.warning('deleteLounge soft delete direct update failed ($e), attempting RPC delete...');
     }
 
     try {
@@ -546,14 +548,9 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
       await client.rpc('super_admin_delete_lounge', params: {'p_lounge_id': id});
       AppLogger.info('deleteLounge super_admin_delete_lounge RPC succeeded for id: $id');
       return;
-    } catch (_) {}
-
-    try {
-      await client.from('lounges').delete().eq('id', id);
-      AppLogger.info('deleteLounge hard delete succeeded for id: $id');
     } catch (e) {
-      AppLogger.error('deleteLounge hard delete failed: $e');
-      rethrow;
+      AppLogger.error('deleteLounge soft delete failed: $e');
+      throw Exception('فشل تعليق الصالة: لا تملك الصلاحيات الكافية لتعديل حالة الصالة.');
     }
   }
 }

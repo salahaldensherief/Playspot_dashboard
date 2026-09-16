@@ -210,29 +210,44 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         double? discountPercentage,
         String? discountReason,
       }) async {
-    debugPrint('🔵 [DATA_SOURCE] Confirming cash payment for: $bookingId');
+    debugPrint('🔵 [DATA_SOURCE] Confirming payment for booking: $bookingId');
     try {
-      await client.rpc('confirm_cash_payment', params: {
+      await client.rpc('complete_booking_payment', params: {
         'p_booking_id': bookingId,
         'p_shift_id': shiftId,
+        'p_payment_method': 'cash',
         'p_discount_amount': discountAmount ?? 0,
         'p_discount_percentage': discountPercentage ?? 0,
         'p_discount_reason': discountReason,
       });
-      debugPrint('🟢 [DATA_SOURCE] RPC confirm_cash_payment succeeded');
-    } catch (e) {
-      debugPrint('⚠️ [DATA_SOURCE] RPC confirm_cash_payment failed ($e), attempting direct update fallback...');
-      final updateData = {
-        'payment_status': 'paid',
-        'discount_amount': discountAmount,
-        'discount_percentage': discountPercentage,
-        'discount_reason': discountReason,
-        'shift_id': shiftId,
-      };
+      debugPrint('🟢 [DATA_SOURCE] RPC complete_booking_payment succeeded!');
+      return;
+    } catch (e1) {
+      debugPrint('ℹ️ [DATA_SOURCE] complete_booking_payment failed ($e1), falling back to confirm_cash_payment...');
+      try {
+        await client.rpc('confirm_cash_payment', params: {
+          'p_booking_id': bookingId,
+          'p_shift_id': shiftId,
+          'p_discount_amount': discountAmount ?? 0,
+          'p_discount_percentage': discountPercentage ?? 0,
+          'p_discount_reason': discountReason,
+        });
+        debugPrint('🟢 [DATA_SOURCE] RPC confirm_cash_payment succeeded!');
+        return;
+      } catch (e2) {
+        debugPrint('⚠️ [DATA_SOURCE] RPC confirm_cash_payment failed ($e2), attempting direct update fallback...');
+        final updateData = {
+          'payment_status': 'paid',
+          'discount_amount': discountAmount,
+          'discount_percentage': discountPercentage,
+          'discount_reason': discountReason,
+          'shift_id': shiftId,
+        };
 
-      final res = await client.from('bookings').update(updateData).eq('id', bookingId).select();
-      if ((res as List).isEmpty) {
-        throw Exception('فشل تأكيد الدفع: لا توجد صلاحيات لتعديل الحجز (RLS Restricted)');
+        final res = await client.from('bookings').update(updateData).eq('id', bookingId).select();
+        if ((res as List).isEmpty) {
+          throw Exception('فشل تأكيد الدفع: لا توجد صلاحيات لتعديل الحجز (RLS Restricted)');
+        }
       }
     }
   }

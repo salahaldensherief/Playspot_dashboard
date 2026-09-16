@@ -51,6 +51,32 @@ class MarketingRepositoryImpl implements MarketingRepository {
   }
 
   @override
+  Future<Either<Failure, void>> updatePromotion(PromoEntity promo) async {
+    try {
+      await remoteDataSource.updatePromotion(PromoModel(
+        id: promo.id,
+        titleAr: promo.titleAr,
+        titleEn: promo.titleEn,
+        tagAr: promo.tagAr,
+        tagEn: promo.tagEn,
+        hexColors: promo.hexColors,
+        iconKey: promo.iconKey,
+        imageUrl: promo.imageUrl,
+        deepLink: promo.deepLink,
+        loungeId: promo.loungeId,
+        roomId: promo.roomId,
+        expiresAt: promo.expiresAt,
+        tag: promo.tag,
+        isRoomSpecific: promo.isRoomSpecific,
+        targetAudience: promo.targetAudience,
+      ));
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> deletePromotion(String id) async {
     try {
       await remoteDataSource.deletePromotion(id);

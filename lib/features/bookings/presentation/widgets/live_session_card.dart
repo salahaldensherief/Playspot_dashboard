@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,16 +10,16 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import '../../../analytics/presentation/dashboard_cubit.dart';
 import '../../../auth/presentation/login/login_cubit.dart';
-import '../../../requests/domain/entities/client_request_entity.dart';
-import '../../../requests/presentation/client_requests_cubit.dart';
-import '../../../requests/presentation/cubit/client_requests_state.dart';
 import '../../domain/entities/booking.dart';
 import '../cubit/booking_cubit.dart';
 import 'add_extras_dialog.dart';
+import 'radial_countdown_ring.dart';
+import 'session_ticker.dart';
+import 'station_control_drawer.dart';
 import 'swap_room_dialog.dart';
 
 /// Interactive UI Card Widget for live active gaming sessions.
-/// Displays dynamic real-time countdown timer, financial stats, extras list, pending client requests, and action handlers.
+/// Listens to global SessionTickerScope without running individual timers.
 class LiveSessionCard extends StatefulWidget {
   final Booking booking;
   final VoidCallback? onEndSession;
@@ -42,45 +41,12 @@ class LiveSessionCard extends StatefulWidget {
 }
 
 class _LiveSessionCardState extends State<LiveSessionCard> {
-  Timer? _timer;
-  bool _showExtrasList = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _startTimer();
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
-        setState(() {});
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
 
   Duration get _remainingDuration {
     return widget.booking.remainingDuration();
   }
 
   bool get _isExpired => widget.booking.isSessionExpired();
-
-  double _calculateExtrasTotal() {
-    double total = 0.0;
-    for (final extra in widget.booking.extras) {
-      final price = (extra['price'] ?? extra['total_price'] ?? extra['unit_price'] as num?)?.toDouble() ?? 0.0;
-      final qty = (extra['quantity'] ?? extra['qty'] ?? extra['count'] as num?)?.toInt() ?? 1;
-      total += (price * qty);
-    }
-    return total;
-  }
 
   String _formatTime12Hour(String timeStr) {
     if (timeStr.isEmpty) return '';
@@ -113,17 +79,17 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
 
   @override
   Widget build(BuildContext context) {
+    // Read broadcast ticker to rebuild synchronously on tick
+    SessionTickerScope.nowOf(context);
+
     final isExpired = _isExpired;
     final remaining = _remainingDuration;
     final formattedTime = _formatDuration(remaining);
     final String formattedDurationHrs = (widget.booking.durationMinutes / 60.0).toStringAsFixed(1).replaceAll('.0', '');
 
-    final extrasTotal = _calculateExtrasTotal();
-    final basePrice = (widget.booking.totalPrice - extrasTotal).clamp(0.0, double.infinity);
-
     return Container(
       width: widget.width ?? 320.w,
-      padding: EdgeInsets.all(14.r),
+      padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(14.r),
@@ -153,33 +119,46 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
                 children: [
                   Icon(
                     Icons.sports_esports,
-                    size: 18.r,
+                    size: 16.r,
                     color: isExpired ? AppColors.danger : AppColors.neonBlue,
                   ),
-                  SizedBox(width: 6.w),
+                  SizedBox(width: 4.w),
                   AppText.subHeading(
                     widget.booking.roomName,
-                    fontSize: 15.sp,
+                    fontSize: 13.sp,
                     color: AppColors.textPrimary,
                   ),
-                  SizedBox(width: 6.w),
+                  SizedBox(width: 4.w),
                   IconButton(
-                    icon: Icon(Icons.swap_horiz, size: 18.r, color: AppColors.neonBlue),
+                    icon: Icon(Icons.swap_horiz, size: 16.r, color: AppColors.neonBlue),
                     tooltip: AppStrings.swapRoom,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: () => _showSwapRoomDialog(context),
+                  ),
+                  SizedBox(width: 2.w),
+                  IconButton(
+                    icon: Icon(Icons.tune_rounded, size: 16.r, color: AppColors.neonPurple),
+                    tooltip: 'Station Control Drawer',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => StationControlDrawer.show(
+                      context,
+                      booking: widget.booking,
+                      onEndSession: widget.onEndSession,
+                    ),
                   ),
                 ],
               ),
               StatusBadge.success(AppStrings.inProgress.toUpperCase()),
             ],
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 6.h),
 
-          // Customer Name & Phone
+          // Customer Name, Phone & Telemetry Tags
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
@@ -187,14 +166,14 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
                   children: [
                     AppText.body(
                       widget.booking.userName ?? AppStrings.anonymous,
-                      fontSize: 13.sp,
+                      fontSize: 12.sp,
                       color: AppColors.textSecondary,
                     ),
                     if (widget.booking.userPhone != null && widget.booking.userPhone?.isNotEmpty == true) ...[
-                      SizedBox(height: 2.h),
+                      SizedBox(height: 1.h),
                       AppText.body(
                         widget.booking.userPhone ?? '',
-                        fontSize: 11.sp,
+                        fontSize: 10.sp,
                         color: AppColors.neonBlue,
                       ),
                     ],
@@ -203,152 +182,204 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
               ),
               // Total Price Badge
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
                 decoration: BoxDecoration(
                   color: AppColors.neonGreen.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8.r),
+                  borderRadius: BorderRadius.circular(6.r),
                   border: Border.all(color: AppColors.neonGreen.withValues(alpha: 0.3)),
                 ),
                 child: AppText.subHeading(
                   '${widget.booking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
-                  fontSize: 12.sp,
+                  fontSize: 11.sp,
                   color: AppColors.neonGreen,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 12.h),
+          SizedBox(height: 8.h),
 
-          // Live Timer Container
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-            decoration: BoxDecoration(
-              color: isExpired
-                  ? AppColors.danger.withValues(alpha: 0.12)
-                  : AppColors.neonBlue.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10.r),
-              border: Border.all(
-                color: isExpired ? AppColors.danger : AppColors.neonBlue.withValues(alpha: 0.2),
+          // Live Timer Container with Radial Countdown Ring
+          InkWell(
+            onTap: () => StationControlDrawer.show(
+              context,
+              booking: widget.booking,
+              onEndSession: widget.onEndSession,
+            ),
+            borderRadius: BorderRadius.circular(8.r),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: isExpired
+                    ? AppColors.danger.withValues(alpha: 0.12)
+                    : AppColors.neonBlue.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(
+                  color: isExpired ? AppColors.danger : AppColors.neonBlue.withValues(alpha: 0.2),
+                ),
               ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      isExpired ? Icons.timer_off_outlined : Icons.timer_outlined,
-                      color: isExpired ? AppColors.danger : AppColors.neonBlue,
-                      size: 20.r,
-                    ),
-                    SizedBox(width: 8.w),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AppText.body(
-                          isExpired ? AppStrings.timeExpired : AppStrings.remainingTime,
-                          fontSize: 10.sp,
-                          color: isExpired ? AppColors.danger : AppColors.textSecondary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        AppText.body(
-                          '${_formatTime12Hour(widget.booking.startTime)} ($formattedDurationHrs ${AppStrings.hours})',
-                          fontSize: 10.sp,
-                          color: AppColors.textMuted,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                AppText.subHeading(
-                  isExpired ? '-$formattedTime' : formattedTime,
-                  fontSize: 18.sp,
-                  color: isExpired ? AppColors.danger : AppColors.neonBlue,
-                  fontWeight: FontWeight.bold,
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 10.h),
-
-          // Financial Breakdown Bar (Base vs Extras)
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-            decoration: BoxDecoration(
-              color: AppColors.mutedBackground.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                AppText.body(
-                  '${AppStrings.basePrice}: ${basePrice.toStringAsFixed(0)} ${AppStrings.egp}',
-                  fontSize: 10.sp,
-                  color: AppColors.textMuted,
-                ),
-                if (extrasTotal > 0)
-                  InkWell(
-                    onTap: () {
-                      setState(() {
-                        _showExtrasList = !_showExtrasList;
-                      });
-                    },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
                     child: Row(
                       children: [
-                        AppText.body(
-                          '${AppStrings.extrasTotal}: ${extrasTotal.toStringAsFixed(0)} ${AppStrings.egp}',
-                          fontSize: 10.sp,
-                          color: AppColors.neonCyan,
-                          fontWeight: FontWeight.bold,
+                        RadialCountdownRing(
+                          totalDuration: Duration(minutes: widget.booking.durationMinutes),
+                          remainingDuration: remaining,
+                          isExpired: isExpired,
+                          isOpenEnded: widget.booking.isOpenEnded,
+                          showText: false,
+                          size: 32.0,
+                          strokeWidth: 3.0,
                         ),
-                        Icon(
-                          _showExtrasList ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                          size: 14.r,
-                          color: AppColors.neonCyan,
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AppText.body(
+                                isExpired ? AppStrings.timeExpired : AppStrings.remainingTime,
+                                fontSize: 10.sp,
+                                color: isExpired ? AppColors.danger : AppColors.textSecondary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              AppText.body(
+                                '${_formatTime12Hour(widget.booking.startTime)} ($formattedDurationHrs ${AppStrings.hours})',
+                                fontSize: 9.sp,
+                                color: AppColors.textMuted,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-              ],
+                  SizedBox(width: 8.w),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: AppText.subHeading(
+                      isExpired ? '-$formattedTime' : formattedTime,
+                      fontSize: 16.sp,
+                      color: isExpired ? AppColors.danger : AppColors.neonBlue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
+          SizedBox(height: 6.h),
 
-          // Extras Summary Expandable List
-          if (widget.booking.extras.isNotEmpty && _showExtrasList) ...[
-            SizedBox(height: 8.h),
-            Container(
-              padding: EdgeInsets.all(8.r),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: AppColors.borderDefault),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: widget.booking.extras.map((item) {
-                  final name = (item['name'] ?? item['name_ar'] ?? item['name_en'] ?? item['title'] ?? item['item_name'] ?? 'إضافة').toString();
-                  final qty = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
-                  final price = (item['price'] ?? item['unit_price'] ?? item['total_price'] as num?)?.toDouble() ?? 0.0;
-                  return Padding(
-                    padding: EdgeInsets.symmetric(vertical: 2.h),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        AppText.body('• ${qty}x $name', fontSize: 10.sp, color: AppColors.textPrimary),
-                        AppText.body('${(price * qty).toStringAsFixed(0)} ${AppStrings.egp}', fontSize: 10.sp, color: AppColors.textMuted),
-                      ],
+          // Quick Time Extensions Bar (+15m, +30m, +1h)
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    if (widget.onExtendMinutes != null) {
+                      widget.onExtendMinutes!(15);
+                    } else {
+                      context.read<DashboardCubit>().extendSession(
+                        widget.booking.id,
+                        15,
+                      );
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(4.r),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 3.h),
+                    decoration: BoxDecoration(
+                      color: AppColors.mutedBackground,
+                      borderRadius: BorderRadius.circular(4.r),
+                      border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.3)),
                     ),
-                  );
-                }).toList(),
+                    child: Center(
+                      child: Text(
+                        '+15m',
+                        style: TextStyle(
+                          color: AppColors.neonBlue,
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
-
-          // Incoming Client Request Alert Banner (if exists)
-          _buildPendingClientRequestBanner(context),
-
-          SizedBox(height: 12.h),
+              SizedBox(width: 4.w),
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    if (widget.onExtendMinutes != null) {
+                      widget.onExtendMinutes!(30);
+                    } else {
+                      context.read<DashboardCubit>().extendSession(
+                        widget.booking.id,
+                        30,
+                      );
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(4.r),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 3.h),
+                    decoration: BoxDecoration(
+                      color: AppColors.mutedBackground,
+                      borderRadius: BorderRadius.circular(4.r),
+                      border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.3)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '+30m',
+                        style: TextStyle(
+                          color: AppColors.neonBlue,
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 4.w),
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    if (widget.onExtendMinutes != null) {
+                      widget.onExtendMinutes!(60);
+                    } else {
+                      context.read<DashboardCubit>().extendSession(
+                        widget.booking.id,
+                        60,
+                      );
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(4.r),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 3.h),
+                    decoration: BoxDecoration(
+                      color: AppColors.mutedBackground,
+                      borderRadius: BorderRadius.circular(4.r),
+                      border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.3)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '+1h',
+                        style: TextStyle(
+                          color: AppColors.neonBlue,
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
 
           // Actions Row: End Session, Add Extras, Extend Time
           Row(
@@ -358,27 +389,27 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
                   text: AppStrings.endSession,
                   icon: Icons.stop_circle_outlined,
                   variant: AppButtonVariant.outlined,
-                  height: 32.h,
+                  height: 30.h,
                   onPressed: () => _handleEndSession(context),
                 ),
               ),
-              SizedBox(width: 6.w),
+              SizedBox(width: 4.w),
               IconButton(
-                icon: Icon(Icons.add_shopping_cart, size: 18.r, color: AppColors.neonCyan),
+                icon: Icon(Icons.add_shopping_cart, size: 16.r, color: AppColors.neonCyan),
                 tooltip: AppStrings.addExtrasToSession,
                 style: IconButton.styleFrom(
                   backgroundColor: AppColors.neonCyan.withValues(alpha: 0.1),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
                 ),
                 onPressed: () => _showAddExtrasDialog(context),
               ),
-              SizedBox(width: 6.w),
+              SizedBox(width: 4.w),
               Expanded(
                 child: AppButton(
                   text: AppStrings.extendTime,
                   icon: Icons.add_alarm_rounded,
                   variant: AppButtonVariant.primary,
-                  height: 32.h,
+                  height: 30.h,
                   onPressed: () => _handleExtendSession(context),
                 ),
               ),
@@ -386,95 +417,6 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildPendingClientRequestBanner(BuildContext context) {
-    return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
-      builder: (context, state) {
-        final pendingRequests = state.requests.where((r) {
-          if (r.isAttended) return false;
-          return r.bookingId == widget.booking.id || r.roomId == widget.booking.roomId;
-        }).toList();
-
-        if (pendingRequests.isEmpty) return const SizedBox.shrink();
-
-        final request = pendingRequests.first;
-        final isExtension = request.type == ClientRequestType.extendSession;
-
-        return Container(
-          margin: EdgeInsets.only(top: 10.h),
-          padding: EdgeInsets.all(8.r),
-          decoration: BoxDecoration(
-            color: AppColors.warning.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.notification_important, color: AppColors.warning, size: 16.r),
-                  SizedBox(width: 6.w),
-                  Expanded(
-                    child: AppText.body(
-                      request.titleAr.isNotEmpty ? request.titleAr : request.bodyAr,
-                      fontSize: 11.sp,
-                      color: AppColors.warning,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 6.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  InkWell(
-                    onTap: () {
-                      context.read<ClientRequestsCubit>().markAsAttended(request.id, isCanteenOrder: request.isCanteenOrder);
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                      decoration: BoxDecoration(
-                        color: AppColors.danger.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                      child: AppText.body(AppStrings.reject, color: AppColors.danger, fontSize: 10.sp, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  InkWell(
-                    onTap: () async {
-                      if (isExtension) {
-                        final mins = request.metadata.items.isNotEmpty ? (request.metadata.items.first['minutes'] as num?)?.toInt() ?? 30 : 30;
-                        await context.read<DashboardCubit>().extendSession(widget.booking.id, mins);
-                      } else if (request.isCanteenOrder && request.canteenItems.isNotEmpty) {
-                        await context.read<DashboardCubit>().addExtrasToSession(widget.booking.id, request.canteenItems, request.totalPrice ?? 0.0);
-                      }
-                      if (context.mounted) {
-                        context.read<ClientRequestsCubit>().markAsAttended(request.id, isCanteenOrder: request.isCanteenOrder);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(AppStrings.requestApproved), backgroundColor: AppColors.success),
-                        );
-                      }
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                      decoration: BoxDecoration(
-                        color: AppColors.success,
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                      child: AppText.body(AppStrings.approve, color: Colors.white, fontSize: 10.sp, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 

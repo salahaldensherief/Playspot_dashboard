@@ -155,17 +155,23 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
   }
 
   void _confirmDelete(TournamentEntity tournament) async {
-    final confirmed = await AppDialog.confirm(
-      context: context,
-      title: AppStrings.deleteTournament,
-      message: '${AppStrings.deleteTournamentConfirm} "${tournament.title}"؟',
-      confirmText: AppStrings.deleteTournament,
-      confirmColor: AppColors.danger,
-    );
-
-    if (confirmed == true && mounted) {
-      context.read<TournamentCubit>().deleteTournament(tournament.id);
+    if (tournament.isCancelled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('البطولة ملغاة بالفعل، وسجلاتها ومشاركوها محفوظون.'),
+          backgroundColor: AppColors.neonBlue,
+        ),
+      );
+      return;
     }
+
+    if (tournament.isDraft && tournament.registeredCount == 0) {
+      _confirmDeleteDraft(tournament);
+      return;
+    }
+
+    // If published, active, or has participants/matches: prompt for cancellation reason
+    _confirmCancel(tournament);
   }
 
   @override
@@ -363,16 +369,23 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                               onPressed: () => context.read<TournamentCubit>().publishTournament(selected.id),
                             ),
                             SizedBox(width: 8.w),
-                            if (selected.canDeleteDraft)
+                            if (selected.registeredCount == 0)
                               AppButton(
                                 text: AppStrings.deleteDraft,
                                 variant: AppButtonVariant.danger,
                                 fontSize: 12.sp,
                                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                                 onPressed: () => _confirmDeleteDraft(selected),
+                              )
+                            else
+                              AppButton(
+                                text: AppStrings.cancelTournament,
+                                variant: AppButtonVariant.danger,
+                                fontSize: 12.sp,
+                                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                                onPressed: () => _confirmCancel(selected),
                               ),
-                          ],
-                          if (selected.isPublished || selected.isInProgress) ...[
+                          ] else if (!selected.isCancelled) ...[
                             AppButton(
                               text: AppStrings.cancelTournament,
                               variant: AppButtonVariant.danger,
@@ -380,23 +393,17 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                               onPressed: () => _confirmCancel(selected),
                             ),
-                            SizedBox(width: 8.w),
-                            AppButton(
-                              text: AppStrings.completeBooking,
-                              backgroundColor: AppColors.neonBlue,
-                              fontSize: 12.sp,
-                              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                              onPressed: () => context.read<TournamentCubit>().awardPrizes(selected.id),
-                            ),
+                            if (selected.isInProgress) ...[
+                              SizedBox(width: 8.w),
+                              AppButton(
+                                text: AppStrings.completeBooking,
+                                backgroundColor: AppColors.neonBlue,
+                                fontSize: 12.sp,
+                                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                                onPressed: () => context.read<TournamentCubit>().awardPrizes(selected.id),
+                              ),
+                            ],
                           ],
-                          SizedBox(width: 8.w),
-                          AppButton(
-                            text: AppStrings.deleteTournament,
-                            variant: AppButtonVariant.danger,
-                            fontSize: 12.sp,
-                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                            onPressed: () => _confirmDelete(selected),
-                          ),
                         ],
                       ],
                     ),

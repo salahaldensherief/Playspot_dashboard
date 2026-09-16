@@ -1,9 +1,12 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import '../dashboard_cubit.dart';
 import '../dashboard_state.dart';
 
@@ -13,15 +16,48 @@ class RevenueChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<DashboardCubit, DashboardState>(
-      buildWhen: (prev, curr) => prev.revenueChart != curr.revenueChart,
+      buildWhen: (prev, curr) =>
+          prev.status != curr.status || prev.revenueChart != curr.revenueChart,
       builder: (context, state) {
+        if (state.status == FeatureStatus.loading && state.revenueChart.isEmpty) {
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: 20.h),
+            child: ShimmerLoading.rounded(
+              width: double.infinity,
+              height: 250.h,
+            ),
+          );
+        }
+
         if (state.revenueChart.isEmpty) {
-          return Center(child: Text(AppStrings.noResultsMatching.replaceFirst("\"{}\"", ""), style: const TextStyle(color: AppColors.textSecondary)));
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.show_chart_rounded, size: 40.r, color: AppColors.textMuted),
+                SizedBox(height: 8.h),
+                AppText.body(
+                  AppStrings.noResultsMatching.replaceFirst("\"{}\"", ""),
+                  color: AppColors.textSecondary,
+                  fontSize: 12.sp,
+                ),
+                SizedBox(height: 12.h),
+                AppButton(
+                  text: AppStrings.refresh,
+                  variant: AppButtonVariant.outlined,
+                  height: 32.h,
+                  onPressed: () {
+                    context.read<DashboardCubit>().loadDashboardData();
+                  },
+                ),
+              ],
+            ),
+          );
         }
 
         final spots = <FlSpot>[];
         double maxY = 1000;
-        
+
         for (int i = 0; i < state.revenueChart.length; i++) {
           final val = (state.revenueChart[i]['revenue'] as num?)?.toDouble() ?? 0.0;
           spots.add(FlSpot(i.toDouble(), val));
@@ -54,7 +90,7 @@ class RevenueChart extends StatelessWidget {
                         return Padding(
                           padding: EdgeInsets.only(top: 10.h),
                           child: Text(
-                            day.length > 5 ? day.substring(5) : day, // Show MM-DD
+                            day.length > 5 ? day.substring(5) : day,
                             style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp),
                           ),
                         );

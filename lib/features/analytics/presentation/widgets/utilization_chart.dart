@@ -1,12 +1,15 @@
-import 'package:easy_localization/easy_localization.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_state.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
 
@@ -16,18 +19,48 @@ class UtilizationChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<RoomCubit, RoomState>(
-      buildWhen: (prev, curr) => prev.rooms != curr.rooms,
+      buildWhen: (prev, curr) => prev.status != curr.status || prev.rooms != curr.rooms,
       builder: (context, roomState) {
         return BlocBuilder<DashboardCubit, DashboardState>(
           buildWhen: (prev, curr) => prev.activeSessionsList != curr.activeSessionsList,
           builder: (context, dashboardState) {
+            if (roomState.status == RoomStatus.loading && roomState.rooms.isEmpty) {
+              return Padding(
+                padding: EdgeInsets.symmetric(vertical: 20.h),
+                child: ShimmerLoading.rounded(
+                  width: double.infinity,
+                  height: 250.h,
+                ),
+              );
+            }
+
             final rooms = roomState.rooms;
 
             if (rooms.isEmpty) {
               return Center(
-                child: Text(
-                  AppStrings.noResultsMatching.replaceFirst("\"{}\"", ""),
-                  style: const TextStyle(color: AppColors.textSecondary),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.pie_chart_outline, size: 40.r, color: AppColors.textMuted),
+                    SizedBox(height: 8.h),
+                    AppText.body(
+                      AppStrings.noRoomsAdded,
+                      color: AppColors.textSecondary,
+                      fontSize: 12.sp,
+                    ),
+                    SizedBox(height: 12.h),
+                    AppButton(
+                      text: AppStrings.refresh,
+                      variant: AppButtonVariant.outlined,
+                      height: 32.h,
+                      onPressed: () {
+                        final loungeId = context.read<LoginCubit>().state.user?.loungeId;
+                        if (loungeId != null) {
+                          context.read<RoomCubit>().watchRooms(loungeId, forceRefresh: true);
+                        }
+                      },
+                    ),
+                  ],
                 ),
               );
             }

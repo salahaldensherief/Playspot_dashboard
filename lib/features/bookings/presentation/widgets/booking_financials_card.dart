@@ -142,6 +142,51 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
             ),
           ),
 
+          // Detailed Extras Section
+          if (widget.booking.extras.isNotEmpty) ...[
+            SizedBox(height: 16.h),
+            AppText.subHeading(AppStrings.extras, fontSize: 14.sp),
+            SizedBox(height: 8.h),
+            Container(
+              padding: EdgeInsets.all(12.r),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: AppColors.borderDefault),
+              ),
+              child: Column(
+                children: widget.booking.extras.map((item) {
+                  final qty = (item['quantity'] ?? item['qty'] as num?)?.toInt() ?? 1;
+                  final name = (item['name_ar'] ?? item['name'] ?? item['name_en'] ?? AppStrings.extras).toString();
+                  final unitPrice = (item['price'] ?? item['unit_price'] as num?)?.toDouble() ?? 0.0;
+                  final itemTotal = unitPrice * qty;
+
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4.h),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.local_cafe_outlined, size: 14.r, color: AppColors.neonBlue),
+                            SizedBox(width: 6.w),
+                            AppText.body('${qty}x $name', fontSize: 12.sp, color: AppColors.textPrimary),
+                          ],
+                        ),
+                        AppText.body(
+                          '${itemTotal.toStringAsFixed(2)} ${AppStrings.egp}',
+                          fontSize: 12.sp,
+                          color: AppColors.neonGreen,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+
           // Detailed Canteen Orders Section
           if (widget.booking.canteenOrders.isNotEmpty) ...[
             SizedBox(height: 16.h),
