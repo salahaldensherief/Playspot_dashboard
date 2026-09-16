@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 
@@ -14,9 +16,9 @@ abstract class AuthRemoteDataSource {
   
   Future<bool> checkSetupStatus(String loungeId);
 
-  Future<UserModel> updateProfileCity({
-    required String userId,
-    required String cityId,
+  Future<UserModel> updateUserLocation({
+    required double latitude,
+    required double longitude,
   });
 }
 
@@ -126,18 +128,39 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<UserModel> updateProfileCity({
-    required String userId,
-    required String cityId,
+  Future<UserModel> updateUserLocation({
+    required double latitude,
+    required double longitude,
   }) async {
-    await supabaseClient
-        .from('profiles')
-        .update({'city_id': cityId})
-        .eq('id', userId);
+    final session = supabaseClient.auth.currentSession;
+    if (session == null || session.accessToken.isEmpty) {
+      throw Exception('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى (401)');
+    }
 
-    final updated = await getCurrentUser(userId: userId);
+    final url = Uri.parse('https://tgpdexoitemmpruepgyt.supabase.co/functions/v1/update-user-location');
+    final response = await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer ${session.accessToken}',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'latitude': latitude,
+        'longitude': longitude,
+      }),
+    );
+
+    if (response.statusCode == 422) {
+      throw Exception('عذراً، المدينة غير مضافة حالياً للنظام (422)');
+    } else if (response.statusCode == 401) {
+      throw Exception('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى (401)');
+    } else if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('فشل تحديث الموقع (${response.statusCode}): ${response.body}');
+    }
+
+    final updated = await getCurrentUser();
     if (updated == null) {
-      throw Exception('Failed to fetch updated profile');
+      throw Exception('تعذر جلب ملف المستخدم بعد تحديث الموقع');
     }
     return updated;
   }

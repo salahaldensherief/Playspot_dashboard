@@ -19,6 +19,8 @@ class UserEntity extends Equatable {
   final String? loungeId;
   final String? avatarUrl;
   final String? cityId;
+  final String? cityNameAr;
+  final String? cityNameEn;
   final bool isSetupCompleted;
   final int pointsBalance;
   final int referralCount;
@@ -32,6 +34,8 @@ class UserEntity extends Equatable {
     this.loungeId,
     this.avatarUrl,
     this.cityId,
+    this.cityNameAr,
+    this.cityNameEn,
     this.isSetupCompleted = false,
     this.pointsBalance = 0,
     this.referralCount = 0,
@@ -66,6 +70,10 @@ class UserEntity extends Equatable {
   bool get canManageMenuStructure => permissions.canManageMenuStructure;
   bool get canUpdateStockOnly => permissions.canUpdateStockOnly;
 
+  String? get displayCityName {
+    return (cityNameAr != null && cityNameAr!.trim().isNotEmpty) ? cityNameAr : cityNameEn;
+  }
+
   UserEntity copyWith({
     String? id,
     String? email,
@@ -75,6 +83,8 @@ class UserEntity extends Equatable {
     String? loungeId,
     String? avatarUrl,
     String? cityId,
+    String? cityNameAr,
+    String? cityNameEn,
     bool? isSetupCompleted,
     int? pointsBalance,
     int? referralCount,
@@ -88,6 +98,8 @@ class UserEntity extends Equatable {
       loungeId: loungeId ?? this.loungeId,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       cityId: cityId ?? this.cityId,
+      cityNameAr: cityNameAr ?? this.cityNameAr,
+      cityNameEn: cityNameEn ?? this.cityNameEn,
       isSetupCompleted: isSetupCompleted ?? this.isSetupCompleted,
       pointsBalance: pointsBalance ?? this.pointsBalance,
       referralCount: referralCount ?? this.referralCount,
@@ -104,6 +116,8 @@ class UserEntity extends Equatable {
         loungeId,
         avatarUrl,
         cityId,
+        cityNameAr,
+        cityNameEn,
         isSetupCompleted,
         pointsBalance,
         referralCount,

@@ -8,50 +8,11 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import '../../../../art_core/widgets/app_cached_image.dart';
-import '../../../../core/di/di.dart';
-import '../../../categories/domain/entities/city_entity.dart';
-import '../../../categories/domain/repositories/category_repository.dart';
 import '../login/login_cubit.dart';
 import '../login/login_state.dart';
 
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
-
-  @override
-  State<ProfilePage> createState() => _ProfilePageState();
-}
-
-class _ProfilePageState extends State<ProfilePage> {
-  List<CityEntity> _cities = [];
-  bool _loadingCities = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchCities();
-  }
-
-  Future<void> _fetchCities() async {
-    setState(() => _loadingCities = true);
-    try {
-      final repo = sl<CategoryRepository>();
-      final result = await repo.getCities();
-      result.fold(
-        (failure) => debugPrint('⚠️ [PROFILE_PAGE] Failed to load cities: ${failure.message}'),
-        (citiesList) {
-          if (mounted) {
-            setState(() => _cities = citiesList);
-          }
-        },
-      );
-    } catch (e) {
-      debugPrint('⚠️ [PROFILE_PAGE] Error loading cities: $e');
-    } finally {
-      if (mounted) {
-        setState(() => _loadingCities = false);
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,55 +55,27 @@ class _ProfilePageState extends State<ProfilePage> {
                     readOnly: true,
                   ),
                   SizedBox(height: 20.h),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        AppStrings.userCity,
-                        style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
-                      ),
-                      SizedBox(height: 8.h),
-                      _loadingCities
-                          ? SizedBox(
-                              height: 48.h,
-                              child: const Center(
-                                child: CircularProgressIndicator(color: AppColors.neonBlue),
-                              ),
-                            )
-                          : DropdownButtonFormField<String>(
-                              initialValue: _cities.any((c) => c.id == user?.cityId) ? user?.cityId : null,
-                              dropdownColor: AppColors.cardBackground,
-                              style: const TextStyle(color: AppColors.textPrimary),
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: AppColors.mutedBackground,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.r),
-                                  borderSide: const BorderSide(color: AppColors.borderDefault),
-                                ),
-                              ),
-                              hint: Text(AppStrings.selectCity, style: const TextStyle(color: AppColors.textSecondary)),
-                              items: _cities.map((city) {
-                                return DropdownMenuItem<String>(
-                                  value: city.id,
-                                  child: Text(city.nameAr.isNotEmpty ? city.nameAr : city.nameEn),
-                                );
-                              }).toList(),
-                              onChanged: (selectedCityId) {
-                                if (selectedCityId != null && selectedCityId != user?.cityId) {
-                                  context.read<LoginCubit>().updateUserCity(selectedCityId);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('${AppStrings.userCity}: ${AppStrings.active}'),
-                                      backgroundColor: AppColors.success,
-                                    ),
-                                  );
-                                }
-                              },
-                            ),
-                    ],
+                  AppTextField(
+                    label: AppStrings.userCity,
+                    controller: TextEditingController(text: user?.displayCityName ?? AppStrings.notSpecified),
+                    readOnly: true,
                   ),
-                  SizedBox(height: 40.h),
+                  SizedBox(height: 16.h),
+                  if (loginState.locationErrorMessage != null) ...[
+                    Text(
+                      loginState.locationErrorMessage!,
+                      style: TextStyle(color: AppColors.danger, fontSize: 12.sp),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 12.h),
+                  ],
+                  AppButton(
+                    text: AppStrings.updateMyLocation,
+                    variant: AppButtonVariant.gradient,
+                    isLoading: loginState.isLoadingLocation,
+                    onPressed: () => context.read<LoginCubit>().updateUserLocation(),
+                  ),
+                  SizedBox(height: 20.h),
                   AppButton(
                     text: AppStrings.changePassword,
                     variant: AppButtonVariant.outlined,
@@ -188,7 +121,6 @@ class _ProfilePageState extends State<ProfilePage> {
           right: 0,
           child: InkWell(
             onTap: () {
-              // Image picking logic would go here
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(AppStrings.underConstruction)),
               );

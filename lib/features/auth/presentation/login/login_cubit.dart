@@ -47,6 +47,8 @@ class LoginCubit extends Cubit<LoginState> {
             isSetupCompleted: user.isSetupCompleted,
           ));
           
+          updateUserLocation();
+
           if (user.isStaff && user.loungeId != null) {
             _handleLoungeAdminAuth(user, context: context);
           }
@@ -73,6 +75,8 @@ class LoginCubit extends Cubit<LoginState> {
           user: user,
           isSetupCompleted: user.isSetupCompleted,
         ));
+
+        updateUserLocation();
 
         if (user.isStaff && user.loungeId != null) {
           _handleLoungeAdminAuth(user, context: context);
@@ -116,19 +120,71 @@ class LoginCubit extends Cubit<LoginState> {
     emit(state.copyWith(user: user, isSetupCompleted: user.isSetupCompleted));
   }
 
-  Future<void> updateUserCity(String cityId) async {
-    final currentUser = state.user;
-    if (currentUser == null) return;
+  Future<void> updateUserLocation() async {
+    emit(state.copyWith(isLoadingLocation: true, locationErrorMessage: null));
+    try {
+      final hasPermission = await locationService.checkPermissions();
+      if (!hasPermission) {
+        emit(state.copyWith(
+          isLoadingLocation: false,
+          locationErrorMessage: 'يرجى تفعيل صلاحية الوصول إلى الموقع من إعدادات الجهاز',
+        ));
+        return;
+      }
 
-    final result = await authRepository.updateProfileCity(
-      userId: currentUser.id,
-      cityId: cityId,
-    );
+      final position = await locationService.getCurrentPosition();
+      if (position == null) {
+        emit(state.copyWith(
+          isLoadingLocation: false,
+          locationErrorMessage: 'الموقع غير واضح أو تعذر تحديد الإحداثيات',
+        ));
+        return;
+      }
 
-    result.fold(
-      (failure) => emit(state.copyWith(errorMessage: failure.message)),
-      (updatedUser) => emit(state.copyWith(user: updatedUser)),
-    );
+      final result = await authRepository.updateUserLocation(
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+
+      result.fold(
+        (failure) {
+          String errorMessage = 'حدث خطأ مؤقت، يرجى المحاولة مرة أخرى';
+          final errStr = failure.message;
+          if (errStr.contains('422') || errStr.contains('غير مضافة')) {
+            errorMessage = 'عذراً، المدينة غير مضافة حالياً للنظام';
+          } else if (errStr.contains('401') || errStr.contains('انتهت صلاحية الجلسة')) {
+            errorMessage = 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى';
+            logout();
+          } else if (errStr.isNotEmpty) {
+            errorMessage = errStr;
+          }
+          emit(state.copyWith(
+            isLoadingLocation: false,
+            locationErrorMessage: errorMessage,
+          ));
+        },
+        (updatedUser) {
+          emit(state.copyWith(
+            isLoadingLocation: false,
+            user: updatedUser,
+            locationErrorMessage: null,
+          ));
+        },
+      );
+    } catch (e) {
+      String errorMessage = 'حدث خطأ مؤقت، يرجى المحاولة مرة أخرى';
+      final errStr = e.toString();
+      if (errStr.contains('422')) {
+        errorMessage = 'عذراً، المدينة غير مضافة حالياً للنظام';
+      } else if (errStr.contains('401')) {
+        errorMessage = 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى';
+        logout();
+      }
+      emit(state.copyWith(
+        isLoadingLocation: false,
+        locationErrorMessage: errorMessage,
+      ));
+    }
   }
 
   void markLocationCaptured() {

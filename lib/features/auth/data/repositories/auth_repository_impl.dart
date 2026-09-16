@@ -60,14 +60,14 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, UserEntity>> updateProfileCity({
-    required String userId,
-    required String cityId,
+  Future<Either<Failure, UserEntity>> updateUserLocation({
+    required double latitude,
+    required double longitude,
   }) async {
     try {
-      final user = await remoteDataSource.updateProfileCity(
-        userId: userId,
-        cityId: cityId,
+      final user = await remoteDataSource.updateUserLocation(
+        latitude: latitude,
+        longitude: longitude,
       );
       return Right(user);
     } catch (e) {

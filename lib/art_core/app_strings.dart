@@ -644,6 +644,14 @@ class AppStrings {
   static String get cityRequiredError => 'city_required_error'.tr();
   static String get radiusRequiredError => 'radius_required_error'.tr();
   static String get userCity => 'user_city'.tr();
+  static String get updateMyLocation {
+    final val = 'update_my_location'.tr();
+    return val == 'update_my_location' ? 'تحديث موقعي' : val;
+  }
+  static String get notSpecified {
+    final val = 'not_specified'.tr();
+    return val == 'not_specified' ? 'غير محدد' : val;
+  }
   static String get deleteDraft => 'delete_draft'.tr();
   static String get roundLabel => 'round'.tr();
   static String get finalRound => 'final_round'.tr();
