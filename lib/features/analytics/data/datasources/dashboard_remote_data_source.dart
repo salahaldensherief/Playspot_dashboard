@@ -135,36 +135,53 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
 
   @override
   Future<void> extendSession(String bookingId, int additionalMinutes, {double? additionalCost}) async {
-    final response = await supabaseClient
-        .from('bookings')
-        .select('duration_minutes, total_price')
-        .eq('id', bookingId)
-        .maybeSingle();
+    debugPrint('🔵 [DASHBOARD_DATA_SOURCE] Calling extend_booking_session RPC for booking $bookingId by $additionalMinutes mins');
+    try {
+      await supabaseClient.rpc('extend_booking_session', params: {
+        'p_booking_id': bookingId,
+        'p_additional_minutes': additionalMinutes,
+      });
+      debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Session extension RPC succeeded!');
+    } catch (e) {
+      final errorStr = e.toString();
+      debugPrint('🔴 [DASHBOARD_DATA_SOURCE] extend_booking_session RPC error: $errorStr');
 
-    if (response == null) {
-      throw Exception('Booking not found: $bookingId');
+      if (errorStr.contains('BOOKING_EXTENSION_CONFLICT')) {
+        throw Exception('لا يمكن تمديد الحجز لأن هناك حجزاً آخر يبدأ بعد وقت حجزك مباشرة.');
+      }
+
+      if (errorStr.contains('function') || errorStr.contains('parameter') || errorStr.contains('PGRST202')) {
+        try {
+          await supabaseClient.rpc('extend_booking_session', params: {
+            'p_booking_id': bookingId,
+            'p_minutes': additionalMinutes,
+          });
+          debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Session extension RPC succeeded with p_minutes!');
+          return;
+        } catch (e2) {
+          final errorStr2 = e2.toString();
+          if (errorStr2.contains('BOOKING_EXTENSION_CONFLICT')) {
+            throw Exception('لا يمكن تمديد الحجز لأن هناك حجزاً آخر يبدأ بعد وقت حجزك مباشرة.');
+          }
+          try {
+            await supabaseClient.rpc('extend_booking_session', params: {
+              'p_booking_id': bookingId,
+              'p_extension_minutes': additionalMinutes,
+            });
+            debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Session extension RPC succeeded with p_extension_minutes!');
+            return;
+          } catch (e3) {
+            final errorStr3 = e3.toString();
+            if (errorStr3.contains('BOOKING_EXTENSION_CONFLICT')) {
+              throw Exception('لا يمكن تمديد الحجز لأن هناك حجزاً آخر يبدأ بعد وقت حجزك مباشرة.');
+            }
+            rethrow;
+          }
+        }
+      }
+
+      rethrow;
     }
-
-    final currentMinutes = (response['duration_minutes'] as num?)?.toInt() ?? 60;
-    final currentPrice = (response['total_price'] as num?)?.toDouble() ?? 0.0;
-
-    final newMinutes = currentMinutes + additionalMinutes;
-    double addedCost = additionalCost ?? 0.0;
-    if (addedCost <= 0.0 && currentMinutes > 0) {
-      final pricePerMinute = currentPrice / currentMinutes;
-      addedCost = pricePerMinute * additionalMinutes;
-    }
-
-    final newTotalPrice = currentPrice + addedCost;
-
-    debugPrint('🔵 [DASHBOARD_DATA_SOURCE] Extending booking $bookingId by $additionalMinutes mins to $newMinutes mins, new price: $newTotalPrice');
-
-    await supabaseClient.from('bookings').update({
-      'duration_minutes': newMinutes,
-      'total_price': newTotalPrice,
-    }).eq('id', bookingId);
-
-    debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Session extension saved successfully!');
   }
 
   @override

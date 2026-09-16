@@ -364,30 +364,42 @@ class BookingCubit extends Cubit<BookingState> {
     final foundIndex = state.bookings.indexWhere((b) => b.id == id);
     if (foundIndex == -1) return false;
 
-    final booking = state.bookings[foundIndex];
-    final newDuration = booking.durationMinutes + additionalMinutes;
-
-    final updatedList = state.bookings.map((b) {
-      if (b.id == id) return b.copyWith(durationMinutes: newDuration);
-      return b;
-    }).toList();
-    emit(state.copyWith(bookings: updatedList));
-
     try {
-      await repository.createBooking(booking.copyWith(durationMinutes: newDuration));
+      final client = Supabase.instance.client;
+      await client.rpc('extend_booking_session', params: {
+        'p_booking_id': id,
+        'p_additional_minutes': additionalMinutes,
+      });
+
       if (_watchedLoungeId != null) {
         startWatchingBookings(loungeId: _watchedLoungeId);
       }
       return true;
     } catch (e) {
-      debugPrint('🔴 [CUBIT] Extend Duration Failed: $e');
+      final errorStr = e.toString();
+      debugPrint('🔴 [CUBIT] Extend Duration Failed: $errorStr');
+      final cleanMessage = errorStr.contains('BOOKING_EXTENSION_CONFLICT')
+          ? 'لا يمكن تمديد الحجز لأن هناك حجزاً آخر يبدأ بعد وقت حجزك مباشرة.'
+          : errorStr.replaceFirst('Exception: ', '');
+
       emit(state.copyWith(
         status: BookingStatusState.failure,
-        errorMessage: e.toString(),
+        errorMessage: cleanMessage,
         bookings: originalBookings,
       ));
       return false;
     }
+  }
+
+  Future<Map<String, dynamic>?> validateVoucherCode(String code) async {
+    final result = await repository.validateVoucherByCode(code);
+    return result.fold(
+      (failure) {
+        emit(state.copyWith(errorMessage: failure.message));
+        return null;
+      },
+      (data) => data,
+    );
   }
 
   void updateSelectedDuration(int minutes) {

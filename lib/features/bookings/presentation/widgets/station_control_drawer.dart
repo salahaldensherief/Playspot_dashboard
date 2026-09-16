@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/client_requests_state.dart';
 import '../../domain/entities/booking.dart';
 import '../../../analytics/presentation/dashboard_cubit.dart';
 import 'radial_countdown_ring.dart';
@@ -116,8 +119,11 @@ class StationControlDrawer extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Gamer Profile Card
-                  _buildGamerInfoCard(),
+                  _buildGamerInfoCard(context),
                   SizedBox(height: 20.h),
+
+                  // Session Requests Section
+                  _buildSessionRequestsSection(context),
 
                   // Countdown Gauge Widget
                   _buildCountdownGauge(remaining, isExpired),
@@ -225,11 +231,15 @@ class StationControlDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildGamerInfoCard() {
+  Widget _buildGamerInfoCard(BuildContext context) {
     final userName = (booking.userName != null && booking.userName!.isNotEmpty)
         ? booking.userName!
         : AppStrings.anonymous;
-    final userPhone = booking.userPhone ?? '';
+    final userPhone = booking.userPhone?.trim() ?? '';
+    final userEmail = booking.userEmail?.trim() ?? '';
+    final bookingIdShort = booking.id.isNotEmpty
+        ? (booking.id.length > 8 ? booking.id.substring(0, 8) : booking.id)
+        : 'زائر';
 
     return Container(
       padding: EdgeInsets.all(14.r),
@@ -238,42 +248,213 @@ class StationControlDrawer extends StatelessWidget {
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: AppColors.borderDefault),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 20.r,
-            backgroundColor: AppColors.neonPurple.withValues(alpha: 0.2),
-            child: Icon(Icons.person, color: AppColors.neonPurple, size: 22.sp),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  userName,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (userPhone.isNotEmpty) ...[
-                  SizedBox(height: 2.h),
-                  Text(
-                    userPhone,
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11.sp,
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 20.r,
+                backgroundColor: AppColors.neonPurple.withValues(alpha: 0.2),
+                child: Icon(Icons.person, color: AppColors.neonPurple, size: 22.sp),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            userName,
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                          decoration: BoxDecoration(
+                            color: AppColors.cardBackground,
+                            borderRadius: BorderRadius.circular(4.r),
+                            border: Border.all(color: AppColors.borderDefault),
+                          ),
+                          child: Text(
+                            '#$bookingIdShort',
+                            style: TextStyle(color: AppColors.textMuted, fontSize: 10.sp),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ],
-            ),
+                    if (userPhone.isNotEmpty && userPhone != 'null' && userPhone != 'No Phone') ...[
+                      SizedBox(height: 4.h),
+                      Row(
+                        children: [
+                          Icon(Icons.phone, size: 12.sp, color: AppColors.neonBlue),
+                          SizedBox(width: 4.w),
+                          Text(
+                            userPhone,
+                            style: TextStyle(
+                              color: AppColors.neonBlue,
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          InkWell(
+                            onTap: () {
+                              Clipboard.setData(ClipboardData(text: userPhone));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('تم نسخ رقم الهاتف'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            },
+                            child: Icon(Icons.copy, size: 12.sp, color: AppColors.textMuted),
+                          ),
+                        ],
+                      ),
+                    ],
+                    if (userEmail.isNotEmpty && userEmail != 'null') ...[
+                      SizedBox(height: 2.h),
+                      Row(
+                        children: [
+                          Icon(Icons.email, size: 12.sp, color: AppColors.textSecondary),
+                          SizedBox(width: 4.w),
+                          Expanded(
+                            child: Text(
+                              userEmail,
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11.sp,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSessionRequestsSection(BuildContext context) {
+    return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
+      builder: (context, requestsState) {
+        final sessionRequests = requestsState.requests.where((r) {
+          if (r.isAttended) return false;
+          final matchBooking = r.bookingId != null && r.bookingId == booking.id;
+          final matchRoom = r.roomId != null && r.roomId == booking.roomId;
+          return matchBooking || matchRoom;
+        }).toList();
+
+        if (sessionRequests.isEmpty) return const SizedBox.shrink();
+
+        return Container(
+          margin: EdgeInsets.only(bottom: 20.h),
+          padding: EdgeInsets.all(14.r),
+          decoration: BoxDecoration(
+            color: AppColors.warning.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: AppColors.warning.withValues(alpha: 0.6)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.notifications_active_rounded, color: AppColors.warning, size: 18),
+                  SizedBox(width: 6.w),
+                  Text(
+                    'طلبات العميل أثناء الجلسة الحالية (${sessionRequests.length})',
+                    style: TextStyle(
+                      color: AppColors.warning,
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10.h),
+              ...sessionRequests.map((req) {
+                final title = req.titleAr.isNotEmpty ? req.titleAr : req.titleEn;
+                final body = req.bodyAr.isNotEmpty ? req.bodyAr : req.bodyEn;
+                return Container(
+                  margin: EdgeInsets.only(bottom: 8.h),
+                  padding: EdgeInsets.all(10.r),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(color: AppColors.borderDefault),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (body.isNotEmpty) ...[
+                              SizedBox(height: 2.h),
+                              Text(
+                                body,
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 11.sp,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      ElevatedButton(
+                        onPressed: () {
+                          context.read<ClientRequestsCubit>().markAsAttended(
+                            req.id,
+                            isCanteenOrder: req.isCanteenOrder,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.success,
+                          foregroundColor: Colors.black,
+                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'تم التنفيذ',
+                          style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        );
+      },
     );
   }
 

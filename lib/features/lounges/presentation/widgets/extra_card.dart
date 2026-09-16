@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_cached_image.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import '../../domain/entities/extra_entity.dart';
@@ -38,7 +39,7 @@ class ExtraCard extends StatelessWidget {
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: extra.isOutOfStock
+          color: (extra.isOutOfStock || (extra.trackStock && extra.stockQuantity <= 0))
               ? AppColors.danger.withValues(alpha: 0.3)
               : AppColors.borderDefault,
         ),
@@ -55,12 +56,20 @@ class ExtraCard extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  Center(
-                    child: Icon(
-                      Icons.restaurant_menu_outlined,
-                      size: 40.r,
-                      color: AppColors.neonBlue,
-                    ),
+                  Positioned.fill(
+                    child: extra.imageUrl != null && extra.imageUrl!.trim().isNotEmpty
+                        ? AppCachedImage(
+                            imageUrl: extra.imageUrl,
+                            borderRadius: 16.r,
+                            fit: BoxFit.cover,
+                          )
+                        : Center(
+                            child: Icon(
+                              Icons.restaurant_menu_outlined,
+                              size: 40.r,
+                              color: AppColors.neonBlue,
+                            ),
+                          ),
                   ),
                   Positioned(
                     top: 12.r,
@@ -98,8 +107,12 @@ class ExtraCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    if (extra.isOutOfStock)
+                    if (extra.isOutOfStock || (extra.trackStock && extra.stockQuantity <= 0))
                       StatusBadge.danger(AppStrings.outOfStock)
+                    else if (extra.trackStock && extra.stockQuantity <= extra.minStockAlert)
+                      StatusBadge.warning('كمية منخفضة (${extra.stockQuantity})')
+                    else if (extra.trackStock)
+                      StatusBadge.info('المخزون: ${extra.stockQuantity}')
                     else
                       StatusBadge.success(AppStrings.active),
                   ],

@@ -442,7 +442,7 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   Future<List<ExtraModel>> getExtras(String loungeId) async {
     final response = await client
         .from('extras')
-        .select('id, lounge_id, name, price, category, is_available')
+        .select('*')
         .eq('lounge_id', loungeId);
     return (response as List).map((e) => ExtraModel.fromJson(e)).toList();
   }

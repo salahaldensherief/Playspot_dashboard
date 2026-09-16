@@ -16,6 +16,8 @@ import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_booking_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_details_dialog.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/client_requests_state.dart';
 
 /// Live Room & Station Occupancy Grid Component for Live Operations.
 /// Clarifies empty vs occupied rooms with real-time countdown timers, customer info, and quick booking actions.
@@ -526,6 +528,7 @@ class _RoomOccupancyCardState extends State<_RoomOccupancyCard> {
                 ],
               ),
             ),
+            _buildRoomSessionRequests(context, activeBooking, room),
             SizedBox(height: 10.h),
 
             // Action: View Customer & Booking Details
@@ -642,6 +645,91 @@ class _RoomOccupancyCardState extends State<_RoomOccupancyCard> {
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildRoomSessionRequests(BuildContext context, Booking booking, RoomEntity room) {
+    return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
+      builder: (context, requestsState) {
+        final sessionRequests = requestsState.requests.where((r) {
+          if (r.isAttended) return false;
+          final matchBooking = r.bookingId != null && r.bookingId == booking.id;
+          final matchRoom = r.roomId != null && r.roomId == room.id;
+          return matchBooking || matchRoom;
+        }).toList();
+
+        if (sessionRequests.isEmpty) return const SizedBox.shrink();
+
+        return Container(
+          margin: EdgeInsets.only(top: 8.h),
+          padding: EdgeInsets.all(8.r),
+          decoration: BoxDecoration(
+            color: AppColors.warning.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(8.r),
+            border: Border.all(color: AppColors.warning),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.notifications_active_rounded, color: AppColors.warning, size: 14),
+                  SizedBox(width: 4.w),
+                  Text(
+                    'طلبات الجلسة (${sessionRequests.length})',
+                    style: TextStyle(
+                      color: AppColors.warning,
+                      fontSize: 11.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 4.h),
+              ...sessionRequests.map((req) {
+                final title = req.titleAr.isNotEmpty ? req.titleAr : req.titleEn;
+                final body = req.bodyAr.isNotEmpty ? req.bodyAr : req.bodyEn;
+                return Padding(
+                  padding: EdgeInsets.only(top: 4.h),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '• $title ${body.isNotEmpty ? "($body)" : ""}',
+                          style: TextStyle(color: AppColors.textPrimary, fontSize: 10.sp),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
+                      InkWell(
+                        onTap: () {
+                          context.read<ClientRequestsCubit>().markAsAttended(
+                            req.id,
+                            isCanteenOrder: req.isCanteenOrder,
+                          );
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                          decoration: BoxDecoration(
+                            color: AppColors.success,
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                          child: Text(
+                            'تم التنفيذ',
+                            style: TextStyle(color: Colors.black, fontSize: 9.sp, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        );
+      },
     );
   }
 

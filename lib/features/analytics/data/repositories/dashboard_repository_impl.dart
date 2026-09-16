@@ -31,7 +31,8 @@ class DashboardRepositoryImpl implements DashboardRepository {
       await remoteDataSource.extendSession(bookingId, additionalMinutes, additionalCost: additionalCost);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      return Left(ServerFailure(msg));
     }
   }
 

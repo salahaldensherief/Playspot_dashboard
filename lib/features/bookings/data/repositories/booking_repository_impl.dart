@@ -122,6 +122,7 @@ class BookingRepositoryImpl implements BookingRepository {
         paymentStatus: booking.paymentStatus,
         totalPrice: booking.totalPrice,
         voucherDiscount: booking.voucherDiscount,
+        voucherCode: booking.voucherCode,
         extras: booking.extras,
         lat: booking.lat,
         lng: booking.lng,
@@ -135,7 +136,27 @@ class BookingRepositoryImpl implements BookingRepository {
       }
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> validateVoucherByCode(String voucherCode) async {
+    try {
+      final res = await remoteDataSource.validateVoucherByCode(voucherCode);
+      return Right(res);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> consumeVoucherByCode(String voucherCode, String bookingId) async {
+    try {
+      await remoteDataSource.consumeVoucherByCode(voucherCode, bookingId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
     }
   }
 

@@ -25,6 +25,8 @@ abstract class BookingRemoteDataSource {
         String? discountReason,
       });
   Future<void> createBooking(BookingModel booking);
+  Future<Map<String, dynamic>> validateVoucherByCode(String voucherCode);
+  Future<void> consumeVoucherByCode(String voucherCode, String bookingId);
   Future<void> swapRoom(String bookingId, String newRoomId, String actionBy);
   Future<void> startBookingSession(String bookingId);
   Future<void> autoCancelExpiredBookings();
@@ -253,6 +255,41 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
 
   @override
+  Future<Map<String, dynamic>> validateVoucherByCode(String voucherCode) async {
+    final cleanCode = voucherCode.trim().toUpperCase();
+    if (cleanCode.isEmpty) {
+      throw Exception('يرجى إدخال كود القسيمة');
+    }
+    debugPrint('🔵 [DATA_SOURCE] Calling validate_voucher_by_code with p_code: $cleanCode');
+    final response = await client.rpc('validate_voucher_by_code', params: {
+      'p_code': cleanCode,
+    });
+
+    if (response is Map) {
+      final resultMap = Map<String, dynamic>.from(response);
+      final isValid = resultMap['is_valid'] ?? resultMap['valid'] ?? resultMap['success'] ?? true;
+      if (isValid == false) {
+        final errorMsg = resultMap['error'] ?? resultMap['message'] ?? resultMap['reason'] ?? 'كود القسيمة غير صالح أو منتهي الصلاحية';
+        throw Exception(errorMsg);
+      }
+      return resultMap;
+    }
+    return {'is_valid': true};
+  }
+
+  @override
+  Future<void> consumeVoucherByCode(String voucherCode, String bookingId) async {
+    final cleanCode = voucherCode.trim().toUpperCase();
+    if (cleanCode.isEmpty || bookingId.isEmpty) return;
+    debugPrint('🔵 [DATA_SOURCE] Calling consume_voucher_by_code with p_code: $cleanCode, p_booking_id: $bookingId');
+    await client.rpc('consume_voucher_by_code', params: {
+      'p_code': cleanCode,
+      'p_booking_id': bookingId,
+    });
+    debugPrint('🟢 [DATA_SOURCE] consume_voucher_by_code RPC executed successfully!');
+  }
+
+  @override
   Future<void> createBooking(BookingModel booking) async {
     final activeShift = await client
         .from('shifts')
@@ -264,6 +301,11 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
     if (activeShift == null) {
       throw Exception('لا توجد وردية مفتوحة حالياً لهذا المقر. يرجى فتح وردية أولاً قبل إضافة أي حجز.');
+    }
+
+    final cleanVoucherCode = booking.voucherCode?.trim().toUpperCase();
+    if (cleanVoucherCode != null && cleanVoucherCode.isNotEmpty) {
+      await validateVoucherByCode(cleanVoucherCode);
     }
 
     final activeShiftId = activeShift['id']?.toString();
@@ -289,6 +331,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       paymentStatus: booking.paymentStatus,
       totalPrice: booking.totalPrice,
       voucherDiscount: booking.voucherDiscount,
+      voucherCode: cleanVoucherCode,
       discountAmount: booking.discountAmount,
       discountPercentage: booking.discountPercentage,
       discountReason: booking.discountReason,
@@ -301,7 +344,17 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     )
         : booking;
 
-    await client.from('bookings').insert(bookingToInsert.toJson());
+    final jsonMap = bookingToInsert.toJson();
+    if (bookingToInsert.id.isEmpty) {
+      jsonMap.remove('id');
+    }
+
+    final response = await client.from('bookings').insert(jsonMap).select().single();
+    final createdBookingId = (response['id'] ?? bookingToInsert.id)?.toString();
+
+    if (cleanVoucherCode != null && cleanVoucherCode.isNotEmpty && createdBookingId != null && createdBookingId.isNotEmpty) {
+      await consumeVoucherByCode(cleanVoucherCode, createdBookingId);
+    }
   }
 
   @override

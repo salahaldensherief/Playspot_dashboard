@@ -68,6 +68,7 @@ class Booking extends Equatable {
   final double totalPrice;
   final double? addonsPrice;
   final double? voucherDiscount;
+  final String? voucherCode;
   final double? discountAmount;
   final double? discountPercentage;
   final String? discountReason;
@@ -101,6 +102,7 @@ class Booking extends Equatable {
     required this.totalPrice,
     this.addonsPrice,
     this.voucherDiscount,
+    this.voucherCode,
     this.discountAmount,
     this.discountPercentage,
     this.discountReason,
@@ -138,6 +140,7 @@ class Booking extends Equatable {
         totalPrice,
         addonsPrice,
         voucherDiscount,
+        voucherCode,
         discountAmount,
         discountPercentage,
         discountReason,
@@ -172,6 +175,7 @@ class Booking extends Equatable {
     double? totalPrice,
     double? addonsPrice,
     double? voucherDiscount,
+    String? voucherCode,
     double? discountAmount,
     double? discountPercentage,
     String? discountReason,
@@ -205,6 +209,7 @@ class Booking extends Equatable {
       totalPrice: totalPrice ?? this.totalPrice,
       addonsPrice: addonsPrice ?? this.addonsPrice,
       voucherDiscount: voucherDiscount ?? this.voucherDiscount,
+      voucherCode: voucherCode ?? this.voucherCode,
       discountAmount: discountAmount ?? this.discountAmount,
       discountPercentage: discountPercentage ?? this.discountPercentage,
       discountReason: discountReason ?? this.discountReason,

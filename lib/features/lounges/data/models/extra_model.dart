@@ -55,6 +55,7 @@ class ExtraModel extends ExtraEntity {
       'price': price,
       'category': validCategory,
       'icon_key': iconKey,
+      'image_url': imageUrl,
       'is_available': !isOutOfStock,
       'stock_quantity': stockQuantity,
       'track_stock': trackStock,

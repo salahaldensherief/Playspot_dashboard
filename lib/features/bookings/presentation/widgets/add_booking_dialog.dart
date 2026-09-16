@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
@@ -34,6 +35,12 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _voucherCodeController = TextEditingController();
+
+  bool _isValidatingVoucher = false;
+  String? _appliedVoucherCode;
+  double _voucherDiscount = 0.0;
+  String? _voucherError;
   
   RoomEntity? _selectedRoom;
   DateTime _selectedDate = DateTime.now();
@@ -47,6 +54,14 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     _selectedRoom = widget.initialRoom;
     // Default duration is 60 mins
     context.read<BookingCubit>().updateSelectedDuration(60);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _voucherCodeController.dispose();
+    super.dispose();
   }
 
   @override
@@ -217,6 +232,11 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
 
                 // Extras Section
                 _buildExtrasSection(),
+
+                SizedBox(height: 20.h),
+
+                // Voucher Section
+                _buildVoucherSection(),
 
                 SizedBox(height: 20.h),
 
@@ -435,10 +455,140 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     );
   }
 
+  Widget _buildVoucherSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppText.body('كود القسيمة / Voucher Code', fontWeight: FontWeight.bold),
+        SizedBox(height: 8.h),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _voucherCodeController,
+                textCapitalization: TextCapitalization.characters,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'أدخل الكود (مثال: 9326D324)',
+                  hintStyle: const TextStyle(color: AppColors.textSecondary),
+                  filled: true,
+                  fillColor: AppColors.cardBackground,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                    borderSide: const BorderSide(color: AppColors.borderDefault),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                    borderSide: const BorderSide(color: AppColors.borderDefault),
+                  ),
+                ),
+                onChanged: (_) {
+                  if (_voucherError != null || _appliedVoucherCode != null) {
+                    setState(() {
+                      _voucherError = null;
+                      _appliedVoucherCode = null;
+                      _voucherDiscount = 0.0;
+                    });
+                  }
+                },
+              ),
+            ),
+            SizedBox(width: 8.w),
+            AppButton(
+              text: _isValidatingVoucher ? 'جاري التحقق...' : 'تطبيق',
+              variant: AppButtonVariant.primary,
+              isLoading: _isValidatingVoucher,
+              onPressed: _isValidatingVoucher ? null : _validateVoucher,
+            ),
+          ],
+        ),
+        if (_voucherError != null) ...[
+          SizedBox(height: 6.h),
+          Text(
+            _voucherError!,
+            style: TextStyle(color: AppColors.danger, fontSize: 12.sp),
+          ),
+        ],
+        if (_appliedVoucherCode != null) ...[
+          SizedBox(height: 6.h),
+          Row(
+            children: [
+              const Icon(Icons.check_circle, color: AppColors.success, size: 16),
+              SizedBox(width: 4.w),
+              Text(
+                'تم تطبيق الخصم بنجاح لكود $_appliedVoucherCode (${_voucherDiscount.toStringAsFixed(2)} ${AppStrings.egp})',
+                style: TextStyle(color: AppColors.success, fontSize: 12.sp, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Future<void> _validateVoucher() async {
+    final code = _voucherCodeController.text.trim().toUpperCase();
+    if (code.isEmpty) return;
+
+    setState(() {
+      _isValidatingVoucher = true;
+      _voucherError = null;
+    });
+
+    try {
+      final validation = await Supabase.instance.client.rpc(
+        'validate_voucher_by_code',
+        params: {
+          'p_code': code,
+        },
+      );
+
+      if (validation is Map) {
+        final map = Map<String, dynamic>.from(validation);
+        final isValid = map['is_valid'] ?? map['valid'] ?? map['success'] ?? true;
+        if (isValid == false) {
+          final err = map['error'] ?? map['message'] ?? 'كود القسيمة غير صالح أو منتهي الصلاحية';
+          setState(() {
+            _voucherError = err.toString();
+            _appliedVoucherCode = null;
+            _voucherDiscount = 0.0;
+          });
+          return;
+        }
+
+        final discount = (map['discount_amount'] ?? map['discount_value'] ?? map['amount'] as num?)?.toDouble() ?? 0.0;
+        setState(() {
+          _appliedVoucherCode = code;
+          _voucherDiscount = discount;
+          _voucherError = null;
+        });
+      } else {
+        setState(() {
+          _appliedVoucherCode = code;
+          _voucherDiscount = 0.0;
+          _voucherError = null;
+        });
+      }
+    } catch (e) {
+      final cleanMsg = e.toString().replaceFirst('Exception: ', '');
+      setState(() {
+        _voucherError = cleanMsg;
+        _appliedVoucherCode = null;
+        _voucherDiscount = 0.0;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isValidatingVoucher = false;
+        });
+      }
+    }
+  }
+
   Widget _buildSummaryCard(int durationMinutes) {
     final double durationHours = durationMinutes / 60.0;
     final double roomTotal = durationHours * (_selectedRoom?.pricePerHour ?? 0);
-    final double grandTotal = roomTotal + _extrasTotal;
+    final double grandTotal = (roomTotal + _extrasTotal - _voucherDiscount).clamp(0.0, double.infinity);
 
     return Container(
       padding: EdgeInsets.all(16.r),
@@ -457,6 +607,8 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
               AppText.body("${AppStrings.pricePerHour}: ${_selectedRoom?.pricePerHour} ${AppStrings.egp}", color: AppColors.textSecondary),
               if (_extrasTotal > 0)
                 AppText.body("مجموع الإضافات: ${_extrasTotal.toStringAsFixed(0)} ${AppStrings.egp}", color: AppColors.neonPurple),
+              if (_voucherDiscount > 0)
+                AppText.body("خصم القسيمة: -${_voucherDiscount.toStringAsFixed(2)} ${AppStrings.egp}", color: AppColors.success),
             ],
           ),
           Column(
@@ -528,6 +680,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
 
     final activeShiftId = context.read<ShiftCubit>().state.activeShift?.id;
     final double roomTotal = (durationMinutes / 60.0) * selectedRoom.pricePerHour;
+    final double grandTotal = (roomTotal + _extrasTotal - _voucherDiscount).clamp(0.0, double.infinity);
 
     final booking = Booking(
       id: '', 
@@ -542,8 +695,10 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
       endTime: endTimeStr,
       durationMinutes: durationMinutes,
       status: BookingStatus.upcoming,
-      totalPrice: roomTotal + _extrasTotal,
+      totalPrice: grandTotal,
       addonsPrice: _extrasTotal > 0 ? _extrasTotal : null,
+      voucherDiscount: _voucherDiscount > 0 ? _voucherDiscount : null,
+      voucherCode: _appliedVoucherCode,
       extras: _selectedExtras,
       shiftId: activeShiftId,
     );

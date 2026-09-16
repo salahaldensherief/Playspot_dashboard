@@ -8,6 +8,8 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/client_requests_state.dart';
 import '../../../analytics/presentation/dashboard_cubit.dart';
 import '../../../auth/presentation/login/login_cubit.dart';
 import '../../domain/entities/booking.dart';
@@ -271,6 +273,7 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
               ),
             ),
           ),
+          _buildActiveSessionRequests(context),
           SizedBox(height: 6.h),
 
           // Quick Time Extensions Bar (+15m, +30m, +1h)
@@ -278,16 +281,7 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
             children: [
               Expanded(
                 child: InkWell(
-                  onTap: () {
-                    if (widget.onExtendMinutes != null) {
-                      widget.onExtendMinutes!(15);
-                    } else {
-                      context.read<DashboardCubit>().extendSession(
-                        widget.booking.id,
-                        15,
-                      );
-                    }
-                  },
+                  onTap: () => _handleExtendMinutes(context, 15),
                   borderRadius: BorderRadius.circular(4.r),
                   child: Container(
                     padding: EdgeInsets.symmetric(vertical: 3.h),
@@ -312,16 +306,7 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
               SizedBox(width: 4.w),
               Expanded(
                 child: InkWell(
-                  onTap: () {
-                    if (widget.onExtendMinutes != null) {
-                      widget.onExtendMinutes!(30);
-                    } else {
-                      context.read<DashboardCubit>().extendSession(
-                        widget.booking.id,
-                        30,
-                      );
-                    }
-                  },
+                  onTap: () => _handleExtendMinutes(context, 30),
                   borderRadius: BorderRadius.circular(4.r),
                   child: Container(
                     padding: EdgeInsets.symmetric(vertical: 3.h),
@@ -346,16 +331,7 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
               SizedBox(width: 4.w),
               Expanded(
                 child: InkWell(
-                  onTap: () {
-                    if (widget.onExtendMinutes != null) {
-                      widget.onExtendMinutes!(60);
-                    } else {
-                      context.read<DashboardCubit>().extendSession(
-                        widget.booking.id,
-                        60,
-                      );
-                    }
-                  },
+                  onTap: () => _handleExtendMinutes(context, 60),
                   borderRadius: BorderRadius.circular(4.r),
                   child: Container(
                     padding: EdgeInsets.symmetric(vertical: 3.h),
@@ -515,8 +491,6 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
       return;
     }
 
-    final dashboardCubit = context.read<DashboardCubit>();
-    final bookingCubit = context.read<BookingCubit>();
     int selectedMinutes = 30;
 
     showDialog(
@@ -584,28 +558,127 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
               variant: AppButtonVariant.primary,
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
-                if (widget.onExtendMinutes != null) {
-                  widget.onExtendMinutes!(selectedMinutes);
-                } else {
-                  final success = await dashboardCubit.extendSession(widget.booking.id, selectedMinutes);
-                  if (!success) {
-                    await bookingCubit.extendBookingDuration(widget.booking.id, selectedMinutes);
-                  }
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(AppStrings.timeExtendedSuccess),
-                        backgroundColor: AppColors.success,
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
-                  }
-                }
+                await _handleExtendMinutes(context, selectedMinutes);
               },
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _handleExtendMinutes(BuildContext context, int minutes) async {
+    if (widget.onExtendMinutes != null) {
+      widget.onExtendMinutes!(minutes);
+      return;
+    }
+
+    final dashboardCubit = context.read<DashboardCubit>();
+    final success = await dashboardCubit.extendSession(widget.booking.id, minutes);
+    if (!context.mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.timeExtendedSuccess),
+          backgroundColor: AppColors.success,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } else {
+      final errorMsg = dashboardCubit.state.errorMessage ?? 'لا يمكن تمديد الحجز لأن هناك حجزاً آخر يبدأ بعد وقت حجزك مباشرة.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMsg),
+          backgroundColor: AppColors.danger,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  Widget _buildActiveSessionRequests(BuildContext context) {
+    return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
+      builder: (context, requestsState) {
+        final sessionRequests = requestsState.requests.where((r) {
+          if (r.isAttended) return false;
+          final matchBooking = r.bookingId != null && r.bookingId == widget.booking.id;
+          final matchRoom = r.roomId != null && r.roomId == widget.booking.roomId;
+          return matchBooking || matchRoom;
+        }).toList();
+
+        if (sessionRequests.isEmpty) return const SizedBox.shrink();
+
+        return Container(
+          margin: EdgeInsets.only(top: 8.h),
+          padding: EdgeInsets.all(8.r),
+          decoration: BoxDecoration(
+            color: AppColors.warning.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(8.r),
+            border: Border.all(color: AppColors.warning.withValues(alpha: 0.5)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.notifications_active_rounded, color: AppColors.warning, size: 14),
+                  SizedBox(width: 4.w),
+                  Text(
+                    'طلبات الجلسة الحالية (${sessionRequests.length})',
+                    style: TextStyle(
+                      color: AppColors.warning,
+                      fontSize: 11.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 6.h),
+              ...sessionRequests.map((req) {
+                final title = req.titleAr.isNotEmpty ? req.titleAr : req.titleEn;
+                final body = req.bodyAr.isNotEmpty ? req.bodyAr : req.bodyEn;
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 4.h),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '• $title ${body.isNotEmpty ? "($body)" : ""}',
+                          style: TextStyle(color: AppColors.textPrimary, fontSize: 10.sp),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
+                      InkWell(
+                        onTap: () {
+                          context.read<ClientRequestsCubit>().markAsAttended(
+                            req.id,
+                            isCanteenOrder: req.isCanteenOrder,
+                          );
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                          decoration: BoxDecoration(
+                            color: AppColors.success,
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                          child: Text(
+                            'تم التنفيذ',
+                            style: TextStyle(color: Colors.black, fontSize: 9.sp, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        );
+      },
     );
   }
 

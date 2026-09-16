@@ -9,6 +9,7 @@ abstract class StorageService {
   Future<String> uploadRoomImage(Uint8List fileBytes, String fileName, String loungeId);
   Future<List<String>> uploadRoomImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId);
   Future<String> uploadTournamentBanner(Uint8List fileBytes, String fileName, String tournamentId);
+  Future<String> uploadExtraImage(Uint8List fileBytes, String fileName, String loungeId);
 }
 
 class StorageServiceImpl implements StorageService {
@@ -99,6 +100,30 @@ class StorageServiceImpl implements StorageService {
         return _supabase.storage.from('promo-assets').getPublicUrl(path);
       } catch (e2) {
         throw Exception('عفواً، مجلد التخزين (Bucket) غير موجود في Supabase. يرجى إنشاء مجلد tournament-assets أو promo-assets.');
+      }
+    }
+  }
+
+  @override
+  Future<String> uploadExtraImage(Uint8List fileBytes, String fileName, String loungeId) async {
+    final fileId = const Uuid().v4();
+    final extension = fileName.contains('.') ? fileName.split('.').last : 'png';
+    final path = 'extras/$loungeId/$fileId.$extension';
+
+    try {
+      await _supabase.storage.from('lounge-assets').uploadBinary(
+        path,
+        fileBytes,
+        fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+      );
+      return _supabase.storage.from('lounge-assets').getPublicUrl(path);
+    } catch (e) {
+      debugPrint('⚠️ [STORAGE_SERVICE] uploadExtraImage error: $e. Attempting promo-assets fallback...');
+      try {
+        await _supabase.storage.from('promo-assets').uploadBinary(path, fileBytes);
+        return _supabase.storage.from('promo-assets').getPublicUrl(path);
+      } catch (e2) {
+        throw Exception('فشل رفع صورة المنتج. يرجى التأكد من وجود مجلد lounge-assets كـ Public في Supabase Storage.');
       }
     }
   }

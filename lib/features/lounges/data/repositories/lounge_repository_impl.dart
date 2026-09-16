@@ -531,6 +531,10 @@ class LoungeRepositoryImpl implements LoungeRepository {
         category: extra.category,
         isOutOfStock: extra.isOutOfStock,
         iconKey: extra.iconKey,
+        imageUrl: extra.imageUrl,
+        stockQuantity: extra.stockQuantity,
+        trackStock: extra.trackStock,
+        minStockAlert: extra.minStockAlert,
       ));
       await localCacheService.remove('cache_extras_${extra.loungeId}');
       return const Right(null);
@@ -552,6 +556,10 @@ class LoungeRepositoryImpl implements LoungeRepository {
         category: extra.category,
         isOutOfStock: extra.isOutOfStock,
         iconKey: extra.iconKey,
+        imageUrl: extra.imageUrl,
+        stockQuantity: extra.stockQuantity,
+        trackStock: extra.trackStock,
+        minStockAlert: extra.minStockAlert,
       ));
       await localCacheService.remove('cache_extras_${extra.loungeId}');
       return const Right(null);

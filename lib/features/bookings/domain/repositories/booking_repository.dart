@@ -25,6 +25,8 @@ abstract class BookingRepository {
     String? discountReason,
   });
   Future<Either<Failure, void>> createBooking(Booking booking);
+  Future<Either<Failure, Map<String, dynamic>>> validateVoucherByCode(String voucherCode);
+  Future<Either<Failure, void>> consumeVoucherByCode(String voucherCode, String bookingId);
   Future<Either<Failure, void>> swapRoom(String bookingId, String newRoomId, String actionBy);
   Future<Either<Failure, void>> startBookingSession(String bookingId);
   Future<Either<Failure, void>> autoCancelExpiredBookings();
