@@ -9,7 +9,7 @@ import '../models/lounge_comparison_model.dart';
 import '../models/shift_audit_log_model.dart';
 
 abstract class ShiftRemoteDataSource {
-  Future<List<ShiftModel>> getShifts({String? loungeId});
+  Future<List<ShiftModel>> getShifts({String? loungeId, int limit = 50, int offset = 0});
   Future<List<ShiftModel>> getShiftReport({
     String? loungeId,
     DateTime? startDate,
@@ -43,14 +43,20 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
   ShiftRemoteDataSourceImpl(this._supabase);
 
   @override
-  Future<List<ShiftModel>> getShifts({String? loungeId}) async {
+  Future<List<ShiftModel>> getShifts({
+    String? loungeId,
+    int limit = 50,
+    int offset = 0,
+  }) async {
     var query = _supabase.from('shifts').select('*, profiles:cashier_id(full_name)');
     
     if (loungeId != null && loungeId.isNotEmpty) {
       query = query.eq('lounge_id', loungeId);
     }
 
-    final response = await query.order('start_time', ascending: false);
+    final response = await query
+        .order('start_time', ascending: false)
+        .range(offset, offset + limit - 1);
     return (response as List).map((json) => ShiftModel.fromJson(json)).toList();
   }
 

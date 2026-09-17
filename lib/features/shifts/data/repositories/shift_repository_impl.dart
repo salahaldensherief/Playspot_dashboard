@@ -48,8 +48,16 @@ class ShiftRepositoryImpl with RepositoryHelper implements ShiftRepository {
   }
 
   @override
-  Future<Either<Failure, List<ShiftEntity>>> getShiftHistory({String? loungeId}) async {
-    final result = await callRepository<List<ShiftModel>>(() => remoteDataSource.getShifts(loungeId: loungeId));
+  Future<Either<Failure, List<ShiftEntity>>> getShiftHistory({
+    int limit = 50,
+    String? loungeId,
+    int offset = 0,
+  }) async {
+    final result = await callRepository<List<ShiftModel>>(() => remoteDataSource.getShifts(
+          loungeId: loungeId,
+          limit: limit,
+          offset: offset,
+        ));
     return result.map((list) => list.cast<ShiftEntity>());
   }
 

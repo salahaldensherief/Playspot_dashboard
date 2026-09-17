@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/core/utils/debouncer.dart';
 
 class ShiftFiltersBar extends StatefulWidget {
   final Function(String period, String status, String searchQuery) onFilterChanged;
@@ -20,9 +21,11 @@ class _ShiftFiltersBarState extends State<ShiftFiltersBar> {
   String _selectedPeriod = 'all'; // 'today', 'week', 'month', 'all'
   String _selectedStatus = 'all'; // 'all', 'open', 'closed', 'approved', 'unapproved'
   final TextEditingController _searchController = TextEditingController();
+  final _searchDebouncer = Debouncer(delay: const Duration(milliseconds: 400));
 
   @override
   void dispose() {
+    _searchDebouncer.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -118,7 +121,7 @@ class _ShiftFiltersBarState extends State<ShiftFiltersBar> {
                   height: 38.h,
                   child: TextField(
                     controller: _searchController,
-                    onChanged: (_) => _notifyParent(),
+                    onChanged: (_) => _searchDebouncer.run(_notifyParent),
                     style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
                     decoration: InputDecoration(
                       hintText: AppStrings.cashierNameHint,

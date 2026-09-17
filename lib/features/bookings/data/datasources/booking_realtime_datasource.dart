@@ -16,11 +16,27 @@ class BookingRealtimeDataSourceImpl implements BookingRealtimeDataSource {
   @override
   Stream<List<BookingModel>> watchBookings({String? loungeId}) {
     late StreamController<List<BookingModel>> controller;
-    Timer? timer;
+    Timer? backupSyncTimer;
+    Timer? debounceTimer;
     StreamSubscription? realtimeSubscription;
+    bool isFetching = false;
+
+    void debouncedFetchAndEmit() {
+      debounceTimer?.cancel();
+      debounceTimer = Timer(const Duration(milliseconds: 300), () async {
+        if (isFetching || controller.isClosed) return;
+        isFetching = true;
+        try {
+          await _fetchAndEmit(controller, loungeId);
+        } finally {
+          isFetching = false;
+        }
+      });
+    }
 
     void cancelResources() {
-      timer?.cancel();
+      debounceTimer?.cancel();
+      backupSyncTimer?.cancel();
       realtimeSubscription?.cancel();
     }
 
@@ -36,17 +52,17 @@ class BookingRealtimeDataSourceImpl implements BookingRealtimeDataSource {
               .stream(primaryKey: ['id'])
               .order('created_at')
               .listen((_) {
-                _fetchAndEmit(controller, loungeId);
+                debouncedFetchAndEmit();
               }, onError: (e) {
-                // Ignore silent socket drops; heartbeat timer will continue polling
+                // Ignore silent socket drops; backup timer will continue polling
               });
         } catch (e) {
-          // Ignore stream setup errors; heartbeat polling will fetch updates
+          // Ignore stream setup errors; backup polling will fetch updates
         }
 
-        // 3. Periodic 5-second heartbeat poll to guarantee immediate live updates
-        timer = Timer.periodic(const Duration(seconds: 5), (_) {
-          _fetchAndEmit(controller, loungeId);
+        // 3. Periodic 30-second fallback backup poll (safety net for socket drops)
+        backupSyncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+          debouncedFetchAndEmit();
         });
       },
       onCancel: () {

@@ -14,7 +14,11 @@ abstract class ShiftRepository {
   Future<Either<Failure, void>> openShift(String loungeId, double startingCash, {String? notes});
   Future<Either<Failure, void>> quickOpenShift(String loungeId, [double startingCash = 0.0, String? notes]);
   Future<Either<Failure, ShiftEntity>> closeShift(String shiftId, double actualCash, String? notes, {String? loungeId});
-  Future<Either<Failure, List<ShiftEntity>>> getShiftHistory({String? loungeId});
+  Future<Either<Failure, List<ShiftEntity>>> getShiftHistory({
+    int limit = 50,
+    String? loungeId,
+    int offset = 0,
+  });
   Future<Either<Failure, List<ShiftEntity>>> getShiftReport({
     String? loungeId,
     DateTime? startDate,

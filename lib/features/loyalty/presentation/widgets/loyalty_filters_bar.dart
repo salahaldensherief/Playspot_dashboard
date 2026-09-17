@@ -7,6 +7,7 @@ import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_text_field.dart';
 import '../../../../art_core/widgets/custom_dropdown.dart';
+import '../../../../core/utils/debouncer.dart';
 import '../../../auth/presentation/login/login_cubit.dart';
 import '../cubit/loyalty_cubit.dart';
 import '../cubit/loyalty_state.dart';
@@ -21,9 +22,11 @@ class LoyaltyFiltersBar extends StatefulWidget {
 
 class _LoyaltyFiltersBarState extends State<LoyaltyFiltersBar> {
   final TextEditingController _userSearchController = TextEditingController();
+  final _userSearchDebouncer = Debouncer(delay: const Duration(milliseconds: 400));
 
   @override
   void dispose() {
+    _userSearchDebouncer.dispose();
     _userSearchController.dispose();
     super.dispose();
   }
@@ -181,7 +184,9 @@ class _LoyaltyFiltersBarState extends State<LoyaltyFiltersBar> {
                   hintText: AppStrings.userSearchHint,
                   prefixIcon: Icons.search,
                   onChanged: (val) {
-                    loyaltyCubit.updateFilters(userId: val);
+                    _userSearchDebouncer.run(() {
+                      loyaltyCubit.updateFilters(userId: val);
+                    });
                   },
                 ),
               ),
@@ -189,6 +194,7 @@ class _LoyaltyFiltersBarState extends State<LoyaltyFiltersBar> {
               // Clear Filters Button
               IconButton(
                 onPressed: () {
+                  _userSearchDebouncer.cancel();
                   _userSearchController.clear();
                   loyaltyCubit.clearFilters();
                 },

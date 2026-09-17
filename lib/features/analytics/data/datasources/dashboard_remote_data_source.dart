@@ -56,11 +56,27 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   Stream<List<BookingModel>> watchActiveSessions({String? loungeId}) {
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
     late StreamController<List<BookingModel>> controller;
-    Timer? heartbeatTimer;
+    Timer? backupSyncTimer;
+    Timer? debounceTimer;
     StreamSubscription? postgresSubscription;
+    bool isFetching = false;
+
+    void debouncedFetch() {
+      debounceTimer?.cancel();
+      debounceTimer = Timer(const Duration(milliseconds: 300), () async {
+        if (isFetching || controller.isClosed) return;
+        isFetching = true;
+        try {
+          await _fetchAndEmitActiveSessions(controller, cleanLoungeId);
+        } finally {
+          isFetching = false;
+        }
+      });
+    }
 
     void cleanup() {
-      heartbeatTimer?.cancel();
+      debounceTimer?.cancel();
+      backupSyncTimer?.cancel();
       postgresSubscription?.cancel();
     }
 
@@ -73,7 +89,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
               .from('bookings')
               .stream(primaryKey: ['id'])
               .listen((_) {
-                _fetchAndEmitActiveSessions(controller, cleanLoungeId);
+                debouncedFetch();
               }, onError: (e) {
                 debugPrint('⚠️ [DASHBOARD_DATA_SOURCE] Active Sessions Realtime Error: $e');
               });
@@ -81,8 +97,8 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
           debugPrint('⚠️ [DASHBOARD_DATA_SOURCE] Active Sessions Stream Listener Exception: $e');
         }
 
-        heartbeatTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-          _fetchAndEmitActiveSessions(controller, cleanLoungeId);
+        backupSyncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+          debouncedFetch();
         });
       },
       onCancel: cleanup,

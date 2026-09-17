@@ -22,6 +22,8 @@ class TournamentRepositoryImpl implements TournamentRepository {
     double? longitude,
     String? loungeId,
     String? status,
+    int limit = 50,
+    int offset = 0,
   }) async {
     try {
       final result = await remoteDataSource.getTournaments(
@@ -29,6 +31,8 @@ class TournamentRepositoryImpl implements TournamentRepository {
         status: status,
         latitude: latitude,
         longitude: longitude,
+        limit: limit,
+        offset: offset,
       );
       return Right(result);
     } catch (e) {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -9,7 +8,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/features/staff/domain/entities/staff_entity.dart';
-import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
+import 'package:play_spot_dashboard/core/utils/debouncer.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_cubit.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_state.dart';
@@ -24,6 +23,8 @@ class StaffScreen extends StatefulWidget {
 }
 
 class _StaffScreenState extends State<StaffScreen> {
+  final _searchDebouncer = Debouncer(delay: const Duration(milliseconds: 400));
+
   @override
   void initState() {
     super.initState();
@@ -32,6 +33,12 @@ class _StaffScreenState extends State<StaffScreen> {
     if (loungeId != null && loungeId.isNotEmpty) {
       context.read<StaffCubit>().fetchStaff(loungeId);
     }
+  }
+
+  @override
+  void dispose() {
+    _searchDebouncer.dispose();
+    super.dispose();
   }
 
   @override
@@ -87,7 +94,7 @@ class _StaffScreenState extends State<StaffScreen> {
               child: AppTextField(
                 hintText: AppStrings.searchStaff,
                 prefixIcon: Icons.search,
-                onChanged: (val) => context.read<StaffCubit>().setSearchQuery(val),
+                onChanged: (val) => _searchDebouncer.run(() => context.read<StaffCubit>().setSearchQuery(val)),
               ),
             ),
             SizedBox(height: 24.h),

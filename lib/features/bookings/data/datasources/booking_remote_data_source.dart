@@ -115,7 +115,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
           status,
           created_at
         ),
-        booking_items(*, canteen_items(*)),
+        booking_items(id, name, quantity, price, total_price, status),
         profiles(full_name, phone, email),
         rooms(name, name_en, controllers_count, screen_size),
         lounges(name, location, location_point)

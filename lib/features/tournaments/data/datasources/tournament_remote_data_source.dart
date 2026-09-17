@@ -11,7 +11,14 @@ import '../models/tournament_prize_model.dart';
 import '../models/tournament_prize_reward_model.dart';
 
 abstract class TournamentRemoteDataSource {
-  Future<List<TournamentModel>> getTournaments({double? latitude, double? longitude, String? loungeId, String? status});
+  Future<List<TournamentModel>> getTournaments({
+    double? latitude,
+    double? longitude,
+    String? loungeId,
+    String? status,
+    int limit = 50,
+    int offset = 0,
+  });
   Future<TournamentModel> createTournament(TournamentModel tournament);
   Future<TournamentModel> updateTournament(TournamentModel tournament);
   Future<void> saveTournamentPrizes(String tournamentId, List<TournamentPrizeModel> prizes);
@@ -58,7 +65,14 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
   TournamentRemoteDataSourceImpl(this.client);
 
   @override
-  Future<List<TournamentModel>> getTournaments({double? latitude, double? longitude, String? loungeId, String? status}) async {
+  Future<List<TournamentModel>> getTournaments({
+    double? latitude,
+    double? longitude,
+    String? loungeId,
+    String? status,
+    int limit = 50,
+    int offset = 0,
+  }) async {
     try {
       var query = client.from('tournaments').select('''
         *,
@@ -68,7 +82,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
           id,
           tournament_id,
           placement,
-          tournament_prize_rewards (*)
+          tournament_prize_rewards (id, prize_id, type, title, title_ar, title_en, description, description_ar, description_en, value, currency, metadata, delivery_status)
         )
       ''');
 
@@ -79,7 +93,9 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
         query = query.eq('status', status.trim());
       }
 
-      final response = await query.order('created_at', ascending: false);
+      final response = await query
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
       return (response as List).map((json) {
         return TournamentModel.fromJson(Map<String, dynamic>.from(json));
       }).toList();
@@ -93,7 +109,9 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
       if (status != null && status.trim().isNotEmpty) {
         plainQuery = plainQuery.eq('status', status.trim());
       }
-      final response = await plainQuery.order('created_at', ascending: false);
+      final response = await plainQuery
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
       return (response as List).map((json) {
         return TournamentModel.fromJson(Map<String, dynamic>.from(json));
       }).toList();
@@ -171,7 +189,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
           id,
           tournament_id,
           placement,
-          tournament_prize_rewards (*)
+          tournament_prize_rewards (id, prize_id, type, title, title_ar, title_en, description, description_ar, description_en, value, currency, metadata, delivery_status)
         )
       ''').eq('id', createdId).single();
 

@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
+import 'package:play_spot_dashboard/core/utils/debouncer.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
@@ -83,6 +84,7 @@ class BookingFilterBar extends StatefulWidget {
 
 class _BookingFilterBarState extends State<BookingFilterBar> {
   late TextEditingController _searchController;
+  final _searchDebouncer = Debouncer(delay: const Duration(milliseconds: 400));
 
   @override
   void initState() {
@@ -100,6 +102,7 @@ class _BookingFilterBarState extends State<BookingFilterBar> {
 
   @override
   void dispose() {
+    _searchDebouncer.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -184,13 +187,16 @@ class _BookingFilterBarState extends State<BookingFilterBar> {
           ? IconButton(
               icon: Icon(Icons.close, size: 16.r, color: AppColors.textMuted),
               onPressed: () {
+                _searchDebouncer.cancel();
                 _searchController.clear();
                 widget.onFilterChanged(widget.filterState.copyWith(searchQuery: ''));
               },
             )
           : null,
       onChanged: (val) {
-        widget.onFilterChanged(widget.filterState.copyWith(searchQuery: val));
+        _searchDebouncer.run(() {
+          widget.onFilterChanged(widget.filterState.copyWith(searchQuery: val));
+        });
       },
     );
   }

@@ -13,6 +13,8 @@ abstract class TournamentRepository {
     double? longitude,
     String? loungeId,
     String? status,
+    int limit = 50,
+    int offset = 0,
   });
 
   Future<Either<Failure, TournamentEntity>> createTournament(TournamentEntity tournament);
