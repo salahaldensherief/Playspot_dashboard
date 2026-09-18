@@ -27,6 +27,10 @@ class RoomModel extends RoomEntity {
     super.controllersCount,
     super.screenSize,
     super.status,
+    super.hasOffer,
+    super.offerTitle,
+    super.offerTag,
+    super.activePromotionId,
   });
 
   factory RoomModel.fromJson(Map<String, dynamic> json) {

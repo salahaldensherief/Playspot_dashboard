@@ -6,7 +6,6 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
-import 'package:play_spot_dashboard/features/requests/presentation/client_requests_state.dart';
 import '../../domain/entities/booking.dart';
 import '../../../analytics/presentation/dashboard_cubit.dart';
 import 'radial_countdown_ring.dart';
@@ -351,14 +350,16 @@ class StationControlDrawer extends StatelessWidget {
   }
 
   Widget _buildSessionRequestsSection(BuildContext context) {
-    return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
-      builder: (context, requestsState) {
-        final sessionRequests = requestsState.requests.where((r) {
-          if (r.isAttended) return false;
-          final matchBooking = r.bookingId != null && r.bookingId == booking.id;
-          final matchRoom = r.roomId != null && r.roomId == booking.roomId;
-          return matchBooking || matchRoom;
-        }).toList();
+    final clientRequestsCubit = context.watch<ClientRequestsCubit?>();
+    if (clientRequestsCubit == null) return const SizedBox.shrink();
+
+    final requestsState = clientRequestsCubit.state;
+    final sessionRequests = requestsState.requests.where((r) {
+      if (r.isAttended) return false;
+      final matchBooking = r.bookingId != null && r.bookingId == booking.id;
+      final matchRoom = r.roomId != null && r.roomId == booking.roomId;
+      return matchBooking || matchRoom;
+    }).toList();
 
         if (sessionRequests.isEmpty) return const SizedBox.shrink();
 
@@ -454,8 +455,6 @@ class StationControlDrawer extends StatelessWidget {
             ],
           ),
         );
-      },
-    );
   }
 
   Widget _buildCountdownGauge(Duration remaining, bool isExpired) {

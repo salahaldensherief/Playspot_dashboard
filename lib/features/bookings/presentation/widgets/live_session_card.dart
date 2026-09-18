@@ -15,7 +15,10 @@ import '../../../auth/presentation/login/login_cubit.dart';
 import '../../domain/entities/booking.dart';
 import '../cubit/booking_cubit.dart';
 import 'add_extras_dialog.dart';
+import 'booking_products_preview.dart';
+import 'customer_visit_badge.dart';
 import 'radial_countdown_ring.dart';
+import 'room_discount_dialog.dart';
 import 'session_ticker.dart';
 import 'station_control_drawer.dart';
 import 'swap_room_dialog.dart';
@@ -65,6 +68,25 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
     } catch (e) {
       return timeStr;
     }
+  }
+
+  void _showDiscountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      useRootNavigator: false,
+      builder: (_) => RoomDiscountDialog(
+        roomName: widget.booking.roomName.isNotEmpty ? widget.booking.roomName : AppStrings.roomLabel,
+        currentPrice: widget.booking.totalPrice,
+        onApplyDiscount: (amount, percent, reason) {
+          context.read<BookingCubit>().confirmCashPayment(
+                widget.booking.id,
+                discountAmount: amount,
+                discountPercentage: percent,
+                discountReason: reason,
+              );
+        },
+      ),
+    );
   }
 
   String _formatDuration(Duration duration) {
@@ -166,10 +188,19 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AppText.body(
-                      widget.booking.userName ?? AppStrings.anonymous,
-                      fontSize: 12.sp,
-                      color: AppColors.textSecondary,
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 6.w,
+                      runSpacing: 2.h,
+                      children: [
+                        AppText.body(
+                          widget.booking.userName ?? AppStrings.anonymous,
+                          fontSize: 12.sp,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        CustomerVisitBadge(visitNumber: widget.booking.visitNumber),
+                      ],
                     ),
                     if (widget.booking.userPhone != null && widget.booking.userPhone?.isNotEmpty == true) ...[
                       SizedBox(height: 1.h),
@@ -182,20 +213,52 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
                   ],
                 ),
               ),
-              // Total Price Badge
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
-                decoration: BoxDecoration(
-                  color: AppColors.neonGreen.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6.r),
-                  border: Border.all(color: AppColors.neonGreen.withValues(alpha: 0.3)),
-                ),
-                child: AppText.subHeading(
-                  '${widget.booking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
-                  fontSize: 11.sp,
-                  color: AppColors.neonGreen,
-                  fontWeight: FontWeight.bold,
-                ),
+              // Total Price & Discount Badge
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if ((widget.booking.discountAmount ?? 0) > 0) ...[
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 3.h),
+                      margin: EdgeInsets.only(left: 4.w),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6.r),
+                        border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+                      ),
+                      child: Text(
+                        '-${widget.booking.discountAmount!.toStringAsFixed(0)} ج.م',
+                        style: TextStyle(
+                          color: AppColors.warning,
+                          fontSize: 9.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
+                    decoration: BoxDecoration(
+                      color: AppColors.neonGreen.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6.r),
+                      border: Border.all(color: AppColors.neonGreen.withValues(alpha: 0.3)),
+                    ),
+                    child: AppText.subHeading(
+                      '${widget.booking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
+                      fontSize: 11.sp,
+                      color: AppColors.neonGreen,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(width: 4.w),
+                  IconButton(
+                    icon: Icon(Icons.local_offer_outlined, size: 15.r, color: AppColors.warning),
+                    tooltip: AppStrings.applyDiscount,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => _showDiscountDialog(context),
+                  ),
+                ],
               ),
             ],
           ),
@@ -273,6 +336,7 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
               ),
             ),
           ),
+          BookingProductsPreview(booking: widget.booking),
           _buildActiveSessionRequests(context),
           SizedBox(height: 6.h),
 
@@ -355,7 +419,7 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
               ),
             ],
           ),
-          const Spacer(),
+          SizedBox(height: 8.h),
 
           // Actions Row: End Session, Add Extras, Extend Time
           Row(

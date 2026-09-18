@@ -35,8 +35,20 @@ class _ActionButtonState extends State<ActionButton> {
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) {
+        if (mounted && !_isHovered) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _isHovered = true);
+          });
+        }
+      },
+      onExit: (_) {
+        if (mounted && _isHovered) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _isHovered = false);
+          });
+        }
+      },
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(

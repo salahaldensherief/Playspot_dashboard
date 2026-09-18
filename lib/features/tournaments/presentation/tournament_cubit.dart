@@ -5,6 +5,7 @@ import 'package:play_spot_dashboard/core/services/location_service.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import '../domain/entities/tournament_entity.dart';
 import '../domain/entities/tournament_match_entity.dart';
+import '../domain/entities/tournament_participant_entity.dart';
 import '../domain/entities/tournament_prize_entity.dart';
 import '../domain/repositories/tournament_repository.dart';
 import 'tournament_state.dart';
@@ -16,6 +17,12 @@ class TournamentCubit extends Cubit<TournamentState> {
   StreamSubscription<List<TournamentMatchEntity>>? _disputesSubscription;
 
   TournamentCubit(this.repository, this.locationService, this.storageService) : super(const TournamentState());
+
+  @override
+  void emit(TournamentState state) {
+    if (isClosed) return;
+    super.emit(state);
+  }
 
   void setTab(int index) {
     emit(state.copyWith(selectedTab: index));
@@ -206,7 +213,6 @@ class TournamentCubit extends Cubit<TournamentState> {
           status: TournamentCubitStatus.actionSuccess,
           successMessage: 'تم حفظ جوائز البطولة بنجاح',
         ));
-        loadTournaments();
       },
     );
   }
@@ -237,7 +243,6 @@ class TournamentCubit extends Cubit<TournamentState> {
           selectedTournament: updatedSelected,
           successMessage: 'تم نشر البطولة بنجاح',
         ));
-        loadTournaments();
       },
     );
   }
@@ -268,7 +273,6 @@ class TournamentCubit extends Cubit<TournamentState> {
           selectedTournament: updatedSelected,
           successMessage: 'تم إلغاء البطولة',
         ));
-        loadTournaments();
       },
     );
   }
@@ -333,13 +337,21 @@ class TournamentCubit extends Cubit<TournamentState> {
         errorMessage: failure.message,
       )),
       (_) {
+        final updatedParticipants = state.participants.map((p) {
+          if (p.id == participantId) {
+            return p.copyWith(
+              paymentStatus: ParticipantPaymentStatus.approved,
+              participantStatus: ParticipantStatus.confirmed,
+            );
+          }
+          return p;
+        }).toList();
+
         emit(state.copyWith(
           status: TournamentCubitStatus.actionSuccess,
+          participants: updatedParticipants,
           successMessage: 'تم اعتماد إيصال الدفع بنجاح',
         ));
-        if (state.selectedTournament != null) {
-          loadParticipants(state.selectedTournament!.id);
-        }
       },
     );
   }
@@ -354,13 +366,21 @@ class TournamentCubit extends Cubit<TournamentState> {
         errorMessage: failure.message,
       )),
       (_) {
+        final updatedParticipants = state.participants.map((p) {
+          if (p.id == participantId) {
+            return p.copyWith(
+              paymentStatus: ParticipantPaymentStatus.rejected,
+              rejectionReason: reason,
+            );
+          }
+          return p;
+        }).toList();
+
         emit(state.copyWith(
           status: TournamentCubitStatus.actionSuccess,
+          participants: updatedParticipants,
           successMessage: 'تم رفض إيصال الدفع',
         ));
-        if (state.selectedTournament != null) {
-          loadParticipants(state.selectedTournament!.id);
-        }
       },
     );
   }
@@ -375,13 +395,21 @@ class TournamentCubit extends Cubit<TournamentState> {
         errorMessage: failure.message,
       )),
       (_) {
+        final updatedParticipants = state.participants.map((p) {
+          if (p.id == participantId) {
+            return p.copyWith(
+              paymentStatus: ParticipantPaymentStatus.approved,
+              participantStatus: ParticipantStatus.confirmed,
+            );
+          }
+          return p;
+        }).toList();
+
         emit(state.copyWith(
           status: TournamentCubitStatus.actionSuccess,
+          participants: updatedParticipants,
           successMessage: 'تم تسجيل الدفع النقدي في الصالة',
         ));
-        if (state.selectedTournament != null) {
-          loadParticipants(state.selectedTournament!.id);
-        }
       },
     );
   }
@@ -415,13 +443,21 @@ class TournamentCubit extends Cubit<TournamentState> {
         errorMessage: failure.message,
       )),
       (_) {
+        final updatedParticipants = state.participants.map((p) {
+          if (p.id == participantId) {
+            return p.copyWith(
+              isCheckedIn: true,
+              checkedInAt: DateTime.now(),
+            );
+          }
+          return p;
+        }).toList();
+
         emit(state.copyWith(
           status: TournamentCubitStatus.actionSuccess,
+          participants: updatedParticipants,
           successMessage: 'تم تسجيل حضور اللاعب',
         ));
-        if (state.selectedTournament != null) {
-          loadParticipants(state.selectedTournament!.id);
-        }
       },
     );
   }
@@ -436,13 +472,20 @@ class TournamentCubit extends Cubit<TournamentState> {
         errorMessage: failure.message,
       )),
       (_) {
+        final updatedParticipants = state.participants.map((p) {
+          if (p.id == participantId) {
+            return p.copyWith(
+              participantStatus: ParticipantStatus.withdrawn,
+            );
+          }
+          return p;
+        }).toList();
+
         emit(state.copyWith(
           status: TournamentCubitStatus.actionSuccess,
+          participants: updatedParticipants,
           successMessage: 'تم انسحاب المشارك بنجاح',
         ));
-        if (state.selectedTournament != null) {
-          loadParticipants(state.selectedTournament!.id);
-        }
       },
     );
   }
@@ -474,7 +517,6 @@ class TournamentCubit extends Cubit<TournamentState> {
           matches: matchesList,
           successMessage: 'تمت إقامة القرعة وتوليد الشجرة بنجاح',
         ));
-        loadTournaments();
       },
     );
   }
@@ -571,7 +613,6 @@ class TournamentCubit extends Cubit<TournamentState> {
           selectedTournament: updatedSelected,
           successMessage: 'تم إنهاء البطولة بنجاح',
         ));
-        loadTournaments();
       },
     );
   }

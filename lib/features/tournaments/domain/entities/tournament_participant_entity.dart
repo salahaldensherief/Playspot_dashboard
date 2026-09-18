@@ -118,6 +118,40 @@ class TournamentParticipantEntity extends Equatable {
   bool get isExpired => participantStatus == ParticipantStatus.expired;
   bool get isConfirmed => participantStatus == ParticipantStatus.confirmed;
 
+  TournamentParticipantEntity copyWith({
+    String? id,
+    String? tournamentId,
+    String? userId,
+    String? userName,
+    String? userPhone,
+    String? userEmail,
+    ParticipantPaymentStatus? paymentStatus,
+    ParticipantStatus? participantStatus,
+    String? receiptPath,
+    String? signedReceiptUrl,
+    String? rejectionReason,
+    bool? isCheckedIn,
+    DateTime? checkedInAt,
+    DateTime? registeredAt,
+  }) {
+    return TournamentParticipantEntity(
+      id: id ?? this.id,
+      tournamentId: tournamentId ?? this.tournamentId,
+      userId: userId ?? this.userId,
+      userName: userName ?? this.userName,
+      userPhone: userPhone ?? this.userPhone,
+      userEmail: userEmail ?? this.userEmail,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      participantStatus: participantStatus ?? this.participantStatus,
+      receiptPath: receiptPath ?? this.receiptPath,
+      signedReceiptUrl: signedReceiptUrl ?? this.signedReceiptUrl,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
+      isCheckedIn: isCheckedIn ?? this.isCheckedIn,
+      checkedInAt: checkedInAt ?? this.checkedInAt,
+      registeredAt: registeredAt ?? this.registeredAt,
+    );
+  }
+
   @override
   List<Object?> get props => [
         id,

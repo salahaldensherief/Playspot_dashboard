@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -34,9 +35,6 @@ class BookingFinancialsCard extends StatefulWidget {
 
 class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
   double _calculateExtrasTotal() {
-    if (widget.booking.addonsPrice != null && widget.booking.addonsPrice! > 0) {
-      return widget.booking.addonsPrice!;
-    }
     double total = 0.0;
     for (final item in widget.booking.extras) {
       final q = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
@@ -45,8 +43,28 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
     }
     if (total == 0.0 && widget.booking.canteenOrders.isNotEmpty) {
       for (final order in widget.booking.canteenOrders) {
-        total += (order['total_price'] ?? order['price'] as num?)?.toDouble() ?? 0.0;
+        dynamic rawItems = order['items'];
+        if (rawItems is String && rawItems.trim().isNotEmpty) {
+          try {
+            rawItems = jsonDecode(rawItems);
+          } catch (_) {}
+        }
+        if (rawItems is List) {
+          for (final item in rawItems) {
+            if (item is Map) {
+              final q = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
+              final p = (item['price'] ?? item['unit_price'] as num?)?.toDouble() ?? 0.0;
+              total += q * p;
+            }
+          }
+        }
+        if (total == 0.0) {
+          total += (order['total_price'] ?? order['price'] as num?)?.toDouble() ?? 0.0;
+        }
       }
+    }
+    if (total == 0.0 && widget.booking.addonsPrice != null && widget.booking.addonsPrice! > 0) {
+      return widget.booking.addonsPrice!;
     }
     return total;
   }
@@ -204,8 +222,14 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
               }
 
               List<Map<String, dynamic>> orderItems = [];
-              if (order['items'] is List) {
-                orderItems = (order['items'] as List)
+              dynamic rawItems = order['items'];
+              if (rawItems is String && rawItems.trim().isNotEmpty) {
+                try {
+                  rawItems = jsonDecode(rawItems);
+                } catch (_) {}
+              }
+              if (rawItems is List) {
+                orderItems = rawItems
                     .whereType<Map>()
                     .map((e) => Map<String, dynamic>.from(e))
                     .toList();

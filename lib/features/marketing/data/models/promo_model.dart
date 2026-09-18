@@ -23,21 +23,40 @@ class PromoModel extends PromoEntity {
     final rawImage = json['image_url']?.toString();
     final imageUrl = (rawImage != null && rawImage.trim().isNotEmpty) ? rawImage.trim() : null;
 
+    final String fallbackTitle = json['title']?.toString() ?? '';
+    final String fallbackTag = json['tag']?.toString() ?? '';
+
+    final String titleAr = (json['title_ar'] != null && json['title_ar'].toString().trim().isNotEmpty)
+        ? json['title_ar'].toString().trim()
+        : fallbackTitle;
+
+    final String titleEn = (json['title_en'] != null && json['title_en'].toString().trim().isNotEmpty)
+        ? json['title_en'].toString().trim()
+        : fallbackTitle;
+
+    final String tagAr = (json['tag_ar'] != null && json['tag_ar'].toString().trim().isNotEmpty)
+        ? json['tag_ar'].toString().trim()
+        : fallbackTag;
+
+    final String tagEn = (json['tag_en'] != null && json['tag_en'].toString().trim().isNotEmpty)
+        ? json['tag_en'].toString().trim()
+        : fallbackTag;
+
     return PromoModel(
       id: json['id']?.toString() ?? '',
-      titleAr: json['title_ar']?.toString() ?? '',
-      titleEn: json['title_en']?.toString() ?? '',
-      tagAr: json['tag_ar']?.toString() ?? '',
-      tagEn: json['tag_en']?.toString() ?? '',
-      hexColors: List<String>.from(json['colors'] ?? []),
-      iconKey: json['icon_key']?.toString() ?? '',
+      titleAr: titleAr,
+      titleEn: titleEn,
+      tagAr: tagAr,
+      tagEn: tagEn,
+      hexColors: json['colors'] is List ? List<String>.from(json['colors']) : <String>[],
+      iconKey: json['icon_key']?.toString() ?? 'Flash',
       imageUrl: imageUrl,
-      deepLink: json['deep_link'],
+      deepLink: json['deep_link']?.toString(),
       loungeId: json['lounge_id']?.toString(),
       roomId: json['room_id']?.toString(),
-      expiresAt: json['expires_at'] != null ? DateTime.parse(json['expires_at']) : null,
-      tag: json['tag']?.toString(),
-      isRoomSpecific: json['is_room_specific'] ?? false,
+      expiresAt: json['expires_at'] != null ? DateTime.tryParse(json['expires_at'].toString()) : null,
+      tag: fallbackTag.isNotEmpty ? fallbackTag : tagAr,
+      isRoomSpecific: json['is_room_specific'] == true,
       targetAudience: json['target_audience']?.toString() ?? 'all',
     );
   }

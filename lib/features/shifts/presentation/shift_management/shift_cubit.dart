@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:play_spot_dashboard/core/error/failures.dart';
 import '../../domain/entities/shift_entity.dart';
 import '../../domain/entities/shift_expense_entity.dart';
+import '../../domain/entities/shift_payment_entity.dart';
+import '../../domain/entities/shift_audit_log_entity.dart';
 import '../../domain/use_cases/get_active_shift_use_case.dart';
 import '../../domain/use_cases/get_lounge_live_shift_overview_use_case.dart';
 import '../../domain/use_cases/open_shift_use_case.dart';
@@ -339,12 +343,19 @@ class ShiftCubit extends Cubit<ShiftState> {
     if (isClosed) return;
     emit(state.copyWith(selectedShiftDetails: shift));
 
-    final expensesRes = await repository.fetchShiftExpenses(shift.id);
-    final paymentsRes = await repository.fetchShiftPayments(shift.id);
-    final bookingsRes = await repository.fetchShiftBookings(shift.id);
-    final auditLogsRes = await repository.fetchShiftAuditLogs(shift.id);
+    final results = await Future.wait([
+      repository.fetchShiftExpenses(shift.id),
+      repository.fetchShiftPayments(shift.id),
+      repository.fetchShiftBookings(shift.id),
+      repository.fetchShiftAuditLogs(shift.id),
+    ]);
 
     if (isClosed) return;
+
+    final expensesRes = results[0] as Either<Failure, List<ShiftExpenseEntity>>;
+    final paymentsRes = results[1] as Either<Failure, List<ShiftPaymentEntity>>;
+    final bookingsRes = results[2] as Either<Failure, List<Map<String, dynamic>>>;
+    final auditLogsRes = results[3] as Either<Failure, List<ShiftAuditLogEntity>>;
 
     final expensesList = expensesRes.getOrElse(() => []);
     final paymentsList = paymentsRes.getOrElse(() => []);

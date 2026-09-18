@@ -39,14 +39,33 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
   }
 
   @override
-  Stream<List<RoomModel>> watchRooms(String loungeId) {
-    return _supabase
-        .from('rooms')
-        .stream(primaryKey: ['id'])
-        .eq('lounge_id', loungeId)
-        .asyncMap((event) async {
-          return await getRooms(loungeId);
-        });
+  Stream<List<RoomModel>> watchRooms(String loungeId) async* {
+    // 1. Initial REST fetch for instant & guaranteed loading
+    try {
+      final initialRooms = await getRooms(loungeId);
+      yield initialRooms;
+    } catch (e) {
+      debugPrint('⚠️ [ROOM_DATA_SOURCE] Initial REST getRooms failed: $e');
+    }
+
+    // 2. Realtime Stream subscription with graceful exception fallback
+    try {
+      final stream = _supabase
+          .from('rooms')
+          .stream(primaryKey: ['id'])
+          .eq('lounge_id', loungeId)
+          .asyncMap((_) async => await getRooms(loungeId));
+
+      await for (final rooms in stream) {
+        yield rooms;
+      }
+    } catch (e) {
+      debugPrint('⚠️ [ROOM_DATA_SOURCE] Realtime stream failed ($e). Falling back to REST data.');
+      try {
+        final fallbackRooms = await getRooms(loungeId);
+        yield fallbackRooms;
+      } catch (_) {}
+    }
   }
 
   @override

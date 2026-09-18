@@ -10,11 +10,14 @@ import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_details_dialog.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_products_preview.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/customer_visit_badge.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_discount_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/start_session_button.dart';
 
-/// Redesigned Compact Booking Card Widget (mainAxisExtent: 280.h)
-/// Displays core essentials (status, time, customer, room, price, primary actions).
-/// Detailed specs, extras, and full controls are accessible via BookingDetailsDialog on tap.
+/// Redesigned Compact & Feature-Rich Booking Card Widget
+/// Displays status, live session progress, customer visit badge (new/returning/VIP),
+/// room specs, itemized canteen orders & extras, total price, and quick actions.
 class BookingCard extends StatefulWidget {
   final Booking booking;
   final VoidCallback? onApprove;
@@ -70,6 +73,25 @@ class _BookingCardState extends State<BookingCard> {
     );
   }
 
+  void _showDiscountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      useRootNavigator: false,
+      builder: (_) => RoomDiscountDialog(
+        roomName: widget.booking.roomName.isNotEmpty ? widget.booking.roomName : AppStrings.roomLabel,
+        currentPrice: widget.booking.totalPrice,
+        onApplyDiscount: (amount, percent, reason) {
+          context.read<BookingCubit>().confirmCashPayment(
+                widget.booking.id,
+                discountAmount: amount,
+                discountPercentage: percent,
+                discountReason: reason,
+              );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final booking = widget.booking;
@@ -77,53 +99,52 @@ class _BookingCardState extends State<BookingCard> {
     final isPaid = booking.paymentStatus == PaymentStatus.paid;
     final isCanStartSession = isPending || booking.status == BookingStatus.upcoming;
     final isOverdue = _isPastStartTime(booking);
+    final isInProgress = booking.status == BookingStatus.inProgress;
 
     final String durationHrsStr = (booking.durationMinutes / 60.0).toStringAsFixed(1).replaceAll('.0', '');
     final String userInitials = _getInitials(booking.userName);
     final String formattedDate = DateFormat('MMM dd').format(booking.date);
     final String shortId = booking.id.length > 8 ? booking.id.substring(0, 8) : booking.id;
 
-    final bool hasExtras = booking.extras.isNotEmpty || booking.canteenOrders.isNotEmpty;
-    String extrasSummary = '';
-    if (booking.extras.isNotEmpty) {
-      final itemsStr = booking.extras.map((e) {
-        final name = e['name_ar'] ?? e['name'] ?? '';
-        final qty = e['quantity'] ?? e['qty'] ?? 1;
-        return '$qty $name';
-      }).take(2).join('، ');
-      extrasSummary = itemsStr;
-      if (booking.extras.length > 2) extrasSummary += '...';
-    } else if (booking.canteenOrders.isNotEmpty) {
-      extrasSummary = '${booking.canteenOrders.length} طلب كافيتريا';
-    }
-
     Color borderColor = AppColors.borderDefault;
     if (isOverdue) {
       borderColor = AppColors.danger.withValues(alpha: 0.8);
     } else if (isPending) {
       borderColor = AppColors.warning.withValues(alpha: 0.6);
-    } else if (booking.status == BookingStatus.inProgress) {
-      borderColor = AppColors.success.withValues(alpha: 0.6);
+    } else if (isInProgress) {
+      borderColor = AppColors.success.withValues(alpha: 0.7);
     }
 
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) {
+        if (mounted && !_isHovered) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _isHovered = true);
+          });
+        }
+      },
+      onExit: (_) {
+        if (mounted && _isHovered) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _isHovered = false);
+          });
+        }
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: widget.width ?? 320.w,
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(14.r),
-          border: Border.all(color: borderColor, width: _isHovered || isOverdue ? 1.5 : 1.0),
+          border: Border.all(color: borderColor, width: _isHovered || isOverdue || isInProgress ? 1.5 : 1.0),
           boxShadow: [
             BoxShadow(
               color: isOverdue
                   ? AppColors.danger.withValues(alpha: 0.15)
-                  : (_isHovered
-                      ? AppColors.neonBlue.withValues(alpha: 0.12)
-                      : Colors.black.withValues(alpha: 0.08)),
-              blurRadius: _isHovered ? 10 : 4,
+                  : (isInProgress
+                      ? AppColors.success.withValues(alpha: 0.12)
+                      : (_isHovered ? AppColors.neonBlue.withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.08))),
+              blurRadius: _isHovered || isInProgress ? 10 : 4,
               offset: const Offset(0, 3),
             ),
           ],
@@ -140,7 +161,7 @@ class _BookingCardState extends State<BookingCard> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. Top Header: Status Badge + ID + Time
+                  // 1. Top Header: Status Badge + ID + Time / Live Countdown
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -180,12 +201,13 @@ class _BookingCardState extends State<BookingCard> {
                   ),
                   SizedBox(height: 8.h),
 
-                  // 2. Customer Row: Avatar + Name + Contact
+                  // 2. Customer Row: Avatar + Name + Customer Visit Badge + Phone
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Container(
-                        width: 32.r,
-                        height: 32.r,
+                        width: 34.r,
+                        height: 34.r,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
@@ -210,13 +232,21 @@ class _BookingCardState extends State<BookingCard> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            AppText.subHeading(
-                              booking.userName ?? AppStrings.anonymous,
-                              fontSize: 13.sp,
-                              color: AppColors.textPrimary,
-                              maxLines: 1,
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 6.w,
+                              runSpacing: 2.h,
+                              children: [
+                                AppText.subHeading(
+                                  booking.userName ?? AppStrings.anonymous,
+                                  fontSize: 13.sp,
+                                  color: AppColors.textPrimary,
+                                  maxLines: 1,
+                                ),
+                                CustomerVisitBadge(visitNumber: booking.visitNumber),
+                              ],
                             ),
-                            SizedBox(height: 1.h),
+                            SizedBox(height: 2.h),
                             AppText.body(
                               booking.userPhone ?? booking.userEmail ?? AppStrings.anonymous,
                               fontSize: 10.sp,
@@ -238,78 +268,108 @@ class _BookingCardState extends State<BookingCard> {
                       borderRadius: BorderRadius.circular(8.r),
                       border: Border.all(color: AppColors.borderDefault),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
                       children: [
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Icon(Icons.sports_esports_outlined, color: AppColors.neonPurple, size: 14.r),
-                            SizedBox(width: 4.w),
-                            AppText.subHeading(
-                              booking.roomName.isNotEmpty ? booking.roomName : AppStrings.roomLabel,
-                              fontSize: 11.sp,
-                              color: AppColors.textPrimary,
-                              maxLines: 1,
+                            Row(
+                              children: [
+                                Icon(Icons.sports_esports_outlined, color: AppColors.neonPurple, size: 14.r),
+                                SizedBox(width: 4.w),
+                                AppText.subHeading(
+                                  booking.roomName.isNotEmpty ? booking.roomName : AppStrings.roomLabel,
+                                  fontSize: 11.sp,
+                                  color: AppColors.textPrimary,
+                                  maxLines: 1,
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Icon(Icons.calendar_today_outlined, size: 10.r, color: AppColors.textMuted),
+                                SizedBox(width: 3.w),
+                                AppText.body(
+                                  formattedDate,
+                                  fontSize: 10.sp,
+                                  color: AppColors.textMuted,
+                                ),
+                                SizedBox(width: 6.w),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.cardBackground,
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
+                                  child: AppText.body(
+                                    '$durationHrsStr ${AppStrings.hours}',
+                                    fontSize: 9.sp,
+                                    color: AppColors.neonPurple,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        Row(
-                          children: [
-                            Icon(Icons.calendar_today_outlined, size: 10.r, color: AppColors.textMuted),
-                            SizedBox(width: 3.w),
-                            AppText.body(
-                              formattedDate,
-                              fontSize: 10.sp,
-                              color: AppColors.textMuted,
-                            ),
-                            SizedBox(width: 6.w),
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
-                              decoration: BoxDecoration(
-                                color: AppColors.cardBackground,
-                                borderRadius: BorderRadius.circular(4.r),
-                              ),
-                              child: AppText.body(
-                                '$durationHrsStr ${AppStrings.hours}',
-                                fontSize: 9.sp,
-                                color: AppColors.neonPurple,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
+                        if (booking.controllersCount > 0 || booking.screenSize.isNotEmpty || booking.playMode != null) ...[
+                          SizedBox(height: 4.h),
+                          Row(
+                            children: [
+                              if (booking.controllersCount > 0) ...[
+                                Icon(Icons.gamepad_outlined, size: 10.r, color: AppColors.textSecondary),
+                                SizedBox(width: 3.w),
+                                AppText.body(
+                                  '${booking.controllersCount} دراعات',
+                                  fontSize: 9.5.sp,
+                                  color: AppColors.textSecondary,
+                                ),
+                                SizedBox(width: 8.w),
+                              ],
+                              if (booking.screenSize.isNotEmpty) ...[
+                                Icon(Icons.tv_outlined, size: 10.r, color: AppColors.textSecondary),
+                                SizedBox(width: 3.w),
+                                AppText.body(
+                                  booking.screenSize,
+                                  fontSize: 9.5.sp,
+                                  color: AppColors.textSecondary,
+                                ),
+                                SizedBox(width: 8.w),
+                              ],
+                              if (booking.playMode != null && booking.playMode!.isNotEmpty) ...[
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.neonBlue.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
+                                  child: AppText.body(
+                                    booking.playMode!,
+                                    fontSize: 9.sp,
+                                    color: AppColors.neonBlue,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
-                  if (hasExtras) ...[
-                    SizedBox(height: 5.h),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-                      decoration: BoxDecoration(
-                        color: AppColors.neonPurple.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6.r),
-                        border: Border.all(color: AppColors.neonPurple.withValues(alpha: 0.3)),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.restaurant_menu_rounded, size: 12.r, color: AppColors.neonPurple),
-                          SizedBox(width: 4.w),
-                          Expanded(
-                            child: AppText.body(
-                              'إضافات: $extrasSummary',
-                              fontSize: 10.sp,
-                              color: AppColors.neonPurple,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+
+                  // 4. Live Session Timer Bar (For Active In-Progress Bookings)
+                  if (isInProgress) ...[
+                    SizedBox(height: 6.h),
+                    _buildSessionProgressBar(booking),
                   ],
+
+                  // 5. Itemized Products Box (Canteen Orders & Extras)
+                  BookingProductsPreview(booking: booking),
+
                   SizedBox(height: 8.h),
 
-                  // 4. Financials Bar: Price & Paid Badge
+                  // 6. Financials Bar: Price & Paid Badge
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -322,6 +382,33 @@ class _BookingCardState extends State<BookingCard> {
                             fontSize: 13.sp,
                             fontWeight: FontWeight.bold,
                           ),
+                          if ((booking.discountAmount ?? 0) > 0) ...[
+                            SizedBox(width: 4.w),
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+                              decoration: BoxDecoration(
+                                color: AppColors.warning.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4.r),
+                                border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+                              ),
+                              child: Text(
+                                '-${booking.discountAmount!.toStringAsFixed(0)} ج.م',
+                                style: TextStyle(
+                                  color: AppColors.warning,
+                                  fontSize: 8.5.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                          SizedBox(width: 4.w),
+                          IconButton(
+                            icon: Icon(Icons.local_offer_outlined, size: 14.r, color: AppColors.warning),
+                            tooltip: AppStrings.applyDiscount,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () => _showDiscountDialog(context),
+                          ),
                         ],
                       ),
                       isPaid
@@ -329,9 +416,9 @@ class _BookingCardState extends State<BookingCard> {
                           : StatusBadge.warning(AppStrings.unpaid.toUpperCase()),
                     ],
                   ),
-                  const Spacer(),
+                  SizedBox(height: 8.h),
 
-                  // 5. Compact Action Buttons Bar
+                  // 7. Compact Action Buttons Bar
                   if (isPending)
                     Row(
                       children: [
@@ -411,6 +498,79 @@ class _BookingCardState extends State<BookingCard> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSessionProgressBar(Booking booking) {
+    final start = booking.startDateTime;
+    final end = booking.endDateTime;
+    final now = DateTime.now();
+
+    int remainingMins = 0;
+    double progress = 0.0;
+
+    if (start != null && end != null) {
+      final totalDuration = end.difference(start).inMinutes;
+      final elapsed = now.difference(start).inMinutes;
+      if (totalDuration > 0) {
+        progress = (elapsed / totalDuration).clamp(0.0, 1.0);
+        remainingMins = (totalDuration - elapsed).clamp(0, 999);
+      }
+    }
+
+    final String remainingText = remainingMins > 0 ? 'متبقي: $remainingMins دقيقة' : 'انتهى الوقت!';
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6.r),
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.timer_outlined, size: 11.r, color: AppColors.success),
+                  SizedBox(width: 4.w),
+                  Text(
+                    'الجلسة نشطة',
+                    style: TextStyle(
+                      color: AppColors.success,
+                      fontSize: 9.5.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                remainingText,
+                style: TextStyle(
+                  color: remainingMins <= 5 ? AppColors.warning : AppColors.textPrimary,
+                  fontSize: 9.5.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 4.h),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4.r),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 4.h,
+              backgroundColor: AppColors.mutedBackground,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                progress > 0.9 ? AppColors.warning : AppColors.success,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -15,7 +15,6 @@ class DataTableWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12.r),
@@ -30,11 +29,12 @@ class DataTableWidget extends StatelessWidget {
           child: ConstrainedBox(
             constraints: BoxConstraints(minWidth: MediaQuery.sizeOf(context).width - 310.w),
             child: DataTable(
-              headingRowColor: MaterialStateProperty.all(AppColors.mutedBackground),
+              headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
               horizontalMargin: 24.w,
               columnSpacing: 20.w,
               headingRowHeight: 56.h,
-              dataRowHeight: 64.h,
+              dataRowMinHeight: 64.h,
+              dataRowMaxHeight: 64.h,
               columns: columns
                   .map((col) => DataColumn(
                         label: Text(

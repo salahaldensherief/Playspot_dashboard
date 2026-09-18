@@ -31,26 +31,29 @@ class RevenueChart extends StatelessWidget {
 
         if (state.revenueChart.isEmpty) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.show_chart_rounded, size: 40.r, color: AppColors.textMuted),
-                SizedBox(height: 8.h),
-                AppText.body(
-                  AppStrings.noResultsMatching.replaceFirst("\"{}\"", ""),
-                  color: AppColors.textSecondary,
-                  fontSize: 12.sp,
-                ),
-                SizedBox(height: 12.h),
-                AppButton(
-                  text: AppStrings.refresh,
-                  variant: AppButtonVariant.outlined,
-                  height: 32.h,
-                  onPressed: () {
-                    context.read<DashboardCubit>().loadDashboardData();
-                  },
-                ),
-              ],
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.show_chart_rounded, size: 28.r, color: AppColors.textMuted),
+                  SizedBox(height: 6.h),
+                  AppText.body(
+                    AppStrings.noResultsMatching.replaceFirst("\"{}\"", ""),
+                    color: AppColors.textSecondary,
+                    fontSize: 12.sp,
+                  ),
+                  SizedBox(height: 8.h),
+                  AppButton(
+                    text: AppStrings.refresh,
+                    variant: AppButtonVariant.outlined,
+                    height: 28.h,
+                    onPressed: () {
+                      context.read<DashboardCubit>().loadDashboardData();
+                    },
+                  ),
+                ],
+              ),
             ),
           );
         }

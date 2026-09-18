@@ -24,6 +24,10 @@ class RoomEntity extends Equatable {
   final int controllersCount;
   final String screenSize;
   final RoomStatusEnum status;
+  final bool hasOffer;
+  final String? offerTitle;
+  final String? offerTag;
+  final String? activePromotionId;
 
   // Aliases and backward compatibility getters
   int get capacity => maxCapacity;
@@ -59,6 +63,10 @@ class RoomEntity extends Equatable {
     this.controllersCount = 2,
     this.screenSize = '43"',
     this.status = RoomStatusEnum.available,
+    this.hasOffer = false,
+    this.offerTitle,
+    this.offerTag,
+    this.activePromotionId,
   })  : maxCapacity = maxCapacity ?? capacity ?? 4,
         hourlyRateSingle = hourlyRateSingle ?? pricePerHourSingle ?? pricePerHour,
         hourlyRateMulti = hourlyRateMulti ?? pricePerHourMulti ?? pricePerHour;
@@ -86,5 +94,9 @@ class RoomEntity extends Equatable {
         controllersCount,
         screenSize,
         status,
+        hasOffer,
+        offerTitle,
+        offerTag,
+        activePromotionId,
       ];
 }

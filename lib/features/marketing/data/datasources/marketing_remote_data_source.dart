@@ -30,33 +30,47 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
 
   @override
   Future<List<PromoModel>> getPromotions({String? loungeId, String? city}) async {
-    var query = _supabase.from('promotions').select();
-    if (loungeId != null) query = query.eq('lounge_id', loungeId);
-    
-    if (city != null) {
-      query = query.eq('city', city);
+    try {
+      var query = _supabase.from('promotions').select();
+      
+      if (loungeId != null && loungeId.trim().isNotEmpty) {
+        query = query.or('lounge_id.eq.${loungeId.trim()},lounge_id.is.null');
+      }
+      
+      if (city != null && city.trim().isNotEmpty) {
+        query = query.eq('city', city.trim());
+      }
+
+      final response = await query.order('created_at', ascending: false);
+      
+      return (response as List).map((json) => PromoModel.fromJson(Map<String, dynamic>.from(json))).toList();
+    } catch (e) {
+      debugPrint('⚠️ [MARKETING_REMOTE] getPromotions error: $e, attempting plain select fallback');
+      try {
+        final response = await _supabase.from('promotions').select().order('created_at', ascending: false);
+        return (response as List).map((json) => PromoModel.fromJson(Map<String, dynamic>.from(json))).toList();
+      } catch (e2) {
+        debugPrint('⚠️ [MARKETING_REMOTE] getPromotions plain fallback error: $e2');
+        return [];
+      }
     }
-
-    final response = await query
-        .or('expires_at.gt.${DateTime.now().toIso8601String()},expires_at.is.null')
-        .order('created_at', ascending: false);
-
-    return (response as List).map((json) => PromoModel.fromJson(json)).toList();
   }
 
   @override
   Future<void> createPromotion(PromoModel promo) async {
     // Try publish_promotion RPC first
     try {
+      debugPrint('🚀 [MARKETING_REMOTE] Calling publish_promotion RPC for lounge: ${promo.loungeId}');
       await _supabase.rpc('publish_promotion', params: {
+        'p_expires_at': promo.expiresAt?.toIso8601String(),
         'p_lounge_id': promo.loungeId,
-        'p_title_ar': promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn,
-        'p_title_en': promo.titleEn.isNotEmpty ? promo.titleEn : promo.titleAr,
+        'p_room_id': promo.roomId,
         'p_tag_ar': promo.tagAr.isNotEmpty ? promo.tagAr : promo.tag,
         'p_tag_en': promo.tagEn.isNotEmpty ? promo.tagEn : promo.tag,
-        'p_room_id': promo.roomId,
-        'p_expires_at': promo.expiresAt?.toIso8601String(),
+        'p_title_ar': promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn,
+        'p_title_en': promo.titleEn.isNotEmpty ? promo.titleEn : promo.titleAr,
       });
+      debugPrint('🟢 [MARKETING_REMOTE] publish_promotion RPC executed successfully!');
       return;
     } catch (e) {
       debugPrint('⚠️ [MARKETING_REMOTE] publish_promotion RPC error ($e), falling back to direct table insert');

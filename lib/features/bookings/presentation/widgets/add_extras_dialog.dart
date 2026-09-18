@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:play_spot_dashboard/core/di/di.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
@@ -9,6 +10,7 @@ import '../../../../art_core/widgets/app_text.dart';
 import '../../../lounges/domain/entities/extra_entity.dart';
 import '../../../lounges/presentation/cubit/extras_cubit.dart';
 import '../../../lounges/presentation/cubit/extras_state.dart';
+import '../cubit/booking_cubit.dart';
 
 class AddExtrasDialog extends StatefulWidget {
   final String bookingId;
@@ -22,6 +24,36 @@ class AddExtrasDialog extends StatefulWidget {
     required this.onConfirm,
   });
 
+  static Future<void> show(
+    BuildContext context, {
+    required String bookingId,
+    required String loungeId,
+    required Function(List<Map<String, dynamic>> extras, double totalCost) onConfirm,
+  }) {
+    final extrasCubit = context.read<ExtrasCubit?>();
+    final bookingCubit = context.read<BookingCubit?>();
+
+    return showDialog(
+      context: context,
+      useRootNavigator: false,
+      builder: (diagContext) => MultiBlocProvider(
+        providers: [
+          if (extrasCubit != null)
+            BlocProvider.value(value: extrasCubit)
+          else
+            BlocProvider(create: (_) => sl<ExtrasCubit>()),
+          if (bookingCubit != null)
+            BlocProvider.value(value: bookingCubit),
+        ],
+        child: AddExtrasDialog(
+          bookingId: bookingId,
+          loungeId: loungeId,
+          onConfirm: onConfirm,
+        ),
+      ),
+    );
+  }
+
   @override
   State<AddExtrasDialog> createState() => _AddExtrasDialogState();
 }
@@ -33,7 +65,10 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ExtrasCubit>().loadExtras(widget.loungeId);
+      final cubit = context.read<ExtrasCubit?>();
+      if (cubit != null) {
+        cubit.loadExtras(widget.loungeId);
+      }
     });
   }
 

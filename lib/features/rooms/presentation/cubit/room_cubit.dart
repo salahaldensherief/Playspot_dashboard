@@ -37,12 +37,26 @@ class RoomCubit extends Cubit<RoomState> {
           rooms: rooms,
         ));
       },
-      onError: (e) {
+      onError: (e) async {
         if (isClosed) return;
-        emit(state.copyWith(
-          status: RoomStatus.failure,
-          errorMessage: e.toString(),
-        ));
+        // If state already has loaded rooms (e.g. from initial REST yield), keep displaying them
+        if (state.rooms.isNotEmpty) {
+          emit(state.copyWith(status: RoomStatus.success));
+          return;
+        }
+        // Otherwise, attempt a direct REST fetch as fallback
+        final result = await _repository.getRooms(cleanLoungeId);
+        if (isClosed) return;
+        result.fold(
+          (failure) => emit(state.copyWith(
+            status: RoomStatus.failure,
+            errorMessage: failure.message,
+          )),
+          (rooms) => emit(state.copyWith(
+            status: RoomStatus.success,
+            rooms: rooms,
+          )),
+        );
       },
     );
   }

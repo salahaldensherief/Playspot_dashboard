@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
 import 'package:play_spot_dashboard/art_core/widgets/section_container.dart';
@@ -48,51 +50,114 @@ class PromoFormSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SectionContainer(
-      title: AppStrings.promotionsMarketing,
+      title: 'بيانات العرض الترويجي (Promotion Details)',
       children: [
+        // 1. Target Scope (Lounge-wide vs Room-Specific)
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              AppStrings.targetAudience,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            AppText.subHeading('نطاق العرض الترويجي:', fontSize: 13.sp, color: AppColors.textPrimary),
             SizedBox(height: 8.h),
-            SegmentedButton<String>(
-              segments: [
-                ButtonSegment(
-                  value: 'local',
-                  label: Text(AppStrings.audienceLocal),
-                  icon: const Icon(Icons.location_on_outlined),
+            Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () => onRoomSpecificChanged(false),
+                    borderRadius: BorderRadius.circular(10.r),
+                    child: Container(
+                      padding: EdgeInsets.all(12.r),
+                      decoration: BoxDecoration(
+                        color: !isRoomSpecific ? AppColors.neonPurple.withValues(alpha: 0.15) : AppColors.cardBackground,
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: Border.all(
+                          color: !isRoomSpecific ? AppColors.neonPurple : AppColors.borderDefault,
+                          width: !isRoomSpecific ? 1.5 : 1.0,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.storefront_rounded, size: 18.r, color: !isRoomSpecific ? AppColors.neonPurple : AppColors.textMuted),
+                          SizedBox(width: 8.w),
+                          AppText.body(
+                            'الصالة بالكامل',
+                            fontSize: 12.sp,
+                            color: !isRoomSpecific ? AppColors.textPrimary : AppColors.textSecondary,
+                            fontWeight: !isRoomSpecific ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-                ButtonSegment(
-                  value: 'all',
-                  label: Text(AppStrings.audienceAll),
-                  icon: const Icon(Icons.public),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: InkWell(
+                    onTap: () => onRoomSpecificChanged(true),
+                    borderRadius: BorderRadius.circular(10.r),
+                    child: Container(
+                      padding: EdgeInsets.all(12.r),
+                      decoration: BoxDecoration(
+                        color: isRoomSpecific ? AppColors.neonBlue.withValues(alpha: 0.15) : AppColors.cardBackground,
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: Border.all(
+                          color: isRoomSpecific ? AppColors.neonBlue : AppColors.borderDefault,
+                          width: isRoomSpecific ? 1.5 : 1.0,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.sports_esports_rounded, size: 18.r, color: isRoomSpecific ? AppColors.neonBlue : AppColors.textMuted),
+                          SizedBox(width: 8.w),
+                          AppText.body(
+                            'روم / جهاز معين',
+                            fontSize: 12.sp,
+                            color: isRoomSpecific ? AppColors.textPrimary : AppColors.textSecondary,
+                            fontWeight: isRoomSpecific ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ],
-              selected: {targetAudience},
-              onSelectionChanged: (Set<String> newSelection) {
-                onTargetAudienceChanged(newSelection.first);
-              },
-              style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.resolveWith<Color?>(
-                  (states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return Colors.blue.withOpacity(0.2);
-                    }
-                    return Colors.transparent;
+            ),
+
+            // Animated Room Dropdown Selector if Room-Specific is enabled
+            if (isRoomSpecific) ...[
+              SizedBox(height: 12.h),
+              Container(
+                padding: EdgeInsets.all(12.r),
+                decoration: BoxDecoration(
+                  color: AppColors.cardBackground,
+                  borderRadius: BorderRadius.circular(10.r),
+                  border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.4)),
+                ),
+                child: CustomDropdown<String>(
+                  label: AppStrings.selectRoom,
+                  value: selectedRoomId,
+                  items: availableRooms.map((room) => room.id).toList(),
+                  itemLabel: (id) {
+                    final room = availableRooms.cast<RoomEntity?>().firstWhere(
+                          (r) => r?.id == id,
+                          orElse: () => null,
+                        );
+                    if (room == null) return AppStrings.selectRoom;
+                    final name = room.nameAr.isNotEmpty ? room.nameAr : (room.nameEn.isNotEmpty ? room.nameEn : 'Gaming Room');
+                    return room.controllersCount > 0 ? '$name (${room.controllersCount} دراعات)' : name;
                   },
+                  onChanged: onRoomChanged,
+                  validator: (v) => isRoomSpecific && v == null ? AppStrings.fieldRequired : null,
                 ),
               ),
-            ),
+            ],
           ],
         ),
-        const SizedBox(height: 16),
+
+        SizedBox(height: 16.h),
+
+        // 2. Titles (Arabic & English)
         Row(
           children: [
             Expanded(
@@ -103,7 +168,7 @@ class PromoFormSection extends StatelessWidget {
                 validator: AppValidator.validateRequired,
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 12.w),
             Expanded(
               child: AppTextField(
                 controller: titleEnController,
@@ -114,20 +179,31 @@ class PromoFormSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+
+        SizedBox(height: 16.h),
+
+        // 3. Tag Category & Expiration Date
         Row(
           children: [
             Expanded(
               child: CustomDropdown<String>(
                 label: AppStrings.tagCategory,
                 value: selectedTag,
-                items: const ['Offer', 'Event', 'Tournament', 'New', '20% OFF'],
+                items: const [
+                  'خصم 50%',
+                  'خصم 20%',
+                  'خصم 10%',
+                  'عرض خاص',
+                  'عرض الويكيند',
+                  'حدث / بطولة',
+                  'عرض جديد',
+                ],
                 itemLabel: (s) => s,
                 onChanged: onTagChanged,
                 validator: (v) => v == null ? AppStrings.fieldRequired : null,
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 12.w),
             Expanded(
               child: InkWell(
                 onTap: () async {
@@ -139,47 +215,51 @@ class PromoFormSection extends StatelessWidget {
                   );
                   if (date != null) onDateChanged(date);
                 },
-                child: AppTextField(
-                  label: AppStrings.expirationDate,
-                  hintText: 'YYYY-MM-DD',
-                  enabled: false,
-                  controller: expirationDateController,
-                  validator: AppValidator.validateRequired,
+                borderRadius: BorderRadius.circular(8.r),
+                child: IgnorePointer(
+                  child: AppTextField(
+                    label: AppStrings.expirationDate,
+                    hintText: 'YYYY-MM-DD',
+                    controller: expirationDateController,
+                    prefixIcon: Icons.calendar_month_rounded,
+                    validator: AppValidator.validateRequired,
+                  ),
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        Row(
+
+        SizedBox(height: 16.h),
+
+        // 4. Target Audience (Local vs All)
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Checkbox(
-              value: isRoomSpecific,
-              onChanged: (v) => onRoomSpecificChanged(v ?? false),
-            ),
-            Text(AppStrings.roomSpecific),
-            if (isRoomSpecific) ...[
-              const SizedBox(width: 16),
-              Expanded(
-                child: CustomDropdown<String>(
-                  label: AppStrings.selectRoom,
-                  value: selectedRoomId,
-                  items: availableRooms.map((room) => room.id).toList(),
-                  itemLabel: (id) {
-                    final room = availableRooms.cast<RoomEntity?>().firstWhere(
-                      (r) => r?.id == id,
-                      orElse: () => null,
-                    );
-                    return room?.nameEn ?? 'Unknown Room';
-                  },
-                  onChanged: onRoomChanged,
-                  validator: (v) => isRoomSpecific && v == null ? AppStrings.fieldRequired : null,
+            AppText.subHeading('الجمهور المستهدف (Audience):', fontSize: 13.sp, color: AppColors.textPrimary),
+            SizedBox(height: 8.h),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(
+                  value: 'local',
+                  label: Text('📍 عملاء الصالة المحليين'),
                 ),
-              ),
-            ],
+                ButtonSegment(
+                  value: 'all',
+                  label: Text('🌐 جميع مستخدمي التطبيق'),
+                ),
+              ],
+              selected: {targetAudience},
+              onSelectionChanged: (Set<String> newSelection) {
+                onTargetAudienceChanged(newSelection.first);
+              },
+            ),
           ],
         ),
-        const SizedBox(height: 16),
+
+        SizedBox(height: 16.h),
+
+        // 5. Deep Link Destination
         CustomDropdown<String>(
           label: AppStrings.deepLinkDest,
           value: selectedDeepLink,

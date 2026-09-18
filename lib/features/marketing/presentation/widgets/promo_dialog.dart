@@ -70,7 +70,7 @@ class _PromoDialogState extends State<PromoDialog> {
 
   Future<void> _pickImage() async {
     final result = await FilePicker.platform.pickFiles(type: FileType.image);
-    if (result != null) {
+    if (result != null && mounted) {
       setState(() {
         _selectedImageBytes = result.files.first.bytes;
         _selectedImageName = result.files.first.name;
@@ -80,7 +80,7 @@ class _PromoDialogState extends State<PromoDialog> {
 
   Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
-      setState(() => _isUploading = true);
+      if (mounted) setState(() => _isUploading = true);
       
       String? imageUrl = _currentImageUrl;
       if (_selectedImageBytes != null) {
@@ -90,6 +90,12 @@ class _PromoDialogState extends State<PromoDialog> {
         );
       }
 
+      if (!mounted) return;
+
+      final String? formattedDeepLink = (_isRoomSpecific && _selectedRoomId != null && _selectedRoomId!.isNotEmpty)
+          ? '/room/$_selectedRoomId'
+          : (_selectedDeepLink != 'Specific Room' ? _selectedDeepLink : null);
+
       if (widget.onSave != null) {
         final updatedPromo = PromoEntity(
           id: widget.promo.id,
@@ -97,21 +103,23 @@ class _PromoDialogState extends State<PromoDialog> {
           titleEn: _titleEnController.text,
           tagAr: _selectedTag ?? '',
           tagEn: _selectedTag ?? '',
-          hexColors: _colorTemplates[_selectedTemplate].map((e) => '#${e.value.toRadixString(16).substring(2)}').toList(),
+          hexColors: _colorTemplates[_selectedTemplate].map((e) => '#${e.toARGB32().toRadixString(16).substring(2)}').toList(),
           iconKey: _selectedIcon,
-          deepLink: _selectedDeepLink,
+          deepLink: formattedDeepLink,
           expiresAt: _expiresAt,
           tag: _selectedTag,
           isRoomSpecific: _isRoomSpecific,
           loungeId: widget.promo.loungeId,
-          roomId: _selectedRoomId,
+          roomId: _isRoomSpecific ? _selectedRoomId : null,
           targetAudience: _targetAudience,
           imageUrl: imageUrl,
         );
         widget.onSave!(updatedPromo);
       }
-      setState(() => _isUploading = false);
-      if (mounted) Navigator.pop(context);
+
+      if (mounted) {
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -150,7 +158,14 @@ class _PromoDialogState extends State<PromoDialog> {
                             selectedTag: _selectedTag,
                             onTagChanged: (v) => setState(() => _selectedTag = v),
                             isRoomSpecific: _isRoomSpecific,
-                            onRoomSpecificChanged: (v) => setState(() => _isRoomSpecific = v),
+                            onRoomSpecificChanged: (v) => setState(() {
+                              _isRoomSpecific = v;
+                              if (!v) {
+                                _selectedRoomId = null;
+                              } else if (_selectedRoomId == null && roomState.rooms.isNotEmpty) {
+                                _selectedRoomId = roomState.rooms.first.id;
+                              }
+                            }),
                             selectedRoomId: _selectedRoomId,
                             onRoomChanged: (v) => setState(() => _selectedRoomId = v),
                             targetAudience: _targetAudience,

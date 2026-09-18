@@ -82,7 +82,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
           id,
           tournament_id,
           placement,
-          tournament_prize_rewards (id, prize_id, type, title, title_ar, title_en, description, description_ar, description_en, value, currency, metadata, delivery_status)
+          tournament_prize_rewards (*)
         )
       ''');
 
@@ -189,7 +189,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
           id,
           tournament_id,
           placement,
-          tournament_prize_rewards (id, prize_id, type, title, title_ar, title_en, description, description_ar, description_en, value, currency, metadata, delivery_status)
+          tournament_prize_rewards (*)
         )
       ''').eq('id', createdId).single();
 

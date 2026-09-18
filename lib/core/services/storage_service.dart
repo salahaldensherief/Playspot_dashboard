@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -43,12 +42,11 @@ class StorageServiceImpl implements StorageService {
 
   @override
   Future<List<String>> uploadLoungeImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId) async {
-    final List<String> urls = [];
-    for (int i = 0; i < filesBytes.length; i++) {
-      final url = await uploadLoungeImage(filesBytes[i], fileNames[i], loungeId);
-      urls.add(url);
-    }
-    return urls;
+    final futures = List.generate(
+      filesBytes.length,
+      (i) => uploadLoungeImage(filesBytes[i], fileNames[i], loungeId),
+    );
+    return await Future.wait(futures);
   }
 
   @override
@@ -73,12 +71,11 @@ class StorageServiceImpl implements StorageService {
 
   @override
   Future<List<String>> uploadRoomImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId) async {
-    final List<String> urls = [];
-    for (int i = 0; i < filesBytes.length; i++) {
-      final url = await uploadRoomImage(filesBytes[i], fileNames[i], loungeId);
-      urls.add(url);
-    }
-    return urls;
+    final futures = List.generate(
+      filesBytes.length,
+      (i) => uploadRoomImage(filesBytes[i], fileNames[i], loungeId),
+    );
+    return await Future.wait(futures);
   }
 
   @override

@@ -1,4 +1,6 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/core/error/failures.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/city_entity.dart';
 import '../../domain/entities/activity_type_entity.dart';
@@ -12,11 +14,17 @@ class CategoryCubit extends Cubit<CategoryState> {
 
   Future<void> loadCategories({bool forceRefresh = false}) async {
     emit(state.copyWith(status: CategoryStatus.loading));
-    final catResult = await _repository.getCategories(forceRefresh: forceRefresh);
-    final cityResult = await _repository.getCities(forceRefresh: forceRefresh);
-    final activityResult = await _repository.getActivityTypes(forceRefresh: forceRefresh);
+    final results = await Future.wait([
+      _repository.getCategories(forceRefresh: forceRefresh),
+      _repository.getCities(forceRefresh: forceRefresh),
+      _repository.getActivityTypes(forceRefresh: forceRefresh),
+    ]);
     
     if (isClosed) return;
+
+    final catResult = results[0] as Either<Failure, List<CategoryEntity>>;
+    final cityResult = results[1] as Either<Failure, List<CityEntity>>;
+    final activityResult = results[2] as Either<Failure, List<ActivityTypeEntity>>;
 
     catResult.fold(
       (failure) => emit(state.copyWith(

@@ -24,7 +24,9 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booki
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_session_card.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_occupancy_grid.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_ticker.dart';
+import 'package:play_spot_dashboard/features/lounges/presentation/cubit/extras_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
+import 'package:play_spot_dashboard/features/lounges/presentation/widgets/lounge_discount_banner.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/widgets/live_requests_feed.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
@@ -90,6 +92,7 @@ class _BookingsPageState extends State<BookingsPage> with TickerProviderStateMix
     if (cleanLoungeId != null) {
       context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId);
       context.read<RoomCubit>().watchRooms(cleanLoungeId);
+      context.read<ExtrasCubit>().loadExtras(cleanLoungeId);
     }
     context.read<LoungeCubit>().fetchLounges();
   }
@@ -103,6 +106,7 @@ class _BookingsPageState extends State<BookingsPage> with TickerProviderStateMix
     if (cleanLoungeId != null) {
       context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId, forceRefresh: true);
       context.read<RoomCubit>().watchRooms(cleanLoungeId, forceRefresh: true);
+      context.read<ExtrasCubit>().loadExtras(cleanLoungeId, forceRefresh: true);
     }
     await context.read<LoungeCubit>().fetchLounges();
   }
@@ -326,6 +330,7 @@ class _BookingsPageState extends State<BookingsPage> with TickerProviderStateMix
             controller: _leftDesktopScrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
+              SliverToBoxAdapter(child: LoungeDiscountBanner(lounge: userLounge)),
               const SliverToBoxAdapter(child: ShiftHeaderBanner()),
               SliverToBoxAdapter(child: SizedBox(height: 12.h)),
               _buildCollapsibleOccupancyGrid(loungeId),
@@ -384,6 +389,7 @@ class _BookingsPageState extends State<BookingsPage> with TickerProviderStateMix
       controller: _mobileScrollController,
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
+        SliverToBoxAdapter(child: LoungeDiscountBanner(lounge: userLounge)),
         const SliverToBoxAdapter(child: ShiftHeaderBanner()),
         SliverToBoxAdapter(child: SizedBox(height: 12.h)),
         SliverToBoxAdapter(
@@ -788,7 +794,7 @@ class _BookingsPageState extends State<BookingsPage> with TickerProviderStateMix
     return SliverGrid(
       gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: maxExtent,
-        mainAxisExtent: 275.h,
+        mainAxisExtent: 330.h,
         crossAxisSpacing: 14.r,
         mainAxisSpacing: 14.r,
       ),
@@ -872,16 +878,9 @@ class _BookingsPageState extends State<BookingsPage> with TickerProviderStateMix
       );
     }).toList();
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minWidth: MediaQuery.sizeOf(context).width - 32.w),
-        child: DataTableWidget(
-          columns: columns,
-          rows: rows,
-        ),
-      ),
+    return DataTableWidget(
+      columns: columns,
+      rows: rows,
     );
   }
 

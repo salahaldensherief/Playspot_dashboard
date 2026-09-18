@@ -448,6 +448,13 @@ class AppStrings {
   static String get noActiveBookings => 'no_active_bookings'.tr();
   static String get discount => 'discount'.tr();
   static String get discountReason => 'discount_reason'.tr();
+  static String get applyDiscount => 'apply_discount'.tr();
+  static String get percentageDiscount => 'percentage_discount'.tr();
+  static String get fixedDiscount => 'fixed_discount'.tr();
+  static String get newCustomer => 'new_customer'.tr();
+  static String visitNumberCount(int count) => 'visit_number_count'.tr(args: [count.toString()]);
+  static String visitVipCount(int count) => 'visit_vip_count'.tr(args: [count.toString()]);
+  static String get orderedProducts => 'ordered_products'.tr();
   static String get managerOverrideRequired => 'manager_override_required'.tr();
   static String get reasonRequired => 'reason_required'.tr();
   static String get directDiscount => 'direct_discount'.tr();

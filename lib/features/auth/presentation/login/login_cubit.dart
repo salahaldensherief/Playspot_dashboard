@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../../../core/utils/app_logger.dart';
 import 'package:play_spot_dashboard/core/services/location_service.dart';
 import '../../domain/usecases/login_params.dart';
@@ -19,6 +20,9 @@ class LoginCubit extends Cubit<LoginState> {
   final LoungeRepository loungeRepository;
   final LocationService locationService;
   final AuthRepository authRepository;
+
+  double? _lastUpdatedLat;
+  double? _lastUpdatedLng;
 
   LoginCubit({
     required this.loginUseCase,
@@ -141,6 +145,21 @@ class LoginCubit extends Cubit<LoginState> {
         return;
       }
 
+      // Check if user location hasn't changed significantly (less than 500 meters)
+      if (_lastUpdatedLat != null && _lastUpdatedLng != null) {
+        final distanceInMeters = Geolocator.distanceBetween(
+          _lastUpdatedLat!,
+          _lastUpdatedLng!,
+          position.latitude,
+          position.longitude,
+        );
+        if (distanceInMeters < 500) {
+          AppLogger.info('LoginCubit: User location hasn\'t changed significantly (${distanceInMeters.toStringAsFixed(1)}m < 500m). Skipping DB update.');
+          emit(state.copyWith(isLoadingLocation: false));
+          return;
+        }
+      }
+
       final result = await authRepository.updateUserLocation(
         latitude: position.latitude,
         longitude: position.longitude,
@@ -164,6 +183,8 @@ class LoginCubit extends Cubit<LoginState> {
           ));
         },
         (updatedUser) {
+          _lastUpdatedLat = position.latitude;
+          _lastUpdatedLng = position.longitude;
           emit(state.copyWith(
             isLoadingLocation: false,
             user: updatedUser,
@@ -191,7 +212,7 @@ class LoginCubit extends Cubit<LoginState> {
     emit(state.copyWith(locationCaptured: true));
   }
 
-  Future<void> refreshUserLounge(String loungeId, {bool forceRefresh = true}) async {
+  Future<void> refreshUserLounge(String loungeId, {bool forceRefresh = false}) async {
     final loungeResult = await loungeRepository.getLoungeById(loungeId, forceRefresh: forceRefresh);
     loungeResult.fold(
       (_) => null,

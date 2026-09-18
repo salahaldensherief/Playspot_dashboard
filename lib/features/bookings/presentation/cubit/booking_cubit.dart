@@ -430,7 +430,9 @@ class BookingCubit extends Cubit<BookingState> {
 
   void _startPeriodicAutoCancelTimer() {
     _autoCancelTimer?.cancel();
-    _autoCancelTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+    // Reduced polling frequency to 5 minutes to prevent unnecessary DB hits.
+    // Recommended: Use Supabase pg_cron for server-side auto-cancel.
+    _autoCancelTimer = Timer.periodic(const Duration(minutes: 5), (_) {
       if (!isClosed) {
         _triggerAutoCancelExpired();
         _checkAndAutoTransitionExpiredSessions();
