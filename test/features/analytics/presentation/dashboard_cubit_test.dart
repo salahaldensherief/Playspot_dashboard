@@ -22,8 +22,10 @@ class FakeDashboardRepository implements DashboardRepository {
   Future<Either<Failure, void>> reviewExtensionRequest({
     required String bookingId,
     required bool isApproved,
-    required int requestedMinutes,
-    required int currentDurationMinutes,
+    double? additionalCost,
+    String? reason,
+    int? requestedMinutes,
+    int? currentDurationMinutes,
   }) async {
     if (shouldFail) {
       return const Left(ServerFailure('Database error'));

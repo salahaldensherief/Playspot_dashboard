@@ -12,8 +12,10 @@ abstract class DashboardRepository {
   Future<Either<Failure, void>> reviewExtensionRequest({
     required String bookingId,
     required bool isApproved,
-    required int requestedMinutes,
-    required int currentDurationMinutes,
+    double? additionalCost,
+    String? reason,
+    int? requestedMinutes,
+    int? currentDurationMinutes,
   });
   Future<Either<Failure, void>> handleClientRequestAction({
     required String requestId,

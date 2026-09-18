@@ -483,22 +483,9 @@ class RequestCard extends StatelessWidget {
                     icon: Icons.close_rounded,
                     variant: AppButtonVariant.danger,
                     height: 34.h,
-                    onPressed: () async {
-                      final firstItem = request.metadata.items.isNotEmpty ? request.metadata.items.first : <String, dynamic>{};
-                      final reqMins = (firstItem['requested_minutes'] ?? firstItem['minutes'] as num?)?.toInt() ?? 30;
-                      final curDuration = (firstItem['current_duration'] as num?)?.toInt() ?? 60;
+                    onPressed: () {
                       final bookingId = request.bookingId ?? request.id.replaceFirst('ext_', '');
-
-                      final success = await dashboardCubit.reviewExtensionRequest(
-                        bookingId: bookingId,
-                        isApproved: false,
-                        requestedMinutes: reqMins,
-                        currentDurationMinutes: curDuration,
-                      );
-
-                      if (success && context.mounted) {
-                        requestsCubit.markAsAttended(request.id);
-                      }
+                      _showLiveRejectDialog(context, dashboardCubit, requestsCubit, request, bookingId);
                     },
                   ),
                 ),
@@ -509,22 +496,9 @@ class RequestCard extends StatelessWidget {
                     icon: Icons.check_rounded,
                     variant: AppButtonVariant.primary,
                     height: 34.h,
-                    onPressed: () async {
-                      final firstItem = request.metadata.items.isNotEmpty ? request.metadata.items.first : <String, dynamic>{};
-                      final reqMins = (firstItem['requested_minutes'] ?? firstItem['minutes'] as num?)?.toInt() ?? 30;
-                      final curDuration = (firstItem['current_duration'] as num?)?.toInt() ?? 60;
+                    onPressed: () {
                       final bookingId = request.bookingId ?? request.id.replaceFirst('ext_', '');
-
-                      final success = await dashboardCubit.reviewExtensionRequest(
-                        bookingId: bookingId,
-                        isApproved: true,
-                        requestedMinutes: reqMins,
-                        currentDurationMinutes: curDuration,
-                      );
-
-                      if (success && context.mounted) {
-                        requestsCubit.markAsAttended(request.id);
-                      }
+                      _showLiveApproveDialog(context, dashboardCubit, requestsCubit, request, bookingId);
                     },
                   ),
                 ),
@@ -548,6 +522,118 @@ class RequestCard extends StatelessWidget {
     ),
 
           ),
+    );
+  }
+
+  void _showLiveApproveDialog(BuildContext context, DashboardCubit dashboardCubit, ClientRequestsCubit requestsCubit, ClientRequestEntity request, String bookingId) {
+    final costController = TextEditingController(text: '0.0');
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        title: AppText.subHeading('قبول طلب التمديد', fontSize: 16.sp),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppText.body('أدخل التكلفة الإضافية للتمديد (إن وجدت):', fontSize: 13.sp),
+            SizedBox(height: 10.h),
+            TextField(
+              controller: costController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: 'التكلفة الإضافية (ج.م)',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.text,
+            onPressed: () => Navigator.of(dialogContext).pop(),
+          ),
+          AppButton(
+            text: AppStrings.approveRequest,
+            variant: AppButtonVariant.primary,
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              final cost = double.tryParse(costController.text) ?? 0.0;
+              final success = await dashboardCubit.reviewExtensionRequest(
+                bookingId: bookingId,
+                isApproved: true,
+                additionalCost: cost,
+              );
+              if (success && context.mounted) {
+                requestsCubit.markAsAttended(request.id);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(AppStrings.requestApproved),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLiveRejectDialog(BuildContext context, DashboardCubit dashboardCubit, ClientRequestsCubit requestsCubit, ClientRequestEntity request, String bookingId) {
+    final reasonController = TextEditingController(text: 'لا يوجد وقت متاح بعد الحجز الحالي');
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        title: AppText.subHeading('رفض طلب التمديد', fontSize: 16.sp),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppText.body('سبب الرفض:', fontSize: 13.sp),
+            SizedBox(height: 10.h),
+            TextField(
+              controller: reasonController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                labelText: 'السبب',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.text,
+            onPressed: () => Navigator.of(dialogContext).pop(),
+          ),
+          AppButton(
+            text: AppStrings.rejectRequest,
+            variant: AppButtonVariant.danger,
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              final reason = reasonController.text.trim();
+              final success = await dashboardCubit.reviewExtensionRequest(
+                bookingId: bookingId,
+                isApproved: false,
+                reason: reason.isEmpty ? 'لا يوجد وقت متاح بعد الحجز الحالي' : reason,
+              );
+              if (success && context.mounted) {
+                requestsCubit.markAsAttended(request.id);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(AppStrings.requestRejected),
+                    backgroundColor: AppColors.danger,
+                  ),
+                );
+              }
+            },
+          ),
+        ],
+      ),
     );
   }
 }

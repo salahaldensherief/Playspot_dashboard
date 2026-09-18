@@ -13,8 +13,10 @@ abstract class DashboardRemoteDataSource {
   Future<void> reviewExtensionRequest({
     required String bookingId,
     required bool isApproved,
-    required int requestedMinutes,
-    required int currentDurationMinutes,
+    double? additionalCost,
+    String? reason,
+    int? requestedMinutes,
+    int? currentDurationMinutes,
   });
   Future<void> handleClientRequestAction({
     required String requestId,
@@ -341,23 +343,25 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   Future<void> reviewExtensionRequest({
     required String bookingId,
     required bool isApproved,
-    required int requestedMinutes,
-    required int currentDurationMinutes,
+    double? additionalCost,
+    String? reason,
+    int? requestedMinutes,
+    int? currentDurationMinutes,
   }) async {
-    debugPrint('🔵 [DASHBOARD_DATA_SOURCE] reviewExtensionRequest: bookingId=$bookingId, isApproved=$isApproved, requestedMinutes=$requestedMinutes, currentDurationMinutes=$currentDurationMinutes');
+    debugPrint('🔵 [DASHBOARD_DATA_SOURCE] reviewExtensionRequest: bookingId=$bookingId, isApproved=$isApproved, additionalCost=$additionalCost, reason=$reason');
 
     if (isApproved) {
-      final newDuration = currentDurationMinutes + requestedMinutes;
-      await supabaseClient.from('bookings').update({
-        'duration_minutes': newDuration,
-        'extension_status': 'approved',
-      }).eq('id', bookingId);
-      debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Extension request approved: duration updated to $newDuration mins');
+      await supabaseClient.rpc('approve_booking_extension', params: {
+        'p_booking_id': bookingId,
+        'p_additional_cost': additionalCost ?? 0.0,
+      });
+      debugPrint('🟢 [DASHBOARD_DATA_SOURCE] RPC approve_booking_extension succeeded!');
     } else {
-      await supabaseClient.from('bookings').update({
-        'extension_status': 'rejected',
-      }).eq('id', bookingId);
-      debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Extension request rejected');
+      await supabaseClient.rpc('reject_booking_extension', params: {
+        'p_booking_id': bookingId,
+        'p_reason': reason ?? 'لا يوجد وقت متاح بعد الحجز الحالي',
+      });
+      debugPrint('🟢 [DASHBOARD_DATA_SOURCE] RPC reject_booking_extension succeeded!');
     }
   }
 

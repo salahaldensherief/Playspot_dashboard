@@ -19,7 +19,7 @@ class PendingExtensionsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
       buildWhen: (prev, curr) =>
-          prev.status != curr.status || prev.requests != curr.requests,
+      prev.status != curr.status || prev.requests != curr.requests,
       builder: (context, state) {
         final pendingExtensions = state.requests.where((r) {
           return r.type == ClientRequestType.extendSession && !r.isAttended;
@@ -150,10 +150,8 @@ class PendingExtensionsCard extends StatelessWidget {
     );
   }
 
-  Widget _buildExtensionRequestTile(
-    BuildContext context,
-    ClientRequestEntity request,
-  ) {
+  Widget _buildExtensionRequestTile(BuildContext context,
+      ClientRequestEntity request,) {
     final requestsCubit = context.read<ClientRequestsCubit>();
     final dashboardCubit = context.read<DashboardCubit>();
 
@@ -162,14 +160,15 @@ class PendingExtensionsCard extends StatelessWidget {
         : <String, dynamic>{};
 
     final int requestedMinutes = (firstMetadataItem['requested_minutes'] ??
-            firstMetadataItem['minutes'] as num?)
+        firstMetadataItem['minutes'] as num?)
         ?.toInt() ??
         30;
 
     final int currentDuration =
         (firstMetadataItem['current_duration'] as num?)?.toInt() ?? 60;
 
-    final String timeFormatted = DateFormat('hh:mm a').format(request.createdAt);
+    final String timeFormatted = DateFormat('hh:mm a').format(
+        request.createdAt);
     final String bookingId = request.bookingId ??
         request.id.replaceFirst('ext_', '');
 
@@ -198,12 +197,14 @@ class PendingExtensionsCard extends StatelessWidget {
                   ),
                   SizedBox(width: 8.w),
                   AppText.subHeading(
-                    request.roomName ?? request.userName ?? AppStrings.anonymous,
+                    request.roomName ?? request.userName ??
+                        AppStrings.anonymous,
                     fontSize: 14.sp,
                     color: AppColors.textPrimary,
                   ),
                   SizedBox(width: 8.w),
-                  if (request.userName != null && request.userName?.isNotEmpty == true)
+                  if (request.userName != null &&
+                      request.userName?.isNotEmpty == true)
                     AppText.body(
                       '(${request.userName ?? ''})',
                       fontSize: 12.sp,
@@ -251,7 +252,8 @@ class PendingExtensionsCard extends StatelessWidget {
               ),
               SizedBox(width: 12.w),
               AppText.body(
-                '${AppStrings.remainingTime}: $currentDuration ${AppStrings.minutesUnit}',
+                '${AppStrings.remainingTime}: $currentDuration ${AppStrings
+                    .minutesUnit}',
                 fontSize: 11.sp,
                 color: AppColors.textMuted,
               ),
@@ -269,24 +271,10 @@ class PendingExtensionsCard extends StatelessWidget {
                 icon: Icons.close,
                 variant: AppButtonVariant.danger,
                 height: 32.h,
-                onPressed: () async {
-                  final success = await dashboardCubit.reviewExtensionRequest(
-                    bookingId: bookingId,
-                    isApproved: false,
-                    requestedMinutes: requestedMinutes,
-                    currentDurationMinutes: currentDuration,
-                  );
-
-                  if (success && context.mounted) {
-                    requestsCubit.markAsAttended(request.id);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(AppStrings.requestRejected),
-                        backgroundColor: AppColors.danger,
-                      ),
-                    );
-                  }
-                },
+                onPressed: () =>
+                    _showRejectDialog(
+                        context, dashboardCubit, requestsCubit, request,
+                        bookingId),
               ),
               SizedBox(width: 8.w),
 
@@ -296,14 +284,64 @@ class PendingExtensionsCard extends StatelessWidget {
                 icon: Icons.check,
                 variant: AppButtonVariant.primary,
                 height: 32.h,
+                onPressed: () =>
+                    _showApproveDialog(
+                        context, dashboardCubit, requestsCubit, request,
+                        bookingId),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showApproveDialog(BuildContext context, DashboardCubit dashboardCubit,
+      ClientRequestsCubit requestsCubit, ClientRequestEntity request,
+      String bookingId) {
+    final costController = TextEditingController(text: '0.0');
+    showDialog(
+      context: context,
+      builder: (dialogContext) =>
+          AlertDialog(
+            backgroundColor: AppColors.cardBackground,
+            title: AppText.subHeading('قبول طلب التمديد', fontSize: 16.sp),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppText.body('أدخل التكلفة الإضافية للتمديد (إن وجدت):',
+                    fontSize: 13.sp),
+                SizedBox(height: 10.h),
+                TextField(
+                  controller: costController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true),
+                  decoration: InputDecoration(
+                    labelText: 'التكلفة الإضافية (ج.م)',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r)),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              AppButton(
+                text: AppStrings.cancel,
+                variant: AppButtonVariant.text,
+                onPressed: () => Navigator.of(dialogContext).pop(),
+              ),
+              AppButton(
+                text: AppStrings.approveRequest,
+                variant: AppButtonVariant.primary,
                 onPressed: () async {
+                  Navigator.of(dialogContext).pop();
+                  final cost = double.tryParse(costController.text) ?? 0.0;
                   final success = await dashboardCubit.reviewExtensionRequest(
                     bookingId: bookingId,
                     isApproved: true,
-                    requestedMinutes: requestedMinutes,
-                    currentDurationMinutes: currentDuration,
+                    additionalCost: cost,
                   );
-
                   if (success && context.mounted) {
                     requestsCubit.markAsAttended(request.id);
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -317,8 +355,69 @@ class PendingExtensionsCard extends StatelessWidget {
               ),
             ],
           ),
-        ],
-      ),
+    );
+  }
+
+  void _showRejectDialog(BuildContext context, DashboardCubit dashboardCubit,
+      ClientRequestsCubit requestsCubit, ClientRequestEntity request,
+      String bookingId) {
+    final reasonController = TextEditingController(
+        text: 'لا يوجد وقت متاح بعد الحجز الحالي');
+    showDialog(
+      context: context,
+      builder: (dialogContext) =>
+          AlertDialog(
+            backgroundColor: AppColors.cardBackground,
+            title: AppText.subHeading('رفض طلب التمديد', fontSize: 16.sp),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppText.body('سبب الرفض:', fontSize: 13.sp),
+                SizedBox(height: 10.h),
+                TextField(
+                  controller: reasonController,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    labelText: 'السبب',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r)),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              AppButton(
+                text: AppStrings.cancel,
+                variant: AppButtonVariant.text,
+                onPressed: () => Navigator.of(dialogContext).pop(),
+              ),
+              AppButton(
+                text: AppStrings.rejectRequest,
+                variant: AppButtonVariant.danger,
+                onPressed: () async {
+                  Navigator.of(dialogContext).pop();
+                  final reason = reasonController.text.trim();
+                  final success = await dashboardCubit.reviewExtensionRequest(
+                    bookingId: bookingId,
+                    isApproved: false,
+                    reason: reason.isEmpty
+                        ? 'لا يوجد وقت متاح بعد الحجز الحالي'
+                        : reason,
+                  );
+                  if (success && context.mounted) {
+                    requestsCubit.markAsAttended(request.id);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(AppStrings.requestRejected),
+                        backgroundColor: AppColors.danger,
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
     );
   }
 }

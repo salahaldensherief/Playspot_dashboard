@@ -95,6 +95,17 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
             table: 'booking_items',
             callback: (_) => fetchAndEmit(),
           )
+              .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'bookings',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'lounge_id',
+              value: cleanLoungeId,
+            ),
+            callback: (_) => fetchAndEmit(),
+          )
               .subscribe((status, error) {
             if (status == RealtimeSubscribeStatus.channelError) {
               debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Realtime Channel Error: $error');
@@ -145,6 +156,36 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     }
   }
 
+  Future<List<ClientRequestModel>> _fetchPendingExtensionRequests(String loungeId) async {
+    try {
+      final response = await client.rpc('get_pending_extension_requests');
+      if (response is List) {
+        return response.map((json) {
+          final map = Map<String, dynamic>.from(json);
+          return ClientRequestModel.fromBookingExtensionJson(map);
+        }).where((req) => req.loungeId.isEmpty || req.loungeId == loungeId).toList();
+      }
+    } catch (e) {
+      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] get_pending_extension_requests RPC error ($e), falling back to bookings select...');
+      try {
+        final response = await client
+            .from('bookings')
+            .select('*, rooms(name, name_en), profiles(full_name, phone, email)')
+            .eq('lounge_id', loungeId)
+            .eq('extension_status', 'pending');
+        if (response is List) {
+          return response.map((json) {
+            final map = Map<String, dynamic>.from(json);
+            return ClientRequestModel.fromBookingExtensionJson(map);
+          }).toList();
+        }
+      } catch (e2) {
+        debugPrint('⚠️ [REQUESTS_DATA_SOURCE] fallback bookings select error: $e2');
+      }
+    }
+    return [];
+  }
+
   @override
   Future<PaginatedResult<ClientRequestModel>> getActiveLoungeRequestsPage({
     required String loungeId,
@@ -157,27 +198,50 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     }
 
     try {
-      final response = await client.rpc(
-        'get_active_lounge_requests_page',
-        params: {
-          'p_lounge_id': cleanLoungeId,
-          'p_page': page,
-          'p_page_size': pageSize,
-        },
-      );
+      List<ClientRequestModel> requestsList = [];
+      try {
+        final response = await client.rpc(
+          'get_active_lounge_requests_page',
+          params: {
+            'p_lounge_id': cleanLoungeId,
+            'p_page': page,
+            'p_page_size': pageSize,
+          },
+        );
 
-      final paginated = PaginatedResult.fromRpcResponse<ClientRequestModel>(
-        response,
-        mapper: (map) => _parseClientRequestMap(map),
-        requestedPage: page,
-        requestedPageSize: pageSize,
-      );
+        final paginated = PaginatedResult.fromRpcResponse<ClientRequestModel>(
+          response,
+          mapper: (map) => _parseClientRequestMap(map),
+          requestedPage: page,
+          requestedPageSize: pageSize,
+        );
+        requestsList.addAll(paginated.items);
+      } catch (e) {
+        debugPrint('⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests_page Error: $e');
+      }
 
-      final filteredItems = paginated.items
+      final extensionRequests = await _fetchPendingExtensionRequests(cleanLoungeId);
+
+      final Map<String, ClientRequestModel> uniqueMap = {};
+      for (var req in requestsList) {
+        uniqueMap[req.id] = req;
+      }
+      for (var req in extensionRequests) {
+        uniqueMap[req.id] = req;
+      }
+
+      final filteredItems = uniqueMap.values
           .where((m) => !_locallyAttendedIds.contains(m.id))
           .toList();
 
-      return paginated.copyWith(items: filteredItems);
+      filteredItems.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      return PaginatedResult(
+        items: filteredItems,
+        totalCount: filteredItems.length,
+        page: page,
+        pageSize: pageSize,
+      );
     } catch (e) {
       debugPrint('⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests_page Error: $e');
       final fallbackList = await getClientRequests(loungeId: cleanLoungeId);
@@ -196,23 +260,39 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     if (cleanLoungeId.isEmpty) return [];
 
     try {
-      final response = await client.rpc(
-        'get_active_lounge_requests_page',
-        params: {
-          'p_lounge_id': cleanLoungeId,
-          'p_page': 1,
-          'p_page_size': 50,
-        },
-      );
+      List<ClientRequestModel> requestsList = [];
+      try {
+        final response = await client.rpc(
+          'get_active_lounge_requests_page',
+          params: {
+            'p_lounge_id': cleanLoungeId,
+            'p_page': 1,
+            'p_page_size': 50,
+          },
+        );
 
-      final paginated = PaginatedResult.fromRpcResponse<ClientRequestModel>(
-        response,
-        mapper: (map) => _parseClientRequestMap(map),
-        requestedPage: 1,
-        requestedPageSize: 50,
-      );
+        final paginated = PaginatedResult.fromRpcResponse<ClientRequestModel>(
+          response,
+          mapper: (map) => _parseClientRequestMap(map),
+          requestedPage: 1,
+          requestedPageSize: 50,
+        );
+        requestsList.addAll(paginated.items);
+      } catch (e) {
+        debugPrint('⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests Error: $e');
+      }
 
-      final list = paginated.items
+      final extensionRequests = await _fetchPendingExtensionRequests(cleanLoungeId);
+
+      final Map<String, ClientRequestModel> uniqueMap = {};
+      for (var req in requestsList) {
+        uniqueMap[req.id] = req;
+      }
+      for (var req in extensionRequests) {
+        uniqueMap[req.id] = req;
+      }
+
+      final list = uniqueMap.values
           .where((m) => !_locallyAttendedIds.contains(m.id))
           .toList();
 

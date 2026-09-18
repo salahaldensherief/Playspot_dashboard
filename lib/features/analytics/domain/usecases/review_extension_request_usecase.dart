@@ -10,12 +10,16 @@ class ReviewExtensionRequestUseCase {
   Future<Either<Failure, void>> call({
     required String bookingId,
     required bool isApproved,
-    required int requestedMinutes,
-    required int currentDurationMinutes,
+    double? additionalCost,
+    String? reason,
+    int? requestedMinutes,
+    int? currentDurationMinutes,
   }) {
     return repository.reviewExtensionRequest(
       bookingId: bookingId,
       isApproved: isApproved,
+      additionalCost: additionalCost,
+      reason: reason,
       requestedMinutes: requestedMinutes,
       currentDurationMinutes: currentDurationMinutes,
     );
