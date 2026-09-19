@@ -103,6 +103,7 @@ class DashboardShell extends StatelessWidget {
 
         return GeolocationHandler(
           child: _DashboardShellContent(
+            location: location,
             activeRoute: activeRoute,
             title: title,
             user: user,
@@ -116,6 +117,7 @@ class DashboardShell extends StatelessWidget {
 }
 
 class _DashboardShellContent extends StatefulWidget {
+  final String location;
   final String activeRoute;
   final String title;
   final UserEntity? user;
@@ -123,6 +125,7 @@ class _DashboardShellContent extends StatefulWidget {
   final Widget child;
 
   const _DashboardShellContent({
+    required this.location,
     required this.activeRoute,
     required this.title,
     required this.user,
@@ -139,6 +142,7 @@ class _DashboardShellContentState extends State<_DashboardShellContent> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkUnauthorizedNotice();
       final loungeId = widget.user?.loungeId;
       if (loungeId != null && loungeId.isNotEmpty) {
         context.read<ShiftCubit>().checkActiveShift(loungeId);
@@ -153,6 +157,9 @@ class _DashboardShellContentState extends State<_DashboardShellContent> {
   @override
   void didUpdateWidget(covariant _DashboardShellContent oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.location != oldWidget.location) {
+      _checkUnauthorizedNotice();
+    }
     if (widget.user?.loungeId != oldWidget.user?.loungeId) {
       final loungeId = widget.user?.loungeId;
       if (loungeId != null && loungeId.isNotEmpty) {
@@ -161,6 +168,33 @@ class _DashboardShellContentState extends State<_DashboardShellContent> {
       } else if (widget.isSuperAdmin) {
         context.read<BookingCubit>().startWatchingBookings();
       }
+    }
+  }
+
+  void _checkUnauthorizedNotice() {
+    if (widget.location.contains('unauthorized=true')) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.lock_outline_rounded, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    AppStrings.unauthorizedAccessMsg,
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.danger,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      });
     }
   }
 

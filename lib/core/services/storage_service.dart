@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'bucket_upload_strategy.dart';
 
 abstract class StorageService {
   Future<String> uploadLoungeImage(Uint8List fileBytes, String fileName, String loungeId);
@@ -12,32 +13,22 @@ abstract class StorageService {
 }
 
 class StorageServiceImpl implements StorageService {
-  final SupabaseClient _supabase;
+  final BucketUploadStrategy _strategy;
 
-  StorageServiceImpl(this._supabase);
+  StorageServiceImpl(SupabaseClient supabase) : _strategy = BucketUploadStrategy(supabase);
 
   @override
   Future<String> uploadLoungeImage(Uint8List fileBytes, String fileName, String loungeId) async {
     final fileId = const Uuid().v4();
     final extension = fileName.split('.').last;
     final path = '$loungeId/$fileId.$extension';
-    
-    try {
-      await _supabase.storage.from('lounge-assets').uploadBinary(
-        path, 
-        fileBytes,
-        fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
-      );
-      return _supabase.storage.from('lounge-assets').getPublicUrl(path);
-    } catch (e) {
-      debugPrint('⚠️ [STORAGE_SERVICE] lounge-assets upload error: $e. Attempting fallback...');
-      try {
-        await _supabase.storage.from('promo-assets').uploadBinary(path, fileBytes);
-        return _supabase.storage.from('promo-assets').getPublicUrl(path);
-      } catch (e2) {
-        throw Exception('عفواً، مجلد التخزين (Bucket) غير موجود في Supabase. يرجى إنشاء مجلد lounge-assets أو promo-assets وتحديده كـ Public.');
-      }
-    }
+
+    return _strategy.uploadWithFallback(
+      buckets: ['lounge-assets', 'promo-assets'],
+      path: path,
+      fileBytes: fileBytes,
+      userErrorMessage: 'فشل رفع صورة اللاونج. يرجى التأكد من الاتصال بالإنترنت وصحة الصورة ثم إعادة المحاولة.',
+    );
   }
 
   @override
@@ -55,18 +46,12 @@ class StorageServiceImpl implements StorageService {
     final extension = fileName.split('.').last;
     final path = '$loungeId/$fileId.$extension';
 
-    try {
-      await _supabase.storage.from('room-assets').uploadBinary(path, fileBytes);
-      return _supabase.storage.from('room-assets').getPublicUrl(path);
-    } catch (e) {
-      debugPrint('⚠️ [STORAGE_SERVICE] room-assets upload error: $e. Attempting fallback...');
-      try {
-        await _supabase.storage.from('lounge-assets').uploadBinary(path, fileBytes);
-        return _supabase.storage.from('lounge-assets').getPublicUrl(path);
-      } catch (e2) {
-        throw Exception('عفواً، مجلد التخزين (Bucket) غير موجود في Supabase. يرجى إنشاء مجلد room-assets أو lounge-assets.');
-      }
-    }
+    return _strategy.uploadWithFallback(
+      buckets: ['room-assets', 'lounge-assets'],
+      path: path,
+      fileBytes: fileBytes,
+      userErrorMessage: 'فشل رفع صورة الغرفة. يرجى التأكد من الاتصال بالإنترنت وصحة الصورة ثم إعادة المحاولة.',
+    );
   }
 
   @override
@@ -83,22 +68,13 @@ class StorageServiceImpl implements StorageService {
     final extension = fileName.contains('.') ? fileName.split('.').last : 'webp';
     final path = '$tournamentId/banner.$extension';
 
-    try {
-      await _supabase.storage.from('tournament-assets').uploadBinary(
-        path,
-        fileBytes,
-        fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
-      );
-      return _supabase.storage.from('tournament-assets').getPublicUrl(path);
-    } catch (e) {
-      debugPrint('⚠️ [STORAGE_SERVICE] tournament-assets upload error: $e. Attempting fallback...');
-      try {
-        await _supabase.storage.from('promo-assets').uploadBinary(path, fileBytes);
-        return _supabase.storage.from('promo-assets').getPublicUrl(path);
-      } catch (e2) {
-        throw Exception('عفواً، مجلد التخزين (Bucket) غير موجود في Supabase. يرجى إنشاء مجلد tournament-assets أو promo-assets.');
-      }
-    }
+    return _strategy.uploadWithFallback(
+      buckets: ['tournament-assets', 'promo-assets'],
+      path: path,
+      fileBytes: fileBytes,
+      fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+      userErrorMessage: 'فشل رفع صورة إعلان البطولة. يرجى التأكد من الاتصال بالإنترنت ثم إعادة المحاولة.',
+    );
   }
 
   @override
@@ -107,21 +83,11 @@ class StorageServiceImpl implements StorageService {
     final extension = fileName.contains('.') ? fileName.split('.').last : 'png';
     final path = 'extras/$loungeId/$fileId.$extension';
 
-    try {
-      await _supabase.storage.from('lounge-assets').uploadBinary(
-        path,
-        fileBytes,
-        fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
-      );
-      return _supabase.storage.from('lounge-assets').getPublicUrl(path);
-    } catch (e) {
-      debugPrint('⚠️ [STORAGE_SERVICE] uploadExtraImage error: $e. Attempting promo-assets fallback...');
-      try {
-        await _supabase.storage.from('promo-assets').uploadBinary(path, fileBytes);
-        return _supabase.storage.from('promo-assets').getPublicUrl(path);
-      } catch (e2) {
-        throw Exception('فشل رفع صورة المنتج. يرجى التأكد من وجود مجلد lounge-assets كـ Public في Supabase Storage.');
-      }
-    }
+    return _strategy.uploadWithFallback(
+      buckets: ['lounge-assets', 'promo-assets'],
+      path: path,
+      fileBytes: fileBytes,
+      userErrorMessage: 'فشل رفع صورة المنتج. يرجى التأكد من الاتصال بالإنترنت ثم إعادة المحاولة.',
+    );
   }
 }

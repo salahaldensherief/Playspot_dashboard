@@ -68,7 +68,19 @@ class FakeDashboardRepository implements DashboardRepository {
 
   @override
   Future<Either<Failure, LoungeStatsEntity>> getLoungeStats(String? loungeId) async {
-    throw UnimplementedError();
+    if (shouldFail) return const Left(ServerFailure('Failed to fetch stats'));
+    return const Right(LoungeStatsEntity(
+      success: true,
+      loungeId: 'test_lounge',
+      todayRevenue: 1000.0,
+      monthlyRevenue: 30000.0,
+      totalRooms: 10,
+      occupiedRooms: 5,
+      occupancyRate: 50.0,
+      activeBookings: 5,
+      openShifts: 1,
+      lowStockItems: 0,
+    ));
   }
 
   @override

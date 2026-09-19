@@ -13,6 +13,10 @@ import '../../auth/presentation/login/login_cubit.dart';
 import '../domain/entities/tournament_entity.dart';
 import 'tournament_cubit.dart';
 import 'tournament_state.dart';
+import 'tournament_participants_cubit.dart';
+import 'tournament_participants_state.dart';
+import 'tournament_matches_cubit.dart';
+import 'tournament_matches_state.dart';
 import 'widgets/audit_logs_modal.dart';
 import 'widgets/dispute_resolution_dialog.dart';
 import 'widgets/tournament_bracket_view.dart';
@@ -343,6 +347,9 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                                 final found = state.tournaments.where((t) => t.id == id).firstOrNull;
                                 if (found != null) {
                                   context.read<TournamentCubit>().selectTournament(found);
+                                  context.read<TournamentParticipantsCubit>().loadParticipants(found.id);
+                                  context.read<TournamentMatchesCubit>().loadMatches(found.id);
+                                  context.read<TournamentMatchesCubit>().startWatchingDisputes(found.id);
                                 }
                               },
                             ),
@@ -451,29 +458,45 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                       // Tab 0: Tournaments Overview
                       _buildTournamentsListTab(context, state),
                       // Tab 1: Participants Table
-                      TournamentParticipantsTable(
-                        participants: state.participants,
-                        onApprovePayment: (p) => context.read<TournamentCubit>().approvePayment(p.id),
-                        onRejectPayment: (p, reason) => context.read<TournamentCubit>().rejectPayment(p.id, reason),
-                        onRecordCash: (p) => context.read<TournamentCubit>().recordCashPayment(p.id),
-                        onCheckIn: (p) => context.read<TournamentCubit>().checkInParticipant(p.id),
-                        onWithdraw: (p) => context.read<TournamentCubit>().withdrawParticipant(p.id),
+                      BlocBuilder<TournamentParticipantsCubit, TournamentParticipantsState>(
+                        builder: (context, partState) {
+                          return TournamentParticipantsTable(
+                            participants: partState.participants,
+                            onApprovePayment: (p) => context.read<TournamentParticipantsCubit>().approvePayment(p.id),
+                            onRejectPayment: (p, reason) => context.read<TournamentParticipantsCubit>().rejectPayment(p.id, reason),
+                            onRecordCash: (p) => context.read<TournamentParticipantsCubit>().recordCashPayment(p.id),
+                            onCheckIn: (p) => context.read<TournamentParticipantsCubit>().checkInParticipant(p.id),
+                            onWithdraw: (p) => context.read<TournamentParticipantsCubit>().withdrawParticipant(p.id),
+                          );
+                        },
                       ),
                       // Tab 2: Bracket Tree (Lazy Built)
-                      _tabController.index == 2
-                          ? TournamentBracketView(
-                              tournament: selected,
-                              matches: state.matches,
-                              onDrawBracket: () {
-                                if (selected != null) {
-                                  context.read<TournamentCubit>().drawBracket(selected.id);
-                                }
-                              },
-                              onStartMatch: (m) => context.read<TournamentCubit>().startMatch(m.id),
-                            )
-                          : const SizedBox.shrink(),
+                      BlocBuilder<TournamentMatchesCubit, TournamentMatchesState>(
+                        builder: (context, matchState) {
+                          return _tabController.index == 2
+                              ? TournamentBracketView(
+                                  tournament: selected,
+                                  matches: matchState.matches,
+                                  onDrawBracket: () {
+                                    if (selected != null) {
+                                      context.read<TournamentMatchesCubit>().drawBracket(selected.id);
+                                    }
+                                  },
+                                  onStartMatch: (m) {
+                                    if (selected != null) {
+                                      context.read<TournamentMatchesCubit>().startMatch(m.id, selected.id);
+                                    }
+                                  },
+                                )
+                              : const SizedBox.shrink();
+                        },
+                      ),
                       // Tab 3: Disputes Room
-                      _buildDisputesRoomTab(context, state),
+                      BlocBuilder<TournamentMatchesCubit, TournamentMatchesState>(
+                        builder: (context, matchState) {
+                          return _buildDisputesRoomTab(context, matchState, selected);
+                        },
+                      ),
                       // Tab 4: Audit Trail
                       _buildAuditLogsTab(context, state),
                     ],
@@ -613,7 +636,7 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
     );
   }
 
-  Widget _buildDisputesRoomTab(BuildContext context, TournamentState state) {
+  Widget _buildDisputesRoomTab(BuildContext context, TournamentMatchesState state, TournamentEntity? selected) {
     if (state.disputedMatches.isEmpty) {
       return SectionContainer(
         title: AppStrings.disputesRoom,
@@ -655,13 +678,16 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                   builder: (ctx) => DisputeResolutionDialog(
                     match: m,
                     onResolve: ({required winnerId, required p1Score, required p2Score, required resolutionNotes}) {
-                      context.read<TournamentCubit>().resolveDispute(
-                            m.id,
-                            winnerId: winnerId,
-                            p1Score: p1Score,
-                            p2Score: p2Score,
-                            resolutionNotes: resolutionNotes,
-                          );
+                      if (selected != null) {
+                        context.read<TournamentMatchesCubit>().resolveDispute(
+                              m.id,
+                              selected.id,
+                              winnerId: winnerId,
+                              p1Score: p1Score,
+                              p2Score: p2Score,
+                              resolutionNotes: resolutionNotes,
+                            );
+                      }
                     },
                   ),
                 );

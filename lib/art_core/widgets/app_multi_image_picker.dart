@@ -169,7 +169,7 @@ class _AppMultiImagePickerState extends State<AppMultiImagePicker> {
                         Icon(Icons.add_photo_alternate_outlined, color: AppColors.textSecondary, size: 24.r),
                         SizedBox(height: 4.h),
                         Text(
-                          'Add',
+                          AppStrings.add,
                           style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp),
                         ),
                       ],

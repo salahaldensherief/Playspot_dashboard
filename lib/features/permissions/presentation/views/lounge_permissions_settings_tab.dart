@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/core/responsive/responsive.dart';
@@ -38,7 +39,7 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
             if (state.status == PermissionsStatus.loading && state.permissions.isEmpty)
               const Center(child: CircularProgressIndicator(color: AppColors.neonBlue))
             else if (state.status == PermissionsStatus.failure && state.permissions.isEmpty)
-              Center(child: AppText.body(state.errorMessage ?? 'Error loading permissions', color: AppColors.danger))
+              Center(child: AppText.body(state.errorMessage ?? AppStrings.errorLoadingPermissions, color: AppColors.danger))
             else
               _buildPermissionsGrid(state.permissions, state.selectedRole),
           ],

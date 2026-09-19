@@ -12,6 +12,11 @@ class RouterKeys {
   static const String superAdminKyc = '/super-admin/kyc';
   static const String superAdminLoyalty = '/super-admin/loyalty';
   static const String superAdminTournaments = '/super-admin/tournaments';
+  static const String superAdminSupportSettings = '/super-admin/support-settings';
+  static const String superAdminPolicies = '/super-admin/policies';
+  static const String superAdminFaqs = '/super-admin/faqs';
+  static const String superAdminTickets = '/super-admin/tickets';
+  static const String superAdminSystemSettings = '/super-admin/system-settings';
 
   // Lounge Admin
   static const String loungeOnboarding = '/onboarding';
@@ -26,5 +31,6 @@ class RouterKeys {
   static const String loungeAdminReviews = '/lounge-admin/reviews';
   static const String loungeAdminProfile = '/lounge-admin/profile';
   static const String loungeAdminTournaments = '/lounge-admin/tournaments';
+  static const String loungeAdminSupport = '/lounge-admin/support';
   static const String profile = '/profile';
 }

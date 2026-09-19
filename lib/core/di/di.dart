@@ -24,6 +24,8 @@ import 'package:play_spot_dashboard/features/permissions/permissions_di.dart';
 import 'package:play_spot_dashboard/features/requests/requests_di.dart';
 import 'package:play_spot_dashboard/features/reviews/reviews_di.dart';
 import 'package:play_spot_dashboard/features/tournaments/tournaments_di.dart';
+import 'package:play_spot_dashboard/features/support/support_di.dart';
+import 'package:play_spot_dashboard/features/system/system_di.dart';
 
 final sl = GetIt.instance;
 
@@ -75,4 +77,6 @@ Future<void> setupInjection() async {
   initRequestsDI(sl);
   initReviewsDI(sl);
   initTournamentsDI(sl);
+  initSupportDI(sl);
+  initSystemDI(sl);
 }

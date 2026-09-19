@@ -1,18 +1,17 @@
-import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/core/utils/realtime_watcher_mixin.dart';
+import 'package:play_spot_dashboard/features/requests/domain/entities/client_request_entity.dart';
 import '../../../core/audio/audio_service.dart';
 import '../domain/repositories/client_requests_repository.dart';
 import 'client_requests_state.dart';
 
-class ClientRequestsCubit extends Cubit<ClientRequestsState> {
+class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatcherMixin<ClientRequestsState> {
   final ClientRequestsRepository repository;
   final AudioService audioService;
-  StreamSubscription? _subscription;
 
   final Set<String> _knownRequestIds = {};
   bool _isFirstLoad = true;
-  String? _watchedLoungeId;
 
   ClientRequestsCubit({
     required this.repository,
@@ -23,25 +22,23 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> {
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
     if (cleanLoungeId == null) return;
 
-    // Idempotent stream subscription guard inside the Cubit
-    if (!forceRefresh && _subscription != null && _watchedLoungeId == cleanLoungeId) {
+    if (isAlreadyWatching(cleanLoungeId, forceRefresh: forceRefresh)) {
       return;
     }
 
-    _watchedLoungeId = cleanLoungeId;
     _isFirstLoad = true;
     _knownRequestIds.clear();
 
     emit(state.copyWith(status: ClientRequestsStatus.loading));
-    _subscription?.cancel();
 
-    _subscription = repository.watchClientRequests(loungeId: cleanLoungeId).listen(
-      (requests) {
-        if (isClosed) return;
-
+    startWatch<List<dynamic>>(
+      entityId: cleanLoungeId,
+      stream: repository.watchClientRequests(loungeId: cleanLoungeId),
+      onData: (requestsList) {
+        final requests = requestsList.cast<dynamic>();
         final currentUnattendedIds = requests
-            .where((r) => !r.isAttended)
-            .map((r) => r.id)
+            .where((r) => !(r.isAttended as bool))
+            .map((r) => r.id as String)
             .toSet();
 
         if (_isFirstLoad) {
@@ -61,11 +58,10 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> {
 
         emit(state.copyWith(
           status: ClientRequestsStatus.success,
-          requests: requests,
+          requests: requests.cast(),
         ));
       },
       onError: (error) {
-        if (isClosed) return;
         emit(state.copyWith(
           status: ClientRequestsStatus.failure,
           errorMessage: error.toString(),
@@ -124,6 +120,8 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> {
       return;
     }
 
+    final originalList = List<ClientRequestEntity>.from(state.requests);
+
     final updatedList = state.requests.map((r) {
       if (r.id == requestId) {
         return r.copyWith(isAttended: true, isRead: true);
@@ -146,15 +144,10 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> {
         emit(state.copyWith(
           status: ClientRequestsStatus.failure,
           errorMessage: failure.message,
+          requests: originalList,
         ));
       },
       (_) => debugPrint('🟢 [CUBIT] Request $requestId marked as attended in DB'),
     );
-  }
-
-  @override
-  Future<void> close() {
-    _subscription?.cancel();
-    return super.close();
   }
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:play_spot_dashboard/core/utils/realtime_watcher_mixin.dart';
 import '../../../../core/audio/audio_service.dart';
 import '../../domain/entities/booking.dart';
 import '../../domain/usecases/confirm_cash_payment.dart';
@@ -12,7 +13,7 @@ import '../../domain/usecases/start_booking_session.dart';
 import '../../domain/repositories/booking_repository.dart';
 import 'booking_state.dart';
 
-class BookingCubit extends Cubit<BookingState> {
+class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<BookingState> {
   final WatchBookings watchBookings;
   final UpdateBookingStatus updateBookingStatus;
   final ConfirmCashPayment confirmCashPaymentUseCase;
@@ -20,12 +21,10 @@ class BookingCubit extends Cubit<BookingState> {
   final StartBookingSession startBookingSessionUseCase;
   final BookingRepository repository;
   final AudioService audioService;
-  StreamSubscription? _subscription;
   Timer? _autoCancelTimer;
   
   final Set<String> _knownBookingIds = {};
   bool _isFirstLoad = true;
-  String? _watchedLoungeId;
 
   BookingCubit({
     required this.watchBookings,
@@ -40,12 +39,10 @@ class BookingCubit extends Cubit<BookingState> {
   void startWatchingBookings({String? loungeId, bool forceRefresh = false}) {
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
 
-    // Avoid re-subscribing only if active subscription exists AND loungeId hasn't changed AND not forced
-    if (!forceRefresh && _subscription != null && _watchedLoungeId == cleanLoungeId) {
+    if (isAlreadyWatching(cleanLoungeId, forceRefresh: forceRefresh)) {
       return;
     }
 
-    _watchedLoungeId = cleanLoungeId;
     _isFirstLoad = true;
     _knownBookingIds.clear();
 
@@ -54,12 +51,11 @@ class BookingCubit extends Cubit<BookingState> {
     _startPeriodicAutoCancelTimer();
 
     emit(state.copyWith(status: BookingStatusState.loading));
-    _subscription?.cancel();
 
-    _subscription = watchBookings(loungeId: cleanLoungeId).listen(
-      (bookings) {
-        if (isClosed) return;
-
+    startWatch<List<Booking>>(
+      entityId: cleanLoungeId!,
+      stream: watchBookings(loungeId: cleanLoungeId),
+      onData: (bookings) {
         final currentIds = bookings.map((b) => b.id).toSet();
 
         if (_isFirstLoad) {
@@ -85,7 +81,6 @@ class BookingCubit extends Cubit<BookingState> {
         _checkAndAutoTransitionExpiredSessions();
       },
       onError: (error) {
-        if (isClosed) return;
         debugPrint('🔴 [BOOKING_CUBIT] watchBookings Error: $error');
         emit(state.copyWith(
           status: BookingStatusState.failure,
@@ -100,13 +95,11 @@ class BookingCubit extends Cubit<BookingState> {
     int page = 1,
     int pageSize = 20,
   }) async {
-    final cleanLoungeId = loungeId.trim();
-    if (cleanLoungeId.isEmpty) return;
-
+    if (loungeId.isEmpty) return;
     emit(state.copyWith(status: BookingStatusState.loading));
 
     final result = await repository.getLoungeBookingsPage(
-      loungeId: cleanLoungeId,
+      loungeId: loungeId,
       page: page,
       pageSize: pageSize,
     );
@@ -127,114 +120,99 @@ class BookingCubit extends Cubit<BookingState> {
       )),
     );
   }
-  Future<void> approveBooking(String id) async {
-    // 1. تحديث فوري وسريع للواجهة (Optimistic UI)
-    final updatedList = state.bookings.map((b) {
-      if (b.id == id) return b.copyWith(status: BookingStatus.upcoming);
-      return b;
-    }).toList();
-    emit(state.copyWith(bookings: updatedList));
 
-    // 2. إرسال التحديث للسيرفر
-    final result = await updateBookingStatus(id, BookingStatus.upcoming);
-    if (isClosed) return;
+  Future<bool> createBooking(Booking booking) async {
+    emit(state.copyWith(status: BookingStatusState.loading));
+    final result = await createBookingUseCase(booking);
+    if (isClosed) return false;
 
-    result.fold(
-          (failure) {
-        debugPrint('🔴 [CUBIT] Approve Failed: ${failure.message}');
+    return result.fold(
+      (failure) {
         emit(state.copyWith(
           status: BookingStatusState.failure,
           errorMessage: failure.message,
         ));
+        return false;
       },
-          (_) => debugPrint('🟢 [CUBIT] Approve Succeeded in Supabase'),
+      (_) {
+        emit(state.copyWith(
+          status: BookingStatusState.success,
+          bookings: [booking, ...state.bookings],
+        ));
+        return true;
+      },
     );
   }
 
-  Future<void> rejectBooking(String id) async {
-    // 1. تحديث فوري وسريع للواجهة (Optimistic UI)
-    final updatedList = state.bookings.map((b) {
-      if (b.id == id) return b.copyWith(status: BookingStatus.cancelled);
+  Future<bool> createManualBooking(Booking booking) async {
+    return createBooking(booking);
+  }
+
+  Future<bool> approveBooking(String id) async {
+    return changeBookingStatus(id, BookingStatus.upcoming);
+  }
+
+  Future<bool> rejectBooking(String id) async {
+    return changeBookingStatus(id, BookingStatus.cancelled);
+  }
+
+  Future<bool> confirmCashPayment(
+    String bookingId, {
+    String? shiftId,
+    double? discountAmount,
+    double? discountPercentage,
+    String? discountReason,
+    double? amount,
+    String? actionBy,
+  }) async {
+    // 1. Optimistic UI update to mark as confirmed & paid
+    final originalBookings = List<Booking>.from(state.bookings);
+    final updatedBookings = state.bookings.map((b) {
+      if (b.id == bookingId) {
+        return b.copyWith(
+          status: BookingStatus.completed,
+          paymentStatus: PaymentStatus.paid,
+        );
+      }
       return b;
     }).toList();
-    emit(state.copyWith(bookings: updatedList));
 
-    // 2. إرسال التحديث للسيرفر
-    final result = await updateBookingStatus(id, BookingStatus.cancelled);
-    if (isClosed) return;
+    emit(state.copyWith(bookings: updatedBookings));
 
-    result.fold(
-          (failure) {
-        debugPrint('🔴 [CUBIT] Reject Failed: ${failure.message}');
-        emit(state.copyWith(
-          status: BookingStatusState.failure,
-          errorMessage: failure.message,
-        ));
-      },
-          (_) => debugPrint('🟢 [CUBIT] Reject Succeeded in Supabase'),
-    );
-  }
-  Future<void> confirmCashPayment(
-      String id, {
-        String? shiftId,
-        double? discountAmount,
-        double? discountPercentage,
-        String? discountReason,
-      }) async {
+    // 2. Call backend
     final result = await confirmCashPaymentUseCase(
-      id,
+      bookingId,
       shiftId: shiftId,
       discountAmount: discountAmount,
       discountPercentage: discountPercentage,
       discountReason: discountReason,
     );
 
-    if (isClosed) return;
+    if (isClosed) return false;
 
-    result.fold(
-          (failure) => emit(state.copyWith(
-        status: BookingStatusState.failure,
-        errorMessage: failure.message,
-      )),
-          (_) {
-        final updatedBookings = state.bookings.map((booking) {
-          if (booking.id == id) {
-            return booking.copyWith(
-              paymentStatus: PaymentStatus.paid,
-            );
-          }
-          return booking;
-        }).toList();
-
+    return result.fold(
+      (failure) {
+        debugPrint('🔴 [CUBIT] Confirm Cash Payment Failed: ${failure.message}');
         emit(state.copyWith(
-          status: BookingStatusState.success,
-          bookings: updatedBookings,
+          status: BookingStatusState.failure,
+          errorMessage: failure.message,
+          bookings: originalBookings, // Rollback
         ));
+        return false;
+      },
+      (_) {
+        debugPrint('🟢 [CUBIT] Confirm Cash Payment Succeeded in Supabase');
+        if (watchedEntityId != null) {
+          startWatchingBookings(loungeId: watchedEntityId);
+        }
+        return true;
       },
     );
   }
 
-  Future<void> createManualBooking(Booking booking) async {
-    emit(state.copyWith(status: BookingStatusState.loading));
-    
-    final result = await createBookingUseCase(booking);
-    
-    if (isClosed) return;
-
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: BookingStatusState.failure,
-        errorMessage: failure.message,
-      )),
-      (_) => emit(state.copyWith(
-        status: BookingStatusState.success,
-      )),
-    );
-  }
-
   Future<void> swapRoom(String bookingId, String newRoomId, String actionBy, {String? newRoomName}) async {
-    // Optimistic Update
     final originalBookings = List<Booking>.from(state.bookings);
+
     final updatedBookings = state.bookings.map((b) {
       if (b.id == bookingId) {
         return b.copyWith(
@@ -286,8 +264,8 @@ class BookingCubit extends Cubit<BookingState> {
       },
       (_) {
         debugPrint('🟢 [CUBIT] Start Booking Session Succeeded in Supabase');
-        if (_watchedLoungeId != null) {
-          startWatchingBookings(loungeId: _watchedLoungeId);
+        if (watchedEntityId != null) {
+          startWatchingBookings(loungeId: watchedEntityId);
         }
         return true;
       },
@@ -319,8 +297,8 @@ class BookingCubit extends Cubit<BookingState> {
       },
       (_) {
         debugPrint('🟢 [CUBIT] Mark No-Show Succeeded in Supabase');
-        if (_watchedLoungeId != null) {
-          startWatchingBookings(loungeId: _watchedLoungeId);
+        if (watchedEntityId != null) {
+          startWatchingBookings(loungeId: watchedEntityId);
         }
         return true;
       },
@@ -352,8 +330,8 @@ class BookingCubit extends Cubit<BookingState> {
       },
       (_) {
         debugPrint('🟢 [CUBIT] Change Booking Status Succeeded in Supabase');
-        if (_watchedLoungeId != null) {
-          startWatchingBookings(loungeId: _watchedLoungeId);
+        if (watchedEntityId != null) {
+          startWatchingBookings(loungeId: watchedEntityId);
         }
         return true;
       },
@@ -372,8 +350,8 @@ class BookingCubit extends Cubit<BookingState> {
         'p_additional_minutes': additionalMinutes,
       });
 
-      if (_watchedLoungeId != null) {
-        startWatchingBookings(loungeId: _watchedLoungeId);
+      if (watchedEntityId != null) {
+        startWatchingBookings(loungeId: watchedEntityId);
       }
       return true;
     } catch (e) {
@@ -442,7 +420,6 @@ class BookingCubit extends Cubit<BookingState> {
 
   @override
   Future<void> close() {
-    _subscription?.cancel();
     _autoCancelTimer?.cancel();
     return super.close();
   }

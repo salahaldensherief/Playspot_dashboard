@@ -27,6 +27,20 @@ class AppCachedImage extends StatelessWidget {
     this.memCacheHeight = 600,
   });
 
+  /// Factory constructor optimized for small list items, thumbnails, and icons to minimize RAM usage.
+  const AppCachedImage.thumbnail({
+    super.key,
+    required this.imageUrl,
+    this.width,
+    this.height,
+    this.fit = BoxFit.cover,
+    this.borderRadius = 0,
+    this.errorWidget,
+    this.placeholder,
+    this.memCacheWidth = 300,
+    this.memCacheHeight = 300,
+  });
+
   /// Helper to return a CachedNetworkImageProvider for CircleAvatar / DecorationImage
   static ImageProvider? provider(String? url, {int? maxCacheWidth = 400, int? maxCacheHeight = 400}) {
     if (url == null || url.trim().isEmpty) return null;

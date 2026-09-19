@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/core/services/location_service.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
+import 'package:play_spot_dashboard/core/utils/optimistic_update_extension.dart';
 import '../domain/entities/tournament_entity.dart';
 import '../domain/entities/tournament_match_entity.dart';
 import '../domain/entities/tournament_participant_entity.dart';
@@ -117,9 +118,10 @@ class TournamentCubit extends Cubit<TournamentState> {
         tournamentToCreate = tournament.copyWith(bannerUrl: bannerUrl);
       } catch (e) {
         debugPrint('⚠️ [TOURNAMENT_CUBIT] Banner upload failed: $e');
+        final cleanMsg = e.toString().replaceFirst('Exception: ', '');
         emit(state.copyWith(
           status: TournamentCubitStatus.failure,
-          errorMessage: 'فشل رفع صورة الإعلان: $e',
+          errorMessage: cleanMsg,
         ));
         return false;
       }
@@ -168,9 +170,10 @@ class TournamentCubit extends Cubit<TournamentState> {
         tournamentToUpdate = tournament.copyWith(bannerUrl: bannerUrl);
       } catch (e) {
         debugPrint('⚠️ [TOURNAMENT_CUBIT] Banner upload failed: $e');
+        final cleanMsg = e.toString().replaceFirst('Exception: ', '');
         emit(state.copyWith(
           status: TournamentCubitStatus.failure,
-          errorMessage: 'فشل رفع صورة الإعلان: $e',
+          errorMessage: cleanMsg,
         ));
         return false;
       }
@@ -328,16 +331,11 @@ class TournamentCubit extends Cubit<TournamentState> {
   }
 
   Future<void> approvePayment(String participantId) async {
-    emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.approvePayment(participantId);
-
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (_) {
-        final updatedParticipants = state.participants.map((p) {
+    final original = List<TournamentParticipantEntity>.from(state.participants);
+    await optimisticUpdate<void>(
+      apply: (curr) => curr.copyWith(
+        status: TournamentCubitStatus.actionSuccess,
+        participants: curr.participants.map((p) {
           if (p.id == participantId) {
             return p.copyWith(
               paymentStatus: ParticipantPaymentStatus.approved,
@@ -345,28 +343,24 @@ class TournamentCubit extends Cubit<TournamentState> {
             );
           }
           return p;
-        }).toList();
-
-        emit(state.copyWith(
-          status: TournamentCubitStatus.actionSuccess,
-          participants: updatedParticipants,
-          successMessage: 'تم اعتماد إيصال الدفع بنجاح',
-        ));
-      },
+        }).toList(),
+        successMessage: 'تم اعتماد إيصال الدفع بنجاح',
+      ),
+      onServer: () => repository.approvePayment(participantId),
+      rollback: (curr, failure) => curr.copyWith(
+        status: TournamentCubitStatus.failure,
+        participants: original,
+        errorMessage: failure.message,
+      ),
     );
   }
 
   Future<void> rejectPayment(String participantId, String reason) async {
-    emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.rejectPayment(participantId, reason);
-
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (_) {
-        final updatedParticipants = state.participants.map((p) {
+    final original = List<TournamentParticipantEntity>.from(state.participants);
+    await optimisticUpdate<void>(
+      apply: (curr) => curr.copyWith(
+        status: TournamentCubitStatus.actionSuccess,
+        participants: curr.participants.map((p) {
           if (p.id == participantId) {
             return p.copyWith(
               paymentStatus: ParticipantPaymentStatus.rejected,
@@ -374,28 +368,24 @@ class TournamentCubit extends Cubit<TournamentState> {
             );
           }
           return p;
-        }).toList();
-
-        emit(state.copyWith(
-          status: TournamentCubitStatus.actionSuccess,
-          participants: updatedParticipants,
-          successMessage: 'تم رفض إيصال الدفع',
-        ));
-      },
+        }).toList(),
+        successMessage: 'تم رفض إيصال الدفع',
+      ),
+      onServer: () => repository.rejectPayment(participantId, reason),
+      rollback: (curr, failure) => curr.copyWith(
+        status: TournamentCubitStatus.failure,
+        participants: original,
+        errorMessage: failure.message,
+      ),
     );
   }
 
   Future<void> recordCashPayment(String participantId) async {
-    emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.recordCashPayment(participantId);
-
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (_) {
-        final updatedParticipants = state.participants.map((p) {
+    final original = List<TournamentParticipantEntity>.from(state.participants);
+    await optimisticUpdate<void>(
+      apply: (curr) => curr.copyWith(
+        status: TournamentCubitStatus.actionSuccess,
+        participants: curr.participants.map((p) {
           if (p.id == participantId) {
             return p.copyWith(
               paymentStatus: ParticipantPaymentStatus.approved,
@@ -403,14 +393,15 @@ class TournamentCubit extends Cubit<TournamentState> {
             );
           }
           return p;
-        }).toList();
-
-        emit(state.copyWith(
-          status: TournamentCubitStatus.actionSuccess,
-          participants: updatedParticipants,
-          successMessage: 'تم تسجيل الدفع النقدي في الصالة',
-        ));
-      },
+        }).toList(),
+        successMessage: 'تم تسجيل الدفع النقدي في الصالة',
+      ),
+      onServer: () => repository.recordCashPayment(participantId),
+      rollback: (curr, failure) => curr.copyWith(
+        status: TournamentCubitStatus.failure,
+        participants: original,
+        errorMessage: failure.message,
+      ),
     );
   }
 
@@ -434,16 +425,11 @@ class TournamentCubit extends Cubit<TournamentState> {
   }
 
   Future<void> checkInParticipant(String participantId) async {
-    emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.checkInParticipant(participantId);
-
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (_) {
-        final updatedParticipants = state.participants.map((p) {
+    final original = List<TournamentParticipantEntity>.from(state.participants);
+    await optimisticUpdate<void>(
+      apply: (curr) => curr.copyWith(
+        status: TournamentCubitStatus.actionSuccess,
+        participants: curr.participants.map((p) {
           if (p.id == participantId) {
             return p.copyWith(
               isCheckedIn: true,
@@ -451,42 +437,39 @@ class TournamentCubit extends Cubit<TournamentState> {
             );
           }
           return p;
-        }).toList();
-
-        emit(state.copyWith(
-          status: TournamentCubitStatus.actionSuccess,
-          participants: updatedParticipants,
-          successMessage: 'تم تسجيل حضور اللاعب',
-        ));
-      },
+        }).toList(),
+        successMessage: 'تم تسجيل حضور اللاعب',
+      ),
+      onServer: () => repository.checkInParticipant(participantId),
+      rollback: (curr, failure) => curr.copyWith(
+        status: TournamentCubitStatus.failure,
+        participants: original,
+        errorMessage: failure.message,
+      ),
     );
   }
 
   Future<void> withdrawParticipant(String participantId) async {
-    emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.withdrawParticipant(participantId);
-
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (_) {
-        final updatedParticipants = state.participants.map((p) {
+    final original = List<TournamentParticipantEntity>.from(state.participants);
+    await optimisticUpdate<void>(
+      apply: (curr) => curr.copyWith(
+        status: TournamentCubitStatus.actionSuccess,
+        participants: curr.participants.map((p) {
           if (p.id == participantId) {
             return p.copyWith(
               participantStatus: ParticipantStatus.withdrawn,
             );
           }
           return p;
-        }).toList();
-
-        emit(state.copyWith(
-          status: TournamentCubitStatus.actionSuccess,
-          participants: updatedParticipants,
-          successMessage: 'تم انسحاب المشارك بنجاح',
-        ));
-      },
+        }).toList(),
+        successMessage: 'تم انسحاب المشارك بنجاح',
+      ),
+      onServer: () => repository.withdrawParticipant(participantId),
+      rollback: (curr, failure) => curr.copyWith(
+        status: TournamentCubitStatus.failure,
+        participants: original,
+        errorMessage: failure.message,
+      ),
     );
   }
 

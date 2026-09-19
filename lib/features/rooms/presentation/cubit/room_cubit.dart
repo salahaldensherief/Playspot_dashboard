@@ -1,13 +1,11 @@
-import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/core/utils/realtime_watcher_mixin.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
 import '../../domain/entities/room_entity.dart';
 import '../../domain/repositories/room_repository.dart';
 
-class RoomCubit extends Cubit<RoomState> {
+class RoomCubit extends Cubit<RoomState> with RealtimeWatcherMixin<RoomState> {
   final RoomRepository _repository;
-  StreamSubscription? _subscription;
-  String? _watchedLoungeId;
 
   RoomCubit(this._repository) : super(const RoomState());
 
@@ -21,24 +19,21 @@ class RoomCubit extends Cubit<RoomState> {
       return;
     }
 
-    // Idempotent stream subscription guard inside the Cubit
-    if (!forceRefresh && _subscription != null && _watchedLoungeId == cleanLoungeId) {
+    if (isAlreadyWatching(cleanLoungeId, forceRefresh: forceRefresh)) {
       return;
     }
 
-    _watchedLoungeId = cleanLoungeId;
     emit(state.copyWith(status: RoomStatus.loading));
-    _subscription?.cancel();
-    _subscription = _repository.watchRooms(cleanLoungeId).listen(
-      (rooms) {
-        if (isClosed) return;
+    startWatch<List<RoomEntity>>(
+      entityId: cleanLoungeId,
+      stream: _repository.watchRooms(cleanLoungeId),
+      onData: (rooms) {
         emit(state.copyWith(
           status: RoomStatus.success,
           rooms: rooms,
         ));
       },
       onError: (e) async {
-        if (isClosed) return;
         // If state already has loaded rooms (e.g. from initial REST yield), keep displaying them
         if (state.rooms.isNotEmpty) {
           emit(state.copyWith(status: RoomStatus.success));
@@ -122,11 +117,5 @@ class RoomCubit extends Cubit<RoomState> {
       )),
       (_) => null,
     );
-  }
-
-  @override
-  Future<void> close() {
-    _subscription?.cancel();
-    return super.close();
   }
 }

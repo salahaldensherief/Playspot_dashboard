@@ -794,7 +794,7 @@ class _BookingsPageState extends State<BookingsPage> with TickerProviderStateMix
     return SliverGrid(
       gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: maxExtent,
-        mainAxisExtent: 330.h,
+        mainAxisExtent: 385.h,
         crossAxisSpacing: 14.r,
         mainAxisSpacing: 14.r,
       ),

@@ -44,6 +44,16 @@ import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_cubit.da
 import 'package:play_spot_dashboard/features/loyalty/presentation/cubit/loyalty_cubit.dart';
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournaments_screen.dart' as tournaments;
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_cubit.dart';
+import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_participants_cubit.dart';
+import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_matches_cubit.dart';
+import 'package:play_spot_dashboard/features/support/presentation/support_settings_screen.dart';
+import 'package:play_spot_dashboard/features/support/presentation/policy_management_screen.dart';
+import 'package:play_spot_dashboard/features/system/presentation/system_settings_screen.dart';
+import 'package:play_spot_dashboard/features/system/presentation/system_settings_cubit.dart';
+import 'package:play_spot_dashboard/features/support/presentation/faq_management_screen.dart';
+import 'package:play_spot_dashboard/features/support/presentation/support_tickets_screen.dart';
+import 'package:play_spot_dashboard/features/support/presentation/lounge_owner_support_screen.dart';
+import 'package:play_spot_dashboard/features/support/presentation/support_cubit.dart';
 
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
@@ -140,27 +150,27 @@ class AppRouter {
       final bool isReviewsRoute = location == RouterKeys.loungeAdminReviews;
 
       if (isReviewsRoute && !user.canViewReviews) {
-        return RouterKeys.loungeAdminDashboard;
+        return '${RouterKeys.loungeAdminDashboard}?unauthorized=true';
       }
 
       if (isStaffManagementRoute && !user.canManageStaff) {
-        return RouterKeys.loungeAdminDashboard;
+        return '${RouterKeys.loungeAdminDashboard}?unauthorized=true';
       }
 
       if (isFinancialRoute && !user.canViewFinancials) {
-        return RouterKeys.loungeAdminDashboard;
+        return '${RouterKeys.loungeAdminDashboard}?unauthorized=true';
       }
 
       if (isShiftHistoryRoute && !user.canViewShiftHistory) {
-        return RouterKeys.loungeAdminDashboard;
+        return '${RouterKeys.loungeAdminDashboard}?unauthorized=true';
       }
 
       if (isMarketingRoute && !user.canManageMarketing) {
-        return RouterKeys.loungeAdminDashboard;
+        return '${RouterKeys.loungeAdminDashboard}?unauthorized=true';
       }
 
       if (isSetupRoute && !user.canEditSetup) {
-        return RouterKeys.loungeAdminDashboard;
+        return '${RouterKeys.loungeAdminDashboard}?unauthorized=true';
       }
 
       return null;
@@ -291,9 +301,58 @@ class AppRouter {
               GoRoute(
                 path: RouterKeys.superAdminTournaments,
                 pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<TournamentCubit>(),
+                  child: MultiBlocProvider(
+                    providers: [
+                      BlocProvider(create: (_) => sl<TournamentCubit>()),
+                      BlocProvider(create: (_) => sl<TournamentParticipantsCubit>()),
+                      BlocProvider(create: (_) => sl<TournamentMatchesCubit>()),
+                    ],
                     child: const tournaments.TournamentsScreen(),
+                  ),
+                ),
+              ),
+              GoRoute(
+                path: RouterKeys.superAdminSupportSettings,
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: BlocProvider(
+                    create: (_) => sl<SupportCubit>(),
+                    child: const SupportSettingsScreen(),
+                  ),
+                ),
+              ),
+              GoRoute(
+                path: RouterKeys.superAdminPolicies,
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: BlocProvider(
+                    create: (_) => sl<SupportCubit>(),
+                    child: const PolicyManagementScreen(),
+                  ),
+                ),
+              ),
+              GoRoute(
+                path: RouterKeys.superAdminFaqs,
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: BlocProvider(
+                    create: (_) => sl<SupportCubit>(),
+                    child: const FaqManagementScreen(),
+                  ),
+                ),
+              ),
+              GoRoute(
+                path: RouterKeys.superAdminTickets,
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: BlocProvider(
+                    create: (_) => sl<SupportCubit>(),
+                    child: const SupportTicketsScreen(),
+                  ),
+                ),
+              ),
+              GoRoute(
+                path: RouterKeys.superAdminSystemSettings,
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: BlocProvider(
+                    create: (_) => sl<SystemSettingsCubit>(),
+                    child: const SystemSettingsScreen(),
                   ),
                 ),
               ),
@@ -330,8 +389,12 @@ class AppRouter {
               GoRoute(
                 path: RouterKeys.loungeAdminTournaments,
                 pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<TournamentCubit>(),
+                  child: MultiBlocProvider(
+                    providers: [
+                      BlocProvider(create: (_) => sl<TournamentCubit>()),
+                      BlocProvider(create: (_) => sl<TournamentParticipantsCubit>()),
+                      BlocProvider(create: (_) => sl<TournamentMatchesCubit>()),
+                    ],
                     child: const tournaments.TournamentsScreen(),
                   ),
                 ),
@@ -374,6 +437,15 @@ class AppRouter {
                 path: RouterKeys.loungeAdminProfile,
                 pageBuilder: (context, state) => const NoTransitionPage(
                   child: lounge_profile.LoungeProfilePage(),
+                ),
+              ),
+              GoRoute(
+                path: RouterKeys.loungeAdminSupport,
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: BlocProvider(
+                    create: (_) => sl<SupportCubit>(),
+                    child: const LoungeOwnerSupportScreen(),
+                  ),
                 ),
               ),
               GoRoute(

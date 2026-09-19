@@ -200,6 +200,36 @@ class DashboardSidebar extends StatelessWidget {
         isActive: activeRoute == RouterKeys.superAdminTournaments,
         onTap: () => context.go(RouterKeys.superAdminTournaments),
       ),
+      _SidebarItem(
+        icon: Icons.contact_support_outlined,
+        label: 'إعدادات التواصل والدفع',
+        isActive: activeRoute == RouterKeys.superAdminSupportSettings,
+        onTap: () => context.go(RouterKeys.superAdminSupportSettings),
+      ),
+      _SidebarItem(
+        icon: Icons.gavel_outlined,
+        label: 'إدارة الشروط والسياسات',
+        isActive: activeRoute == RouterKeys.superAdminPolicies,
+        onTap: () => context.go(RouterKeys.superAdminPolicies),
+      ),
+      _SidebarItem(
+        icon: Icons.quiz_outlined,
+        label: 'الأسئلة الشائعة (FAQ)',
+        isActive: activeRoute == RouterKeys.superAdminFaqs,
+        onTap: () => context.go(RouterKeys.superAdminFaqs),
+      ),
+      _SidebarItem(
+        icon: Icons.confirmation_number_outlined,
+        label: 'شكاوى وتذاكر الدعم',
+        isActive: activeRoute == RouterKeys.superAdminTickets,
+        onTap: () => context.go(RouterKeys.superAdminTickets),
+      ),
+      _SidebarItem(
+        icon: Icons.settings_suggest_outlined,
+        label: 'إدارة النظام والإعلانات',
+        isActive: activeRoute == RouterKeys.superAdminSystemSettings,
+        onTap: () => context.go(RouterKeys.superAdminSystemSettings),
+      ),
     ];
   }
 
@@ -309,6 +339,13 @@ class DashboardSidebar extends StatelessWidget {
           isActive: activeRoute == AppStrings.loungeProfile,
           onTap: () => context.go(RouterKeys.loungeAdminProfile),
         ),
+
+      _SidebarItem(
+        icon: Icons.headset_mic_outlined,
+        label: 'الدعم والمساعدة',
+        isActive: activeRoute == RouterKeys.loungeAdminSupport,
+        onTap: () => context.go(RouterKeys.loungeAdminSupport),
+      ),
 
       _SidebarItem(
         icon: Icons.person_outline,

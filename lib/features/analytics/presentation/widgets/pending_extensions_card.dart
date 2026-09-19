@@ -317,10 +317,26 @@ class PendingExtensionsCard extends StatelessWidget {
                   controller: costController,
                   keyboardType: const TextInputType.numberWithOptions(
                       decimal: true),
+                  style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.bold),
                   decoration: InputDecoration(
                     labelText: 'التكلفة الإضافية (ج.م)',
+                    labelStyle: TextStyle(
+                        color: AppColors.textSecondary, fontSize: 13.sp),
+                    filled: true,
+                    fillColor: AppColors.scaffoldBackground,
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.r)),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                      borderSide: const BorderSide(color: AppColors.borderDefault),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                      borderSide: const BorderSide(color: AppColors.neonBlue, width: 1.5),
+                    ),
                   ),
                 ),
               ],
