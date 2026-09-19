@@ -32,6 +32,7 @@ import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/shift_header_banner.dart';
 
+/// Redesigned Modern & Immersive Bookings & Live Sessions Page
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
 
@@ -42,9 +43,7 @@ class BookingsPage extends StatefulWidget {
 class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late SessionTickerNotifier _sessionTickerNotifier;
-
   late ScrollController _mainScrollController;
-  late ScrollController _requestsScrollController;
 
   int _selectedTabIndex = 0;
   bool _isOccupancyExpanded = true;
@@ -57,9 +56,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _sessionTickerNotifier = SessionTickerNotifier();
-
     _mainScrollController = ScrollController();
-    _requestsScrollController = ScrollController();
 
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging && mounted) {
@@ -110,7 +107,6 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     _tabController.dispose();
     _sessionTickerNotifier.dispose();
     _mainScrollController.dispose();
-    _requestsScrollController.dispose();
     super.dispose();
   }
 
@@ -191,37 +187,37 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
         backgroundColor: AppColors.scaffoldBackground,
         endDrawer: !isDesktop
             ? Drawer(
-          backgroundColor: AppColors.cardBackground,
-          child: SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(16.r),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                backgroundColor: AppColors.cardBackground,
+                child: SafeArea(
+                  child: Column(
                     children: [
-                      AppText.heading(AppStrings.clientRequestsAndAlerts, fontSize: 16.sp),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: AppColors.textSecondary),
-                        onPressed: () => Navigator.of(context).pop(),
+                      Padding(
+                        padding: EdgeInsets.all(16.r),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            AppText.heading(AppStrings.clientRequestsAndAlerts, fontSize: 16.sp),
+                            IconButton(
+                              icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                          ],
+                        ),
                       ),
+                      const Divider(color: AppColors.borderDefault),
+                      const Expanded(child: RepaintBoundary(child: LiveRequestsFeed())),
                     ],
                   ),
                 ),
-                const Divider(color: AppColors.borderDefault),
-                const Expanded(child: RepaintBoundary(child: LiveRequestsFeed())),
-              ],
-            ),
-          ),
-        )
+              )
             : null,
         floatingActionButton: !isDesktop
             ? FloatingActionButton.extended(
-          backgroundColor: AppColors.neonBlue,
-          icon: const Icon(Icons.add_rounded, color: Colors.black),
-          label: Text(AppStrings.newBooking, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-          onPressed: () => _showAddBookingModal(context, loungeId),
-        )
+                backgroundColor: AppColors.neonBlue,
+                icon: const Icon(Icons.add_rounded, color: Colors.black),
+                label: Text(AppStrings.newBooking, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                onPressed: () => _showAddBookingModal(context, loungeId),
+              )
             : null,
         body: DashboardLayout(
           title: AppStrings.bookings,
@@ -266,12 +262,12 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                         const SliverToBoxAdapter(child: ShiftHeaderBanner()),
                         SliverToBoxAdapter(child: SizedBox(height: 12.h)),
 
-                        // Operational Stats Bar
-                        SliverToBoxAdapter(child: _buildCockpitStatsBar(context, loungeId, userLounge)),
+                        // Redesigned Cockpit Operations Strip with Glow & Modern Cards
+                        SliverToBoxAdapter(child: _buildModernCockpitStatsBar(context, loungeId, userLounge)),
                         SliverToBoxAdapter(child: SizedBox(height: 14.h)),
 
-                        // Compact Room Radar / Occupancy Grid
-                        _buildCollapsibleOccupancyGrid(loungeId),
+                        // Interactive Room Radar / Occupancy Grid
+                        SliverToBoxAdapter(child: _buildCollapsibleOccupancyGrid(loungeId)),
                         SliverToBoxAdapter(child: SizedBox(height: 16.h)),
 
                         // Filter & View Mode Controls
@@ -284,18 +280,19 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                         ),
                         SliverToBoxAdapter(child: SizedBox(height: 14.h)),
 
-                        // Tabs Header
-                        PinnedHeaderSliver(
+                        // Modern Glassmorphism Tabs Header
+                        SliverToBoxAdapter(
                           child: Container(
                             color: AppColors.scaffoldBackground,
                             padding: EdgeInsets.symmetric(vertical: 4.h),
-                            child: _buildCockpitTabs(context, userLounge),
+                            child: _buildModernCockpitTabs(context, userLounge),
                           ),
                         ),
                         SliverToBoxAdapter(child: SizedBox(height: 14.h)),
 
-                        // Active Tab Bookings
+                        // Active Tab Bookings View
                         ..._buildActiveBookingsView(context, userLounge),
+                        SliverToBoxAdapter(child: SizedBox(height: 40.h)),
                       ],
                     ),
                   ),
@@ -308,29 +305,43 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                       child: Container(
                         decoration: BoxDecoration(
                           color: AppColors.cardBackground,
-                          borderRadius: BorderRadius.circular(14.r),
+                          borderRadius: BorderRadius.circular(16.r),
                           border: Border.all(color: AppColors.borderDefault),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
                         child: Column(
                           children: [
                             Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
                                     children: [
-                                      const Icon(Icons.bolt_rounded, color: AppColors.warning),
-                                      SizedBox(width: 6.w),
+                                      Container(
+                                        padding: EdgeInsets.all(6.r),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.warning.withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(8.r),
+                                        ),
+                                        child: const Icon(Icons.bolt_rounded, color: AppColors.warning, size: 18),
+                                      ),
+                                      SizedBox(width: 8.w),
                                       AppText.subHeading(AppStrings.clientRequestsAndAlerts, fontSize: 13.sp),
                                     ],
                                   ),
                                   if (unreadRequestsCount > 0)
                                     Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                                       decoration: BoxDecoration(
                                         color: AppColors.warning,
-                                        borderRadius: BorderRadius.circular(10.r),
+                                        borderRadius: BorderRadius.circular(12.r),
                                       ),
                                       child: Text(
                                         '$unreadRequestsCount',
@@ -356,8 +367,8 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     );
   }
 
-  /// Cockpit Operations Strip: Compact, high-contrast stats bar with quick-add action
-  Widget _buildCockpitStatsBar(BuildContext context, String loungeId, dynamic userLounge) {
+  /// Modern Cockpit Operations Strip: High-contrast metric cards with neon accents and quick actions
+  Widget _buildModernCockpitStatsBar(BuildContext context, String loungeId, dynamic userLounge) {
     final bookingState = context.watch<BookingCubit>().state;
     final shiftState = context.watch<ShiftCubit>().state;
     final activeShift = shiftState.activeShift;
@@ -367,31 +378,47 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     final totalRevenue = bookingState.currentShiftRevenue(activeShift: activeShift, userLounge: userLounge);
 
     return Container(
-      padding: EdgeInsets.all(12.r),
+      padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(14.r),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.cardBackground,
+            AppColors.cardBackground.withValues(alpha: 0.9),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.borderDefault),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.neonBlue.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
           const LiveIndicatorBadge(),
-          SizedBox(width: 12.w),
+          SizedBox(width: 14.w),
           Expanded(
             child: Row(
               children: [
-                _buildCockpitItem('الجلسات الجارية', '$activeCount', AppColors.neonBlue, Icons.sports_esports),
-                _buildCockpitItem('طلبات بالانتظار', '$pendingCount', AppColors.warning, Icons.access_time_filled),
-                _buildCockpitItem('إيراد الوردية', '${totalRevenue.toStringAsFixed(0)} ${AppStrings.egp}', AppColors.neonGreen, Icons.account_balance_wallet),
+                _buildModernMetricCard('الجلسات الجارية', '$activeCount', AppColors.neonBlue, Icons.sports_esports_rounded),
+                SizedBox(width: 12.w),
+                _buildModernMetricCard('طلبات بالانتظار', '$pendingCount', AppColors.warning, Icons.access_time_filled_rounded),
+                SizedBox(width: 12.w),
+                _buildModernMetricCard('إيراد الوردية', '${totalRevenue.toStringAsFixed(0)} ${AppStrings.egp}', AppColors.neonGreen, Icons.account_balance_wallet_rounded),
               ],
             ),
           ),
-          SizedBox(width: 10.w),
+          SizedBox(width: 14.w),
           AppButton(
             text: AppStrings.newBooking,
             icon: Icons.add_rounded,
             variant: AppButtonVariant.primary,
-            height: 38.h,
+            height: 42.h,
             onPressed: () => _showAddBookingModal(context, loungeId),
           ),
         ],
@@ -399,72 +426,118 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildCockpitItem(String title, String value, Color color, IconData icon) {
+  Widget _buildModernMetricCard(String title, String value, Color accentColor, IconData icon) {
     return Expanded(
-      child: Row(
-        children: [
-          Icon(icon, size: 16.r, color: color),
-          SizedBox(width: 6.w),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(title, style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp)),
-              Text(value, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13.sp)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCollapsibleOccupancyGrid(String loungeId) {
-    return SliverToBoxAdapter(
       child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
         decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(14.r),
-          border: Border.all(color: AppColors.borderDefault),
+          color: AppColors.scaffoldBackground.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: accentColor.withValues(alpha: 0.3)),
         ),
-        child: Column(
+        child: Row(
           children: [
-            InkWell(
-              onTap: () => setState(() => _isOccupancyExpanded = !_isOccupancyExpanded),
-              borderRadius: BorderRadius.circular(14.r),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.dashboard_customize_outlined, color: AppColors.neonBlue, size: 18.r),
-                        SizedBox(width: 8.w),
-                        AppText.subHeading(AppStrings.devicesAndRoomsMap, fontSize: 13.sp),
-                      ],
-                    ),
-                    Icon(
-                      _isOccupancyExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                      color: AppColors.textSecondary,
-                    ),
-                  ],
-                ),
+            Container(
+              padding: EdgeInsets.all(6.r),
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Icon(icon, size: 16.r, color: accentColor),
+            ),
+            SizedBox(width: 10.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(title, style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp), maxLines: 1),
+                  SizedBox(height: 2.h),
+                  Text(value, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13.sp), maxLines: 1),
+                ],
               ),
             ),
-            if (_isOccupancyExpanded) ...[
-              const Divider(color: AppColors.borderDefault, height: 1),
-              Padding(
-                padding: EdgeInsets.all(12.r),
-                child: RoomOccupancyGrid(loungeId: loungeId),
-              ),
-            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCockpitTabs(BuildContext context, dynamic userLounge) {
+  Widget _buildCollapsibleOccupancyGrid(String loungeId) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.borderDefault),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () => setState(() => _isOccupancyExpanded = !_isOccupancyExpanded),
+            borderRadius: BorderRadius.circular(16.r),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(6.r),
+                        decoration: BoxDecoration(
+                          color: AppColors.neonPurple.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: const Icon(Icons.dashboard_customize_outlined, color: AppColors.neonPurple, size: 18),
+                      ),
+                      SizedBox(width: 10.w),
+                      AppText.subHeading(AppStrings.devicesAndRoomsMap, fontSize: 14.sp),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                        decoration: BoxDecoration(
+                          color: AppColors.neonBlue.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10.r),
+                        ),
+                        child: Text(
+                          _isOccupancyExpanded ? 'إخفاء الخريطة' : 'عرض الخريطة',
+                          style: TextStyle(color: AppColors.neonBlue, fontSize: 11.sp, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      SizedBox(width: 6.w),
+                      Icon(
+                        _isOccupancyExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.textSecondary,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_isOccupancyExpanded) ...[
+            const Divider(color: AppColors.borderDefault, height: 1),
+            Padding(
+              padding: EdgeInsets.all(14.r),
+              child: RoomOccupancyGrid(loungeId: loungeId),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernCockpitTabs(BuildContext context, dynamic userLounge) {
     final bookingState = context.watch<BookingCubit>().state;
     final shiftState = context.watch<ShiftCubit>().state;
     final activeShift = shiftState.activeShift;
@@ -477,9 +550,11 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
       children: [
         Expanded(
           child: Container(
+            height: 48.h,
+            padding: EdgeInsets.all(4.r),
             decoration: BoxDecoration(
               color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(10.r),
+              borderRadius: BorderRadius.circular(14.r),
               border: Border.all(color: AppColors.borderDefault),
             ),
             child: TabBar(
@@ -487,8 +562,14 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
               indicator: BoxDecoration(
-                borderRadius: BorderRadius.circular(8.r),
-                color: AppColors.neonBlue.withAlpha(35),
+                borderRadius: BorderRadius.circular(10.r),
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.neonBlue.withValues(alpha: 0.3),
+                    AppColors.neonPurple.withValues(alpha: 0.3),
+                  ],
+                ),
+                border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.5)),
               ),
               labelColor: AppColors.neonBlue,
               unselectedLabelColor: AppColors.textSecondary,
@@ -501,11 +582,19 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
             ),
           ),
         ),
-        SizedBox(width: 8.w),
-        IconButton(
-          tooltip: 'تبديل شكل العرض',
-          icon: Icon(_isTableView ? Icons.grid_view_rounded : Icons.view_agenda_outlined, color: AppColors.neonBlue),
-          onPressed: () => setState(() => _isTableView = !_isTableView),
+        SizedBox(width: 10.w),
+        Container(
+          height: 48.h,
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(14.r),
+            border: Border.all(color: AppColors.borderDefault),
+          ),
+          child: IconButton(
+            tooltip: _isTableView ? 'عرض كبطاقات' : 'عرض كجدول',
+            icon: Icon(_isTableView ? Icons.grid_view_rounded : Icons.view_list_rounded, color: AppColors.neonBlue),
+            onPressed: () => setState(() => _isTableView = !_isTableView),
+          ),
         ),
       ],
     );
@@ -523,8 +612,8 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     final List<Booking> list = _selectedTabIndex == 0
         ? bookingState.activeBookings
         : (_selectedTabIndex == 1
-        ? bookingState.pendingBookings
-        : bookingState.currentShiftBookings(activeShift: activeShift, userLounge: userLounge));
+            ? bookingState.pendingBookings
+            : bookingState.currentShiftBookings(activeShift: activeShift, userLounge: userLounge));
 
     final filtered = _applyFilters(list, activeShift);
 
@@ -532,18 +621,26 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
       return [
         SliverToBoxAdapter(
           child: Container(
-            padding: EdgeInsets.all(40.r),
+            padding: EdgeInsets.all(50.r),
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(14.r),
+              borderRadius: BorderRadius.circular(16.r),
               border: Border.all(color: AppColors.borderDefault),
             ),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.inbox_outlined, size: 42.r, color: AppColors.textMuted),
-                SizedBox(height: 8.h),
-                Text('لا توجد عناصر مطابقة في هذا التبويب', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
+                Container(
+                  padding: EdgeInsets.all(16.r),
+                  decoration: BoxDecoration(
+                    color: AppColors.scaffoldBackground,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.inbox_rounded, size: 48.r, color: AppColors.textMuted),
+                ),
+                SizedBox(height: 12.h),
+                Text('لا توجد حجوزات أو طلبات مطابقة في هذا التبويب', style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp, fontWeight: FontWeight.w500)),
               ],
             ),
           ),
@@ -559,12 +656,12 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
       SliverGrid(
         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 420.w,
-          mainAxisExtent: 380.h,
-          crossAxisSpacing: 12.r,
-          mainAxisSpacing: 12.r,
+          mainAxisExtent: 390.h,
+          crossAxisSpacing: 14.r,
+          mainAxisSpacing: 14.r,
         ),
         delegate: SliverChildBuilderDelegate(
-              (context, index) {
+          (context, index) {
             final b = filtered[index];
             if (b.status == BookingStatus.inProgress) {
               return LiveSessionCard(key: ValueKey('live_${b.id}'), booking: b, width: double.infinity);
@@ -588,8 +685,15 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.borderDefault),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: DataTableWidget(
         columns: [
@@ -603,8 +707,8 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
         rows: bookings.map((b) {
           return DataRow(
             cells: [
-              DataCell(Text(b.userName ?? AppStrings.anonymous, style: const TextStyle(color: AppColors.textPrimary))),
-              DataCell(Text(b.roomName, style: const TextStyle(color: AppColors.neonPurple))),
+              DataCell(Text(b.userName ?? AppStrings.anonymous, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold))),
+              DataCell(Text(b.roomName, style: const TextStyle(color: AppColors.neonPurple, fontWeight: FontWeight.w600))),
               DataCell(Text(b.startTime, style: const TextStyle(color: AppColors.textSecondary))),
               DataCell(Text('${b.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.neonGreen, fontWeight: FontWeight.bold))),
               DataCell(StatusBadge(
