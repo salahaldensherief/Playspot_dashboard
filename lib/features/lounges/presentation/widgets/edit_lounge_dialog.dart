@@ -5,6 +5,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import '../../domain/entities/lounge.dart';
@@ -31,6 +32,8 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
   
   late TextEditingController _nameController;
   late TextEditingController _cityController;
+  late TextEditingController _vodafoneCashController;
+  late TextEditingController _instapayController;
   
   Uint8List? _loungeImageBytes;
   String? _loungeImageName;
@@ -43,6 +46,8 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
     super.initState();
     _nameController = TextEditingController(text: widget.lounge.name);
     _cityController = TextEditingController(text: widget.lounge.city);
+    _vodafoneCashController = TextEditingController(text: widget.lounge.vodafoneCashNumber ?? '');
+    _instapayController = TextEditingController(text: widget.lounge.instapayAccount ?? '');
     _isOpen = widget.lounge.isOpen;
   }
 
@@ -50,10 +55,19 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
   void dispose() {
     _nameController.dispose();
     _cityController.dispose();
+    _vodafoneCashController.dispose();
+    _instapayController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
+    if (_vodafoneCashController.text.trim().isEmpty && _instapayController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppStrings.paymentMethodsRequiredError), backgroundColor: AppColors.danger),
+      );
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       setState(() => _isLocalUploading = true);
       
@@ -73,6 +87,8 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
             imageUrl: imageUrl,
             city: _cityController.text,
             isOpen: _isOpen,
+            vodafoneCashNumber: _vodafoneCashController.text.trim().isEmpty ? null : _vodafoneCashController.text.trim(),
+            instapayAccount: _instapayController.text.trim().isEmpty ? null : _instapayController.text.trim(),
           );
 
           if (widget.onSave != null) {
@@ -124,8 +140,43 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
                 _loungeImageName = name;
               },
             ),
-            SizedBox(height: 32.h),
+            SizedBox(height: 24.h),
             _buildStatusSection(),
+            SizedBox(height: 24.h),
+            Container(
+              padding: EdgeInsets.all(16.r),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: AppColors.borderDefault),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.payment_rounded, color: AppColors.neonBlue),
+                      SizedBox(width: 8.w),
+                      Text(AppStrings.paymentMethodsTitle, style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(AppStrings.paymentMethodsHint, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                  SizedBox(height: 16.h),
+                  AppTextField(
+                    controller: _vodafoneCashController,
+                    label: AppStrings.vodafoneCashNumberStr,
+                    hintText: '01xxxxxxxxx',
+                  ),
+                  SizedBox(height: 16.h),
+                  AppTextField(
+                    controller: _instapayController,
+                    label: AppStrings.instapayAccountStr,
+                    hintText: 'username@instapay',
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -136,7 +187,7 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
     return Container(
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: AppColors.mutedBackground.withOpacity(0.5),
+        color: AppColors.mutedBackground.withAlpha(128),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: AppColors.divider),
       ),

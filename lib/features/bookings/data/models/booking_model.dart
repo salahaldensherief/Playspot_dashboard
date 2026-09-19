@@ -36,6 +36,9 @@ class BookingModel extends Booking {
     super.playMode,
     super.roomPrice,
     super.visitNumber,
+    super.paymentMethod,
+    super.receiptUrl,
+    super.expiresAt,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
@@ -297,6 +300,11 @@ class BookingModel extends Booking {
         }
         return null;
       }(),
+      paymentMethod: (json['payment_method'] ?? json['out_payment_method'])?.toString(),
+      receiptUrl: (json['receipt_url'] ?? json['out_receipt_url'] ?? json['receipt_path'])?.toString(),
+      expiresAt: json['expires_at'] != null 
+          ? DateTime.tryParse(json['expires_at'].toString()) 
+          : (json['out_expires_at'] != null ? DateTime.tryParse(json['out_expires_at'].toString()) : null),
     );
   }
 
@@ -324,6 +332,9 @@ class BookingModel extends Booking {
       'discount_reason': discountReason,
       if (shiftId != null) 'shift_id': shiftId,
       if (playMode != null) 'play_mode': playMode,
+      if (paymentMethod != null) 'payment_method': paymentMethod,
+      if (receiptUrl != null) 'receipt_url': receiptUrl,
+      if (expiresAt != null) 'expires_at': expiresAt!.toIso8601String(),
     };
   }
 }

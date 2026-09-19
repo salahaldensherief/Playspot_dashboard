@@ -869,6 +869,11 @@ class AppStrings {
   static String get actionExecutedSuccess => 'action_executed_success'.tr();
   static String get payoutReviewResolvedSuccess => 'payout_review_resolved_success'.tr();
   static String get transferRefRequiredError => 'transfer_ref_required_error'.tr();
+  static String get paymentMethodsTitle => 'payment_methods_title'.tr();
+  static String get vodafoneCashNumberStr => 'vodafone_cash_number'.tr();
+  static String get instapayAccountStr => 'instapay_account'.tr();
+  static String get paymentMethodsRequiredError => 'payment_methods_required_error'.tr();
+  static String get paymentMethodsHint => 'payment_methods_hint'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

@@ -149,7 +149,39 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
   }
 
   Future<bool> approveBooking(String id) async {
-    return changeBookingStatus(id, BookingStatus.upcoming);
+    final originalBookings = List<Booking>.from(state.bookings);
+    final updatedList = state.bookings.map((b) {
+      if (b.id == id) {
+        return b.copyWith(
+          status: BookingStatus.upcoming,
+          paymentStatus: PaymentStatus.paid,
+        );
+      }
+      return b;
+    }).toList();
+    emit(state.copyWith(bookings: updatedList));
+
+    final result = await repository.approveBooking(id);
+    if (isClosed) return false;
+
+    return result.fold(
+      (failure) {
+        debugPrint('🔴 [CUBIT] Approve Booking Failed: ${failure.message}');
+        emit(state.copyWith(
+          status: BookingStatusState.failure,
+          errorMessage: failure.message,
+          bookings: originalBookings,
+        ));
+        return false;
+      },
+      (_) {
+        debugPrint('🟢 [CUBIT] Approve Booking Succeeded');
+        if (watchedEntityId != null) {
+          startWatchingBookings(loungeId: watchedEntityId);
+        }
+        return true;
+      },
+    );
   }
 
   Future<bool> rejectBooking(String id) async {

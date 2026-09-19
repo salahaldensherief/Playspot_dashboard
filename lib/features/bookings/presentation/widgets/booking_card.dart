@@ -477,14 +477,6 @@ class _BookingCardState extends State<BookingCard> {
                         ),
                       ],
                     )
-                  else if (!isPaid && widget.onConfirmPayment != null)
-                    AppButton(
-                      text: AppStrings.confirmCash,
-                      onPressed: widget.onConfirmPayment ?? () {},
-                      width: double.infinity,
-                      height: 30.h,
-                      icon: Icons.payments_outlined,
-                    )
                   else
                     AppButton(
                       text: AppStrings.bookingDetails,

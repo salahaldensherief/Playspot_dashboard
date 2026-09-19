@@ -809,6 +809,11 @@
   "payout_marked_paid_success": "تم تسجيل التسوية كمدفوعة بنجاح!",
   "action_executed_success": "تم تنفيذ الإجراء بنجاح!",
   "payout_review_resolved_success": "تمت معالجة مراجعة التسوية بنجاح!",
-  "transfer_ref_required_error": "رقم مرجع التحويل مطلوب!"
+  "transfer_ref_required_error": "رقم مرجع التحويل مطلوب!",
+  "payment_methods_title": "وسائل الدفع",
+  "vodafone_cash_number": "رقم فودافون كاش",
+  "instapay_account": "حساب انستا باي",
+  "payment_methods_required_error": "يجب إدخال Vodafone Cash أو InstaPay على الأقل لاستقبال الحجوزات.",
+  "payment_methods_hint": "يجب إدخال رقم فودافون كاش أو حساب انستا باي على الأقل لاستقبال الحجوزات."
 }
 

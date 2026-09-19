@@ -17,6 +17,7 @@ abstract class BookingRemoteDataSource {
     int pageSize = 20,
   });
   Future<void> updateBookingStatus(String id, String status);
+  Future<void> approveBooking(String id);
   Future<void> confirmCashPayment(
       String bookingId, {
         String? shiftId,
@@ -161,6 +162,21 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         debugPrint('${AppConstants.criticalFallbackError}$e3');
         return [];
       }
+    }
+  }
+
+  @override
+  Future<void> approveBooking(String id) async {
+    debugPrint('🔵 [DATA_SOURCE] Approving booking id=$id (status=upcoming, payment_status=paid)');
+    try {
+      await client.from('bookings').update({
+        'status': 'upcoming',
+        'payment_status': 'paid',
+      }).eq('id', id);
+      debugPrint('🟢 [DATA_SOURCE] Booking approved successfully with payment_status=paid!');
+    } catch (e) {
+      debugPrint('⚠️ [DATA_SOURCE] Failed to approve booking directly ($e), calling updateBookingStatus...');
+      await updateBookingStatus(id, 'upcoming');
     }
   }
 

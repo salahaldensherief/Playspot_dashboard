@@ -772,5 +772,10 @@
   "no_announcements_found": "No announcements found in the system.",
   "deactivate": "Deactivate",
   "refresh_data": "Refresh Data",
-  "select_target_lounge_error": "Please select the target lounge for the announcement"
+  "select_target_lounge_error": "Please select the target lounge for the announcement",
+  "payment_methods_title": "Payment Methods",
+  "vodafone_cash_number": "Vodafone Cash Number",
+  "instapay_account": "InstaPay Account",
+  "payment_methods_required_error": "Please add at least one payment method: Vodafone Cash or InstaPay.",
+  "payment_methods_hint": "Please enter at least Vodafone Cash number or InstaPay account to receive bookings."
 }

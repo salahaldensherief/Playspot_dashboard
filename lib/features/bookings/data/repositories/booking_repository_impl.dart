@@ -78,6 +78,16 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
+  Future<Either<Failure, void>> approveBooking(String id) async {
+    try {
+      await remoteDataSource.approveBooking(id);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> confirmCashPayment(
     String bookingId, {
     String? shiftId,

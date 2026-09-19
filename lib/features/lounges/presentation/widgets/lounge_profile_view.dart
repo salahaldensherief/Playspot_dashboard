@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_multi_image_picker.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
@@ -39,6 +40,8 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
   late TextEditingController _discountTitleArController;
   late TextEditingController _discountTitleEnController;
   late TextEditingController _discountExpirationController;
+  late TextEditingController _vodafoneCashController;
+  late TextEditingController _instapayController;
 
   Uint8List? _mainImageBytes;
   String? _mainImageName;
@@ -72,6 +75,8 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     _discountExpirationController = TextEditingController(
       text: _discountExpiresAt != null ? _discountExpiresAt!.toLocal().toString().split(' ')[0] : '',
     );
+    _vodafoneCashController = TextEditingController(text: lounge?.vodafoneCashNumber ?? '');
+    _instapayController = TextEditingController(text: lounge?.instapayAccount ?? '');
     
     _lat = lounge?.lat;
     _lng = lounge?.lng;
@@ -98,6 +103,8 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     _discountExpirationController.text = _discountExpiresAt != null
         ? _discountExpiresAt!.toLocal().toString().split(' ')[0]
         : '';
+    _vodafoneCashController.text = lounge.vodafoneCashNumber ?? '';
+    _instapayController.text = lounge.instapayAccount ?? '';
 
     _lat = lounge.lat;
     _lng = lounge.lng;
@@ -116,10 +123,22 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     _discountTitleArController.dispose();
     _discountTitleEnController.dispose();
     _discountExpirationController.dispose();
+    _vodafoneCashController.dispose();
+    _instapayController.dispose();
     super.dispose();
   }
 
   Future<void> _saveProfile() async {
+    if (_vodafoneCashController.text.trim().isEmpty && _instapayController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.paymentMethodsRequiredError),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       setState(() => _isSaving = true);
       try {
@@ -154,6 +173,8 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
             images: galleryUrls,
             lat: _lat,
             lng: _lng,
+            vodafoneCashNumber: _vodafoneCashController.text.trim().isEmpty ? null : _vodafoneCashController.text.trim(),
+            instapayAccount: _instapayController.text.trim().isEmpty ? null : _instapayController.text.trim(),
           );
 
           await context.read<LoungeCubit>().updateLounge(updatedLounge);
@@ -293,6 +314,41 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
                     closesAtController: _closesAtController,
                     onOpensAtTap: () => _selectTime(context, _opensAtController),
                     onClosesAtTap: () => _selectTime(context, _closesAtController),
+                  ),
+                  SizedBox(height: 32.h),
+                  Container(
+                    padding: EdgeInsets.all(16.r),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBackground,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: AppColors.borderDefault),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.payment_rounded, color: AppColors.neonBlue),
+                            SizedBox(width: 8.w),
+                            Text(AppStrings.paymentMethodsTitle, style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(AppStrings.paymentMethodsHint, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                        SizedBox(height: 16.h),
+                        AppTextField(
+                          controller: _vodafoneCashController,
+                          label: AppStrings.vodafoneCashNumberStr,
+                          hintText: '01xxxxxxxxx',
+                        ),
+                        SizedBox(height: 16.h),
+                        AppTextField(
+                          controller: _instapayController,
+                          label: AppStrings.instapayAccountStr,
+                          hintText: 'username@instapay',
+                        ),
+                      ],
+                    ),
                   ),
                   SizedBox(height: 40.h),
                   AppButton(

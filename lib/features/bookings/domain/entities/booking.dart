@@ -80,6 +80,9 @@ class Booking extends Equatable {
   final String? playMode;
   final double? roomPrice;
   final int? visitNumber;
+  final String? paymentMethod;
+  final String? receiptUrl;
+  final DateTime? expiresAt;
 
   const Booking({
     required this.id,
@@ -115,6 +118,9 @@ class Booking extends Equatable {
     this.playMode,
     this.roomPrice,
     this.visitNumber,
+    this.paymentMethod,
+    this.receiptUrl,
+    this.expiresAt,
   });
 
   bool get isOpenEnded => durationMinutes <= 0;
@@ -154,6 +160,9 @@ class Booking extends Equatable {
         playMode,
         roomPrice,
         visitNumber,
+        paymentMethod,
+        receiptUrl,
+        expiresAt,
       ];
 
   Booking copyWith({
@@ -190,6 +199,9 @@ class Booking extends Equatable {
     String? playMode,
     double? roomPrice,
     int? visitNumber,
+    String? paymentMethod,
+    String? receiptUrl,
+    DateTime? expiresAt,
   }) {
     return Booking(
       id: id ?? this.id,
@@ -225,6 +237,9 @@ class Booking extends Equatable {
       playMode: playMode ?? this.playMode,
       roomPrice: roomPrice ?? this.roomPrice,
       visitNumber: visitNumber ?? this.visitNumber,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      receiptUrl: receiptUrl ?? this.receiptUrl,
+      expiresAt: expiresAt ?? this.expiresAt,
     );
   }
 

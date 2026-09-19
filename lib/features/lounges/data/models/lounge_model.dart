@@ -32,6 +32,8 @@ class LoungeModel extends Lounge {
     super.discountTitleAr,
     super.discountTitleEn,
     super.discountExpiresAt,
+    super.vodafoneCashNumber,
+    super.instapayAccount,
   });
 
   factory LoungeModel.fromJson(Map<String, dynamic> json) {
@@ -128,6 +130,8 @@ class LoungeModel extends Lounge {
       discountTitleAr: json['discount_title_ar']?.toString(),
       discountTitleEn: json['discount_title_en']?.toString(),
       discountExpiresAt: json['discount_expires_at'] != null ? DateTime.tryParse(json['discount_expires_at'].toString()) : null,
+      vodafoneCashNumber: (json['vodafone_cash_number'] ?? json['vodafone_cash'])?.toString(),
+      instapayAccount: (json['instapay_account'] ?? json['instapay'])?.toString(),
     );
   }
 
@@ -158,6 +162,8 @@ class LoungeModel extends Lounge {
       if (categoryId != null) 'category_id': categoryId,
       if (ownerName != null) 'owner_name': ownerName,
       if (ownerEmail != null) 'owner_email': ownerEmail,
+      if (vodafoneCashNumber != null) 'vodafone_cash_number': vodafoneCashNumber,
+      if (instapayAccount != null) 'instapay_account': instapayAccount,
     };
   }
 }

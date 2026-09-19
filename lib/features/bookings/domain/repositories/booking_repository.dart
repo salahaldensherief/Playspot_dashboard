@@ -17,6 +17,7 @@ abstract class BookingRepository {
   });
   Stream<List<Booking>> watchBookings({String? loungeId});
   Future<Either<Failure, void>> updateBookingStatus(String id, BookingStatus status);
+  Future<Either<Failure, void>> approveBooking(String id);
   Future<Either<Failure, void>> confirmCashPayment(
     String bookingId, {
     String? shiftId,

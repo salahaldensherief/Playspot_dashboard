@@ -15,6 +15,7 @@ class BookingStatusActions extends StatelessWidget {
   final VoidCallback? onComplete;
   final VoidCallback? onConfirmPayment;
   final VoidCallback? onSwapRoom;
+  final VoidCallback? onReviewReceipt;
 
   const BookingStatusActions({
     super.key,
@@ -25,6 +26,7 @@ class BookingStatusActions extends StatelessWidget {
     this.onComplete,
     this.onConfirmPayment,
     this.onSwapRoom,
+    this.onReviewReceipt,
   });
 
   @override
@@ -34,7 +36,6 @@ class BookingStatusActions extends StatelessWidget {
     final isInProgress = booking.status == BookingStatus.inProgress;
     final isCompleted = booking.status == BookingStatus.completed;
     final isCancelled = booking.status == BookingStatus.cancelled;
-    final isUnpaid = booking.paymentStatus != PaymentStatus.paid;
 
     if (isLoading) {
       return const Center(
@@ -51,6 +52,15 @@ class BookingStatusActions extends StatelessWidget {
       alignment: WrapAlignment.end,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
+        // Review Receipt / Payment Action
+        if (onReviewReceipt != null)
+          AppButton(
+            text: AppStrings.reviewReceipt,
+            variant: AppButtonVariant.primary,
+            backgroundColor: AppColors.neonBlue,
+            onPressed: onReviewReceipt,
+          ),
+
         // Swap Room Action
         if ((isInProgress || isUpcoming) && onSwapRoom != null)
           AppButton(
@@ -81,14 +91,6 @@ class BookingStatusActions extends StatelessWidget {
             text: AppStrings.cancelBooking,
             variant: AppButtonVariant.outlined,
             onPressed: onCancel,
-          ),
-
-        // Confirm Cash Payment Action
-        if (isUnpaid && !isCancelled && onConfirmPayment != null)
-          AppButton(
-            text: AppStrings.confirmCash,
-            variant: AppButtonVariant.primary,
-            onPressed: onConfirmPayment,
           ),
       ],
     );

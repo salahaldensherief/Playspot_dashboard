@@ -31,6 +31,8 @@ class Lounge extends Equatable {
   final String? discountTitleAr;
   final String? discountTitleEn;
   final DateTime? discountExpiresAt;
+  final String? vodafoneCashNumber;
+  final String? instapayAccount;
 
   const Lounge({
     required this.id,
@@ -62,6 +64,8 @@ class Lounge extends Equatable {
     this.discountTitleAr,
     this.discountTitleEn,
     this.discountExpiresAt,
+    this.vodafoneCashNumber,
+    this.instapayAccount,
   });
 
   /// Calculates dynamic distance in kilometers from device coordinates ([deviceLat], [deviceLng])
@@ -122,6 +126,8 @@ class Lounge extends Equatable {
         discountTitleAr,
         discountTitleEn,
         discountExpiresAt,
+        vodafoneCashNumber,
+        instapayAccount,
       ];
 
   Lounge copyWith({
@@ -154,6 +160,8 @@ class Lounge extends Equatable {
     String? discountTitleAr,
     String? discountTitleEn,
     DateTime? discountExpiresAt,
+    String? vodafoneCashNumber,
+    String? instapayAccount,
   }) {
     return Lounge(
       id: id ?? this.id,
@@ -185,6 +193,8 @@ class Lounge extends Equatable {
       discountTitleAr: discountTitleAr ?? this.discountTitleAr,
       discountTitleEn: discountTitleEn ?? this.discountTitleEn,
       discountExpiresAt: discountExpiresAt ?? this.discountExpiresAt,
+      vodafoneCashNumber: vodafoneCashNumber ?? this.vodafoneCashNumber,
+      instapayAccount: instapayAccount ?? this.instapayAccount,
     );
   }
 }

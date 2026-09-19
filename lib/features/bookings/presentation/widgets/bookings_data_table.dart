@@ -202,9 +202,9 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
       return booking.paymentStatus == PaymentStatus.paid
         ? const Icon(Icons.check_circle, color: AppColors.success)
         : AppButton(
-            text: AppStrings.confirmCash,
+            text: AppStrings.approve,
             variant: AppButtonVariant.primary,
-            onPressed: () => context.read<BookingCubit>().confirmCashPayment(booking.id),
+            onPressed: () => context.read<BookingCubit>().approveBooking(booking.id),
           );
     }
 
@@ -221,14 +221,6 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
       context: context,
       builder: (_) => BookingDetailsDialog(
         booking: booking,
-        onConfirmPayment: (amount, percent, reason) {
-          context.read<BookingCubit>().confirmCashPayment(
-            booking.id,
-            discountAmount: amount,
-            discountPercentage: percent,
-            discountReason: reason,
-          );
-        },
         onCancel: () => context.read<BookingCubit>().rejectBooking(booking.id),
       ),
     );
