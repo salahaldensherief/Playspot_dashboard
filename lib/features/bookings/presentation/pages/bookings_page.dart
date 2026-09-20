@@ -32,7 +32,7 @@ import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/shift_header_banner.dart';
 
-/// Redesigned Modern & Immersive Bookings & Live Sessions Page
+/// Redesigned Modern & Immersive Web Bookings & Live Sessions Page
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
 
@@ -100,6 +100,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
       context.read<ExtrasCubit>().loadExtras(cleanLoungeId, forceRefresh: true);
     }
     await context.read<LoungeCubit>().fetchLounges();
+    if (!mounted) return;
   }
 
   @override
@@ -211,14 +212,6 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                 ),
               )
             : null,
-        floatingActionButton: !isDesktop
-            ? FloatingActionButton.extended(
-                backgroundColor: AppColors.neonBlue,
-                icon: const Icon(Icons.add_rounded, color: Colors.black),
-                label: Text(AppStrings.newBooking, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                onPressed: () => _showAddBookingModal(context, loungeId),
-              )
-            : null,
         body: DashboardLayout(
           title: AppStrings.bookings,
           activeRoute: 'Bookings',
@@ -234,6 +227,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                 listener: (context, state) {
                   if (state.status == BookingStatusState.failure) {
                     final errMsg = state.errorMessage ?? AppStrings.actionFailed;
+                    if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(errMsg),
@@ -280,12 +274,12 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                         ),
                         SliverToBoxAdapter(child: SizedBox(height: 14.h)),
 
-                        // Modern Glassmorphism Tabs Header
+                        // Modern Glassmorphism Tabs Header with Requests Drawer Trigger Button
                         SliverToBoxAdapter(
                           child: Container(
                             color: AppColors.scaffoldBackground,
                             padding: EdgeInsets.symmetric(vertical: 4.h),
-                            child: _buildModernCockpitTabs(context, userLounge),
+                            child: _buildModernCockpitTabs(context, userLounge, unreadRequestsCount, isDesktop),
                           ),
                         ),
                         SliverToBoxAdapter(child: SizedBox(height: 14.h)),
@@ -537,7 +531,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildModernCockpitTabs(BuildContext context, dynamic userLounge) {
+  Widget _buildModernCockpitTabs(BuildContext context, dynamic userLounge, int unreadRequestsCount, bool isDesktop) {
     final bookingState = context.watch<BookingCubit>().state;
     final shiftState = context.watch<ShiftCubit>().state;
     final activeShift = shiftState.activeShift;
@@ -583,6 +577,29 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
           ),
         ),
         SizedBox(width: 10.w),
+        if (!isDesktop) ...[
+          Builder(
+            builder: (drawerContext) => Container(
+              height: 48.h,
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(14.r),
+                border: Border.all(color: AppColors.borderDefault),
+              ),
+              child: IconButton(
+                tooltip: AppStrings.clientRequestsAndAlerts,
+                icon: Badge(
+                  isLabelVisible: unreadRequestsCount > 0,
+                  label: Text('$unreadRequestsCount'),
+                  backgroundColor: AppColors.warning,
+                  child: const Icon(Icons.bolt_rounded, color: AppColors.warning),
+                ),
+                onPressed: () => Scaffold.of(drawerContext).openEndDrawer(),
+              ),
+            ),
+          ),
+          SizedBox(width: 8.w),
+        ],
         Container(
           height: 48.h,
           decoration: BoxDecoration(
@@ -656,7 +673,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
       SliverGrid(
         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 420.w,
-          mainAxisExtent: 390.h,
+          mainAxisExtent: 480.h,
           crossAxisSpacing: 14.r,
           mainAxisSpacing: 14.r,
         ),
@@ -712,13 +729,31 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
               DataCell(Text(b.startTime, style: const TextStyle(color: AppColors.textSecondary))),
               DataCell(Text('${b.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.neonGreen, fontWeight: FontWeight.bold))),
               DataCell(StatusBadge(
-                text: b.paymentStatus == PaymentStatus.paid ? 'مدفوع' : 'غير مدفوع',
-                color: b.paymentStatus == PaymentStatus.paid ? AppColors.success : AppColors.warning,
+                text: b.paymentMethod == 'manual_transfer' ? 'محفظة' : 'كاش',
+                color: b.paymentMethod == 'manual_transfer' ? AppColors.neonBlue : AppColors.warning,
               )),
               DataCell(
-                IconButton(
-                  icon: const Icon(Icons.open_in_new_rounded, color: AppColors.neonBlue),
-                  onPressed: () => _showBookingDetails(context, b),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (b.status == BookingStatus.pending) ...[
+                      IconButton(
+                        icon: const Icon(Icons.check_circle_rounded, color: AppColors.success),
+                        tooltip: AppStrings.approve,
+                        onPressed: () => context.read<BookingCubit>().approveBooking(b.id),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.cancel_rounded, color: AppColors.danger),
+                        tooltip: AppStrings.reject,
+                        onPressed: () => context.read<BookingCubit>().rejectBooking(b.id),
+                      ),
+                    ],
+                    IconButton(
+                      icon: const Icon(Icons.open_in_new_rounded, color: AppColors.neonBlue),
+                      tooltip: AppStrings.details,
+                      onPressed: () => _showBookingDetails(context, b),
+                    ),
+                  ],
                 ),
               ),
             ],

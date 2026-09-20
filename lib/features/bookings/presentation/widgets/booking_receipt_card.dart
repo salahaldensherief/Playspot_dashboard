@@ -38,52 +38,68 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
       return;
     }
 
-    if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
+    final trimmed = rawPath.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
       if (mounted) {
         setState(() {
-          _signedReceiptUrl = rawPath;
+          _signedReceiptUrl = trimmed;
           _isLoadingUrl = false;
         });
       }
       return;
     }
 
-    String path = rawPath.trim();
-    if (path.startsWith('receipts/')) {
-      path = path.substring(9);
-    } else if (path.startsWith('/receipts/')) {
-      path = path.substring(10);
+    String path = trimmed;
+    while (path.startsWith('/')) {
+      path = path.substring(1);
     }
 
-    try {
-      final url = await Supabase.instance.client.storage
-          .from('receipts')
-          .createSignedUrl(path, 3600);
-      debugPrint('🟢 [RECEIPT_CARD] Generated signed URL successfully: $url');
-      if (mounted) {
-        setState(() {
-          _signedReceiptUrl = url;
-          _isLoadingUrl = false;
-        });
-      }
-    } catch (e1) {
-      debugPrint('⚠️ [RECEIPT_CARD] createSignedUrl failed ($e1), trying getPublicUrl...');
-      try {
-        final pubUrl = Supabase.instance.client.storage
-            .from('receipts')
-            .getPublicUrl(path);
-        debugPrint('🟢 [RECEIPT_CARD] Fallback public URL: $pubUrl');
-        if (mounted) {
-          setState(() {
-            _signedReceiptUrl = pubUrl;
-            _isLoadingUrl = false;
-          });
-        }
-      } catch (e2) {
-        debugPrint('❌ [RECEIPT_CARD] All receipt URL resolution methods failed: $e2');
-        if (mounted) setState(() => _isLoadingUrl = false);
+    final bucketsToTry = ['receipts', 'booking_receipts', 'payment_receipts', 'wallets', 'payouts', 'attachments'];
+
+    String cleanPath = path;
+    for (final b in bucketsToTry) {
+      if (cleanPath.startsWith('$b/')) {
+        cleanPath = cleanPath.substring(b.length + 1);
+        break;
       }
     }
+
+    for (final bucket in bucketsToTry) {
+      try {
+        final url = await Supabase.instance.client.storage
+            .from(bucket)
+            .createSignedUrl(cleanPath, 3600);
+        if (url.isNotEmpty) {
+          debugPrint('🟢 [RECEIPT_CARD] Generated signed URL ($bucket): $url');
+          if (mounted) {
+            setState(() {
+              _signedReceiptUrl = url;
+              _isLoadingUrl = false;
+            });
+          }
+          return;
+        }
+      } catch (_) {}
+
+      try {
+        final pubUrl = Supabase.instance.client.storage
+            .from(bucket)
+            .getPublicUrl(cleanPath);
+        if (pubUrl.isNotEmpty) {
+          debugPrint('🟢 [RECEIPT_CARD] Fallback public URL ($bucket): $pubUrl');
+          if (mounted) {
+            setState(() {
+              _signedReceiptUrl = pubUrl;
+              _isLoadingUrl = false;
+            });
+          }
+          return;
+        }
+      } catch (_) {}
+    }
+
+    debugPrint('❌ [RECEIPT_CARD] Unable to resolve receipt URL for $rawPath');
+    if (mounted) setState(() => _isLoadingUrl = false);
   }
 
   @override

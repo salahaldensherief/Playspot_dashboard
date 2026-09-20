@@ -8,6 +8,8 @@ import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.da
 import 'package:play_spot_dashboard/features/lounges/domain/entities/extra_entity.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/extras_cubit.dart';
 
+import 'package:play_spot_dashboard/core/utils/item_name_resolver.dart';
+
 /// Redesigned Products & Canteen Items Section on Booking Card
 /// Itemizes canteen orders and extras directly on the card so cashiers
 /// can see exact product names (e.g. بيبسي) and quantities without opening dialogs.
@@ -22,91 +24,63 @@ class BookingProductsPreview extends StatelessWidget {
   });
 
   String _resolveItemName(Map itemMap, List<ExtraEntity> availableExtras) {
-    // 1. Direct name field check
-    final candidateName = itemMap['name'] ??
-        itemMap['name_ar'] ??
-        itemMap['extra_name'] ??
-        itemMap['item_name'] ??
-        itemMap['title'] ??
-        itemMap['name_en'] ??
-        itemMap['display_name'];
-
-    if (candidateName != null &&
-        candidateName.toString().trim().isNotEmpty &&
-        candidateName.toString().trim() != 'صنف' &&
-        candidateName.toString().trim() != 'canteen_order') {
-      return candidateName.toString().trim();
-    }
-
-    // 2. Nested extra object check
-    if (itemMap['extra'] is Map) {
-      final nested = itemMap['extra'] as Map;
-      final nestedName = nested['name_ar'] ?? nested['name'] ?? nested['title'] ?? nested['name_en'];
-      if (nestedName != null && nestedName.toString().trim().isNotEmpty) {
-        return nestedName.toString().trim();
-      }
-    }
-
-    // 3. Match extra_id against ExtrasCubit store
-    final extraId = (itemMap['extra_id'] ?? itemMap['id'])?.toString();
-    if (extraId != null && extraId.isNotEmpty) {
-      try {
-        final matched = availableExtras.firstWhere((e) => e.id == extraId);
-        final matchedName = matched.nameAr.isNotEmpty ? matched.nameAr : (matched.name.isNotEmpty ? matched.name : matched.nameEn);
-        if (matchedName.isNotEmpty) return matchedName;
-      } catch (_) {}
-
-      // 4. Match extra_id against booking.extras list
-      for (final ex in booking.extras) {
-        final exId = (ex['id'] ?? ex['extra_id'])?.toString();
-        if (exId == extraId) {
-          final exName = ex['name_ar'] ?? ex['name'] ?? ex['title'];
-          if (exName != null && exName.toString().trim().isNotEmpty) {
-            return exName.toString().trim();
-          }
-        }
-      }
-    }
-
-    return 'صنف كافيتريا';
+    return resolveItemName(Map<String, dynamic>.from(itemMap), availableExtras);
   }
 
   List<Map<String, dynamic>> _extractAllOrderedItems(List<ExtraEntity> availableExtras) {
     final List<Map<String, dynamic>> items = [];
 
-    // 1. Extract from extras
     for (final extra in booking.extras) {
       final name = _resolveItemName(extra, availableExtras);
       final qty = (extra['quantity'] ?? extra['qty'] ?? extra['count'] as num?)?.toInt() ?? 1;
-      final price = (extra['price'] ?? extra['unit_price'] as num?)?.toDouble() ?? 0.0;
+      final unitPrice = (extra['unit_price'] ?? extra['price'] as num?)?.toDouble() ?? 0.0;
+      final totalPrice = (extra['total_price'] as num?)?.toDouble() ?? (unitPrice * qty);
       items.add({
         'name': name,
         'qty': qty,
-        'price': price,
+        'unit_price': unitPrice,
+        'price': unitPrice,
+        'total_price': totalPrice,
         'type': 'extra',
       });
     }
 
-    // 2. Extract from canteenOrders
     for (final order in booking.canteenOrders) {
-      dynamic rawItems = order['items'];
-      if (rawItems is String && rawItems.trim().isNotEmpty) {
-        try {
-          rawItems = jsonDecode(rawItems);
-        } catch (_) {}
-      }
-      if (rawItems is List) {
-        for (final item in rawItems) {
-          if (item is Map) {
-            final name = _resolveItemName(item, availableExtras);
-            final qty = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
-            final price = (item['price'] ?? item['unit_price'] as num?)?.toDouble() ?? 0.0;
-            items.add({
-              'name': name,
-              'qty': qty,
-              'price': price,
-              'type': 'canteen',
-            });
+      final List<dynamic> sourceLists = [
+        order['items'],
+        order['canteen_order_items'],
+        order['canteen_items'],
+      ];
+
+      for (var rawItems in sourceLists) {
+        if (rawItems is String && rawItems.trim().isNotEmpty) {
+          try {
+            rawItems = jsonDecode(rawItems);
+          } catch (_) {}
+        }
+        if (rawItems is List) {
+          for (final item in rawItems) {
+            if (item is Map) {
+              final name = _resolveItemName(item, availableExtras);
+              final qty = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
+              final unitPrice = (item['unit_price'] ?? item['price'] as num?)?.toDouble() ?? 0.0;
+              final totalPrice = (item['total_price'] as num?)?.toDouble() ?? (unitPrice * qty);
+              
+              final alreadyExists = items.any((existing) => 
+                existing['name'].toString().toLowerCase() == name.toLowerCase() && 
+                existing['qty'] == qty
+              );
+              if (!alreadyExists) {
+                items.add({
+                  'name': name,
+                  'qty': qty,
+                  'unit_price': unitPrice,
+                  'price': unitPrice,
+                  'total_price': totalPrice,
+                  'type': 'canteen',
+                });
+              }
+            }
           }
         }
       }
@@ -132,6 +106,13 @@ class BookingProductsPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final extrasCubit = context.watch<ExtrasCubit?>();
+    if (extrasCubit != null && extrasCubit.state.extras.isEmpty && booking.loungeId.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          extrasCubit.loadExtras(booking.loungeId);
+        }
+      });
+    }
     final List<ExtraEntity> availableExtras = extrasCubit?.state.extras ?? [];
 
     final allItems = _extractAllOrderedItems(availableExtras);

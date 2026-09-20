@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import '../../domain/entities/client_request_entity.dart';
 import '../../domain/entities/notification_metadata.dart';
 
@@ -170,8 +169,6 @@ class ClientRequestModel extends ClientRequestEntity {
   }
 
   factory ClientRequestModel.fromCanteenOrderJson(Map<String, dynamic> json) {
-    debugPrint('📦 [CLIENT_REQUEST_MODEL] Parsing canteen order JSON keys: ${json.keys.toList()}');
-    debugPrint('📦 [CLIENT_REQUEST_MODEL] Raw JSON: $json');
 
     double parseDouble(dynamic val) {
       if (val == null) return 0.0;
@@ -187,14 +184,48 @@ class ClientRequestModel extends ClientRequestEntity {
       void processItem(Map<String, dynamic> itemMap) {
         final extraObj = itemMap['extras'] ?? itemMap['canteen_items'] ?? itemMap['extra'] ?? itemMap['item'];
         if (extraObj is Map) {
-          itemMap['name'] = extraObj['name'] ?? extraObj['name_ar'] ?? extraObj['name_en'] ?? itemMap['name'];
-          itemMap['name_ar'] = extraObj['name_ar'] ?? extraObj['name'] ?? itemMap['name_ar'];
-          itemMap['price'] = extraObj['price'] ?? itemMap['unit_price'] ?? itemMap['price'];
+          final String? nestedNameAr = extraObj['name_ar']?.toString().trim();
+          final String? nestedNameEn = extraObj['name_en']?.toString().trim();
+          final String? nestedNameDefault = extraObj['name']?.toString().trim();
+          final String? nestedTitle = extraObj['title']?.toString().trim();
+          final String resolvedNested = (nestedNameAr != null && nestedNameAr.isNotEmpty)
+              ? nestedNameAr
+              : ((nestedNameEn != null && nestedNameEn.isNotEmpty)
+                  ? nestedNameEn
+                  : ((nestedNameDefault != null && nestedNameDefault.isNotEmpty)
+                      ? nestedNameDefault
+                      : (nestedTitle ?? '')));
+
+          if (resolvedNested.isNotEmpty) {
+            itemMap['name'] = resolvedNested;
+            itemMap['name_ar'] = nestedNameAr ?? resolvedNested;
+            itemMap['name_en'] = nestedNameEn ?? resolvedNested;
+          }
+          itemMap['price'] = extraObj['price'] ?? extraObj['unit_price'] ?? itemMap['price'] ?? itemMap['unit_price'];
         }
 
-        itemMap['name'] = itemMap['name'] ?? itemMap['name_ar'] ?? itemMap['name_en'] ?? itemMap['item_name'] ?? itemMap['title'] ?? itemMap['extra_name'] ?? 'Extra Item';
+        final String? nameAr = itemMap['name_ar']?.toString().trim();
+        final String? nameEn = itemMap['name_en']?.toString().trim();
+        final String? nameDefault = itemMap['name']?.toString().trim();
+        final String? rawTitle = (itemMap['extra_name'] ?? itemMap['item_name'] ?? itemMap['title'])?.toString().trim();
+
+        final resolvedName = (nameAr != null && nameAr.isNotEmpty && nameAr != 'null')
+            ? nameAr
+            : ((nameEn != null && nameEn.isNotEmpty && nameEn != 'null')
+                ? nameEn
+                : ((nameDefault != null && nameDefault.isNotEmpty && nameDefault != 'null' && nameDefault != 'Extra Item')
+                    ? nameDefault
+                    : ((rawTitle != null && rawTitle.isNotEmpty && rawTitle != 'null') ? rawTitle : 'صنف')));
+
+        itemMap['name'] = resolvedName;
+        itemMap['name_ar'] = (nameAr != null && nameAr.isNotEmpty) ? nameAr : resolvedName;
+        itemMap['name_en'] = (nameEn != null && nameEn.isNotEmpty) ? nameEn : resolvedName;
+
         itemMap['quantity'] = itemMap['quantity'] ?? itemMap['qty'] ?? itemMap['count'] ?? 1;
         itemMap['price'] = itemMap['price'] ?? itemMap['unit_price'] ?? itemMap['unitPrice'] ?? 0.0;
+        itemMap['unit_price'] = itemMap['unit_price'] ?? itemMap['price'] ?? 0.0;
+        itemMap['total_price'] = itemMap['total_price'] ?? ((itemMap['quantity'] as int) * (itemMap['price'] as double));
+        itemMap['extra_id'] = (itemMap['extra_id'] ?? itemMap['product_id'] ?? itemMap['id'])?.toString();
 
         targetList.add(itemMap);
       }
@@ -256,8 +287,8 @@ class ClientRequestModel extends ClientRequestEntity {
         _parseBool(json['attended']);
 
     final bookingObj = _parseMap(json['bookings']);
-    final roomName = (json['room_name'] ?? json['roomName'] ?? json['room'] ?? bookingObj?['room_name'] ?? metadataObj.roomName ?? 'Gaming Station').toString();
-    final userName = (json['user_name'] ?? json['userName'] ?? json['user'] ?? json['full_name'] ?? bookingObj?['user_name'] ?? metadataObj.userName ?? 'Client').toString();
+    final String roomName = (json['room_name'] ?? json['roomName'] ?? json['room'] ?? bookingObj?['room_name'] ?? metadataObj.roomName ?? '').toString();
+    final String userName = (json['user_name'] ?? json['userName'] ?? json['user'] ?? json['full_name'] ?? bookingObj?['user_name'] ?? metadataObj.userName ?? '').toString();
     final userPhone = (json['user_phone'] ?? json['userPhone'] ?? json['phone'] ?? bookingObj?['user_phone'] ?? metadataObj.userPhone ?? '').toString();
     final userAvatarUrl = (json['user_avatar'] ?? json['user_avatar_url'] ?? json['avatar_url'] ?? bookingObj?['avatar_url'] ?? metadataObj.userAvatar)?.toString();
 
@@ -304,8 +335,8 @@ class ClientRequestModel extends ClientRequestEntity {
       30,
     );
     final int currentDuration = _parseInt(json['duration_minutes'], 60);
-    final String roomName = (json['room_name'] ?? json['roomName'] ?? json['room'] ?? 'Station').toString();
-    final String userName = (json['user_name'] ?? json['userName'] ?? json['user'] ?? json['full_name'] ?? 'Client').toString();
+    final String roomName = (json['room_name'] ?? json['roomName'] ?? json['room'] ?? '').toString();
+    final String userName = (json['user_name'] ?? json['userName'] ?? json['user'] ?? json['full_name'] ?? '').toString();
     final String? userAvatarUrl = (json['user_avatar'] ?? json['user_avatar_url'] ?? json['avatar_url'])?.toString();
     final String extStatus = (json['extension_status'] ?? 'pending').toString().toLowerCase();
     final bool isAttended = extStatus != 'pending';
@@ -441,11 +472,11 @@ class ClientRequestModel extends ClientRequestEntity {
 
   factory ClientRequestModel.fromBookingItemJson(Map<String, dynamic> json) {
     final bookingObj = _parseMap(json['bookings']);
-    final String name = (json['name'] ?? json['title'] ?? json['item_name'] ?? 'Canteen Item').toString();
+    final String name = (json['name'] ?? json['title'] ?? json['item_name'] ?? '').toString();
     final double price = (json['price'] ?? json['unit_price'] as num?)?.toDouble() ?? 0.0;
     final int qty = (json['quantity'] ?? json['qty'] ?? json['count'] as num?)?.toInt() ?? 1;
-    final String roomName = (bookingObj?['room_name'] ?? json['room_name'] ?? json['roomName'] ?? json['room'] ?? 'Gaming Station').toString();
-    final String userName = (bookingObj?['user_name'] ?? json['user_name'] ?? json['userName'] ?? json['user'] ?? 'Client').toString();
+    final String roomName = (bookingObj?['room_name'] ?? json['room_name'] ?? json['roomName'] ?? json['room'] ?? '').toString();
+    final String userName = (bookingObj?['user_name'] ?? json['user_name'] ?? json['userName'] ?? json['user'] ?? '').toString();
     final String userPhone = (bookingObj?['user_phone'] ?? json['user_phone'] ?? json['userPhone'] ?? json['phone'] ?? '').toString();
     final String? userAvatarUrl = (bookingObj?['avatar_url'] ?? bookingObj?['user_avatar'] ?? json['user_avatar'] ?? json['user_avatar_url'] ?? json['avatar_url'])?.toString();
 

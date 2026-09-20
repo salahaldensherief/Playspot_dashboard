@@ -130,6 +130,8 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
         },
       );
 
+      if (!mounted) return;
+
       final finalDateTime = DateTime(
         pickedDate.year,
         pickedDate.month,

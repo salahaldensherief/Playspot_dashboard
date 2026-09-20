@@ -26,6 +26,16 @@ abstract class LoungeRepository {
     String? titleAr,
     String? titleEn,
     DateTime? expiresAt,
+    String? vodafoneCashNumber,
+    String? instapayAccount,
+  });
+  Future<Either<Failure, void>> updateLoungePolicies({
+    required String loungeId,
+    required bool allowCashPayment,
+    required bool requirePrepaidFirstTime,
+    required int cashGracePeriodMinutes,
+    String? vodafoneCashNumber,
+    String? instapayAccount,
   });
   Future<Either<Failure, void>> updateLoungeLocation(String loungeId, double lat, double lng);
   Future<Either<Failure, void>> deleteLounge(String id);

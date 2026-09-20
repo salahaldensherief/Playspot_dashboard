@@ -464,6 +464,7 @@ class RequestCard extends StatelessWidget {
             CanteenItemsDetailsBox(
               items: request.canteenItems,
               totalPrice: request.totalPrice,
+              note: request.metadata.notes,
             ),
           ],
 
@@ -807,11 +808,13 @@ class ExtensionDetailsRow extends StatelessWidget {
 class CanteenItemsDetailsBox extends StatelessWidget {
   final List<Map<String, dynamic>> items;
   final double? totalPrice;
+  final String? note;
 
   const CanteenItemsDetailsBox({
     super.key,
     required this.items,
     this.totalPrice,
+    this.note,
   });
 
   @override
@@ -839,6 +842,30 @@ class CanteenItemsDetailsBox extends StatelessWidget {
               ),
             ],
           ),
+          if (note != null && note!.trim().isNotEmpty) ...[
+            SizedBox(height: 6.h),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4.r),
+                border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.note_alt_rounded, size: 12.r, color: AppColors.warning),
+                  SizedBox(width: 4.w),
+                  Expanded(
+                    child: AppText.body(
+                      'ملاحظة: $note',
+                      fontSize: 10.sp,
+                      color: AppColors.warning,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           SizedBox(height: 8.h),
           ...items.map((item) {
             final name = item['name_ar'] ?? item['name'] ?? item['name_en'] ?? item['item_name'] ?? 'صنف';

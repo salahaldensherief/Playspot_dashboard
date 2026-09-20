@@ -114,7 +114,50 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
     String? loungeId,
   ) async {
     try {
-      var query = supabaseClient.from('bookings').select('*, profiles(full_name, phone, email), rooms(name, name_en)');
+      if (loungeId != null && loungeId.isNotEmpty) {
+        try {
+          final rpcResponse = await supabaseClient.rpc(
+            'get_live_bookings_with_items',
+            params: {'p_lounge_id': loungeId},
+          );
+          if (rpcResponse != null && rpcResponse is List) {
+            final list = rpcResponse
+                .map((json) => BookingModel.fromJson(Map<String, dynamic>.from(json)))
+                .toList();
+            if (!controller.isClosed) {
+              controller.add(list);
+              return;
+            }
+          }
+        } catch (rpcErr) {
+          debugPrint('⚠️ [DASHBOARD_DATA_SOURCE] get_live_bookings_with_items RPC error ($rpcErr), falling back to query');
+        }
+      }
+
+      var query = supabaseClient.from('bookings').select('''
+        *,
+        canteen_orders (
+          id,
+          items,
+          total_price,
+          note,
+          status,
+          created_at,
+          canteen_order_items (
+            id,
+            quantity,
+            price,
+            unit_price,
+            total_price,
+            extra_id,
+            extras (id, name, name_ar, name_en, price, unit_price)
+          )
+        ),
+        booking_items(id, name, quantity, price, total_price, status),
+        profiles(full_name, phone, email),
+        rooms(name, name_en, controllers_count, screen_size),
+        lounges(name, location, location_point)
+      ''');
       if (loungeId != null && loungeId.isNotEmpty) {
         query = query.eq('lounge_id', loungeId);
       }

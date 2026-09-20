@@ -12,6 +12,9 @@ import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
 import 'booking_receipt_card.dart';
 import 'swap_room_dialog.dart';
+import 'package:play_spot_dashboard/core/di/di.dart';
+import 'package:play_spot_dashboard/features/users/presentation/cubit/moderation_cubit.dart';
+import 'package:play_spot_dashboard/features/users/presentation/widgets/report_user_ban_dialog.dart';
 
 class BookingDetailsDialog extends StatefulWidget {
   final Booking booking;
@@ -262,24 +265,69 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
               ],
             ),
           ),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(20.r),
-              border: Border.all(color: AppColors.borderDefault),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.person_pin_circle_outlined, size: 14.r, color: AppColors.neonPurple),
-                SizedBox(width: 4.w),
+          IconButton(
+            icon: const Icon(Icons.report_problem_outlined, color: AppColors.danger, size: 20),
+            tooltip: 'إبلاغ وطلب حظر العميل',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (_) => BlocProvider(
+                  create: (_) => sl<ModerationCubit>(),
+                  child: ReportUserBanDialog(
+                    loungeId: booking.loungeId,
+                    userId: booking.userId,
+                    bookingId: booking.id,
+                    userName: booking.userName,
+                  ),
+                ),
+              );
+            },
+          ),
+          SizedBox(width: 8.w),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: booking.isFirstBooking
+                      ? AppColors.warning.withValues(alpha: 0.15)
+                      : AppColors.cardBackground,
+                  borderRadius: BorderRadius.circular(20.r),
+                  border: Border.all(
+                    color: booking.isFirstBooking
+                        ? AppColors.warning.withValues(alpha: 0.5)
+                        : AppColors.borderDefault,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      booking.isFirstBooking ? Icons.star_rounded : Icons.person_pin_circle_outlined,
+                      size: 14.r,
+                      color: booking.isFirstBooking ? AppColors.warning : AppColors.neonPurple,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      booking.isFirstBooking ? AppStrings.firstBookingBadge : AppStrings.returningCustomerBadge,
+                      style: TextStyle(
+                        color: booking.isFirstBooking ? AppColors.warning : AppColors.textPrimary,
+                        fontSize: 11.sp,
+                        fontWeight: booking.isFirstBooking ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (booking.senderWalletPhone != null && booking.senderWalletPhone!.isNotEmpty) ...[
+                SizedBox(height: 4.h),
                 Text(
-                  'عميل مسجل',
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 11.sp),
+                  AppStrings.senderWalletLabel(booking.senderWalletPhone!),
+                  style: TextStyle(color: AppColors.neonBlue, fontSize: 11.sp, fontWeight: FontWeight.w600),
                 ),
               ],
-            ),
+            ],
           ),
         ],
       ),
@@ -320,10 +368,95 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
             children: [
               _buildBadgeItem(Icons.group_outlined, 'الضيوف: 1'),
               _buildBadgeItem(Icons.sports_esports_outlined, booking.loungeName.isNotEmpty ? booking.loungeName : 'الفرع الرئيسي'),
-              if (booking.paymentMethod != null)
-                _buildBadgeItem(Icons.payment_outlined, booking.paymentMethod!),
+              if (booking.paymentMethod != null && booking.paymentMethod!.isNotEmpty)
+                _buildBadgeItem(
+                  Icons.payment_outlined,
+                  (booking.paymentMethod == 'manual_transfer' || booking.isManualTransfer)
+                      ? 'تحويل يدوي (محفظة)'
+                      : (booking.isCashPayment ? 'دفع كاش' : booking.paymentMethod!),
+                ),
+              if (booking.checkedInAt != null)
+                _buildBadgeItem(Icons.how_to_reg_rounded, AppStrings.checkedInAtLabel('${booking.checkedInAt!.hour.toString().padLeft(2, '0')}:${booking.checkedInAt!.minute.toString().padLeft(2, '0')}')),
             ],
           ),
+          if (booking.receiptUrl != null && booking.receiptUrl!.isNotEmpty) ...[
+            SizedBox(height: 10.h),
+            Row(
+              children: [
+                const Icon(Icons.receipt_long_rounded, color: AppColors.neonBlue, size: 16),
+                SizedBox(width: 6.w),
+                Text(AppStrings.receiptAttachedLabel, style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp, fontWeight: FontWeight.bold)),
+                SizedBox(width: 8.w),
+                InkWell(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => Dialog(
+                        backgroundColor: AppColors.cardBackground,
+                        child: Padding(
+                          padding: EdgeInsets.all(16.r),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(AppStrings.receiptImageTitle, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16.sp)),
+                              SizedBox(height: 12.h),
+                              Image.network(booking.receiptUrl!, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => Text(AppStrings.imageLoadFailed)),
+                              SizedBox(height: 12.h),
+                              AppButton(text: AppStrings.cancel, onPressed: () => Navigator.pop(context)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: AppColors.neonBlue.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6.r),
+                      border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.4)),
+                    ),
+                    child: Text(AppStrings.previewReceiptBtn, style: TextStyle(color: AppColors.neonBlue, fontSize: 11.sp, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (booking.status == BookingStatus.cancelled && booking.cancellationReason != null) ...[
+            SizedBox(height: 10.h),
+            Container(
+              padding: EdgeInsets.all(10.r),
+              decoration: BoxDecoration(
+                color: AppColors.danger.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.cancel_outlined, color: AppColors.danger, size: 18),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          booking.cancellationReason!.contains('auto') || booking.cancellationReason!.contains('تأخير')
+                              ? AppStrings.autoCancelledLabel
+                              : AppStrings.manualCancelledLabel,
+                          style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold, fontSize: 12.sp),
+                        ),
+                        SizedBox(height: 2.h),
+                        Text(
+                          AppStrings.cancellationReasonLabel(booking.cancellationReason!),
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

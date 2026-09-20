@@ -316,49 +316,48 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         .replaceFirst('req_', '')
         .replaceFirst('ext_', '');
 
-    // إذا كان الـ ID مؤقت أو غير صالح للداتا بيز، نتخطى الاتصال بالسيرفر لمنع أخطاء الـ UUID
     if (rawDbId.isEmpty || rawDbId.startsWith('req_')) {
       debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Skipped DB update for local/temporary ID: $id');
       return;
     }
 
     try {
-      final tables = ['booking_items', 'canteen_orders', 'service_calls', 'client_requests', 'bookings', 'notifications'];
-      final idCols = ['id', 'call_id', 'order_id', 'request_id', 'booking_id'];
-      bool success = false;
-
-      for (final table in tables) {
-        for (final col in idCols) {
-          try {
-            Map<String, dynamic> updatePayload;
-            if (table == 'bookings') {
-              updatePayload = {'extension_status': 'approved'};
-            } else if (table == 'canteen_orders') {
-              updatePayload = {'status': 'completed'};
-            } else if (table == 'booking_items') {
-              updatePayload = {'status': 'completed', 'is_attended': true, 'is_read': true};
-            } else if (table == 'notifications') {
-              updatePayload = {'is_read': true};
-            } else {
-              updatePayload = {'status': 'resolved', 'is_attended': true, 'is_read': true};
-            }
-
-            final response = await client
-                .from(table)
-                .update(updatePayload)
-                .eq(col, rawDbId)
-                .select();
-
-            if (response != null && (response as List).isNotEmpty) {
-              debugPrint('🟢 [REQUESTS_DATA_SOURCE] Successfully marked request $id as attended in table $table using column $col');
-              success = true;
-            }
-          } catch (_) {}
-        }
+      // 1. Target specific table directly based on ID prefix
+      if (id.startsWith('ext_')) {
+        await client.from('bookings').update({'extension_status': 'approved'}).eq('id', rawDbId);
+        return;
+      } else if (id.startsWith('canteen_') || isCanteenOrder) {
+        await client.from('canteen_orders').update({'status': 'completed'}).eq('id', rawDbId);
+        return;
+      } else if (id.startsWith('item_')) {
+        await client.from('booking_items').update({'status': 'completed', 'is_attended': true, 'is_read': true}).eq('id', rawDbId);
+        return;
+      } else if (id.startsWith('sc_')) {
+        await client.from('service_calls').update({'status': 'resolved', 'is_attended': true, 'is_read': true}).eq('id', rawDbId);
+        return;
       }
 
-      if (!success) {
-        debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Warning: Request $rawDbId update affected 0 rows across all tables/columns');
+      // 2. Fallback check for general tables
+      final tables = ['service_calls', 'client_requests', 'canteen_orders', 'booking_items', 'bookings'];
+      for (final table in tables) {
+        try {
+          Map<String, dynamic> updatePayload;
+          if (table == 'bookings') {
+            updatePayload = {'extension_status': 'approved'};
+          } else if (table == 'canteen_orders') {
+            updatePayload = {'status': 'completed'};
+          } else if (table == 'booking_items') {
+            updatePayload = {'status': 'completed', 'is_attended': true, 'is_read': true};
+          } else {
+            updatePayload = {'status': 'resolved', 'is_attended': true, 'is_read': true};
+          }
+
+          final response = await client.from(table).update(updatePayload).eq('id', rawDbId).select();
+          if (response != null && (response as List).isNotEmpty) {
+            debugPrint('🟢 [REQUESTS_DATA_SOURCE] Marked request $id as attended in table $table');
+            return;
+          }
+        } catch (_) {}
       }
     } catch (e) {
       debugPrint('⚠️ [REQUESTS_DATA_SOURCE] markRequestAsAttended Error for $id: $e');

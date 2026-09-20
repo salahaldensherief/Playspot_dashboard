@@ -1,7 +1,5 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
@@ -10,10 +8,8 @@ import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:uuid/uuid.dart';
-import '../../../categories/domain/entities/category_entity.dart';
 import '../../../categories/domain/entities/activity_type_entity.dart';
 import '../../../categories/presentation/categories/category_cubit.dart';
-import '../../../categories/presentation/categories/category_state.dart';
 import '../../domain/entities/room_entity.dart';
 import 'room_basic_info_form.dart';
 import 'room_specs_form.dart';

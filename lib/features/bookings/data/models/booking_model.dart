@@ -39,6 +39,10 @@ class BookingModel extends Booking {
     super.paymentMethod,
     super.receiptUrl,
     super.expiresAt,
+    super.isFirstBooking = false,
+    super.senderWalletPhone,
+    super.checkedInAt,
+    super.cancellationReason,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
@@ -58,23 +62,23 @@ class BookingModel extends Booking {
     final roomData = json['rooms'] as Map<String, dynamic>?;
     final loungeData = json['lounges'] as Map<String, dynamic>?;
 
-    final String userName = (
+    final String? rawUserName = (
       json['out_user_name'] ?? 
       json['user_name'] ?? 
       json['userName'] ?? 
       profileData?['full_name'] ?? 
       profileData?['name'] ?? 
-      json['full_name'] ?? 
-      'Client'
-    ).toString();
+      json['full_name']
+    )?.toString().trim();
+    final String userName = (rawUserName != null && rawUserName.isNotEmpty && rawUserName != 'null') ? rawUserName : '';
 
-    final String roomName = (
+    final String? rawRoomName = (
       json['out_room_name'] ?? 
       json['room_name'] ?? 
       roomData?['name_en'] ?? 
-      roomData?['name'] ?? 
-      'Gaming Station'
-    ).toString();
+      roomData?['name']
+    )?.toString().trim();
+    final String roomName = (rawRoomName != null && rawRoomName.isNotEmpty && rawRoomName != 'null') ? rawRoomName : '';
 
     final String? rawPhone = (
       json['out_user_phone'] ?? 
@@ -131,6 +135,13 @@ class BookingModel extends Booking {
         paymentStatus = PaymentStatus.unpaid;
     }
 
+    final String paymentMethodStr = (json['payment_method'] ?? json['out_payment_method'] ?? 'cash').toString().toLowerCase();
+    final bool isCash = paymentMethodStr == 'cash' || paymentMethodStr.isEmpty;
+
+    if (isCash && paymentStatus != PaymentStatus.paid && (status == BookingStatus.upcoming || statusStr == 'upcoming')) {
+      status = BookingStatus.pending;
+    }
+
     final double? addonsPrice = json['addons_price'] != null
         ? parseDouble(json['addons_price'])
         : (json['out_addons_price'] != null ? parseDouble(json['out_addons_price']) : null);
@@ -157,64 +168,43 @@ class BookingModel extends Booking {
     final List<Map<String, dynamic>> parsedExtras = () {
       List<Map<String, dynamic>> itemsList = [];
 
-      // 1. Process canteen_orders if present
-      if (parsedCanteenOrders.isNotEmpty) {
-        for (var order in parsedCanteenOrders) {
-          bool extractedFromOrderItems = false;
+      void addNormalizedItem(Map map) {
+        final String? nameAr = map['name_ar']?.toString().trim();
+        final String? nameEn = map['name_en']?.toString().trim();
+        final String? nameDefault = map['name']?.toString().trim();
+        final String? rawTitle = (map['title'] ?? map['item_name'] ?? map['extra_name'] ?? map['product_name'])?.toString().trim();
 
-          // 1a. Check canteen_order_items table join first (normalized extras table join)
-          dynamic orderItemsJoin = order['canteen_order_items'];
-          if (orderItemsJoin is String && orderItemsJoin.trim().isNotEmpty) {
-            try {
-              orderItemsJoin = jsonDecode(orderItemsJoin);
-            } catch (_) {}
-          }
-          if (orderItemsJoin is List && orderItemsJoin.isNotEmpty) {
-            for (var orderItem in orderItemsJoin) {
-              if (orderItem is Map) {
-                final extraData = orderItem['extras'] is Map ? orderItem['extras'] as Map : {};
-                final nameAr = extraData['name_ar'] ?? extraData['name'] ?? orderItem['name_ar'] ?? orderItem['name'];
-                final nameEn = extraData['name_en'] ?? extraData['name'] ?? orderItem['name_en'] ?? orderItem['name'];
-                final qty = (orderItem['quantity'] ?? orderItem['qty'] as num?)?.toInt() ?? 1;
-                final price = (orderItem['unit_price'] ?? orderItem['price'] ?? extraData['price'] as num?)?.toDouble() ?? 0.0;
+        final resolvedName = (nameAr != null && nameAr.isNotEmpty && nameAr != 'null')
+            ? nameAr
+            : ((nameEn != null && nameEn.isNotEmpty && nameEn != 'null')
+                ? nameEn
+                : ((nameDefault != null && nameDefault.isNotEmpty && nameDefault != 'null' && nameDefault != 'canteen_order')
+                    ? nameDefault
+                    : ((rawTitle != null && rawTitle.isNotEmpty && rawTitle != 'null') ? rawTitle : 'صنف')));
 
-                itemsList.add({
-                  'id': (orderItem['id'] ?? extraData['id'])?.toString(),
-                  'extra_id': (orderItem['extra_id'] ?? extraData['id'])?.toString(),
-                  'name': nameAr ?? nameEn ?? 'صنف',
-                  'name_ar': nameAr ?? 'صنف',
-                  'name_en': nameEn ?? 'Item',
-                  'quantity': qty,
-                  'price': price,
-                  'unit_price': price,
-                  'total_price': price * qty,
-                });
-                extractedFromOrderItems = true;
-              }
-            }
-          }
+        final qty = (map['quantity'] ?? map['qty'] ?? map['count'] as num?)?.toInt() ?? 1;
+        final unitPrice = (map['unit_price'] ?? map['price'] ?? map['item_price'] as num?)?.toDouble() ?? 0.0;
+        final givenTotal = (map['total_price'] ?? map['total'] ?? map['amount'] as num?)?.toDouble();
+        final totalPrice = givenTotal ?? (unitPrice * qty);
 
-          // 1b. Fallback to order['items'] JSON if canteen_order_items is empty
-          if (!extractedFromOrderItems) {
-            dynamic rawItems = order['items'];
-            if (rawItems is String && rawItems.trim().isNotEmpty) {
-              try {
-                rawItems = jsonDecode(rawItems);
-              } catch (_) {}
-            }
-            if (rawItems is List) {
-              for (var it in rawItems) {
-                if (it is Map) {
-                  itemsList.add(Map<String, dynamic>.from(it));
-                }
-              }
-            }
-          }
-        }
+        itemsList.add({
+          'id': (map['id'] ?? map['extra_id'] ?? map['product_id'])?.toString(),
+          'extra_id': (map['extra_id'] ?? map['product_id'] ?? map['id'])?.toString(),
+          'name': resolvedName,
+          'name_ar': (nameAr != null && nameAr.isNotEmpty) ? nameAr : resolvedName,
+          'name_en': (nameEn != null && nameEn.isNotEmpty) ? nameEn : resolvedName,
+          'quantity': qty,
+          'qty': qty,
+          'unit_price': unitPrice,
+          'price': unitPrice,
+          'total_price': totalPrice,
+          'status': map['status']?.toString(),
+          'note': map['note']?.toString(),
+        });
       }
 
-      // 2. Process json['extras'], json['booking_items'], json['canteen_items'], json['items'], json['out_extras']
-      dynamic rawExtras = json['extras'] ?? json['booking_items'] ?? json['canteen_items'] ?? json['items'] ?? json['out_extras'];
+      // 1. Process json['items'], json['booking_items'], json['extras'], json['canteen_items'], json['out_extras']
+      dynamic rawExtras = json['items'] ?? json['booking_items'] ?? json['extras'] ?? json['canteen_items'] ?? json['out_extras'];
       if (rawExtras is String && rawExtras.trim().isNotEmpty) {
         try {
           rawExtras = jsonDecode(rawExtras);
@@ -223,11 +213,37 @@ class BookingModel extends Booking {
       if (rawExtras is List) {
         for (var e in rawExtras) {
           if (e is Map) {
-            itemsList.add(Map<String, dynamic>.from(e));
+            addNormalizedItem(e);
           }
         }
       } else if (rawExtras is Map) {
-        itemsList.add(Map<String, dynamic>.from(rawExtras));
+        addNormalizedItem(rawExtras);
+      }
+
+      // 2. Process canteen_orders if present
+      if (parsedCanteenOrders.isNotEmpty) {
+        for (var order in parsedCanteenOrders) {
+          final List<dynamic> sourceLists = [
+            order['items'],
+            order['canteen_order_items'],
+            order['canteen_items'],
+          ];
+
+          for (var rawItems in sourceLists) {
+            if (rawItems is String && rawItems.trim().isNotEmpty) {
+              try {
+                rawItems = jsonDecode(rawItems);
+              } catch (_) {}
+            }
+            if (rawItems is List) {
+              for (var it in rawItems) {
+                if (it is Map) {
+                  addNormalizedItem(it);
+                }
+              }
+            }
+          }
+        }
       }
 
       return itemsList;
@@ -301,10 +317,53 @@ class BookingModel extends Booking {
         return null;
       }(),
       paymentMethod: (json['payment_method'] ?? json['out_payment_method'])?.toString(),
-      receiptUrl: (json['receipt_url'] ?? json['out_receipt_url'] ?? json['receipt_path'])?.toString(),
+      receiptUrl: () {
+        dynamic val = json['receipt_url'] ??
+            json['out_receipt_url'] ??
+            json['receipt_path'] ??
+            json['out_receipt_path'] ??
+            json['receipt'] ??
+            json['payment_receipt'] ??
+            json['payment_receipt_url'] ??
+            json['payment_proof'] ??
+            json['proof_url'] ??
+            json['proof_image'] ??
+            json['proof_path'] ??
+            json['attachment_url'] ??
+            json['attachment_path'] ??
+            json['receipt_image'] ??
+            json['receipt_image_url'] ??
+            json['wallet_receipt'] ??
+            json['transfer_receipt'];
+
+        if (val == null && json['metadata'] is Map) {
+          val = json['metadata']['receipt_url'] ??
+              json['metadata']['receipt_path'] ??
+              json['metadata']['receipt'] ??
+              json['metadata']['payment_receipt'] ??
+              json['metadata']['proof_url'];
+        }
+
+        if (val == null && json['bookings'] is Map) {
+          val = json['bookings']['receipt_url'] ??
+              json['bookings']['receipt_path'] ??
+              json['bookings']['receipt'] ??
+              json['bookings']['payment_receipt'];
+        }
+
+        if (val != null) {
+          final str = val.toString().trim();
+          if (str.isNotEmpty && str != 'null') return str;
+        }
+        return null;
+      }(),
       expiresAt: json['expires_at'] != null 
           ? DateTime.tryParse(json['expires_at'].toString()) 
           : (json['out_expires_at'] != null ? DateTime.tryParse(json['out_expires_at'].toString()) : null),
+      isFirstBooking: json['is_first_booking'] ?? false,
+      senderWalletPhone: (json['sender_wallet_phone'] ?? json['sender_phone'])?.toString(),
+      checkedInAt: json['checked_in_at'] != null ? DateTime.tryParse(json['checked_in_at'].toString()) : null,
+      cancellationReason: json['cancellation_reason']?.toString(),
     );
   }
 
@@ -335,6 +394,10 @@ class BookingModel extends Booking {
       if (paymentMethod != null) 'payment_method': paymentMethod,
       if (receiptUrl != null) 'receipt_url': receiptUrl,
       if (expiresAt != null) 'expires_at': expiresAt!.toIso8601String(),
+      'is_first_booking': isFirstBooking,
+      if (senderWalletPhone != null) 'sender_wallet_phone': senderWalletPhone,
+      if (checkedInAt != null) 'checked_in_at': checkedInAt!.toIso8601String(),
+      if (cancellationReason != null) 'cancellation_reason': cancellationReason,
     };
   }
 }

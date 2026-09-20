@@ -9,6 +9,7 @@ import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/get_current_user_usecase.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../../lounges/domain/entities/lounge.dart';
 import '../../../lounges/domain/repositories/lounge_repository.dart';
 import '../../../../core/usecases/base_usecase.dart';
 import 'login_state.dart';
@@ -210,6 +211,10 @@ class LoginCubit extends Cubit<LoginState> {
 
   void markLocationCaptured() {
     emit(state.copyWith(locationCaptured: true));
+  }
+
+  void updateUserLounge(Lounge lounge) {
+    emit(state.copyWith(userLounge: lounge));
   }
 
   Future<void> refreshUserLounge(String loungeId, {bool forceRefresh = false}) async {

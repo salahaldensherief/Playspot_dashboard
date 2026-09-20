@@ -54,17 +54,6 @@ class BookingState extends Equatable {
   static bool isBookingInCurrentShiftOrToday(Booking booking, dynamic activeShift, {Lounge? userLounge}) {
     if (booking.status != BookingStatus.completed) return false;
 
-    // RULE 1: If there is an Active Open Shift -> Operational Day defined by the Open Shift
-    if (activeShift != null) {
-      if (booking.shiftId != null && booking.shiftId == activeShift.id) {
-        return true;
-      }
-      final DateTime startTime = activeShift.startTime;
-      return booking.date.isAfter(startTime.subtract(const Duration(minutes: 15))) ||
-          booking.date.isAtSameMomentAs(startTime);
-    }
-
-    // RULE 2: If No Active Shift -> Operational Day based on Lounge Opening Hours / 5:00 AM Threshold
     final now = DateTime.now();
     int thresholdHour = 5;
 
@@ -85,8 +74,24 @@ class BookingState extends Equatable {
     } else {
       operationalDayStart = DateTime(now.year, now.month, now.day, thresholdHour);
     }
+    final DateTime operationalDayEnd = operationalDayStart.add(const Duration(hours: 24));
 
-    return booking.date.isAfter(operationalDayStart) || booking.date.isAtSameMomentAs(operationalDayStart);
+    final bookingTime = booking.startDateTime ?? DateTime(booking.date.year, booking.date.month, booking.date.day);
+
+    // RULE 1: If there is an Active Open Shift -> Operational Day defined by the Open Shift
+    if (activeShift != null) {
+      if (booking.shiftId != null && booking.shiftId == activeShift.id) {
+        return true;
+      }
+      final DateTime startTime = activeShift.startTime;
+      final bool isAfterShiftStart = bookingTime.isAfter(startTime.subtract(const Duration(minutes: 15))) ||
+          bookingTime.isAtSameMomentAs(startTime);
+      return isAfterShiftStart && bookingTime.isBefore(operationalDayEnd);
+    }
+
+    // RULE 2: If No Active Shift -> Operational Day based on 24-hour window from Lounge Threshold
+    return (bookingTime.isAfter(operationalDayStart) || bookingTime.isAtSameMomentAs(operationalDayStart)) &&
+        bookingTime.isBefore(operationalDayEnd);
   }
 
   BookingState copyWith({

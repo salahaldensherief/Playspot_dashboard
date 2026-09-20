@@ -23,6 +23,8 @@ abstract class LoungeRemoteDataSource {
     String? titleAr,
     String? titleEn,
     DateTime? expiresAt,
+    String? vodafoneCashNumber,
+    String? instapayAccount,
   });
   Future<Map<String, dynamic>> getDashboardStats(String? loungeId);
   Future<Map<String, dynamic>> getDashboardOverview();
@@ -335,15 +337,20 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     String? titleAr,
     String? titleEn,
     DateTime? expiresAt,
+    String? vodafoneCashNumber,
+    String? instapayAccount,
   }) async {
     final updateData = <String, dynamic>{
       'has_discount': hasDiscount,
-      'discount_percentage': discountPercentage,
-      'discount_title_ar': titleAr,
-      'discount_title_en': titleEn,
-      'discount_expires_at': expiresAt?.toIso8601String(),
+      'discount_percentage': hasDiscount ? discountPercentage : 0,
+      'discount_title_ar': hasDiscount ? (titleAr ?? '') : '',
+      'discount_title_en': hasDiscount ? (titleEn ?? '') : '',
+      'discount_expires_at': hasDiscount ? expiresAt?.toIso8601String() : null,
+      if (vodafoneCashNumber != null && vodafoneCashNumber.trim().isNotEmpty)
+        'vodafone_cash_number': vodafoneCashNumber.trim(),
+      if (instapayAccount != null && instapayAccount.trim().isNotEmpty)
+        'instapay_account': instapayAccount.trim(),
     };
-    updateData.removeWhere((key, value) => value == null && key.contains('title'));
 
     try {
       await client.from('lounges').update(updateData).eq('id', id);

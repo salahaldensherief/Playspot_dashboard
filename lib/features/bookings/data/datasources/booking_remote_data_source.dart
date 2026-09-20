@@ -247,7 +247,13 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         'p_discount_percentage': discountPercentage ?? 0,
         'p_discount_reason': discountReason,
       });
-      debugPrint('🟢 [DATA_SOURCE] RPC complete_booking_payment succeeded!');
+
+      // Safeguard: Ensure payment confirmation does not prematurely complete the booking and release the room
+      await client.from('bookings').update({
+        'status': 'in_progress',
+      }).eq('id', bookingId).eq('status', 'completed');
+
+      debugPrint('🟢 [DATA_SOURCE] RPC complete_booking_payment succeeded & status safeguarded!');
       return;
     } catch (e1) {
       debugPrint('ℹ️ [DATA_SOURCE] complete_booking_payment failed ($e1), falling back to confirm_cash_payment...');
@@ -259,12 +265,19 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
           'p_discount_percentage': discountPercentage ?? 0,
           'p_discount_reason': discountReason,
         });
-        debugPrint('🟢 [DATA_SOURCE] RPC confirm_cash_payment succeeded!');
+
+        // Safeguard fallback
+        await client.from('bookings').update({
+          'status': 'in_progress',
+        }).eq('id', bookingId).eq('status', 'completed');
+
+        debugPrint('🟢 [DATA_SOURCE] RPC confirm_cash_payment succeeded & status safeguarded!');
         return;
       } catch (e2) {
         debugPrint('⚠️ [DATA_SOURCE] RPC confirm_cash_payment failed ($e2), attempting direct update fallback...');
         final updateData = {
           'payment_status': 'paid',
+          'status': 'in_progress',
           'discount_amount': discountAmount,
           'discount_percentage': discountPercentage,
           'discount_reason': discountReason,

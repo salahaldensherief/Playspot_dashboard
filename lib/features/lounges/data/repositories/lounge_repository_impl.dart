@@ -358,6 +358,11 @@ class LoungeRepositoryImpl implements LoungeRepository {
         'discount_title_ar': lounge.discountTitleAr,
         'discount_title_en': lounge.discountTitleEn,
         'discount_expires_at': lounge.discountExpiresAt?.toIso8601String(),
+        'allow_cash_payment': lounge.allowCashPayment,
+        'require_prepaid_first_time': lounge.requirePrepaidFirstTime,
+        'cash_grace_period_minutes': lounge.cashGracePeriodMinutes,
+        if (lounge.vodafoneCashNumber != null) 'vodafone_cash_number': lounge.vodafoneCashNumber,
+        if (lounge.instapayAccount != null) 'instapay_account': lounge.instapayAccount,
       };
 
       await remoteDataSource.updateLounge(lounge.id, updateMap);
@@ -377,6 +382,8 @@ class LoungeRepositoryImpl implements LoungeRepository {
     String? titleAr,
     String? titleEn,
     DateTime? expiresAt,
+    String? vodafoneCashNumber,
+    String? instapayAccount,
   }) async {
     try {
       await remoteDataSource.updateLoungeDiscount(
@@ -386,7 +393,35 @@ class LoungeRepositoryImpl implements LoungeRepository {
         titleAr: titleAr,
         titleEn: titleEn,
         expiresAt: expiresAt,
+        vodafoneCashNumber: vodafoneCashNumber,
+        instapayAccount: instapayAccount,
       );
+      await localCacheService.remove('cache_lounges_v2');
+      await localCacheService.remove('cache_lounge_$loungeId');
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateLoungePolicies({
+    required String loungeId,
+    required bool allowCashPayment,
+    required bool requirePrepaidFirstTime,
+    required int cashGracePeriodMinutes,
+    String? vodafoneCashNumber,
+    String? instapayAccount,
+  }) async {
+    try {
+      final updateData = <String, dynamic>{
+        'allow_cash_payment': allowCashPayment,
+        'require_prepaid_first_time': requirePrepaidFirstTime,
+        'cash_grace_period_minutes': cashGracePeriodMinutes,
+        if (vodafoneCashNumber != null) 'vodafone_cash_number': vodafoneCashNumber.trim(),
+        if (instapayAccount != null) 'instapay_account': instapayAccount.trim(),
+      };
+      await remoteDataSource.updateLounge(loungeId, updateData);
       await localCacheService.remove('cache_lounges_v2');
       await localCacheService.remove('cache_lounge_$loungeId');
       return const Right(null);

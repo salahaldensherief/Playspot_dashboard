@@ -34,6 +34,11 @@ class LoungeModel extends Lounge {
     super.discountExpiresAt,
     super.vodafoneCashNumber,
     super.instapayAccount,
+    super.allowCashPayment = true,
+    super.requirePrepaidFirstTime = false,
+    super.cashGracePeriodMinutes = 15,
+    super.isActive = true,
+    super.suspensionReason,
   });
 
   factory LoungeModel.fromJson(Map<String, dynamic> json) {
@@ -132,6 +137,11 @@ class LoungeModel extends Lounge {
       discountExpiresAt: json['discount_expires_at'] != null ? DateTime.tryParse(json['discount_expires_at'].toString()) : null,
       vodafoneCashNumber: (json['vodafone_cash_number'] ?? json['vodafone_cash'])?.toString(),
       instapayAccount: (json['instapay_account'] ?? json['instapay'])?.toString(),
+      allowCashPayment: json['allow_cash_payment'] ?? true,
+      requirePrepaidFirstTime: json['require_prepaid_first_time'] ?? false,
+      cashGracePeriodMinutes: parseInt(json['cash_grace_period_minutes']) ?? 15,
+      isActive: json['is_active'] ?? true,
+      suspensionReason: json['suspension_reason']?.toString(),
     );
   }
 
@@ -164,6 +174,11 @@ class LoungeModel extends Lounge {
       if (ownerEmail != null) 'owner_email': ownerEmail,
       if (vodafoneCashNumber != null) 'vodafone_cash_number': vodafoneCashNumber,
       if (instapayAccount != null) 'instapay_account': instapayAccount,
+      'allow_cash_payment': allowCashPayment,
+      'require_prepaid_first_time': requirePrepaidFirstTime,
+      'cash_grace_period_minutes': cashGracePeriodMinutes,
+      'is_active': isActive,
+      if (suspensionReason != null) 'suspension_reason': suspensionReason,
     };
   }
 }

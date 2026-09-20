@@ -175,6 +175,11 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
             lng: _lng,
             vodafoneCashNumber: _vodafoneCashController.text.trim().isEmpty ? null : _vodafoneCashController.text.trim(),
             instapayAccount: _instapayController.text.trim().isEmpty ? null : _instapayController.text.trim(),
+            hasDiscount: _hasDiscount,
+            discountPercentage: _hasDiscount ? (int.tryParse(_discountPercentageController.text) ?? 0) : 0,
+            discountTitleAr: _hasDiscount ? _discountTitleArController.text.trim() : '',
+            discountTitleEn: _hasDiscount ? _discountTitleEnController.text.trim() : '',
+            discountExpiresAt: _hasDiscount ? _discountExpiresAt : null,
           );
 
           await context.read<LoungeCubit>().updateLounge(updatedLounge);
@@ -201,18 +206,44 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     final lounge = context.read<LoginCubit>().state.userLounge;
     if (lounge == null) return;
 
+    final String vodafoneCash = _vodafoneCashController.text.trim();
+    final String instapay = _instapayController.text.trim();
+
+    if (vodafoneCash.isEmpty && instapay.isEmpty && (lounge.vodafoneCashNumber ?? '').isEmpty && (lounge.instapayAccount ?? '').isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.paymentMethodsRequiredError),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isSavingDiscount = true);
     try {
       await context.read<LoungeCubit>().updateLoungeDiscount(
         loungeId: lounge.id,
         hasDiscount: _hasDiscount,
-        discountPercentage: int.tryParse(_discountPercentageController.text) ?? 0,
-        titleAr: _discountTitleArController.text.trim(),
-        titleEn: _discountTitleEnController.text.trim(),
-        expiresAt: _discountExpiresAt,
+        discountPercentage: _hasDiscount ? (int.tryParse(_discountPercentageController.text) ?? 0) : 0,
+        titleAr: _hasDiscount ? _discountTitleArController.text.trim() : '',
+        titleEn: _hasDiscount ? _discountTitleEnController.text.trim() : '',
+        expiresAt: _hasDiscount ? _discountExpiresAt : null,
+        vodafoneCashNumber: vodafoneCash.isNotEmpty ? vodafoneCash : lounge.vodafoneCashNumber,
+        instapayAccount: instapay.isNotEmpty ? instapay : lounge.instapayAccount,
       );
       
       if (mounted) {
+        final updatedLoungeInState = lounge.copyWith(
+          hasDiscount: _hasDiscount,
+          discountPercentage: _hasDiscount ? (int.tryParse(_discountPercentageController.text) ?? 0) : 0,
+          discountTitleAr: _hasDiscount ? _discountTitleArController.text.trim() : '',
+          discountTitleEn: _hasDiscount ? _discountTitleEnController.text.trim() : '',
+          discountExpiresAt: _hasDiscount ? _discountExpiresAt : null,
+          vodafoneCashNumber: vodafoneCash.isNotEmpty ? vodafoneCash : lounge.vodafoneCashNumber,
+          instapayAccount: instapay.isNotEmpty ? instapay : lounge.instapayAccount,
+        );
+        context.read<LoginCubit>().updateUserLounge(updatedLoungeInState);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppStrings.discountUpdatedSuccess), backgroundColor: Colors.green),
         );
@@ -360,7 +391,13 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
                   SizedBox(height: 56.h),
                   QuickDiscountSection(
                     hasDiscount: _hasDiscount,
-                    onHasDiscountChanged: (v) => setState(() => _hasDiscount = v),
+                    onHasDiscountChanged: (v) => setState(() {
+                      _hasDiscount = v;
+                      if (!v) {
+                        _discountExpiresAt = null;
+                        _discountExpirationController.clear();
+                      }
+                    }),
                     percentageController: _discountPercentageController,
                     titleArController: _discountTitleArController,
                     titleEnController: _discountTitleEnController,

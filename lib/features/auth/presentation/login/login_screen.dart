@@ -207,20 +207,4 @@ class _LoginScreenState extends State<LoginScreen> {
       },
     );
   }
-
-  Widget _buildDemoRow(String label, String value, Color valueColor) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
-        ),
-        Text(
-          value,
-          style: TextStyle(color: valueColor, fontSize: 12.sp, fontWeight: FontWeight.w500),
-        ),
-      ],
-    );
-  }
 }

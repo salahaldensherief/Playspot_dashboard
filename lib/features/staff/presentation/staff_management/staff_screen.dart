@@ -261,7 +261,9 @@ class _StaffScreenState extends State<StaffScreen> {
       confirmColor: AppColors.danger,
     );
 
-    if (confirmed == true && context.mounted) {
+    if (!mounted) return;
+
+    if (confirmed == true) {
       context.read<StaffCubit>().deleteStaff(staff.id, loungeId);
     }
   }

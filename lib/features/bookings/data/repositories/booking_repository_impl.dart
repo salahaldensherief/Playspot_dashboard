@@ -68,12 +68,9 @@ class BookingRepositoryImpl implements BookingRepository {
       await remoteDataSource.updateBookingStatus(id, status.toDbString());
       return const Right(null);
     } on PostgrestException catch (e) {
-      if (e.code == '23P01' || e.message.contains('bookings_room_booking_period_excl') || e.message.contains('exclusion')) {
-        return const Left(ServerFailure('الوقت المحدد تم حجزه بالفعل، يرجى اختيار وقت آخر'));
-      }
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(_mapBookingErrorMessage(e.message)));
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
     }
   }
 
@@ -83,7 +80,7 @@ class BookingRepositoryImpl implements BookingRepository {
       await remoteDataSource.approveBooking(id);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
     }
   }
 
@@ -105,7 +102,7 @@ class BookingRepositoryImpl implements BookingRepository {
       );
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
     }
   }
 
@@ -137,16 +134,15 @@ class BookingRepositoryImpl implements BookingRepository {
         lat: booking.lat,
         lng: booking.lng,
         shiftId: booking.shiftId,
+        paymentMethod: booking.paymentMethod,
+        senderWalletPhone: booking.senderWalletPhone,
       );
       await remoteDataSource.createBooking(model);
       return const Right(null);
     } on PostgrestException catch (e) {
-      if (e.code == '23P01' || e.message.contains('bookings_room_booking_period_excl') || e.message.contains('exclusion')) {
-        return const Left(ServerFailure('الوقت المحدد تم حجزه بالفعل، يرجى اختيار وقت آخر'));
-      }
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(_mapBookingErrorMessage(e.message)));
     } catch (e) {
-      return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
     }
   }
 
@@ -156,7 +152,7 @@ class BookingRepositoryImpl implements BookingRepository {
       final res = await remoteDataSource.validateVoucherByCode(voucherCode);
       return Right(res);
     } catch (e) {
-      return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
     }
   }
 
@@ -166,7 +162,7 @@ class BookingRepositoryImpl implements BookingRepository {
       await remoteDataSource.consumeVoucherByCode(voucherCode, bookingId);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
     }
   }
 
@@ -176,12 +172,9 @@ class BookingRepositoryImpl implements BookingRepository {
       await remoteDataSource.swapRoom(bookingId, newRoomId, actionBy);
       return const Right(null);
     } on PostgrestException catch (e) {
-      if (e.code == '23P01' || e.message.contains('bookings_room_booking_period_excl') || e.message.contains('exclusion')) {
-        return const Left(ServerFailure('الغرفة الجديدة محجوزة في هذا الوقت، يرجى اختيار غرفة أخرى'));
-      }
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(_mapBookingErrorMessage(e.message)));
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
     }
   }
 
@@ -191,9 +184,9 @@ class BookingRepositoryImpl implements BookingRepository {
       await remoteDataSource.startBookingSession(bookingId);
       return const Right(null);
     } on PostgrestException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(_mapBookingErrorMessage(e.message)));
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
     }
   }
 
@@ -203,7 +196,24 @@ class BookingRepositoryImpl implements BookingRepository {
       await remoteDataSource.autoCancelExpiredBookings();
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
     }
+  }
+
+  String _mapBookingErrorMessage(String message) {
+    final clean = message.toLowerCase();
+    if (clean.contains('cash payment is disabled') || clean.contains('cash is disabled')) {
+      return 'الدفع الكاش غير متاح في هذه الصالة.';
+    }
+    if (clean.contains('first booking must use') || clean.contains('first_booking') || clean.contains('first booking')) {
+      return 'أول حجز يجب تأكيده بتحويل مسبق.';
+    }
+    if (clean.contains('sender_wallet_phone is required') || clean.contains('sender_wallet_phone')) {
+      return 'يجب إدخال رقم المحفظة الذي تم التحويل منه.';
+    }
+    if (clean.contains('23p01') || clean.contains('bookings_room_booking_period_excl') || clean.contains('exclusion')) {
+      return 'الوقت المحدد تم حجزه بالفعل، يرجى اختيار وقت آخر.';
+    }
+    return message.replaceFirst('Exception: ', '');
   }
 }

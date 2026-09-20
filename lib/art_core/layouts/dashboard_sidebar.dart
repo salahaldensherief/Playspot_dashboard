@@ -202,31 +202,31 @@ class DashboardSidebar extends StatelessWidget {
       ),
       _SidebarItem(
         icon: Icons.contact_support_outlined,
-        label: 'إعدادات التواصل والدفع',
+        label: AppStrings.supportAndPaymentSettings,
         isActive: activeRoute == RouterKeys.superAdminSupportSettings,
         onTap: () => context.go(RouterKeys.superAdminSupportSettings),
       ),
       _SidebarItem(
         icon: Icons.gavel_outlined,
-        label: 'إدارة الشروط والسياسات',
+        label: AppStrings.policiesManagement,
         isActive: activeRoute == RouterKeys.superAdminPolicies,
         onTap: () => context.go(RouterKeys.superAdminPolicies),
       ),
       _SidebarItem(
         icon: Icons.quiz_outlined,
-        label: 'الأسئلة الشائعة (FAQ)',
+        label: AppStrings.faqsTitle,
         isActive: activeRoute == RouterKeys.superAdminFaqs,
         onTap: () => context.go(RouterKeys.superAdminFaqs),
       ),
       _SidebarItem(
         icon: Icons.confirmation_number_outlined,
-        label: 'شكاوى وتذاكر الدعم',
+        label: AppStrings.supportTickets,
         isActive: activeRoute == RouterKeys.superAdminTickets,
         onTap: () => context.go(RouterKeys.superAdminTickets),
       ),
       _SidebarItem(
         icon: Icons.settings_suggest_outlined,
-        label: 'إدارة النظام والإعلانات',
+        label: AppStrings.systemAndAnnouncements,
         isActive: activeRoute == RouterKeys.superAdminSystemSettings,
         onTap: () => context.go(RouterKeys.superAdminSystemSettings),
       ),
@@ -342,7 +342,7 @@ class DashboardSidebar extends StatelessWidget {
 
       _SidebarItem(
         icon: Icons.headset_mic_outlined,
-        label: 'الدعم والمساعدة',
+        label: AppStrings.supportAndHelp,
         isActive: activeRoute == RouterKeys.loungeAdminSupport,
         onTap: () => context.go(RouterKeys.loungeAdminSupport),
       ),

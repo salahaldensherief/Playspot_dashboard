@@ -46,6 +46,53 @@ extension BookingStatusX on BookingStatus {
 
 enum PaymentStatus { unpaid, paid, refunded }
 
+enum PaymentMethod { cash, wallet, manualTransfer, card, online, other }
+
+extension PaymentMethodX on PaymentMethod {
+  String toDbString() {
+    switch (this) {
+      case PaymentMethod.cash:
+        return 'cash';
+      case PaymentMethod.wallet:
+        return 'wallet';
+      case PaymentMethod.manualTransfer:
+        return 'manual_transfer';
+      case PaymentMethod.card:
+        return 'card';
+      case PaymentMethod.online:
+        return 'online';
+      case PaymentMethod.other:
+        return 'other';
+    }
+  }
+
+  static PaymentMethod fromString(String? pm) {
+    if (pm == null) return PaymentMethod.cash;
+    final clean = pm.trim().toLowerCase();
+    switch (clean) {
+      case 'cash':
+        return PaymentMethod.cash;
+      case 'wallet':
+        return PaymentMethod.wallet;
+      case 'manual_transfer':
+      case 'manual':
+      case 'instapay':
+      case 'vodafone_cash':
+        return PaymentMethod.manualTransfer;
+      case 'card':
+      case 'credit_card':
+      case 'visa':
+        return PaymentMethod.card;
+      case 'online':
+      case 'fawry':
+      case 'paymob':
+        return PaymentMethod.online;
+      default:
+        return PaymentMethod.other;
+    }
+  }
+}
+
 class Booking extends Equatable {
   final String id;
   final String userId;
@@ -83,6 +130,10 @@ class Booking extends Equatable {
   final String? paymentMethod;
   final String? receiptUrl;
   final DateTime? expiresAt;
+  final bool isFirstBooking;
+  final String? senderWalletPhone;
+  final DateTime? checkedInAt;
+  final String? cancellationReason;
 
   const Booking({
     required this.id,
@@ -121,6 +172,10 @@ class Booking extends Equatable {
     this.paymentMethod,
     this.receiptUrl,
     this.expiresAt,
+    this.isFirstBooking = false,
+    this.senderWalletPhone,
+    this.checkedInAt,
+    this.cancellationReason,
   });
 
   bool get isOpenEnded => durationMinutes <= 0;
@@ -163,6 +218,10 @@ class Booking extends Equatable {
         paymentMethod,
         receiptUrl,
         expiresAt,
+        isFirstBooking,
+        senderWalletPhone,
+        checkedInAt,
+        cancellationReason,
       ];
 
   Booking copyWith({
@@ -202,6 +261,10 @@ class Booking extends Equatable {
     String? paymentMethod,
     String? receiptUrl,
     DateTime? expiresAt,
+    bool? isFirstBooking,
+    String? senderWalletPhone,
+    DateTime? checkedInAt,
+    String? cancellationReason,
   }) {
     return Booking(
       id: id ?? this.id,
@@ -240,7 +303,34 @@ class Booking extends Equatable {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       receiptUrl: receiptUrl ?? this.receiptUrl,
       expiresAt: expiresAt ?? this.expiresAt,
+      isFirstBooking: isFirstBooking ?? this.isFirstBooking,
+      senderWalletPhone: senderWalletPhone ?? this.senderWalletPhone,
+      checkedInAt: checkedInAt ?? this.checkedInAt,
+      cancellationReason: cancellationReason ?? this.cancellationReason,
     );
+  }
+
+  /// Helper to determine if booking is cash or manual transfer
+  bool get isCashPayment {
+    final pm = (paymentMethod ?? 'cash').toLowerCase().trim();
+    return pm == 'cash' || pm.isEmpty;
+  }
+
+  bool get isManualTransfer {
+    final pm = (paymentMethod ?? '').toLowerCase().trim();
+    return pm == 'manual_transfer' || pm == 'manual' || pm == 'wallet' || pm == 'vodafone_cash' || pm == 'instapay';
+  }
+
+  bool get isWalletPayment => isManualTransfer;
+
+  String get displayWalletInfo {
+    if (senderWalletPhone != null && senderWalletPhone!.trim().isNotEmpty) {
+      return senderWalletPhone!.trim();
+    }
+    if (userPhone != null && userPhone!.trim().isNotEmpty) {
+      return userPhone!.trim();
+    }
+    return 'تحويل يدوي';
   }
 
   /// Calculates the exact start [DateTime] combining [date] and [startTime].
@@ -308,14 +398,21 @@ class Booking extends Equatable {
     return status == BookingStatus.inProgress;
   }
 
-  /// Checks if the session has expired beyond an optional grace period (default 5 minutes).
+  /// Checks if the session or cash hold has expired.
+  /// Uses [expiresAt] as SSOT if available, otherwise calculates end time + grace period.
   bool isSessionExpired([DateTime? now, Duration gracePeriod = const Duration(minutes: 5)]) {
     final currentTime = now ?? DateTime.now();
+    if (expiresAt != null) {
+      return currentTime.isAfter(expiresAt!) || currentTime.isAtSameMomentAs(expiresAt!);
+    }
     final end = endDateTime;
     if (end == null) return false;
     final endWithGrace = end.add(gracePeriod);
     return currentTime.isAfter(endWithGrace) || currentTime.isAtSameMomentAs(endWithGrace);
   }
+
+  /// Alias for checking if hold grace period has expired using [expiresAt] SSOT
+  bool get isGraceExpired => isSessionExpired();
 
   /// Helper to get remaining duration based on real-world clock.
   Duration remainingDuration([DateTime? now]) {

@@ -80,18 +80,13 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
     final basePrice = (widget.booking.totalPrice - extrasTotal).clamp(0.0, double.infinity);
     final isPaid = widget.booking.paymentStatus == PaymentStatus.paid;
 
-    double calculatedDiscountAmount = 0.0;
-    if (_discountValue > 0) {
-      calculatedDiscountAmount = widget.isPercentage
-          ? (widget.booking.totalPrice * _discountValue / 100)
-          : _discountValue;
-    } else if ((widget.booking.discountAmount ?? 0) > 0) {
-      calculatedDiscountAmount = widget.booking.discountAmount!;
-    } else if ((widget.booking.voucherDiscount ?? 0) > 0) {
-      calculatedDiscountAmount = widget.booking.voucherDiscount!;
-    }
+    final voucherDiscount = widget.booking.voucherDiscount ?? 0.0;
+    final manualDiscount = (_discountValue > 0)
+        ? (widget.isPercentage ? (widget.booking.totalPrice * _discountValue / 100) : _discountValue)
+        : (widget.booking.discountAmount ?? 0.0);
 
-    final finalPrice = (widget.booking.totalPrice - calculatedDiscountAmount).clamp(0.0, double.infinity);
+    final totalDiscount = voucherDiscount + manualDiscount;
+    final finalPrice = (widget.booking.totalPrice - totalDiscount).clamp(0.0, double.infinity);
 
     return Container(
       padding: EdgeInsets.all(16.r),
@@ -137,11 +132,23 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
                   SizedBox(height: 8.h),
                   _buildPriceRow(AppStrings.additionalItems, '${extrasTotal.toStringAsFixed(2)} ${AppStrings.egp}'),
                 ],
-                if (calculatedDiscountAmount > 0) ...[
+                if (voucherDiscount > 0) ...[
                   SizedBox(height: 8.h),
                   _buildPriceRow(
-                    AppStrings.discount,
-                    '-${calculatedDiscountAmount.toStringAsFixed(2)} ${AppStrings.egp}',
+                    widget.booking.voucherCode != null && widget.booking.voucherCode!.isNotEmpty
+                        ? '${AppStrings.voucherDiscount} (${widget.booking.voucherCode})'
+                        : AppStrings.voucherDiscount,
+                    '-${voucherDiscount.toStringAsFixed(2)} ${AppStrings.egp}',
+                    color: AppColors.success,
+                  ),
+                ],
+                if (manualDiscount > 0) ...[
+                  SizedBox(height: 8.h),
+                  _buildPriceRow(
+                    widget.booking.discountReason != null && widget.booking.discountReason!.isNotEmpty
+                        ? '${AppStrings.discount} (${widget.booking.discountReason})'
+                        : AppStrings.discount,
+                    '-${manualDiscount.toStringAsFixed(2)} ${AppStrings.egp}',
                     color: AppColors.success,
                   ),
                 ],
@@ -174,10 +181,11 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
               ),
               child: Column(
                 children: widget.booking.extras.map((item) {
-                  final qty = (item['quantity'] ?? item['qty'] as num?)?.toInt() ?? 1;
-                  final name = (item['name_ar'] ?? item['name'] ?? item['name_en'] ?? AppStrings.extras).toString();
-                  final unitPrice = (item['price'] ?? item['unit_price'] as num?)?.toDouble() ?? 0.0;
-                  final itemTotal = unitPrice * qty;
+                  final qty = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
+                  final rawName = item['name_ar'] ?? item['name_en'] ?? item['name'] ?? item['title'] ?? item['item_name'];
+                  final name = (rawName != null && rawName.toString().trim().isNotEmpty && rawName.toString().trim() != 'null') ? rawName.toString().trim() : 'صنف';
+                  final unitPrice = (item['unit_price'] ?? item['price'] as num?)?.toDouble() ?? 0.0;
+                  final itemTotal = (item['total_price'] as num?)?.toDouble() ?? (unitPrice * qty);
 
                   return Padding(
                     padding: EdgeInsets.symmetric(vertical: 4.h),
@@ -264,8 +272,10 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
                     ],
                     ...orderItems.map((item) {
                       final quantity = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
-                      final name = (item['name'] ?? item['name_ar'] ?? item['name_en'] ?? item['title'] ?? 'صنف').toString();
-                      final unitPrice = (item['price'] ?? item['unit_price'] as num?)?.toDouble() ?? 0.0;
+                      final rawName = item['name_ar'] ?? item['name_en'] ?? item['name'] ?? item['title'] ?? item['item_name'];
+                      final name = (rawName != null && rawName.toString().trim().isNotEmpty && rawName.toString().trim() != 'null') ? rawName.toString().trim() : 'صنف';
+                      final unitPrice = (item['unit_price'] ?? item['price'] as num?)?.toDouble() ?? 0.0;
+                      final itemTotal = (item['total_price'] as num?)?.toDouble() ?? (unitPrice * quantity);
 
                       return Padding(
                         padding: EdgeInsets.symmetric(vertical: 2.h),
@@ -277,9 +287,9 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
                               fontSize: 12.sp,
                               color: AppColors.textPrimary,
                             ),
-                            if (unitPrice > 0)
+                            if (itemTotal > 0)
                               AppText.body(
-                                '${(quantity * unitPrice).toStringAsFixed(2)} ${AppStrings.egp}',
+                                '${itemTotal.toStringAsFixed(2)} ${AppStrings.egp}',
                                 fontSize: 12.sp,
                                 color: AppColors.textSecondary,
                               ),
@@ -325,7 +335,8 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
               child: Column(
                 children: widget.booking.extras.map((item) {
                   final quantity = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
-                  final name = (item['name'] ?? item['name_ar'] ?? item['name_en'] ?? item['title'] ?? AppStrings.addItem).toString();
+                  final rawName = item['name_ar'] ?? item['name_en'] ?? item['name'] ?? item['title'] ?? item['item_name'];
+                  final name = (rawName != null && rawName.toString().trim().isNotEmpty && rawName.toString().trim() != 'null') ? rawName.toString().trim() : 'صنف';
                   final unitPrice = (item['price'] ?? item['unit_price'] as num?)?.toDouble() ?? 0.0;
                   final totalItemPrice = quantity * unitPrice;
 

@@ -24,6 +24,8 @@ class UserEntity extends Equatable {
   final bool isSetupCompleted;
   final int pointsBalance;
   final int referralCount;
+  final bool isBanned;
+  final String? bannedReason;
 
   const UserEntity({
     required this.id,
@@ -39,6 +41,8 @@ class UserEntity extends Equatable {
     this.isSetupCompleted = false,
     this.pointsBalance = 0,
     this.referralCount = 0,
+    this.isBanned = false,
+    this.bannedReason,
   });
 
   /// Access point for all permission logic
@@ -88,6 +92,8 @@ class UserEntity extends Equatable {
     bool? isSetupCompleted,
     int? pointsBalance,
     int? referralCount,
+    bool? isBanned,
+    String? bannedReason,
   }) {
     return UserEntity(
       id: id ?? this.id,
@@ -103,6 +109,8 @@ class UserEntity extends Equatable {
       isSetupCompleted: isSetupCompleted ?? this.isSetupCompleted,
       pointsBalance: pointsBalance ?? this.pointsBalance,
       referralCount: referralCount ?? this.referralCount,
+      isBanned: isBanned ?? this.isBanned,
+      bannedReason: bannedReason ?? this.bannedReason,
     );
   }
 
@@ -121,5 +129,7 @@ class UserEntity extends Equatable {
         isSetupCompleted,
         pointsBalance,
         referralCount,
+        isBanned,
+        bannedReason,
       ];
 }

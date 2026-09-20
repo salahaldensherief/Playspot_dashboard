@@ -1,3 +1,4 @@
+import 'dart:io' as io;
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -69,56 +70,86 @@ class _PromoDialogState extends State<PromoDialog> {
   }
 
   Future<void> _pickImage() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
-    if (result != null && mounted) {
-      setState(() {
-        _selectedImageBytes = result.files.first.bytes;
-        _selectedImageName = result.files.first.name;
-      });
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+      );
+
+      if (result != null && result.files.isNotEmpty && mounted) {
+        final file = result.files.first;
+        Uint8List? bytes = file.bytes;
+        if (bytes == null && file.path != null && file.path!.isNotEmpty) {
+          try {
+            bytes = await io.File(file.path!).readAsBytes();
+          } catch (_) {}
+        }
+
+        if (bytes != null) {
+          setState(() {
+            _selectedImageBytes = bytes;
+            _selectedImageName = file.name;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('🔴 [PROMO_DIALOG] Error picking image: $e');
     }
   }
 
   Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       if (mounted) setState(() => _isUploading = true);
-      
-      String? imageUrl = _currentImageUrl;
-      if (_selectedImageBytes != null) {
-        imageUrl = await context.read<MarketingCubit>().uploadPromoPoster(
-          _selectedImageBytes!,
-          _selectedImageName!,
-        );
-      }
 
-      if (!mounted) return;
+      try {
+        String? imageUrl = _currentImageUrl;
+        if (_selectedImageBytes != null) {
+          imageUrl = await context.read<MarketingCubit>().uploadPromoPoster(
+            _selectedImageBytes!,
+            _selectedImageName ?? 'promo_poster.png',
+          );
+        }
 
-      final String? formattedDeepLink = (_isRoomSpecific && _selectedRoomId != null && _selectedRoomId!.isNotEmpty)
-          ? '/room/$_selectedRoomId'
-          : (_selectedDeepLink != 'Specific Room' ? _selectedDeepLink : null);
+        if (!mounted) return;
 
-      if (widget.onSave != null) {
-        final updatedPromo = PromoEntity(
-          id: widget.promo.id,
-          titleAr: _titleArController.text,
-          titleEn: _titleEnController.text,
-          tagAr: _selectedTag ?? '',
-          tagEn: _selectedTag ?? '',
-          hexColors: _colorTemplates[_selectedTemplate].map((e) => '#${e.toARGB32().toRadixString(16).substring(2)}').toList(),
-          iconKey: _selectedIcon,
-          deepLink: formattedDeepLink,
-          expiresAt: _expiresAt,
-          tag: _selectedTag,
-          isRoomSpecific: _isRoomSpecific,
-          loungeId: widget.promo.loungeId,
-          roomId: _isRoomSpecific ? _selectedRoomId : null,
-          targetAudience: _targetAudience,
-          imageUrl: imageUrl,
-        );
-        widget.onSave!(updatedPromo);
-      }
+        final String? formattedDeepLink = (_isRoomSpecific && _selectedRoomId != null && _selectedRoomId!.isNotEmpty)
+            ? '/room/$_selectedRoomId'
+            : (_selectedDeepLink != 'Specific Room' ? _selectedDeepLink : null);
 
-      if (mounted) {
-        Navigator.pop(context);
+        if (widget.onSave != null) {
+          final updatedPromo = PromoEntity(
+            id: widget.promo.id,
+            titleAr: _titleArController.text.trim(),
+            titleEn: _titleEnController.text.trim(),
+            tagAr: _selectedTag ?? '',
+            tagEn: _selectedTag ?? '',
+            hexColors: _colorTemplates[_selectedTemplate].map((e) => '#${e.toARGB32().toRadixString(16).substring(2)}').toList(),
+            iconKey: _selectedIcon,
+            deepLink: formattedDeepLink,
+            expiresAt: _expiresAt,
+            tag: _selectedTag,
+            isRoomSpecific: _isRoomSpecific,
+            loungeId: widget.promo.loungeId,
+            roomId: _isRoomSpecific ? _selectedRoomId : null,
+            targetAudience: _targetAudience,
+            imageUrl: imageUrl,
+          );
+          widget.onSave!(updatedPromo);
+        }
+
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        debugPrint('🔴 [PROMO_DIALOG] Error submitting promo: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.danger),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isUploading = false);
       }
     }
   }

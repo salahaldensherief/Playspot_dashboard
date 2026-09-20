@@ -16,6 +16,8 @@ class UserModel extends UserEntity {
     super.isSetupCompleted = false,
     super.pointsBalance = 0,
     super.referralCount = 0,
+    super.isBanned = false,
+    super.bannedReason,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,8 @@ class UserModel extends UserEntity {
       isSetupCompleted: json['is_setup_completed'] ?? json['out_is_setup_completed'] ?? false,
       pointsBalance: (json['points_balance'] ?? json['reward_points'] ?? json['points'] as num?)?.toInt() ?? 0,
       referralCount: (json['referral_count'] ?? json['referrals_count'] ?? json['referrals'] as num?)?.toInt() ?? 0,
+      isBanned: json['is_banned'] ?? json['out_is_banned'] ?? false,
+      bannedReason: json['banned_reason']?.toString(),
     );
   }
 

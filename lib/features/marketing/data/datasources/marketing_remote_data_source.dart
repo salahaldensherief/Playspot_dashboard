@@ -58,26 +58,8 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
 
   @override
   Future<void> createPromotion(PromoModel promo) async {
-    // Try publish_promotion RPC first
-    try {
-      debugPrint('🚀 [MARKETING_REMOTE] Calling publish_promotion RPC for lounge: ${promo.loungeId}');
-      await _supabase.rpc('publish_promotion', params: {
-        'p_expires_at': promo.expiresAt?.toIso8601String(),
-        'p_lounge_id': promo.loungeId,
-        'p_room_id': promo.roomId,
-        'p_tag_ar': promo.tagAr.isNotEmpty ? promo.tagAr : promo.tag,
-        'p_tag_en': promo.tagEn.isNotEmpty ? promo.tagEn : promo.tag,
-        'p_title_ar': promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn,
-        'p_title_en': promo.titleEn.isNotEmpty ? promo.titleEn : promo.titleAr,
-      });
-      debugPrint('🟢 [MARKETING_REMOTE] publish_promotion RPC executed successfully!');
-      return;
-    } catch (e) {
-      debugPrint('⚠️ [MARKETING_REMOTE] publish_promotion RPC error ($e), falling back to direct table insert');
-    }
-
     final promoJson = promo.toJson();
-    final payload = {
+    final payload = <String, dynamic>{
       ...promoJson,
       'title': promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn,
       'tag': promo.tagAr.isNotEmpty ? promo.tagAr : promo.tagEn,
@@ -99,6 +81,25 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
     payload.removeWhere((key, value) => value == null && (key == 'room_id' || key == 'lounge_id'));
 
     await _supabase.from('promotions').insert(payload);
+    debugPrint('🟢 [MARKETING_REMOTE] Successfully inserted promo into promotions table with image_url: ${promo.imageUrl}');
+
+    // Try publish_promotion RPC as secondary step if loungeId exists
+    if (promo.loungeId != null && promo.loungeId!.isNotEmpty) {
+      try {
+        debugPrint('🚀 [MARKETING_REMOTE] Calling publish_promotion RPC for lounge: ${promo.loungeId}');
+        await _supabase.rpc('publish_promotion', params: {
+          'p_expires_at': promo.expiresAt?.toIso8601String(),
+          'p_lounge_id': promo.loungeId,
+          'p_room_id': promo.roomId,
+          'p_tag_ar': promo.tagAr.isNotEmpty ? promo.tagAr : promo.tag,
+          'p_tag_en': promo.tagEn.isNotEmpty ? promo.tagEn : promo.tag,
+          'p_title_ar': promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn,
+          'p_title_en': promo.titleEn.isNotEmpty ? promo.titleEn : promo.titleAr,
+        });
+      } catch (e) {
+        debugPrint('ℹ️ [MARKETING_REMOTE] publish_promotion RPC notice: $e');
+      }
+    }
   }
 
   @override
@@ -114,17 +115,18 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
       'tag_en': promo.tagEn,
       'title': promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn,
       'tag': promo.tagAr.isNotEmpty ? promo.tagAr : promo.tagEn,
-      if (promo.imageUrl != null) 'image_url': promo.imageUrl,
-      if (promo.deepLink != null) 'deep_link': promo.deepLink,
-      if (promo.expiresAt != null) 'expires_at': promo.expiresAt!.toIso8601String(),
-      if (promo.roomId != null) 'room_id': promo.roomId,
+      'image_url': promo.imageUrl,
+      'deep_link': promo.deepLink,
+      'expires_at': promo.expiresAt?.toIso8601String(),
+      'room_id': promo.roomId,
       'is_room_specific': promo.isRoomSpecific,
       'target_audience': promo.targetAudience,
+      'icon_key': promo.iconKey,
+      'colors': promo.hexColors,
     };
 
-    // Rule: Do NOT change lounge_id to another Lounge during promotion update.
-    // lounge_id is preserved from original record to prevent cross-lounge reassignment.
     await _supabase.from('promotions').update(payload).eq('id', promo.id);
+    debugPrint('🟢 [MARKETING_REMOTE] Successfully updated promo ${promo.id} with image_url: ${promo.imageUrl}');
   }
 
   @override
@@ -141,7 +143,8 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
 
   @override
   Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName) async {
-    final path = 'posters/${DateTime.now().millisecondsSinceEpoch}_$fileName';
+    final sanitizedFileName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+    final path = 'posters/${DateTime.now().millisecondsSinceEpoch}_$sanitizedFileName';
     
     // 1. Try promotion-assets bucket (newly created bucket)
     try {
@@ -229,7 +232,7 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
         'p_offset': offset,
       });
       if (response != null && response is List) {
-        return (response as List).map((json) => NotificationModel.fromJson(Map<String, dynamic>.from(json as Map))).toList();
+        return response.map((json) => NotificationModel.fromJson(Map<String, dynamic>.from(json as Map))).toList();
       }
     } catch (e) {
       debugPrint('⚠️ [MARKETING_REMOTE] get_notifications RPC error: $e, falling back to direct select');

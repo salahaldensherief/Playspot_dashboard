@@ -151,6 +151,8 @@ class LoungeCubit extends Cubit<LoungeState> {
     String? titleAr,
     String? titleEn,
     DateTime? expiresAt,
+    String? vodafoneCashNumber,
+    String? instapayAccount,
   }) async {
     emit(state.copyWith(status: LoungeStatus.loading));
     final result = await repository.updateLoungeDiscount(
@@ -160,6 +162,8 @@ class LoungeCubit extends Cubit<LoungeState> {
       titleAr: titleAr,
       titleEn: titleEn,
       expiresAt: expiresAt,
+      vodafoneCashNumber: vodafoneCashNumber,
+      instapayAccount: instapayAccount,
     );
 
     if (isClosed) return;
@@ -178,6 +182,52 @@ class LoungeCubit extends Cubit<LoungeState> {
               discountTitleAr: titleAr,
               discountTitleEn: titleEn,
               discountExpiresAt: expiresAt,
+              vodafoneCashNumber: vodafoneCashNumber ?? l.vodafoneCashNumber,
+              instapayAccount: instapayAccount ?? l.instapayAccount,
+            );
+          }
+          return l;
+        }).toList();
+        emit(state.copyWith(status: LoungeStatus.success, lounges: updatedLounges));
+        fetchLounges(forceRefresh: true);
+      },
+    );
+  }
+
+  Future<void> updateLoungePolicies({
+    required String loungeId,
+    required bool allowCashPayment,
+    required bool requirePrepaidFirstTime,
+    required int cashGracePeriodMinutes,
+    String? vodafoneCashNumber,
+    String? instapayAccount,
+  }) async {
+    emit(state.copyWith(status: LoungeStatus.loading));
+    final result = await repository.updateLoungePolicies(
+      loungeId: loungeId,
+      allowCashPayment: allowCashPayment,
+      requirePrepaidFirstTime: requirePrepaidFirstTime,
+      cashGracePeriodMinutes: cashGracePeriodMinutes,
+      vodafoneCashNumber: vodafoneCashNumber,
+      instapayAccount: instapayAccount,
+    );
+
+    if (isClosed) return;
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: LoungeStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (_) {
+        final updatedLounges = state.lounges.map((l) {
+          if (l.id == loungeId) {
+            return l.copyWith(
+              allowCashPayment: allowCashPayment,
+              requirePrepaidFirstTime: requirePrepaidFirstTime,
+              cashGracePeriodMinutes: cashGracePeriodMinutes,
+              vodafoneCashNumber: vodafoneCashNumber ?? l.vodafoneCashNumber,
+              instapayAccount: instapayAccount ?? l.instapayAccount,
             );
           }
           return l;

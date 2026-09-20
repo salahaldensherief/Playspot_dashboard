@@ -276,13 +276,25 @@ class AppStrings {
   static String get consoleSpecs => 'console_specs'.tr();
   static String get cancelBooking => 'cancel_booking'.tr();
   static String get anonymous => 'anonymous'.tr();
-  static String get pending => 'pending'.tr();
+  static String get pending {
+    final val = 'pending'.tr();
+    return (val.isNotEmpty && val != 'pending') ? val : 'قيد الانتظار';
+  }
   static String get paid => 'paid'.tr();
   static String get unpaid => 'unpaid'.tr();
   static String get egp => 'EGP';
-  static String get upcoming => 'upcoming'.tr();
-  static String get completed => 'completed'.tr();
-  static String get cancelled => 'cancelled'.tr();
+  static String get upcoming {
+    final val = 'upcoming'.tr();
+    return (val.isNotEmpty && val != 'upcoming') ? val : 'قادم';
+  }
+  static String get completed {
+    final val = 'completed'.tr();
+    return (val.isNotEmpty && val != 'completed') ? val : 'مكتمل';
+  }
+  static String get cancelled {
+    final val = 'cancelled'.tr();
+    return (val.isNotEmpty && val != 'cancelled') ? val : 'ملغى';
+  }
   static String get approve => 'approve'.tr();
   static String get reject => 'reject'.tr();
   static String get pendingRequests => 'pending_requests'.tr();
@@ -436,6 +448,47 @@ class AppStrings {
   static String get reviewDocumentsFor => 'review_documents_for'.tr();
   static String get loungeIsOpen => 'lounge_is_open'.tr();
   static String get loungeIsClosed => 'lounge_is_closed'.tr();
+
+  // Moderation & Banning
+  static String get reportUserBanTitle => 'report_user_ban_title'.tr();
+  static String customerLabel(String name) => 'customer_label'.tr(args: [name]);
+  static String get mainBanReason => 'main_ban_reason'.tr();
+  static String get evidenceDetailsOptional => 'evidence_details_optional'.tr();
+  static String get violationDetailsHint => 'violation_details_hint'.tr();
+  static String get sending => 'sending'.tr();
+  static String get sendBanReport => 'send_ban_report'.tr();
+  static String get pendingBanQueueTitle => 'pending_ban_queue_title'.tr();
+  static String get noPendingBanRequests => 'no_pending_ban_requests'.tr();
+  static String get banFromThisLoungeOnly => 'ban_from_this_lounge_only'.tr();
+  static String get globalBanApp => 'global_ban_app'.tr();
+  static String get adminNotesHint => 'admin_notes_hint'.tr();
+  static String get confirmDecision => 'confirm_decision'.tr();
+  static String suspendLoungeTitle(String name) => 'suspend_lounge_title'.tr(args: [name]);
+  static String get suspensionReason => 'suspension_reason'.tr();
+  static String get suspensionReasonHint => 'suspension_reason_hint'.tr();
+  static String get confirmSuspension => 'confirm_suspension'.tr();
+  static String get pleaseEnterSuspensionReason => 'please_enter_suspension_reason'.tr();
+  static String get supportAndPaymentSettings => 'support_and_payment_settings'.tr();
+  static String get policiesManagement => 'policies_management'.tr();
+  static String get faqsTitle => 'faqs_title'.tr();
+  static String get supportTickets => 'support_tickets'.tr();
+  static String get systemAndAnnouncements => 'system_and_announcements'.tr();
+  static String get supportAndHelp => 'support_and_help'.tr();
+  static String get controllersLabel => 'controllers_label'.tr();
+  static String get sessionActive => 'session_active'.tr();
+  static String get remaining => 'remaining'.tr();
+  static String get timeUp => 'time_up'.tr();
+  static String get walletLabel => 'wallet_label'.tr();
+  static String get stationControlDrawer => 'station_control_drawer'.tr();
+  static String get sessionRequests => 'session_requests'.tr();
+  static String get canteenOrderLabel => 'canteen_order_label'.tr();
+  static String get done => 'done'.tr();
+  static String get extendFallbackError => 'extend_fallback_error'.tr();
+  static String get phoneCopied => 'phone_copied'.tr();
+  static String totalDuration(String duration) {
+    final val = 'total_duration'.tr(args: [duration]);
+    return (val.isNotEmpty && !val.contains('total_duration')) ? val : 'إجمالي المدة: $duration';
+  }
   static String get usersCanBookNow => 'users_can_book_now'.tr();
   static String get loungeIsHidden => 'lounge_is_hidden'.tr();
   static String get closeLounge => 'close_lounge'.tr();
@@ -447,6 +500,7 @@ class AppStrings {
   static String get noNewRequests => 'no_new_requests'.tr();
   static String get noActiveBookings => 'no_active_bookings'.tr();
   static String get discount => 'discount'.tr();
+  static String get voucherDiscount => 'voucher_discount'.tr();
   static String get discountReason => 'discount_reason'.tr();
   static String get applyDiscount => 'apply_discount'.tr();
   static String get percentageDiscount => 'percentage_discount'.tr();
@@ -519,7 +573,10 @@ class AppStrings {
   static String get startSession => 'start_session'.tr();
   static String get sessionStartedSuccess => 'session_started_success'.tr();
   static String get sessionStartFailed => 'session_start_failed'.tr();
-  static String get inProgress => 'in_progress'.tr();
+  static String get inProgress {
+    final val = 'in_progress'.tr();
+    return (val.isNotEmpty && val != 'in_progress') ? val : 'نشط (جاري)';
+  }
 
   static String get noShow => 'no_show'.tr();
   static String get markNoShow => 'mark_no_show'.tr();
@@ -874,6 +931,68 @@ class AppStrings {
   static String get instapayAccountStr => 'instapay_account'.tr();
   static String get paymentMethodsRequiredError => 'payment_methods_required_error'.tr();
   static String get paymentMethodsHint => 'payment_methods_hint'.tr();
+  static String get loungePoliciesTitle => 'lounge_policies_title'.tr();
+  static String get allowCashPaymentLabel => 'allow_cash_payment_label'.tr();
+  static String get allowCashPaymentHint => 'allow_cash_payment_hint'.tr();
+  static String get requirePrepaidFirstTimeLabel => 'require_prepaid_first_time_label'.tr();
+  static String get requirePrepaidFirstTimeHint => 'require_prepaid_first_time_hint'.tr();
+  static String get cashGracePeriodLabel => 'cash_grace_period_label'.tr();
+  static String get cashGracePeriodHint => 'cash_grace_period_hint'.tr();
+  static String get cashBookingBadge {
+    final val = 'cash_booking_badge'.tr();
+    return (val.isNotEmpty && val != 'cash_booking_badge') ? val : 'دفع كاش';
+  }
+  static String get walletBookingBadge {
+    final val = 'wallet_booking_badge'.tr();
+    return (val.isNotEmpty && val != 'wallet_booking_badge') ? val : 'دفع محفظة';
+  }
+  static String transferredFromWallet(String wallet) => 'transferred_from_wallet'.tr(args: [wallet]);
+  static String get confirmReceipt {
+    final val = 'confirm_receipt'.tr();
+    return (val.isNotEmpty && val != 'confirm_receipt') ? val : 'تأكيد الحجز والاستلام';
+  }
+  static String get checkInAction => 'check_in_action'.tr();
+  static String get markNoShowAction {
+    final val = 'mark_no_show_action'.tr();
+    return (val.isNotEmpty && val != 'mark_no_show_action') ? val : 'إلغاء لعدم الحضور';
+  }
+  static String countdownToStart(String time) {
+    final val = 'countdown_to_start'.tr(args: [time]);
+    return (val.isNotEmpty && !val.contains('countdown_to_start')) ? val : 'تبقي $time على بدء الحجز';
+  }
+  static String gracePeriodExpired(String mins) => 'grace_period_expired'.tr(args: [mins]);
+  static String get savePoliciesSuccess => 'save_policies_success'.tr();
+  static String get loungePoliciesSubtitle => 'lounge_policies_subtitle'.tr();
+  static String get cashPoliciesTitle => 'cash_policies_title'.tr();
+  static String get gracePeriodFieldLabel => 'grace_period_field_label'.tr();
+  static String get gracePeriodRequiredError => 'grace_period_required_error'.tr();
+  static String get invalidNumberError => 'invalid_number_error'.tr();
+  static String get gracePeriodRangeError => 'grace_period_range_error'.tr();
+  static String get walletNumberFieldLabel => 'wallet_number_field_label'.tr();
+  static String get instapayHandleFieldLabel => 'instapay_handle_field_label'.tr();
+  static String get permissionDeniedEditPolicies => 'permission_denied_edit_policies'.tr();
+  static String get firstBookingBadge {
+    final val = 'first_booking_badge'.tr();
+    return (val.isNotEmpty && val != 'first_booking_badge') ? val : 'أول حجز للعميل';
+  }
+  static String get returningCustomerBadge {
+    final val = 'returning_customer_badge'.tr();
+    return (val.isNotEmpty && val != 'returning_customer_badge') ? val : 'عميل متكرر';
+  }
+  static String senderWalletLabel(String wallet) {
+    final val = 'sender_wallet_label'.tr(args: [wallet]);
+    return (val.isNotEmpty && !val.contains('sender_wallet_label')) ? val : 'محفظة المرسل: $wallet';
+  }
+  static String checkedInAtLabel(String time) => 'checked_in_at_label'.tr(args: [time]);
+  static String get receiptAttachedLabel => 'receipt_attached_label'.tr();
+  static String get previewReceiptBtn => 'preview_receipt_btn'.tr();
+  static String get receiptImageTitle => 'receipt_image_title'.tr();
+  static String get imageLoadFailed => 'image_load_failed'.tr();
+  static String get autoCancelledLabel => 'auto_cancelled_label'.tr();
+  static String get manualCancelledLabel => 'manual_cancelled_label'.tr();
+  static String cancellationReasonLabel(String reason) => 'cancellation_reason_label'.tr(args: [reason]);
+  static String get confirmExtensionApproval => 'تأكيد الموافقة على التمديد';
+  static String get rejectExtensionRequest => 'تأكيد رفض طلب التمديد';
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

@@ -5,15 +5,19 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import '../../domain/entities/booking.dart';
 import '../../../analytics/presentation/dashboard_cubit.dart';
 import 'radial_countdown_ring.dart';
 import 'add_extras_dialog.dart';
 import 'swap_room_dialog.dart';
+import 'customer_visit_badge.dart';
+import 'booking_products_preview.dart';
 
 /// Slide-over Station Control Drawer for interactive real-time station management.
-/// Enables quick time extensions (+15m, +30m, +1h), canteen orders, room swaps, and end session checkout.
+/// Redesigned to match the stunning design language of BookingCard and LiveSessionCard.
 class StationControlDrawer extends StatelessWidget {
   final Booking booking;
   final VoidCallback onClose;
@@ -74,6 +78,15 @@ class StationControlDrawer extends StatelessWidget {
     );
   }
 
+  String _getInitials(String? name) {
+    if (name == null || name.trim().isEmpty) return 'U';
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2 && parts[1].isNotEmpty) {
+      return '${parts[0][0]}'.toUpperCase() + '${parts[1][0]}'.toUpperCase();
+    }
+    return name[0].toUpperCase();
+  }
+
   double _calculateExtrasTotal() {
     double total = 0.0;
     for (final extra in booking.extras) {
@@ -90,6 +103,10 @@ class StationControlDrawer extends StatelessWidget {
     final isExpired = booking.isSessionExpired();
     final extrasTotal = _calculateExtrasTotal();
     final totalBalance = booking.totalPrice + extrasTotal;
+
+    final Color accent = isExpired
+        ? AppColors.danger
+        : (remaining.inMinutes <= 5 && !booking.isOpenEnded ? AppColors.warning : AppColors.success);
 
     return Container(
       decoration: BoxDecoration(
@@ -108,33 +125,37 @@ class StationControlDrawer extends StatelessWidget {
       child: Column(
         children: [
           // Header Bar
-          _buildHeader(context, isExpired),
+          _buildHeader(context, isExpired, accent),
 
           // Scrollable Body
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(20.r),
+              padding: EdgeInsets.all(18.r),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Gamer Profile Card
                   _buildGamerInfoCard(context),
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 16.h),
 
                   // Session Requests Section
                   _buildSessionRequestsSection(context),
 
                   // Countdown Gauge Widget
-                  _buildCountdownGauge(remaining, isExpired),
-                  SizedBox(height: 24.h),
+                  _buildCountdownGauge(remaining, isExpired, accent),
+                  SizedBox(height: 18.h),
 
                   // Quick Time Extension Bar (+15m, +30m, +1h)
                   _buildQuickExtensionsBar(context),
-                  SizedBox(height: 24.h),
+                  SizedBox(height: 16.h),
 
                   // Quick Actions Bar (Extras & Swap)
                   _buildQuickActions(context),
-                  SizedBox(height: 24.h),
+                  SizedBox(height: 16.h),
+
+                  // Canteen & Extras Preview
+                  BookingProductsPreview(booking: booking),
+                  SizedBox(height: 16.h),
 
                   // Itemized Balance Breakdown Card
                   _buildBalanceBreakdown(extrasTotal, totalBalance),
@@ -150,11 +171,12 @@ class StationControlDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool isExpired) {
+  Widget _buildHeader(BuildContext context, bool isExpired, Color accent) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.borderDefault)),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.08),
+        border: const Border(bottom: BorderSide(color: AppColors.borderDefault)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -164,13 +186,13 @@ class StationControlDrawer extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(8.r),
                 decoration: BoxDecoration(
-                  color: AppColors.neonBlue.withValues(alpha: 0.15),
+                  color: accent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10.r),
-                  border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.3)),
+                  border: Border.all(color: accent.withValues(alpha: 0.3)),
                 ),
                 child: Icon(
-                  Icons.sports_esports,
-                  color: AppColors.neonBlue,
+                  Icons.sports_esports_rounded,
+                  color: accent,
                   size: 22.sp,
                 ),
               ),
@@ -181,37 +203,20 @@ class StationControlDrawer extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        booking.roomName.isNotEmpty ? booking.roomName : 'الجهاز',
+                        booking.roomName.isNotEmpty ? booking.roomName : AppStrings.roomLabel,
                         style: TextStyle(
                           color: AppColors.textPrimary,
-                          fontSize: 18.sp,
+                          fontSize: 16.sp,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       SizedBox(width: 8.w),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                        decoration: BoxDecoration(
-                          color: (isExpired ? AppColors.danger : AppColors.success).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6.r),
-                          border: Border.all(
-                            color: (isExpired ? AppColors.danger : AppColors.success).withValues(alpha: 0.4),
-                          ),
-                        ),
-                        child: Text(
-                          isExpired ? AppStrings.timeExpired : AppStrings.active,
-                          style: TextStyle(
-                            color: isExpired ? AppColors.danger : AppColors.success,
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                      StatusBadge.success(AppStrings.inProgress.toUpperCase()),
                     ],
                   ),
                   SizedBox(height: 2.h),
                   Text(
-                    'نمط اللعب: ${booking.playMode ?? "فردي"}',
+                    booking.playMode ?? "فردي",
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 11.sp,
@@ -223,7 +228,7 @@ class StationControlDrawer extends StatelessWidget {
           ),
           IconButton(
             onPressed: onClose,
-            icon: Icon(Icons.close, color: AppColors.textSecondary, size: 22.sp),
+            icon: Icon(Icons.close, color: AppColors.textSecondary, size: 20.sp),
           ),
         ],
       ),
@@ -247,102 +252,88 @@ class StationControlDrawer extends StatelessWidget {
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: AppColors.borderDefault),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20.r,
-                backgroundColor: AppColors.neonPurple.withValues(alpha: 0.2),
-                child: Icon(Icons.person, color: AppColors.neonPurple, size: 22.sp),
+          Container(
+            width: 42.r,
+            height: 42.r,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.neonBlue.withValues(alpha: 0.75),
+                  AppColors.neonPurple.withValues(alpha: 0.75),
+                ],
               ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              _getInitials(userName),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14.sp,
+              ),
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            userName,
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                    Expanded(
+                      child: Text(
+                        userName,
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
                         ),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                          decoration: BoxDecoration(
-                            color: AppColors.cardBackground,
-                            borderRadius: BorderRadius.circular(4.r),
-                            border: Border.all(color: AppColors.borderDefault),
-                          ),
-                          child: Text(
-                            '#$bookingIdShort',
-                            style: TextStyle(color: AppColors.textMuted, fontSize: 10.sp),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (userPhone.isNotEmpty && userPhone != 'null' && userPhone != 'No Phone') ...[
-                      SizedBox(height: 4.h),
-                      Row(
-                        children: [
-                          Icon(Icons.phone, size: 12.sp, color: AppColors.neonBlue),
-                          SizedBox(width: 4.w),
-                          Text(
-                            userPhone,
-                            style: TextStyle(
-                              color: AppColors.neonBlue,
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          InkWell(
-                            onTap: () {
-                              Clipboard.setData(ClipboardData(text: userPhone));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('تم نسخ رقم الهاتف'),
-                                  duration: Duration(seconds: 2),
-                                ),
-                              );
-                            },
-                            child: Icon(Icons.copy, size: 12.sp, color: AppColors.textMuted),
-                          ),
-                        ],
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                    if (userEmail.isNotEmpty && userEmail != 'null') ...[
-                      SizedBox(height: 2.h),
-                      Row(
-                        children: [
-                          Icon(Icons.email, size: 12.sp, color: AppColors.textSecondary),
-                          SizedBox(width: 4.w),
-                          Expanded(
-                            child: Text(
-                              userEmail,
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 11.sp,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(width: 6.w),
+                    CustomerVisitBadge(visitNumber: booking.visitNumber),
+                  ],
+                ),
+                SizedBox(height: 2.h),
+                Row(
+                  children: [
+                    if (userPhone.isNotEmpty && userPhone != 'null' && userPhone != 'No Phone') ...[
+                      Icon(Icons.phone_outlined, size: 12.sp, color: AppColors.neonBlue),
+                      SizedBox(width: 4.w),
+                      Text(
+                        userPhone,
+                        style: TextStyle(
+                          color: AppColors.neonBlue,
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(width: 6.w),
+                      InkWell(
+                        onTap: () {
+                          Clipboard.setData(ClipboardData(text: userPhone));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(AppStrings.phoneCopied),
+                              duration: const Duration(seconds: 2),
+                              backgroundColor: AppColors.success,
                             ),
-                          ),
-                        ],
+                          );
+                        },
+                        child: Icon(Icons.copy_rounded, size: 12.sp, color: AppColors.textMuted),
                       ),
                     ],
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -361,112 +352,111 @@ class StationControlDrawer extends StatelessWidget {
       return matchBooking || matchRoom;
     }).toList();
 
-        if (sessionRequests.isEmpty) return const SizedBox.shrink();
+    if (sessionRequests.isEmpty) return const SizedBox.shrink();
 
-        return Container(
-          margin: EdgeInsets.only(bottom: 20.h),
-          padding: EdgeInsets.all(14.r),
-          decoration: BoxDecoration(
-            color: AppColors.warning.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppColors.warning.withValues(alpha: 0.6)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      margin: EdgeInsets.only(bottom: 14.h),
+      padding: EdgeInsets.all(12.r),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
+              Icon(Icons.notifications_active_rounded, color: AppColors.warning, size: 16.r),
+              SizedBox(width: 6.w),
+              Text(
+                '${AppStrings.sessionRequests} (${sessionRequests.length})',
+                style: TextStyle(
+                  color: AppColors.warning,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          ...sessionRequests.map((req) {
+            final title = req.titleAr.isNotEmpty ? req.titleAr : req.titleEn;
+            final body = req.bodyAr.isNotEmpty ? req.bodyAr : req.bodyEn;
+            return Container(
+              margin: EdgeInsets.only(bottom: 6.h),
+              padding: EdgeInsets.all(10.r),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: AppColors.borderDefault),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(Icons.notifications_active_rounded, color: AppColors.warning, size: 18),
-                  SizedBox(width: 6.w),
-                  Text(
-                    'طلبات العميل أثناء الجلسة الحالية (${sessionRequests.length})',
-                    style: TextStyle(
-                      color: AppColors.warning,
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (body.isNotEmpty) ...[
+                          SizedBox(height: 2.h),
+                          Text(
+                            body,
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 11.sp,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  ElevatedButton(
+                    onPressed: () {
+                      context.read<ClientRequestsCubit>().markAsAttended(
+                            req.id,
+                            isCanteenOrder: req.isCanteenOrder,
+                          );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.success,
+                      foregroundColor: Colors.black,
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
+                    ),
+                    child: Text(
+                      AppStrings.done,
+                      style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 10.h),
-              ...sessionRequests.map((req) {
-                final title = req.titleAr.isNotEmpty ? req.titleAr : req.titleEn;
-                final body = req.bodyAr.isNotEmpty ? req.bodyAr : req.bodyEn;
-                return Container(
-                  margin: EdgeInsets.only(bottom: 8.h),
-                  padding: EdgeInsets.all(10.r),
-                  decoration: BoxDecoration(
-                    color: AppColors.cardBackground,
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(color: AppColors.borderDefault),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              title,
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            if (body.isNotEmpty) ...[
-                              SizedBox(height: 2.h),
-                              Text(
-                                body,
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 11.sp,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      ElevatedButton(
-                        onPressed: () {
-                          context.read<ClientRequestsCubit>().markAsAttended(
-                            req.id,
-                            isCanteenOrder: req.isCanteenOrder,
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.success,
-                          foregroundColor: Colors.black,
-                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          'تم التنفيذ',
-                          style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ],
-          ),
-        );
+            );
+          }),
+        ],
+      ),
+    );
   }
 
-  Widget _buildCountdownGauge(Duration remaining, bool isExpired) {
+  Widget _buildCountdownGauge(Duration remaining, bool isExpired, Color accent) {
     final totalDuration = Duration(minutes: booking.durationMinutes);
     return Container(
-      padding: EdgeInsets.all(16.r),
+      padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
-        color: AppColors.scaffoldBackground,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: (isExpired ? AppColors.danger : AppColors.neonBlue).withValues(alpha: 0.3),
-        ),
+        color: AppColors.mutedBackground.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: accent.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
@@ -475,10 +465,10 @@ class StationControlDrawer extends StatelessWidget {
             remainingDuration: remaining,
             isExpired: isExpired,
             isOpenEnded: booking.isOpenEnded,
-            size: 80.0,
-            strokeWidth: 6.0,
+            size: 68.0,
+            strokeWidth: 5.0,
           ),
-          SizedBox(width: 20.w),
+          SizedBox(width: 16.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,26 +476,24 @@ class StationControlDrawer extends StatelessWidget {
                 Text(
                   isExpired ? AppStrings.timeExpired : AppStrings.remainingTime,
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: isExpired ? AppColors.danger : AppColors.textSecondary,
                     fontSize: 12.sp,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  booking.isOpenEnded
-                      ? 'الوقت مفتوح'
-                      : _formatDuration(remaining),
+                  booking.isOpenEnded ? 'الوقت مفتوح' : _formatDuration(remaining),
                   style: TextStyle(
                     color: isExpired ? AppColors.danger : AppColors.neonBlue,
-                    fontSize: 22.sp,
+                    fontSize: 20.sp,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'SpaceGrotesk',
                   ),
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  'إجمالي المدة: ${booking.durationMinutes} دقيقة',
+                  AppStrings.totalDuration('${booking.durationMinutes} دقيقة'),
                   style: TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 11.sp,
@@ -543,7 +531,7 @@ class StationControlDrawer extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        SizedBox(height: 10.h),
+        SizedBox(height: 8.h),
         Row(
           children: [
             Expanded(child: _buildExtensionButton(context, 15)),
@@ -562,13 +550,10 @@ class StationControlDrawer extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(10.r),
       onTap: () {
-        context.read<DashboardCubit>().extendSession(
-          booking.id,
-          minutes,
-        );
+        context.read<DashboardCubit>().extendSession(booking.id, minutes);
       },
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 10.h),
+        padding: EdgeInsets.symmetric(vertical: 9.h),
         decoration: BoxDecoration(
           color: AppColors.mutedBackground,
           borderRadius: BorderRadius.circular(10.r),
@@ -601,22 +586,23 @@ class StationControlDrawer extends StatelessWidget {
                   loungeId: booking.loungeId,
                   onConfirm: (extras, totalCost) {
                     context.read<DashboardCubit>().addExtrasToSession(
-                      booking.id,
-                      extras,
-                      totalCost,
-                    );
+                          booking.id,
+                          extras,
+                          totalCost,
+                        );
                   },
                 ),
               );
             },
-            icon: Icon(Icons.fastfood, size: 16.sp, color: AppColors.neonPurple),
+            icon: Icon(Icons.fastfood_rounded, size: 16.sp, color: AppColors.neonPurple),
             label: Text(
               AppStrings.addExtrasToSession,
-              style: TextStyle(color: AppColors.neonPurple, fontSize: 12.sp),
+              style: TextStyle(color: AppColors.neonPurple, fontSize: 12.sp, fontWeight: FontWeight.w600),
             ),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: AppColors.neonPurple.withValues(alpha: 0.4)),
-              padding: EdgeInsets.symmetric(vertical: 10.h),
+              padding: EdgeInsets.symmetric(vertical: 11.h),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
             ),
           ),
         ),
@@ -632,14 +618,15 @@ class StationControlDrawer extends StatelessWidget {
                 ),
               );
             },
-            icon: Icon(Icons.swap_horiz, size: 16.sp, color: AppColors.textPrimary),
+            icon: Icon(Icons.swap_horiz_rounded, size: 16.sp, color: AppColors.textPrimary),
             label: Text(
               AppStrings.swapRoom,
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp),
+              style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp, fontWeight: FontWeight.w600),
             ),
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: AppColors.borderDefault),
-              padding: EdgeInsets.symmetric(vertical: 10.h),
+              padding: EdgeInsets.symmetric(vertical: 11.h),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
             ),
           ),
         ),
@@ -651,7 +638,7 @@ class StationControlDrawer extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
-        color: AppColors.scaffoldBackground,
+        color: AppColors.mutedBackground.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: AppColors.borderDefault),
       ),
@@ -684,7 +671,7 @@ class StationControlDrawer extends StatelessWidget {
               ),
             ],
           ),
-          const Divider(color: AppColors.divider, height: 16),
+          const Divider(color: AppColors.borderDefault, height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -723,6 +710,7 @@ class StationControlDrawer extends StatelessWidget {
             },
         text: '${AppStrings.endSession} (${totalBalance.toStringAsFixed(2)} ${AppStrings.egp})',
         backgroundColor: AppColors.danger,
+        height: 42.h,
       ),
     );
   }

@@ -33,6 +33,11 @@ class Lounge extends Equatable {
   final DateTime? discountExpiresAt;
   final String? vodafoneCashNumber;
   final String? instapayAccount;
+  final bool allowCashPayment;
+  final bool requirePrepaidFirstTime;
+  final int cashGracePeriodMinutes;
+  final bool isActive;
+  final String? suspensionReason;
 
   const Lounge({
     required this.id,
@@ -66,6 +71,11 @@ class Lounge extends Equatable {
     this.discountExpiresAt,
     this.vodafoneCashNumber,
     this.instapayAccount,
+    this.allowCashPayment = true,
+    this.requirePrepaidFirstTime = false,
+    this.cashGracePeriodMinutes = 15,
+    this.isActive = true,
+    this.suspensionReason,
   });
 
   /// Calculates dynamic distance in kilometers from device coordinates ([deviceLat], [deviceLng])
@@ -128,6 +138,11 @@ class Lounge extends Equatable {
         discountExpiresAt,
         vodafoneCashNumber,
         instapayAccount,
+        allowCashPayment,
+        requirePrepaidFirstTime,
+        cashGracePeriodMinutes,
+        isActive,
+        suspensionReason,
       ];
 
   Lounge copyWith({
@@ -162,6 +177,11 @@ class Lounge extends Equatable {
     DateTime? discountExpiresAt,
     String? vodafoneCashNumber,
     String? instapayAccount,
+    bool? allowCashPayment,
+    bool? requirePrepaidFirstTime,
+    int? cashGracePeriodMinutes,
+    bool? isActive,
+    String? suspensionReason,
   }) {
     return Lounge(
       id: id ?? this.id,
@@ -195,6 +215,11 @@ class Lounge extends Equatable {
       discountExpiresAt: discountExpiresAt ?? this.discountExpiresAt,
       vodafoneCashNumber: vodafoneCashNumber ?? this.vodafoneCashNumber,
       instapayAccount: instapayAccount ?? this.instapayAccount,
+      allowCashPayment: allowCashPayment ?? this.allowCashPayment,
+      requirePrepaidFirstTime: requirePrepaidFirstTime ?? this.requirePrepaidFirstTime,
+      cashGracePeriodMinutes: cashGracePeriodMinutes ?? this.cashGracePeriodMinutes,
+      isActive: isActive ?? this.isActive,
+      suspensionReason: suspensionReason ?? this.suspensionReason,
     );
   }
 }
