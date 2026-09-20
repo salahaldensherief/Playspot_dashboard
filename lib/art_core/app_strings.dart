@@ -597,6 +597,9 @@ class AppStrings {
 
   static String get callStaff => 'call_staff'.tr();
   static String get canteenOrder => 'canteen_order'.tr();
+  static String get serviceCall => 'service_call'.tr();
+  static String get canteenOrderDetails => 'canteen_order_details'.tr();
+  static String get item => 'item'.tr();
   static String get markAsAttended => 'mark_as_attended'.tr();
   static String get attended => 'attended'.tr();
   static String get unread => 'unread'.tr();

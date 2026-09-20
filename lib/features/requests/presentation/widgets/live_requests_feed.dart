@@ -320,31 +320,31 @@ class RequestCard extends StatelessWidget {
 
     if (isCallStaff) {
       themeColor = AppColors.warning;
-      typeTagAr = 'نداء عامل';
+      typeTagAr = AppStrings.callStaff;
     } else if (isExtension) {
       themeColor = AppColors.neonBlue;
-      typeTagAr = 'تمديد وقت';
+      typeTagAr = AppStrings.clientRequestedExtension;
     } else if (isCanteen) {
       themeColor = AppColors.success;
-      typeTagAr = 'طلب كافيتريا';
+      typeTagAr = AppStrings.canteenOrder;
     } else {
       themeColor = AppColors.neonPurple;
-      typeTagAr = 'طلب خدمة';
+      typeTagAr = AppStrings.serviceCall;
     }
 
     String descriptionText = request.bodyAr;
     if (descriptionText.isEmpty || descriptionText == 'طلب من العميل') {
       if (isCallStaff) {
-        descriptionText = 'طلب مساعدة من العامل في الغرفة';
+        descriptionText = AppStrings.callStaff;
       } else if (isCanteen) {
-        descriptionText = 'طلب أصناف من الكافيتريا';
+        descriptionText = AppStrings.clientRequestedExtras;
       } else if (isExtension) {
-        descriptionText = 'طلب تمديد مدة الجلسة';
+        descriptionText = AppStrings.clientRequestedExtension;
       }
     }
 
-    final roomDisplayName = request.roomName ?? 'غرفة/جهاز';
-    final userDisplayName = (request.userName != null && request.userName!.isNotEmpty) ? request.userName! : 'عميل';
+    final roomDisplayName = request.roomName ?? AppStrings.roomLabel;
+    final userDisplayName = (request.userName != null && request.userName!.isNotEmpty) ? request.userName! : AppStrings.anonymous;
 
     return Container(
       decoration: BoxDecoration(
@@ -835,7 +835,7 @@ class CanteenItemsDetailsBox extends StatelessWidget {
               Icon(Icons.restaurant_menu_rounded, size: 14.r, color: AppColors.success),
               SizedBox(width: 6.w),
               AppText.subHeading(
-                'تفاصيل طلب الكافيتريا',
+                AppStrings.canteenOrderDetails,
                 fontSize: 12.sp,
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.bold,
@@ -868,7 +868,7 @@ class CanteenItemsDetailsBox extends StatelessWidget {
           ],
           SizedBox(height: 8.h),
           ...items.map((item) {
-            final name = item['name_ar'] ?? item['name'] ?? item['name_en'] ?? item['item_name'] ?? 'صنف';
+            final name = item['name_ar'] ?? item['name'] ?? item['name_en'] ?? item['item_name'] ?? AppStrings.item;
             final qty = item['quantity'] ?? item['qty'] ?? 1;
             final price = (item['price'] ?? item['unit_price'] as num?)?.toDouble() ?? 0.0;
 
