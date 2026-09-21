@@ -95,7 +95,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       debugPrint('AuthRemoteDataSource: RPC returned null, trying direct select...');
       final tableResponse = await supabaseClient
           .from('profiles')
-          .select()
+          .select('*, cities:city_id(id, name_ar, name_en)')
           .eq('id', finalUserId)
           .maybeSingle();
 

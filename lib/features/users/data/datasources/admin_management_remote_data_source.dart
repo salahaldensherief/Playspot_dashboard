@@ -68,7 +68,7 @@ class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSo
     try {
       final response = await supabaseClient
           .from('profiles')
-          .select('id, email, full_name, role, lounge_id, avatar_url, is_setup_completed, points_balance, reward_points, referral_count, referrals_count, is_active')
+          .select('id, email, full_name, role, lounge_id, avatar_url, is_setup_completed, points_balance, reward_points, referral_count, referrals_count, is_active, city_id, cities:city_id(id, name_ar, name_en)')
           .neq('role', 'inactive')
           .order('full_name');
       return (response as List)
@@ -80,7 +80,7 @@ class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSo
       try {
         final fallbackResponse = await supabaseClient
             .from('profiles')
-            .select()
+            .select('*, cities:city_id(id, name_ar, name_en)')
             .neq('role', 'inactive')
             .order('full_name');
         return (fallbackResponse as List)
@@ -136,6 +136,9 @@ class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSo
 
   @override
   Future<void> updateAdmin(String adminId, Map<String, dynamic> data) async {
-    await supabaseClient.from('profiles').update(data).eq('id', adminId);
+    final cleanData = UserModel.sanitizeProfilePayload(data);
+    if (cleanData.isNotEmpty) {
+      await supabaseClient.from('profiles').update(cleanData).eq('id', adminId);
+    }
   }
 }

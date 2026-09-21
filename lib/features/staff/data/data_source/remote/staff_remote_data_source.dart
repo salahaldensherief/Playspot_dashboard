@@ -156,18 +156,23 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
     final updates = <String, dynamic>{
       if (data.containsKey('name') && data['name'] != null) 'full_name': data['name'],
       if (data.containsKey('phone') && data['phone'] != null) 'phone': data['phone'],
-      'role':? mappedRole,
+      if (mappedRole != null) 'role': mappedRole,
       if (data.containsKey('email') && data['email'] != null) 'email': data['email'],
       if (data.containsKey('national_id_number') && data['national_id_number'] != null) 'national_id_number': data['national_id_number'],
       if (data.containsKey('id_front_url') && data['id_front_url'] != null) 'id_front_url': data['id_front_url'],
       if (data.containsKey('id_back_url') && data['id_back_url'] != null) 'id_back_url': data['id_back_url'],
+      if (data.containsKey('city_id')) 'city_id': data['city_id'],
     };
 
-    debugPrint('🔵 [STAFF_REMOTE_SOURCE] Updating profile targeting ID: $cleanStaffId with updates: $updates');
+    final cleanUpdates = UserModel.sanitizeProfilePayload(updates);
+
+    debugPrint('🔵 [STAFF_REMOTE_SOURCE] Updating profile targeting ID: $cleanStaffId with updates: $cleanUpdates');
 
     try {
-      await _supabase.from('profiles').update(updates).eq('id', cleanStaffId);
-      debugPrint('🟢 [STAFF_REMOTE_SOURCE] Profile updated successfully for $cleanStaffId');
+      if (cleanUpdates.isNotEmpty) {
+        await _supabase.from('profiles').update(cleanUpdates).eq('id', cleanStaffId);
+        debugPrint('🟢 [STAFF_REMOTE_SOURCE] Profile updated successfully for $cleanStaffId');
+      }
     } catch (e) {
       debugPrint('🔴 [STAFF_REMOTE_SOURCE] Failed to update profile $cleanStaffId: $e');
       rethrow;

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -57,7 +58,11 @@ class ProfilePage extends StatelessWidget {
                   SizedBox(height: 20.h),
                   AppTextField(
                     label: AppStrings.userCity,
-                    controller: TextEditingController(text: user?.displayCityName ?? AppStrings.notSpecified),
+                    controller: TextEditingController(
+                      text: user?.getDisplayCityName(languageCode: context.locale.languageCode) ??
+                          user?.displayCityName ??
+                          AppStrings.notSpecified,
+                    ),
                     readOnly: true,
                   ),
                   SizedBox(height: 16.h),
