@@ -402,12 +402,18 @@ class ClientRequestModel extends ClientRequestEntity {
 
     final String callType = (json['call_type'] ?? json['type'] ?? 'assistance').toString().toLowerCase();
     String bodyAr = 'طلب مساعدة من العامل';
-    if (callType == 'controller_issue') {
+    if (json['reason'] != null && json['reason'].toString().trim().isNotEmpty) {
+      bodyAr = json['reason'].toString().trim();
+    } else if (json['note'] != null && json['note'].toString().trim().isNotEmpty) {
+      bodyAr = json['note'].toString().trim();
+    } else if (json['notes'] != null && json['notes'].toString().trim().isNotEmpty) {
+      bodyAr = json['notes'].toString().trim();
+    } else if (json['message'] != null && json['message'].toString().trim().isNotEmpty) {
+      bodyAr = json['message'].toString().trim();
+    } else if (callType == 'controller_issue') {
       bodyAr = 'مشكلة في أجهزة التحكم / الأذرع';
     } else if (callType == 'cleaning') {
       bodyAr = 'طلب تنظيف المكان';
-    } else if (json['notes'] != null && json['notes'].toString().isNotEmpty) {
-      bodyAr = json['notes'].toString();
     }
 
     final roomObj = _parseMap(json['rooms']);
