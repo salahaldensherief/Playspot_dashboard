@@ -1,35 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:js_interop';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:play_spot_dashboard/art_core/di/provider_scope.dart';
 
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_screen.dart';
-import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_screen.dart' as dashboard;
+import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_screen.dart'
+    as dashboard;
 import 'package:play_spot_dashboard/features/analytics/presentation/lounge_stats_cubit.dart';
-import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounges_page.dart' as lounges;
+import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounges_page.dart'
+    as lounges;
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
-import 'package:play_spot_dashboard/features/categories/presentation/categories/categories_screen.dart' as categories;
-import 'package:play_spot_dashboard/features/marketing/presentation/pages/marketing_page.dart' as marketing;
-import 'package:play_spot_dashboard/features/payouts/presentation/pages/super_admin_payouts_page.dart' as payouts;
-import 'package:play_spot_dashboard/features/payouts/presentation/pages/lounge_admin_payouts_page.dart' as lounge_payouts;
-import 'package:play_spot_dashboard/features/bookings/presentation/pages/bookings_page.dart' as bookings;
-import 'package:play_spot_dashboard/features/rooms/presentation/pages/room_management_page.dart' as rooms;
-import 'package:play_spot_dashboard/features/onboarding/presentation/pages/lounge_setup_page.dart' as onboarding;
-import 'package:play_spot_dashboard/features/lounges/presentation/pages/extras_management_page.dart' as extras;
-import 'package:play_spot_dashboard/features/reviews/presentation/reviews_screen.dart' as reviews_page;
-import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounge_profile_page.dart' as lounge_profile;
-import 'package:play_spot_dashboard/features/auth/presentation/profile/profile_page.dart' as profile;
-import 'package:play_spot_dashboard/features/kyc/presentation/pages/kyc_reviews_page.dart' as kyc_reviews;
+import 'package:play_spot_dashboard/features/categories/presentation/categories/categories_screen.dart'
+    as categories;
+import 'package:play_spot_dashboard/features/marketing/presentation/pages/marketing_page.dart'
+    as marketing;
+import 'package:play_spot_dashboard/features/payouts/presentation/pages/super_admin_payouts_page.dart'
+    as payouts;
+import 'package:play_spot_dashboard/features/payouts/presentation/pages/lounge_admin_payouts_page.dart'
+    as lounge_payouts;
+import 'package:play_spot_dashboard/features/bookings/presentation/pages/bookings_page.dart'
+    as bookings;
+import 'package:play_spot_dashboard/features/rooms/presentation/pages/room_management_page.dart'
+    as rooms;
+import 'package:play_spot_dashboard/features/onboarding/presentation/pages/lounge_setup_page.dart'
+    as onboarding;
+import 'package:play_spot_dashboard/features/lounges/presentation/pages/extras_management_page.dart'
+    as extras;
+import 'package:play_spot_dashboard/features/reviews/presentation/reviews_screen.dart'
+    as reviews_page;
+import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounge_profile_page.dart'
+    as lounge_profile;
+import 'package:play_spot_dashboard/features/auth/presentation/profile/profile_page.dart'
+    as profile;
+import 'package:play_spot_dashboard/features/kyc/presentation/pages/kyc_reviews_page.dart'
+    as kyc_reviews;
 import 'package:play_spot_dashboard/features/kyc/presentation/pages/kyc_pending_page.dart';
-import 'package:play_spot_dashboard/features/loyalty/presentation/pages/loyalty_page.dart' as loyalty;
-import 'package:play_spot_dashboard/features/shifts/presentation/shift_history/shift_history_screen.dart' as shifts;
-import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_screen.dart' as staff;
+import 'package:play_spot_dashboard/features/loyalty/presentation/pages/loyalty_page.dart'
+    as loyalty;
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_history/shift_history_screen.dart'
+    as shifts;
+import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_screen.dart'
+    as staff;
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_cubit.dart';
-import 'package:play_spot_dashboard/features/bookings/presentation/pages/booking_history_page.dart' as reports;
+import 'package:play_spot_dashboard/features/bookings/presentation/pages/booking_history_page.dart'
+    as reports;
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_shell.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
@@ -42,7 +61,8 @@ import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboa
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/extras_cubit.dart';
 import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_cubit.dart';
 import 'package:play_spot_dashboard/features/loyalty/presentation/cubit/loyalty_cubit.dart';
-import 'package:play_spot_dashboard/features/tournaments/presentation/tournaments_screen.dart' as tournaments;
+import 'package:play_spot_dashboard/features/tournaments/presentation/tournaments_screen.dart'
+    as tournaments;
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_cubit.dart';
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_participants_cubit.dart';
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_matches_cubit.dart';
@@ -58,10 +78,10 @@ import 'package:play_spot_dashboard/features/support/presentation/support_cubit.
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import 'package:play_spot_dashboard/features/reviews/presentation/reviews_cubit.dart';
-import 'package:play_spot_dashboard/features/users/presentation/pages/users_page.dart' as users;
+import 'package:play_spot_dashboard/features/users/presentation/pages/users_page.dart'
+    as users;
 import 'package:play_spot_dashboard/features/users/presentation/cubit/admin_management_cubit.dart';
 import 'package:play_spot_dashboard/features/payouts/presentation/cubit/payout_cubit.dart';
-
 
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
@@ -93,11 +113,13 @@ class AppRouter {
       final bool isLoggingIn = state.matchedLocation == RouterKeys.login;
       final user = authState.user;
 
-      if (authState.status == LoginStatus.initial || authState.status == LoginStatus.checking) {
+      if (authState.status == LoginStatus.initial ||
+          authState.status == LoginStatus.checking) {
         return null;
       }
 
-      final bool isAuthenticated = authState.status == LoginStatus.authenticated ||
+      final bool isAuthenticated =
+          authState.status == LoginStatus.authenticated ||
           authState.status == LoginStatus.success;
 
       if (!isAuthenticated) {
@@ -109,11 +131,17 @@ class AppRouter {
       final bool isStaffUser = user.isStaff;
       final bool isLoungeOwner = user.isOwner;
       final bool isSuperAdmin = user.role == UserRole.superAdmin;
-      final bool isOnboardingPath = state.matchedLocation == RouterKeys.loungeOnboarding;
-      final bool isKycPendingPath = state.matchedLocation == RouterKeys.kycPending;
+      final bool isOnboardingPath =
+          state.matchedLocation == RouterKeys.loungeOnboarding;
+      final bool isKycPendingPath =
+          state.matchedLocation == RouterKeys.kycPending;
 
       final lounge = authState.userLounge;
-      final bool isLoungePending = lounge != null && (lounge.status == 'pending' || lounge.status == 'pending_approval' || lounge.status != 'active');
+      final bool isLoungePending =
+          lounge != null &&
+          (lounge.status == 'pending' ||
+              lounge.status == 'pending_approval' ||
+              lounge.status != 'active');
 
       // 1. Only Lounge Owners who haven't completed setup need Onboarding
       if (!isSuperAdmin && isLoungeOwner && !user.isSetupCompleted) {
@@ -122,13 +150,17 @@ class AppRouter {
       }
 
       // 2. Lounge Owners whose lounge/KYC is still pending approval go to KYC Pending Screen
-      if (!isSuperAdmin && isLoungeOwner && user.isSetupCompleted && isLoungePending) {
+      if (!isSuperAdmin &&
+          isLoungeOwner &&
+          user.isSetupCompleted &&
+          isLoungePending) {
         if (!isKycPendingPath) return RouterKeys.kycPending;
         return null;
       }
 
       // Leave onboarding or kyc-pending if status is active or user is non-owner
-      if ((isOnboardingPath || isKycPendingPath) && (user.isSetupCompleted && !isLoungePending)) {
+      if ((isOnboardingPath || isKycPendingPath) &&
+          (user.isSetupCompleted && !isLoungePending)) {
         return RouterKeys.loungeAdminDashboard;
       }
 
@@ -147,11 +179,16 @@ class AppRouter {
         return RouterKeys.loungeAdminDashboard;
       }
 
-      final bool isStaffManagementRoute = location == RouterKeys.loungeAdminStaff;
-      final bool isFinancialRoute = location.contains('/payouts') || location.contains('/reports');
-      final bool isShiftHistoryRoute = location == '/lounge-admin/shifts';
+      final bool isStaffManagementRoute =
+          location == RouterKeys.loungeAdminStaff;
+      final bool isFinancialRoute =
+          location.contains('/payouts') || location.contains('/reports');
+      final bool isShiftHistoryRoute =
+          location == RouterKeys.loungeAdminShifts;
       final bool isMarketingRoute = location == RouterKeys.loungeAdminMarketing;
-      final bool isSetupRoute = location == RouterKeys.loungeAdminRooms || location == RouterKeys.loungeAdminExtras;
+      final bool isSetupRoute =
+          location == RouterKeys.loungeAdminRooms ||
+          location == RouterKeys.loungeAdminExtras;
       final bool isReviewsRoute = location == RouterKeys.loungeAdminReviews;
 
       if (isReviewsRoute && !user.canViewReviews) {
@@ -186,10 +223,13 @@ class AppRouter {
           return BlocProvider<LoginCubit>.value(
             value: authCubit,
             child: BlocBuilder<LoginCubit, LoginState>(
-              buildWhen: (previous, current) => previous.status != current.status,
+              buildWhen: (previous, current) =>
+                  previous.status != current.status,
               builder: (context, authState) {
                 if (authState.status == LoginStatus.checking) {
-                  return const Scaffold(backgroundColor: AppColors.scaffoldBackground);
+                  return const Scaffold(
+                    backgroundColor: AppColors.scaffoldBackground,
+                  );
                 }
                 _hideWebSplash();
                 return child;
@@ -200,12 +240,13 @@ class AppRouter {
         routes: [
           GoRoute(
             path: RouterKeys.login,
-            pageBuilder: (context, state) => const NoTransitionPage(child: LoginScreen()),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: LoginScreen()),
           ),
           GoRoute(
             path: RouterKeys.loungeOnboarding,
             pageBuilder: (context, state) => NoTransitionPage(
-              child: MultiBlocProvider(
+              child: MultiBlocProviderScope(
                 providers: [
                   BlocProvider(create: (_) => sl<OnboardingCubit>()),
                   BlocProvider(create: (_) => sl<CategoryCubit>()),
@@ -217,20 +258,25 @@ class AppRouter {
           ),
           GoRoute(
             path: RouterKeys.kycPending,
-            pageBuilder: (context, state) => const NoTransitionPage(child: KycPendingPage()),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: KycPendingPage()),
           ),
 
           // لوحة التحكم الرئيسية مع المحافظة على دورة حياة الـ Providers
           ShellRoute(
             builder: (BuildContext context, GoRouterState state, Widget child) {
-              return MultiBlocProvider(
+              return MultiBlocProviderScope(
                 providers: [
                   BlocProvider<ShiftCubit>(create: (_) => sl<ShiftCubit>()),
                   BlocProvider<BookingCubit>(create: (_) => sl<BookingCubit>()),
                   BlocProvider<LoungeCubit>(create: (_) => sl<LoungeCubit>()),
                   BlocProvider<RoomCubit>(create: (_) => sl<RoomCubit>()),
-                  BlocProvider<LoungeStatsCubit>(create: (_) => sl<LoungeStatsCubit>()),
-                  BlocProvider<DashboardCubit>(create: (_) => sl<DashboardCubit>()),
+                  BlocProvider<LoungeStatsCubit>(
+                    create: (_) => sl<LoungeStatsCubit>(),
+                  ),
+                  BlocProvider<DashboardCubit>(
+                    create: (_) => sl<DashboardCubit>(),
+                  ),
                   BlocProvider<ExtrasCubit>(create: (_) => sl<ExtrasCubit>()),
                   BlocProvider<ReviewsCubit>(create: (_) => sl<ReviewsCubit>()),
                   BlocProvider<ClientRequestsCubit>.value(
@@ -255,15 +301,20 @@ class AppRouter {
               ),
               GoRoute(
                 path: RouterKeys.superAdminLounges,
-                pageBuilder: (context, state) => const NoTransitionPage(child: lounges.LoungesPage()),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: lounges.LoungesPage()),
               ),
               GoRoute(
                 path: RouterKeys.superAdminUsers,
                 pageBuilder: (context, state) => NoTransitionPage(
-                  child: MultiBlocProvider(
+                  child: MultiBlocProviderScope(
                     providers: [
-                      BlocProvider(create: (_) => sl<AdminManagementCubit>()..fetchAdmins()),
-                      BlocProvider(create: (_) => sl<LoungeCubit>()..fetchLounges()),
+                      BlocProvider(
+                        create: (_) => sl<AdminManagementCubit>(),
+                      ),
+                      BlocProvider(
+                        create: (_) => sl<LoungeCubit>(),
+                      ),
                     ],
                     child: const users.UsersPage(),
                   ),
@@ -319,10 +370,12 @@ class AppRouter {
               GoRoute(
                 path: RouterKeys.superAdminTournaments,
                 pageBuilder: (context, state) => NoTransitionPage(
-                  child: MultiBlocProvider(
+                  child: MultiBlocProviderScope(
                     providers: [
                       BlocProvider(create: (_) => sl<TournamentCubit>()),
-                      BlocProvider(create: (_) => sl<TournamentParticipantsCubit>()),
+                      BlocProvider(
+                        create: (_) => sl<TournamentParticipantsCubit>(),
+                      ),
                       BlocProvider(create: (_) => sl<TournamentMatchesCubit>()),
                     ],
                     child: const tournaments.TournamentsScreen(),
@@ -379,13 +432,16 @@ class AppRouter {
                 pageBuilder: (context, state) {
                   final user = authCubit.state.user;
                   return NoTransitionPage(
-                    child: dashboard.DashboardScreen(role: user?.role ?? UserRole.manager),
+                    child: dashboard.DashboardScreen(
+                      role: user?.role ?? UserRole.manager,
+                    ),
                   );
                 },
               ),
               GoRoute(
                 path: RouterKeys.loungeAdminLiveOps,
-                pageBuilder: (context, state) => const NoTransitionPage(child: bookings.BookingsPage()),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: bookings.BookingsPage()),
               ),
               GoRoute(
                 path: RouterKeys.loungeAdminRooms,
@@ -398,19 +454,25 @@ class AppRouter {
               ),
               GoRoute(
                 path: RouterKeys.loungeAdminExtras,
-                pageBuilder: (context, state) => const NoTransitionPage(child: extras.ExtrasManagementPage()),
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: extras.ExtrasManagementPage(),
+                ),
               ),
               GoRoute(
                 path: RouterKeys.loungeAdminReviews,
-                pageBuilder: (context, state) => const NoTransitionPage(child: reviews_page.LoungeReviewsPage()),
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: reviews_page.LoungeReviewsPage(),
+                ),
               ),
               GoRoute(
                 path: RouterKeys.loungeAdminTournaments,
                 pageBuilder: (context, state) => NoTransitionPage(
-                  child: MultiBlocProvider(
+                  child: MultiBlocProviderScope(
                     providers: [
                       BlocProvider(create: (_) => sl<TournamentCubit>()),
-                      BlocProvider(create: (_) => sl<TournamentParticipantsCubit>()),
+                      BlocProvider(
+                        create: (_) => sl<TournamentParticipantsCubit>(),
+                      ),
                       BlocProvider(create: (_) => sl<TournamentMatchesCubit>()),
                     ],
                     child: const tournaments.TournamentsScreen(),
@@ -437,14 +499,14 @@ class AppRouter {
               ),
 
               GoRoute(
-                path: '/lounge-admin/reports',
-                pageBuilder: (context, state) => const NoTransitionPage(child: reports.BookingHistoryPage()),
+                path: RouterKeys.loungeAdminReports,
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: reports.BookingHistoryPage()),
               ),
               GoRoute(
-                path: '/lounge-admin/shifts',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: shifts.ShiftHistoryScreen(),
-                ),
+                path: RouterKeys.loungeAdminShifts,
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: shifts.ShiftHistoryScreen()),
               ),
               GoRoute(
                 path: RouterKeys.loungeAdminStaff,
@@ -472,9 +534,8 @@ class AppRouter {
               ),
               GoRoute(
                 path: RouterKeys.profile,
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: profile.ProfilePage(),
-                ),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: profile.ProfilePage()),
               ),
             ],
           ),
@@ -486,7 +547,10 @@ class AppRouter {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(AppStrings.pageNotFound, style: const TextStyle(color: Colors.white, fontSize: 24)),
+            Text(
+              AppStrings.pageNotFound,
+              style: const TextStyle(color: Colors.white, fontSize: 24),
+            ),
             const SizedBox(height: 16),
             AppButton(
               onPressed: () => context.go(RouterKeys.root),

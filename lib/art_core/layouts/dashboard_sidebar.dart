@@ -175,31 +175,31 @@ class DashboardSidebar extends StatelessWidget {
       _SidebarItem(
         icon: Icons.analytics_outlined,
         label: AppStrings.analytics,
-        isActive: activeRoute == AppStrings.dashboard,
+        isActive: activeRoute == RouterKeys.superAdminDashboard,
         onTap: () => context.go(RouterKeys.superAdminDashboard),
       ),
       _SidebarItem(
         icon: Icons.business_outlined,
         label: AppStrings.lounges,
-        isActive: activeRoute == AppStrings.lounges,
+        isActive: activeRoute == RouterKeys.superAdminLounges,
         onTap: () => context.go(RouterKeys.superAdminLounges),
       ),
       _SidebarItem(
         icon: Icons.account_balance_wallet_outlined,
         label: AppStrings.payouts,
-        isActive: activeRoute == AppStrings.payouts,
+        isActive: activeRoute == RouterKeys.superAdminPayouts,
         onTap: () => context.go(RouterKeys.superAdminPayouts),
       ),
       _SidebarItem(
         icon: Icons.verified_user_outlined,
         label: AppStrings.kycReviews,
-        isActive: activeRoute == AppStrings.kycReviews,
+        isActive: activeRoute == RouterKeys.superAdminKyc,
         onTap: () => context.go(RouterKeys.superAdminKyc),
       ),
       _SidebarItem(
         icon: Icons.card_giftcard_outlined,
         label: AppStrings.loyaltySystemAndReferrals,
-        isActive: activeRoute == AppStrings.loyaltySystemAndReferrals,
+        isActive: activeRoute == RouterKeys.superAdminLoyalty,
         onTap: () => context.go(RouterKeys.superAdminLoyalty),
       ),
       _SidebarItem(
@@ -259,7 +259,7 @@ class DashboardSidebar extends StatelessWidget {
       _SidebarItem(
         icon: Icons.analytics_outlined,
         label: AppStrings.dashboard,
-        isActive: activeRoute == AppStrings.dashboard,
+        isActive: activeRoute == RouterKeys.loungeAdminDashboard,
         onTap: () => context.go(RouterKeys.loungeAdminDashboard),
       ),
 
@@ -268,7 +268,7 @@ class DashboardSidebar extends StatelessWidget {
         _SidebarItem(
           icon: Icons.sensors,
           label: AppStrings.bookings,
-          isActive: activeRoute == AppStrings.bookings,
+          isActive: activeRoute == RouterKeys.loungeAdminLiveOps,
           onTap: () => context.go(RouterKeys.loungeAdminLiveOps),
         ),
       
@@ -277,7 +277,7 @@ class DashboardSidebar extends StatelessWidget {
         _SidebarItem(
           icon: Icons.meeting_room_outlined,
           label: AppStrings.rooms,
-          isActive: activeRoute == AppStrings.rooms,
+          isActive: activeRoute == RouterKeys.loungeAdminRooms,
           onTap: () => context.go(RouterKeys.loungeAdminRooms),
         ),
 
@@ -285,7 +285,7 @@ class DashboardSidebar extends StatelessWidget {
         _SidebarItem(
           icon: Icons.restaurant_menu,
           label: AppStrings.extras,
-          isActive: activeRoute == AppStrings.extras,
+          isActive: activeRoute == RouterKeys.loungeAdminExtras,
           onTap: () => context.go(RouterKeys.loungeAdminExtras),
         ),
 
@@ -293,7 +293,7 @@ class DashboardSidebar extends StatelessWidget {
         _SidebarItem(
           icon: Icons.star_outline_rounded,
           label: AppStrings.loungeReviews,
-          isActive: activeRoute == AppStrings.loungeReviews,
+          isActive: activeRoute == RouterKeys.loungeAdminReviews,
           onTap: () => context.go(RouterKeys.loungeAdminReviews),
         ),
 
@@ -302,7 +302,7 @@ class DashboardSidebar extends StatelessWidget {
         _SidebarItem(
           icon: Icons.campaign_outlined,
           label: AppStrings.marketing,
-          isActive: activeRoute == AppStrings.marketing,
+          isActive: activeRoute == RouterKeys.loungeAdminMarketing,
           onTap: () => context.go(RouterKeys.loungeAdminMarketing),
         ),
 
@@ -318,7 +318,7 @@ class DashboardSidebar extends StatelessWidget {
         _SidebarItem(
           icon: Icons.people_outline,
           label: AppStrings.staffManagement,
-          isActive: activeRoute == AppStrings.staffManagement,
+          isActive: activeRoute == RouterKeys.loungeAdminStaff,
           onTap: () => context.go(RouterKeys.loungeAdminStaff),
         ),
 
@@ -327,16 +327,16 @@ class DashboardSidebar extends StatelessWidget {
         _SidebarItem(
           icon: Icons.history_outlined,
           label: AppStrings.shiftHistory,
-          isActive: activeRoute == AppStrings.shiftHistory,
-          onTap: () => context.go('/lounge-admin/shifts'),
+          isActive: activeRoute == RouterKeys.loungeAdminShifts,
+          onTap: () => context.go(RouterKeys.loungeAdminShifts),
         ),
 
       if (canViewReports)
         _SidebarItem(
           icon: Icons.assessment_outlined,
           label: AppStrings.monthlyReports,
-          isActive: activeRoute == AppStrings.monthlyReports,
-          onTap: () => context.go('/lounge-admin/reports'),
+          isActive: activeRoute == RouterKeys.loungeAdminReports,
+          onTap: () => context.go(RouterKeys.loungeAdminReports),
         ),
 
       // Profile & Settings
@@ -344,7 +344,7 @@ class DashboardSidebar extends StatelessWidget {
         _SidebarItem(
           icon: Icons.settings_outlined,
           label: AppStrings.loungeProfile,
-          isActive: activeRoute == AppStrings.loungeProfile,
+          isActive: activeRoute == RouterKeys.loungeAdminProfile,
           onTap: () => context.go(RouterKeys.loungeAdminProfile),
         ),
 
@@ -358,7 +358,7 @@ class DashboardSidebar extends StatelessWidget {
       _SidebarItem(
         icon: Icons.person_outline,
         label: AppStrings.myProfile,
-        isActive: activeRoute == AppStrings.myProfile,
+        isActive: activeRoute == RouterKeys.profile,
         onTap: () => context.go(RouterKeys.profile),
       ),
     ];

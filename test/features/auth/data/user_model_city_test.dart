@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:play_spot_dashboard/features/auth/data/models/user_model.dart';
-import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 
 void main() {
   group('UserModel & Profile City & Payload Sanitization Tests', () {

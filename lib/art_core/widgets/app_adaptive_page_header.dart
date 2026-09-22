@@ -82,11 +82,11 @@ class AppAdaptivePageHeader extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (secondaryAction != null) ...[
-                secondaryAction!,
+              if (secondaryAction case final secAction?) ...[
+                secAction,
                 if (primaryAction != null) SizedBox(width: 12.w),
               ],
-              if (primaryAction != null) primaryAction!,
+              ?primaryAction,
             ],
           ),
         ],

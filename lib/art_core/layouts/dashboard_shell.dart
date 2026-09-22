@@ -18,6 +18,7 @@ import '../../features/shifts/presentation/shift_management/widgets/open_shift_d
 import '../../features/shifts/presentation/shift_management/widgets/shift_summary_modal.dart';
 import '../../features/shifts/presentation/shift_management/widgets/shift_header_banner.dart';
 import '../../features/permissions/presentation/cubit/permissions_cubit.dart';
+import '../../core/router/router_keys.dart';
 import 'dashboard_sidebar.dart';
 import 'dashboard_top_bar.dart';
 import '../widgets/geolocation_handler.dart';
@@ -34,19 +35,6 @@ class DashboardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final loginState = context.read<LoginCubit>().state;
-      final user = loginState.user;
-      final loungeId = user?.loungeId ?? loginState.userLounge?.id;
-      final roleStr = user?.rawRole ?? user?.role.name ?? 'staff';
-      context.read<PermissionsCubit>().loadUserPermissions(roleStr, loungeId: loungeId);
-
-      final loungeCubit = context.read<LoungeCubit>();
-      if (loungeCubit.state.status == LoungeStatus.initial) {
-        loungeCubit.fetchLounges();
-      }
-    });
-
     return BlocBuilder<LoginCubit, LoginState>(
       buildWhen: (prev, curr) => prev.user != curr.user,
       builder: (context, loginState) {
@@ -56,51 +44,97 @@ class DashboardShell extends StatelessWidget {
         String activeRoute = '';
         String title = AppStrings.dashboard;
 
-        if (location.contains('dashboard')) {
-          activeRoute = AppStrings.dashboard;
-          title = AppStrings.systemOverview;
-        } else if (location.contains('lounges')) {
-          activeRoute = AppStrings.lounges;
-          title = AppStrings.lounges;
-        } else if (location.contains('rooms')) {
-          activeRoute = AppStrings.rooms;
-          title = AppStrings.manageRoomsDesc;
-        } else if (location.contains('live-operations')) {
-          activeRoute = AppStrings.bookings;
-          title = AppStrings.bookings;
-        } else if (location.contains('users')) {
-          activeRoute = AppStrings.users;
-          title = AppStrings.loungeAdministrators;
-        } else if (location.contains('marketing')) {
-          activeRoute = AppStrings.marketing;
-          title = AppStrings.marketing;
-        } else if (location.contains('payouts')) {
-          activeRoute = isSuperAdmin ? AppStrings.payouts : AppStrings.myPayouts;
-          title = isSuperAdmin ? AppStrings.loungePayouts : AppStrings.payoutHistory;
-        } else if (location.contains('kyc')) {
-          activeRoute = AppStrings.kycReviews;
-          title = AppStrings.kycReviews;
-        } else if (location.contains('reviews')) {
-          activeRoute = AppStrings.loungeReviews;
-          title = AppStrings.loungeReviews;
-        } else if (location.contains('loyalty')) {
-          activeRoute = AppStrings.loyaltySystemAndReferrals;
-          title = AppStrings.loyaltySystemAndReferrals;
-        } else if (location.contains('shifts')) {
-          activeRoute = AppStrings.shiftHistory;
-          title = AppStrings.shiftHistory;
-        } else if (location.contains('staff')) {
-          activeRoute = AppStrings.staffManagement;
-          title = AppStrings.staffManagement;
-        } else if (location.contains('reports')) {
-          activeRoute = AppStrings.monthlyReports;
-          title = AppStrings.monthlyReports;
-        } else if (location.contains('lounge-admin/profile')) {
-          activeRoute = AppStrings.loungeProfile;
-          title = AppStrings.loungeProfile;
-        } else if (location.contains('profile')) {
-          activeRoute = AppStrings.myProfile;
-          title = AppStrings.myProfile;
+        if (isSuperAdmin) {
+          if (location.startsWith(RouterKeys.superAdminDashboard)) {
+            activeRoute = RouterKeys.superAdminDashboard;
+            title = AppStrings.systemOverview;
+          } else if (location.startsWith(RouterKeys.superAdminLounges)) {
+            activeRoute = RouterKeys.superAdminLounges;
+            title = AppStrings.lounges;
+          } else if (location.startsWith(RouterKeys.superAdminPayouts)) {
+            activeRoute = RouterKeys.superAdminPayouts;
+            title = AppStrings.loungePayouts;
+          } else if (location.startsWith(RouterKeys.superAdminKyc)) {
+            activeRoute = RouterKeys.superAdminKyc;
+            title = AppStrings.kycReviews;
+          } else if (location.startsWith(RouterKeys.superAdminLoyalty)) {
+            activeRoute = RouterKeys.superAdminLoyalty;
+            title = AppStrings.loyaltySystemAndReferrals;
+          } else if (location.startsWith(RouterKeys.superAdminTournaments)) {
+            activeRoute = RouterKeys.superAdminTournaments;
+            title = AppStrings.tournaments;
+          } else if (location.startsWith(RouterKeys.superAdminSupportSettings)) {
+            activeRoute = RouterKeys.superAdminSupportSettings;
+            title = AppStrings.supportAndPaymentSettings;
+          } else if (location.startsWith(RouterKeys.superAdminPolicies)) {
+            activeRoute = RouterKeys.superAdminPolicies;
+            title = AppStrings.policiesManagement;
+          } else if (location.startsWith(RouterKeys.superAdminFaqs)) {
+            activeRoute = RouterKeys.superAdminFaqs;
+            title = AppStrings.faqsTitle;
+          } else if (location.startsWith(RouterKeys.superAdminTickets)) {
+            activeRoute = RouterKeys.superAdminTickets;
+            title = AppStrings.supportTickets;
+          } else if (location.startsWith(RouterKeys.superAdminSystemSettings)) {
+            activeRoute = RouterKeys.superAdminSystemSettings;
+            title = AppStrings.systemAndAnnouncements;
+          } else if (location.startsWith(RouterKeys.superAdminCategories)) {
+            activeRoute = RouterKeys.superAdminCategories;
+            title = AppStrings.categories;
+          } else if (location.startsWith(RouterKeys.superAdminMarketing)) {
+            activeRoute = RouterKeys.superAdminMarketing;
+            title = AppStrings.marketing;
+          } else if (location.startsWith(RouterKeys.superAdminUsers)) {
+            activeRoute = RouterKeys.superAdminUsers;
+            title = AppStrings.loungeAdministrators;
+          } else if (location.startsWith(RouterKeys.profile)) {
+            activeRoute = RouterKeys.profile;
+            title = AppStrings.myProfile;
+          }
+        } else {
+          if (location.startsWith(RouterKeys.loungeAdminDashboard)) {
+            activeRoute = RouterKeys.loungeAdminDashboard;
+            title = AppStrings.dashboard;
+          } else if (location.startsWith(RouterKeys.loungeAdminLiveOps)) {
+            activeRoute = RouterKeys.loungeAdminLiveOps;
+            title = AppStrings.bookings;
+          } else if (location.startsWith(RouterKeys.loungeAdminRooms)) {
+            activeRoute = RouterKeys.loungeAdminRooms;
+            title = AppStrings.manageRoomsDesc;
+          } else if (location.startsWith(RouterKeys.loungeAdminExtras)) {
+            activeRoute = RouterKeys.loungeAdminExtras;
+            title = AppStrings.extras;
+          } else if (location.startsWith(RouterKeys.loungeAdminReviews)) {
+            activeRoute = RouterKeys.loungeAdminReviews;
+            title = AppStrings.loungeReviews;
+          } else if (location.startsWith(RouterKeys.loungeAdminMarketing)) {
+            activeRoute = RouterKeys.loungeAdminMarketing;
+            title = AppStrings.marketing;
+          } else if (location.startsWith(RouterKeys.loungeAdminTournaments)) {
+            activeRoute = RouterKeys.loungeAdminTournaments;
+            title = AppStrings.tournaments;
+          } else if (location.startsWith(RouterKeys.loungeAdminStaff)) {
+            activeRoute = RouterKeys.loungeAdminStaff;
+            title = AppStrings.staffManagement;
+          } else if (location.startsWith(RouterKeys.loungeAdminShifts)) {
+            activeRoute = RouterKeys.loungeAdminShifts;
+            title = AppStrings.shiftHistory;
+          } else if (location.startsWith(RouterKeys.loungeAdminReports)) {
+            activeRoute = RouterKeys.loungeAdminReports;
+            title = AppStrings.monthlyReports;
+          } else if (location.startsWith(RouterKeys.loungeAdminPayouts)) {
+            activeRoute = RouterKeys.loungeAdminPayouts;
+            title = AppStrings.myPayouts;
+          } else if (location.startsWith(RouterKeys.loungeAdminProfile)) {
+            activeRoute = RouterKeys.loungeAdminProfile;
+            title = AppStrings.loungeProfile;
+          } else if (location.startsWith(RouterKeys.loungeAdminSupport)) {
+            activeRoute = RouterKeys.loungeAdminSupport;
+            title = AppStrings.supportAndHelp;
+          } else if (location.startsWith(RouterKeys.profile)) {
+            activeRoute = RouterKeys.profile;
+            title = AppStrings.myProfile;
+          }
         }
 
         return GeolocationHandler(
@@ -145,6 +179,7 @@ class _DashboardShellContentState extends State<_DashboardShellContent> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkUnauthorizedNotice();
+      _initializePermissionsAndLounges();
       final loungeId = widget.user?.loungeId;
       if (loungeId != null && loungeId.isNotEmpty) {
         context.read<ShiftCubit>().checkActiveShift(loungeId);
@@ -156,11 +191,29 @@ class _DashboardShellContentState extends State<_DashboardShellContent> {
     });
   }
 
+  void _initializePermissionsAndLounges() {
+    final loginState = context.read<LoginCubit>().state;
+    final user = loginState.user;
+    final loungeId = user?.loungeId ?? loginState.userLounge?.id;
+    final roleStr = user?.rawRole ?? user?.role.name ?? 'staff';
+    context.read<PermissionsCubit>().loadUserPermissions(roleStr, loungeId: loungeId);
+
+    final loungeCubit = context.read<LoungeCubit>();
+    if (loungeCubit.state.status == LoungeStatus.initial) {
+      loungeCubit.fetchLounges();
+    }
+  }
+
   @override
   void didUpdateWidget(covariant _DashboardShellContent oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.location != oldWidget.location) {
       _checkUnauthorizedNotice();
+    }
+    if (widget.user?.id != oldWidget.user?.id ||
+        widget.user?.role != oldWidget.user?.role ||
+        widget.user?.loungeId != oldWidget.user?.loungeId) {
+      _initializePermissionsAndLounges();
     }
     if (widget.user?.loungeId != oldWidget.user?.loungeId) {
       final loungeId = widget.user?.loungeId;
@@ -272,7 +325,7 @@ class _DashboardShellContentState extends State<_DashboardShellContent> {
                   DashboardTopBar(
                     title: widget.title,
                     showMenuButton: Responsive.isMobile(context),
-                    actions: widget.activeRoute == AppStrings.myProfile 
+                    actions: widget.activeRoute == RouterKeys.profile 
                       ? [
                           IconButton(
                             icon: const Icon(Icons.edit_outlined, color: AppColors.textPrimary),

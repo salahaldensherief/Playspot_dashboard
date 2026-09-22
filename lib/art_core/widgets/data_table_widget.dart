@@ -19,13 +19,14 @@ class DataTableWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMobile = AppBreakpoints.isMobile(context);
 
-    if (isMobile && mobileCardBuilder != null && rows.isNotEmpty) {
+    final cardBuilder = mobileCardBuilder;
+    if (isMobile && cardBuilder != null && rows.isNotEmpty) {
       return ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: rows.length,
-        separatorBuilder: (_, __) => SizedBox(height: 12.h),
-        itemBuilder: (context, index) => mobileCardBuilder!(context, index),
+        separatorBuilder: (_, _) => SizedBox(height: 12.h),
+        itemBuilder: (context, index) => cardBuilder(context, index),
       );
     }
 
