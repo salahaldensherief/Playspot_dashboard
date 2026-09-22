@@ -639,7 +639,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
       });
 
       if (response != null && response is List) {
-        return (response as List).map((json) {
+        return response.map((json) {
           return TournamentMatchModel.fromJson(Map<String, dynamic>.from(json));
         }).toList();
       }

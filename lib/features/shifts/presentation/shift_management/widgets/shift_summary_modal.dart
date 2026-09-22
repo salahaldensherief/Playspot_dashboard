@@ -23,7 +23,7 @@ class ShiftSummaryModal extends StatelessWidget {
           style: TextStyle(color: AppColors.neonBlue, fontSize: 24.sp, fontWeight: FontWeight.bold, fontFamily: 'Orbitron'),
         ),
       ),
-      content: Container(
+      content: SizedBox(
         width: 400.w,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -83,9 +83,9 @@ class ShiftSummaryModal extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(12.r),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8.r),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -58,6 +58,11 @@ import 'package:play_spot_dashboard/features/support/presentation/support_cubit.
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import 'package:play_spot_dashboard/features/reviews/presentation/reviews_cubit.dart';
+import 'package:play_spot_dashboard/features/users/presentation/pages/users_page.dart' as users;
+import 'package:play_spot_dashboard/features/users/presentation/cubit/admin_management_cubit.dart';
+import 'package:play_spot_dashboard/features/payouts/presentation/cubit/payout_cubit.dart';
+
+
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
 import '../../art_core/theme/app_colors.dart';
@@ -254,8 +259,17 @@ class AppRouter {
               ),
               GoRoute(
                 path: RouterKeys.superAdminUsers,
-                redirect: (context, state) => RouterKeys.superAdminLounges,
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: MultiBlocProvider(
+                    providers: [
+                      BlocProvider(create: (_) => sl<AdminManagementCubit>()..fetchAdmins()),
+                      BlocProvider(create: (_) => sl<LoungeCubit>()..fetchLounges()),
+                    ],
+                    child: const users.UsersPage(),
+                  ),
+                ),
               ),
+
               GoRoute(
                 path: RouterKeys.superAdminCategories,
                 pageBuilder: (context, state) => NoTransitionPage(
@@ -276,10 +290,14 @@ class AppRouter {
               ),
               GoRoute(
                 path: RouterKeys.superAdminPayouts,
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: payouts.SuperAdminPayoutsPage(),
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: BlocProvider(
+                    create: (_) => sl<PayoutCubit>(),
+                    child: const payouts.SuperAdminPayoutsPage(),
+                  ),
                 ),
               ),
+
               GoRoute(
                 path: RouterKeys.superAdminKyc,
                 pageBuilder: (context, state) => NoTransitionPage(
@@ -410,10 +428,14 @@ class AppRouter {
               ),
               GoRoute(
                 path: RouterKeys.loungeAdminPayouts,
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: lounge_payouts.LoungeAdminPayoutsPage(),
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: BlocProvider(
+                    create: (_) => sl<PayoutCubit>(),
+                    child: const lounge_payouts.LoungeAdminPayoutsPage(),
+                  ),
                 ),
               ),
+
               GoRoute(
                 path: '/lounge-admin/reports',
                 pageBuilder: (context, state) => const NoTransitionPage(child: reports.BookingHistoryPage()),

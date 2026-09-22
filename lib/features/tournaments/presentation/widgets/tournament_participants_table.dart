@@ -111,7 +111,8 @@ class TournamentParticipantsTable extends StatelessWidget {
             borderRadius: BorderRadius.circular(12.r),
             child: DataTable(
               headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
-              dataRowHeight: 64.h,
+              dataRowMinHeight: 64.h,
+              dataRowMaxHeight: 64.h,
               columns: [
                 DataColumn(label: Text(AppStrings.customerName, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
                 DataColumn(label: Text(AppStrings.phoneNumber, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
@@ -140,7 +141,7 @@ class TournamentParticipantsTable extends StatelessWidget {
                             children: [
                               Text(p.userName, style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.w600)),
                               if (p.isWaitlist)
-                                Text('قائمة الانتظار', style: TextStyle(color: AppColors.warning, fontSize: 11.sp, fontWeight: FontWeight.bold)),
+                                Text(AppStrings.waitlistLabel, style: TextStyle(color: AppColors.warning, fontSize: 11.sp, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ],

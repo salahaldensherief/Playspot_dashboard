@@ -40,7 +40,7 @@ class CustomDropdown<T> extends StatelessWidget {
         ),
         SizedBox(height: 8.h),
         DropdownButtonFormField<T>(
-          value: value,
+          initialValue: value,
           isExpanded: true,
           dropdownColor: AppColors.cardBackground,
           style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),

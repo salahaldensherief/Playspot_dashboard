@@ -173,12 +173,10 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
             .select('*, rooms(name, name_en), profiles(full_name, phone, email)')
             .eq('lounge_id', loungeId)
             .eq('extension_status', 'pending');
-        if (response is List) {
-          return response.map((json) {
-            final map = Map<String, dynamic>.from(json);
-            return ClientRequestModel.fromBookingExtensionJson(map);
-          }).toList();
-        }
+        return (response as List).map((json) {
+          final map = Map<String, dynamic>.from(json);
+          return ClientRequestModel.fromBookingExtensionJson(map);
+        }).toList();
       } catch (e2) {
         debugPrint('⚠️ [REQUESTS_DATA_SOURCE] fallback bookings select error: $e2');
       }
@@ -353,7 +351,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
           }
 
           final response = await client.from(table).update(updatePayload).eq('id', rawDbId).select();
-          if (response != null && (response as List).isNotEmpty) {
+          if ((response as List).isNotEmpty) {
             debugPrint('🟢 [REQUESTS_DATA_SOURCE] Marked request $id as attended in table $table');
             return;
           }

@@ -994,8 +994,67 @@ class AppStrings {
   static String get autoCancelledLabel => 'auto_cancelled_label'.tr();
   static String get manualCancelledLabel => 'manual_cancelled_label'.tr();
   static String cancellationReasonLabel(String reason) => 'cancellation_reason_label'.tr(args: [reason]);
-  static String get confirmExtensionApproval => 'تأكيد الموافقة على التمديد';
-  static String get rejectExtensionRequest => 'تأكيد رفض طلب التمديد';
+  static String get confirmExtensionApproval => 'confirm_extension_approval'.tr();
+  static String get confirmExtensionRejection => 'confirm_extension_rejection'.tr();
+
+  // Shift Status Messages
+  static String get shiftOpenedSuccess => 'shift_opened_success'.tr();
+  static String get shiftClosedSuccess => 'shift_closed_success'.tr();
+  static String errorCheckingShift(String msg) => 'error_checking_shift'.tr(args: [msg]);
+
+  // Image Picker Errors
+  static String errorPickingImage(String err) => 'error_picking_image'.tr(args: [err]);
+  static String errorPickingImages(String err) => 'error_picking_images'.tr(args: [err]);
+
+  // Cashier Performance Table Columns
+  static String get cashierShiftCountCol => 'cashier_shift_count_col'.tr();
+  static String get cashierClosedCol => 'cashier_closed_col'.tr();
+  static String get cashierApprovedCol => 'cashier_approved_col'.tr();
+  static String get cashierTotalSalesCol => 'cashier_total_sales_col'.tr();
+  static String get cashierCashSalesCol => 'cashier_cash_sales_col'.tr();
+  static String get cashierDigitalSalesCol => 'cashier_digital_sales_col'.tr();
+  static String get cashierExpensesCol => 'cashier_expenses_col'.tr();
+  static String get cashierDiscrepancyCol => 'cashier_discrepancy_col'.tr();
+  static String get cashierAvgSalesCol => 'cashier_avg_sales_col'.tr();
+
+  // Lounge Comparison Table Columns
+  static String get comparisonTotalShiftsCol => 'comparison_total_shifts_col'.tr();
+  static String get comparisonOpenNowCol => 'comparison_open_now_col'.tr();
+  static String get comparisonTotalSalesCol => 'comparison_total_sales_col'.tr();
+  static String get comparisonTotalExpensesCol => 'comparison_total_expenses_col'.tr();
+  static String get comparisonTotalDifferencesCol => 'comparison_total_differences_col'.tr();
+  static String get comparisonAvgShiftSalesCol => 'comparison_avg_shift_sales_col'.tr();
+  static String get comparisonPendingApprovalCol => 'comparison_pending_approval_col'.tr();
+
+  // Shift KPI
+  static String get digitalRevenueSubtitle => 'digital_revenue_subtitle'.tr();
+
+  // Tournaments
+  static String get tournamentCancelledInfo => 'tournament_cancelled_info'.tr();
+
+  // Dispute Resolution
+  static String get disputePlayerOne => 'dispute_player_one'.tr();
+  static String get disputePlayerTwo => 'dispute_player_two'.tr();
+  static String get disputeReasonLabel => 'dispute_reason_label'.tr();
+  static String get disputeProofImageLabel => 'dispute_proof_image_label'.tr();
+  static String get disputeSelectWinner => 'dispute_select_winner'.tr();
+  static String get disputeAdminNotesHint => 'dispute_admin_notes_hint'.tr();
+
+  // Participants
+  static String get waitlistLabel => 'waitlist_label'.tr();
+
+  // Extension Dialogs
+  static String get approveExtensionTitle => 'approve_extension_title'.tr();
+  static String get approveExtensionCostLabel => 'approve_extension_cost_label'.tr();
+  static String get additionalCostField => 'additional_cost_field'.tr();
+  static String get rejectExtensionTitle => 'reject_extension_title'.tr();
+  static String get rejectReasonLabel => 'reject_reason_label'.tr();
+  static String get rejectionReasonField => 'rejection_reason_field'.tr();
+  static String get rejectReasonDefault => 'reject_reason_default'.tr();
+
+  // Promo Audience
+  static String get promoAudienceLocal => 'promo_audience_local'.tr();
+  static String get promoAudienceAll => 'promo_audience_all'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

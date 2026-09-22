@@ -117,7 +117,7 @@ class _CategoryDialogState extends State<CategoryDialog> {
                       child: Container(
                         padding: EdgeInsets.all(10.r),
                         decoration: BoxDecoration(
-                          color: isSelected ? AppColors.neonBlue.withOpacity(0.1) : Colors.transparent,
+                          color: isSelected ? AppColors.neonBlue.withValues(alpha: 0.1) : Colors.transparent,
                           borderRadius: BorderRadius.circular(8.r),
                           border: Border.all(
                             color: isSelected ? AppColors.neonBlue : Colors.transparent,

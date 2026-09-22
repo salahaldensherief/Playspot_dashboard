@@ -397,7 +397,7 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
           Container(
             padding: EdgeInsets.all(8.r),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(icon, color: color, size: 20.r),

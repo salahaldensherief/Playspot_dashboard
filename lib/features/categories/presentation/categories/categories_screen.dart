@@ -182,7 +182,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
         
         return ListView.separated(
           itemCount: state.cities.length,
-          separatorBuilder: (_, __) => Divider(color: AppColors.borderDefault),
+          separatorBuilder: (_, _) => Divider(color: AppColors.borderDefault),
           itemBuilder: (context, index) {
             final city = state.cities[index];
             return ListTile(
@@ -194,7 +194,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
                   Switch(
                     value: city.isActive, 
                     onChanged: (val) => cubit.updateCity(city.copyWith(isActive: val)),
-                    activeColor: AppColors.success,
+                    activeThumbColor: AppColors.success,
                   ),
                   IconButton(icon: const Icon(Icons.edit, color: AppColors.textSecondary), onPressed: () => _showCityDialog(context, cubit, city: city)),
                   IconButton(icon: const Icon(Icons.delete, color: AppColors.danger), onPressed: () => _confirmCityDelete(context, cubit, city)),

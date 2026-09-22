@@ -65,7 +65,7 @@ class RoomsDataTable extends StatelessWidget {
             DataCell(
               Switch(
                 value: room.status == RoomStatusEnum.available,
-                activeColor: AppColors.neonBlue,
+                activeThumbColor: AppColors.neonBlue,
                 onChanged: (val) => roomCubit.toggleRoomStatus(room.id, room.status),
               ),
             ),

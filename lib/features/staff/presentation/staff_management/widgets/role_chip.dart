@@ -21,7 +21,7 @@ class RoleChip extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.neonBlue.withOpacity(0.1) : AppColors.mutedBackground,
+          color: isSelected ? AppColors.neonBlue.withValues(alpha: 0.1) : AppColors.mutedBackground,
           borderRadius: BorderRadius.circular(8.r),
           border: Border.all(color: isSelected ? AppColors.neonBlue : AppColors.borderDefault),
         ),

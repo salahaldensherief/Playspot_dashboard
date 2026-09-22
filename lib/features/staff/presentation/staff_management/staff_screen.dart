@@ -89,7 +89,7 @@ class _StaffScreenState extends State<StaffScreen> {
               ],
             ),
             SizedBox(height: 32.h),
-            Container(
+            SizedBox(
               width: 400.w,
               child: AppTextField(
                 hintText: AppStrings.searchStaff,
@@ -122,7 +122,7 @@ class _StaffScreenState extends State<StaffScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.people_outline, size: 64.r, color: AppColors.textSecondary.withOpacity(0.2)),
+                          Icon(Icons.people_outline, size: 64.r, color: AppColors.textSecondary.withValues(alpha: 0.2)),
                           SizedBox(height: 16.h),
                           Text(AppStrings.noStaffFound, style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp)),
                         ],

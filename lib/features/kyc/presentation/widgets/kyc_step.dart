@@ -46,9 +46,9 @@ class KycStep extends StatelessWidget {
         Container(
           padding: EdgeInsets.all(16.r),
           decoration: BoxDecoration(
-            color: AppColors.neonBlue.withOpacity(0.05),
+            color: AppColors.neonBlue.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppColors.neonBlue.withOpacity(0.2)),
+            border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.2)),
           ),
           child: Row(
             children: [

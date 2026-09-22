@@ -208,7 +208,7 @@ class _DashboardShellContentState extends State<_DashboardShellContent> {
         if (state.status == ShiftStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error checking shift status: ${state.errorMessage}'),
+              content: Text(AppStrings.errorCheckingShift(state.errorMessage ?? '')),
               backgroundColor: AppColors.danger,
             ),
           );
@@ -221,7 +221,7 @@ class _DashboardShellContentState extends State<_DashboardShellContent> {
             _showShiftSummary(context, state.lastClosedShift!);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Shift closed successfully.'), backgroundColor: Colors.green),
+              SnackBar(content: Text(AppStrings.shiftClosedSuccess), backgroundColor: Colors.green),
             );
             context.read<ShiftCubit>().resetToInitial();
             if (widget.user?.loungeId != null) {

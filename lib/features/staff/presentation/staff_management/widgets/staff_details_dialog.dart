@@ -27,7 +27,7 @@ class StaffDetailsDialog extends StatelessWidget {
               final bool hasAvatar = staff.avatarUrl != null && staff.avatarUrl!.trim().isNotEmpty;
               return CircleAvatar(
                 radius: 20.r,
-                backgroundColor: AppColors.neonBlue.withOpacity(0.1),
+                backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
                 backgroundImage: hasAvatar ? AppCachedImage.provider(staff.avatarUrl) : null,
                 child: !hasAvatar ? Icon(Icons.person, color: AppColors.neonBlue, size: 20.r) : null,
               );

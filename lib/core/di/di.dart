@@ -41,6 +41,7 @@ Future<void> setupInjection() async {
 
   await Supabase.initialize(
     url: supabaseUrl,
+    // ignore: deprecated_member_use - Kept for compatibility until supabase_flutter major bump
     anonKey: supabaseAnonKey,
   );
 

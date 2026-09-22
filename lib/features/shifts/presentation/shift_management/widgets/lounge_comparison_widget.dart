@@ -60,13 +60,13 @@ class LoungeComparisonWidget extends StatelessWidget {
               columnSpacing: 20.w,
               columns: [
                 DataColumn(label: Text(AppStrings.loungeName, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
-                DataColumn(label: Text('إجمالي الورديات', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
-                DataColumn(label: Text('مفتوحة حالياً', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
-                DataColumn(label: Text('إجمالي المبيعات', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
-                DataColumn(label: Text('إجمالي المصروفات', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
-                DataColumn(label: Text('إجمالي الفروقات', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
-                DataColumn(label: Text('متوسط مبيعات الوردية', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
-                DataColumn(label: Text('بانتظار الاعتماد', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
+                DataColumn(label: Text(AppStrings.comparisonTotalShiftsCol, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
+                DataColumn(label: Text(AppStrings.comparisonOpenNowCol, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
+                DataColumn(label: Text(AppStrings.comparisonTotalSalesCol, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
+                DataColumn(label: Text(AppStrings.comparisonTotalExpensesCol, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
+                DataColumn(label: Text(AppStrings.comparisonTotalDifferencesCol, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
+                DataColumn(label: Text(AppStrings.comparisonAvgShiftSalesCol, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
+                DataColumn(label: Text(AppStrings.comparisonPendingApprovalCol, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
               ],
               rows: comparisons.map((c) {
                 final isHealthy = c.totalDifference >= 0;

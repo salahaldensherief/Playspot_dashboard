@@ -466,7 +466,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
               .eq(col, rawDbId)
               .select();
 
-          if (response != null && (response as List).isNotEmpty) {
+          if ((response as List).isNotEmpty) {
             debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Successfully updated request $requestId in table $table using column $col');
             success = true;
           }

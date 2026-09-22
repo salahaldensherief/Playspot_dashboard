@@ -111,7 +111,7 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
       },
     );
 
-    if (pickedDate != null && mounted) {
+    if (pickedDate != null && context.mounted) {
       final pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(initial),

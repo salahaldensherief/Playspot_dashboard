@@ -8,6 +8,9 @@ import 'package:play_spot_dashboard/features/tournaments/domain/entities/tournam
 import 'package:play_spot_dashboard/features/tournaments/domain/repositories/tournament_repository.dart';
 import 'package:play_spot_dashboard/core/services/location_service.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/usecases/tournament_match_usecases.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/usecases/tournament_participant_usecases.dart';
+import 'package:play_spot_dashboard/features/tournaments/domain/usecases/tournament_usecases.dart';
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_cubit.dart';
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_state.dart';
 
@@ -49,7 +52,34 @@ void main() {
     mockLocationService = MockLocationService();
     mockStorageService = MockStorageService();
     when(() => mockLocationService.getCurrentPosition()).thenAnswer((_) async => null);
-    cubit = TournamentCubit(mockRepository, mockLocationService, mockStorageService);
+
+    cubit = TournamentCubit(
+      getTournamentsUseCase: GetTournamentsUseCase(mockRepository),
+      createTournamentUseCase: CreateTournamentUseCase(mockRepository),
+      updateTournamentUseCase: UpdateTournamentUseCase(mockRepository),
+      saveTournamentPrizesUseCase: SaveTournamentPrizesUseCase(mockRepository),
+      publishTournamentUseCase: PublishTournamentUseCase(mockRepository),
+      cancelTournamentUseCase: CancelTournamentUseCase(mockRepository),
+      deleteDraftTournamentUseCase: DeleteDraftTournamentUseCase(mockRepository),
+      deleteTournamentUseCase: DeleteTournamentUseCase(mockRepository),
+      completeTournamentUseCase: CompleteTournamentUseCase(mockRepository),
+      awardPrizesUseCase: AwardPrizesUseCase(mockRepository),
+      getTournamentAuditLogsUseCase: GetTournamentAuditLogsUseCase(mockRepository),
+      watchDisputedMatchesUseCase: WatchDisputedMatchesUseCase(mockRepository),
+      getParticipantsUseCase: GetTournamentParticipantsUseCase(mockRepository),
+      approvePaymentUseCase: ApproveParticipantPaymentUseCase(mockRepository),
+      rejectPaymentUseCase: RejectParticipantPaymentUseCase(mockRepository),
+      recordCashPaymentUseCase: RecordCashPaymentUseCase(mockRepository),
+      promoteWaitlistUseCase: PromoteWaitlistUseCase(mockRepository),
+      checkInParticipantUseCase: CheckInParticipantUseCase(mockRepository),
+      withdrawParticipantUseCase: WithdrawParticipantUseCase(mockRepository),
+      drawBracketUseCase: DrawBracketUseCase(mockRepository),
+      getMatchesUseCase: GetTournamentMatchesUseCase(mockRepository),
+      startMatchUseCase: StartMatchUseCase(mockRepository),
+      resolveDisputeUseCase: ResolveDisputeUseCase(mockRepository),
+      locationService: mockLocationService,
+      storageService: mockStorageService,
+    );
   });
 
   tearDown(() {

@@ -29,7 +29,7 @@ class CategoryCard extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(12.r),
             decoration: BoxDecoration(
-              color: AppColors.neonBlue.withOpacity(0.1),
+              color: AppColors.neonBlue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Icon(Icons.category, color: AppColors.neonBlue, size: 24.r),

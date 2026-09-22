@@ -95,7 +95,7 @@ class _ReportUserBanDialogState extends State<ReportUserBanDialog> {
                   ),
                   SizedBox(height: 8.h),
                   DropdownButtonFormField<String>(
-                    value: _selectedReason,
+                    initialValue: _selectedReason,
                     dropdownColor: AppColors.cardBackground,
                     style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
                     decoration: InputDecoration(

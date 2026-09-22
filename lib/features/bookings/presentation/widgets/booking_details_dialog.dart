@@ -35,7 +35,7 @@ class BookingDetailsDialog extends StatefulWidget {
 class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
   final _discountController = TextEditingController();
   final _reasonController = TextEditingController();
-  bool _isPercentage = false;
+  final bool _isPercentage = false;
 
   @override
   void dispose() {

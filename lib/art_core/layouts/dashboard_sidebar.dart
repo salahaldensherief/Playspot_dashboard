@@ -32,11 +32,12 @@ class DashboardSidebar extends StatelessWidget {
         return BlocBuilder<PermissionsCubit, PermissionsState>(
           builder: (context, permState) {
             return Container(
-              width: Responsive.isDesktop(context) ? 260.w : double.infinity,
-              decoration: BoxDecoration(
+              width: Responsive.isDesktop(context) ? 260.0 : double.infinity,
+              decoration: const BoxDecoration(
                 color: AppColors.sidebarBackground,
-                border: Border(right: BorderSide(color: AppColors.borderDefault)),
+                border: BorderDirectional(end: BorderSide(color: AppColors.borderDefault)),
               ),
+
               child: Column(
                 children: [
                   SizedBox(height: 24.h),

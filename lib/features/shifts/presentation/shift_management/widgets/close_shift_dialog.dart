@@ -146,9 +146,9 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
               Container(
                 padding: EdgeInsets.all(12.r),
                 decoration: BoxDecoration(
-                  color: AppColors.neonBlue.withOpacity(0.1),
+                  color: AppColors.neonBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: AppColors.neonBlue.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
