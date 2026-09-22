@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../art_core/theme/app_colors.dart';
+import '../../../art_core/widgets/app_adaptive_page_header.dart';
 import '../../../art_core/widgets/app_button.dart';
 import '../../../art_core/widgets/section_container.dart';
 import '../../../art_core/widgets/status_badge.dart';
@@ -97,43 +98,15 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.quiz_outlined, color: AppColors.neonBlue, size: 28.r),
-                            SizedBox(width: 12.w),
-                            Text(
-                              'إدارة الأسئلة الشائعة (FAQ)',
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 22.sp,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          'إضافة وتعديل الأسئلة الشائعة وإجاباتها والمعروضة بداخل قسم الدعم بالتطبيق',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 14.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                    AppButton(
-                      text: '+ إضافة سؤال جديد',
-                      variant: AppButtonVariant.gradient,
-                      icon: Icons.add,
-                      onPressed: () => _openFaqDialog(),
-                    ),
-                  ],
+                AppAdaptivePageHeader(
+                  title: 'إدارة الأسئلة الشائعة (FAQ)',
+                  subtitle: 'إضافة وتعديل الأسئلة الشائعة وإجاباتها والمعروضة بداخل قسم الدعم بالتطبيق',
+                  primaryAction: AppButton(
+                    text: 'إضافة سؤال جديد',
+                    variant: AppButtonVariant.gradient,
+                    icon: Icons.add,
+                    onPressed: () => _openFaqDialog(),
+                  ),
                 ),
                 SizedBox(height: 24.h),
                 if (state.status == SupportStatus.loading && state.faqs.isEmpty)

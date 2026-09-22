@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
+import '../../../../art_core/widgets/app_adaptive_page_header.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_text.dart';
 import '../../../marketing/domain/entities/redemption_option_entity.dart';
@@ -78,32 +79,19 @@ class _LoyaltyPageState extends State<LoyaltyPage> with SingleTickerProviderStat
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Header Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppText.heading(AppStrings.loyaltySystemAndReferrals, fontSize: 28.sp),
-                ],
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () => loyaltyCubit.loadLoyaltyData(),
-                    icon: const Icon(Icons.refresh, color: AppColors.neonBlue),
-                    tooltip: AppStrings.refresh,
-                  ),
-                  SizedBox(width: 12.w),
-                  AppButton(
-                    text: AppStrings.addReward,
-                    onPressed: () => _showOptionDialog(context, loyaltyCubit),
-                    icon: Icons.add,
-                  ),
-                ],
-              ),
-            ],
+          AppAdaptivePageHeader(
+            title: AppStrings.loyaltySystemAndReferrals,
+            primaryAction: AppButton(
+              text: AppStrings.addReward,
+              onPressed: () => _showOptionDialog(context, loyaltyCubit),
+              icon: Icons.add,
+            ),
+            secondaryAction: AppButton(
+              text: AppStrings.refresh,
+              icon: Icons.refresh,
+              variant: AppButtonVariant.outlined,
+              onPressed: () => loyaltyCubit.loadLoyaltyData(),
+            ),
           ),
           SizedBox(height: 20.h),
 

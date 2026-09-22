@@ -33,7 +33,7 @@ class MarketplaceStep extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: state.extras.length,
-              separatorBuilder: (_, __) => SizedBox(height: 12.h),
+              separatorBuilder: (_, _) => SizedBox(height: 12.h),
               itemBuilder: (context, index) {
                 final extra = state.extras[index];
                 return _buildExtraItem(extra);
@@ -56,7 +56,7 @@ class MarketplaceStep extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(32.r),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground.withOpacity(0.5),
+        color: AppColors.cardBackground.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.borderDefault, style: BorderStyle.solid),
       ),
@@ -86,7 +86,7 @@ class MarketplaceStep extends StatelessWidget {
             width: 48.w,
             height: 48.h,
             decoration: BoxDecoration(
-              color: AppColors.neonPurple.withOpacity(0.1),
+              color: AppColors.neonPurple.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: const Icon(Icons.fastfood, color: AppColors.neonPurple),

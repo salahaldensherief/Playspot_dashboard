@@ -10,6 +10,7 @@ import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
+import 'booking_products_preview.dart';
 import 'booking_receipt_card.dart';
 import 'swap_room_dialog.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
@@ -35,7 +36,7 @@ class BookingDetailsDialog extends StatefulWidget {
 class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
   final _discountController = TextEditingController();
   final _reasonController = TextEditingController();
-  bool _isPercentage = false;
+  final bool _isPercentage = false;
 
   @override
   void dispose() {
@@ -192,35 +193,42 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(8.r),
-              decoration: BoxDecoration(
-                color: AppColors.neonBlue.withAlpha(25),
-                borderRadius: BorderRadius.circular(10.r),
+        Expanded(
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8.r),
+                decoration: BoxDecoration(
+                  color: AppColors.neonBlue.withAlpha(25),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: const Icon(Icons.confirmation_number_outlined, color: AppColors.neonBlue),
               ),
-              child: const Icon(Icons.confirmation_number_outlined, color: AppColors.neonBlue),
-            ),
-            SizedBox(width: 12.w),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AppText.heading(AppStrings.bookingDetails, fontSize: 18.sp),
-                    SizedBox(width: 8.w),
-                    _getStatusBadge(booking.status),
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8.w,
+                      runSpacing: 4.h,
+                      children: [
+                        AppText.heading(AppStrings.bookingDetails, fontSize: 18.sp),
+                        _getStatusBadge(booking.status),
+                      ],
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      '#${booking.id}',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
-                SizedBox(height: 2.h),
-                Text(
-                  '#${booking.id}',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
         IconButton(
           onPressed: () => Navigator.of(context, rootNavigator: false).pop(),
@@ -482,6 +490,11 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
   }
 
   Widget _buildFinancialSummary(Booking booking) {
+    final double extrasTotal = booking.addonsPrice ?? 0.0;
+    final double roomBasePrice = booking.roomPrice ?? (booking.totalPrice - extrasTotal).clamp(0.0, double.infinity);
+
+    final bool hasExtras = extrasTotal > 0 || booking.extras.isNotEmpty || booking.canteenOrders.isNotEmpty;
+
     return Container(
       padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
@@ -503,10 +516,10 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
             ],
           ),
           SizedBox(height: 12.h),
-          _buildBillRow('سعر الغرفة الأساسي', '${booking.roomPrice ?? booking.totalPrice} ${AppStrings.egp}'),
-          _buildBillRow('الطلبات والمشروبات الإضافية', '0 ${AppStrings.egp}'),
+          _buildBillRow('سعر الغرفة الأساسي', '${roomBasePrice.toStringAsFixed(0)} ${AppStrings.egp}'),
+          _buildBillRow('الطلبات والمشروبات الإضافية', '${extrasTotal.toStringAsFixed(0)} ${AppStrings.egp}', color: hasExtras ? AppColors.warning : null),
           if (booking.discountAmount != null && booking.discountAmount! > 0)
-            _buildBillRow('الخصم', '-${booking.discountAmount} ${AppStrings.egp}', color: AppColors.danger),
+            _buildBillRow('الخصم', '-${booking.discountAmount!.toStringAsFixed(0)} ${AppStrings.egp}', color: AppColors.danger),
           const Divider(color: AppColors.borderDefault),
           _buildBillRow(
             'الإجمالي النهائي المطلوب',
@@ -514,6 +527,12 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
             isTotal: true,
             color: AppColors.neonGreen,
           ),
+          if (hasExtras) ...[
+            SizedBox(height: 12.h),
+            const Divider(color: AppColors.borderDefault, height: 1),
+            SizedBox(height: 10.h),
+            BookingProductsPreview(booking: booking, maxVisibleItems: 10),
+          ],
         ],
       ),
     );
@@ -582,6 +601,10 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
             onPressed: () {
               if (isInProgress) {
                 cubit.changeBookingStatus(booking.id, BookingStatus.completed);
+                Navigator.pop(context);
+              } else if (isUpcoming) {
+                cubit.startBookingSession(booking.id);
+                Navigator.pop(context);
               }
             },
           ),

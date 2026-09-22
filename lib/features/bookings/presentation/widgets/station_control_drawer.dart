@@ -5,7 +5,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import '../../domain/entities/booking.dart';
@@ -82,7 +81,7 @@ class StationControlDrawer extends StatelessWidget {
     if (name == null || name.trim().isEmpty) return 'U';
     final parts = name.trim().split(' ');
     if (parts.length >= 2 && parts[1].isNotEmpty) {
-      return '${parts[0][0]}'.toUpperCase() + '${parts[1][0]}'.toUpperCase();
+      return (parts[0][0] + parts[1][0]).toUpperCase();
     }
     return name[0].toUpperCase();
   }
@@ -240,10 +239,6 @@ class StationControlDrawer extends StatelessWidget {
         ? booking.userName!
         : AppStrings.anonymous;
     final userPhone = booking.userPhone?.trim() ?? '';
-    final userEmail = booking.userEmail?.trim() ?? '';
-    final bookingIdShort = booking.id.isNotEmpty
-        ? (booking.id.length > 8 ? booking.id.substring(0, 8) : booking.id)
-        : 'زائر';
 
     return Container(
       padding: EdgeInsets.all(14.r),

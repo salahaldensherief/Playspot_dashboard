@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
-import '../../../art_core/theme/app_colors.dart';
-import '../../../art_core/widgets/app_button.dart';
-import '../../../art_core/widgets/section_container.dart';
-import '../../../art_core/widgets/status_badge.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
+import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+import '../domain/entities/app_settings_entity.dart';
+import '../domain/entities/support_ticket_entity.dart';
 import 'support_cubit.dart';
 import 'support_state.dart';
 
@@ -17,365 +22,226 @@ class LoungeOwnerSupportScreen extends StatefulWidget {
 }
 
 class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
-  final _formKey = GlobalKey<FormState>();
-  String _selectedIssueType = 'payment';
-  final _messageController = TextEditingController();
-
-  final List<Map<String, String>> _issueTypes = [
-    {'key': 'payment', 'label': 'تسويات ومستحقات مادية (Payouts)'},
-    {'key': 'technical', 'label': 'مشاكل تقنية باللوحة أو الستايشن'},
-    {'key': 'booking', 'label': 'حجوزات أو رومات'},
-    {'key': 'lounge', 'label': 'بيانات وإعدادات الصالة'},
-    {'key': 'other', 'label': 'عام / أخرى'},
-  ];
-
   @override
   void initState() {
     super.initState();
-    final cubit = context.read<SupportCubit>();
-    cubit.loadAppSettings();
-    cubit.loadFaqs();
-    cubit.loadTickets();
-  }
-
-  @override
-  void dispose() {
-    _messageController.dispose();
-    super.dispose();
-  }
-
-  String _formatDate(DateTime? dt) {
-    if (dt == null) return 'غير محدد';
-    return DateFormat('yyyy/MM/dd - hh:mm a').format(dt);
-  }
-
-  Widget _buildTicketStatusBadge(String status) {
-    switch (status) {
-      case 'new':
-        return StatusBadge.warning('جديدة (قيد الانتظار)');
-      case 'in_progress':
-        return StatusBadge.info('جاري المعالجة');
-      case 'resolved':
-        return StatusBadge.success('تم الحل والتجاوب');
-      default:
-        return StatusBadge.neutral(status);
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<SupportCubit>().loadAppSettings();
+        context.read<SupportCubit>().loadTickets();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<SupportCubit, SupportState>(
-      listenWhen: (prev, curr) =>
-          prev.actionStatus != curr.actionStatus ||
-          prev.successMessage != curr.successMessage ||
-          prev.errorMessage != curr.errorMessage,
-      listener: (context, state) {
-        if (state.actionStatus == SupportStatus.success && state.successMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.successMessage!),
-              backgroundColor: AppColors.success,
-            ),
-          );
-          _messageController.clear();
-        } else if (state.actionStatus == SupportStatus.failure && state.errorMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage!),
-              backgroundColor: AppColors.danger,
-            ),
-          );
-        }
-      },
-      builder: (context, state) {
-        final settings = state.settings;
+    return DashboardLayout(
+      title: 'الدعم الفني | Support',
+      activeRoute: 'Support',
+      child: BlocBuilder<SupportCubit, SupportState>(
+        builder: (context, state) {
+          final isLoading = state.status == SupportStatus.loading;
 
-        return Scaffold(
-          backgroundColor: AppColors.scaffoldBackground,
-          body: SingleChildScrollView(
-            padding: EdgeInsets.all(24.r),
+          return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.headset_mic_outlined, color: AppColors.neonBlue, size: 28.r),
-                    SizedBox(width: 12.w),
-                    Text(
-                      'مركز الدعم الفني والمساعدة',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 22.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  'تواصل مع فريق إدارة منصة بلاي سبوت لتقديم البلاغات، طلب المساعدة، وتتبع حالة تذاكر الدعم الخاصة بك',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14.sp,
+                AppAdaptivePageHeader(
+                  title: 'مركز المساعدة والدعم',
+                  subtitle: 'تواصل مع فريق الدعم الفني لمساعدتك في أي استفسارات أو مشكلات',
+                  primaryAction: AppButton(
+                    text: AppStrings.refresh,
+                    icon: Icons.refresh,
+                    variant: AppButtonVariant.outlined,
+                    onPressed: () {
+                      context.read<SupportCubit>().loadAppSettings();
+                      context.read<SupportCubit>().loadTickets();
+                    },
                   ),
                 ),
                 SizedBox(height: 24.h),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Card 1: Contact Details & Vodafone Cash
-                    Expanded(
-                      flex: 4,
-                      child: SectionContainer(
-                        title: 'وسائل التواصل المباشر',
-                        children: [
-                          _buildContactTile(
-                            icon: Icons.chat_bubble_outline,
-                            color: AppColors.success,
-                            title: 'واتساب الدعم الفني',
-                            value: settings?.whatsappPhone.isNotEmpty == true
-                                ? settings!.whatsappPhone
-                                : 'غير متوفر حالياً',
-                          ),
-                          SizedBox(height: 12.h),
-                          _buildContactTile(
-                            icon: Icons.phone_outlined,
-                            color: AppColors.neonBlue,
-                            title: 'الهاتف المباشر',
-                            value: settings?.supportPhone.isNotEmpty == true
-                                ? settings!.supportPhone
-                                : 'غير متوفر حالياً',
-                          ),
-                          SizedBox(height: 12.h),
-                          _buildContactTile(
-                            icon: Icons.email_outlined,
-                            color: AppColors.neonPurple,
-                            title: 'البريد الإلكتروني',
-                            value: settings?.supportEmail.isNotEmpty == true
-                                ? settings!.supportEmail
-                                : 'support@playspot.app',
-                          ),
-                          SizedBox(height: 12.h),
-                          _buildContactTile(
-                            icon: Icons.account_balance_wallet_outlined,
-                            color: AppColors.warning,
-                            title: 'محفظة فودافون كاش الرسمية',
-                            value: settings?.vodafoneCashNumber.isNotEmpty == true
-                                ? settings!.vodafoneCashNumber
-                                : 'غير متوفر حالياً',
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 24.w),
-                    // Card 2: Create New Ticket
-                    Expanded(
-                      flex: 5,
-                      child: SectionContainer(
-                        title: 'تقديم تذكرة دعم / بلاغ جديد',
-                        children: [
-                          Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('نوع الشكوى / الاستفسار',
-                                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
-                                SizedBox(height: 6.h),
-                                Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 12.w),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.scaffoldBackground,
-                                    borderRadius: BorderRadius.circular(8.r),
-                                    border: Border.all(color: AppColors.borderDefault),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: _selectedIssueType,
-                                      dropdownColor: AppColors.cardBackground,
-                                      isExpanded: true,
-                                      style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
-                                      items: _issueTypes.map((i) {
-                                        return DropdownMenuItem<String>(
-                                          value: i['key'],
-                                          child: Text(i['label']!),
-                                        );
-                                      }).toList(),
-                                      onChanged: (val) {
-                                        if (val != null) {
-                                          setState(() {
-                                            _selectedIssueType = val;
-                                          });
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 16.h),
-                                Text('تفاصيل المشكلة / الرسالة',
-                                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
-                                SizedBox(height: 6.h),
-                                TextFormField(
-                                  controller: _messageController,
-                                  maxLines: 4,
-                                  style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
-                                  decoration: InputDecoration(
-                                    hintText: 'اكتب تفاصيل استفسارك أو مشكلتك بالتفصيل ليتم إفادتك فوراً...',
-                                    hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
-                                    filled: true,
-                                    fillColor: AppColors.scaffoldBackground,
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-                                  ),
-                                  validator: (val) {
-                                    if (val == null || val.trim().isEmpty) {
-                                      return 'يرجى كتابة نص الرسالة أو الشكوى';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                SizedBox(height: 16.h),
-                                Align(
-                                  alignment: AlignmentDirectional.centerEnd,
-                                  child: AppButton(
-                                    text: 'إرسال التذكرة',
-                                    variant: AppButtonVariant.gradient,
-                                    icon: Icons.send_rounded,
-                                    isLoading: state.actionStatus == SupportStatus.loading,
-                                    onPressed: () {
-                                      if (_formKey.currentState!.validate()) {
-                                        context.read<SupportCubit>().createTicket(
-                                              issueType: _selectedIssueType,
-                                              message: _messageController.text.trim(),
-                                            );
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+
+                // Direct Support Channels
+                _buildSupportSettingsCard(state.settings),
                 SizedBox(height: 24.h),
-                // Card 3: My Support Tickets
-                SectionContainer(
-                  title: 'تذاكري واستفساراتي السابقة (${state.tickets.length})',
-                  children: [
-                    if (state.status == SupportStatus.loading && state.tickets.isEmpty)
-                      const Center(child: CircularProgressIndicator(color: AppColors.neonBlue))
-                    else if (state.tickets.isEmpty)
-                      Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(24.r),
-                          child: Text(
-                            'لم تقم بتقديم أي تذاكر دعم سابقة حتى الآن.',
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
-                          ),
-                        ),
-                      )
-                    else
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8.r),
-                        child: Table(
-                          border: TableBorder.all(color: AppColors.borderDefault, width: 1),
-                          columnWidths: const {
-                            0: FlexColumnWidth(1.2),
-                            1: FlexColumnWidth(2.5),
-                            2: FlexColumnWidth(1.4),
-                            3: FlexColumnWidth(1.4),
-                            4: FlexColumnWidth(2.0),
-                          },
-                          children: [
-                            TableRow(
-                              decoration: const BoxDecoration(color: AppColors.scaffoldBackground),
-                              children: [
-                                _buildHeaderCell('نوع المشكلة'),
-                                _buildHeaderCell('تفاصيل الرسالة'),
-                                _buildHeaderCell('تاريخ الإرسال'),
-                                _buildHeaderCell('الحالة'),
-                                _buildHeaderCell('رد الآدمن والملاحظات'),
-                              ],
-                            ),
-                            ...state.tickets.map((ticket) {
-                              return TableRow(
-                                children: [
-                                  _buildDataCell(ticket.issueType),
-                                  _buildDataCell(ticket.message),
-                                  _buildDataCell(_formatDate(ticket.createdAt)),
-                                  TableCell(
-                                    verticalAlignment: TableCellVerticalAlignment.middle,
-                                    child: Padding(
-                                      padding: EdgeInsets.all(8.r),
-                                      child: _buildTicketStatusBadge(ticket.status),
-                                    ),
-                                  ),
-                                  _buildDataCell(
-                                    ticket.adminNotes?.isNotEmpty == true
-                                        ? ticket.adminNotes!
-                                        : 'بانتظار مراجعة الإدارة',
-                                  ),
-                                ],
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-                SizedBox(height: 24.h),
-                // Card 4: FAQs
-                if (state.faqs.isNotEmpty)
-                  SectionContainer(
-                    title: 'الأسئلة الشائعة وتوجيهات الصالات (FAQ)',
-                    children: [
-                      ...state.faqs.map((faq) {
-                        return Container(
-                          margin: EdgeInsets.only(bottom: 12.h),
-                          decoration: BoxDecoration(
-                            color: AppColors.scaffoldBackground,
-                            borderRadius: BorderRadius.circular(8.r),
-                            border: Border.all(color: AppColors.borderDefault),
-                          ),
-                          child: ExpansionTile(
-                            iconColor: AppColors.neonBlue,
-                            collapsedIconColor: AppColors.textSecondary,
-                            title: Text(
-                              faq.questionAr,
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14.sp,
-                              ),
-                            ),
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.all(16.r),
-                                child: Align(
-                                  alignment: AlignmentDirectional.centerStart,
-                                  child: Text(
-                                    faq.answerAr,
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 13.sp,
-                                      height: 1.4,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
+
+                // User's Support Tickets
+                AppText.heading('تذاكر الدعم الفني', fontSize: 18.sp),
+                SizedBox(height: 12.h),
+
+                if (isLoading)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: CircularProgressIndicator(color: AppColors.neonBlue),
+                    ),
+                  )
+                else if (state.tickets.isEmpty)
+                  _buildEmptyTicketsCard()
+                else
+                  _buildTicketsTable(state.tickets),
               ],
             ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSupportSettingsCard(AppSettingsEntity? settings) {
+    return Container(
+      padding: EdgeInsets.all(20.r),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.headset_mic_outlined, color: AppColors.neonBlue, size: 24.r),
+              SizedBox(width: 8.w),
+              AppText.heading('قنوات الدعم المباشرة', fontSize: 18.sp),
+            ],
           ),
-        );
-      },
+          SizedBox(height: 16.h),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 650;
+              final tiles = [
+                _buildContactTile(
+                  icon: Icons.chat_bubble_outline,
+                  color: AppColors.success,
+                  title: 'واتساب الدعم',
+                  value: settings?.whatsappPhone ?? '+201000000000',
+                ),
+                _buildContactTile(
+                  icon: Icons.phone_outlined,
+                  color: AppColors.neonBlue,
+                  title: 'الهاتف',
+                  value: settings?.supportPhone ?? '19000',
+                ),
+                _buildContactTile(
+                  icon: Icons.email_outlined,
+                  color: AppColors.warning,
+                  title: AppStrings.email,
+                  value: settings?.supportEmail ?? 'support@playspot.app',
+                ),
+                _buildContactTile(
+                  icon: Icons.account_balance_wallet_outlined,
+                  color: AppColors.neonGreen,
+                  title: 'فودافون كاش',
+                  value: settings?.vodafoneCashNumber ?? '01000000000',
+                ),
+              ];
+
+              if (isNarrow) {
+                return Column(
+                  children: tiles
+                      .map((tile) => Padding(
+                            padding: EdgeInsets.only(bottom: 12.h),
+                            child: tile,
+                          ))
+                      .toList(),
+                );
+              }
+
+              return GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                crossAxisSpacing: 12.w,
+                mainAxisSpacing: 12.h,
+                childAspectRatio: 3.2,
+                children: tiles,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyTicketsCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(32.r),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.assignment_outlined, color: AppColors.textSecondary, size: 48.r),
+          SizedBox(height: 12.h),
+          AppText.body('لا توجد تذاكر دعم فني حالياً', color: AppColors.textSecondary),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTicketsTable(List<SupportTicketEntity> tickets) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16.r),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
+            columns: [
+              DataColumn(label: _buildHeaderCell('الاسم والتفاصيل')),
+              DataColumn(label: _buildHeaderCell('نوع المشكلة')),
+              DataColumn(label: _buildHeaderCell('الحالة')),
+              DataColumn(label: _buildHeaderCell('التاريخ')),
+            ],
+            rows: tickets.map((ticket) {
+              return DataRow(
+                cells: [
+                  DataCell(
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          ticket.userName,
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                        SizedBox(height: 2.h),
+                        Text(
+                          ticket.message,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                        ),
+                      ],
+                    ),
+                  ),
+                  DataCell(Text(ticket.issueType, style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp))),
+                  DataCell(_getStatusBadge(ticket.status)),
+                  DataCell(
+                    Text(
+                      ticket.createdAt != null ? DateFormat('yyyy-MM-dd HH:mm').format(ticket.createdAt!) : 'N/A',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+      ),
     );
   }
 
@@ -397,26 +263,28 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
           Container(
             padding: EdgeInsets.all(8.r),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(icon, color: color, size: 20.r),
           ),
           SizedBox(width: 12.w),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
-              SizedBox(height: 2.h),
-              SelectableText(
-                value,
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14.sp,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                SizedBox(height: 2.h),
+                SelectableText(
+                  value,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.sp,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -428,20 +296,27 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
       padding: EdgeInsets.all(12.r),
       child: Text(
         text,
-        style: TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold, fontSize: 13.sp),
+        style: TextStyle(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.bold,
+          fontSize: 13.sp,
+        ),
       ),
     );
   }
 
-  Widget _buildDataCell(String text) {
-    return Padding(
-      padding: EdgeInsets.all(12.r),
-      child: Text(
-        text,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
-      ),
-    );
+  Widget _getStatusBadge(String status) {
+    switch (status.toLowerCase()) {
+      case 'open':
+      case 'new':
+        return StatusBadge.info(AppStrings.open);
+      case 'in_progress':
+        return StatusBadge.warning(AppStrings.inProgress);
+      case 'resolved':
+      case 'closed':
+        return StatusBadge.success(AppStrings.active);
+      default:
+        return StatusBadge.secondary(status);
+    }
   }
 }

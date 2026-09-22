@@ -281,7 +281,9 @@ class _RoomOccupancyCardState extends State<_RoomOccupancyCard> {
   Widget build(BuildContext context) {
     final room = widget.room;
     final activeBooking = widget.activeBooking;
-    final isOccupied = activeBooking != null && activeBooking.isBookingActive();
+    final isOccupiedByApp = activeBooking != null && activeBooking.isBookingActive();
+    final isOccupiedByWalkIn = room.status == RoomStatusEnum.occupied && !isOccupiedByApp;
+    final isOccupied = isOccupiedByApp || isOccupiedByWalkIn;
     final isMaintenance = room.status == RoomStatusEnum.maintenance;
 
     Color borderColor = AppColors.borderDefault;
@@ -300,7 +302,7 @@ class _RoomOccupancyCardState extends State<_RoomOccupancyCard> {
 
     Duration remaining = Duration.zero;
     bool isExpired = false;
-    if (isOccupied) {
+    if (activeBooking != null && isOccupiedByApp) {
       remaining = activeBooking.remainingDuration();
       isExpired = activeBooking.isSessionExpired();
     }
@@ -417,8 +419,8 @@ class _RoomOccupancyCardState extends State<_RoomOccupancyCard> {
           ),
           SizedBox(height: 12.h),
 
-          // Body Content: Occupied vs Available vs Maintenance
-          if (isOccupied) ...[
+          // Body Content: App Booking vs Walk-In vs Maintenance vs Available
+          if (isOccupiedByApp) ...[
             // Customer Info Box
             Container(
               padding: EdgeInsets.all(10.r),
@@ -561,6 +563,62 @@ class _RoomOccupancyCardState extends State<_RoomOccupancyCard> {
                 ),
               ],
             ),
+          ] else if (isOccupiedByWalkIn) ...[
+            Container(
+              padding: EdgeInsets.all(12.r),
+              decoration: BoxDecoration(
+                color: AppColors.danger.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10.r),
+                border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.directions_walk_rounded, color: AppColors.danger, size: 18.r),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'حجز مباشر (Walk-in)',
+                          style: TextStyle(
+                            color: AppColors.danger,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12.sp,
+                          ),
+                        ),
+                        Text(
+                          'الأوضة مشغولة بزبون من الصالة',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 11.sp,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 10.h),
+            BlocBuilder<RoomCubit, RoomState>(
+              builder: (context, roomState) {
+                final isUpdating = roomState.isRoomUpdating(room.id);
+                return AppButton(
+                  text: 'تفريغ الغرفة (إنهاء الحجز)',
+                  icon: Icons.check_circle_outline_rounded,
+                  variant: AppButtonVariant.outlined,
+                  width: double.infinity,
+                  height: 36.h,
+                  isLoading: isUpdating,
+                  onPressed: isUpdating
+                      ? null
+                      : () {
+                          context.read<RoomCubit>().toggleWalkInStatus(room.id, room.status);
+                        },
+                );
+              },
+            ),
           ] else if (isMaintenance) ...[
             Container(
               padding: EdgeInsets.all(12.r),
@@ -624,21 +682,44 @@ class _RoomOccupancyCardState extends State<_RoomOccupancyCard> {
             ),
             SizedBox(height: 12.h),
 
-            // Start Quick Session Action Button
-            AppButton(
-              text: '+ بدء حجز سريع على الغرفة',
-              icon: Icons.play_arrow_rounded,
-              variant: AppButtonVariant.primary,
-              width: double.infinity,
-              height: 34.h,
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  useRootNavigator: false,
-                  builder: (_) => AddBookingDialog(
-                    loungeId: widget.loungeId,
-                    initialRoom: room,
-                  ),
+            // One-Tap Walk-in Quick Toggle & Quick Booking Dialog
+            BlocBuilder<RoomCubit, RoomState>(
+              builder: (context, roomState) {
+                final isUpdating = roomState.isRoomUpdating(room.id);
+                return Row(
+                  children: [
+                    Expanded(
+                      child: AppButton(
+                        text: 'حجز مباشر (Walk-in)',
+                        icon: Icons.flash_on_rounded,
+                        variant: AppButtonVariant.primary,
+                        height: 36.h,
+                        isLoading: isUpdating,
+                        onPressed: isUpdating
+                            ? null
+                            : () {
+                                context.read<RoomCubit>().toggleWalkInStatus(room.id, room.status);
+                              },
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    AppButton(
+                      text: 'حجز تفصيلي',
+                      icon: Icons.add_rounded,
+                      variant: AppButtonVariant.outlined,
+                      height: 36.h,
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          useRootNavigator: false,
+                          builder: (_) => AddBookingDialog(
+                            loungeId: widget.loungeId,
+                            initialRoom: room,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 );
               },
             ),
@@ -805,3 +886,4 @@ class _RoomOccupancyCardState extends State<_RoomOccupancyCard> {
     );
   }
 }
+

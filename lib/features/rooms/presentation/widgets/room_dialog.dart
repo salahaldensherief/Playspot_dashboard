@@ -312,7 +312,7 @@ class _RoomDialogState extends State<RoomDialog> {
               final isAdded = _featuresEn.contains(s);
               return ActionChip(
                 label: Text(s, style: TextStyle(fontSize: 10.sp, color: isAdded ? Colors.white : AppColors.textSecondary)),
-                backgroundColor: isAdded ? AppColors.neonBlue.withOpacity(0.5) : AppColors.mutedBackground,
+                backgroundColor: isAdded ? AppColors.neonBlue.withValues(alpha: 0.5) : AppColors.mutedBackground,
                 onPressed: () {
                   setState(() {
                     if (isAdded) {

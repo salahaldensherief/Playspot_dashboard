@@ -68,7 +68,7 @@ class QuickDiscountSection extends StatelessWidget {
               Switch(
                 value: hasDiscount,
                 onChanged: onHasDiscountChanged,
-                activeColor: AppColors.neonBlue,
+                activeThumbColor: AppColors.neonBlue,
               ),
             ],
           ),

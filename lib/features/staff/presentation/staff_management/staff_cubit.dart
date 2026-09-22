@@ -1,36 +1,55 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/staff/data/models/staff_params.dart';
-import 'package:play_spot_dashboard/features/staff/domain/repositories/staff_repository.dart';
+import 'package:play_spot_dashboard/features/staff/domain/usecases/add_staff_member_usecase.dart';
+import 'package:play_spot_dashboard/features/staff/domain/usecases/delete_staff_usecase.dart';
+import 'package:play_spot_dashboard/features/staff/domain/usecases/get_lounge_staff_usecase.dart';
+import 'package:play_spot_dashboard/features/staff/domain/usecases/update_staff_member_usecase.dart';
+import 'package:play_spot_dashboard/features/staff/domain/usecases/update_staff_status_usecase.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_state.dart';
 
 class StaffCubit extends Cubit<StaffState> {
-  final StaffRepository _repository;
+  final GetLoungeStaffUseCase _getLoungeStaffUseCase;
+  final AddStaffMemberUseCase _addStaffMemberUseCase;
+  final UpdateStaffMemberUseCase _updateStaffMemberUseCase;
+  final UpdateStaffStatusUseCase _updateStaffStatusUseCase;
+  final DeleteStaffUseCase _deleteStaffUseCase;
 
-  StaffCubit(this._repository) : super(StaffState.init());
+  StaffCubit({
+    required GetLoungeStaffUseCase getLoungeStaffUseCase,
+    required AddStaffMemberUseCase addStaffMemberUseCase,
+    required UpdateStaffMemberUseCase updateStaffMemberUseCase,
+    required UpdateStaffStatusUseCase updateStaffStatusUseCase,
+    required DeleteStaffUseCase deleteStaffUseCase,
+  })  : _getLoungeStaffUseCase = getLoungeStaffUseCase,
+        _addStaffMemberUseCase = addStaffMemberUseCase,
+        _updateStaffMemberUseCase = updateStaffMemberUseCase,
+        _updateStaffStatusUseCase = updateStaffStatusUseCase,
+        _deleteStaffUseCase = deleteStaffUseCase,
+        super(StaffState.init());
 
   Future<void> fetchStaff(String loungeId) async {
     final cleanLoungeId = loungeId.trim();
     if (cleanLoungeId.isEmpty) {
-      debugPrint('StaffCubit: fetchStaff skipped because loungeId is empty');
+      AppLogger.debug('StaffCubit: fetchStaff skipped because loungeId is empty');
       return;
     }
     
-    debugPrint('StaffCubit: fetchStaff started for loungeId: $cleanLoungeId');
+    AppLogger.debug('StaffCubit: fetchStaff started for loungeId: $cleanLoungeId');
     emit(state.copyWith(status: StaffStatus.loading));
-    final result = await _repository.getLoungeStaff(cleanLoungeId);
+    final result = await _getLoungeStaffUseCase(cleanLoungeId);
     
     if (isClosed) return;
 
     result.fold(
       (failure) {
-        debugPrint('StaffCubit: fetchStaff failed: ${failure.message}');
+        AppLogger.warning('StaffCubit: fetchStaff failed: ${failure.message}');
         emit(state.copyWith(status: StaffStatus.failure, errorMessage: failure.message));
       },
       (staff) {
-        debugPrint('StaffCubit: fetchStaff success, found ${staff.length} staff members');
+        AppLogger.info('StaffCubit: fetchStaff success, found ${staff.length} staff members');
         emit(state.copyWith(status: StaffStatus.success, staffList: staff));
       },
     );
@@ -45,19 +64,19 @@ class StaffCubit extends Cubit<StaffState> {
       return;
     }
 
-    debugPrint('StaffCubit: addStaffMember started for ${params.email}');
+    AppLogger.debug('StaffCubit: addStaffMember started for ${params.email}');
     emit(state.copyWith(status: StaffStatus.loading));
-    final result = await _repository.addStaffMember(params);
+    final result = await _addStaffMemberUseCase(params);
     
     if (isClosed) return;
 
     result.fold(
       (failure) {
-        debugPrint('StaffCubit: addStaffMember failed: ${failure.message}');
+        AppLogger.warning('StaffCubit: addStaffMember failed: ${failure.message}');
         emit(state.copyWith(status: StaffStatus.failure, errorMessage: failure.message));
       },
       (_) {
-        debugPrint('StaffCubit: addStaffMember success, refetching staff list');
+        AppLogger.info('StaffCubit: addStaffMember success, refetching staff list');
         fetchStaff(params.loungeId);
       },
     );
@@ -82,17 +101,19 @@ class StaffCubit extends Cubit<StaffState> {
     }
 
     emit(state.copyWith(status: StaffStatus.loading));
-    final result = await _repository.updateStaffMember(staffId, data);
+    final result = await _updateStaffMemberUseCase(
+      UpdateStaffParams(staffId: staffId, data: data),
+    );
     
     if (isClosed) return;
 
     result.fold(
       (failure) {
-        debugPrint('🔴 [STAFF_CUBIT] updateStaffMember failed: ${failure.message}');
+        AppLogger.warning('StaffCubit: updateStaffMember failed: ${failure.message}');
         emit(state.copyWith(status: StaffStatus.failure, errorMessage: failure.message));
       },
       (_) async {
-        debugPrint('🟢 [STAFF_CUBIT] updateStaffMember success, refreshing staff list');
+        AppLogger.info('StaffCubit: updateStaffMember success, refreshing staff list');
         await fetchStaff(loungeId);
       },
     );
@@ -120,12 +141,14 @@ class StaffCubit extends Cubit<StaffState> {
     }).toList();
     emit(state.copyWith(staffList: updatedList));
 
-    final result = await _repository.updateStaffStatus(staffId, !currentStatus);
+    final result = await _updateStaffStatusUseCase(
+      UpdateStaffStatusParams(staffId: staffId, isActive: !currentStatus),
+    );
     if (isClosed) return;
 
     result.fold(
       (failure) {
-        debugPrint('🔴 [STAFF_CUBIT] toggleStaffStatus failed: ${failure.message}');
+        AppLogger.warning('StaffCubit: toggleStaffStatus failed: ${failure.message}');
         emit(state.copyWith(status: StaffStatus.failure, errorMessage: failure.message));
         fetchStaff(loungeId);
       },
@@ -149,12 +172,12 @@ class StaffCubit extends Cubit<StaffState> {
     final updatedList = state.staffList.where((staff) => staff.id != staffId).toList();
     emit(state.copyWith(staffList: updatedList));
 
-    final result = await _repository.deleteStaff(staffId);
+    final result = await _deleteStaffUseCase(staffId);
     if (isClosed) return;
 
     result.fold(
       (failure) {
-        debugPrint('🔴 [STAFF_CUBIT] deleteStaff failed: ${failure.message}');
+        AppLogger.warning('StaffCubit: deleteStaff failed: ${failure.message}');
         emit(state.copyWith(status: StaffStatus.failure, errorMessage: failure.message));
         fetchStaff(loungeId);
       },

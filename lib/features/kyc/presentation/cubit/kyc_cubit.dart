@@ -1,12 +1,23 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/repositories/kyc_repository.dart';
-import 'kyc_state.dart';
 import 'dart:typed_data';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/core/usecases/base_usecase.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
+import '../../domain/usecases/kyc_usecases.dart';
+import 'kyc_state.dart';
 
 class KycCubit extends Cubit<KycState> {
-  final KycRepository _repository;
+  final SubmitKycUseCase _submitKycUseCase;
+  final GetPendingKycReviewsUseCase _getPendingKycReviewsUseCase;
+  final ReviewKycUseCase _reviewKycUseCase;
 
-  KycCubit(this._repository) : super(const KycState());
+  KycCubit({
+    required SubmitKycUseCase submitKycUseCase,
+    required GetPendingKycReviewsUseCase getPendingKycReviewsUseCase,
+    required ReviewKycUseCase reviewKycUseCase,
+  })  : _submitKycUseCase = submitKycUseCase,
+        _getPendingKycReviewsUseCase = getPendingKycReviewsUseCase,
+        _reviewKycUseCase = reviewKycUseCase,
+        super(const KycState());
 
   Future<void> submitKyc({
     required String userId,
@@ -16,30 +27,36 @@ class KycCubit extends Cubit<KycState> {
     String? businessDocName,
   }) async {
     emit(state.copyWith(status: KycStatus.loading));
-    final result = await _repository.submitKyc(
+    final result = await _submitKycUseCase(SubmitKycParams(
       userId: userId,
       idCardBytes: idCardBytes,
       idCardName: idCardName,
       businessDocBytes: businessDocBytes,
       businessDocName: businessDocName,
-    );
+    ));
 
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(status: KycStatus.failure, errorMessage: failure.message)),
+      (failure) {
+        AppLogger.error('Submit KYC error: ${failure.message}');
+        emit(state.copyWith(status: KycStatus.failure, errorMessage: failure.message));
+      },
       (_) => emit(state.copyWith(status: KycStatus.success)),
     );
   }
 
   Future<void> loadPendingReviews() async {
     emit(state.copyWith(status: KycStatus.loading));
-    final result = await _repository.getPendingReviews();
+    final result = await _getPendingKycReviewsUseCase(const NoParams());
 
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(status: KycStatus.failure, errorMessage: failure.message)),
+      (failure) {
+        AppLogger.error('Load pending reviews error: ${failure.message}');
+        emit(state.copyWith(status: KycStatus.failure, errorMessage: failure.message));
+      },
       (requests) => emit(state.copyWith(status: KycStatus.success, requests: requests)),
     );
   }
@@ -50,16 +67,19 @@ class KycCubit extends Cubit<KycState> {
     String? notes,
   }) async {
     emit(state.copyWith(status: KycStatus.loading));
-    final result = await _repository.reviewKyc(
+    final result = await _reviewKycUseCase(ReviewKycParams(
       userId: userId,
       approve: approve,
       notes: notes,
-    );
+    ));
 
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(status: KycStatus.failure, errorMessage: failure.message)),
+      (failure) {
+        AppLogger.error('Review KYC error: ${failure.message}');
+        emit(state.copyWith(status: KycStatus.failure, errorMessage: failure.message));
+      },
       (_) => loadPendingReviews(),
     );
   }

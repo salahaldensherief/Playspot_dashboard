@@ -1,22 +1,31 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import 'package:play_spot_dashboard/core/utils/realtime_watcher_mixin.dart';
 import 'package:play_spot_dashboard/features/requests/domain/entities/client_request_entity.dart';
 import '../../../core/audio/audio_service.dart';
-import '../domain/repositories/client_requests_repository.dart';
+import '../domain/usecases/get_active_lounge_requests_page_usecase.dart';
+import '../domain/usecases/mark_request_as_attended_usecase.dart';
+import '../domain/usecases/watch_client_requests_usecase.dart';
 import 'client_requests_state.dart';
 
 class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatcherMixin<ClientRequestsState> {
-  final ClientRequestsRepository repository;
+  final WatchClientRequestsUseCase _watchClientRequestsUseCase;
+  final MarkRequestAsAttendedUseCase _markRequestAsAttendedUseCase;
+  final GetActiveLoungeRequestsPageUseCase _getActiveLoungeRequestsPageUseCase;
   final AudioService audioService;
 
   final Set<String> _knownRequestIds = {};
   bool _isFirstLoad = true;
 
   ClientRequestsCubit({
-    required this.repository,
+    required WatchClientRequestsUseCase watchClientRequestsUseCase,
+    required MarkRequestAsAttendedUseCase markRequestAsAttendedUseCase,
+    required GetActiveLoungeRequestsPageUseCase getActiveLoungeRequestsPageUseCase,
     required this.audioService,
-  }) : super(const ClientRequestsState());
+  })  : _watchClientRequestsUseCase = watchClientRequestsUseCase,
+        _markRequestAsAttendedUseCase = markRequestAsAttendedUseCase,
+        _getActiveLoungeRequestsPageUseCase = getActiveLoungeRequestsPageUseCase,
+        super(const ClientRequestsState());
 
   void startWatchingRequests({String? loungeId, bool forceRefresh = false}) {
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
@@ -33,7 +42,7 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
 
     startWatch<List<dynamic>>(
       entityId: cleanLoungeId,
-      stream: repository.watchClientRequests(loungeId: cleanLoungeId),
+      stream: _watchClientRequestsUseCase(loungeId: cleanLoungeId),
       onData: (requestsList) {
         final requests = requestsList.cast<dynamic>();
         final currentUnattendedIds = requests
@@ -49,11 +58,15 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
           if (newIds.isNotEmpty) {
             _knownRequestIds.addAll(newIds);
             try {
-              audioService.playNotificationSound();
+              audioService.playUrgentAlertSound();
             } catch (e) {
-              debugPrint('Audio notification play failed: $e');
+              AppLogger.warning('Audio notification play failed: $e');
             }
           }
+        }
+
+        if (currentUnattendedIds.isEmpty) {
+          audioService.stopUrgentAlertSound();
         }
 
         emit(state.copyWith(
@@ -82,10 +95,12 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
     if (loungeId.isEmpty) return;
     emit(state.copyWith(status: ClientRequestsStatus.loading));
 
-    final result = await repository.getActiveLoungeRequestsPage(
-      loungeId: loungeId,
-      page: page,
-      pageSize: pageSize,
+    final result = await _getActiveLoungeRequestsPageUseCase(
+      GetActiveLoungeRequestsPageParams(
+        loungeId: loungeId,
+        page: page,
+        pageSize: pageSize,
+      ),
     );
 
     if (isClosed) return;
@@ -107,7 +122,7 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
 
   Future<void> markAsAttended(String requestId, {bool isCanteenOrder = false}) async {
     if (requestId.isEmpty || requestId.startsWith('notif_')) {
-      debugPrint('⚠️ [CUBIT] Skipped backend call for invalid/mock request ID: $requestId');
+      AppLogger.debug('⚠️ [CUBIT] Skipped backend call for invalid/mock request ID: $requestId');
 
       final updatedList = state.requests.map((r) {
         if (r.id == requestId) {
@@ -117,6 +132,10 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
       }).toList();
 
       emit(state.copyWith(requests: updatedList));
+
+      if (updatedList.where((r) => !r.isAttended).isEmpty) {
+        audioService.stopUrgentAlertSound();
+      }
       return;
     }
 
@@ -131,23 +150,29 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
 
     emit(state.copyWith(requests: updatedList));
 
-    final result = await repository.markRequestAsAttended(
-      requestId,
-      isCanteenOrder: isCanteenOrder,
+    if (updatedList.where((r) => !r.isAttended).isEmpty) {
+      audioService.stopUrgentAlertSound();
+    }
+
+    final result = await _markRequestAsAttendedUseCase(
+      MarkRequestAttendedParams(
+        requestId: requestId,
+        isCanteenOrder: isCanteenOrder,
+      ),
     );
 
     if (isClosed) return;
 
     result.fold(
       (failure) {
-        debugPrint('🔴 [CUBIT] Mark Attended Failed: ${failure.message}');
+        AppLogger.warning('🔴 [CUBIT] Mark Attended Failed: ${failure.message}');
         emit(state.copyWith(
           status: ClientRequestsStatus.failure,
           errorMessage: failure.message,
           requests: originalList,
         ));
       },
-      (_) => debugPrint('🟢 [CUBIT] Request $requestId marked as attended in DB'),
+      (_) => AppLogger.info('🟢 [CUBIT] Request $requestId marked as attended in DB'),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../domain/entities/booking.dart';
 import '../models/booking_model.dart';
 
 abstract class BookingRemoteDataSource {
@@ -390,6 +391,33 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     final response = await client.from('bookings').insert(jsonMap).select().single();
     final createdBookingId = (response['id'] ?? bookingToInsert.id)?.toString();
 
+    // If session is started immediately, mark room as occupied
+    if (bookingToInsert.status == BookingStatus.inProgress) {
+      try {
+        await client.from('rooms').update({'status': 'occupied', 'is_available': false}).eq('id', bookingToInsert.roomId);
+      } catch (e) {
+        debugPrint('⚠️ [DATA_SOURCE] Failed updating room status to occupied: $e');
+      }
+    }
+
+    // Insert extras into booking_items if provided
+    if (bookingToInsert.extras.isNotEmpty && createdBookingId != null && createdBookingId.isNotEmpty) {
+      final itemsToInsert = bookingToInsert.extras.map((extra) => {
+        'booking_id': createdBookingId,
+        'extra_id': extra['id'] ?? extra['extra_id'],
+        'name': extra['name_ar'] ?? extra['name'] ?? extra['name_en'] ?? 'صنف',
+        'quantity': extra['quantity'] ?? extra['qty'] ?? 1,
+        'unit_price': extra['unit_price'] ?? extra['price'] ?? 0.0,
+        'total_price': extra['total_price'] ?? ((extra['unit_price'] ?? extra['price'] ?? 0.0) * (extra['quantity'] ?? extra['qty'] ?? 1)),
+      }).toList();
+
+      try {
+        await client.from('booking_items').insert(itemsToInsert);
+      } catch (e) {
+        debugPrint('⚠️ [DATA_SOURCE] Failed inserting booking_items: $e');
+      }
+    }
+
     if (cleanVoucherCode != null && cleanVoucherCode.isNotEmpty && createdBookingId != null && createdBookingId.isNotEmpty) {
       await consumeVoucherByCode(cleanVoucherCode, createdBookingId);
     }
@@ -423,7 +451,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     try {
       final response = await client
           .from('booking_items')
-          .select('*, canteen_items(*)')
+          .select('*, extras(*)')
           .eq('booking_id', bookingId);
 
       return (response as List).map((item) => Map<String, dynamic>.from(item)).toList();

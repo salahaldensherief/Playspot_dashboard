@@ -119,7 +119,7 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: requests.length,
-                separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                separatorBuilder: (_, _) => SizedBox(height: 12.h),
                 itemBuilder: (context, index) {
                   final req = requests[index];
                   return Container(

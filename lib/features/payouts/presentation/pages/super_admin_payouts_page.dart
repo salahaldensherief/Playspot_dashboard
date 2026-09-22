@@ -10,7 +10,9 @@ import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
+import '../../domain/repositories/payout_repository.dart';
+
 
 class SuperAdminPayoutsPage extends StatefulWidget {
   const SuperAdminPayoutsPage({super.key});
@@ -40,26 +42,61 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage> with Sing
 
   Future<void> _fetchData() async {
     setState(() => _isLoading = true);
-    try {
-      final supabase = sl<SupabaseClient>();
-      final overviewRes = await supabase.rpc('get_pending_payouts_overview');
-      final payoutsRes = await supabase
-          .from('payouts')
-          .select('*, lounges(name)')
-          .order('created_at', ascending: false);
+    final repo = sl<PayoutRepository>();
+    final overviewRes = await repo.getPendingPayoutsOverview();
+    final payoutsRes = await repo.getAllPayouts();
 
-      if (!mounted) return;
-      setState(() {
-        _pendingOverview = List<Map<String, dynamic>>.from(overviewRes);
-        _allPayouts = List<Map<String, dynamic>>.from(payoutsRes);
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppStrings.error}: $e')));
-    }
+    if (!mounted) return;
+
+    overviewRes.fold(
+      (failure) {
+        AppLogger.error('Failed to load pending payouts overview: ${failure.message}');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message)));
+        setState(() => _isLoading = false);
+      },
+      (overview) {
+        payoutsRes.fold(
+          (failure) {
+            AppLogger.error('Failed to load all payouts: ${failure.message}');
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message)));
+            setState(() => _isLoading = false);
+          },
+          (payouts) {
+            setState(() {
+              _pendingOverview = overview
+                  .map((o) => {
+                        'lounge_id': o.loungeId,
+                        'lounge_name': o.loungeName,
+                        'pending_amount': o.pendingAmount,
+                        'pending_payments_count': o.pendingPaymentsCount,
+                      })
+                  .toList();
+              _allPayouts = payouts
+                  .map((p) => {
+                        'id': p.id,
+                        'lounge_id': p.loungeId,
+                        'lounges': {'name': p.loungeName ?? '-'},
+                        'amount': p.amount,
+                        'total_amount': p.amount,
+                        'period_start': p.periodStart,
+                        'period_end': p.periodEnd,
+                        'status': p.status,
+                        'notes': p.notes,
+                        'created_at': p.createdAt.toIso8601String(),
+                        'paid_at': p.paidAt?.toIso8601String(),
+                        'transfer_reference': p.transferReference,
+                        'transfer_method': p.transferMethod,
+                        'payment_count': p.paymentCount,
+                      })
+                  .toList();
+              _isLoading = false;
+            });
+          },
+        );
+      },
+    );
   }
+
 
   Future<void> _createPayoutModal(String loungeId, String loungeName) async {
     final startController = TextEditingController(text: '2026-01-01');
@@ -94,29 +131,34 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage> with Sing
                             isSubmitting = true;
                             errorMessage = null;
                           });
-                          try {
-                            final result = await sl<SupabaseClient>().rpc('create_payout', params: {
-                              'p_lounge_id': loungeId,
-                              'p_period_start': startController.text,
-                              'p_period_end': endController.text,
-                            });
-                            if (dialogContext.mounted) {
-                              Navigator.pop(dialogContext);
-                            }
-                            if (result['success'] == true) {
-                              messenger.showSnackBar(
-                                SnackBar(
+                          final resultEither = await sl<PayoutRepository>().createPayout(
+                            loungeId: loungeId,
+                            periodStart: startController.text,
+                            periodEnd: endController.text,
+                          );
+                          resultEither.fold(
+                            (failure) {
+                              setDialogState(() {
+                                isSubmitting = false;
+                                errorMessage = failure.message;
+                              });
+                            },
+                            (result) {
+                              if (dialogContext.mounted) {
+                                Navigator.pop(dialogContext);
+                              }
+                              if (result['success'] == true) {
+                                messenger.showSnackBar(
+                                  SnackBar(
                                     content: Text(
-                                        '${AppStrings.payoutCreatedSuccess} \$${result['amount']} (${result['payment_count']} ${AppStrings.paymentsCount})')),
-                              );
+                                      '${AppStrings.payoutCreatedSuccess} \$${result['amount']} (${result['payment_count']} ${AppStrings.paymentsCount})',
+                                    ),
+                                  ),
+                                );
+                              }
                               _fetchData();
-                            }
-                          } catch (e) {
-                            setDialogState(() {
-                              isSubmitting = false;
-                              errorMessage = e.toString();
-                            });
-                          }
+                            },
+                          );
                         },
                 ),
               ],
@@ -181,28 +223,31 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage> with Sing
                           isSubmitting = true;
                           errorMessage = null;
                         });
-                        try {
-                          await sl<SupabaseClient>().rpc('complete_payout', params: {
-                            'p_payout_id': payoutId,
-                            'p_transfer_method': transferMethod,
-                            'p_transfer_reference': refController.text.trim(),
-                            'p_receipt_url':
-                                receiptController.text.trim().isEmpty ? null : receiptController.text.trim(),
-                            'p_notes': notesController.text.trim().isEmpty ? null : notesController.text.trim(),
-                          });
-                          if (dialogContext.mounted) {
-                            Navigator.pop(dialogContext);
-                          }
-                          messenger.showSnackBar(
-                            SnackBar(content: Text(AppStrings.payoutMarkedPaidSuccess)),
-                          );
-                          _fetchData();
-                        } catch (e) {
-                          setDialogState(() {
-                            isSubmitting = false;
-                            errorMessage = e.toString();
-                          });
-                        }
+                        final resultEither = await sl<PayoutRepository>().completePayout(
+                          payoutId: payoutId,
+                          transferMethod: transferMethod,
+                          transferReference: refController.text.trim(),
+                          receiptUrl:
+                              receiptController.text.trim().isEmpty ? null : receiptController.text.trim(),
+                          notes: notesController.text.trim().isEmpty ? null : notesController.text.trim(),
+                        );
+                        resultEither.fold(
+                          (failure) {
+                            setDialogState(() {
+                              isSubmitting = false;
+                              errorMessage = failure.message;
+                            });
+                          },
+                          (_) {
+                            if (dialogContext.mounted) {
+                              Navigator.pop(dialogContext);
+                            }
+                            messenger.showSnackBar(
+                              SnackBar(content: Text(AppStrings.payoutMarkedPaidSuccess)),
+                            );
+                            _fetchData();
+                          },
+                        );
                       },
               ),
             ],
@@ -276,22 +321,28 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage> with Sing
                           isSubmitting = true;
                           errorMessage = null;
                         });
-                        try {
-                          await sl<SupabaseClient>().rpc(rpcName, params: {
-                            'p_payout_id': payoutId,
-                            'p_reason': reasonController.text.trim(),
-                          });
-                          if (dialogContext.mounted) {
-                            Navigator.pop(dialogContext);
-                          }
-                          messenger.showSnackBar(SnackBar(content: Text(AppStrings.actionExecutedSuccess)));
-                          _fetchData();
-                        } catch (e) {
-                          setDialogState(() {
-                            isSubmitting = false;
-                            errorMessage = e.toString();
-                          });
-                        }
+                        final repo = sl<PayoutRepository>();
+                        final reason = reasonController.text.trim();
+                        final result = rpcName == 'approve_payout'
+                            ? await repo.approvePayout(payoutId: payoutId, notes: reason)
+                            : rpcName == 'fail_payout'
+                                ? await repo.failPayout(payoutId: payoutId, reason: reason)
+                                : await repo.cancelPayout(payoutId: payoutId, reason: reason);
+                        result.fold(
+                          (failure) {
+                            setDialogState(() {
+                              isSubmitting = false;
+                              errorMessage = failure.message;
+                            });
+                          },
+                          (_) {
+                            if (dialogContext.mounted) {
+                              Navigator.pop(dialogContext);
+                            }
+                            messenger.showSnackBar(SnackBar(content: Text(AppStrings.actionExecutedSuccess)));
+                            _fetchData();
+                          },
+                        );
                       },
               ),
             ],
@@ -347,24 +398,27 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage> with Sing
                           isSubmitting = true;
                           errorMessage = null;
                         });
-                        try {
-                          await sl<SupabaseClient>().rpc('resolve_payout_review', params: {
-                            'p_payout_id': payoutId,
-                            'p_resolution': resolution,
-                            'p_reason': reasonController.text.trim(),
-                          });
-                          if (dialogContext.mounted) {
-                            Navigator.pop(dialogContext);
-                          }
-                          messenger.showSnackBar(
-                              SnackBar(content: Text(AppStrings.payoutReviewResolvedSuccess)));
-                          _fetchData();
-                        } catch (e) {
-                          setDialogState(() {
-                            isSubmitting = false;
-                            errorMessage = e.toString();
-                          });
-                        }
+                        final result = await sl<PayoutRepository>().resolvePayoutReview(
+                          payoutId: payoutId,
+                          resolution: resolution,
+                          reason: reasonController.text.trim(),
+                        );
+                        result.fold(
+                          (failure) {
+                            setDialogState(() {
+                              isSubmitting = false;
+                              errorMessage = failure.message;
+                            });
+                          },
+                          (_) {
+                            if (dialogContext.mounted) {
+                              Navigator.pop(dialogContext);
+                            }
+                            messenger.showSnackBar(
+                                SnackBar(content: Text(AppStrings.payoutReviewResolvedSuccess)));
+                            _fetchData();
+                          },
+                        );
                       },
               ),
             ],
@@ -408,15 +462,14 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage> with Sing
   }
 
   Future<void> _viewDetailsModal(String payoutId) async {
-    try {
-      final details = await sl<SupabaseClient>().rpc('get_payout_details', params: {
-        'p_payout_id': payoutId,
-      });
+    final detailsRes = await sl<PayoutRepository>().getPayoutDetails(payoutId: payoutId);
+    if (!mounted) return;
 
-      if (!mounted) return;
-
-      showDialog(
-        context: context,
+    detailsRes.fold(
+      (failure) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message))),
+      (details) {
+        showDialog(
+          context: context,
         builder: (context) => AppDialog(
           title: AppStrings.payoutDetailsAndReconciliation,
           actions: [
@@ -455,11 +508,11 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage> with Sing
           ),
         ),
       );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppStrings.error}: $e')));
-    }
-  }
+    },
+  );
+}
+
+
 
   Widget _buildStatusBadge(String status) {
     switch (status) {
@@ -593,14 +646,11 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage> with Sing
                                       TextButton(
                                         onPressed: () async {
                                           final messenger = ScaffoldMessenger.of(context);
-                                          try {
-                                            await sl<SupabaseClient>()
-                                                .rpc('approve_payout', params: {'p_payout_id': p['id']});
-                                            _fetchData();
-                                          } catch (e) {
-                                            if (!mounted) return;
-                                            messenger.showSnackBar(SnackBar(content: Text('${AppStrings.error}: $e')));
-                                          }
+                                          final res = await sl<PayoutRepository>().approvePayout(payoutId: p['id']);
+                                          res.fold(
+                                            (failure) => messenger.showSnackBar(SnackBar(content: Text(failure.message))),
+                                            (_) => _fetchData(),
+                                          );
                                         },
                                         child: Text(AppStrings.approve, style: const TextStyle(color: Colors.blueAccent)),
                                       ),
@@ -615,14 +665,11 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage> with Sing
                                       TextButton(
                                         onPressed: () async {
                                           final messenger = ScaffoldMessenger.of(context);
-                                          try {
-                                            await sl<SupabaseClient>().rpc('start_payout_processing',
-                                                params: {'p_payout_id': p['id']});
-                                            _fetchData();
-                                          } catch (e) {
-                                            if (!mounted) return;
-                                            messenger.showSnackBar(SnackBar(content: Text('${AppStrings.error}: $e')));
-                                          }
+                                          final res = await sl<PayoutRepository>().startPayoutProcessing(payoutId: p['id']);
+                                          res.fold(
+                                            (failure) => messenger.showSnackBar(SnackBar(content: Text(failure.message))),
+                                            (_) => _fetchData(),
+                                          );
                                         },
                                         child: Text(AppStrings.process, style: const TextStyle(color: Colors.purpleAccent)),
                                       ),

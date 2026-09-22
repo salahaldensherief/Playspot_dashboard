@@ -177,7 +177,7 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
                   Expanded(
                     child: ListView.separated(
                       itemCount: availableExtras.length,
-                      separatorBuilder: (_, __) => Divider(color: AppColors.divider, height: 16.h),
+                      separatorBuilder: (_, _) => Divider(color: AppColors.divider, height: 16.h),
                       itemBuilder: (context, index) {
                         final extra = availableExtras[index];
                         final qty = _selectedQuantities[extra.id] ?? 0;

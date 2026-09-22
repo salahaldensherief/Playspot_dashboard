@@ -48,25 +48,33 @@ class ShiftHeaderBanner extends StatelessWidget {
   Widget _buildNoActiveShiftBanner(BuildContext context, String loungeId, {bool isMandatory = false}) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       color: (isMandatory ? AppColors.danger : AppColors.neonBlue).withValues(alpha: 0.1),
-      child: Row(
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 12.w,
+        runSpacing: 8.h,
         children: [
-          Icon(
-            isMandatory ? Icons.warning_amber_rounded : Icons.info_outline,
-            color: isMandatory ? AppColors.danger : AppColors.neonBlue,
-            size: 20.r,
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isMandatory ? Icons.warning_amber_rounded : Icons.info_outline,
+                color: isMandatory ? AppColors.danger : AppColors.neonBlue,
+                size: 20.r,
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                AppStrings.noActiveShift,
+                style: TextStyle(
+                  color: isMandatory ? AppColors.danger : AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14.sp,
+                ),
+              ),
+            ],
           ),
-          SizedBox(width: 12.w),
-          Text(
-            AppStrings.noActiveShift,
-            style: TextStyle(
-              color: isMandatory ? AppColors.danger : AppColors.textPrimary,
-              fontWeight: FontWeight.bold,
-              fontSize: 14.sp,
-            ),
-          ),
-          const Spacer(),
           AppButton(
             text: AppStrings.openNewShift,
             onPressed: () => _showOpenShiftDialog(context, loungeId, isDismissible: !isMandatory),
@@ -85,56 +93,59 @@ class ShiftHeaderBanner extends StatelessWidget {
     
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: AppColors.success.withValues(alpha: 0.1),
         border: const Border(bottom: BorderSide(color: AppColors.divider)),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-            decoration: BoxDecoration(
-              color: AppColors.success.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(4.r),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4.r),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8.r,
+                    height: 8.r,
+                    decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    AppStrings.shiftActive,
+                    style: TextStyle(color: AppColors.success, fontSize: 12.sp, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 8.r,
-                  height: 8.r,
-                  decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
-                ),
-                SizedBox(width: 8.w),
-                Text(
-                  AppStrings.shiftActive,
-                  style: TextStyle(color: AppColors.success, fontSize: 12.sp, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 24.w),
-          _buildInfoItem(AppStrings.cashier, shift.cashierName ?? 'N/A'),
-          SizedBox(width: 24.w),
-          _buildInfoItem(AppStrings.startTimeLabel, startTime),
-          const Spacer(),
-          if (isMyShift) ...[
-            AppButton(
-              text: 'تسجيل مصروف / سحب',
-              icon: Icons.receipt_long_outlined,
-              variant: AppButtonVariant.outlined,
-              height: 32.h,
-              onPressed: () => _showAddExpenseDialog(context, shift, loungeId),
-            ),
-            SizedBox(width: 8.w),
-            AppButton(
-              text: AppStrings.closeShift,
-              onPressed: () => _showCloseShiftDialog(context, shift, loungeId),
-              variant: AppButtonVariant.outlined,
-              height: 32.h,
-            ),
+            SizedBox(width: 16.w),
+            _buildInfoItem(AppStrings.cashier, shift.cashierName ?? 'N/A'),
+            SizedBox(width: 16.w),
+            _buildInfoItem(AppStrings.startTimeLabel, startTime),
+            SizedBox(width: 24.w),
+            if (isMyShift) ...[
+              AppButton(
+                text: 'تسجيل مصروف / سحب',
+                icon: Icons.receipt_long_outlined,
+                variant: AppButtonVariant.outlined,
+                height: 32.h,
+                onPressed: () => _showAddExpenseDialog(context, shift, loungeId),
+              ),
+              SizedBox(width: 8.w),
+              AppButton(
+                text: AppStrings.closeShift,
+                onPressed: () => _showCloseShiftDialog(context, shift, loungeId),
+                variant: AppButtonVariant.outlined,
+                height: 32.h,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

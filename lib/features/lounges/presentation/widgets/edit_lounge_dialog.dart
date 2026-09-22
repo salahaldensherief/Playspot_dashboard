@@ -216,7 +216,7 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
           Switch(
             value: _isOpen,
             onChanged: (val) => setState(() => _isOpen = val),
-            activeColor: AppColors.neonBlue,
+            activeThumbColor: AppColors.neonBlue,
           ),
         ],
       ),

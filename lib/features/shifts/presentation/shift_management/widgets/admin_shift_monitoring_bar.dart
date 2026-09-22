@@ -107,12 +107,12 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
                 if (mounted && success) {
                   _refreshOverview();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       content: Row(
                         children: [
-                          Icon(Icons.check_circle_outline, color: Colors.white),
-                          SizedBox(width: 8),
-                          Text('تم فتح الوردية بنجاح!'),
+                          const Icon(Icons.check_circle_outline, color: Colors.white),
+                          const SizedBox(width: 8),
+                          Text(AppStrings.shiftOpenedSuccess),
                         ],
                       ),
                       backgroundColor: AppColors.success,

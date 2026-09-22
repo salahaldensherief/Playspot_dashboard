@@ -1,19 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:play_spot_dashboard/core/responsive/app_breakpoints.dart';
 import '../theme/app_colors.dart';
 
 class DataTableWidget extends StatelessWidget {
   final List<String> columns;
   final List<DataRow> rows;
+  final Widget Function(BuildContext context, int index)? mobileCardBuilder;
 
   const DataTableWidget({
     super.key,
     required this.columns,
     required this.rows,
+    this.mobileCardBuilder,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = AppBreakpoints.isMobile(context);
+
+    if (isMobile && mobileCardBuilder != null && rows.isNotEmpty) {
+      return ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: rows.length,
+        separatorBuilder: (_, __) => SizedBox(height: 12.h),
+        itemBuilder: (context, index) => mobileCardBuilder!(context, index),
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
@@ -27,14 +42,18 @@ class DataTableWidget extends StatelessWidget {
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: MediaQuery.sizeOf(context).width - 310.w),
+            constraints: BoxConstraints(
+              minWidth: isMobile
+                  ? MediaQuery.sizeOf(context).width - 32.w
+                  : MediaQuery.sizeOf(context).width - 310.w,
+            ),
             child: DataTable(
               headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
-              horizontalMargin: 24.w,
-              columnSpacing: 20.w,
-              headingRowHeight: 56.h,
-              dataRowMinHeight: 64.h,
-              dataRowMaxHeight: 64.h,
+              horizontalMargin: 16.w,
+              columnSpacing: 16.w,
+              headingRowHeight: 52.h,
+              dataRowMinHeight: 60.h,
+              dataRowMaxHeight: 80.h,
               columns: columns
                   .map((col) => DataColumn(
                         label: Text(
@@ -42,7 +61,7 @@ class DataTableWidget extends StatelessWidget {
                           style: TextStyle(
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.bold,
-                            fontSize: 14.sp,
+                            fontSize: 13.sp,
                           ),
                         ),
                       ))

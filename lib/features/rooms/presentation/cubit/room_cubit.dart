@@ -34,12 +34,10 @@ class RoomCubit extends Cubit<RoomState> with RealtimeWatcherMixin<RoomState> {
         ));
       },
       onError: (e) async {
-        // If state already has loaded rooms (e.g. from initial REST yield), keep displaying them
         if (state.rooms.isNotEmpty) {
           emit(state.copyWith(status: RoomStatus.success));
           return;
         }
-        // Otherwise, attempt a direct REST fetch as fallback
         final result = await _repository.getRooms(cleanLoungeId);
         if (isClosed) return;
         result.fold(
@@ -52,6 +50,74 @@ class RoomCubit extends Cubit<RoomState> with RealtimeWatcherMixin<RoomState> {
             rooms: rooms,
           )),
         );
+      },
+    );
+  }
+
+  Future<void> toggleWalkInStatus(String roomId, RoomStatusEnum currentStatus) async {
+    if (state.isRoomUpdating(roomId)) return;
+
+    final newStatus = currentStatus == RoomStatusEnum.occupied
+        ? RoomStatusEnum.available
+        : RoomStatusEnum.occupied;
+
+    final updatedUpdatingIds = Set<String>.from(state.updatingRoomIds)..add(roomId);
+    final previousRooms = List<RoomEntity>.from(state.rooms);
+    final updatedRooms = state.rooms.map((room) {
+      if (room.id == roomId) {
+        return RoomEntity(
+          id: room.id,
+          loungeId: room.loungeId,
+          nameAr: room.nameAr,
+          nameEn: room.nameEn,
+          descriptionAr: room.descriptionAr,
+          descriptionEn: room.descriptionEn,
+          activityNames: room.activityNames,
+          activityIds: room.activityIds,
+          spaceType: room.spaceType,
+          spaceTypeId: room.spaceTypeId,
+          maxCapacity: room.maxCapacity,
+          hourlyRateSingle: room.hourlyRateSingle,
+          hourlyRateMulti: room.hourlyRateMulti,
+          extraControllerPrice: room.extraControllerPrice,
+          isAvailable: room.isAvailable,
+          images: room.images,
+          featuresAr: room.featuresAr,
+          featuresEn: room.featuresEn,
+          controllersCount: room.controllersCount,
+          screenSize: room.screenSize,
+          status: newStatus,
+          hasOffer: room.hasOffer,
+          offerTitle: room.offerTitle,
+          offerTag: room.offerTag,
+          activePromotionId: room.activePromotionId,
+        );
+      }
+      return room;
+    }).toList();
+
+    emit(state.copyWith(
+      rooms: updatedRooms,
+      updatingRoomIds: updatedUpdatingIds,
+    ));
+
+    final result = await _repository.updateRoomStatus(roomId, newStatus);
+
+    if (isClosed) return;
+
+    final clearedUpdatingIds = Set<String>.from(state.updatingRoomIds)..remove(roomId);
+
+    result.fold(
+      (failure) {
+        emit(state.copyWith(
+          rooms: previousRooms,
+          updatingRoomIds: clearedUpdatingIds,
+          status: RoomStatus.failure,
+          errorMessage: failure.message,
+        ));
+      },
+      (_) {
+        emit(state.copyWith(updatingRoomIds: clearedUpdatingIds));
       },
     );
   }

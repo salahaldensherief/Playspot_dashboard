@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
@@ -74,70 +75,36 @@ class _MarketingViewState extends State<MarketingView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppStrings.marketing,
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 28.sp,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Orbitron',
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      AppStrings.promotionsMarketing,
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13.sp,
-                      ),
-                    ),
-                  ],
+            // Header Section (Adaptive)
+            AppAdaptivePageHeader(
+              title: AppStrings.marketing,
+              subtitle: AppStrings.promotionsMarketing,
+              secondaryAction: isSuperAdmin
+                  ? AppButton(
+                      text: AppStrings.newNotification,
+                      onPressed: () => _showNotificationDialog(context, marketingCubit),
+                      icon: Icons.notifications_active_outlined,
+                      variant: AppButtonVariant.outlined,
+                    )
+                  : null,
+              primaryAction: AppButton(
+                text: AppStrings.createPromotion,
+                onPressed: () => _showEditPromoDialog(
+                  context,
+                  marketingCubit,
+                  PromoEntity(
+                    id: '',
+                    titleAr: '',
+                    titleEn: '',
+                    tagAr: '',
+                    tagEn: '',
+                    hexColors: const [],
+                    iconKey: 'Flash',
+                    loungeId: user?.loungeId,
+                  ),
                 ),
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: _reloadPromotions,
-                      icon: const Icon(Icons.refresh, color: AppColors.neonBlue),
-                      tooltip: AppStrings.refresh,
-                    ),
-                    SizedBox(width: 8.w),
-                    if (isSuperAdmin) ...[
-                      AppButton(
-                        text: AppStrings.newNotification,
-                        onPressed: () => _showNotificationDialog(context, marketingCubit),
-                        icon: Icons.notifications_active_outlined,
-                        variant: AppButtonVariant.outlined,
-                      ),
-                      SizedBox(width: 12.w),
-                    ],
-                    AppButton(
-                      text: AppStrings.createPromotion,
-                      onPressed: () => _showEditPromoDialog(
-                        context,
-                        marketingCubit,
-                        PromoEntity(
-                          id: '',
-                          titleAr: '',
-                          titleEn: '',
-                          tagAr: '',
-                          tagEn: '',
-                          hexColors: const [],
-                          iconKey: 'Flash',
-                          loungeId: user?.loungeId,
-                        ),
-                      ),
-                      icon: Icons.add,
-                    ),
-                  ],
-                ),
-              ],
+                icon: Icons.add,
+              ),
             ),
             SizedBox(height: 24.h),
 

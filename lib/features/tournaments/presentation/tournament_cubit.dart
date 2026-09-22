@@ -3,21 +3,96 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/core/services/location_service.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import 'package:play_spot_dashboard/core/utils/optimistic_update_extension.dart';
 import '../domain/entities/tournament_entity.dart';
 import '../domain/entities/tournament_match_entity.dart';
 import '../domain/entities/tournament_participant_entity.dart';
 import '../domain/entities/tournament_prize_entity.dart';
-import '../domain/repositories/tournament_repository.dart';
+import '../domain/usecases/tournament_match_usecases.dart';
+import '../domain/usecases/tournament_participant_usecases.dart';
+import '../domain/usecases/tournament_usecases.dart';
 import 'tournament_state.dart';
 
 class TournamentCubit extends Cubit<TournamentState> {
-  final TournamentRepository repository;
+  final GetTournamentsUseCase _getTournamentsUseCase;
+  final CreateTournamentUseCase _createTournamentUseCase;
+  final UpdateTournamentUseCase _updateTournamentUseCase;
+  final SaveTournamentPrizesUseCase _saveTournamentPrizesUseCase;
+  final PublishTournamentUseCase _publishTournamentUseCase;
+  final CancelTournamentUseCase _cancelTournamentUseCase;
+  final DeleteDraftTournamentUseCase _deleteDraftTournamentUseCase;
+  final DeleteTournamentUseCase _deleteTournamentUseCase;
+  final CompleteTournamentUseCase _completeTournamentUseCase;
+  final AwardPrizesUseCase _awardPrizesUseCase;
+  final GetTournamentAuditLogsUseCase _getTournamentAuditLogsUseCase;
+  final WatchDisputedMatchesUseCase _watchDisputedMatchesUseCase;
+  final GetTournamentParticipantsUseCase _getParticipantsUseCase;
+  final ApproveParticipantPaymentUseCase _approvePaymentUseCase;
+  final RejectParticipantPaymentUseCase _rejectPaymentUseCase;
+  final RecordCashPaymentUseCase _recordCashPaymentUseCase;
+  final PromoteWaitlistUseCase _promoteWaitlistUseCase;
+  final CheckInParticipantUseCase _checkInParticipantUseCase;
+  final WithdrawParticipantUseCase _withdrawParticipantUseCase;
+  final DrawBracketUseCase _drawBracketUseCase;
+  final GetTournamentMatchesUseCase _getMatchesUseCase;
+  final StartMatchUseCase _startMatchUseCase;
+  final ResolveDisputeUseCase _resolveDisputeUseCase;
   final LocationService locationService;
   final StorageService storageService;
+
   StreamSubscription<List<TournamentMatchEntity>>? _disputesSubscription;
 
-  TournamentCubit(this.repository, this.locationService, this.storageService) : super(const TournamentState());
+  TournamentCubit({
+    required GetTournamentsUseCase getTournamentsUseCase,
+    required CreateTournamentUseCase createTournamentUseCase,
+    required UpdateTournamentUseCase updateTournamentUseCase,
+    required SaveTournamentPrizesUseCase saveTournamentPrizesUseCase,
+    required PublishTournamentUseCase publishTournamentUseCase,
+    required CancelTournamentUseCase cancelTournamentUseCase,
+    required DeleteDraftTournamentUseCase deleteDraftTournamentUseCase,
+    required DeleteTournamentUseCase deleteTournamentUseCase,
+    required CompleteTournamentUseCase completeTournamentUseCase,
+    required AwardPrizesUseCase awardPrizesUseCase,
+    required GetTournamentAuditLogsUseCase getTournamentAuditLogsUseCase,
+    required WatchDisputedMatchesUseCase watchDisputedMatchesUseCase,
+    required GetTournamentParticipantsUseCase getParticipantsUseCase,
+    required ApproveParticipantPaymentUseCase approvePaymentUseCase,
+    required RejectParticipantPaymentUseCase rejectPaymentUseCase,
+    required RecordCashPaymentUseCase recordCashPaymentUseCase,
+    required PromoteWaitlistUseCase promoteWaitlistUseCase,
+    required CheckInParticipantUseCase checkInParticipantUseCase,
+    required WithdrawParticipantUseCase withdrawParticipantUseCase,
+    required DrawBracketUseCase drawBracketUseCase,
+    required GetTournamentMatchesUseCase getMatchesUseCase,
+    required StartMatchUseCase startMatchUseCase,
+    required ResolveDisputeUseCase resolveDisputeUseCase,
+    required this.locationService,
+    required this.storageService,
+  })  : _getTournamentsUseCase = getTournamentsUseCase,
+        _createTournamentUseCase = createTournamentUseCase,
+        _updateTournamentUseCase = updateTournamentUseCase,
+        _saveTournamentPrizesUseCase = saveTournamentPrizesUseCase,
+        _publishTournamentUseCase = publishTournamentUseCase,
+        _cancelTournamentUseCase = cancelTournamentUseCase,
+        _deleteDraftTournamentUseCase = deleteDraftTournamentUseCase,
+        _deleteTournamentUseCase = deleteTournamentUseCase,
+        _completeTournamentUseCase = completeTournamentUseCase,
+        _awardPrizesUseCase = awardPrizesUseCase,
+        _getTournamentAuditLogsUseCase = getTournamentAuditLogsUseCase,
+        _watchDisputedMatchesUseCase = watchDisputedMatchesUseCase,
+        _getParticipantsUseCase = getParticipantsUseCase,
+        _approvePaymentUseCase = approvePaymentUseCase,
+        _rejectPaymentUseCase = rejectPaymentUseCase,
+        _recordCashPaymentUseCase = recordCashPaymentUseCase,
+        _promoteWaitlistUseCase = promoteWaitlistUseCase,
+        _checkInParticipantUseCase = checkInParticipantUseCase,
+        _withdrawParticipantUseCase = withdrawParticipantUseCase,
+        _drawBracketUseCase = drawBracketUseCase,
+        _getMatchesUseCase = getMatchesUseCase,
+        _startMatchUseCase = startMatchUseCase,
+        _resolveDisputeUseCase = resolveDisputeUseCase,
+        super(const TournamentState());
 
   @override
   void emit(TournamentState state) {
@@ -47,16 +122,16 @@ class TournamentCubit extends Cubit<TournamentState> {
           userLng = position.longitude;
         }
       } catch (e) {
-        debugPrint('⚠️ [TOURNAMENT_CUBIT] Location request error: $e');
+        AppLogger.warning('Location request error: $e');
       }
     }
 
-    final result = await repository.getTournaments(
+    final result = await _getTournamentsUseCase(GetTournamentsParams(
       loungeId: loungeId,
       status: status,
       latitude: userLat,
       longitude: userLng,
-    );
+    ));
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -117,7 +192,7 @@ class TournamentCubit extends Cubit<TournamentState> {
         );
         tournamentToCreate = tournament.copyWith(bannerUrl: bannerUrl);
       } catch (e) {
-        debugPrint('⚠️ [TOURNAMENT_CUBIT] Banner upload failed: $e');
+        AppLogger.error('Banner upload failed: $e');
         final cleanMsg = e.toString().replaceFirst('Exception: ', '');
         emit(state.copyWith(
           status: TournamentCubitStatus.failure,
@@ -127,7 +202,7 @@ class TournamentCubit extends Cubit<TournamentState> {
       }
     }
 
-    final result = await repository.createTournament(tournamentToCreate);
+    final result = await _createTournamentUseCase(tournamentToCreate);
 
     return result.fold(
       (failure) {
@@ -169,7 +244,7 @@ class TournamentCubit extends Cubit<TournamentState> {
         );
         tournamentToUpdate = tournament.copyWith(bannerUrl: bannerUrl);
       } catch (e) {
-        debugPrint('⚠️ [TOURNAMENT_CUBIT] Banner upload failed: $e');
+        AppLogger.error('Banner upload failed: $e');
         final cleanMsg = e.toString().replaceFirst('Exception: ', '');
         emit(state.copyWith(
           status: TournamentCubitStatus.failure,
@@ -179,7 +254,7 @@ class TournamentCubit extends Cubit<TournamentState> {
       }
     }
 
-    final result = await repository.updateTournament(tournamentToUpdate);
+    final result = await _updateTournamentUseCase(tournamentToUpdate);
 
     return result.fold(
       (failure) {
@@ -195,7 +270,7 @@ class TournamentCubit extends Cubit<TournamentState> {
           status: TournamentCubitStatus.actionSuccess,
           tournaments: list,
           selectedTournament: updated,
-          successMessage: 'تم تعديل بيانات البطولة بنجاح',
+          successMessage: 'تم تحديث بيانات البطولة بنجاح',
         ));
         return true;
       },
@@ -204,7 +279,9 @@ class TournamentCubit extends Cubit<TournamentState> {
 
   Future<void> saveTournamentPrizes(String tournamentId, List<TournamentPrizeEntity> prizes) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.saveTournamentPrizes(tournamentId, prizes);
+    final result = await _saveTournamentPrizesUseCase(
+      SaveTournamentPrizesParams(tournamentId: tournamentId, prizes: prizes),
+    );
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -222,7 +299,7 @@ class TournamentCubit extends Cubit<TournamentState> {
 
   Future<void> publishTournament(String tournamentId) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.publishTournament(tournamentId);
+    final result = await _publishTournamentUseCase(tournamentId);
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -252,7 +329,9 @@ class TournamentCubit extends Cubit<TournamentState> {
 
   Future<void> cancelTournament(String tournamentId, String reason) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.cancelTournament(tournamentId, reason);
+    final result = await _cancelTournamentUseCase(
+      CancelTournamentParams(tournamentId: tournamentId, reason: reason),
+    );
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -282,7 +361,7 @@ class TournamentCubit extends Cubit<TournamentState> {
 
   Future<void> deleteDraftTournament(String tournamentId) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.deleteDraftTournament(tournamentId);
+    final result = await _deleteDraftTournamentUseCase(tournamentId);
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -303,7 +382,7 @@ class TournamentCubit extends Cubit<TournamentState> {
 
   Future<void> deleteTournament(String tournamentId) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.deleteTournament(tournamentId);
+    final result = await _deleteTournamentUseCase(tournamentId);
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -323,7 +402,7 @@ class TournamentCubit extends Cubit<TournamentState> {
   }
 
   Future<void> loadParticipants(String tournamentId) async {
-    final result = await repository.getParticipants(tournamentId);
+    final result = await _getParticipantsUseCase(tournamentId);
     result.fold(
       (failure) => emit(state.copyWith(errorMessage: failure.message)),
       (list) => emit(state.copyWith(participants: list)),
@@ -346,7 +425,7 @@ class TournamentCubit extends Cubit<TournamentState> {
         }).toList(),
         successMessage: 'تم اعتماد إيصال الدفع بنجاح',
       ),
-      onServer: () => repository.approvePayment(participantId),
+      onServer: () => _approvePaymentUseCase(participantId),
       rollback: (curr, failure) => curr.copyWith(
         status: TournamentCubitStatus.failure,
         participants: original,
@@ -371,7 +450,7 @@ class TournamentCubit extends Cubit<TournamentState> {
         }).toList(),
         successMessage: 'تم رفض إيصال الدفع',
       ),
-      onServer: () => repository.rejectPayment(participantId, reason),
+      onServer: () => _rejectPaymentUseCase(RejectPaymentParams(participantId: participantId, reason: reason)),
       rollback: (curr, failure) => curr.copyWith(
         status: TournamentCubitStatus.failure,
         participants: original,
@@ -396,7 +475,7 @@ class TournamentCubit extends Cubit<TournamentState> {
         }).toList(),
         successMessage: 'تم تسجيل الدفع النقدي في الصالة',
       ),
-      onServer: () => repository.recordCashPayment(participantId),
+      onServer: () => _recordCashPaymentUseCase(participantId),
       rollback: (curr, failure) => curr.copyWith(
         status: TournamentCubitStatus.failure,
         participants: original,
@@ -407,7 +486,7 @@ class TournamentCubit extends Cubit<TournamentState> {
 
   Future<void> promoteWaitlist(String tournamentId) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.promoteWaitlist(tournamentId);
+    final result = await _promoteWaitlistUseCase(tournamentId);
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -440,7 +519,7 @@ class TournamentCubit extends Cubit<TournamentState> {
         }).toList(),
         successMessage: 'تم تسجيل حضور اللاعب',
       ),
-      onServer: () => repository.checkInParticipant(participantId),
+      onServer: () => _checkInParticipantUseCase(participantId),
       rollback: (curr, failure) => curr.copyWith(
         status: TournamentCubitStatus.failure,
         participants: original,
@@ -464,7 +543,7 @@ class TournamentCubit extends Cubit<TournamentState> {
         }).toList(),
         successMessage: 'تم انسحاب المشارك بنجاح',
       ),
-      onServer: () => repository.withdrawParticipant(participantId),
+      onServer: () => _withdrawParticipantUseCase(participantId),
       rollback: (curr, failure) => curr.copyWith(
         status: TournamentCubitStatus.failure,
         participants: original,
@@ -475,7 +554,7 @@ class TournamentCubit extends Cubit<TournamentState> {
 
   Future<void> drawBracket(String tournamentId) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.drawBracket(tournamentId);
+    final result = await _drawBracketUseCase(tournamentId);
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -505,7 +584,7 @@ class TournamentCubit extends Cubit<TournamentState> {
   }
 
   Future<void> loadMatches(String tournamentId) async {
-    final result = await repository.getMatches(tournamentId);
+    final result = await _getMatchesUseCase(tournamentId);
     result.fold(
       (failure) => emit(state.copyWith(errorMessage: failure.message)),
       (list) {
@@ -517,7 +596,7 @@ class TournamentCubit extends Cubit<TournamentState> {
 
   Future<void> startMatch(String matchId, {String? roomId}) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.startMatch(matchId, roomId: roomId);
+    final result = await _startMatchUseCase(StartMatchParams(matchId: matchId, roomId: roomId));
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -544,13 +623,13 @@ class TournamentCubit extends Cubit<TournamentState> {
     required String resolutionNotes,
   }) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.resolveDispute(
-      matchId,
+    final result = await _resolveDisputeUseCase(ResolveDisputeParams(
+      matchId: matchId,
       winnerId: winnerId,
       p1Score: p1Score,
       p2Score: p2Score,
       resolutionNotes: resolutionNotes,
-    );
+    ));
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -572,7 +651,7 @@ class TournamentCubit extends Cubit<TournamentState> {
 
   Future<void> completeTournament(String tournamentId) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.completeTournament(tournamentId);
+    final result = await _completeTournamentUseCase(tournamentId);
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -602,7 +681,7 @@ class TournamentCubit extends Cubit<TournamentState> {
 
   Future<void> awardPrizes(String tournamentId) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await repository.awardPrizes(tournamentId);
+    final result = await _awardPrizesUseCase(tournamentId);
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -621,11 +700,11 @@ class TournamentCubit extends Cubit<TournamentState> {
   }
 
   Future<void> loadAuditLogs(String tournamentId, {int page = 1, int pageSize = 50}) async {
-    final result = await repository.getTournamentAuditLogsPage(
+    final result = await _getTournamentAuditLogsUseCase(GetTournamentAuditLogsParams(
       tournamentId: tournamentId,
       page: page,
       pageSize: pageSize,
-    );
+    ));
     result.fold(
       (failure) => emit(state.copyWith(errorMessage: failure.message)),
       (paginated) => emit(state.copyWith(
@@ -639,7 +718,7 @@ class TournamentCubit extends Cubit<TournamentState> {
 
   void startWatchingDisputes(String tournamentId) {
     _disputesSubscription?.cancel();
-    _disputesSubscription = repository.watchDisputedMatches(tournamentId).listen((disputedList) {
+    _disputesSubscription = _watchDisputedMatchesUseCase(tournamentId).listen((disputedList) {
       emit(state.copyWith(disputedMatches: disputedList));
     });
   }

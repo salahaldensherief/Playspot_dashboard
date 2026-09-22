@@ -111,7 +111,7 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
                           Text(AppStrings.rewardType, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
                           SizedBox(height: 8.h),
                           DropdownButtonFormField<String>(
-                            value: _rewardType,
+                            initialValue: _rewardType,
                             dropdownColor: AppColors.cardBackground,
                             items: [
                               DropdownMenuItem(value: 'discount_fixed', child: Text(AppStrings.directDiscount, style: const TextStyle(color: AppColors.textPrimary))),

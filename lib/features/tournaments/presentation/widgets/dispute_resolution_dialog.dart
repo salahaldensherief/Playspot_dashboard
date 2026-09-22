@@ -114,7 +114,7 @@ class _DisputeResolutionDialogState extends State<DisputeResolutionDialog> {
               children: [
                 Column(
                   children: [
-                    Text('اللاعب الأول', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                    Text(AppStrings.disputePlayerOne, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
                     SizedBox(height: 4.h),
                     Text(m.player1Name ?? 'P1', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16.sp)),
                   ],
@@ -122,7 +122,7 @@ class _DisputeResolutionDialogState extends State<DisputeResolutionDialog> {
                 Text('VS', style: TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold, fontSize: 18.sp)),
                 Column(
                   children: [
-                    Text('اللاعب الثاني', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                    Text(AppStrings.disputePlayerTwo, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
                     SizedBox(height: 4.h),
                     Text(m.player2Name ?? 'P2', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16.sp)),
                   ],
@@ -132,7 +132,7 @@ class _DisputeResolutionDialogState extends State<DisputeResolutionDialog> {
           ),
           SizedBox(height: 16.h),
           if (m.disputeReason != null && m.disputeReason!.isNotEmpty) ...[
-            Text('سبب النزاع:', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold, fontSize: 14.sp)),
+            Text(AppStrings.disputeReasonLabel, style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold, fontSize: 14.sp)),
             SizedBox(height: 6.h),
             Container(
               width: double.infinity,
@@ -147,7 +147,7 @@ class _DisputeResolutionDialogState extends State<DisputeResolutionDialog> {
             SizedBox(height: 16.h),
           ],
           if (m.proofUrl != null && m.proofUrl!.isNotEmpty) ...[
-            Text('صورة الإثبات:', style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp)),
+            Text(AppStrings.disputeProofImageLabel, style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp)),
             SizedBox(height: 6.h),
             Container(
               height: 220.h,
@@ -161,29 +161,29 @@ class _DisputeResolutionDialogState extends State<DisputeResolutionDialog> {
             ),
             SizedBox(height: 20.h),
           ],
-          Text('تحديد الفائز والسكور النهائي', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15.sp)),
+          Text(AppStrings.disputeSelectWinner, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15.sp)),
           SizedBox(height: 12.h),
-          Row(
-            children: [
-              Expanded(
-                child: RadioListTile<String>(
-                  title: Text(m.player1Name ?? 'P1', style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp)),
-                  value: m.player1Id ?? '',
-                  groupValue: _selectedWinnerId,
-                  onChanged: (val) => setState(() => _selectedWinnerId = val),
-                  activeColor: AppColors.neonBlue,
+          RadioGroup<String>(
+            groupValue: _selectedWinnerId,
+            onChanged: (val) => setState(() => _selectedWinnerId = val),
+            child: Row(
+              children: [
+                Expanded(
+                  child: RadioListTile<String>(
+                    title: Text(m.player1Name ?? 'P1', style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp)),
+                    value: m.player1Id ?? '',
+                    activeColor: AppColors.neonBlue,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: RadioListTile<String>(
-                  title: Text(m.player2Name ?? 'P2', style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp)),
-                  value: m.player2Id ?? '',
-                  groupValue: _selectedWinnerId,
-                  onChanged: (val) => setState(() => _selectedWinnerId = val),
-                  activeColor: AppColors.neonBlue,
+                Expanded(
+                  child: RadioListTile<String>(
+                    title: Text(m.player2Name ?? 'P2', style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp)),
+                    value: m.player2Id ?? '',
+                    activeColor: AppColors.neonBlue,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           SizedBox(height: 12.h),
           Row(
@@ -209,7 +209,7 @@ class _DisputeResolutionDialogState extends State<DisputeResolutionDialog> {
           AppTextField(
             controller: _notesController,
             label: AppStrings.reviewNotes,
-            hintText: 'ملاحظات القرار الإداري',
+            hintText: AppStrings.disputeAdminNotesHint,
             maxLines: 3,
           ),
         ],

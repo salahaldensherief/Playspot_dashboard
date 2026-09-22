@@ -47,6 +47,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
   TimeOfDay _startTime = TimeOfDay.now();
   List<Map<String, dynamic>> _selectedExtras = [];
   double _extrasTotal = 0.0;
+  bool _startSessionImmediately = true;
 
   @override
   void initState() {
@@ -232,6 +233,62 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
 
                 // Extras Section
                 _buildExtrasSection(),
+
+                SizedBox(height: 20.h),
+
+                // Start Session Immediately Switch
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(10.r),
+                    border: Border.all(
+                      color: _startSessionImmediately 
+                          ? AppColors.neonBlue.withValues(alpha: 0.5) 
+                          : AppColors.borderDefault,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.play_circle_fill_rounded,
+                              color: _startSessionImmediately ? AppColors.neonBlue : AppColors.textMuted,
+                              size: 22.r,
+                            ),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  AppText.body(
+                                    'بدء الجلسة وعّد الوقت فوراً عند الحفظ',
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13.sp,
+                                  ),
+                                  AppText.body(
+                                    'سيتم تحويل الغرفة لمشغولة وتشغيل حاسبة وقت اللعب والإضافات فوراً',
+                                    fontSize: 11.sp,
+                                    color: AppColors.textMuted,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: _startSessionImmediately,
+                        activeTrackColor: AppColors.neonBlue.withValues(alpha: 0.4),
+                        activeThumbColor: AppColors.neonBlue,
+                        onChanged: (val) => setState(() => _startSessionImmediately = val),
+                      ),
+                    ],
+                  ),
+                ),
 
                 SizedBox(height: 20.h),
 
@@ -694,7 +751,8 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
       startTime: startTimeStr,
       endTime: endTimeStr,
       durationMinutes: durationMinutes,
-      status: BookingStatus.upcoming,
+      status: _startSessionImmediately ? BookingStatus.inProgress : BookingStatus.upcoming,
+      checkedInAt: _startSessionImmediately ? DateTime.now() : null,
       totalPrice: grandTotal,
       addonsPrice: _extrasTotal > 0 ? _extrasTotal : null,
       voucherDiscount: _voucherDiscount > 0 ? _voucherDiscount : null,

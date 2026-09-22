@@ -306,24 +306,24 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
               });
             } catch (_) {}
           }
-        }
 
-        // 3. Update bookings table (total_price & addons_price)
-        final updatedTotalPrice = currentTotalPrice + additionalCost;
-        final updatedAddonsPrice = currentAddonsPrice + additionalCost;
+          // Direct Fallback Update to bookings table (total_price & addons_price)
+          final updatedTotalPrice = currentTotalPrice + additionalCost;
+          final updatedAddonsPrice = currentAddonsPrice + additionalCost;
 
-        debugPrint('🔵 [CANTEEN_ORDER_SYNC] Updating `total_price` ($updatedTotalPrice) and `addons_price` ($updatedAddonsPrice) on `bookings`...');
-        try {
-          await supabaseClient.from('bookings').update({
-            'total_price': updatedTotalPrice,
-            'addons_price': updatedAddonsPrice,
-          }).eq('id', bookingId);
-        } catch (_) {
+          debugPrint('🔵 [CANTEEN_ORDER_SYNC] Direct Fallback: Updating `total_price` ($updatedTotalPrice) on `bookings`...');
           try {
             await supabaseClient.from('bookings').update({
               'total_price': updatedTotalPrice,
+              'addons_price': updatedAddonsPrice,
             }).eq('id', bookingId);
-          } catch (_) {}
+          } catch (_) {
+            try {
+              await supabaseClient.from('bookings').update({
+                'total_price': updatedTotalPrice,
+              }).eq('id', bookingId);
+            } catch (_) {}
+          }
         }
 
         // 4. Failsafe optional insert to booking_items table
@@ -466,7 +466,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
               .eq(col, rawDbId)
               .select();
 
-          if (response != null && (response as List).isNotEmpty) {
+          if ((response as List).isNotEmpty) {
             debugPrint('🟢 [DASHBOARD_DATA_SOURCE] Successfully updated request $requestId in table $table using column $col');
             success = true;
           }

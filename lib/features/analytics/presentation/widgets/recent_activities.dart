@@ -70,9 +70,12 @@ class RecentActivityCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      AppText.heading(
-                        AppStrings.recentActivity,
-                        fontSize: 18.sp,
+                      Expanded(
+                        child: AppText.heading(
+                          AppStrings.recentActivity,
+                          fontSize: 18.sp,
+                          maxLines: 1,
+                        ),
                       ),
                       AppButton(
                         text: AppStrings.viewAll,

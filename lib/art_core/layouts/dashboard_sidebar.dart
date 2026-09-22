@@ -31,12 +31,20 @@ class DashboardSidebar extends StatelessWidget {
 
         return BlocBuilder<PermissionsCubit, PermissionsState>(
           builder: (context, permState) {
+            double sidebarWidth = double.infinity;
+            if (Responsive.isDesktop(context)) {
+              sidebarWidth = 260.0;
+            } else if (Responsive.isTablet(context)) {
+              sidebarWidth = 220.0;
+            }
+
             return Container(
-              width: Responsive.isDesktop(context) ? 260.w : double.infinity,
-              decoration: BoxDecoration(
+              width: sidebarWidth,
+              decoration: const BoxDecoration(
                 color: AppColors.sidebarBackground,
-                border: Border(right: BorderSide(color: AppColors.borderDefault)),
+                border: BorderDirectional(end: BorderSide(color: AppColors.borderDefault)),
               ),
+
               child: Column(
                 children: [
                   SizedBox(height: 24.h),
@@ -400,7 +408,12 @@ class _SidebarItem extends StatelessWidget {
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
-            onTap: onTap,
+            onTap: () {
+              if (Scaffold.maybeOf(context)?.isDrawerOpen ?? false) {
+                Navigator.of(context).pop();
+              }
+              onTap();
+            },
             dense: true,
           ),
         ),

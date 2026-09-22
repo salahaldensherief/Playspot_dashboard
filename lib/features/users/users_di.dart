@@ -4,7 +4,9 @@ import 'data/datasources/moderation_remote_data_source.dart';
 import 'data/repositories/admin_management_repository_impl.dart';
 import 'domain/repositories/admin_management_repository.dart';
 import 'domain/usecases/create_lounge_admin_usecase.dart';
+import 'domain/usecases/delete_admin_usecase.dart';
 import 'domain/usecases/get_admins_usecase.dart';
+import 'domain/usecases/update_admin_usecase.dart';
 import 'presentation/cubit/admin_management_cubit.dart';
 import 'presentation/cubit/moderation_cubit.dart';
 
@@ -25,13 +27,16 @@ void initUsersDI(GetIt sl) {
   // Use Cases
   sl.registerLazySingleton(() => CreateLoungeAdminUseCase(sl()));
   sl.registerLazySingleton(() => GetAdminsUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteAdminUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateAdminUseCase(sl()));
 
   // Cubits
   sl.registerFactory<AdminManagementCubit>(
     () => AdminManagementCubit(
       createLoungeAdminUseCase: sl(),
       getAdminsUseCase: sl(),
-      repository: sl(),
+      deleteAdminUseCase: sl(),
+      updateAdminUseCase: sl(),
     ),
   );
   sl.registerFactory<ModerationCubit>(
