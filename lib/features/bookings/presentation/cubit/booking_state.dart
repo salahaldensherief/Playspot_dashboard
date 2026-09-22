@@ -12,6 +12,7 @@ class BookingState extends Equatable {
   final int totalCount;
   final String? errorMessage;
   final int selectedDurationMinutes;
+  final Booking? latestNewBooking;
 
   const BookingState({
     this.status = BookingStatusState.initial,
@@ -21,6 +22,7 @@ class BookingState extends Equatable {
     this.totalCount = 0,
     this.errorMessage,
     this.selectedDurationMinutes = 60,
+    this.latestNewBooking,
   });
 
   bool get hasNextPage => page * pageSize < totalCount;
@@ -40,7 +42,7 @@ class BookingState extends Equatable {
   /// Current Shift / Today Bookings
   List<Booking> currentShiftBookings({dynamic activeShift, Lounge? userLounge}) {
     return bookings
-        .where((b) => isBookingInCurrentShiftOrToday(b, activeShift, userLounge: userLounge))
+        .where((b) => isBookingInCurrentShiftOrToday(b, activeShift, userLounge: userLounge, requireCompleted: true))
         .toList();
   }
 
@@ -51,8 +53,14 @@ class BookingState extends Equatable {
   }
 
   /// Core logic for checking if a booking belongs to current active shift or today's operational day
-  static bool isBookingInCurrentShiftOrToday(Booking booking, dynamic activeShift, {Lounge? userLounge}) {
-    if (booking.status != BookingStatus.completed) return false;
+  static bool isBookingInCurrentShiftOrToday(
+    Booking booking,
+    dynamic activeShift, {
+    Lounge? userLounge,
+    bool requireCompleted = false,
+  }) {
+    if (requireCompleted && booking.status != BookingStatus.completed) return false;
+    if (booking.status == BookingStatus.cancelled) return false;
 
     final now = DateTime.now();
     int thresholdHour = 5;
@@ -78,7 +86,6 @@ class BookingState extends Equatable {
 
     final bookingTime = booking.startDateTime ?? DateTime(booking.date.year, booking.date.month, booking.date.day);
 
-    // RULE 1: If there is an Active Open Shift -> Operational Day defined by the Open Shift
     if (activeShift != null) {
       if (booking.shiftId != null && booking.shiftId == activeShift.id) {
         return true;
@@ -89,7 +96,6 @@ class BookingState extends Equatable {
       return isAfterShiftStart && bookingTime.isBefore(operationalDayEnd);
     }
 
-    // RULE 2: If No Active Shift -> Operational Day based on 24-hour window from Lounge Threshold
     return (bookingTime.isAfter(operationalDayStart) || bookingTime.isAtSameMomentAs(operationalDayStart)) &&
         bookingTime.isBefore(operationalDayEnd);
   }
@@ -102,6 +108,8 @@ class BookingState extends Equatable {
     int? totalCount,
     String? errorMessage,
     int? selectedDurationMinutes,
+    Booking? latestNewBooking,
+    bool clearLatestNewBooking = false,
   }) {
     return BookingState(
       status: status ?? this.status,
@@ -111,6 +119,7 @@ class BookingState extends Equatable {
       totalCount: totalCount ?? this.totalCount,
       errorMessage: errorMessage ?? this.errorMessage,
       selectedDurationMinutes: selectedDurationMinutes ?? this.selectedDurationMinutes,
+      latestNewBooking: clearLatestNewBooking ? null : (latestNewBooking ?? this.latestNewBooking),
     );
   }
 
@@ -123,5 +132,6 @@ class BookingState extends Equatable {
         totalCount,
         errorMessage,
         selectedDurationMinutes,
+        latestNewBooking,
       ];
 }

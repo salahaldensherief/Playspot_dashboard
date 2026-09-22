@@ -69,8 +69,12 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
             ),
             SizedBox(height: 16.h),
 
-            // Data Table
+            // Data Table / Mobile Card ListView
             DataTableWidget(
+              mobileCardBuilder: (ctx, index) {
+                final b = pagedBookings[index];
+                return _buildMobileBookingCard(ctx, b);
+              },
               columns: [
                 AppStrings.id,
                 AppStrings.userLabel,
@@ -118,6 +122,7 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
                         text: AppStrings.back,
                         variant: AppButtonVariant.outlined,
                         fontSize: 12.sp,
+                        height: 48.h,
                         onPressed: _currentPage > 0
                             ? () => setState(() => _currentPage--)
                             : null,
@@ -136,6 +141,7 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
                         text: AppStrings.next,
                         variant: AppButtonVariant.outlined,
                         fontSize: 12.sp,
+                        height: 48.h,
                         onPressed: (_currentPage + 1) < totalPages
                             ? () => setState(() => _currentPage++)
                             : null,
@@ -148,6 +154,86 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildMobileBookingCard(BuildContext context, Booking booking) {
+    return Container(
+      padding: EdgeInsets.all(14.r),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'حجز #${booking.id.length >= 6 ? booking.id.substring(0, 6) : booking.id}',
+                style: TextStyle(
+                  color: AppColors.neonBlue,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.sp,
+                ),
+              ),
+              _getStatusBadge(booking.status.toDbString()),
+            ],
+          ),
+          SizedBox(height: 8.h),
+
+          Row(
+            children: [
+              Icon(Icons.person, color: AppColors.textSecondary, size: 14.r),
+              SizedBox(width: 6.w),
+              Text(
+                booking.userName ?? 'عميل زائر',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13.sp,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 4.h),
+
+          Row(
+            children: [
+              Icon(Icons.meeting_room, color: AppColors.textSecondary, size: 14.r),
+              SizedBox(width: 6.w),
+              Text(
+                booking.roomName,
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+              ),
+              SizedBox(width: 12.w),
+              Icon(Icons.access_time, color: AppColors.textSecondary, size: 14.r),
+              SizedBox(width: 4.w),
+              Text(
+                booking.startTime,
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              AppButton(
+                text: 'التفاصيل',
+                variant: AppButtonVariant.outlined,
+                height: 48.h,
+                icon: Icons.info_outline,
+                onPressed: () => _showBookingDetails(context, booking),
+              ),
+              _buildActions(context, booking),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -177,7 +263,6 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
   }
 
   Widget _buildActions(BuildContext context, Booking booking) {
-    // إذا كان الحجز ينتظر الموافقة، نعرض أزرار القبول والرفض
     if (booking.status == BookingStatus.pending) {
       return Row(
         mainAxisSize: MainAxisSize.min,
@@ -185,30 +270,31 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
           AppButton(
             text: AppStrings.approve,
             variant: AppButtonVariant.primary,
+            height: 48.h,
             onPressed: () => context.read<BookingCubit>().approveBooking(booking.id),
           ),
           SizedBox(width: 8.w),
           AppButton(
             text: AppStrings.reject,
             variant: AppButtonVariant.outlined,
+            height: 48.h,
             onPressed: () => context.read<BookingCubit>().rejectBooking(booking.id),
           ),
         ],
       );
     }
 
-    // إذا تم قبول الحجز (Active)، نعرض زر تأكيد الدفع إذا لم يتم الدفع بعد
     if (booking.status == BookingStatus.upcoming) {
       return booking.paymentStatus == PaymentStatus.paid
         ? const Icon(Icons.check_circle, color: AppColors.success)
         : AppButton(
             text: AppStrings.approve,
             variant: AppButtonVariant.primary,
+            height: 48.h,
             onPressed: () => context.read<BookingCubit>().approveBooking(booking.id),
           );
     }
 
-    // إذا اكتمل الحجز تماماً
     if (booking.status == BookingStatus.completed) {
       return const Icon(Icons.verified, color: AppColors.success);
     }

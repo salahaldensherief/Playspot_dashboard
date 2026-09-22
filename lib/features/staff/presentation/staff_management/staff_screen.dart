@@ -7,6 +7,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
+import 'package:play_spot_dashboard/core/responsive/app_breakpoints.dart';
 import 'package:play_spot_dashboard/features/staff/domain/entities/staff_entity.dart';
 import 'package:play_spot_dashboard/core/utils/debouncer.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
@@ -63,31 +64,61 @@ class _StaffScreenState extends State<StaffScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppStrings.staffManagement,
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 28.sp, fontWeight: FontWeight.bold, fontFamily: 'Orbitron'),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      AppStrings.staffManagementDesc,
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+            if (AppBreakpoints.isMobile(context))
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.staffManagement,
+                    style: TextStyle(color: AppColors.textPrimary, fontSize: 22.sp, fontWeight: FontWeight.bold, fontFamily: 'Orbitron'),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    AppStrings.staffManagementDesc,
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+                  ),
+                  if (user?.canManageStaff == true) ...[
+                    SizedBox(height: 12.h),
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppButton(
+                        text: AppStrings.addStaff,
+                        icon: Icons.person_add_outlined,
+                        onPressed: () => _showStaffDialog(context, loungeId),
+                      ),
                     ),
                   ],
-                ),
-                if (user?.canManageStaff == true)
-                  AppButton(
-                    text: AppStrings.addStaff,
-                    icon: Icons.person_add_outlined,
-                    onPressed: () => _showStaffDialog(context, loungeId),
+                ],
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings.staffManagement,
+                          style: TextStyle(color: AppColors.textPrimary, fontSize: 28.sp, fontWeight: FontWeight.bold, fontFamily: 'Orbitron'),
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          AppStrings.staffManagementDesc,
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+                        ),
+                      ],
+                    ),
                   ),
-              ],
-            ),
+                  SizedBox(width: 12.w),
+                  if (user?.canManageStaff == true)
+                    AppButton(
+                      text: AppStrings.addStaff,
+                      icon: Icons.person_add_outlined,
+                      onPressed: () => _showStaffDialog(context, loungeId),
+                    ),
+                ],
+              ),
             SizedBox(height: 32.h),
             SizedBox(
               width: 400.w,

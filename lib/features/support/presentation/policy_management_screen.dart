@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../art_core/theme/app_colors.dart';
+import '../../../art_core/widgets/app_adaptive_page_header.dart';
 import '../../../art_core/widgets/app_button.dart';
 import '../../../art_core/widgets/section_container.dart';
 import '../domain/entities/app_policy_entity.dart';
@@ -131,37 +132,38 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.gavel_outlined, color: AppColors.neonBlue, size: 28.r),
-                    SizedBox(width: 12.w),
-                    Text(
-                      'إدارة الشروط والسياسات',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 22.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  'كتابة وتحديث سياسات الخصوصية، شروط الاستخدام، وسياسات الإلغاء باللغتين العربية والإنجليزية',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14.sp,
+                AppAdaptivePageHeader(
+                  title: 'إدارة الشروط والسياسات',
+                  subtitle: 'كتابة وتحديث سياسات الخصوصية، شروط الاستخدام، وسياسات الإلغاء باللغتين العربية والإنجليزية',
+                  primaryAction: AppButton(
+                    text: 'حفظ ونشر السياسة',
+                    icon: Icons.save_outlined,
+                    isLoading: state.actionStatus == SupportStatus.loading,
+                    onPressed: () {
+                      final updated = AppPolicyEntity(
+                        id: currentPolicy.id,
+                        policyType: _selectedPolicyType,
+                        titleAr: _titleArController.text.trim(),
+                        titleEn: _titleEnController.text.trim(),
+                        contentAr: _contentArController.text.trim(),
+                        contentEn: _contentEnController.text.trim(),
+                      );
+                      context.read<SupportCubit>().savePolicy(updated);
+                    },
                   ),
                 ),
                 SizedBox(height: 24.h),
-                Row(
-                  children: [
-                    _buildTabButton('terms_of_service', 'شروط الاستخدام', Icons.assignment_outlined),
-                    SizedBox(width: 12.w),
-                    _buildTabButton('privacy_policy', 'سياسة الخصوصية', Icons.privacy_tip_outlined),
-                    SizedBox(width: 12.w),
-                    _buildTabButton('refund_policy', 'سياسة الإلغاء والاسترجاع', Icons.event_busy_outlined),
-                  ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildTabButton('terms_of_service', 'شروط الاستخدام', Icons.assignment_outlined),
+                      SizedBox(width: 12.w),
+                      _buildTabButton('privacy_policy', 'سياسة الخصوصية', Icons.privacy_tip_outlined),
+                      SizedBox(width: 12.w),
+                      _buildTabButton('refund_policy', 'سياسة الإلغاء والاسترجاع', Icons.event_busy_outlined),
+                    ],
+                  ),
                 ),
                 SizedBox(height: 24.h),
                 if (state.status == SupportStatus.loading && state.policies.isEmpty)

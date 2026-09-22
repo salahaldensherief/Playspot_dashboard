@@ -46,7 +46,15 @@ class _ExtraDialogState extends State<ExtraDialog> {
   String? _currentImageUrl;
   bool _isUploading = false;
 
-  static const List<String> _validCategories = ['drinks', 'food', 'snacks', 'services', 'others'];
+  static const List<String> _validCategories = [
+    'drinks',
+    'hot_drinks',
+    'cold_drinks',
+    'food',
+    'snacks',
+    'services',
+    'others'
+  ];
 
   @override
   void initState() {
@@ -198,6 +206,10 @@ class _ExtraDialogState extends State<ExtraDialog> {
                     switch (s) {
                       case 'drinks':
                         return AppStrings.drinks;
+                      case 'hot_drinks':
+                        return 'Hot Drinks | مشروبات ساخنة';
+                      case 'cold_drinks':
+                        return 'Cold Drinks | مشروبات باردة';
                       case 'food':
                         return 'Food | مأكولات';
                       case 'snacks':

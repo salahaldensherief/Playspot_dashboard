@@ -920,6 +920,26 @@
   "confirm_extension_approval": "تأكيد الموافقة على التمديد",
   "confirm_extension_rejection": "تأكيد رفض طلب التمديد",
   "promo_audience_local": "📍 عملاء الصالة المحليين",
-  "promo_audience_all": "🌐 جميع مستخدمي التطبيق"
+  "promo_audience_all": "🌐 جميع مستخدمي التطبيق",
+  "new_booking_arrived": "وصلك حجز جديد!",
+  "realtime_booking_alert": "تنبيه حجز لحظي عبر التطبيق",
+  "total_price_label": "السعر الإجمالي",
+  "confirm_booking": "تأكيد الحجز",
+  "booking_and_client_details": "تفاصيل الحجز والعميل",
+  "station_under_maintenance": "المحطة تحت الصيانة حالياً وغير متاحة للحجز",
+  "single_price_label": "سعر الفردي:",
+  "multi_price_label": "سعر الزوجي (Multi):",
+  "walk_in_booking": "حجز مباشر (Walk-in)",
+  "detailed_booking": "حجز تفصيلي",
+  "room_occupied_by_walk_in": "الأوضة مشغولة بزبون من الصالة",
+  "vacate_room": "تفريغ الغرفة (إنهاء الحجز)",
+  "single": "فردي",
+  "multi": "زوجي",
+  "online_available": "متاحة أونلاين",
+  "booking_id_prefix": "حجز #",
+  "guest_client": "عميل زائر",
+  "available_status": "متاحة",
+  "maintenance_status": "صيانة",
+  "occupied_status": "مشغولة"
 }
 

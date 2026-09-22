@@ -399,10 +399,11 @@ class Booking extends Equatable {
   }
 
   /// Checks if the session or cash hold has expired.
-  /// Uses [expiresAt] as SSOT if available, otherwise calculates end time + grace period.
+  /// For pending bookings, uses [expiresAt] as hold expiration if available.
+  /// For active/upcoming sessions, calculates end time + grace period.
   bool isSessionExpired([DateTime? now, Duration gracePeriod = const Duration(minutes: 5)]) {
     final currentTime = now ?? DateTime.now();
-    if (expiresAt != null) {
+    if (status == BookingStatus.pending && expiresAt != null) {
       return currentTime.isAfter(expiresAt!) || currentTime.isAtSameMomentAs(expiresAt!);
     }
     final end = endDateTime;

@@ -7,6 +7,8 @@ import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/login/login_cubit.dart';
 import '../../features/auth/presentation/login/login_state.dart';
 import '../../features/bookings/presentation/cubit/booking_cubit.dart';
+import '../../features/bookings/presentation/cubit/booking_state.dart';
+import '../../features/bookings/presentation/widgets/new_booking_alert_dialog.dart';
 import '../../features/requests/presentation/client_requests_cubit.dart';
 import '../../features/lounges/presentation/cubit/lounge_cubit.dart';
 import '../../features/lounges/presentation/cubit/lounge_state.dart';
@@ -200,51 +202,76 @@ class _DashboardShellContentState extends State<_DashboardShellContent> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ShiftCubit, ShiftState>(
-      listenWhen: (prev, curr) => prev.status != curr.status,
-      listener: (context, state) {
-        final isCashier = widget.user?.role == UserRole.cashier;
-        
-        if (state.status == ShiftStatus.error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppStrings.errorCheckingShift(state.errorMessage ?? '')),
-              backgroundColor: AppColors.danger,
-            ),
-          );
-        }
-
-        if (state.status == ShiftStatus.initial && isCashier) {
-           _showOpenShiftDialog(context, widget.user?.loungeId ?? '');
-        } else if (state.status == ShiftStatus.closed && state.lastClosedShift != null) {
-          if (state.lastClosedShift!.cashierId == widget.user?.id) {
-            _showShiftSummary(context, state.lastClosedShift!);
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(AppStrings.shiftClosedSuccess), backgroundColor: Colors.green),
-            );
-            context.read<ShiftCubit>().resetToInitial();
-            if (widget.user?.loungeId != null) {
-              context.read<ShiftCubit>().getLiveShiftOverview(widget.user!.loungeId!);
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<ShiftCubit, ShiftState>(
+          listenWhen: (prev, curr) => prev.status != curr.status,
+          listener: (context, state) {
+            final isCashier = widget.user?.role == UserRole.cashier;
+            
+            if (state.status == ShiftStatus.error) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(AppStrings.errorCheckingShift(state.errorMessage ?? '')),
+                  backgroundColor: AppColors.danger,
+                ),
+              );
             }
-          }
-        }
-      },
+
+            if (state.status == ShiftStatus.initial && isCashier) {
+               _showOpenShiftDialog(context, widget.user?.loungeId ?? '');
+            } else if (state.status == ShiftStatus.closed && state.lastClosedShift != null) {
+              if (state.lastClosedShift!.cashierId == widget.user?.id) {
+                _showShiftSummary(context, state.lastClosedShift!);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(AppStrings.shiftClosedSuccess), backgroundColor: Colors.green),
+                );
+                context.read<ShiftCubit>().resetToInitial();
+                if (widget.user?.loungeId != null) {
+                  context.read<ShiftCubit>().getLiveShiftOverview(widget.user!.loungeId!);
+                }
+              }
+            }
+          },
+        ),
+        BlocListener<BookingCubit, BookingState>(
+          listenWhen: (prev, curr) => curr.latestNewBooking != null && curr.latestNewBooking != prev.latestNewBooking,
+          listener: (context, state) {
+            final newBooking = state.latestNewBooking;
+            final bookingCubit = context.read<BookingCubit>();
+            if (newBooking != null) {
+              showDialog(
+                context: context,
+                useRootNavigator: false,
+                builder: (diagContext) => BlocProvider.value(
+                  value: bookingCubit,
+                  child: NewBookingAlertDialog(booking: newBooking),
+                ),
+              ).then((_) {
+                if (context.mounted) {
+                  bookingCubit.clearLatestNewBooking();
+                }
+              });
+            }
+          },
+        ),
+      ],
       child: Scaffold(
         backgroundColor: AppColors.scaffoldBackground,
-        drawer: Responsive.isDesktop(context) 
-            ? null 
-            : Drawer(child: DashboardSidebar(activeRoute: widget.activeRoute)),
+        drawer: Responsive.isMobile(context) 
+            ? Drawer(child: DashboardSidebar(activeRoute: widget.activeRoute))
+            : null,
         body: Row(
           children: [
-            if (Responsive.isDesktop(context))
+            if (!Responsive.isMobile(context))
               DashboardSidebar(activeRoute: widget.activeRoute),
             Expanded(
               child: Column(
                 children: [
                   DashboardTopBar(
                     title: widget.title,
-                    showMenuButton: !Responsive.isDesktop(context),
+                    showMenuButton: Responsive.isMobile(context),
                     actions: widget.activeRoute == AppStrings.myProfile 
                       ? [
                           IconButton(

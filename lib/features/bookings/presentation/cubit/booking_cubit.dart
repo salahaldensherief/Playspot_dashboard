@@ -24,6 +24,7 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
   Timer? _autoCancelTimer;
   
   final Set<String> _knownBookingIds = {};
+  final Set<String> _alertedStartBookingIds = {};
   bool _isFirstLoad = true;
 
   BookingCubit({
@@ -45,6 +46,7 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
 
     _isFirstLoad = true;
     _knownBookingIds.clear();
+    _alertedStartBookingIds.clear();
 
     // Trigger auto-cancel for overdue bookings on startup & start periodic background check
     _triggerAutoCancelExpired();
@@ -57,6 +59,7 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
       stream: watchBookings(loungeId: cleanLoungeId),
       onData: (bookings) {
         final currentIds = bookings.map((b) => b.id).toSet();
+        Booking? newlyArrivedBooking;
 
         if (_isFirstLoad) {
           _isFirstLoad = false;
@@ -65,6 +68,7 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
           final newIds = currentIds.difference(_knownBookingIds);
           if (newIds.isNotEmpty) {
             _knownBookingIds.addAll(newIds);
+            newlyArrivedBooking = bookings.firstWhere((b) => newIds.contains(b.id));
             debugPrint('🔔 [BOOKING_CUBIT] New booking detected! Playing notification sound...');
             try {
               audioService.playNotificationSound();
@@ -77,7 +81,9 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
         emit(state.copyWith(
           status: BookingStatusState.success,
           bookings: bookings,
+          latestNewBooking: newlyArrivedBooking,
         ));
+        _checkBookingStartTimesAndNotify();
         _checkAndAutoTransitionExpiredSessions();
       },
       onError: (error) {
@@ -313,7 +319,7 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
     }).toList();
     emit(state.copyWith(bookings: updatedList));
 
-    // 2. Send cancellation to server
+    // 2. Send cancellation to server with No-Show reason
     final result = await updateBookingStatus(id, BookingStatus.cancelled);
     if (isClosed) return false;
 
@@ -417,12 +423,42 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
     emit(state.copyWith(selectedDurationMinutes: minutes));
   }
 
+  void clearLatestNewBooking() {
+    emit(state.copyWith(clearLatestNewBooking: true));
+  }
+
   void _triggerAutoCancelExpired() {
     repository.autoCancelExpiredBookings().then((_) {
       debugPrint('🟢 [BookingCubit] autoCancelExpiredBookings completed');
     }).catchError((e) {
       debugPrint('⚠️ [BookingCubit] autoCancelExpiredBookings error: $e');
     });
+  }
+
+  void _checkBookingStartTimesAndNotify() {
+    if (isClosed) return;
+    final now = DateTime.now();
+
+    for (final booking in state.bookings) {
+      if (booking.status == BookingStatus.upcoming || booking.status == BookingStatus.pending) {
+        final start = booking.startDateTime;
+        if (start != null) {
+          final diffMinutes = now.difference(start).inMinutes;
+          // Trigger alert if start time arrived within the last 5 minutes and session not started
+          if (diffMinutes >= 0 && diffMinutes <= 5) {
+            if (!_alertedStartBookingIds.contains(booking.id)) {
+              _alertedStartBookingIds.add(booking.id);
+              debugPrint('🔔 [BOOKING_CUBIT] Booking ${booking.id} start time arrived! Session not started yet.');
+              try {
+                audioService.playUrgentAlertSound();
+              } catch (e) {
+                debugPrint('Audio alert error: $e');
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   void _checkAndAutoTransitionExpiredSessions() {
@@ -440,11 +476,11 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
 
   void _startPeriodicAutoCancelTimer() {
     _autoCancelTimer?.cancel();
-    // Reduced polling frequency to 5 minutes to prevent unnecessary DB hits.
-    // Recommended: Use Supabase pg_cron for server-side auto-cancel.
-    _autoCancelTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+    // Check every 30 seconds for start time alerts & session transitions
+    _autoCancelTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (!isClosed) {
         _triggerAutoCancelExpired();
+        _checkBookingStartTimesAndNotify();
         _checkAndAutoTransitionExpiredSessions();
       }
     });

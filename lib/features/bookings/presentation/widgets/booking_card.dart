@@ -569,7 +569,35 @@ class _BookingCardState extends State<BookingCard> {
           height: h,
         );
 
-    // Cash booking
+    // Approved upcoming booking (Cash, Wallet, or Online)
+    if (booking.status == BookingStatus.upcoming) {
+      return Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: StartSessionButton(
+              bookingId: booking.id,
+              bookingDate: booking.date,
+              startTime: booking.startTime,
+              onSuccess: widget.onStartSession,
+              height: h,
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Expanded(
+            flex: 2,
+            child: AppButton(
+              text: AppStrings.markNoShowAction,
+              variant: AppButtonVariant.outlined,
+              height: h,
+              onPressed: () => _showNoShowConfirmDialog(context),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Cash booking (Pending)
     if (booking.isCashPayment) {
       if (!isCanStartSession) return detailsButton();
       return Row(

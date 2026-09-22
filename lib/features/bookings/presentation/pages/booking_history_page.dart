@@ -9,6 +9,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+import 'package:play_spot_dashboard/core/responsive/app_breakpoints.dart';
 import '../../../auth/presentation/login/login_cubit.dart';
 import '../../domain/entities/booking.dart';
 import '../cubit/booking_cubit.dart';
@@ -70,6 +71,29 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final isMobile = AppBreakpoints.isMobile(context);
+
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppText.heading(DateFormat('MMMM yyyy').format(_selectedDate), fontSize: 22.sp),
+          SizedBox(height: 4.h),
+          AppText.body(AppStrings.selectMonth, fontSize: 13.sp),
+          SizedBox(height: 12.h),
+          SizedBox(
+            width: double.infinity,
+            child: AppButton(
+              text: AppStrings.selectMonth,
+              icon: Icons.calendar_month,
+              variant: AppButtonVariant.primary,
+              onPressed: () => _selectDate(context),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -91,6 +115,18 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
   }
 
   Widget _buildStatsGrid(int count, double revenue) {
+    final isMobile = AppBreakpoints.isMobile(context);
+
+    if (isMobile) {
+      return Column(
+        children: [
+          _buildStatCard(AppStrings.totalBookings, count.toString(), Icons.confirmation_number_outlined, AppColors.neonBlue),
+          SizedBox(height: 12.h),
+          _buildStatCard(AppStrings.totalRevenue, "${revenue.toStringAsFixed(0)} ${AppStrings.egp}", Icons.payments_outlined, AppColors.success),
+        ],
+      );
+    }
+
     return Row(
       children: [
         _buildStatCard(AppStrings.totalBookings, count.toString(), Icons.confirmation_number_outlined, AppColors.neonBlue),
@@ -116,13 +152,15 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
               decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12.r)),
               child: Icon(icon, color: color, size: 28.r),
             ),
-            SizedBox(width: 20.w),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppText.body(label, color: AppColors.textSecondary),
-                AppText.heading(value, fontSize: 24.sp, color: color),
-              ],
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppText.body(label, color: AppColors.textSecondary, overflow: TextOverflow.ellipsis),
+                  AppText.heading(value, fontSize: 24.sp, color: color),
+                ],
+              ),
             ),
           ],
         ),

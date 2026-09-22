@@ -107,7 +107,20 @@ class RoomRepositoryImpl implements RoomRepository {
   @override
   Future<Either<Failure, void>> updateRoomStatus(String roomId, RoomStatusEnum status) async {
     try {
-      await _remoteSource.updateRoomStatus(roomId, status == RoomStatusEnum.maintenance ? 'maintenance' : 'available');
+      final String dbStatus;
+      switch (status) {
+        case RoomStatusEnum.occupied:
+          dbStatus = 'occupied';
+          break;
+        case RoomStatusEnum.maintenance:
+          dbStatus = 'maintenance';
+          break;
+        case RoomStatusEnum.available:
+        default:
+          dbStatus = 'available';
+          break;
+      }
+      await _remoteSource.updateRoomStatus(roomId, dbStatus);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

@@ -58,11 +58,15 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
           if (newIds.isNotEmpty) {
             _knownRequestIds.addAll(newIds);
             try {
-              audioService.playNotificationSound();
+              audioService.playUrgentAlertSound();
             } catch (e) {
               AppLogger.warning('Audio notification play failed: $e');
             }
           }
+        }
+
+        if (currentUnattendedIds.isEmpty) {
+          audioService.stopUrgentAlertSound();
         }
 
         emit(state.copyWith(
@@ -128,6 +132,10 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
       }).toList();
 
       emit(state.copyWith(requests: updatedList));
+
+      if (updatedList.where((r) => !r.isAttended).isEmpty) {
+        audioService.stopUrgentAlertSound();
+      }
       return;
     }
 
@@ -141,6 +149,10 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
     }).toList();
 
     emit(state.copyWith(requests: updatedList));
+
+    if (updatedList.where((r) => !r.isAttended).isEmpty) {
+      audioService.stopUrgentAlertSound();
+    }
 
     final result = await _markRequestAsAttendedUseCase(
       MarkRequestAttendedParams(

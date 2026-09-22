@@ -637,8 +637,10 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
   }
 
   void _showAddExtrasDialog(BuildContext context) {
-    final user = context.read<LoginCubit>().state.user;
-    final loungeId = user?.loungeId ?? widget.booking.loungeId;
+    final loginState = context.read<LoginCubit>().state;
+    final userLoungeId = loginState.user?.loungeId ?? loginState.userLounge?.id;
+    final cleanUserLoungeId = (userLoungeId != null && userLoungeId.trim().isNotEmpty) ? userLoungeId.trim() : null;
+    final loungeId = cleanUserLoungeId ?? widget.booking.loungeId;
     final dashboardCubit = context.read<DashboardCubit>();
 
     showDialog(

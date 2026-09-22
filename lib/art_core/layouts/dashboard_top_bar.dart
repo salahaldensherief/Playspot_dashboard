@@ -81,28 +81,34 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
 
-          const SizedBox(width: 16),
+          const SizedBox(width: 8),
 
           // Right Side: Actions & User Info
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              if (actions != null) ...[
-                ...actions!,
-                const SizedBox(width: 16),
-              ] else ...[
-                _buildShiftStatusIndicator(context),
-                const SizedBox(width: 12),
-                _buildLoungeStatusToggle(context),
-                const SizedBox(width: 12),
-                _buildAudioMuteToggle(context),
-                const SizedBox(width: 12),
-                _buildNotificationIcon(context),
-                const SizedBox(width: 16),
-              ],
-              _buildUserInfo(),
-            ],
+          Flexible(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              reverse: true,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (actions != null) ...[
+                    ...actions!,
+                    const SizedBox(width: 12),
+                  ] else ...[
+                    _buildShiftStatusIndicator(context),
+                    const SizedBox(width: 8),
+                    _buildLoungeStatusToggle(context),
+                    const SizedBox(width: 8),
+                    _buildAudioMuteToggle(context),
+                    const SizedBox(width: 8),
+                    _buildNotificationIcon(context),
+                    const SizedBox(width: 12),
+                  ],
+                  _buildUserInfo(),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -205,10 +211,21 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
       builder: (context, _) {
         final isMuted = audioService.isMuted;
         return Tooltip(
-          message: isMuted ? 'Unmute Alerts' : 'Mute Alert Sound',
+          message: isMuted ? 'تفعيل أصوات التنبيه' : 'إيكتم صوت التنبيهات (اضغط مطولاً للتجربة)',
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
             onTap: () => audioService.toggleMute(),
+            onLongPress: () {
+              if (!isMuted) {
+                audioService.playNotificationSound();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('🔔 تجربة صوت التنبيه'),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+              }
+            },
             child: Padding(
               padding: const EdgeInsets.all(4),
               child: Icon(

@@ -4,6 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_empty_state_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
@@ -94,6 +96,23 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              AppAdaptivePageHeader(
+                title: 'الورديات',
+                subtitle: 'سجل الورديات وإغلاق الخزينة',
+                primaryAction: AppButton(
+                  text: AppStrings.refresh,
+                  icon: Icons.refresh,
+                  variant: AppButtonVariant.outlined,
+                  onPressed: () {
+                    final user = context.read<LoginCubit>().state.user;
+                    context.read<ShiftCubit>().fetchShiftHistory(
+                          loungeId: user?.isStaff == true ? user?.loungeId : null,
+                        );
+                  },
+                ),
+              ),
+              SizedBox(height: 16.h),
+
               ShiftKpiCards(
                 shifts: filteredShifts,
                 activeShift: state.activeShift,
@@ -111,15 +130,16 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
 
               Expanded(
                 child: filteredShifts.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.history_toggle_off_rounded, size: 48.r, color: AppColors.textSecondary),
-                            SizedBox(height: 12.h),
-                            AppText.body(AppStrings.noShiftHistoryFound, color: AppColors.textSecondary),
-                          ],
-                        ),
+                    ? AppEmptyStateWidget(
+                        icon: Icons.history_toggle_off_rounded,
+                        title: AppStrings.noShiftHistoryFound,
+                        actionText: AppStrings.refresh,
+                        onActionTextPressed: () {
+                          final user = context.read<LoginCubit>().state.user;
+                          context.read<ShiftCubit>().fetchShiftHistory(
+                                loungeId: user?.isStaff == true ? user?.loungeId : null,
+                              );
+                        },
                       )
                     : Container(
                         decoration: BoxDecoration(

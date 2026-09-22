@@ -370,6 +370,48 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     final activeCount = bookingState.activeBookings.length;
     final pendingCount = bookingState.pendingBookings.length;
     final totalRevenue = bookingState.currentShiftRevenue(activeShift: activeShift, userLounge: userLounge);
+    final isSmallScreen = MediaQuery.sizeOf(context).width < 900;
+
+    if (isSmallScreen) {
+      return Container(
+        padding: EdgeInsets.all(14.r),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: AppColors.borderDefault),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const LiveIndicatorBadge(),
+                AppButton(
+                  text: AppStrings.newBooking,
+                  icon: Icons.add_rounded,
+                  variant: AppButtonVariant.primary,
+                  height: 38.h,
+                  onPressed: () => _showAddBookingModal(context, loungeId),
+                ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildCompactMetricCard('الجلسات الجارية', '$activeCount', AppColors.neonBlue, Icons.sports_esports_rounded),
+                  SizedBox(width: 8.w),
+                  _buildCompactMetricCard('طلبات بالانتظار', '$pendingCount', AppColors.warning, Icons.access_time_filled_rounded),
+                  SizedBox(width: 8.w),
+                  _buildCompactMetricCard('إيراد الوردية', '${totalRevenue.toStringAsFixed(0)} ${AppStrings.egp}', AppColors.neonGreen, Icons.account_balance_wallet_rounded),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       padding: EdgeInsets.all(16.r),
@@ -414,6 +456,32 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
             variant: AppButtonVariant.primary,
             height: 42.h,
             onPressed: () => _showAddBookingModal(context, loungeId),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactMetricCard(String title, String value, Color accentColor, IconData icon) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: AppColors.scaffoldBackground.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16.r, color: accentColor),
+          SizedBox(width: 8.w),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(title, style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp)),
+              Text(value, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 12.sp)),
+            ],
           ),
         ],
       ),

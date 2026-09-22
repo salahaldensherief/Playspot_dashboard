@@ -91,7 +91,8 @@ class _StartSessionButtonState extends State<StartSessionButton> {
     final start = _bookingStartTime;
     if (start == null) return true; // Default to enabled if no date/time provided
     final now = DateTime.now();
-    return now.isAfter(start) || now.isAtSameMomentAs(start);
+    final earlyAllowedStart = start.subtract(const Duration(minutes: 15));
+    return now.isAfter(earlyAllowedStart) || now.isAtSameMomentAs(earlyAllowedStart);
   }
 
   String _format12Hour(DateTime dt) {

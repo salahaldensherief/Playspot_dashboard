@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import '../../domain/entities/category_entity.dart';
@@ -81,35 +82,20 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                AppStrings.categories,
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 28.sp,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Orbitron',
-                ),
-              ),
-              Row(
-                children: [
-                  AppButton(
-                    text: AppStrings.addCity,
-                    onPressed: () => _showCityDialog(context, categoryCubit),
-                    icon: Icons.location_city,
-                    variant: AppButtonVariant.outlined,
-                  ),
-                  SizedBox(width: 16.w),
-                  AppButton(
-                    text: AppStrings.addCategory,
-                    onPressed: () => _showCategoryDialog(context, categoryCubit),
-                    icon: Icons.add,
-                  ),
-                ],
-              ),
-            ],
+          AppAdaptivePageHeader(
+            title: AppStrings.categories,
+            subtitle: AppStrings.manageRoomsDesc,
+            secondaryAction: AppButton(
+              text: AppStrings.addCity,
+              onPressed: () => _showCityDialog(context, categoryCubit),
+              icon: Icons.location_city,
+              variant: AppButtonVariant.outlined,
+            ),
+            primaryAction: AppButton(
+              text: AppStrings.addCategory,
+              onPressed: () => _showCategoryDialog(context, categoryCubit),
+              icon: Icons.add,
+            ),
           ),
           SizedBox(height: 24.h),
           TabBar(

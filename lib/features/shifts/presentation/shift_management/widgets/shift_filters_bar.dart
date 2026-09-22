@@ -55,17 +55,20 @@ class _ShiftFiltersBarState extends State<ShiftFiltersBar> {
             children: [
               AppText.body(AppStrings.periodFilter, fontSize: 11.sp, color: AppColors.textSecondary),
               SizedBox(height: 6.h),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildPeriodChip(AppStrings.all, 'all'),
-                  SizedBox(width: 6.w),
-                  _buildPeriodChip(AppStrings.today, 'today'),
-                  SizedBox(width: 6.w),
-                  _buildPeriodChip(AppStrings.thisWeek, 'week'),
-                  SizedBox(width: 6.w),
-                  _buildPeriodChip(AppStrings.thisMonth, 'month'),
-                ],
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildPeriodChip(AppStrings.all, 'all'),
+                    SizedBox(width: 6.w),
+                    _buildPeriodChip(AppStrings.today, 'today'),
+                    SizedBox(width: 6.w),
+                    _buildPeriodChip(AppStrings.thisWeek, 'week'),
+                    SizedBox(width: 6.w),
+                    _buildPeriodChip(AppStrings.thisMonth, 'month'),
+                  ],
+                ),
               ),
             ],
           ),

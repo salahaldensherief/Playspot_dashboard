@@ -9,6 +9,7 @@ import '../../../art_core/widgets/app_dialog.dart';
 import '../../../art_core/widgets/section_container.dart';
 import '../../../art_core/widgets/status_badge.dart';
 import '../../../core/responsive/responsive.dart';
+import '../../../core/responsive/app_breakpoints.dart';
 import '../../auth/presentation/login/login_cubit.dart';
 import '../domain/entities/tournament_entity.dart';
 import 'tournament_cubit.dart';
@@ -218,51 +219,100 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppStrings.tournamentsHub,
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 24.sp,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Orbitron',
+                // Header Row (Adaptive)
+                if (AppBreakpoints.isMobile(context))
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppStrings.tournamentsHub,
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 20.sp,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Orbitron',
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        AppStrings.tournamentsHubSub,
+                        style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+                      ),
+                      SizedBox(height: 12.h),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: AppButton(
+                              text: AppStrings.refresh,
+                              variant: AppButtonVariant.outlined,
+                              icon: Icons.refresh,
+                              onPressed: () {
+                                final loungeId = context.read<LoginCubit>().state.userLounge?.id ??
+                                    context.read<LoginCubit>().state.user?.loungeId;
+                                context.read<TournamentCubit>().loadTournaments(loungeId: loungeId);
+                              },
+                            ),
                           ),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: AppButton(
+                              text: AppStrings.createTournament,
+                              icon: Icons.add,
+                              onPressed: _openCreateDialog,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                else
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppStrings.tournamentsHub,
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 24.sp,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Orbitron',
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              AppStrings.tournamentsHubSub,
+                              style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+                            ),
+                          ],
                         ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          AppStrings.tournamentsHubSub,
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        AppButton(
-                          text: AppStrings.refresh,
-                          variant: AppButtonVariant.outlined,
-                          icon: Icons.refresh,
-                          onPressed: () {
-                            final loungeId = context.read<LoginCubit>().state.userLounge?.id ??
-                                context.read<LoginCubit>().state.user?.loungeId;
-                            context.read<TournamentCubit>().loadTournaments(loungeId: loungeId);
-                          },
-                        ),
-                        SizedBox(width: 12.w),
-                        AppButton(
-                          text: AppStrings.createTournament,
-                          icon: Icons.add,
-                          onPressed: _openCreateDialog,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Row(
+                        children: [
+                          AppButton(
+                            text: AppStrings.refresh,
+                            variant: AppButtonVariant.outlined,
+                            icon: Icons.refresh,
+                            onPressed: () {
+                              final loungeId = context.read<LoginCubit>().state.userLounge?.id ??
+                                  context.read<LoginCubit>().state.user?.loungeId;
+                              context.read<TournamentCubit>().loadTournaments(loungeId: loungeId);
+                            },
+                          ),
+                          SizedBox(width: 12.w),
+                          AppButton(
+                            text: AppStrings.createTournament,
+                            icon: Icons.add,
+                            onPressed: _openCreateDialog,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 SizedBox(height: 16.h),
                 if (state.status == TournamentCubitStatus.loading) ...[
                   LinearProgressIndicator(

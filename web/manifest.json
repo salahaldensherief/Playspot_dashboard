@@ -1,12 +1,12 @@
 {
-    "name": "play_spot_dashboard",
-    "short_name": "play_spot_dashboard",
+    "name": "PlaySpot Dashboard - لوحة تحكم بلاي سبوت",
+    "short_name": "PlaySpot",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0b0e14",
     "theme_color": "#0b0e14",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "description": "PlaySpot Lounge & Gaming Web Dashboard",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {
