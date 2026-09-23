@@ -1,17 +1,15 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/core/services/location_service.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:play_spot_dashboard/core/utils/app_logger.dart';
-import 'package:play_spot_dashboard/core/utils/optimistic_update_extension.dart';
 import '../domain/entities/tournament_entity.dart';
-import '../domain/entities/tournament_match_entity.dart';
-import '../domain/entities/tournament_participant_entity.dart';
 import '../domain/entities/tournament_prize_entity.dart';
-import '../domain/usecases/tournament_match_usecases.dart';
-import '../domain/usecases/tournament_participant_usecases.dart';
 import '../domain/usecases/tournament_usecases.dart';
+import 'tournament_audit_manager.dart';
+import 'tournament_banner_uploader.dart';
+import 'tournament_state_mutator.dart';
 import 'tournament_state.dart';
 
 class TournamentCubit extends Cubit<TournamentState> {
@@ -25,23 +23,9 @@ class TournamentCubit extends Cubit<TournamentState> {
   final DeleteTournamentUseCase _deleteTournamentUseCase;
   final CompleteTournamentUseCase _completeTournamentUseCase;
   final AwardPrizesUseCase _awardPrizesUseCase;
-  final GetTournamentAuditLogsUseCase _getTournamentAuditLogsUseCase;
-  final WatchDisputedMatchesUseCase _watchDisputedMatchesUseCase;
-  final GetTournamentParticipantsUseCase _getParticipantsUseCase;
-  final ApproveParticipantPaymentUseCase _approvePaymentUseCase;
-  final RejectParticipantPaymentUseCase _rejectPaymentUseCase;
-  final RecordCashPaymentUseCase _recordCashPaymentUseCase;
-  final PromoteWaitlistUseCase _promoteWaitlistUseCase;
-  final CheckInParticipantUseCase _checkInParticipantUseCase;
-  final WithdrawParticipantUseCase _withdrawParticipantUseCase;
-  final DrawBracketUseCase _drawBracketUseCase;
-  final GetTournamentMatchesUseCase _getMatchesUseCase;
-  final StartMatchUseCase _startMatchUseCase;
-  final ResolveDisputeUseCase _resolveDisputeUseCase;
   final LocationService locationService;
-  final StorageService storageService;
-
-  StreamSubscription<List<TournamentMatchEntity>>? _disputesSubscription;
+  final TournamentBannerUploader _bannerUploader;
+  final TournamentAuditManager _auditManager;
 
   TournamentCubit({
     required GetTournamentsUseCase getTournamentsUseCase,
@@ -56,19 +40,8 @@ class TournamentCubit extends Cubit<TournamentState> {
     required AwardPrizesUseCase awardPrizesUseCase,
     required GetTournamentAuditLogsUseCase getTournamentAuditLogsUseCase,
     required WatchDisputedMatchesUseCase watchDisputedMatchesUseCase,
-    required GetTournamentParticipantsUseCase getParticipantsUseCase,
-    required ApproveParticipantPaymentUseCase approvePaymentUseCase,
-    required RejectParticipantPaymentUseCase rejectPaymentUseCase,
-    required RecordCashPaymentUseCase recordCashPaymentUseCase,
-    required PromoteWaitlistUseCase promoteWaitlistUseCase,
-    required CheckInParticipantUseCase checkInParticipantUseCase,
-    required WithdrawParticipantUseCase withdrawParticipantUseCase,
-    required DrawBracketUseCase drawBracketUseCase,
-    required GetTournamentMatchesUseCase getMatchesUseCase,
-    required StartMatchUseCase startMatchUseCase,
-    required ResolveDisputeUseCase resolveDisputeUseCase,
     required this.locationService,
-    required this.storageService,
+    required StorageService storageService,
   })  : _getTournamentsUseCase = getTournamentsUseCase,
         _createTournamentUseCase = createTournamentUseCase,
         _updateTournamentUseCase = updateTournamentUseCase,
@@ -79,19 +52,11 @@ class TournamentCubit extends Cubit<TournamentState> {
         _deleteTournamentUseCase = deleteTournamentUseCase,
         _completeTournamentUseCase = completeTournamentUseCase,
         _awardPrizesUseCase = awardPrizesUseCase,
-        _getTournamentAuditLogsUseCase = getTournamentAuditLogsUseCase,
-        _watchDisputedMatchesUseCase = watchDisputedMatchesUseCase,
-        _getParticipantsUseCase = getParticipantsUseCase,
-        _approvePaymentUseCase = approvePaymentUseCase,
-        _rejectPaymentUseCase = rejectPaymentUseCase,
-        _recordCashPaymentUseCase = recordCashPaymentUseCase,
-        _promoteWaitlistUseCase = promoteWaitlistUseCase,
-        _checkInParticipantUseCase = checkInParticipantUseCase,
-        _withdrawParticipantUseCase = withdrawParticipantUseCase,
-        _drawBracketUseCase = drawBracketUseCase,
-        _getMatchesUseCase = getMatchesUseCase,
-        _startMatchUseCase = startMatchUseCase,
-        _resolveDisputeUseCase = resolveDisputeUseCase,
+        _bannerUploader = TournamentBannerUploader(storageService),
+        _auditManager = TournamentAuditManager(
+          getTournamentAuditLogsUseCase: getTournamentAuditLogsUseCase,
+          watchDisputedMatchesUseCase: watchDisputedMatchesUseCase,
+        ),
         super(const TournamentState());
 
   @override
@@ -100,9 +65,7 @@ class TournamentCubit extends Cubit<TournamentState> {
     super.emit(state);
   }
 
-  void setTab(int index) {
-    emit(state.copyWith(selectedTab: index));
-  }
+  void setTab(int index) => emit(state.copyWith(selectedTab: index));
 
   Future<void> loadTournaments({
     String? loungeId,
@@ -141,10 +104,7 @@ class TournamentCubit extends Cubit<TournamentState> {
       (list) {
         TournamentEntity? currentSelected = state.selectedTournament;
         if (currentSelected != null) {
-          final updatedSelected = list.where((t) => t.id == currentSelected?.id).firstOrNull;
-          if (updatedSelected != null) {
-            currentSelected = updatedSelected;
-          }
+          currentSelected = list.where((t) => t.id == currentSelected?.id).firstOrNull ?? currentSelected;
         } else if (list.isNotEmpty) {
           currentSelected = list.first;
         }
@@ -168,8 +128,6 @@ class TournamentCubit extends Cubit<TournamentState> {
   }
 
   Future<void> _refreshSelectedTournamentData(String tournamentId) async {
-    loadParticipants(tournamentId);
-    loadMatches(tournamentId);
     loadAuditLogs(tournamentId);
     startWatchingDisputes(tournamentId);
   }
@@ -181,42 +139,32 @@ class TournamentCubit extends Cubit<TournamentState> {
   }) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
 
-    TournamentEntity tournamentToCreate = tournament;
-
-    if (bannerBytes != null && bannerName != null) {
-      try {
-        final bannerUrl = await storageService.uploadTournamentBanner(
-          bannerBytes,
-          bannerName,
-          tournament.id,
-        );
-        tournamentToCreate = tournament.copyWith(bannerUrl: bannerUrl);
-      } catch (e) {
-        AppLogger.error('Banner upload failed: $e');
-        final cleanMsg = e.toString().replaceFirst('Exception: ', '');
-        emit(state.copyWith(
-          status: TournamentCubitStatus.failure,
-          errorMessage: cleanMsg,
-        ));
-        return false;
+    TournamentEntity entity = tournament;
+    try {
+      final bannerUrl = await _bannerUploader.upload(
+        bytes: bannerBytes,
+        name: bannerName,
+        tournamentId: tournament.id,
+      );
+      if (bannerUrl != null) {
+        entity = entity.copyWith(bannerUrl: bannerUrl);
       }
+    } catch (e) {
+      final cleanMsg = e.toString().replaceFirst('Exception: ', '');
+      emit(state.copyWith(status: TournamentCubitStatus.failure, errorMessage: cleanMsg));
+      return false;
     }
 
-    final result = await _createTournamentUseCase(tournamentToCreate);
-
+    final result = await _createTournamentUseCase(entity);
     return result.fold(
       (failure) {
-        emit(state.copyWith(
-          status: TournamentCubitStatus.failure,
-          errorMessage: failure.message,
-        ));
+        emit(state.copyWith(status: TournamentCubitStatus.failure, errorMessage: failure.message));
         return false;
       },
       (created) {
-        final updatedList = [created, ...state.tournaments];
         emit(state.copyWith(
           status: TournamentCubitStatus.actionSuccess,
-          tournaments: updatedList,
+          tournaments: [created, ...state.tournaments],
           selectedTournament: created,
           successMessage: 'تم إنشاء البطولة بنجاح',
         ));
@@ -233,35 +181,26 @@ class TournamentCubit extends Cubit<TournamentState> {
   }) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
 
-    TournamentEntity tournamentToUpdate = tournament;
-
-    if (bannerBytes != null && bannerName != null) {
-      try {
-        final bannerUrl = await storageService.uploadTournamentBanner(
-          bannerBytes,
-          bannerName,
-          tournament.id,
-        );
-        tournamentToUpdate = tournament.copyWith(bannerUrl: bannerUrl);
-      } catch (e) {
-        AppLogger.error('Banner upload failed: $e');
-        final cleanMsg = e.toString().replaceFirst('Exception: ', '');
-        emit(state.copyWith(
-          status: TournamentCubitStatus.failure,
-          errorMessage: cleanMsg,
-        ));
-        return false;
+    TournamentEntity entity = tournament;
+    try {
+      final bannerUrl = await _bannerUploader.upload(
+        bytes: bannerBytes,
+        name: bannerName,
+        tournamentId: tournament.id,
+      );
+      if (bannerUrl != null) {
+        entity = entity.copyWith(bannerUrl: bannerUrl);
       }
+    } catch (e) {
+      final cleanMsg = e.toString().replaceFirst('Exception: ', '');
+      emit(state.copyWith(status: TournamentCubitStatus.failure, errorMessage: cleanMsg));
+      return false;
     }
 
-    final result = await _updateTournamentUseCase(tournamentToUpdate);
-
+    final result = await _updateTournamentUseCase(entity);
     return result.fold(
       (failure) {
-        emit(state.copyWith(
-          status: TournamentCubitStatus.failure,
-          errorMessage: failure.message,
-        ));
+        emit(state.copyWith(status: TournamentCubitStatus.failure, errorMessage: failure.message));
         return false;
       },
       (updated) {
@@ -284,410 +223,89 @@ class TournamentCubit extends Cubit<TournamentState> {
     );
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (_) {
-        emit(state.copyWith(
-          status: TournamentCubitStatus.actionSuccess,
-          successMessage: 'تم حفظ جوائز البطولة بنجاح',
-        ));
-      },
-    );
-  }
-
-  Future<void> publishTournament(String tournamentId) async {
-    emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await _publishTournamentUseCase(tournamentId);
-
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (_) {
-        final updatedList = state.tournaments.map((t) {
-          if (t.id == tournamentId) {
-            return t.copyWith(status: TournamentStatus.published);
-          }
-          return t;
-        }).toList();
-        final updatedSelected = state.selectedTournament?.id == tournamentId
-            ? state.selectedTournament?.copyWith(status: TournamentStatus.published)
-            : state.selectedTournament;
-
-        emit(state.copyWith(
-          status: TournamentCubitStatus.actionSuccess,
-          tournaments: updatedList,
-          selectedTournament: updatedSelected,
-          successMessage: 'تم نشر البطولة بنجاح',
-        ));
-      },
-    );
-  }
-
-  Future<void> cancelTournament(String tournamentId, String reason) async {
-    emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await _cancelTournamentUseCase(
-      CancelTournamentParams(tournamentId: tournamentId, reason: reason),
-    );
-
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (_) {
-        final updatedList = state.tournaments.map((t) {
-          if (t.id == tournamentId) {
-            return t.copyWith(status: TournamentStatus.cancelled);
-          }
-          return t;
-        }).toList();
-        final updatedSelected = state.selectedTournament?.id == tournamentId
-            ? state.selectedTournament?.copyWith(status: TournamentStatus.cancelled)
-            : state.selectedTournament;
-
-        emit(state.copyWith(
-          status: TournamentCubitStatus.actionSuccess,
-          tournaments: updatedList,
-          selectedTournament: updatedSelected,
-          successMessage: 'تم إلغاء البطولة',
-        ));
-      },
-    );
-  }
-
-  Future<void> deleteDraftTournament(String tournamentId) async {
-    emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await _deleteDraftTournamentUseCase(tournamentId);
-
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (_) {
-        final list = state.tournaments.where((t) => t.id != tournamentId).toList();
-        emit(state.copyWith(
-          status: TournamentCubitStatus.actionSuccess,
-          tournaments: list,
-          clearSelectedTournament: state.selectedTournament?.id == tournamentId,
-          successMessage: 'تم حذف مسودة البطولة بنجاح',
-        ));
-      },
-    );
-  }
-
-  Future<void> deleteTournament(String tournamentId) async {
-    emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await _deleteTournamentUseCase(tournamentId);
-
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (_) {
-        final list = state.tournaments.where((t) => t.id != tournamentId).toList();
-        emit(state.copyWith(
-          status: TournamentCubitStatus.actionSuccess,
-          tournaments: list,
-          clearSelectedTournament: state.selectedTournament?.id == tournamentId,
-          successMessage: 'تم حذف البطولة بنجاح',
-        ));
-      },
-    );
-  }
-
-  Future<void> loadParticipants(String tournamentId) async {
-    final result = await _getParticipantsUseCase(tournamentId);
-    result.fold(
-      (failure) => emit(state.copyWith(errorMessage: failure.message)),
-      (list) => emit(state.copyWith(participants: list)),
-    );
-  }
-
-  Future<void> approvePayment(String participantId) async {
-    final original = List<TournamentParticipantEntity>.from(state.participants);
-    await optimisticUpdate<void>(
-      apply: (curr) => curr.copyWith(
+      (failure) => emit(state.copyWith(status: TournamentCubitStatus.failure, errorMessage: failure.message)),
+      (_) => emit(state.copyWith(
         status: TournamentCubitStatus.actionSuccess,
-        participants: curr.participants.map((p) {
-          if (p.id == participantId) {
-            return p.copyWith(
-              paymentStatus: ParticipantPaymentStatus.approved,
-              participantStatus: ParticipantStatus.confirmed,
-            );
-          }
-          return p;
-        }).toList(),
-        successMessage: 'تم اعتماد إيصال الدفع بنجاح',
-      ),
-      onServer: () => _approvePaymentUseCase(participantId),
-      rollback: (curr, failure) => curr.copyWith(
-        status: TournamentCubitStatus.failure,
-        participants: original,
-        errorMessage: failure.message,
-      ),
-    );
-  }
-
-  Future<void> rejectPayment(String participantId, String reason) async {
-    final original = List<TournamentParticipantEntity>.from(state.participants);
-    await optimisticUpdate<void>(
-      apply: (curr) => curr.copyWith(
-        status: TournamentCubitStatus.actionSuccess,
-        participants: curr.participants.map((p) {
-          if (p.id == participantId) {
-            return p.copyWith(
-              paymentStatus: ParticipantPaymentStatus.rejected,
-              rejectionReason: reason,
-            );
-          }
-          return p;
-        }).toList(),
-        successMessage: 'تم رفض إيصال الدفع',
-      ),
-      onServer: () => _rejectPaymentUseCase(RejectPaymentParams(participantId: participantId, reason: reason)),
-      rollback: (curr, failure) => curr.copyWith(
-        status: TournamentCubitStatus.failure,
-        participants: original,
-        errorMessage: failure.message,
-      ),
-    );
-  }
-
-  Future<void> recordCashPayment(String participantId) async {
-    final original = List<TournamentParticipantEntity>.from(state.participants);
-    await optimisticUpdate<void>(
-      apply: (curr) => curr.copyWith(
-        status: TournamentCubitStatus.actionSuccess,
-        participants: curr.participants.map((p) {
-          if (p.id == participantId) {
-            return p.copyWith(
-              paymentStatus: ParticipantPaymentStatus.approved,
-              participantStatus: ParticipantStatus.confirmed,
-            );
-          }
-          return p;
-        }).toList(),
-        successMessage: 'تم تسجيل الدفع النقدي في الصالة',
-      ),
-      onServer: () => _recordCashPaymentUseCase(participantId),
-      rollback: (curr, failure) => curr.copyWith(
-        status: TournamentCubitStatus.failure,
-        participants: original,
-        errorMessage: failure.message,
-      ),
-    );
-  }
-
-  Future<void> promoteWaitlist(String tournamentId) async {
-    emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await _promoteWaitlistUseCase(tournamentId);
-
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
+        successMessage: 'تم حفظ جوائز البطولة بنجاح',
       )),
-      (_) {
-        emit(state.copyWith(
-          status: TournamentCubitStatus.actionSuccess,
-          successMessage: 'تم ترقية أول لاعب في قائمة الانتظار بنجاح',
-        ));
-        loadParticipants(tournamentId);
-      },
     );
   }
 
-  Future<void> checkInParticipant(String participantId) async {
-    final original = List<TournamentParticipantEntity>.from(state.participants);
-    await optimisticUpdate<void>(
-      apply: (curr) => curr.copyWith(
-        status: TournamentCubitStatus.actionSuccess,
-        participants: curr.participants.map((p) {
-          if (p.id == participantId) {
-            return p.copyWith(
-              isCheckedIn: true,
-              checkedInAt: DateTime.now(),
-            );
-          }
-          return p;
-        }).toList(),
-        successMessage: 'تم تسجيل حضور اللاعب',
-      ),
-      onServer: () => _checkInParticipantUseCase(participantId),
-      rollback: (curr, failure) => curr.copyWith(
-        status: TournamentCubitStatus.failure,
-        participants: original,
-        errorMessage: failure.message,
-      ),
-    );
-  }
-
-  Future<void> withdrawParticipant(String participantId) async {
-    final original = List<TournamentParticipantEntity>.from(state.participants);
-    await optimisticUpdate<void>(
-      apply: (curr) => curr.copyWith(
-        status: TournamentCubitStatus.actionSuccess,
-        participants: curr.participants.map((p) {
-          if (p.id == participantId) {
-            return p.copyWith(
-              participantStatus: ParticipantStatus.withdrawn,
-            );
-          }
-          return p;
-        }).toList(),
-        successMessage: 'تم انسحاب المشارك بنجاح',
-      ),
-      onServer: () => _withdrawParticipantUseCase(participantId),
-      rollback: (curr, failure) => curr.copyWith(
-        status: TournamentCubitStatus.failure,
-        participants: original,
-        errorMessage: failure.message,
-      ),
-    );
-  }
-
-  Future<void> drawBracket(String tournamentId) async {
-    emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await _drawBracketUseCase(tournamentId);
-
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (matchesList) {
-        final updatedList = state.tournaments.map((t) {
-          if (t.id == tournamentId) {
-            return t.copyWith(status: TournamentStatus.inProgress);
-          }
-          return t;
-        }).toList();
-        final updatedSelected = state.selectedTournament?.id == tournamentId
-            ? state.selectedTournament?.copyWith(status: TournamentStatus.inProgress)
-            : state.selectedTournament;
-
-        emit(state.copyWith(
-          status: TournamentCubitStatus.actionSuccess,
-          tournaments: updatedList,
-          selectedTournament: updatedSelected,
-          matches: matchesList,
-          successMessage: 'تمت إقامة القرعة وتوليد الشجرة بنجاح',
-        ));
-      },
-    );
-  }
-
-  Future<void> loadMatches(String tournamentId) async {
-    final result = await _getMatchesUseCase(tournamentId);
-    result.fold(
-      (failure) => emit(state.copyWith(errorMessage: failure.message)),
-      (list) {
-        final disputed = list.where((m) => m.isDisputed).toList();
-        emit(state.copyWith(matches: list, disputedMatches: disputed));
-      },
-    );
-  }
-
-  Future<void> startMatch(String matchId, {String? roomId}) async {
-    emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await _startMatchUseCase(StartMatchParams(matchId: matchId, roomId: roomId));
-
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (_) {
-        emit(state.copyWith(
-          status: TournamentCubitStatus.actionSuccess,
-          successMessage: 'تم بدء المباراة',
-        ));
-        if (state.selectedTournament != null) {
-          loadMatches(state.selectedTournament!.id);
-        }
-      },
-    );
-  }
-
-  Future<void> resolveDispute(
-    String matchId, {
-    required String winnerId,
-    required int p1Score,
-    required int p2Score,
-    required String resolutionNotes,
+  Future<void> _updateTournamentStatus({
+    required String tournamentId,
+    required TournamentStatus newStatus,
+    required String successMessage,
+    required TournamentActionResult Function() action,
   }) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await _resolveDisputeUseCase(ResolveDisputeParams(
-      matchId: matchId,
-      winnerId: winnerId,
-      p1Score: p1Score,
-      p2Score: p2Score,
-      resolutionNotes: resolutionNotes,
-    ));
-
+    final result = await action();
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
+      (failure) => emit(TournamentStateMutator.applyFailure(state: state, failure: failure)),
+      (_) => emit(TournamentStateMutator.applyStatusUpdate(
+        state: state,
+        tournamentId: tournamentId,
+        newStatus: newStatus,
+        successMessage: successMessage,
       )),
-      (_) {
-        emit(state.copyWith(
-          status: TournamentCubitStatus.actionSuccess,
-          successMessage: 'تم حل النزاع وتحديد الفائز بنجاح',
-        ));
-        if (state.selectedTournament != null) {
-          loadMatches(state.selectedTournament!.id);
-          loadAuditLogs(state.selectedTournament!.id);
-        }
-      },
     );
   }
 
-  Future<void> completeTournament(String tournamentId) async {
+  Future<void> publishTournament(String id) => _updateTournamentStatus(
+        tournamentId: id,
+        newStatus: TournamentStatus.published,
+        successMessage: 'تم نشر البطولة بنجاح',
+        action: () => _publishTournamentUseCase(id),
+      );
+
+  Future<void> cancelTournament(String id, String reason) => _updateTournamentStatus(
+        tournamentId: id,
+        newStatus: TournamentStatus.cancelled,
+        successMessage: 'تم إلغاء البطولة',
+        action: () => _cancelTournamentUseCase(CancelTournamentParams(tournamentId: id, reason: reason)),
+      );
+
+  Future<void> completeTournament(String id) => _updateTournamentStatus(
+        tournamentId: id,
+        newStatus: TournamentStatus.completed,
+        successMessage: 'تم إنهاء البطولة بنجاح',
+        action: () => _completeTournamentUseCase(id),
+      );
+
+  Future<void> _deleteHelper({
+    required String tournamentId,
+    required String successMessage,
+    required TournamentActionResult Function() action,
+  }) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
-    final result = await _completeTournamentUseCase(tournamentId);
-
+    final result = await action();
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
+      (failure) => emit(TournamentStateMutator.applyFailure(state: state, failure: failure)),
+      (_) => emit(TournamentStateMutator.applyDeletion(
+        state: state,
+        tournamentId: tournamentId,
+        successMessage: successMessage,
       )),
-      (_) {
-        final updatedList = state.tournaments.map((t) {
-          if (t.id == tournamentId) {
-            return t.copyWith(status: TournamentStatus.completed);
-          }
-          return t;
-        }).toList();
-        final updatedSelected = state.selectedTournament?.id == tournamentId
-            ? state.selectedTournament?.copyWith(status: TournamentStatus.completed)
-            : state.selectedTournament;
-
-        emit(state.copyWith(
-          status: TournamentCubitStatus.actionSuccess,
-          tournaments: updatedList,
-          selectedTournament: updatedSelected,
-          successMessage: 'تم إنهاء البطولة بنجاح',
-        ));
-      },
     );
   }
+
+  Future<void> deleteDraftTournament(String id) => _deleteHelper(
+        tournamentId: id,
+        successMessage: 'تم حذف مسودة البطولة بنجاح',
+        action: () => _deleteDraftTournamentUseCase(id),
+      );
+
+  Future<void> deleteTournament(String id) => _deleteHelper(
+        tournamentId: id,
+        successMessage: 'تم حذف البطولة بنجاح',
+        action: () => _deleteTournamentUseCase(id),
+      );
 
   Future<void> awardPrizes(String tournamentId) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
     final result = await _awardPrizesUseCase(tournamentId);
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: TournamentCubitStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(state.copyWith(status: TournamentCubitStatus.failure, errorMessage: failure.message)),
       (data) {
         emit(state.copyWith(
           status: TournamentCubitStatus.actionSuccess,
@@ -700,32 +318,26 @@ class TournamentCubit extends Cubit<TournamentState> {
   }
 
   Future<void> loadAuditLogs(String tournamentId, {int page = 1, int pageSize = 50}) async {
-    final result = await _getTournamentAuditLogsUseCase(GetTournamentAuditLogsParams(
-      tournamentId: tournamentId,
-      page: page,
-      pageSize: pageSize,
-    ));
-    result.fold(
-      (failure) => emit(state.copyWith(errorMessage: failure.message)),
-      (paginated) => emit(state.copyWith(
+    final paginated = await _auditManager.loadAuditLogs(tournamentId, page: page, pageSize: pageSize);
+    if (paginated != null) {
+      emit(state.copyWith(
         auditLogs: paginated.items,
         auditLogsPage: paginated.page,
         auditLogsPageSize: paginated.pageSize,
         totalAuditLogsCount: paginated.totalCount,
-      )),
-    );
+      ));
+    }
   }
 
   void startWatchingDisputes(String tournamentId) {
-    _disputesSubscription?.cancel();
-    _disputesSubscription = _watchDisputedMatchesUseCase(tournamentId).listen((disputedList) {
+    _auditManager.startWatchingDisputes(tournamentId, (disputedList) {
       emit(state.copyWith(disputedMatches: disputedList));
     });
   }
 
   @override
   Future<void> close() {
-    _disputesSubscription?.cancel();
+    _auditManager.dispose();
     return super.close();
   }
 }

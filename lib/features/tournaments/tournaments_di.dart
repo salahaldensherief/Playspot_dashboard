@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'data/datasources/tournament_remote_data_source.dart';
+import 'data/datasources/tournament_remote_data_source_impl.dart';
 import 'data/repositories/tournament_repository_impl.dart';
 import 'domain/repositories/tournament_repository.dart';
 import 'domain/usecases/tournament_match_usecases.dart';
@@ -64,17 +65,6 @@ void initTournamentsDI(GetIt sl) {
       awardPrizesUseCase: sl(),
       getTournamentAuditLogsUseCase: sl(),
       watchDisputedMatchesUseCase: sl(),
-      getParticipantsUseCase: sl(),
-      approvePaymentUseCase: sl(),
-      rejectPaymentUseCase: sl(),
-      recordCashPaymentUseCase: sl(),
-      promoteWaitlistUseCase: sl(),
-      checkInParticipantUseCase: sl(),
-      withdrawParticipantUseCase: sl(),
-      drawBracketUseCase: sl(),
-      getMatchesUseCase: sl(),
-      startMatchUseCase: sl(),
-      resolveDisputeUseCase: sl(),
       locationService: sl(),
       storageService: sl(),
     ),

@@ -8,6 +8,8 @@ import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
 import 'package:play_spot_dashboard/art_core/widgets/section_container.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
 import '../../domain/entities/announcement_entity.dart';
+import 'audience_option_chip.dart';
+import 'type_option_chip.dart';
 
 class CreateAnnouncementCard extends StatefulWidget {
   final List<Lounge> lounges;
@@ -27,9 +29,9 @@ class CreateAnnouncementCard extends StatefulWidget {
 
 class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
   final _formKey = GlobalKey<FormState>();
-  String _targetAudience = 'all'; // 'all', 'lounge_owners', 'specific_lounge'
+  String _targetAudience = 'all';
   Lounge? _selectedLounge;
-  String _announcementType = 'info'; // 'info', 'warning', 'update'
+  String _announcementType = 'info';
 
   final TextEditingController _titleArController = TextEditingController();
   final TextEditingController _titleEnController = TextEditingController();
@@ -73,7 +75,6 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
 
       widget.onSubmit(announcement);
 
-      // Reset form on submission
       _titleArController.clear();
       _titleEnController.clear();
       _bodyArController.clear();
@@ -96,7 +97,6 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Target Audience selection
               Text(
                 AppStrings.targetAudience,
                 style: TextStyle(
@@ -109,7 +109,7 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
               Row(
                 children: [
                   Expanded(
-                    child: _AudienceOptionChip(
+                    child: AudienceOptionChip(
                       label: AppStrings.audienceAll,
                       icon: Icons.groups_outlined,
                       isSelected: _targetAudience == 'all',
@@ -121,7 +121,7 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
-                    child: _AudienceOptionChip(
+                    child: AudienceOptionChip(
                       label: AppStrings.audienceOwners,
                       icon: Icons.storefront_outlined,
                       isSelected: _targetAudience == 'lounge_owners',
@@ -133,7 +133,7 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
-                    child: _AudienceOptionChip(
+                    child: AudienceOptionChip(
                       label: AppStrings.audienceSpecificLounge,
                       icon: Icons.business,
                       isSelected: _targetAudience == 'specific_lounge',
@@ -144,7 +144,6 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
               ),
               SizedBox(height: 16.h),
 
-              // Specific Lounge Selector if specific_lounge
               if (_targetAudience == 'specific_lounge') ...[
                 CustomDropdown<Lounge>(
                   label: AppStrings.selectTargetLounge,
@@ -156,7 +155,6 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
                 SizedBox(height: 16.h),
               ],
 
-              // Announcement Type Selection
               Text(
                 AppStrings.announcementType,
                 style: TextStyle(
@@ -168,21 +166,21 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
               SizedBox(height: 8.h),
               Row(
                 children: [
-                  _TypeOptionChip(
+                  TypeOptionChip(
                     label: AppStrings.typeInfo,
                     color: AppColors.neonBlue,
                     isSelected: _announcementType == 'info',
                     onTap: () => setState(() => _announcementType = 'info'),
                   ),
                   SizedBox(width: 12.w),
-                  _TypeOptionChip(
+                  TypeOptionChip(
                     label: AppStrings.typeWarning,
                     color: AppColors.warning,
                     isSelected: _announcementType == 'warning',
                     onTap: () => setState(() => _announcementType = 'warning'),
                   ),
                   SizedBox(width: 12.w),
-                  _TypeOptionChip(
+                  TypeOptionChip(
                     label: AppStrings.typeUpdate,
                     color: AppColors.neonPurple,
                     isSelected: _announcementType == 'update',
@@ -192,7 +190,6 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
               ),
               SizedBox(height: 20.h),
 
-              // Titles in 2 languages
               Row(
                 children: [
                   Expanded(
@@ -216,7 +213,6 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
               ),
               SizedBox(height: 16.h),
 
-              // Body text in 2 languages
               Row(
                 children: [
                   Expanded(
@@ -256,102 +252,6 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _AudienceOptionChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _AudienceOptionChip({
-    required this.label,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10.r),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.neonBlue.withAlpha(25) : AppColors.mutedBackground,
-          borderRadius: BorderRadius.circular(10.r),
-          border: Border.all(
-            color: isSelected ? AppColors.neonBlue : AppColors.borderDefault,
-            width: isSelected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 20.r,
-              color: isSelected ? AppColors.neonBlue : AppColors.textSecondary,
-            ),
-            SizedBox(width: 8.w),
-            Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? AppColors.neonBlue : AppColors.textPrimary,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 13.sp,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TypeOptionChip extends StatelessWidget {
-  final String label;
-  final Color color;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _TypeOptionChip({
-    required this.label,
-    required this.color,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8.r),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-        decoration: BoxDecoration(
-          color: isSelected ? color.withAlpha(30) : AppColors.mutedBackground,
-          borderRadius: BorderRadius.circular(8.r),
-          border: Border.all(
-            color: isSelected ? color : AppColors.borderDefault,
-            width: isSelected ? 1.5 : 1,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? color : AppColors.textSecondary,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            fontSize: 13.sp,
-          ),
-        ),
-      ),
     );
   }
 }

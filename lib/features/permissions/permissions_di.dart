@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'data/data_sources/permissions_remote_data_source.dart';
+import 'data/data_sources/permissions_remote_data_source_impl.dart';
 import 'data/repositories/permissions_repository_impl.dart';
 import 'domain/repositories/permissions_repository.dart';
 import 'domain/use_cases/get_role_permissions_use_case.dart';

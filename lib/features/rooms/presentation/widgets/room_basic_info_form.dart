@@ -55,7 +55,7 @@ class RoomBasicInfoForm extends StatelessWidget {
             Expanded(
               child: AppTextField(
                 label: AppStrings.descriptionArLabel,
-                hintText: 'وصف الغرفة والمواصفات (مثل نوع الدركسيون في السيميليتور)...',
+                hintText: AppStrings.descriptionArHint,
                 controller: descriptionArController,
                 maxLines: 3,
               ),
@@ -64,7 +64,7 @@ class RoomBasicInfoForm extends StatelessWidget {
             Expanded(
               child: AppTextField(
                 label: AppStrings.descriptionEnLabel,
-                hintText: 'Description & Specs (e.g. Wheel type for Simulators, PC specs)...',
+                hintText: AppStrings.descriptionEnHint,
                 controller: descriptionEnController,
                 maxLines: 3,
               ),

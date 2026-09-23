@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import '../../../art_core/app_strings.dart';
 import '../../../art_core/theme/app_colors.dart';
 import '../../../art_core/widgets/section_container.dart';
 import '../../../art_core/widgets/status_badge.dart';
@@ -97,7 +98,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                     Icon(Icons.confirmation_number_outlined, color: AppColors.neonBlue, size: 28.r),
                     SizedBox(width: 12.w),
                     Text(
-                      'إدارة تذاكر الشكاوى والدعم',
+                      AppStrings.supportTickets,
                       style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 22.sp,
@@ -108,7 +109,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  'استقبال ومتابعة وحل الشكاوى والاستفسارات المرسلة من مستخدمي التطبيق',
+                  AppStrings.supportTicketsSubtitle,
                   style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 14.sp,
@@ -117,13 +118,13 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                 SizedBox(height: 24.h),
                 Row(
                   children: [
-                    _buildFilterChip('all', 'جميع التذاكر', state.activeTicketFilter),
+                    _buildFilterChip('all', AppStrings.allTickets, state.activeTicketFilter),
                     SizedBox(width: 12.w),
-                    _buildFilterChip('new', 'جديدة', state.activeTicketFilter),
+                    _buildFilterChip('new', AppStrings.ticketStatusNew, state.activeTicketFilter),
                     SizedBox(width: 12.w),
-                    _buildFilterChip('in_progress', 'جاري العمل عليها', state.activeTicketFilter),
+                    _buildFilterChip('in_progress', AppStrings.ticketStatusInProgress, state.activeTicketFilter),
                     SizedBox(width: 12.w),
-                    _buildFilterChip('resolved', 'تم الحل', state.activeTicketFilter),
+                    _buildFilterChip('resolved', AppStrings.ticketStatusResolved, state.activeTicketFilter),
                   ],
                 ),
                 SizedBox(height: 24.h),
@@ -131,7 +132,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                   const Center(child: CircularProgressIndicator(color: AppColors.neonBlue))
                 else if (state.tickets.isEmpty)
                   SectionContainer(
-                    title: 'قائمة تذاكر الشكاوى',
+                    title: AppStrings.complaintTicketsList,
                     children: [
                       Center(
                         child: Padding(
@@ -141,7 +142,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                               Icon(Icons.inbox_outlined, color: AppColors.textMuted, size: 48.r),
                               SizedBox(height: 12.h),
                               Text(
-                                'لا توجد تذاكر شكاوى في هذا الفلتر',
+                                AppStrings.noTicketsInFilter,
                                 style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp),
                               ),
                             ],
@@ -152,7 +153,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                   )
                 else
                   SectionContainer(
-                    title: 'جدول الشكاوى والطلبات (${state.tickets.length})',
+                    title: '${AppStrings.complaintsTable} (${state.tickets.length})',
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8.r),
@@ -171,13 +172,13 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                             TableRow(
                               decoration: const BoxDecoration(color: AppColors.scaffoldBackground),
                               children: [
-                                _buildHeaderCell('اسم المستخدم'),
-                                _buildHeaderCell('رقم الهاتف'),
-                                _buildHeaderCell('نوع المشكلة'),
-                                _buildHeaderCell('الرسالة'),
-                                _buildHeaderCell('التاريخ'),
-                                _buildHeaderCell('الحالة'),
-                                _buildHeaderCell('عرض'),
+                                _buildHeaderCell(AppStrings.fullName),
+                                _buildHeaderCell(AppStrings.phoneNumber),
+                                _buildHeaderCell(AppStrings.issueType),
+                                _buildHeaderCell(AppStrings.message),
+                                _buildHeaderCell(AppStrings.date),
+                                _buildHeaderCell(AppStrings.status),
+                                _buildHeaderCell(AppStrings.view),
                               ],
                             ),
                             ...state.tickets.map((ticket) {

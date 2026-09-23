@@ -79,7 +79,7 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.danger),
+            SnackBar(content: Text(AppStrings.operationError(e.toString())), backgroundColor: AppColors.danger),
           );
         }
       } finally {
@@ -91,7 +91,7 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
   @override
   Widget build(BuildContext context) {
     return AppDialog(
-      title: "Create Lounge & Owner",
+      title: AppStrings.createLoungeAndOwner,
       width: 650.w,
       actions: [
         AppButton(
@@ -101,7 +101,7 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
         ),
         SizedBox(width: 16.w),
         AppButton(
-          text: "Create Lounge & Owner",
+          text: AppStrings.createLoungeAndOwner,
           isLoading: widget.isLoading || _isLocalUploading,
           onPressed: _submit,
         ),
@@ -113,7 +113,7 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // --- Section 1: Lounge Details ---
-              AppText.subHeading("1. Lounge Details", fontSize: 16.sp, color: AppColors.neonPurple),
+              AppText.subHeading("1. ${AppStrings.loungeDetails}", fontSize: 16.sp, color: AppColors.neonPurple),
               SizedBox(height: 16.h),
               Row(
                 children: [
@@ -128,8 +128,8 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
                   SizedBox(width: 16.w),
                   Expanded(
                     child: AppTextField(
-                      label: "Contact Phone",
-                      hintText: "Lounge phone number",
+                      label: AppStrings.contactPhone,
+                      hintText: AppStrings.loungePhoneHint,
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
                     ),
@@ -142,7 +142,7 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
               SizedBox(height: 20.h),
 
               // --- Section 2: Owner Details ---
-              AppText.subHeading("2. Owner Details", fontSize: 16.sp, color: AppColors.neonBlue),
+              AppText.subHeading("2. ${AppStrings.ownerDetails}", fontSize: 16.sp, color: AppColors.neonBlue),
               SizedBox(height: 16.h),
               Row(
                 children: [
@@ -171,8 +171,8 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
                 children: [
                   Expanded(
                     child: AppTextField(
-                      label: "Owner Phone",
-                      hintText: "Owner mobile number",
+                      label: AppStrings.ownerPhone,
+                      hintText: AppStrings.ownerPhoneHint,
                       controller: _ownerPhoneController,
                       keyboardType: TextInputType.phone,
                     ),

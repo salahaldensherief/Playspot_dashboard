@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/features/analytics/data/datasources/dashboard_remote_data_source.dart';
+import 'package:play_spot_dashboard/features/analytics/data/datasources/dashboard_remote_data_source_impl.dart';
 import 'package:play_spot_dashboard/features/analytics/data/repositories/dashboard_repository_impl.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/repositories/dashboard_repository.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/get_lounge_owner_stats_usecase.dart';

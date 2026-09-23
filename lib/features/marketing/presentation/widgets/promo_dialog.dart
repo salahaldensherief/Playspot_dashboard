@@ -11,6 +11,7 @@ import 'package:play_spot_dashboard/features/marketing/presentation/cubit/market
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
 import '../../../../art_core/widgets/app_cached_image.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../domain/entities/promo_entity.dart';
 import 'promo_form_section.dart';
 import 'design_style_section.dart';
@@ -94,7 +95,7 @@ class _PromoDialogState extends State<PromoDialog> {
         }
       }
     } catch (e) {
-      debugPrint('🔴 [PROMO_DIALOG] Error picking image: $e');
+      AppLogger.error('Error picking image: $e', e);
     }
   }
 
@@ -142,10 +143,10 @@ class _PromoDialogState extends State<PromoDialog> {
           Navigator.pop(context);
         }
       } catch (e) {
-        debugPrint('🔴 [PROMO_DIALOG] Error submitting promo: $e');
+        AppLogger.error('[PROMO_DIALOG] Error submitting promo: $e', e);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.danger),
+            SnackBar(content: Text(AppStrings.operationError(e.toString())), backgroundColor: AppColors.danger),
           );
         }
       } finally {

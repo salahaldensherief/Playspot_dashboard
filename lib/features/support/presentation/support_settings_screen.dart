@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../art_core/app_strings.dart';
 import '../../../art_core/theme/app_colors.dart';
 import '../../../art_core/widgets/app_button.dart';
 import '../../../art_core/widgets/section_container.dart';
@@ -100,7 +101,7 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
                     Icon(Icons.contact_support_outlined, color: AppColors.neonBlue, size: 28.r),
                     SizedBox(width: 12.w),
                     Text(
-                      'إعدادات التواصل والدفع',
+                      AppStrings.supportAndPaymentSettings,
                       style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 22.sp,
@@ -111,7 +112,7 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  'التحكم في أرقام وتفاصيل التواصل ورقم فودافون كاش المعروضة للمستخدمين بداخل التطبيق',
+                  AppStrings.supportPaymentSettingsSubtitle,
                   style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 14.sp,
@@ -122,7 +123,7 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
                   const Center(child: CircularProgressIndicator(color: AppColors.neonBlue))
                 else
                   SectionContainer(
-                    title: 'تفاصيل الدعم الفني ووسائل الاتصال',
+                    title: AppStrings.supportContactDetails,
                     children: [
                       Form(
                         key: _formKey,
@@ -130,28 +131,28 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
                           children: [
                             _buildInputField(
                               controller: _whatsappController,
-                              label: 'رقم واتساب الدعم الفني',
+                              label: AppStrings.whatsappSupportNumber,
                               hint: '+201000000000',
                               icon: Icons.chat_bubble_outline,
                             ),
                             SizedBox(height: 16.h),
                             _buildInputField(
                               controller: _phoneController,
-                              label: 'رقم الاتصال المباشر',
+                              label: AppStrings.directCallNumber,
                               hint: '+201000000000',
                               icon: Icons.phone_outlined,
                             ),
                             SizedBox(height: 16.h),
                             _buildInputField(
                               controller: _emailController,
-                              label: 'البريد الإلكتروني للدعم الفني',
+                              label: AppStrings.supportEmailLabel,
                               hint: 'support@playspot.app',
                               icon: Icons.email_outlined,
                             ),
                             SizedBox(height: 16.h),
                             _buildInputField(
                               controller: _vodafoneController,
-                              label: 'رقم محفظة فودافون كاش الرسمية',
+                              label: AppStrings.vodafoneCashOfficialLabel,
                               hint: '01000000000',
                               icon: Icons.account_balance_wallet_outlined,
                             ),
@@ -159,7 +160,7 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
                             Align(
                               alignment: AlignmentDirectional.centerEnd,
                               child: AppButton(
-                                text: 'حفظ التغييرات',
+                                text: AppStrings.saveChanges,
                                 variant: AppButtonVariant.gradient,
                                 icon: Icons.save,
                                 isLoading: state.actionStatus == SupportStatus.loading,
@@ -232,7 +233,7 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
           ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
-              return 'هذا الحقل مطلوب';
+              return AppStrings.fieldRequired;
             }
             return null;
           },

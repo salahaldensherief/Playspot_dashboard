@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../domain/entities/faq_entity.dart';
@@ -65,7 +66,7 @@ class _FaqDialogState extends State<FaqDialog> {
           ),
           SizedBox(width: 8.w),
           Text(
-            isEdit ? 'تعديل سؤال شائع' : 'إضافة سؤال شائع جديد',
+            isEdit ? AppStrings.editFaq : AppStrings.addFaq,
             style: TextStyle(color: AppColors.textPrimary, fontSize: 18.sp, fontWeight: FontWeight.bold),
           ),
         ],
@@ -79,29 +80,29 @@ class _FaqDialogState extends State<FaqDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildSectionHeader('اللغة العربية'),
+                _buildSectionHeader(AppStrings.arabicLanguage),
                 SizedBox(height: 8.h),
-                _buildTextField(_qArController, 'السؤال بالعربية', 'مثال: كيف يمكنني حجز صالة؟'),
+                _buildTextField(_qArController, AppStrings.questionAr, AppStrings.questionArHint),
                 SizedBox(height: 12.h),
-                _buildTextField(_aArController, 'الإجابة بالعربية', 'تفاصيل الإجابة...', maxLines: 3),
+                _buildTextField(_aArController, AppStrings.answerAr, AppStrings.answerArHint, maxLines: 3),
                 SizedBox(height: 20.h),
-                _buildSectionHeader('English Version'),
+                _buildSectionHeader(AppStrings.englishLanguage),
                 SizedBox(height: 8.h),
-                _buildTextField(_qEnController, 'Question (English)', 'e.g. How do I book a lounge?'),
+                _buildTextField(_qEnController, AppStrings.questionEn, AppStrings.questionEnHint),
                 SizedBox(height: 12.h),
-                _buildTextField(_aEnController, 'Answer (English)', 'Answer details...', maxLines: 3),
+                _buildTextField(_aEnController, AppStrings.answerEn, AppStrings.answerEnHint, maxLines: 3),
                 SizedBox(height: 20.h),
                 Row(
                   children: [
                     Expanded(
-                      child: _buildTextField(_orderController, 'أولوية الترتيب (sort_order)', '0', isNumber: true),
+                      child: _buildTextField(_orderController, AppStrings.sortOrderPriority, '0', isNumber: true),
                     ),
                     SizedBox(width: 16.w),
                     Expanded(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('تفعيل السؤال (Active)', style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp)),
+                          Text(AppStrings.activeFaq, style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp)),
                           Switch(
                             value: _isActive,
                             activeTrackColor: AppColors.neonBlue,
@@ -124,10 +125,10 @@ class _FaqDialogState extends State<FaqDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('إلغاء', style: TextStyle(color: AppColors.textSecondary)),
+          child: Text(AppStrings.cancel, style: const TextStyle(color: AppColors.textSecondary)),
         ),
         AppButton(
-          text: isEdit ? 'حفظ التعديلات' : 'إضافة السؤال',
+          text: isEdit ? AppStrings.saveChanges : AppStrings.addFaq,
           variant: AppButtonVariant.gradient,
           onPressed: () {
             if (_formKey.currentState!.validate()) {

@@ -101,7 +101,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('خطأ في رفع الصورة: $e'), backgroundColor: AppColors.danger),
+            SnackBar(content: Text(AppStrings.imageUploadError(e.toString())), backgroundColor: AppColors.danger),
           );
           setState(() {
             _isUploading = false;

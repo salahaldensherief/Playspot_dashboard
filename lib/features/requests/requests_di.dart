@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'data/datasources/requests_remote_data_source.dart';
+import 'data/datasources/requests_remote_data_source_impl.dart';
 import 'data/repositories/client_requests_repository_impl.dart';
 import 'domain/repositories/client_requests_repository.dart';
 import 'domain/usecases/get_active_lounge_requests_page_usecase.dart';

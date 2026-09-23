@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
@@ -13,7 +12,10 @@ import '../../../../core/di/di.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../domain/entities/tournament_entity.dart';
 import '../../domain/entities/tournament_prize_entity.dart';
+import 'tournament_basic_details_section.dart';
+import 'tournament_prize_banner.dart';
 import 'tournament_prizes_dialog.dart';
+import 'tournament_schedule_section.dart';
 
 class TournamentFormDialog extends StatefulWidget {
   final TournamentEntity? tournament;
@@ -90,193 +92,125 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
     super.dispose();
   }
 
-  Future<void> _selectDateTime(BuildContext context, DateTime initial, Function(DateTime) onPicked) async {
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime.now().subtract(const Duration(days: 30)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.neonBlue,
-              onPrimary: Colors.black,
-              surface: AppColors.cardBackground,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child ?? const SizedBox(),
-        );
-      },
-    );
-
-    if (pickedDate != null && context.mounted) {
-      final pickedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(initial),
-        builder: (context, child) {
-          return Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: const ColorScheme.dark(
-                primary: AppColors.neonBlue,
-                onPrimary: Colors.black,
-                surface: AppColors.cardBackground,
-                onSurface: AppColors.textPrimary,
-              ),
-            ),
-            child: child ?? const SizedBox(),
-          );
-        },
-      );
-
-      if (!mounted) return;
-
-      final finalDateTime = DateTime(
-        pickedDate.year,
-        pickedDate.month,
-        pickedDate.day,
-        pickedTime?.hour ?? initial.hour,
-        pickedTime?.minute ?? initial.minute,
-      );
-      onPicked(finalDateTime);
+  bool _validateTimeline() {
+    if (widget.tournament == null && _bannerBytes == null) {
+      _showError(AppStrings.tournamentBannerRequired);
+      return false;
     }
+    if (_registrationClosesAt.isBefore(_registrationOpensAt) ||
+        _registrationClosesAt.isAtSameMomentAs(_registrationOpensAt)) {
+      _showError(AppStrings.regCloseAfterOpenError);
+      return false;
+    }
+    if (_checkInOpensAt.isBefore(_registrationClosesAt)) {
+      _showError(AppStrings.checkInAfterRegCloseError);
+      return false;
+    }
+    if (_checkInClosesAt.isAfter(_startDate)) {
+      _showError(AppStrings.checkInBeforeStartError);
+      return false;
+    }
+    if (_endDate.isBefore(_startDate)) {
+      _showError(AppStrings.endDate);
+      return false;
+    }
+    return true;
   }
 
-  Widget _buildDateTimeField(String label, DateTime value, Function(DateTime) onPicked) {
-    final dateFormat = DateFormat('yyyy/MM/dd HH:mm');
-    return InkWell(
-      onTap: () => _selectDateTime(context, value, (newDate) {
-        onPicked(newDate);
-      }),
-      child: AbsorbPointer(
-        child: AppTextField(
-          controller: TextEditingController(text: dateFormat.format(value)),
-          label: label,
-          enabled: false,
-        ),
-      ),
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: AppColors.danger),
     );
   }
 
   Future<void> _handleSubmit() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      // Validate banner image requirement for new tournament creation
-      if (widget.tournament == null && _bannerBytes == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppStrings.tournamentBannerRequired),
-            backgroundColor: AppColors.danger,
-          ),
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (!_validateTimeline()) return;
+
+    setState(() => _isUploading = true);
+
+    try {
+      String? bannerUrl = widget.tournament?.bannerUrl;
+      final tournamentId = widget.tournament?.id ?? const Uuid().v4();
+
+      if (_bannerBytes != null && _bannerName != null) {
+        bannerUrl = await sl<StorageService>().uploadTournamentBanner(
+          _bannerBytes!,
+          _bannerName!,
+          tournamentId,
         );
-        return;
       }
 
-      // Client Validations according to pre-launch checklist & spec
-      if (_registrationClosesAt.isBefore(_registrationOpensAt) ||
-          _registrationClosesAt.isAtSameMomentAs(_registrationOpensAt)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppStrings.regCloseAfterOpenError),
-            backgroundColor: AppColors.danger,
-          ),
+      if (mounted) {
+        final entity = TournamentEntity(
+          id: widget.tournament?.id ?? tournamentId,
+          title: _titleController.text.trim(),
+          titleAr: _titleController.text.trim(),
+          titleEn: _titleController.text.trim(),
+          descriptionAr: _rulesController.text.trim(),
+          descriptionEn: _rulesController.text.trim(),
+          gameTitle: _gameTitleController.text.trim(),
+          bannerUrl: bannerUrl,
+          treeSize: _treeSize,
+          status: widget.tournament?.status ?? TournamentStatus.draft,
+          entryFee: double.tryParse(_entryFeeController.text.trim()) ?? 0.0,
+          prizePool: double.tryParse(_prizePoolController.text.trim()) ?? 0.0,
+          startDate: _startDate,
+          endDate: _endDate,
+          registrationDeadline: _registrationClosesAt,
+          registrationOpensAt: _registrationOpensAt,
+          registrationClosesAt: _registrationClosesAt,
+          checkInOpensAt: _checkInOpensAt,
+          checkInClosesAt: _checkInClosesAt,
+          tournamentStartsAt: _startDate,
+          minPlayers: int.tryParse(_minPlayersController.text.trim()) ?? 4,
+          maxPlayers: int.tryParse(_maxPlayersController.text.trim()) ?? _treeSize,
+          rules: _rulesController.text.trim(),
+          registeredCount: widget.tournament?.registeredCount ?? 0,
+          prizes: _prizes,
+          loungeId: widget.tournament?.loungeId ?? widget.loungeId,
+          cityId: widget.tournament?.cityId,
         );
-        return;
+
+        widget.onSubmit(entity);
+        Navigator.pop(context);
       }
-
-      if (_checkInOpensAt.isBefore(_registrationClosesAt)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppStrings.checkInAfterRegCloseError),
-            backgroundColor: AppColors.danger,
-          ),
-        );
-        return;
+    } catch (e) {
+      if (mounted) {
+        _showError('${AppStrings.error}: $e');
       }
-
-      if (_checkInClosesAt.isAfter(_startDate)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppStrings.checkInBeforeStartError),
-            backgroundColor: AppColors.danger,
-          ),
-        );
-        return;
-      }
-
-      if (_endDate.isBefore(_startDate)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppStrings.endDate),
-            backgroundColor: AppColors.danger,
-          ),
-        );
-        return;
-      }
-
-      setState(() => _isUploading = true);
-
-      try {
-        String? bannerUrl = widget.tournament?.bannerUrl;
-        final tournamentId = widget.tournament?.id ?? const Uuid().v4();
-
-        if (_bannerBytes != null && _bannerName != null) {
-          bannerUrl = await sl<StorageService>().uploadTournamentBanner(
-            _bannerBytes!,
-            _bannerName!,
-            tournamentId,
-          );
-        }
-
-        if (mounted) {
-          final entity = TournamentEntity(
-            id: widget.tournament?.id ?? tournamentId,
-            title: _titleController.text.trim(),
-            titleAr: _titleController.text.trim(),
-            titleEn: _titleController.text.trim(),
-            descriptionAr: _rulesController.text.trim(),
-            descriptionEn: _rulesController.text.trim(),
-            gameTitle: _gameTitleController.text.trim(),
-            bannerUrl: bannerUrl,
-            treeSize: _treeSize,
-            status: widget.tournament?.status ?? TournamentStatus.draft,
-            entryFee: double.tryParse(_entryFeeController.text.trim()) ?? 0.0,
-            prizePool: double.tryParse(_prizePoolController.text.trim()) ?? 0.0,
-            startDate: _startDate,
-            endDate: _endDate,
-            registrationDeadline: _registrationClosesAt,
-            registrationOpensAt: _registrationOpensAt,
-            registrationClosesAt: _registrationClosesAt,
-            checkInOpensAt: _checkInOpensAt,
-            checkInClosesAt: _checkInClosesAt,
-            tournamentStartsAt: _startDate,
-            minPlayers: int.tryParse(_minPlayersController.text.trim()) ?? 4,
-            maxPlayers: int.tryParse(_maxPlayersController.text.trim()) ?? _treeSize,
-            rules: _rulesController.text.trim(),
-            registeredCount: widget.tournament?.registeredCount ?? 0,
-            prizes: _prizes,
-            loungeId: widget.tournament?.loungeId ?? widget.loungeId,
-            cityId: widget.tournament?.cityId,
-          );
-
-          widget.onSubmit(entity);
-          Navigator.pop(context);
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${AppStrings.error}: $e'),
-              backgroundColor: AppColors.danger,
-            ),
-          );
-        }
-      } finally {
-        if (mounted) {
-          setState(() => _isUploading = false);
-        }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploading = false);
       }
     }
+  }
+
+  void _openManagePrizes() {
+    final currentEntity = TournamentEntity(
+      id: widget.tournament?.id ?? const Uuid().v4(),
+      title: _titleController.text.trim().isNotEmpty
+          ? _titleController.text.trim()
+          : 'البطولة',
+      treeSize: _treeSize,
+      status: widget.tournament?.status ?? TournamentStatus.draft,
+      entryFee: double.tryParse(_entryFeeController.text.trim()) ?? 0.0,
+      prizePool: double.tryParse(_prizePoolController.text.trim()) ?? 0.0,
+      startDate: _startDate,
+      endDate: _endDate,
+      registrationDeadline: _registrationClosesAt,
+      minPlayers: int.tryParse(_minPlayersController.text.trim()) ?? 4,
+      maxPlayers: int.tryParse(_maxPlayersController.text.trim()) ?? _treeSize,
+      prizes: _prizes,
+      loungeId: widget.tournament?.loungeId ?? widget.loungeId,
+    );
+    showDialog(
+      context: context,
+      builder: (ctx) => TournamentPrizesDialog(
+        tournament: currentEntity,
+        onSave: (updated) => setState(() => _prizes = updated),
+      ),
+    );
   }
 
   @override
@@ -315,156 +249,25 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
               },
             ),
             SizedBox(height: 16.h),
-            AppTextField(
-              controller: _titleController,
-              label: AppStrings.tournamentTitle,
-              validator: (v) => v == null || v.trim().isEmpty ? AppStrings.fieldRequired : null,
-            ),
-            SizedBox(height: 16.h),
-            Row(
-              children: [
-                Expanded(
-                  child: AppTextField(
-                    controller: _gameTitleController,
-                    label: AppStrings.gameTitle,
-                    validator: (v) => v == null || v.trim().isEmpty ? AppStrings.fieldRequired : null,
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        AppStrings.treeSize,
-                        style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
-                      ),
-                      SizedBox(height: 8.h),
-                      DropdownButtonFormField<int>(
-                        initialValue: _treeSize,
-                        dropdownColor: AppColors.cardBackground,
-                        style: const TextStyle(color: AppColors.textPrimary),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: AppColors.mutedBackground,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.r),
-                            borderSide: const BorderSide(color: AppColors.borderDefault),
-                          ),
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: 8, child: Text('8')),
-                          DropdownMenuItem(value: 16, child: Text('16')),
-                          DropdownMenuItem(value: 32, child: Text('32')),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() {
-                              _treeSize = val;
-                              _maxPlayersController.text = val.toString();
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            Row(
-              children: [
-                Expanded(
-                  child: AppTextField(
-                    controller: _entryFeeController,
-                    label: AppStrings.entryFee,
-                    keyboardType: TextInputType.number,
-                    validator: (v) => v == null || v.trim().isEmpty ? AppStrings.fieldRequired : null,
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: AppTextField(
-                    controller: _prizePoolController,
-                    label: AppStrings.prizePool,
-                    keyboardType: TextInputType.number,
-                    validator: (v) => v == null || v.trim().isEmpty ? AppStrings.fieldRequired : null,
-                  ),
-                ),
-              ],
+            TournamentBasicDetailsSection(
+              titleController: _titleController,
+              gameTitleController: _gameTitleController,
+              entryFeeController: _entryFeeController,
+              prizePoolController: _prizePoolController,
+              treeSize: _treeSize,
+              onTreeSizeChanged: (val) {
+                if (val != null) {
+                  setState(() {
+                    _treeSize = val;
+                    _maxPlayersController.text = val.toString();
+                  });
+                }
+              },
             ),
             SizedBox(height: 12.h),
-            Container(
-              padding: EdgeInsets.all(12.r),
-              decoration: BoxDecoration(
-                color: AppColors.mutedBackground,
-                borderRadius: BorderRadius.circular(10.r),
-                border: Border.all(color: AppColors.borderDefault),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        AppStrings.tournamentPrizes,
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 2.h),
-                      Text(
-                        _prizes.isEmpty
-                            ? 'لم يتم تخصيص جوائز للمراكز بعد'
-                            : 'تم تخصيص ${_prizes.length} مراكز للجوائز',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12.sp,
-                        ),
-                      ),
-                    ],
-                  ),
-                  AppButton(
-                    text: AppStrings.managePrizes,
-                    icon: Icons.emoji_events_outlined,
-                    variant: AppButtonVariant.outlined,
-                    fontSize: 12.sp,
-                    onPressed: () {
-                      final currentEntity = TournamentEntity(
-                        id: widget.tournament?.id ?? const Uuid().v4(),
-                        title: _titleController.text.trim().isNotEmpty
-                            ? _titleController.text.trim()
-                            : 'البطولة',
-                        treeSize: _treeSize,
-                        status: widget.tournament?.status ?? TournamentStatus.draft,
-                        entryFee: double.tryParse(_entryFeeController.text.trim()) ?? 0.0,
-                        prizePool: double.tryParse(_prizePoolController.text.trim()) ?? 0.0,
-                        startDate: _startDate,
-                        endDate: _endDate,
-                        registrationDeadline: _registrationClosesAt,
-                        minPlayers: int.tryParse(_minPlayersController.text.trim()) ?? 4,
-                        maxPlayers: int.tryParse(_maxPlayersController.text.trim()) ?? _treeSize,
-                        prizes: _prizes,
-                        loungeId: widget.tournament?.loungeId ?? widget.loungeId,
-                      );
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => TournamentPrizesDialog(
-                          tournament: currentEntity,
-                          onSave: (updatedPrizes) {
-                            setState(() {
-                              _prizes = updatedPrizes;
-                            });
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
+            TournamentPrizeBanner(
+              prizeCount: _prizes.length,
+              onManagePrizes: _openManagePrizes,
             ),
             SizedBox(height: 16.h),
             Row(
@@ -487,25 +290,17 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
               ],
             ),
             SizedBox(height: 20.h),
-            Text(
-              AppStrings.schedule,
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 12.h),
-            // Schedule Date & Time Text Fields
-            Wrap(
-              spacing: 16.w,
-              runSpacing: 16.h,
-              children: [
-                SizedBox(
-                  width: 320.w,
-                  child: _buildDateTimeField(AppStrings.regOpensAt, _registrationOpensAt, (d) => setState(() => _registrationOpensAt = d)),
-                ),
-                SizedBox(width: 320.w, child: _buildDateTimeField(AppStrings.regClosesAt, _registrationClosesAt, (d) => setState(() => _registrationClosesAt = d))),
-                SizedBox(width: 320.w, child: _buildDateTimeField(AppStrings.checkInOpensAt, _checkInOpensAt, (d) => setState(() => _checkInOpensAt = d))),
-                SizedBox(width: 320.w, child: _buildDateTimeField(AppStrings.startDate, _startDate, (d) => setState(() => _startDate = d))),
-                SizedBox(width: 320.w, child: _buildDateTimeField(AppStrings.endDate, _endDate, (d) => setState(() => _endDate = d))),
-              ],
+            TournamentScheduleSection(
+              registrationOpensAt: _registrationOpensAt,
+              registrationClosesAt: _registrationClosesAt,
+              checkInOpensAt: _checkInOpensAt,
+              startDate: _startDate,
+              endDate: _endDate,
+              onRegistrationOpensChanged: (d) => setState(() => _registrationOpensAt = d),
+              onRegistrationClosesChanged: (d) => setState(() => _registrationClosesAt = d),
+              onCheckInOpensChanged: (d) => setState(() => _checkInOpensAt = d),
+              onStartDateChanged: (d) => setState(() => _startDate = d),
+              onEndDateChanged: (d) => setState(() => _endDate = d),
             ),
             SizedBox(height: 20.h),
             AppTextField(

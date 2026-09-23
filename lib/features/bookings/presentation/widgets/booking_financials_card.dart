@@ -1,14 +1,14 @@
 import 'dart:convert';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
-import '../../domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_financials_canteen_orders.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_financials_discount_input.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_financials_extras_list.dart';
 
 /// Reusable UI Card displaying Financials, Extra items/canteen orders, and Payment status.
 class BookingFinancialsCard extends StatefulWidget {
@@ -63,15 +63,15 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
         }
       }
     }
-    if (total == 0.0 && widget.booking.addonsPrice != null && widget.booking.addonsPrice! > 0) {
-      return widget.booking.addonsPrice!;
+    if (total == 0.0 && widget.booking.addonsPrice != null && (widget.booking.addonsPrice ?? 0) > 0) {
+      return widget.booking.addonsPrice ?? 0.0;
     }
     return total;
   }
 
   double get _discountValue {
     if (widget.discountController == null) return 0.0;
-    return double.tryParse(widget.discountController!.text) ?? 0.0;
+    return double.tryParse(widget.discountController?.text ?? '') ?? 0.0;
   }
 
   @override
@@ -135,7 +135,7 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
                 if (voucherDiscount > 0) ...[
                   SizedBox(height: 8.h),
                   _buildPriceRow(
-                    widget.booking.voucherCode != null && widget.booking.voucherCode!.isNotEmpty
+                    (widget.booking.voucherCode != null && widget.booking.voucherCode!.isNotEmpty)
                         ? '${AppStrings.voucherDiscount} (${widget.booking.voucherCode})'
                         : AppStrings.voucherDiscount,
                     '-${voucherDiscount.toStringAsFixed(2)} ${AppStrings.egp}',
@@ -145,7 +145,7 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
                 if (manualDiscount > 0) ...[
                   SizedBox(height: 8.h),
                   _buildPriceRow(
-                    widget.booking.discountReason != null && widget.booking.discountReason!.isNotEmpty
+                    (widget.booking.discountReason != null && widget.booking.discountReason!.isNotEmpty)
                         ? '${AppStrings.discount} (${widget.booking.discountReason})'
                         : AppStrings.discount,
                     '-${manualDiscount.toStringAsFixed(2)} ${AppStrings.egp}',
@@ -168,266 +168,23 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
           ),
 
           // Detailed Extras Section
-          if (widget.booking.extras.isNotEmpty) ...[
-            SizedBox(height: 16.h),
-            AppText.subHeading(AppStrings.extras, fontSize: 14.sp),
-            SizedBox(height: 8.h),
-            Container(
-              padding: EdgeInsets.all(12.r),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: AppColors.borderDefault),
-              ),
-              child: Column(
-                children: widget.booking.extras.map((item) {
-                  final qty = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
-                  final rawName = item['name_ar'] ?? item['name_en'] ?? item['name'] ?? item['title'] ?? item['item_name'];
-                  final name = (rawName != null && rawName.toString().trim().isNotEmpty && rawName.toString().trim() != 'null') ? rawName.toString().trim() : 'صنف';
-                  final unitPrice = (item['unit_price'] ?? item['price'] as num?)?.toDouble() ?? 0.0;
-                  final itemTotal = (item['total_price'] as num?)?.toDouble() ?? (unitPrice * qty);
-
-                  return Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4.h),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.local_cafe_outlined, size: 14.r, color: AppColors.neonBlue),
-                            SizedBox(width: 6.w),
-                            AppText.body('${qty}x $name', fontSize: 12.sp, color: AppColors.textPrimary),
-                          ],
-                        ),
-                        AppText.body(
-                          '${itemTotal.toStringAsFixed(2)} ${AppStrings.egp}',
-                          fontSize: 12.sp,
-                          color: AppColors.neonGreen,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
+          BookingFinancialsExtrasList(extras: widget.booking.extras),
 
           // Detailed Canteen Orders Section
-          if (widget.booking.canteenOrders.isNotEmpty) ...[
-            SizedBox(height: 16.h),
-            AppText.subHeading('طلبات الكافيتريا - Canteen Orders', fontSize: 14.sp),
-            SizedBox(height: 8.h),
-            ...widget.booking.canteenOrders.map((order) {
-              final orderId = order['id']?.toString() ?? '';
-              final note = order['note']?.toString();
-              final orderTotal = (order['total_price'] as num?)?.toDouble() ?? 0.0;
-              final createdAtRaw = order['created_at']?.toString();
-              String timeFormatted = '';
-              if (createdAtRaw != null) {
-                final dt = DateTime.tryParse(createdAtRaw);
-                if (dt != null) timeFormatted = DateFormat('hh:mm a').format(dt);
-              }
-
-              List<Map<String, dynamic>> orderItems = [];
-              dynamic rawItems = order['items'];
-              if (rawItems is String && rawItems.trim().isNotEmpty) {
-                try {
-                  rawItems = jsonDecode(rawItems);
-                } catch (_) {}
-              }
-              if (rawItems is List) {
-                orderItems = rawItems
-                    .whereType<Map>()
-                    .map((e) => Map<String, dynamic>.from(e))
-                    .toList();
-              }
-
-              return Container(
-                margin: EdgeInsets.only(bottom: 8.h),
-                padding: EdgeInsets.all(12.r),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: AppColors.borderDefault),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (timeFormatted.isNotEmpty || orderId.isNotEmpty) ...[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          AppText.body(
-                            'طلب #${orderId.length > 6 ? orderId.substring(0, 6) : orderId}',
-                            fontSize: 11.sp,
-                            color: AppColors.neonBlue,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          if (timeFormatted.isNotEmpty)
-                            AppText.body(timeFormatted, fontSize: 11.sp, color: AppColors.textMuted),
-                        ],
-                      ),
-                      SizedBox(height: 6.h),
-                    ],
-                    ...orderItems.map((item) {
-                      final quantity = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
-                      final rawName = item['name_ar'] ?? item['name_en'] ?? item['name'] ?? item['title'] ?? item['item_name'];
-                      final name = (rawName != null && rawName.toString().trim().isNotEmpty && rawName.toString().trim() != 'null') ? rawName.toString().trim() : 'صنف';
-                      final unitPrice = (item['unit_price'] ?? item['price'] as num?)?.toDouble() ?? 0.0;
-                      final itemTotal = (item['total_price'] as num?)?.toDouble() ?? (unitPrice * quantity);
-
-                      return Padding(
-                        padding: EdgeInsets.symmetric(vertical: 2.h),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            AppText.body(
-                              '${quantity}x $name',
-                              fontSize: 12.sp,
-                              color: AppColors.textPrimary,
-                            ),
-                            if (itemTotal > 0)
-                              AppText.body(
-                                '${itemTotal.toStringAsFixed(2)} ${AppStrings.egp}',
-                                fontSize: 12.sp,
-                                color: AppColors.textSecondary,
-                              ),
-                          ],
-                        ),
-                      );
-                    }),
-                    if (note != null && note.trim().isNotEmpty) ...[
-                      SizedBox(height: 4.h),
-                      AppText.body(
-                        'ملاحظة: $note',
-                        fontSize: 11.sp,
-                        color: AppColors.warning,
-                      ),
-                    ],
-                    if (orderTotal > 0) ...[
-                      SizedBox(height: 4.h),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: AppText.body(
-                          'الإجمالي: ${orderTotal.toStringAsFixed(2)} ${AppStrings.egp}',
-                          fontSize: 11.sp,
-                          color: AppColors.success,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              );
-            }),
-          ] else if (widget.booking.extras.isNotEmpty) ...[
-            SizedBox(height: 16.h),
-            AppText.subHeading(AppStrings.additionalItems, fontSize: 14.sp),
-            SizedBox(height: 8.h),
-            Container(
-              padding: EdgeInsets.all(12.r),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: AppColors.borderDefault),
-              ),
-              child: Column(
-                children: widget.booking.extras.map((item) {
-                  final quantity = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
-                  final rawName = item['name_ar'] ?? item['name_en'] ?? item['name'] ?? item['title'] ?? item['item_name'];
-                  final name = (rawName != null && rawName.toString().trim().isNotEmpty && rawName.toString().trim() != 'null') ? rawName.toString().trim() : 'صنف';
-                  final unitPrice = (item['price'] ?? item['unit_price'] as num?)?.toDouble() ?? 0.0;
-                  final totalItemPrice = quantity * unitPrice;
-
-                  return Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4.h),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: AppText.body(
-                            '${quantity}x $name',
-                            fontSize: 13.sp,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        AppText.body(
-                          '${totalItemPrice.toStringAsFixed(2)} ${AppStrings.egp}',
-                          fontSize: 13.sp,
-                          color: AppColors.textSecondary,
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
+          BookingFinancialsCanteenOrders(canteenOrders: widget.booking.canteenOrders),
 
           // Discount Input Section (if unpaid and controllers provided)
-          if (!isPaid && widget.discountController != null && widget.reasonController != null) ...[
-            SizedBox(height: 16.h),
-            AppText.subHeading(AppStrings.discount, fontSize: 14.sp),
-            SizedBox(height: 8.h),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: AppTextField(
-                    label: AppStrings.discount,
-                    controller: widget.discountController!,
-                    keyboardType: TextInputType.number,
-                    suffix: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        InkWell(
-                          onTap: () => widget.onTogglePercentage?.call(false),
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                            child: Text(
-                              'EGP',
-                              style: TextStyle(
-                                color: !widget.isPercentage ? AppColors.neonBlue : Colors.white70,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () => widget.onTogglePercentage?.call(true),
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                            child: Text(
-                              '%',
-                              style: TextStyle(
-                                color: widget.isPercentage ? AppColors.neonBlue : Colors.white70,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    onChanged: (val) {
-                      setState(() {});
-                      widget.onChanged?.call(val);
-                    },
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  flex: 3,
-                  child: AppTextField(
-                    label: AppStrings.discountReason,
-                    controller: widget.reasonController!,
-                    hintText: 'Reason for audit...',
-                  ),
-                ),
-              ],
+          if (!isPaid && widget.discountController != null && widget.reasonController != null)
+            BookingFinancialsDiscountInput(
+              discountController: widget.discountController!,
+              reasonController: widget.reasonController!,
+              isPercentage: widget.isPercentage,
+              onTogglePercentage: widget.onTogglePercentage,
+              onChanged: (val) {
+                setState(() {});
+                widget.onChanged?.call(val);
+              },
             ),
-          ],
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../art_core/app_strings.dart';
 import '../../../art_core/theme/app_colors.dart';
 import '../../../art_core/widgets/app_adaptive_page_header.dart';
 import '../../../art_core/widgets/app_button.dart';
@@ -61,26 +62,26 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
   String _getDefaultTitleAr(String type) {
     switch (type) {
       case 'terms_of_service':
-        return 'شروط الاستخدام';
+        return AppStrings.termsOfService;
       case 'privacy_policy':
-        return 'سياسة الخصوصية';
+        return AppStrings.privacyPolicy;
       case 'refund_policy':
-        return 'سياسة الإلغاء والاسترجاع';
+        return AppStrings.refundPolicy;
       default:
-        return 'السياسة';
+        return AppStrings.policy;
     }
   }
 
   String _getDefaultTitleEn(String type) {
     switch (type) {
       case 'terms_of_service':
-        return 'Terms of Service';
+        return AppStrings.termsOfService;
       case 'privacy_policy':
-        return 'Privacy Policy';
+        return AppStrings.privacyPolicy;
       case 'refund_policy':
-        return 'Cancellation & Refund Policy';
+        return AppStrings.refundPolicy;
       default:
-        return 'Policy';
+        return AppStrings.policy;
     }
   }
 
@@ -133,10 +134,10 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppAdaptivePageHeader(
-                  title: 'إدارة الشروط والسياسات',
-                  subtitle: 'كتابة وتحديث سياسات الخصوصية، شروط الاستخدام، وسياسات الإلغاء باللغتين العربية والإنجليزية',
+                  title: AppStrings.policiesManagement,
+                  subtitle: AppStrings.policiesManagementSubtitle,
                   primaryAction: AppButton(
-                    text: 'حفظ ونشر السياسة',
+                    text: AppStrings.savePolicy,
                     icon: Icons.save_outlined,
                     isLoading: state.actionStatus == SupportStatus.loading,
                     onPressed: () {
@@ -157,11 +158,11 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildTabButton('terms_of_service', 'شروط الاستخدام', Icons.assignment_outlined),
+                      _buildTabButton('terms_of_service', AppStrings.termsOfService, Icons.assignment_outlined),
                       SizedBox(width: 12.w),
-                      _buildTabButton('privacy_policy', 'سياسة الخصوصية', Icons.privacy_tip_outlined),
+                      _buildTabButton('privacy_policy', AppStrings.privacyPolicy, Icons.privacy_tip_outlined),
                       SizedBox(width: 12.w),
-                      _buildTabButton('refund_policy', 'سياسة الإلغاء والاسترجاع', Icons.event_busy_outlined),
+                      _buildTabButton('refund_policy', AppStrings.refundPolicy, Icons.event_busy_outlined),
                     ],
                   ),
                 ),
@@ -196,7 +197,7 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
                       Align(
                         alignment: AlignmentDirectional.centerEnd,
                         child: AppButton(
-                          text: 'حفظ ونشر السياسة',
+                          text: AppStrings.savePolicy,
                           variant: AppButtonVariant.gradient,
                           icon: Icons.publish_outlined,
                           isLoading: state.actionStatus == SupportStatus.loading,
@@ -282,7 +283,7 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
             ),
             SizedBox(width: 8.w),
             Text(
-              isArabic ? 'النسخة العربية' : 'English Version',
+              isArabic ? AppStrings.arabicLanguage : AppStrings.englishLanguage,
               style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 16.sp,
@@ -293,7 +294,7 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
         ),
         SizedBox(height: 16.h),
         Text(
-          isArabic ? 'عنوان السياسة' : 'Policy Title',
+          isArabic ? AppStrings.policyTitleAr : AppStrings.policyTitleEn,
           style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
         ),
         SizedBox(height: 6.h),
@@ -308,7 +309,7 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
         ),
         SizedBox(height: 16.h),
         Text(
-          isArabic ? 'محتوى السياسة الكامل' : 'Policy Full Content',
+          isArabic ? AppStrings.policyContentAr : AppStrings.policyContentEn,
           style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
         ),
         SizedBox(height: 6.h),
@@ -317,7 +318,7 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
           maxLines: 12,
           style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
           decoration: InputDecoration(
-            hintText: isArabic ? 'أدخل تفاصيل ومواد السياسة بالكامل هنا...' : 'Enter full policy text here...',
+            hintText: isArabic ? AppStrings.policyContentArHint : AppStrings.policyContentEnHint,
             hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 13.sp),
             filled: true,
             fillColor: AppColors.scaffoldBackground,

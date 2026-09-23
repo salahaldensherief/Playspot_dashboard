@@ -1,9 +1,6 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
@@ -11,11 +8,15 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
-import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_booking_customer_fields.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_booking_extras_section.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_booking_schedule_picker.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_booking_summary_card.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_booking_voucher_section.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
-import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_extras_dialog.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 
 class AddBookingDialog extends StatefulWidget {
   final String loungeId;
@@ -35,13 +36,10 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _voucherCodeController = TextEditingController();
 
-  bool _isValidatingVoucher = false;
   String? _appliedVoucherCode;
   double _voucherDiscount = 0.0;
-  String? _voucherError;
-  
+
   RoomEntity? _selectedRoom;
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _startTime = TimeOfDay.now();
@@ -53,7 +51,6 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
   void initState() {
     super.initState();
     _selectedRoom = widget.initialRoom;
-    // Default duration is 60 mins
     context.read<BookingCubit>().updateSelectedDuration(60);
   }
 
@@ -61,8 +58,27 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
-    _voucherCodeController.dispose();
     super.dispose();
+  }
+
+  void _onExtrasChanged(List<Map<String, dynamic>> extras) {
+    double total = 0.0;
+    for (final item in extras) {
+      final qty = item['quantity'] ?? item['qty'] ?? 1;
+      final price = (item['price'] ?? item['unit_price'] ?? 0.0) as num;
+      total += price.toDouble() * (qty as num).toDouble();
+    }
+    setState(() {
+      _selectedExtras = extras;
+      _extrasTotal = total;
+    });
+  }
+
+  void _onVoucherChanged(({String? code, double discount}) voucher) {
+    setState(() {
+      _appliedVoucherCode = voucher.code;
+      _voucherDiscount = voucher.discount;
+    });
   }
 
   @override
@@ -94,27 +110,11 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                   ],
                 ),
                 Divider(height: 32.h, color: AppColors.borderDefault),
-                
+
                 // Customer Info
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        controller: _nameController,
-                        label: AppStrings.customerName,
-                        hint: AppStrings.fullName,
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      child: _buildTextField(
-                        controller: _phoneController,
-                        label: AppStrings.phoneNumber,
-                        hint: "01xxxxxxxxx",
-                        keyboardType: TextInputType.phone,
-                      ),
-                    ),
-                  ],
+                AddBookingCustomerFields(
+                  nameController: _nameController,
+                  phoneController: _phoneController,
                 ),
                 SizedBox(height: 16.h),
 
@@ -137,10 +137,12 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                           hint: AppText.body(AppStrings.roomLabel, color: AppColors.textSecondary),
                           isExpanded: true,
                           dropdownColor: AppColors.cardBackground,
-                          items: rooms.map((room) => DropdownMenuItem(
-                            value: room,
-                            child: AppText.body(room.nameEn),
-                          )).toList(),
+                          items: rooms
+                              .map((room) => DropdownMenuItem(
+                                    value: room,
+                                    child: AppText.body(room.nameEn),
+                                  ))
+                              .toList(),
                           onChanged: (val) => setState(() => _selectedRoom = val),
                         ),
                       ),
@@ -149,163 +151,44 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                 ),
                 SizedBox(height: 24.h),
 
-                // Date & Time Selection
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: _buildPickerField(
-                        label: AppStrings.date,
-                        value: DateFormat('yyyy-MM-dd').format(_selectedDate),
-                        icon: Icons.calendar_today,
-                        onTap: _pickDate,
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      flex: 2,
-                      child: _buildPickerField(
-                        label: AppStrings.opensAt,
-                        value: _startTime.format(context),
-                        icon: Icons.access_time,
-                        onTap: _pickStartTime,
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      flex: 3,
-                      child: BlocBuilder<BookingCubit, BookingState>(
-                        buildWhen: (p, c) => p.selectedDurationMinutes != c.selectedDurationMinutes,
-                        builder: (context, state) {
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              AppText.body("Duration", fontWeight: FontWeight.bold),
-                              SizedBox(height: 8.h),
-                              Container(
-                                padding: EdgeInsets.symmetric(horizontal: 8.w),
-                                decoration: BoxDecoration(
-                                  color: AppColors.cardBackground,
-                                  borderRadius: BorderRadius.circular(8.r),
-                                  border: Border.all(color: AppColors.borderDefault),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.remove, color: AppColors.neonBlue, size: 20),
-                                      onPressed: state.selectedDurationMinutes > 30 
-                                        ? () => context.read<BookingCubit>().updateSelectedDuration(state.selectedDurationMinutes - 30)
-                                        : null,
-                                    ),
-                                    AppText.body("${state.selectedDurationMinutes / 60.0} hrs"),
-                                    IconButton(
-                                      icon: const Icon(Icons.add, color: AppColors.neonBlue, size: 20),
-                                      onPressed: () => context.read<BookingCubit>().updateSelectedDuration(state.selectedDurationMinutes + 30),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                // Date, Time & Duration Picker
+                AddBookingSchedulePicker(
+                  selectedDate: _selectedDate,
+                  startTime: _startTime,
+                  onDateChanged: (date) => setState(() => _selectedDate = date),
+                  onStartTimeChanged: (time) => setState(() => _startTime = time),
                 ),
-                SizedBox(height: 12.h),
-                
-                // End Time Display
-                BlocBuilder<BookingCubit, BookingState>(
-                  buildWhen: (p, c) => p.selectedDurationMinutes != c.selectedDurationMinutes,
-                  builder: (context, state) {
-                    final endTime = _calculateEndTime(_startTime, state.selectedDurationMinutes);
-                    return AppText.body(
-                      "Ends at: ${endTime.format(context)} (${state.selectedDurationMinutes / 60.0} hrs total)",
-                      color: AppColors.textSecondary,
-                      fontSize: 12.sp,
-                    );
-                  },
-                ),
-
                 SizedBox(height: 20.h),
 
                 // Extras Section
-                _buildExtrasSection(),
-
+                AddBookingExtrasSection(
+                  loungeId: widget.loungeId,
+                  selectedExtras: _selectedExtras,
+                  onExtrasChanged: _onExtrasChanged,
+                ),
                 SizedBox(height: 20.h),
 
                 // Start Session Immediately Switch
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                  decoration: BoxDecoration(
-                    color: AppColors.cardBackground,
-                    borderRadius: BorderRadius.circular(10.r),
-                    border: Border.all(
-                      color: _startSessionImmediately 
-                          ? AppColors.neonBlue.withValues(alpha: 0.5) 
-                          : AppColors.borderDefault,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.play_circle_fill_rounded,
-                              color: _startSessionImmediately ? AppColors.neonBlue : AppColors.textMuted,
-                              size: 22.r,
-                            ),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  AppText.body(
-                                    'بدء الجلسة وعّد الوقت فوراً عند الحفظ',
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13.sp,
-                                  ),
-                                  AppText.body(
-                                    'سيتم تحويل الغرفة لمشغولة وتشغيل حاسبة وقت اللعب والإضافات فوراً',
-                                    fontSize: 11.sp,
-                                    color: AppColors.textMuted,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Switch(
-                        value: _startSessionImmediately,
-                        activeTrackColor: AppColors.neonBlue.withValues(alpha: 0.4),
-                        activeThumbColor: AppColors.neonBlue,
-                        onChanged: (val) => setState(() => _startSessionImmediately = val),
-                      ),
-                    ],
-                  ),
-                ),
-
+                _buildImmediateSwitch(),
                 SizedBox(height: 20.h),
 
                 // Voucher Section
-                _buildVoucherSection(),
-
+                AddBookingVoucherSection(onVoucherChanged: _onVoucherChanged),
                 SizedBox(height: 20.h),
 
                 // Price Calculation Summary
-                if (_selectedRoom != null) 
+                if (_selectedRoom != null)
                   BlocBuilder<BookingCubit, BookingState>(
                     buildWhen: (p, c) => p.selectedDurationMinutes != c.selectedDurationMinutes,
                     builder: (context, state) {
-                      return _buildSummaryCard(state.selectedDurationMinutes);
+                      return AddBookingSummaryCard(
+                        room: _selectedRoom,
+                        durationMinutes: state.selectedDurationMinutes,
+                        extrasTotal: _extrasTotal,
+                        voucherDiscount: _voucherDiscount,
+                      );
                     },
                   ),
-
                 SizedBox(height: 24.h),
 
                 // Action Buttons
@@ -333,352 +216,60 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    TextInputType? keyboardType,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppText.body(label, fontWeight: FontWeight.bold),
-        SizedBox(height: 8.h),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(color: AppColors.textSecondary),
-            filled: true,
-            fillColor: AppColors.cardBackground,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: BorderSide(color: AppColors.borderDefault)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: BorderSide(color: AppColors.borderDefault)),
-          ),
-          validator: (val) => val == null || val.isEmpty ? AppStrings.fieldRequired : null,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPickerField({
-    required String label,
-    required String value,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppText.body(label, fontWeight: FontWeight.bold),
-        SizedBox(height: 8.h),
-        InkWell(
-          onTap: onTap,
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: AppColors.borderDefault),
-            ),
-            child: Row(
-              children: [
-                Icon(icon, size: 18, color: AppColors.neonBlue),
-                SizedBox(width: 8.w),
-                Expanded(
-                  child: AppText.body(
-                    value, 
-                    fontSize: 13.sp,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildExtrasSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.restaurant_menu_rounded, size: 18.r, color: AppColors.neonBlue),
-                SizedBox(width: 6.w),
-                AppText.body(AppStrings.extras, fontWeight: FontWeight.bold),
-              ],
-            ),
-            InkWell(
-              onTap: _openAddExtrasModal,
-              borderRadius: BorderRadius.circular(6.r),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                child: Row(
-                  children: [
-                    Icon(Icons.add_circle_outline, size: 16.r, color: AppColors.neonBlue),
-                    SizedBox(width: 4.w),
-                    AppText.body(
-                      AppStrings.addExtrasToSession,
-                      fontSize: 12.sp,
-                      color: AppColors.neonBlue,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 8.h),
-        if (_selectedExtras.isEmpty)
-          Container(
-            padding: EdgeInsets.all(12.r),
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: AppColors.borderDefault),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline, size: 16.r, color: AppColors.textMuted),
-                SizedBox(width: 8.w),
-                Expanded(
-                  child: AppText.body(
-                    'لم يتم إضافة مشروبات أو مأكولات مع الحجز حتى الآن',
-                    fontSize: 12.sp,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          )
-        else
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: _selectedExtras.map((item) {
-              final name = item['name_ar'] ?? item['name'] ?? '';
-              final qty = item['quantity'] ?? item['qty'] ?? 1;
-              final price = (item['price'] ?? item['unit_price'] ?? 0.0) * qty;
-
-              return Chip(
-                backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
-                side: const BorderSide(color: AppColors.neonBlue),
-                avatar: CircleAvatar(
-                  backgroundColor: AppColors.neonBlue,
-                  child: Text('$qty', style: TextStyle(color: Colors.black, fontSize: 10.sp, fontWeight: FontWeight.bold)),
-                ),
-                label: Text(
-                  '$name (${price.toStringAsFixed(0)} ${AppStrings.egp})',
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 11.sp),
-                ),
-                deleteIcon: const Icon(Icons.close, size: 14),
-                deleteIconColor: AppColors.danger,
-                onDeleted: () {
-                  setState(() {
-                    _selectedExtras.remove(item);
-                    _extrasTotal -= price;
-                    if (_extrasTotal < 0) _extrasTotal = 0;
-                  });
-                },
-              );
-            }).toList(),
-          ),
-      ],
-    );
-  }
-
-  void _openAddExtrasModal() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AddExtrasDialog(
-        bookingId: '',
-        loungeId: widget.loungeId,
-        onConfirm: (extras, totalCost) {
-          setState(() {
-            _selectedExtras = extras;
-            _extrasTotal = totalCost;
-          });
-        },
-      ),
-    );
-  }
-
-  Widget _buildVoucherSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppText.body('كود القسيمة / Voucher Code', fontWeight: FontWeight.bold),
-        SizedBox(height: 8.h),
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _voucherCodeController,
-                textCapitalization: TextCapitalization.characters,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'أدخل الكود (مثال: 9326D324)',
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
-                  filled: true,
-                  fillColor: AppColors.cardBackground,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                    borderSide: const BorderSide(color: AppColors.borderDefault),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                    borderSide: const BorderSide(color: AppColors.borderDefault),
-                  ),
-                ),
-                onChanged: (_) {
-                  if (_voucherError != null || _appliedVoucherCode != null) {
-                    setState(() {
-                      _voucherError = null;
-                      _appliedVoucherCode = null;
-                      _voucherDiscount = 0.0;
-                    });
-                  }
-                },
-              ),
-            ),
-            SizedBox(width: 8.w),
-            AppButton(
-              text: _isValidatingVoucher ? 'جاري التحقق...' : 'تطبيق',
-              variant: AppButtonVariant.primary,
-              isLoading: _isValidatingVoucher,
-              onPressed: _isValidatingVoucher ? null : _validateVoucher,
-            ),
-          ],
-        ),
-        if (_voucherError != null) ...[
-          SizedBox(height: 6.h),
-          Text(
-            _voucherError!,
-            style: TextStyle(color: AppColors.danger, fontSize: 12.sp),
-          ),
-        ],
-        if (_appliedVoucherCode != null) ...[
-          SizedBox(height: 6.h),
-          Row(
-            children: [
-              const Icon(Icons.check_circle, color: AppColors.success, size: 16),
-              SizedBox(width: 4.w),
-              Text(
-                'تم تطبيق الخصم بنجاح لكود $_appliedVoucherCode (${_voucherDiscount.toStringAsFixed(2)} ${AppStrings.egp})',
-                style: TextStyle(color: AppColors.success, fontSize: 12.sp, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
-
-  Future<void> _validateVoucher() async {
-    final code = _voucherCodeController.text.trim().toUpperCase();
-    if (code.isEmpty) return;
-
-    setState(() {
-      _isValidatingVoucher = true;
-      _voucherError = null;
-    });
-
-    try {
-      final validation = await Supabase.instance.client.rpc(
-        'validate_voucher_by_code',
-        params: {
-          'p_code': code,
-        },
-      );
-
-      if (validation is Map) {
-        final map = Map<String, dynamic>.from(validation);
-        final isValid = map['is_valid'] ?? map['valid'] ?? map['success'] ?? true;
-        if (isValid == false) {
-          final err = map['error'] ?? map['message'] ?? 'كود القسيمة غير صالح أو منتهي الصلاحية';
-          setState(() {
-            _voucherError = err.toString();
-            _appliedVoucherCode = null;
-            _voucherDiscount = 0.0;
-          });
-          return;
-        }
-
-        final discount = (map['discount_amount'] ?? map['discount_value'] ?? map['amount'] as num?)?.toDouble() ?? 0.0;
-        setState(() {
-          _appliedVoucherCode = code;
-          _voucherDiscount = discount;
-          _voucherError = null;
-        });
-      } else {
-        setState(() {
-          _appliedVoucherCode = code;
-          _voucherDiscount = 0.0;
-          _voucherError = null;
-        });
-      }
-    } catch (e) {
-      final cleanMsg = e.toString().replaceFirst('Exception: ', '');
-      setState(() {
-        _voucherError = cleanMsg;
-        _appliedVoucherCode = null;
-        _voucherDiscount = 0.0;
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isValidatingVoucher = false;
-        });
-      }
-    }
-  }
-
-  Widget _buildSummaryCard(int durationMinutes) {
-    final double durationHours = durationMinutes / 60.0;
-    final double roomTotal = durationHours * (_selectedRoom?.pricePerHour ?? 0);
-    final double grandTotal = (roomTotal + _extrasTotal - _voucherDiscount).clamp(0.0, double.infinity);
-
+  Widget _buildImmediateSwitch() {
     return Container(
-      padding: EdgeInsets.all(16.r),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: AppColors.neonBlue.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.2)),
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(
+          color: _startSessionImmediately ? AppColors.neonBlue.withValues(alpha: 0.5) : AppColors.borderDefault,
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppText.body("${AppStrings.schedule}: $durationHours ${AppStrings.gaming}", color: AppColors.textSecondary),
-              AppText.body("${AppStrings.pricePerHour}: ${_selectedRoom?.pricePerHour} ${AppStrings.egp}", color: AppColors.textSecondary),
-              if (_extrasTotal > 0)
-                AppText.body("مجموع الإضافات: ${_extrasTotal.toStringAsFixed(0)} ${AppStrings.egp}", color: AppColors.neonPurple),
-              if (_voucherDiscount > 0)
-                AppText.body("خصم القسيمة: -${_voucherDiscount.toStringAsFixed(2)} ${AppStrings.egp}", color: AppColors.success),
-            ],
+          Expanded(
+            child: Row(
+              children: [
+                Icon(
+                  Icons.play_circle_fill_rounded,
+                  color: _startSessionImmediately ? AppColors.neonBlue : AppColors.textMuted,
+                  size: 22.r,
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppText.body(
+                        'بدء الجلسة وعّد الوقت فوراً عند الحفظ',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13.sp,
+                      ),
+                      AppText.body(
+                        'سيتم تحويل الغرفة لمشغولة وتشغيل حاسبة وقت اللعب والإضافات فوراً',
+                        fontSize: 11.sp,
+                        color: AppColors.textMuted,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              AppText.body(AppStrings.totalPrice, fontWeight: FontWeight.bold),
-              AppText.subHeading("${grandTotal.toStringAsFixed(2)} ${AppStrings.egp}", color: AppColors.neonBlue),
-            ],
+          Switch(
+            value: _startSessionImmediately,
+            activeTrackColor: AppColors.neonBlue.withValues(alpha: 0.4),
+            activeThumbColor: AppColors.neonBlue,
+            onChanged: (val) => setState(() => _startSessionImmediately = val),
           ),
         ],
       ),
     );
   }
+
+
 
   TimeOfDay _calculateEndTime(TimeOfDay start, int durationMinutes) {
     int totalMinutes = start.hour * 60 + start.minute + durationMinutes;
@@ -687,22 +278,8 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     return TimeOfDay(hour: hour, minute: minute);
   }
 
-  Future<void> _pickDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 30)),
-    );
-    if (date != null) setState(() => _selectedDate = date);
-  }
-
-  Future<void> _pickStartTime() async {
-    final time = await showTimePicker(
-      context: context,
-      initialTime: _startTime,
-    );
-    if (time != null) setState(() => _startTime = time);
+  bool _checkTimeOverlap(String s1, String e1, String s2, String e2) {
+    return s1.compareTo(e2) < 0 && e1.compareTo(s2) > 0;
   }
 
   void _submit() {
@@ -711,21 +288,22 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     final durationMinutes = context.read<BookingCubit>().state.selectedDurationMinutes;
     final endTime = _calculateEndTime(_startTime, durationMinutes);
 
-    final startTimeStr = "${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}:00";
-    final endTimeStr = "${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00";
+    final startTimeStr =
+        "${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}:00";
+    final endTimeStr =
+        "${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00";
 
-    // UI-level overlap check
     final bookingCubit = context.read<BookingCubit>();
     final selectedRoom = _selectedRoom;
     if (selectedRoom == null) return;
 
     final isOverlapping = bookingCubit.state.bookings.any((b) {
       if (b.roomId != selectedRoom.id || b.status == BookingStatus.cancelled) return false;
-      
-      return b.date.year == _selectedDate.year && 
-             b.date.month == _selectedDate.month && 
-             b.date.day == _selectedDate.day &&
-             _checkTimeOverlap(b.startTime, b.endTime, startTimeStr, endTimeStr);
+
+      return b.date.year == _selectedDate.year &&
+          b.date.month == _selectedDate.month &&
+          b.date.day == _selectedDate.day &&
+          _checkTimeOverlap(b.startTime, b.endTime, startTimeStr, endTimeStr);
     });
 
     if (isOverlapping) {
@@ -740,8 +318,8 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     final double grandTotal = (roomTotal + _extrasTotal - _voucherDiscount).clamp(0.0, double.infinity);
 
     final booking = Booking(
-      id: '', 
-      userId: '', 
+      id: '',
+      userId: '',
       userName: _nameController.text,
       userPhone: _phoneController.text,
       loungeId: widget.loungeId,
@@ -763,9 +341,5 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
 
     context.read<BookingCubit>().createManualBooking(booking);
     Navigator.pop(context);
-  }
-
-  bool _checkTimeOverlap(String s1, String e1, String s2, String e2) {
-    return s1.compareTo(e2) < 0 && e1.compareTo(s2) > 0;
   }
 }

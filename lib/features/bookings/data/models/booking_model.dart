@@ -1,5 +1,5 @@
-import 'dart:convert';
 import '../../domain/entities/booking.dart';
+import 'booking_json_parser.dart';
 
 class BookingModel extends Booking {
   const BookingModel({
@@ -46,18 +46,6 @@ class BookingModel extends Booking {
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
-    double parseDouble(dynamic value) {
-      if (value == null) return 0.0;
-      if (value is num) return value.toDouble();
-      return double.tryParse(value.toString()) ?? 0.0;
-    }
-
-    int parseInt(dynamic value, int defaultValue) {
-      if (value == null) return defaultValue;
-      if (value is num) return value.toInt();
-      return int.tryParse(value.toString()) ?? defaultValue;
-    }
-
     final profileData = json['profiles'] as Map<String, dynamic>?;
     final roomData = json['rooms'] as Map<String, dynamic>?;
     final loungeData = json['lounges'] as Map<String, dynamic>?;
@@ -107,7 +95,7 @@ class BookingModel extends Booking {
         ? rawEmail
         : null;
 
-    String statusStr = (
+    final String statusStr = (
       json['out_booking_status'] ?? 
       json['status'] ?? 
       json['booking_status'] ?? 
@@ -116,7 +104,7 @@ class BookingModel extends Booking {
 
     BookingStatus status = BookingStatusX.fromString(statusStr);
 
-    String paymentStatusStr = (
+    final String paymentStatusStr = (
       json['out_payment_status'] ?? 
       json['payment_status'] ?? 
       'unpaid'
@@ -143,111 +131,14 @@ class BookingModel extends Booking {
     }
 
     final double? addonsPrice = json['addons_price'] != null
-        ? parseDouble(json['addons_price'])
-        : (json['out_addons_price'] != null ? parseDouble(json['out_addons_price']) : null);
+        ? BookingJsonParser.parseDouble(json['addons_price'])
+        : (json['out_addons_price'] != null ? BookingJsonParser.parseDouble(json['out_addons_price']) : null);
 
-    final List<Map<String, dynamic>> parsedCanteenOrders = () {
-      dynamic rawOrders = json['canteen_orders'] ?? json['out_canteen_orders'];
-      if (rawOrders is String && rawOrders.trim().isNotEmpty) {
-        try {
-          rawOrders = jsonDecode(rawOrders);
-        } catch (_) {}
-      }
-      if (rawOrders is List) {
-        return rawOrders
-            .whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      }
-      if (rawOrders is Map) {
-        return [Map<String, dynamic>.from(rawOrders)];
-      }
-      return <Map<String, dynamic>>[];
-    }();
+    final List<Map<String, dynamic>> parsedCanteenOrders =
+        BookingJsonParser.parseCanteenOrders(json['canteen_orders'] ?? json['out_canteen_orders']);
 
-    final List<Map<String, dynamic>> parsedExtras = () {
-      List<Map<String, dynamic>> itemsList = [];
-
-      void addNormalizedItem(Map map) {
-        final String? nameAr = map['name_ar']?.toString().trim();
-        final String? nameEn = map['name_en']?.toString().trim();
-        final String? nameDefault = map['name']?.toString().trim();
-        final String? rawTitle = (map['title'] ?? map['item_name'] ?? map['extra_name'] ?? map['product_name'])?.toString().trim();
-
-        final resolvedName = (nameAr != null && nameAr.isNotEmpty && nameAr != 'null')
-            ? nameAr
-            : ((nameEn != null && nameEn.isNotEmpty && nameEn != 'null')
-                ? nameEn
-                : ((nameDefault != null && nameDefault.isNotEmpty && nameDefault != 'null' && nameDefault != 'canteen_order')
-                    ? nameDefault
-                    : ((rawTitle != null && rawTitle.isNotEmpty && rawTitle != 'null') ? rawTitle : 'صنف')));
-
-        final qty = (map['quantity'] ?? map['qty'] ?? map['count'] as num?)?.toInt() ?? 1;
-        final unitPrice = (map['unit_price'] ?? map['price'] ?? map['item_price'] as num?)?.toDouble() ?? 0.0;
-        final givenTotal = (map['total_price'] ?? map['total'] ?? map['amount'] as num?)?.toDouble();
-        final totalPrice = givenTotal ?? (unitPrice * qty);
-
-        itemsList.add({
-          'id': (map['id'] ?? map['extra_id'] ?? map['product_id'])?.toString(),
-          'extra_id': (map['extra_id'] ?? map['product_id'] ?? map['id'])?.toString(),
-          'name': resolvedName,
-          'name_ar': (nameAr != null && nameAr.isNotEmpty) ? nameAr : resolvedName,
-          'name_en': (nameEn != null && nameEn.isNotEmpty) ? nameEn : resolvedName,
-          'quantity': qty,
-          'qty': qty,
-          'unit_price': unitPrice,
-          'price': unitPrice,
-          'total_price': totalPrice,
-          'status': map['status']?.toString(),
-          'note': map['note']?.toString(),
-        });
-      }
-
-      // 1. Process json['items'], json['booking_items'], json['extras'], json['canteen_items'], json['out_extras']
-      dynamic rawExtras = json['items'] ?? json['booking_items'] ?? json['extras'] ?? json['canteen_items'] ?? json['out_extras'];
-      if (rawExtras is String && rawExtras.trim().isNotEmpty) {
-        try {
-          rawExtras = jsonDecode(rawExtras);
-        } catch (_) {}
-      }
-      if (rawExtras is List) {
-        for (var e in rawExtras) {
-          if (e is Map) {
-            addNormalizedItem(e);
-          }
-        }
-      } else if (rawExtras is Map) {
-        addNormalizedItem(rawExtras);
-      }
-
-      // 2. Process canteen_orders if present
-      if (parsedCanteenOrders.isNotEmpty) {
-        for (var order in parsedCanteenOrders) {
-          final List<dynamic> sourceLists = [
-            order['items'],
-            order['canteen_order_items'],
-            order['canteen_items'],
-          ];
-
-          for (var rawItems in sourceLists) {
-            if (rawItems is String && rawItems.trim().isNotEmpty) {
-              try {
-                rawItems = jsonDecode(rawItems);
-              } catch (_) {}
-            }
-            if (rawItems is List) {
-              for (var it in rawItems) {
-                if (it is Map) {
-                  addNormalizedItem(it);
-                }
-              }
-            }
-          }
-        }
-      }
-
-      return itemsList;
-    }();
+    final List<Map<String, dynamic>> parsedExtras =
+        BookingJsonParser.parseExtras(json, parsedCanteenOrders);
 
     return BookingModel(
       id: (json['out_booking_id'] ?? json['id'] ?? '').toString(),
@@ -260,103 +151,40 @@ class BookingModel extends Booking {
       loungeName: (json['out_lounge_name'] ?? json['lounge_name'] ?? loungeData?['name'] ?? '').toString(),
       loungeLocation: (json['lounge_location'] ?? loungeData?['location'] ?? '').toString(),
       roomName: roomName,
-      controllersCount: parseInt(json['controllers_count'] ?? roomData?['controllers_count'], 0),
+      controllersCount: BookingJsonParser.parseInt(json['controllers_count'] ?? roomData?['controllers_count'], 0),
       screenSize: (json['screen_size'] ?? roomData?['screen_size'] ?? '').toString(),
       date: DateTime.parse(json['out_booking_date'] ?? json['date'] ?? DateTime.now().toIso8601String()),
       startTime: (json['out_start_time'] ?? json['start_time'] ?? '').toString(),
       endTime: (json['out_end_time'] ?? json['end_time'] ?? '').toString(),
-      durationMinutes: parseInt(json['duration_minutes'] ?? (json['duration_hours'] != null ? (parseDouble(json['duration_hours']) * 60).round() : null), 60),
+      durationMinutes: BookingJsonParser.parseInt(json['duration_minutes'] ?? (json['duration_hours'] != null ? (BookingJsonParser.parseDouble(json['duration_hours']) * 60).round() : null), 60),
       status: status,
       paymentStatus: paymentStatus,
-      totalPrice: parseDouble(json['out_total_price'] ?? json['total_price']),
+      totalPrice: BookingJsonParser.parseDouble(json['out_total_price'] ?? json['total_price']),
       addonsPrice: addonsPrice,
-      voucherDiscount: json['voucher_discount'] != null ? parseDouble(json['voucher_discount']) : null,
+      voucherDiscount: json['voucher_discount'] != null ? BookingJsonParser.parseDouble(json['voucher_discount']) : null,
       voucherCode: json['voucher_code']?.toString(),
-      discountAmount: json['discount_amount'] != null ? parseDouble(json['discount_amount']) : null,
-      discountPercentage: json['discount_percentage'] != null ? parseDouble(json['discount_percentage']) : null,
+      discountAmount: json['discount_amount'] != null ? BookingJsonParser.parseDouble(json['discount_amount']) : null,
+      discountPercentage: json['discount_percentage'] != null ? BookingJsonParser.parseDouble(json['discount_percentage']) : null,
       discountReason: json['discount_reason']?.toString(),
       extras: parsedExtras,
       canteenOrders: parsedCanteenOrders,
-      lat: () {
-        final val = json['latitude'] ?? json['lat'] ?? loungeData?['latitude'] ?? loungeData?['lat'];
-        if (val != null) return parseDouble(val);
-        final locPoint = json['location_point'] ?? loungeData?['location_point'];
-        if (locPoint is Map && locPoint['coordinates'] is List && (locPoint['coordinates'] as List).length >= 2) {
-          return parseDouble((locPoint['coordinates'] as List)[1]);
-        }
-        if (locPoint is String) {
-          final match = RegExp(r'POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)', caseSensitive: false).firstMatch(locPoint);
-          if (match != null) return double.tryParse(match.group(2) ?? '');
-        }
-        return null;
-      }(),
-      lng: () {
-        final val = json['longitude'] ?? json['lng'] ?? loungeData?['longitude'] ?? loungeData?['lng'];
-        if (val != null) return parseDouble(val);
-        final locPoint = json['location_point'] ?? loungeData?['location_point'];
-        if (locPoint is Map && locPoint['coordinates'] is List && (locPoint['coordinates'] as List).length >= 2) {
-          return parseDouble((locPoint['coordinates'] as List)[0]);
-        }
-        if (locPoint is String) {
-          final match = RegExp(r'POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)', caseSensitive: false).firstMatch(locPoint);
-          if (match != null) return double.tryParse(match.group(1) ?? '');
-        }
-        return null;
-      }(),
+      lat: BookingJsonParser.parseCoordinate(json, loungeData, true),
+      lng: BookingJsonParser.parseCoordinate(json, loungeData, false),
       shiftId: json['shift_id']?.toString(),
       playMode: (json['play_mode'] ?? json['playMode'])?.toString(),
       roomPrice: (json['room_price'] ?? json['roomPrice']) != null
-          ? parseDouble(json['room_price'] ?? json['roomPrice'])
+          ? BookingJsonParser.parseDouble(json['room_price'] ?? json['roomPrice'])
           : null,
       visitNumber: () {
         final raw = json['visit_number'] ?? json['out_visit_number'] ?? json['visitNumber'];
         if (raw != null) {
-          final val = parseInt(raw, 0);
+          final val = BookingJsonParser.parseInt(raw, 0);
           return val > 0 ? val : null;
         }
         return null;
       }(),
       paymentMethod: (json['payment_method'] ?? json['out_payment_method'])?.toString(),
-      receiptUrl: () {
-        dynamic val = json['receipt_url'] ??
-            json['out_receipt_url'] ??
-            json['receipt_path'] ??
-            json['out_receipt_path'] ??
-            json['receipt'] ??
-            json['payment_receipt'] ??
-            json['payment_receipt_url'] ??
-            json['payment_proof'] ??
-            json['proof_url'] ??
-            json['proof_image'] ??
-            json['proof_path'] ??
-            json['attachment_url'] ??
-            json['attachment_path'] ??
-            json['receipt_image'] ??
-            json['receipt_image_url'] ??
-            json['wallet_receipt'] ??
-            json['transfer_receipt'];
-
-        if (val == null && json['metadata'] is Map) {
-          val = json['metadata']['receipt_url'] ??
-              json['metadata']['receipt_path'] ??
-              json['metadata']['receipt'] ??
-              json['metadata']['payment_receipt'] ??
-              json['metadata']['proof_url'];
-        }
-
-        if (val == null && json['bookings'] is Map) {
-          val = json['bookings']['receipt_url'] ??
-              json['bookings']['receipt_path'] ??
-              json['bookings']['receipt'] ??
-              json['bookings']['payment_receipt'];
-        }
-
-        if (val != null) {
-          final str = val.toString().trim();
-          if (str.isNotEmpty && str != 'null') return str;
-        }
-        return null;
-      }(),
+      receiptUrl: BookingJsonParser.parseReceiptUrl(json),
       expiresAt: json['expires_at'] != null 
           ? DateTime.tryParse(json['expires_at'].toString()) 
           : (json['out_expires_at'] != null ? DateTime.tryParse(json['out_expires_at'].toString()) : null),
@@ -368,6 +196,10 @@ class BookingModel extends Booking {
   }
 
   Map<String, dynamic> toJson() {
+    final vCode = voucherCode;
+    final expAt = expiresAt;
+    final chkAt = checkedInAt;
+
     return {
       'user_id': userId,
       'room_id': roomId,
@@ -385,7 +217,7 @@ class BookingModel extends Booking {
       'user_phone': userPhone,
       'room_name': roomName,
       if (voucherDiscount != null) 'voucher_discount': voucherDiscount,
-      if (voucherCode != null && voucherCode!.isNotEmpty) 'voucher_code': voucherCode,
+      if (vCode != null && vCode.isNotEmpty) 'voucher_code': vCode,
       'discount_amount': discountAmount,
       'discount_percentage': discountPercentage,
       'discount_reason': discountReason,
@@ -393,10 +225,10 @@ class BookingModel extends Booking {
       if (playMode != null) 'play_mode': playMode,
       if (paymentMethod != null) 'payment_method': paymentMethod,
       if (receiptUrl != null) 'receipt_url': receiptUrl,
-      if (expiresAt != null) 'expires_at': expiresAt!.toIso8601String(),
+      if (expAt != null) 'expires_at': expAt.toIso8601String(),
       'is_first_booking': isFirstBooking,
       if (senderWalletPhone != null) 'sender_wallet_phone': senderWalletPhone,
-      if (checkedInAt != null) 'checked_in_at': checkedInAt!.toIso8601String(),
+      if (chkAt != null) 'checked_in_at': chkAt.toIso8601String(),
       if (cancellationReason != null) 'cancellation_reason': cancellationReason,
     };
   }

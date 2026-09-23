@@ -3,91 +3,36 @@ import 'package:flutter/foundation.dart';
 import 'dart:js_interop';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/di/provider_scope.dart';
-
-import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
-import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
-import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
-import 'package:play_spot_dashboard/features/auth/presentation/login/login_screen.dart';
-import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_screen.dart'
-    as dashboard;
+import 'package:play_spot_dashboard/art_core/layouts/dashboard_shell.dart';
+import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/core/di/di.dart';
+import 'package:play_spot_dashboard/core/router/go_router_refresh_stream.dart';
+import 'package:play_spot_dashboard/core/router/lounge_admin_routes.dart';
+import 'package:play_spot_dashboard/core/router/router_guards.dart';
+import 'package:play_spot_dashboard/core/router/router_keys.dart';
+import 'package:play_spot_dashboard/core/router/super_admin_routes.dart';
+import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/lounge_stats_cubit.dart';
-import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounges_page.dart'
-    as lounges;
-import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
-import 'package:play_spot_dashboard/features/categories/presentation/categories/categories_screen.dart'
-    as categories;
-import 'package:play_spot_dashboard/features/marketing/presentation/pages/marketing_page.dart'
-    as marketing;
-import 'package:play_spot_dashboard/features/payouts/presentation/pages/super_admin_payouts_page.dart'
-    as payouts;
-import 'package:play_spot_dashboard/features/payouts/presentation/pages/lounge_admin_payouts_page.dart'
-    as lounge_payouts;
-import 'package:play_spot_dashboard/features/bookings/presentation/pages/bookings_page.dart'
-    as bookings;
-import 'package:play_spot_dashboard/features/rooms/presentation/pages/room_management_page.dart'
-    as rooms;
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_screen.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/categories/presentation/categories/category_cubit.dart';
+import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_cubit.dart';
+import 'package:play_spot_dashboard/features/kyc/presentation/pages/kyc_pending_page.dart';
+import 'package:play_spot_dashboard/features/lounges/presentation/cubit/extras_cubit.dart';
+import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:play_spot_dashboard/features/onboarding/presentation/pages/lounge_setup_page.dart'
     as onboarding;
-import 'package:play_spot_dashboard/features/lounges/presentation/pages/extras_management_page.dart'
-    as extras;
-import 'package:play_spot_dashboard/features/reviews/presentation/reviews_screen.dart'
-    as reviews_page;
-import 'package:play_spot_dashboard/features/lounges/presentation/pages/lounge_profile_page.dart'
-    as lounge_profile;
-import 'package:play_spot_dashboard/features/auth/presentation/profile/profile_page.dart'
-    as profile;
-import 'package:play_spot_dashboard/features/kyc/presentation/pages/kyc_reviews_page.dart'
-    as kyc_reviews;
-import 'package:play_spot_dashboard/features/kyc/presentation/pages/kyc_pending_page.dart';
-import 'package:play_spot_dashboard/features/loyalty/presentation/pages/loyalty_page.dart'
-    as loyalty;
-import 'package:play_spot_dashboard/features/shifts/presentation/shift_history/shift_history_screen.dart'
-    as shifts;
-import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_screen.dart'
-    as staff;
-import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_cubit.dart';
-import 'package:play_spot_dashboard/features/bookings/presentation/pages/booking_history_page.dart'
-    as reports;
-import 'package:play_spot_dashboard/art_core/layouts/dashboard_shell.dart';
-import 'package:play_spot_dashboard/art_core/app_strings.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
-import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
-import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
-import 'package:play_spot_dashboard/features/categories/presentation/categories/category_cubit.dart';
-import 'package:play_spot_dashboard/features/marketing/presentation/cubit/marketing_cubit.dart';
-import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
-import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_cubit.dart';
-import 'package:play_spot_dashboard/features/lounges/presentation/cubit/extras_cubit.dart';
-import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_cubit.dart';
-import 'package:play_spot_dashboard/features/loyalty/presentation/cubit/loyalty_cubit.dart';
-import 'package:play_spot_dashboard/features/tournaments/presentation/tournaments_screen.dart'
-    as tournaments;
-import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_cubit.dart';
-import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_participants_cubit.dart';
-import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_matches_cubit.dart';
-import 'package:play_spot_dashboard/features/support/presentation/support_settings_screen.dart';
-import 'package:play_spot_dashboard/features/support/presentation/policy_management_screen.dart';
-import 'package:play_spot_dashboard/features/system/presentation/system_settings_screen.dart';
-import 'package:play_spot_dashboard/features/system/presentation/system_settings_cubit.dart';
-import 'package:play_spot_dashboard/features/support/presentation/faq_management_screen.dart';
-import 'package:play_spot_dashboard/features/support/presentation/support_tickets_screen.dart';
-import 'package:play_spot_dashboard/features/support/presentation/lounge_owner_support_screen.dart';
-import 'package:play_spot_dashboard/features/support/presentation/support_cubit.dart';
-
-import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/permissions/presentation/cubit/permissions_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import 'package:play_spot_dashboard/features/reviews/presentation/reviews_cubit.dart';
-import 'package:play_spot_dashboard/features/users/presentation/pages/users_page.dart'
-    as users;
-import 'package:play_spot_dashboard/features/users/presentation/cubit/admin_management_cubit.dart';
-import 'package:play_spot_dashboard/features/payouts/presentation/cubit/payout_cubit.dart';
-
-import 'package:play_spot_dashboard/core/di/di.dart';
-import 'package:play_spot_dashboard/core/router/router_keys.dart';
-import '../../art_core/theme/app_colors.dart';
-import '../../features/permissions/presentation/cubit/permissions_cubit.dart';
-import 'go_router_refresh_stream.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 
 @JS('removeSplash')
 external void _removeWebSplash();
@@ -108,115 +53,8 @@ class AppRouter {
   late final router = GoRouter(
     initialLocation: RouterKeys.root,
     refreshListenable: GoRouterRefreshStream(authCubit.stream),
-    redirect: (context, state) {
-      final authState = authCubit.state;
-      final bool isLoggingIn = state.matchedLocation == RouterKeys.login;
-      final user = authState.user;
-
-      if (authState.status == LoginStatus.initial ||
-          authState.status == LoginStatus.checking) {
-        return null;
-      }
-
-      final bool isAuthenticated =
-          authState.status == LoginStatus.authenticated ||
-          authState.status == LoginStatus.success;
-
-      if (!isAuthenticated) {
-        return isLoggingIn ? null : RouterKeys.login;
-      }
-
-      if (user == null) return isLoggingIn ? null : null;
-
-      final bool isStaffUser = user.isStaff;
-      final bool isLoungeOwner = user.isOwner;
-      final bool isSuperAdmin = user.role == UserRole.superAdmin;
-      final bool isOnboardingPath =
-          state.matchedLocation == RouterKeys.loungeOnboarding;
-      final bool isKycPendingPath =
-          state.matchedLocation == RouterKeys.kycPending;
-
-      final lounge = authState.userLounge;
-      final bool isLoungePending =
-          lounge != null &&
-          (lounge.status == 'pending' ||
-              lounge.status == 'pending_approval' ||
-              lounge.status != 'active');
-
-      // 1. Only Lounge Owners who haven't completed setup need Onboarding
-      if (!isSuperAdmin && isLoungeOwner && !user.isSetupCompleted) {
-        if (!isOnboardingPath) return RouterKeys.loungeOnboarding;
-        return null;
-      }
-
-      // 2. Lounge Owners whose lounge/KYC is still pending approval go to KYC Pending Screen
-      if (!isSuperAdmin &&
-          isLoungeOwner &&
-          user.isSetupCompleted &&
-          isLoungePending) {
-        if (!isKycPendingPath) return RouterKeys.kycPending;
-        return null;
-      }
-
-      // Leave onboarding or kyc-pending if status is active or user is non-owner
-      if ((isOnboardingPath || isKycPendingPath) &&
-          (user.isSetupCompleted && !isLoungePending)) {
-        return RouterKeys.loungeAdminDashboard;
-      }
-
-      if (isOnboardingPath && !isLoungeOwner) {
-        return RouterKeys.loungeAdminDashboard;
-      }
-
-      if (isLoggingIn || state.matchedLocation == RouterKeys.root) {
-        if (isSuperAdmin) return RouterKeys.superAdminDashboard;
-        if (isStaffUser) return RouterKeys.loungeAdminDashboard;
-      }
-
-      final String location = state.matchedLocation;
-
-      if (location.startsWith('/super-admin') && !isSuperAdmin) {
-        return RouterKeys.loungeAdminDashboard;
-      }
-
-      final bool isStaffManagementRoute =
-          location == RouterKeys.loungeAdminStaff;
-      final bool isFinancialRoute =
-          location.contains('/payouts') || location.contains('/reports');
-      final bool isShiftHistoryRoute =
-          location == RouterKeys.loungeAdminShifts;
-      final bool isMarketingRoute = location == RouterKeys.loungeAdminMarketing;
-      final bool isSetupRoute =
-          location == RouterKeys.loungeAdminRooms ||
-          location == RouterKeys.loungeAdminExtras;
-      final bool isReviewsRoute = location == RouterKeys.loungeAdminReviews;
-
-      if (isReviewsRoute && !user.canViewReviews) {
-        return '${RouterKeys.loungeAdminDashboard}?unauthorized=true';
-      }
-
-      if (isStaffManagementRoute && !user.canManageStaff) {
-        return '${RouterKeys.loungeAdminDashboard}?unauthorized=true';
-      }
-
-      if (isFinancialRoute && !user.canViewFinancials) {
-        return '${RouterKeys.loungeAdminDashboard}?unauthorized=true';
-      }
-
-      if (isShiftHistoryRoute && !user.canViewShiftHistory) {
-        return '${RouterKeys.loungeAdminDashboard}?unauthorized=true';
-      }
-
-      if (isMarketingRoute && !user.canManageMarketing) {
-        return '${RouterKeys.loungeAdminDashboard}?unauthorized=true';
-      }
-
-      if (isSetupRoute && !user.canEditSetup) {
-        return '${RouterKeys.loungeAdminDashboard}?unauthorized=true';
-      }
-
-      return null;
-    },
+    redirect: (context, state) =>
+        RouterGuards.redirect(context, state, authCubit),
     routes: [
       ShellRoute(
         builder: (BuildContext context, GoRouterState state, Widget child) {
@@ -262,7 +100,7 @@ class AppRouter {
                 const NoTransitionPage(child: KycPendingPage()),
           ),
 
-          // لوحة التحكم الرئيسية مع المحافظة على دورة حياة الـ Providers
+          // Core dashboard shell with hoisted persistent Cubits
           ShellRoute(
             builder: (BuildContext context, GoRouterState state, Widget child) {
               return MultiBlocProviderScope(
@@ -293,250 +131,8 @@ class AppRouter {
               );
             },
             routes: [
-              GoRoute(
-                path: RouterKeys.superAdminDashboard,
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: dashboard.DashboardScreen(role: UserRole.superAdmin),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.superAdminLounges,
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: lounges.LoungesPage()),
-              ),
-              GoRoute(
-                path: RouterKeys.superAdminUsers,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: MultiBlocProviderScope(
-                    providers: [
-                      BlocProvider(
-                        create: (_) => sl<AdminManagementCubit>(),
-                      ),
-                      BlocProvider(
-                        create: (_) => sl<LoungeCubit>(),
-                      ),
-                    ],
-                    child: const users.UsersPage(),
-                  ),
-                ),
-              ),
-
-              GoRoute(
-                path: RouterKeys.superAdminCategories,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<CategoryCubit>(),
-                    child: const categories.CategoriesScreen(),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.superAdminMarketing,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<MarketingCubit>(),
-                    child: const marketing.MarketingPage(),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.superAdminPayouts,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<PayoutCubit>(),
-                    child: const payouts.SuperAdminPayoutsPage(),
-                  ),
-                ),
-              ),
-
-              GoRoute(
-                path: RouterKeys.superAdminKyc,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<KycCubit>(),
-                    child: const kyc_reviews.KycReviewsPage(),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.superAdminLoyalty,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<LoyaltyCubit>(),
-                    child: const loyalty.LoyaltyPage(),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.superAdminTournaments,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: MultiBlocProviderScope(
-                    providers: [
-                      BlocProvider(create: (_) => sl<TournamentCubit>()),
-                      BlocProvider(
-                        create: (_) => sl<TournamentParticipantsCubit>(),
-                      ),
-                      BlocProvider(create: (_) => sl<TournamentMatchesCubit>()),
-                    ],
-                    child: const tournaments.TournamentsScreen(),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.superAdminSupportSettings,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<SupportCubit>(),
-                    child: const SupportSettingsScreen(),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.superAdminPolicies,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<SupportCubit>(),
-                    child: const PolicyManagementScreen(),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.superAdminFaqs,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<SupportCubit>(),
-                    child: const FaqManagementScreen(),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.superAdminTickets,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<SupportCubit>(),
-                    child: const SupportTicketsScreen(),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.superAdminSystemSettings,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<SystemSettingsCubit>(),
-                    child: const SystemSettingsScreen(),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.loungeAdminDashboard,
-                pageBuilder: (context, state) {
-                  final user = authCubit.state.user;
-                  return NoTransitionPage(
-                    child: dashboard.DashboardScreen(
-                      role: user?.role ?? UserRole.manager,
-                    ),
-                  );
-                },
-              ),
-              GoRoute(
-                path: RouterKeys.loungeAdminLiveOps,
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: bookings.BookingsPage()),
-              ),
-              GoRoute(
-                path: RouterKeys.loungeAdminRooms,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<CategoryCubit>(),
-                    child: const rooms.RoomManagementPage(),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.loungeAdminExtras,
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: extras.ExtrasManagementPage(),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.loungeAdminReviews,
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: reviews_page.LoungeReviewsPage(),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.loungeAdminTournaments,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: MultiBlocProviderScope(
-                    providers: [
-                      BlocProvider(create: (_) => sl<TournamentCubit>()),
-                      BlocProvider(
-                        create: (_) => sl<TournamentParticipantsCubit>(),
-                      ),
-                      BlocProvider(create: (_) => sl<TournamentMatchesCubit>()),
-                    ],
-                    child: const tournaments.TournamentsScreen(),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.loungeAdminMarketing,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<MarketingCubit>(),
-                    child: const marketing.MarketingPage(),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.loungeAdminPayouts,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<PayoutCubit>(),
-                    child: const lounge_payouts.LoungeAdminPayoutsPage(),
-                  ),
-                ),
-              ),
-
-              GoRoute(
-                path: RouterKeys.loungeAdminReports,
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: reports.BookingHistoryPage()),
-              ),
-              GoRoute(
-                path: RouterKeys.loungeAdminShifts,
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: shifts.ShiftHistoryScreen()),
-              ),
-              GoRoute(
-                path: RouterKeys.loungeAdminStaff,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<StaffCubit>(),
-                    child: const staff.StaffScreen(),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.loungeAdminProfile,
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: lounge_profile.LoungeProfilePage(),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.loungeAdminSupport,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: BlocProvider(
-                    create: (_) => sl<SupportCubit>(),
-                    child: const LoungeOwnerSupportScreen(),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: RouterKeys.profile,
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: profile.ProfilePage()),
-              ),
+              ...getSuperAdminRoutes(),
+              ...getLoungeAdminRoutes(authCubit),
             ],
           ),
         ],

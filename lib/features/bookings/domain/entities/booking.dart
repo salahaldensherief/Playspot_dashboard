@@ -1,97 +1,9 @@
 import 'package:equatable/equatable.dart';
+import 'booking_status.dart';
+import 'payment_enums.dart';
 
-enum BookingStatus { pending, upcoming, completed, cancelled, inProgress }
-
-extension BookingStatusX on BookingStatus {
-  String toDbString() {
-    switch (this) {
-      case BookingStatus.pending:
-        return 'pending';
-      case BookingStatus.upcoming:
-        return 'upcoming';
-      case BookingStatus.completed:
-        return 'completed';
-      case BookingStatus.cancelled:
-        return 'cancelled';
-      case BookingStatus.inProgress:
-        return 'in_progress';
-    }
-  }
-
-  static BookingStatus fromString(String? status) {
-    if (status == null) return BookingStatus.pending;
-    final clean = status.trim().toLowerCase().replaceAll(' ', '_');
-    switch (clean) {
-      case 'upcoming':
-        return BookingStatus.upcoming;
-      case 'completed':
-        return BookingStatus.completed;
-      case 'cancelled':
-      case 'canceled':
-      case 'rejected':
-      case 'reject':
-      case 'no_show':
-      case 'noshow':
-        return BookingStatus.cancelled;
-      case 'in_progress':
-      case 'inprogress':
-      case 'active':
-        return BookingStatus.inProgress;
-      case 'pending':
-      default:
-        return BookingStatus.pending;
-    }
-  }
-}
-
-enum PaymentStatus { unpaid, paid, refunded }
-
-enum PaymentMethod { cash, wallet, manualTransfer, card, online, other }
-
-extension PaymentMethodX on PaymentMethod {
-  String toDbString() {
-    switch (this) {
-      case PaymentMethod.cash:
-        return 'cash';
-      case PaymentMethod.wallet:
-        return 'wallet';
-      case PaymentMethod.manualTransfer:
-        return 'manual_transfer';
-      case PaymentMethod.card:
-        return 'card';
-      case PaymentMethod.online:
-        return 'online';
-      case PaymentMethod.other:
-        return 'other';
-    }
-  }
-
-  static PaymentMethod fromString(String? pm) {
-    if (pm == null) return PaymentMethod.cash;
-    final clean = pm.trim().toLowerCase();
-    switch (clean) {
-      case 'cash':
-        return PaymentMethod.cash;
-      case 'wallet':
-        return PaymentMethod.wallet;
-      case 'manual_transfer':
-      case 'manual':
-      case 'instapay':
-      case 'vodafone_cash':
-        return PaymentMethod.manualTransfer;
-      case 'card':
-      case 'credit_card':
-      case 'visa':
-        return PaymentMethod.card;
-      case 'online':
-      case 'fawry':
-      case 'paymob':
-        return PaymentMethod.online;
-      default:
-        return PaymentMethod.other;
-    }
-  }
-}
+export 'booking_status.dart';
+export 'payment_enums.dart';
 
 class Booking extends Equatable {
   final String id;
@@ -403,8 +315,9 @@ class Booking extends Equatable {
   /// For active/upcoming sessions, calculates end time + grace period.
   bool isSessionExpired([DateTime? now, Duration gracePeriod = const Duration(minutes: 5)]) {
     final currentTime = now ?? DateTime.now();
-    if (status == BookingStatus.pending && expiresAt != null) {
-      return currentTime.isAfter(expiresAt!) || currentTime.isAtSameMomentAs(expiresAt!);
+    final holdExpiry = expiresAt;
+    if (status == BookingStatus.pending && holdExpiry != null) {
+      return currentTime.isAfter(holdExpiry) || currentTime.isAtSameMomentAs(holdExpiry);
     }
     final end = endDateTime;
     if (end == null) return false;

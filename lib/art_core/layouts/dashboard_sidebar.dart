@@ -2,11 +2,8 @@ import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/responsive/responsive.dart';
-import '../../core/router/router_keys.dart';
-import '../../core/utils/permission_extension.dart';
 import '../../features/permissions/presentation/cubit/permissions_cubit.dart';
 import '../../features/permissions/presentation/cubit/permissions_state.dart';
 import '../app_strings.dart';
@@ -16,6 +13,8 @@ import '../widgets/app_dialog.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/login/login_cubit.dart';
 import '../../features/auth/presentation/login/login_state.dart';
+import 'sidebar/sidebar_item.dart';
+import 'sidebar/sidebar_navigation_items.dart';
 
 class DashboardSidebar extends StatelessWidget {
   final String activeRoute;
@@ -42,9 +41,9 @@ class DashboardSidebar extends StatelessWidget {
               width: sidebarWidth,
               decoration: const BoxDecoration(
                 color: AppColors.sidebarBackground,
-                border: BorderDirectional(end: BorderSide(color: AppColors.borderDefault)),
+                border: BorderDirectional(
+                    end: BorderSide(color: AppColors.borderDefault)),
               ),
-
               child: Column(
                 children: [
                   SizedBox(height: 24.h),
@@ -53,20 +52,19 @@ class DashboardSidebar extends StatelessWidget {
                   Expanded(
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        children: [
-                          if (isSuperAdmin) 
-                            ..._buildSuperAdminItems(context) 
-                          else 
-                            ..._buildLoungeStaffItems(context, user),
-                        ],
+                      child: SidebarNavigationItems(
+                        isSuperAdmin: isSuperAdmin,
+                        user: user,
+                        activeRoute: activeRoute,
                       ),
                     ),
                   ),
                   const Divider(color: AppColors.borderDefault, height: 1),
-                  _SidebarItem(
+                  SidebarItem(
                     icon: Icons.language,
-                    label: context.locale.languageCode == 'en' ? 'العربية' : 'English',
+                    label: context.locale.languageCode == 'en'
+                        ? 'العربية'
+                        : 'English',
                     isActive: false,
                     onTap: () {
                       if (context.locale.languageCode == 'en') {
@@ -76,7 +74,7 @@ class DashboardSidebar extends StatelessWidget {
                       }
                     },
                   ),
-                  _SidebarItem(
+                  SidebarItem(
                     icon: Icons.logout,
                     label: AppStrings.logout,
                     isActive: false,
@@ -149,7 +147,7 @@ class DashboardSidebar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'PlaySpot',
+                  AppStrings.appName,
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 18.sp,
@@ -160,262 +158,12 @@ class DashboardSidebar extends StatelessWidget {
                 ),
                 Text(
                   roleLabel,
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                  style: TextStyle(
+                      color: AppColors.textSecondary, fontSize: 12.sp),
                 ),
               ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _buildSuperAdminItems(BuildContext context) {
-    return [
-      _SidebarItem(
-        icon: Icons.analytics_outlined,
-        label: AppStrings.analytics,
-        isActive: activeRoute == RouterKeys.superAdminDashboard,
-        onTap: () => context.go(RouterKeys.superAdminDashboard),
-      ),
-      _SidebarItem(
-        icon: Icons.business_outlined,
-        label: AppStrings.lounges,
-        isActive: activeRoute == RouterKeys.superAdminLounges,
-        onTap: () => context.go(RouterKeys.superAdminLounges),
-      ),
-      _SidebarItem(
-        icon: Icons.account_balance_wallet_outlined,
-        label: AppStrings.payouts,
-        isActive: activeRoute == RouterKeys.superAdminPayouts,
-        onTap: () => context.go(RouterKeys.superAdminPayouts),
-      ),
-      _SidebarItem(
-        icon: Icons.verified_user_outlined,
-        label: AppStrings.kycReviews,
-        isActive: activeRoute == RouterKeys.superAdminKyc,
-        onTap: () => context.go(RouterKeys.superAdminKyc),
-      ),
-      _SidebarItem(
-        icon: Icons.card_giftcard_outlined,
-        label: AppStrings.loyaltySystemAndReferrals,
-        isActive: activeRoute == RouterKeys.superAdminLoyalty,
-        onTap: () => context.go(RouterKeys.superAdminLoyalty),
-      ),
-      _SidebarItem(
-        icon: Icons.emoji_events_outlined,
-        label: AppStrings.tournaments,
-        isActive: activeRoute == RouterKeys.superAdminTournaments,
-        onTap: () => context.go(RouterKeys.superAdminTournaments),
-      ),
-      _SidebarItem(
-        icon: Icons.contact_support_outlined,
-        label: AppStrings.supportAndPaymentSettings,
-        isActive: activeRoute == RouterKeys.superAdminSupportSettings,
-        onTap: () => context.go(RouterKeys.superAdminSupportSettings),
-      ),
-      _SidebarItem(
-        icon: Icons.gavel_outlined,
-        label: AppStrings.policiesManagement,
-        isActive: activeRoute == RouterKeys.superAdminPolicies,
-        onTap: () => context.go(RouterKeys.superAdminPolicies),
-      ),
-      _SidebarItem(
-        icon: Icons.quiz_outlined,
-        label: AppStrings.faqsTitle,
-        isActive: activeRoute == RouterKeys.superAdminFaqs,
-        onTap: () => context.go(RouterKeys.superAdminFaqs),
-      ),
-      _SidebarItem(
-        icon: Icons.confirmation_number_outlined,
-        label: AppStrings.supportTickets,
-        isActive: activeRoute == RouterKeys.superAdminTickets,
-        onTap: () => context.go(RouterKeys.superAdminTickets),
-      ),
-      _SidebarItem(
-        icon: Icons.settings_suggest_outlined,
-        label: AppStrings.systemAndAnnouncements,
-        isActive: activeRoute == RouterKeys.superAdminSystemSettings,
-        onTap: () => context.go(RouterKeys.superAdminSystemSettings),
-      ),
-    ];
-  }
-
-  List<Widget> _buildLoungeStaffItems(BuildContext context, UserEntity? user) {
-    if (user == null) return [];
-
-    final canViewBookings = context.hasPermission('bookings_view') || context.hasPermission('pos_view_menu');
-    final canViewRooms = context.hasPermission('rooms_view');
-    final canViewExtras = context.hasPermission('menu_view');
-    final canViewReviews = context.hasPermission('reviews_view');
-    final canManageMarketing = context.hasPermission('marketing_manage');
-    final canViewTournaments = context.hasPermission('tournaments_view') || user.isOwner || user.isManager;
-    final canManageStaff = context.hasPermission('staff_management');
-    final canViewShiftHistory = context.hasPermission('shifts_view');
-    final canViewReports = context.hasPermission('reports_view');
-    final canEditLoungeProfile = context.hasPermission('lounge_profile_edit');
-
-    return [
-      _SidebarItem(
-        icon: Icons.analytics_outlined,
-        label: AppStrings.dashboard,
-        isActive: activeRoute == RouterKeys.loungeAdminDashboard,
-        onTap: () => context.go(RouterKeys.loungeAdminDashboard),
-      ),
-
-      // Common: Live Operations (Sensors/Bookings)
-      if (canViewBookings)
-        _SidebarItem(
-          icon: Icons.sensors,
-          label: AppStrings.bookings,
-          isActive: activeRoute == RouterKeys.loungeAdminLiveOps,
-          onTap: () => context.go(RouterKeys.loungeAdminLiveOps),
-        ),
-      
-      // Setup: Rooms & Extras
-      if (canViewRooms)
-        _SidebarItem(
-          icon: Icons.meeting_room_outlined,
-          label: AppStrings.rooms,
-          isActive: activeRoute == RouterKeys.loungeAdminRooms,
-          onTap: () => context.go(RouterKeys.loungeAdminRooms),
-        ),
-
-      if (canViewExtras)
-        _SidebarItem(
-          icon: Icons.restaurant_menu,
-          label: AppStrings.extras,
-          isActive: activeRoute == RouterKeys.loungeAdminExtras,
-          onTap: () => context.go(RouterKeys.loungeAdminExtras),
-        ),
-
-      if (canViewReviews)
-        _SidebarItem(
-          icon: Icons.star_outline_rounded,
-          label: AppStrings.loungeReviews,
-          isActive: activeRoute == RouterKeys.loungeAdminReviews,
-          onTap: () => context.go(RouterKeys.loungeAdminReviews),
-        ),
-
-      // Management Level
-      if (canManageMarketing)
-        _SidebarItem(
-          icon: Icons.campaign_outlined,
-          label: AppStrings.marketing,
-          isActive: activeRoute == RouterKeys.loungeAdminMarketing,
-          onTap: () => context.go(RouterKeys.loungeAdminMarketing),
-        ),
-
-      if (canViewTournaments)
-        _SidebarItem(
-          icon: Icons.emoji_events_outlined,
-          label: AppStrings.tournaments,
-          isActive: activeRoute == RouterKeys.loungeAdminTournaments,
-          onTap: () => context.go(RouterKeys.loungeAdminTournaments),
-        ),
-
-      if (canManageStaff)
-        _SidebarItem(
-          icon: Icons.people_outline,
-          label: AppStrings.staffManagement,
-          isActive: activeRoute == RouterKeys.loungeAdminStaff,
-          onTap: () => context.go(RouterKeys.loungeAdminStaff),
-        ),
-
-      // History & Reports
-      if (canViewShiftHistory)
-        _SidebarItem(
-          icon: Icons.history_outlined,
-          label: AppStrings.shiftHistory,
-          isActive: activeRoute == RouterKeys.loungeAdminShifts,
-          onTap: () => context.go(RouterKeys.loungeAdminShifts),
-        ),
-
-      if (canViewReports)
-        _SidebarItem(
-          icon: Icons.assessment_outlined,
-          label: AppStrings.monthlyReports,
-          isActive: activeRoute == RouterKeys.loungeAdminReports,
-          onTap: () => context.go(RouterKeys.loungeAdminReports),
-        ),
-
-      // Profile & Settings
-      if (canEditLoungeProfile)
-        _SidebarItem(
-          icon: Icons.settings_outlined,
-          label: AppStrings.loungeProfile,
-          isActive: activeRoute == RouterKeys.loungeAdminProfile,
-          onTap: () => context.go(RouterKeys.loungeAdminProfile),
-        ),
-
-      _SidebarItem(
-        icon: Icons.headset_mic_outlined,
-        label: AppStrings.supportAndHelp,
-        isActive: activeRoute == RouterKeys.loungeAdminSupport,
-        onTap: () => context.go(RouterKeys.loungeAdminSupport),
-      ),
-
-      _SidebarItem(
-        icon: Icons.person_outline,
-        label: AppStrings.myProfile,
-        isActive: activeRoute == RouterKeys.profile,
-        onTap: () => context.go(RouterKeys.profile),
-      ),
-    ];
-  }
-}
-
-class _SidebarItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _SidebarItem({
-    required this.icon,
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.sidebarActiveBg : Colors.transparent,
-          borderRadius: BorderRadius.circular(12.r),
-          border: isActive 
-            ? Border.all(color: AppColors.sidebarActiveBorder.withValues(alpha: 0.5))
-            : null,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-          child: ListTile(
-            leading: Icon(
-              icon,
-              color: isActive ? AppColors.neonBlue : AppColors.textSecondary,
-              size: 20.r,
-            ),
-            title: Text(
-              label,
-              style: TextStyle(
-                color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
-                fontSize: 14.sp,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-              ),
-            ),
-            onTap: () {
-              if (Scaffold.maybeOf(context)?.isDrawerOpen ?? false) {
-                Navigator.of(context).pop();
-              }
-              onTap();
-            },
-            dense: true,
-          ),
         ),
       ),
     );

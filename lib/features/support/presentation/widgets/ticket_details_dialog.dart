@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../domain/entities/support_ticket_entity.dart';
@@ -23,10 +24,10 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
   late String _selectedStatus;
   late TextEditingController _notesController;
 
-  final List<Map<String, String>> _statusOptions = [
-    {'key': 'new', 'label': 'جديدة (New)'},
-    {'key': 'in_progress', 'label': 'جاري العمل عليها (In Progress)'},
-    {'key': 'resolved', 'label': 'تم الحل (Resolved)'},
+  List<Map<String, String>> get _statusOptions => [
+    {'key': 'new', 'label': AppStrings.ticketStatusNew},
+    {'key': 'in_progress', 'label': AppStrings.ticketStatusInProgress},
+    {'key': 'resolved', 'label': AppStrings.ticketStatusResolved},
   ];
 
   @override
@@ -43,7 +44,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
   }
 
   String _formatDate(DateTime? dt) {
-    if (dt == null) return 'غير محدد';
+    if (dt == null) return AppStrings.unspecified;
     return DateFormat('yyyy/MM/dd - hh:mm a').format(dt);
   }
 
@@ -60,7 +61,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
               Icon(Icons.confirmation_number_outlined, color: AppColors.neonBlue, size: 24.r),
               SizedBox(width: 8.w),
               Text(
-                'تفاصيل الشكوى / التذكرة',
+                AppStrings.complaintDetails,
                 style: TextStyle(color: AppColors.textPrimary, fontSize: 18.sp, fontWeight: FontWeight.bold),
               ),
             ],
@@ -78,16 +79,16 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildInfoRow('اسم المستخدم', widget.ticket.userName, Icons.person_outline),
-              _buildInfoRow('رقم الهاتف', widget.ticket.userPhone, Icons.phone_outlined),
-              _buildInfoRow('نوع المشكلة', widget.ticket.issueType, Icons.category_outlined),
-              _buildInfoRow('تاريخ الإرسال', _formatDate(widget.ticket.createdAt), Icons.calendar_today_outlined),
+              _buildInfoRow(AppStrings.fullName, widget.ticket.userName, Icons.person_outline),
+              _buildInfoRow(AppStrings.phoneNumber, widget.ticket.userPhone, Icons.phone_outlined),
+              _buildInfoRow(AppStrings.issueType, widget.ticket.issueType, Icons.category_outlined),
+              _buildInfoRow(AppStrings.sentDate, _formatDate(widget.ticket.createdAt), Icons.calendar_today_outlined),
               if (widget.ticket.resolvedAt != null)
-                _buildInfoRow('تاريخ الحل', _formatDate(widget.ticket.resolvedAt), Icons.check_circle_outline),
+                _buildInfoRow(AppStrings.resolvedDate, _formatDate(widget.ticket.resolvedAt), Icons.check_circle_outline),
               SizedBox(height: 16.h),
               const Divider(color: AppColors.borderDefault),
               SizedBox(height: 12.h),
-              Text('نص الشكوى / الرسالة:', style: TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold, fontSize: 14.sp)),
+              Text(AppStrings.ticketMessageText, style: TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold, fontSize: 14.sp)),
               SizedBox(height: 6.h),
               Container(
                 width: double.infinity,
@@ -105,7 +106,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
               SizedBox(height: 20.h),
               const Divider(color: AppColors.borderDefault),
               SizedBox(height: 12.h),
-              Text('تحديث حالة التذكرة', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp)),
+              Text(AppStrings.updateTicketStatus, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp)),
               SizedBox(height: 8.h),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w),
@@ -137,14 +138,14 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                 ),
               ),
               SizedBox(height: 16.h),
-              Text('ملاحظات الإدارة (Admin Notes)', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
+              Text(AppStrings.adminNotes, style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
               SizedBox(height: 6.h),
               TextField(
                 controller: _notesController,
                 maxLines: 3,
                 style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
                 decoration: InputDecoration(
-                  hintText: 'إضافة أي ملاحظات داخلية حول كيفية حل الشكوى...',
+                  hintText: AppStrings.adminNotesHint,
                   hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
                   filled: true,
                   fillColor: AppColors.mutedBackground,
@@ -158,10 +159,10 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('إلغاء', style: TextStyle(color: AppColors.textSecondary)),
+          child: Text(AppStrings.cancel, style: const TextStyle(color: AppColors.textSecondary)),
         ),
         AppButton(
-          text: 'تحديث الحالة',
+          text: AppStrings.updateStatus,
           variant: AppButtonVariant.gradient,
           onPressed: () {
             widget.onStatusChanged(_selectedStatus, _notesController.text.trim());

@@ -503,6 +503,11 @@ class AppStrings {
         : 'إجمالي المدة: $duration';
   }
 
+  static String get duration =>
+      'duration'.tr().isNotEmpty && !'duration'.tr().contains('duration')
+      ? 'duration'.tr()
+      : 'المدة';
+
   static String get usersCanBookNow => 'users_can_book_now'.tr();
   static String get loungeIsHidden => 'lounge_is_hidden'.tr();
   static String get closeLounge => 'close_lounge'.tr();
@@ -1163,7 +1168,8 @@ class AppStrings {
   static String get realtimeBookingAlert => 'realtime_booking_alert'.tr();
   static String get totalPriceLabel => 'total_price_label'.tr();
   static String get confirmBooking => 'confirm_booking'.tr();
-  static String get bookingAndClientDetails => 'booking_and_client_details'.tr();
+  static String get bookingAndClientDetails =>
+      'booking_and_client_details'.tr();
   static String get stationUnderMaintenance => 'station_under_maintenance'.tr();
   static String get singlePriceLabel => 'single_price_label'.tr();
   static String get multiPriceLabel => 'multi_price_label'.tr();
@@ -1179,6 +1185,116 @@ class AppStrings {
   static String get availableStatus => 'available_status'.tr();
   static String get maintenanceStatus => 'maintenance_status'.tr();
   static String get occupiedStatus => 'occupied_status'.tr();
+
+  // Common Feedback & Operations
+  static String get profileUpdatedSuccess => 'profile_updated_success'.tr();
+  static String operationError(String err) => 'operation_error'.tr(args: [err]);
+  static String imageUploadError(String err) =>
+      'image_upload_error'.tr(args: [err]);
+  static String get zoom => 'zoom'.tr();
+  static String get invalidDiscountValue => 'invalid_discount_value'.tr();
+  static String get discountReasonHint => 'discount_reason_hint'.tr();
+  static String get reasonForAuditHint => 'reason_for_audit_hint'.tr();
+  static String get enterVoucherCodeHint => 'enter_voucher_code_hint'.tr();
+  static String get reportCustomerTooltip => 'report_customer_tooltip'.tr();
+
+  // Support & FAQ
+  static String get deleteFaqConfirm => 'delete_faq_confirm'.tr();
+  static String get faqManagement => 'faq_management'.tr();
+  static String get faqManagementSubtitle => 'faq_management_subtitle'.tr();
+  static String get faqTable => 'faq_table'.tr();
+  static String get ticketMessageText => 'ticket_message_text'.tr();
+  static String get updateTicketStatus => 'update_ticket_status'.tr();
+  static String get adminNotes => 'admin_notes'.tr();
+  static String get activeFaq => 'active_faq'.tr();
+  static String get sortOrderPriority => 'sort_order_priority'.tr();
+  static String get addFaq => 'add_faq'.tr();
+  static String get supportCenter => 'support_center'.tr();
+  static String get supportCenterSubtitle => 'support_center_subtitle'.tr();
+  static String get directSupportChannels => 'direct_support_channels'.tr();
+  static String get whatsappSupport => 'whatsapp_support'.tr();
+  static String get phone => 'phone'.tr();
+  static String get vodafoneCash => 'vodafone_cash'.tr();
+  static String get policiesManagementSubtitle =>
+      'policies_management_subtitle'.tr();
+  static String get complaintTicketsList => 'complaint_tickets_list'.tr();
+  static String get complaintsTable => 'complaints_table'.tr();
+  static String get supportContactDetails => 'support_contact_details'.tr();
+
+  // Lounges & Marketing
+  static String get createLoungeAndOwner => 'create_lounge_and_owner'.tr();
+  static String get loungePhoneHint => 'lounge_phone_hint'.tr();
+  static String get ownerPhoneHint => 'owner_phone_hint'.tr();
+  static String get promotionDetails => 'promotion_details'.tr();
+  static String get designStyleTitle => 'design_style_title'.tr();
+  static String get colorPalette => 'color_palette'.tr();
+  static String get reportReason => 'report_reason'.tr();
+  static String get reportEvidence => 'report_evidence'.tr();
+  static String get shiftsHistorySubtitle => 'shifts_history_subtitle'.tr();
+  static String get testAlertSound => 'test_alert_sound'.tr();
+  static String get unmuteSound => 'unmute_sound'.tr();
+  static String get muteSoundTooltip => 'mute_sound_tooltip'.tr();
+  static String get perHour => 'per_hour'.tr();
+  static String get phoneSampleHint => 'phone_sample_hint'.tr();
+  static String get instapaySampleHint => 'instapay_sample_hint'.tr();
+
+  // Roles
+  static String get roleManager => 'role_manager'.tr();
+  static String get roleCashier => 'role_cashier'.tr();
+  static String get roleStaff => 'role_staff'.tr();
+
+  // FAQ Details
+  static String get editFaq => 'edit_faq'.tr();
+  static String get arabicLanguage => 'arabic_language'.tr();
+  static String get englishLanguage => 'english_language'.tr();
+  static String get questionAr => 'question_ar'.tr();
+  static String get questionArHint => 'question_ar_hint'.tr();
+  static String get answerAr => 'answer_ar'.tr();
+  static String get answerArHint => 'answer_ar_hint'.tr();
+  static String get questionEn => 'question_en'.tr();
+  static String get questionEnHint => 'question_en_hint'.tr();
+  static String get answerEn => 'answer_en'.tr();
+  static String get answerEnHint => 'answer_en_hint'.tr();
+
+  // Ticket Details
+  static String get complaintDetails => 'complaint_details'.tr();
+  static String get issueType => 'issue_type'.tr();
+  static String get sentDate => 'sent_date'.tr();
+  static String get resolvedDate => 'resolved_date'.tr();
+  static String get updateStatus => 'update_status'.tr();
+  static String get ticketStatusNew => 'ticket_status_new'.tr();
+  static String get ticketStatusInProgress => 'ticket_status_in_progress'.tr();
+  static String get ticketStatusResolved => 'ticket_status_resolved'.tr();
+  static String get savePolicy => 'save_policy'.tr();
+  static String get noTicketsFound => 'no_tickets_found'.tr();
+  static String get nameAndDetails => 'name_and_details'.tr();
+  static String get allTickets => 'all_tickets'.tr();
+  static String get noTicketsInFilter => 'no_tickets_in_filter'.tr();
+  static String get supportTicketsSubtitle => 'support_tickets_subtitle'.tr();
+  static String get directCallNumber => 'direct_call_number'.tr();
+  static String get whatsappSupportNumber => 'whatsapp_support_number'.tr();
+  static String get supportPaymentSettingsSubtitle =>
+      'support_payment_settings_subtitle'.tr();
+
+  // Policy Settings
+  static String get termsOfService => 'terms_of_service'.tr();
+  static String get privacyPolicy => 'privacy_policy'.tr();
+  static String get refundPolicy => 'refund_policy'.tr();
+  static String get policy => 'policy'.tr();
+  static String get policyTitleAr => 'policy_title_ar'.tr();
+  static String get policyTitleEn => 'policy_title_en'.tr();
+  static String get policyContentAr => 'policy_content_ar'.tr();
+  static String get policyContentEn => 'policy_content_en'.tr();
+  static String get policyContentArHint => 'policy_content_ar_hint'.tr();
+  static String get policyContentEnHint => 'policy_content_en_hint'.tr();
+  static String get message => 'message'.tr();
+  static String get view => 'view'.tr();
+  static String get supportEmailLabel => 'support_email_label'.tr();
+  static String get vodafoneCashOfficialLabel =>
+      'vodafone_cash_official_label'.tr();
+  static String get loungeDetails => 'lounge_details'.tr();
+  static String get contactPhone => 'contact_phone'.tr();
+  static String get ownerPhone => 'owner_phone'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

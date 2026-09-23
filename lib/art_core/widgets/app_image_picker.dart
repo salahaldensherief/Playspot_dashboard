@@ -45,7 +45,7 @@ class _AppImagePickerState extends State<AppImagePicker> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: $e'), backgroundColor: AppColors.danger),
+          SnackBar(content: Text(AppStrings.errorPickingImage(e.toString())), backgroundColor: AppColors.danger),
         );
       }
     }

@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'data/datasources/lounge_remote_data_source.dart';
+import 'data/datasources/lounge_remote_data_source_impl.dart';
 import 'data/repositories/lounge_repository_impl.dart';
 import 'data/repositories/lounge_payment_settings_repository_impl.dart';
 import 'domain/repositories/lounge_repository.dart';

@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'data/datasources/loyalty_remote_data_source.dart';
+import 'data/datasources/loyalty_remote_data_source_impl.dart';
 import 'data/repositories/loyalty_repository_impl.dart';
 import 'domain/repositories/loyalty_repository.dart';
 import 'domain/usecases/loyalty_usecases.dart';

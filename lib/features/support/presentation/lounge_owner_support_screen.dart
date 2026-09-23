@@ -36,7 +36,7 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
   @override
   Widget build(BuildContext context) {
     return DashboardLayout(
-      title: 'الدعم الفني | Support',
+      title: AppStrings.supportAndHelp,
       activeRoute: 'Support',
       child: BlocBuilder<SupportCubit, SupportState>(
         builder: (context, state) {
@@ -47,8 +47,8 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppAdaptivePageHeader(
-                  title: 'مركز المساعدة والدعم',
-                  subtitle: 'تواصل مع فريق الدعم الفني لمساعدتك في أي استفسارات أو مشكلات',
+                  title: AppStrings.supportCenter,
+                  subtitle: AppStrings.supportCenterSubtitle,
                   primaryAction: AppButton(
                     text: AppStrings.refresh,
                     icon: Icons.refresh,
@@ -66,7 +66,7 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
                 SizedBox(height: 24.h),
 
                 // User's Support Tickets
-                AppText.heading('تذاكر الدعم الفني', fontSize: 18.sp),
+                AppText.heading(AppStrings.supportTickets, fontSize: 18.sp),
                 SizedBox(height: 12.h),
 
                 if (isLoading)
@@ -103,7 +103,7 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
             children: [
               Icon(Icons.headset_mic_outlined, color: AppColors.neonBlue, size: 24.r),
               SizedBox(width: 8.w),
-              AppText.heading('قنوات الدعم المباشرة', fontSize: 18.sp),
+              AppText.heading(AppStrings.directSupportChannels, fontSize: 18.sp),
             ],
           ),
           SizedBox(height: 16.h),
@@ -114,13 +114,13 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
                 _buildContactTile(
                   icon: Icons.chat_bubble_outline,
                   color: AppColors.success,
-                  title: 'واتساب الدعم',
+                  title: AppStrings.whatsappSupport,
                   value: settings?.whatsappPhone ?? '+201000000000',
                 ),
                 _buildContactTile(
                   icon: Icons.phone_outlined,
                   color: AppColors.neonBlue,
-                  title: 'الهاتف',
+                  title: AppStrings.phone,
                   value: settings?.supportPhone ?? '19000',
                 ),
                 _buildContactTile(
@@ -132,7 +132,7 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
                 _buildContactTile(
                   icon: Icons.account_balance_wallet_outlined,
                   color: AppColors.neonGreen,
-                  title: 'فودافون كاش',
+                  title: AppStrings.vodafoneCash,
                   value: settings?.vodafoneCashNumber ?? '01000000000',
                 ),
               ];
@@ -177,7 +177,7 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
         children: [
           Icon(Icons.assignment_outlined, color: AppColors.textSecondary, size: 48.r),
           SizedBox(height: 12.h),
-          AppText.body('لا توجد تذاكر دعم فني حالياً', color: AppColors.textSecondary),
+          AppText.body(AppStrings.noTicketsFound, color: AppColors.textSecondary),
         ],
       ),
     );
@@ -197,10 +197,10 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
           child: DataTable(
             headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
             columns: [
-              DataColumn(label: _buildHeaderCell('الاسم والتفاصيل')),
-              DataColumn(label: _buildHeaderCell('نوع المشكلة')),
-              DataColumn(label: _buildHeaderCell('الحالة')),
-              DataColumn(label: _buildHeaderCell('التاريخ')),
+              DataColumn(label: _buildHeaderCell(AppStrings.nameAndDetails)),
+              DataColumn(label: _buildHeaderCell(AppStrings.issueType)),
+              DataColumn(label: _buildHeaderCell(AppStrings.status)),
+              DataColumn(label: _buildHeaderCell(AppStrings.date)),
             ],
             rows: tickets.map((ticket) {
               return DataRow(

@@ -6,7 +6,6 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_multi_image_picker.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
@@ -15,8 +14,9 @@ import '../../domain/entities/lounge.dart';
 import '../cubit/lounge_cubit.dart';
 import 'core_info_section.dart';
 import 'location_info_section.dart';
-import 'working_hours_section.dart';
+import 'lounge_payment_methods_section.dart';
 import 'quick_discount_section.dart';
+import 'working_hours_section.dart';
 
 class LoungeProfileView extends StatefulWidget {
   const LoungeProfileView({super.key});
@@ -27,7 +27,7 @@ class LoungeProfileView extends StatefulWidget {
 
 class _LoungeProfileViewState extends State<LoungeProfileView> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late TextEditingController _nameController;
   late TextEditingController _descArController;
   late TextEditingController _descEnController;
@@ -35,11 +35,6 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
   late TextEditingController _addressController;
   late TextEditingController _opensAtController;
   late TextEditingController _closesAtController;
-  
-  late TextEditingController _discountPercentageController;
-  late TextEditingController _discountTitleArController;
-  late TextEditingController _discountTitleEnController;
-  late TextEditingController _discountExpirationController;
   late TextEditingController _vodafoneCashController;
   late TextEditingController _instapayController;
 
@@ -49,16 +44,13 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
   double? _lat;
   double? _lng;
   bool _isSaving = false;
-  bool _hasDiscount = false;
-  DateTime? _discountExpiresAt;
-  bool _isSavingDiscount = false;
 
   @override
   void initState() {
     super.initState();
     final user = context.read<LoginCubit>().state.user;
     final lounge = context.read<LoginCubit>().state.userLounge;
-    
+
     _nameController = TextEditingController(text: lounge?.name ?? '');
     _descArController = TextEditingController(text: lounge?.descriptionAr ?? '');
     _descEnController = TextEditingController(text: lounge?.descriptionEn ?? '');
@@ -66,23 +58,15 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     _addressController = TextEditingController(text: lounge?.location ?? '');
     _opensAtController = TextEditingController(text: lounge?.opensAt ?? '');
     _closesAtController = TextEditingController(text: lounge?.closesAt ?? '');
-    
-    _hasDiscount = lounge?.hasDiscount ?? false;
-    _discountPercentageController = TextEditingController(text: lounge?.discountPercentage.toString() ?? '0');
-    _discountTitleArController = TextEditingController(text: lounge?.discountTitleAr ?? '');
-    _discountTitleEnController = TextEditingController(text: lounge?.discountTitleEn ?? '');
-    _discountExpiresAt = lounge?.discountExpiresAt;
-    _discountExpirationController = TextEditingController(
-      text: _discountExpiresAt != null ? _discountExpiresAt!.toLocal().toString().split(' ')[0] : '',
-    );
     _vodafoneCashController = TextEditingController(text: lounge?.vodafoneCashNumber ?? '');
     _instapayController = TextEditingController(text: lounge?.instapayAccount ?? '');
-    
+
     _lat = lounge?.lat;
     _lng = lounge?.lng;
 
-    if (user?.loungeId != null && user!.loungeId!.isNotEmpty) {
-      context.read<LoginCubit>().refreshUserLounge(user.loungeId!, forceRefresh: true);
+    final loungeId = user?.loungeId;
+    if (loungeId != null && loungeId.isNotEmpty) {
+      context.read<LoginCubit>().refreshUserLounge(loungeId, forceRefresh: true);
     }
   }
 
@@ -94,15 +78,6 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     _addressController.text = lounge.location ?? '';
     _opensAtController.text = lounge.opensAt;
     _closesAtController.text = lounge.closesAt;
-
-    _hasDiscount = lounge.hasDiscount;
-    _discountPercentageController.text = lounge.discountPercentage.toString();
-    _discountTitleArController.text = lounge.discountTitleAr ?? '';
-    _discountTitleEnController.text = lounge.discountTitleEn ?? '';
-    _discountExpiresAt = lounge.discountExpiresAt;
-    _discountExpirationController.text = _discountExpiresAt != null
-        ? _discountExpiresAt!.toLocal().toString().split(' ')[0]
-        : '';
     _vodafoneCashController.text = lounge.vodafoneCashNumber ?? '';
     _instapayController.text = lounge.instapayAccount ?? '';
 
@@ -119,10 +94,6 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     _addressController.dispose();
     _opensAtController.dispose();
     _closesAtController.dispose();
-    _discountPercentageController.dispose();
-    _discountTitleArController.dispose();
-    _discountTitleEnController.dispose();
-    _discountExpirationController.dispose();
     _vodafoneCashController.dispose();
     _instapayController.dispose();
     super.dispose();
@@ -147,7 +118,11 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
 
         String mainImageUrl = lounge.imageUrl;
         if (_mainImageBytes != null) {
-          mainImageUrl = await sl<StorageService>().uploadLoungeImage(_mainImageBytes!, _mainImageName!, lounge.id);
+          mainImageUrl = await sl<StorageService>().uploadLoungeImage(
+            _mainImageBytes!,
+            _mainImageName!,
+            lounge.id,
+          );
         }
 
         List<String> galleryUrls = lounge.images ?? [];
@@ -173,27 +148,29 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
             images: galleryUrls,
             lat: _lat,
             lng: _lng,
-            vodafoneCashNumber: _vodafoneCashController.text.trim().isEmpty ? null : _vodafoneCashController.text.trim(),
-            instapayAccount: _instapayController.text.trim().isEmpty ? null : _instapayController.text.trim(),
-            hasDiscount: _hasDiscount,
-            discountPercentage: _hasDiscount ? (int.tryParse(_discountPercentageController.text) ?? 0) : 0,
-            discountTitleAr: _hasDiscount ? _discountTitleArController.text.trim() : '',
-            discountTitleEn: _hasDiscount ? _discountTitleEnController.text.trim() : '',
-            discountExpiresAt: _hasDiscount ? _discountExpiresAt : null,
+            vodafoneCashNumber: _vodafoneCashController.text.trim().isEmpty
+                ? null
+                : _vodafoneCashController.text.trim(),
+            instapayAccount: _instapayController.text.trim().isEmpty
+                ? null
+                : _instapayController.text.trim(),
           );
 
           await context.read<LoungeCubit>().updateLounge(updatedLounge);
           if (mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(
-               const SnackBar(content: Text('Profile updated successfully'), backgroundColor: Colors.green),
-             );
-             await context.read<LoginCubit>().refreshUserLounge(lounge.id, forceRefresh: true);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(AppStrings.profileUpdatedSuccess),
+                backgroundColor: AppColors.success,
+              ),
+            );
+            await context.read<LoginCubit>().refreshUserLounge(lounge.id, forceRefresh: true);
           }
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.danger),
+            SnackBar(content: Text(AppStrings.operationError(e.toString())), backgroundColor: AppColors.danger),
           );
         }
       } finally {
@@ -202,99 +179,15 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     }
   }
 
-  Future<void> _saveDiscount() async {
-    final lounge = context.read<LoginCubit>().state.userLounge;
-    if (lounge == null) return;
-
-    final String vodafoneCash = _vodafoneCashController.text.trim();
-    final String instapay = _instapayController.text.trim();
-
-    if (vodafoneCash.isEmpty && instapay.isEmpty && (lounge.vodafoneCashNumber ?? '').isEmpty && (lounge.instapayAccount ?? '').isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppStrings.paymentMethodsRequiredError),
-          backgroundColor: AppColors.danger,
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isSavingDiscount = true);
-    try {
-      await context.read<LoungeCubit>().updateLoungeDiscount(
-        loungeId: lounge.id,
-        hasDiscount: _hasDiscount,
-        discountPercentage: _hasDiscount ? (int.tryParse(_discountPercentageController.text) ?? 0) : 0,
-        titleAr: _hasDiscount ? _discountTitleArController.text.trim() : '',
-        titleEn: _hasDiscount ? _discountTitleEnController.text.trim() : '',
-        expiresAt: _hasDiscount ? _discountExpiresAt : null,
-        vodafoneCashNumber: vodafoneCash.isNotEmpty ? vodafoneCash : lounge.vodafoneCashNumber,
-        instapayAccount: instapay.isNotEmpty ? instapay : lounge.instapayAccount,
-      );
-      
-      if (mounted) {
-        final updatedLoungeInState = lounge.copyWith(
-          hasDiscount: _hasDiscount,
-          discountPercentage: _hasDiscount ? (int.tryParse(_discountPercentageController.text) ?? 0) : 0,
-          discountTitleAr: _hasDiscount ? _discountTitleArController.text.trim() : '',
-          discountTitleEn: _hasDiscount ? _discountTitleEnController.text.trim() : '',
-          discountExpiresAt: _hasDiscount ? _discountExpiresAt : null,
-          vodafoneCashNumber: vodafoneCash.isNotEmpty ? vodafoneCash : lounge.vodafoneCashNumber,
-          instapayAccount: instapay.isNotEmpty ? instapay : lounge.instapayAccount,
-        );
-        context.read<LoginCubit>().updateUserLounge(updatedLoungeInState);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.discountUpdatedSuccess), backgroundColor: Colors.green),
-        );
-        await context.read<LoginCubit>().refreshUserLounge(lounge.id, forceRefresh: true);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.danger),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSavingDiscount = false);
-    }
-  }
-
-  Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _discountExpiresAt ?? DateTime.now().add(const Duration(days: 7)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.neonBlue,
-              onPrimary: Colors.white,
-              surface: AppColors.cardBackground,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null && mounted) {
-      setState(() {
-        _discountExpiresAt = picked;
-        _discountExpirationController.text = picked.toLocal().toString().split(' ')[0];
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<LoginCubit, LoginState>(
+      buildWhen: (prev, curr) => prev.userLounge != curr.userLounge,
       listenWhen: (prev, curr) => prev.userLounge != curr.userLounge,
       listener: (context, state) {
-        if (state.userLounge != null) {
-          _populateFromLounge(state.userLounge!);
+        final lounge = state.userLounge;
+        if (lounge != null) {
+          _populateFromLounge(lounge);
         }
       },
       builder: (context, loginState) {
@@ -347,39 +240,9 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
                     onClosesAtTap: () => _selectTime(context, _closesAtController),
                   ),
                   SizedBox(height: 32.h),
-                  Container(
-                    padding: EdgeInsets.all(16.r),
-                    decoration: BoxDecoration(
-                      color: AppColors.cardBackground,
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(color: AppColors.borderDefault),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.payment_rounded, color: AppColors.neonBlue),
-                            SizedBox(width: 8.w),
-                            Text(AppStrings.paymentMethodsTitle, style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(AppStrings.paymentMethodsHint, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
-                        SizedBox(height: 16.h),
-                        AppTextField(
-                          controller: _vodafoneCashController,
-                          label: AppStrings.vodafoneCashNumberStr,
-                          hintText: '01xxxxxxxxx',
-                        ),
-                        SizedBox(height: 16.h),
-                        AppTextField(
-                          controller: _instapayController,
-                          label: AppStrings.instapayAccountStr,
-                          hintText: 'username@instapay',
-                        ),
-                      ],
-                    ),
+                  LoungePaymentMethodsSection(
+                    vodafoneCashController: _vodafoneCashController,
+                    instapayController: _instapayController,
                   ),
                   SizedBox(height: 40.h),
                   AppButton(
@@ -390,21 +253,9 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
                   ),
                   SizedBox(height: 56.h),
                   QuickDiscountSection(
-                    hasDiscount: _hasDiscount,
-                    onHasDiscountChanged: (v) => setState(() {
-                      _hasDiscount = v;
-                      if (!v) {
-                        _discountExpiresAt = null;
-                        _discountExpirationController.clear();
-                      }
-                    }),
-                    percentageController: _discountPercentageController,
-                    titleArController: _discountTitleArController,
-                    titleEnController: _discountTitleEnController,
-                    expirationController: _discountExpirationController,
-                    onExpirationTap: _selectDate,
-                    onSave: _saveDiscount,
-                    isSaving: _isSavingDiscount,
+                    lounge: loginState.userLounge,
+                    vodafoneCashController: _vodafoneCashController,
+                    instapayController: _instapayController,
                   ),
                   SizedBox(height: 40.h),
                 ],
@@ -430,7 +281,7 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
               onSurface: AppColors.textPrimary,
             ),
           ),
-          child: child!,
+          child: child ?? const SizedBox.shrink(),
         );
       },
     );

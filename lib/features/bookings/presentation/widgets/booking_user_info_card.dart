@@ -157,9 +157,9 @@ class BookingUserInfoCard extends StatelessWidget {
                             onTap: () {
                               Clipboard.setData(ClipboardData(text: phone));
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('تم نسخ رقم الهاتف'),
-                                  duration: Duration(seconds: 2),
+                                SnackBar(
+                                  content: Text(AppStrings.phoneCopied),
+                                  duration: const Duration(seconds: 2),
                                 ),
                               );
                             },

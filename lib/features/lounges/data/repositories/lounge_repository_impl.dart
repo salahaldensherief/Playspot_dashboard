@@ -1,278 +1,86 @@
 import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
 import 'package:play_spot_dashboard/core/services/local_cache_service.dart';
+import 'package:play_spot_dashboard/features/lounges/data/datasources/lounge_remote_data_source.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/entities/activity.dart';
+import 'package:play_spot_dashboard/features/lounges/domain/entities/extra_entity.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/entities/room.dart';
-import 'package:play_spot_dashboard/features/lounges/domain/entities/extra_entity.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/repositories/lounge_repository.dart';
-import 'package:play_spot_dashboard/features/lounges/data/datasources/lounge_remote_data_source.dart';
-import 'package:play_spot_dashboard/features/lounges/data/models/lounge_model.dart';
-import 'package:play_spot_dashboard/features/lounges/data/models/extra_model.dart';
 import 'package:play_spot_dashboard/features/rooms/data/models/room_model.dart';
+import 'lounge_analytics_repository_helper.dart';
+import 'lounge_cache_helper.dart';
+import 'lounge_extras_repository_helper.dart';
 
 class LoungeRepositoryImpl implements LoungeRepository {
   final LoungeRemoteDataSource remoteDataSource;
   final LocalCacheService localCacheService;
 
-  LoungeRepositoryImpl(this.remoteDataSource, this.localCacheService);
+  late final LoungeCacheHelper _cacheHelper;
+  late final LoungeExtrasRepositoryHelper _extrasHelper;
+  late final LoungeAnalyticsRepositoryHelper _analyticsHelper;
+
+  LoungeRepositoryImpl(this.remoteDataSource, this.localCacheService) {
+    _cacheHelper = LoungeCacheHelper(localCacheService, remoteDataSource);
+    _extrasHelper = LoungeExtrasRepositoryHelper(remoteDataSource, localCacheService);
+    _analyticsHelper = LoungeAnalyticsRepositoryHelper(remoteDataSource);
+  }
 
   @override
   Future<Either<Failure, List<Lounge>>> getLounges({bool forceRefresh = false}) async {
-    const cacheKey = 'cache_lounges_v2';
-    // Purge legacy cache key if present
-    await localCacheService.remove('cache_lounges');
-
     try {
       if (!forceRefresh) {
-        final cached = localCacheService.getJson(cacheKey);
-        if (cached is List && cached.isNotEmpty) {
-          try {
-            final cachedLounges = cached
-                .map((item) => LoungeModel.fromJson(Map<String, dynamic>.from(item as Map)))
-                .where((e) => e.status != 'deleted')
-                .map((e) => e as Lounge)
-                .toList();
-            if (cachedLounges.isEmpty) {
-              await localCacheService.remove(cacheKey);
-            } else {
-              _refreshLoungesInBackground(cacheKey);
-              return Right(cachedLounges);
-            }
-          } catch (_) {
-            await localCacheService.remove(cacheKey);
-          }
+        final cached = _cacheHelper.getCachedLounges();
+        if (cached != null) {
+          _cacheHelper.refreshLoungesInBackground();
+          return Right(cached);
         }
       }
 
       final lounges = await remoteDataSource.getLounges();
       if (lounges.isEmpty) {
-        try {
-          final cached = localCacheService.getJson(cacheKey);
-          if (cached is List && cached.isNotEmpty) {
-            final cachedLounges = cached
-                .map((item) => LoungeModel.fromJson(Map<String, dynamic>.from(item as Map)))
-                .where((e) => e.status != 'deleted')
-                .map((e) => e as Lounge)
-                .toList();
-            if (cachedLounges.isNotEmpty) {
-              return Right(cachedLounges);
-            }
-          }
-        } catch (_) {}
+        final cached = _cacheHelper.getCachedLounges();
+        if (cached != null) return Right(cached);
       } else {
-        final loungeModels = lounges.map((l) => LoungeModel(
-          id: l.id,
-          name: l.name,
-          imageUrl: l.imageUrl,
-          rating: l.rating,
-          distance: l.distance,
-          pricePerHour: l.pricePerHour,
-          isOpen: l.isOpen,
-          location: l.location,
-          city: l.city,
-          totalReviews: l.totalReviews,
-          availableRooms: l.availableRooms,
-          descriptionAr: l.descriptionAr,
-          descriptionEn: l.descriptionEn,
-          images: l.images,
-          opensAt: l.opensAt,
-          closesAt: l.closesAt,
-          lat: l.lat,
-          lng: l.lng,
-          categoryIcons: l.categoryIcons,
-          categoryId: l.categoryId,
-          ownerName: l.ownerName,
-          ownerEmail: l.ownerEmail,
-          status: l.status,
-          hasDiscount: l.hasDiscount,
-          discountPercentage: l.discountPercentage,
-          discountTitleAr: l.discountTitleAr,
-          discountTitleEn: l.discountTitleEn,
-          discountExpiresAt: l.discountExpiresAt,
-        )).toList();
-
-        await localCacheService.setJson(
-          cacheKey,
-          loungeModels.map((m) => m.toJson()).toList(),
-        );
+        await _cacheHelper.cacheLounges(lounges);
       }
-
       return Right(lounges.map((e) => e as Lounge).toList());
     } catch (e) {
-      try {
-        final cached = localCacheService.getJson(cacheKey);
-        if (cached is List && cached.isNotEmpty) {
-          final cachedLounges = cached
-              .map((item) => LoungeModel.fromJson(Map<String, dynamic>.from(item as Map)))
-              .where((e) => e.status != 'deleted')
-              .map((e) => e as Lounge)
-              .toList();
-          if (cachedLounges.isNotEmpty) {
-            return Right(cachedLounges);
-          }
-        }
-      } catch (_) {
-        await localCacheService.remove(cacheKey);
-      }
+      final cached = _cacheHelper.getCachedLounges();
+      if (cached != null) return Right(cached);
       return Left(ServerFailure(e.toString()));
     }
-  }
-
-  void _refreshLoungesInBackground(String cacheKey) async {
-    try {
-      final lounges = await remoteDataSource.getLounges();
-      final loungeModels = lounges.map((l) => LoungeModel(
-        id: l.id,
-        name: l.name,
-        imageUrl: l.imageUrl,
-        rating: l.rating,
-        distance: l.distance,
-        pricePerHour: l.pricePerHour,
-        isOpen: l.isOpen,
-        location: l.location,
-        city: l.city,
-        totalReviews: l.totalReviews,
-        availableRooms: l.availableRooms,
-        descriptionAr: l.descriptionAr,
-        descriptionEn: l.descriptionEn,
-        images: l.images,
-        opensAt: l.opensAt,
-        closesAt: l.closesAt,
-        lat: l.lat,
-        lng: l.lng,
-        categoryIcons: l.categoryIcons,
-        categoryId: l.categoryId,
-        ownerName: l.ownerName,
-        ownerEmail: l.ownerEmail,
-        status: l.status,
-        hasDiscount: l.hasDiscount,
-        discountPercentage: l.discountPercentage,
-        discountTitleAr: l.discountTitleAr,
-        discountTitleEn: l.discountTitleEn,
-        discountExpiresAt: l.discountExpiresAt,
-      )).toList();
-
-      await localCacheService.setJson(
-        cacheKey,
-        loungeModels.map((m) => m.toJson()).toList(),
-      );
-    } catch (_) {}
   }
 
   @override
   Future<Either<Failure, Lounge?>> getLoungeById(String id, {bool forceRefresh = false}) async {
-    final cacheKey = 'cache_lounge_$id';
     try {
       if (!forceRefresh) {
-        final cached = localCacheService.getJson(cacheKey);
-        if (cached is Map) {
-          final model = LoungeModel.fromJson(Map<String, dynamic>.from(cached));
-          _refreshLoungeByIdInBackground(id, cacheKey);
-          return Right(model);
+        final cached = _cacheHelper.getCachedLoungeById(id);
+        if (cached != null) {
+          _cacheHelper.refreshLoungeByIdInBackground(id);
+          return Right(cached);
         }
       }
 
       final lounge = await remoteDataSource.getLoungeById(id);
       if (lounge != null) {
-        final model = LoungeModel(
-          id: lounge.id,
-          name: lounge.name,
-          imageUrl: lounge.imageUrl,
-          rating: lounge.rating,
-          distance: lounge.distance,
-          pricePerHour: lounge.pricePerHour,
-          isOpen: lounge.isOpen,
-          location: lounge.location,
-          city: lounge.city,
-          totalReviews: lounge.totalReviews,
-          availableRooms: lounge.availableRooms,
-          descriptionAr: lounge.descriptionAr,
-          descriptionEn: lounge.descriptionEn,
-          images: lounge.images,
-          opensAt: lounge.opensAt,
-          closesAt: lounge.closesAt,
-          lat: lounge.lat,
-          lng: lounge.lng,
-          categoryIcons: lounge.categoryIcons,
-          categoryId: lounge.categoryId,
-          ownerName: lounge.ownerName,
-          ownerEmail: lounge.ownerEmail,
-          status: lounge.status,
-          hasDiscount: lounge.hasDiscount,
-          discountPercentage: lounge.discountPercentage,
-          discountTitleAr: lounge.discountTitleAr,
-          discountTitleEn: lounge.discountTitleEn,
-          discountExpiresAt: lounge.discountExpiresAt,
-        );
-        await localCacheService.setJson(cacheKey, model.toJson());
+        await _cacheHelper.cacheLoungeById(id, lounge);
       }
       return Right(lounge);
     } catch (e) {
-      final cached = localCacheService.getJson(cacheKey);
-      if (cached is Map) {
-        final model = LoungeModel.fromJson(Map<String, dynamic>.from(cached));
-        return Right(model);
-      }
+      final cached = _cacheHelper.getCachedLoungeById(id);
+      if (cached != null) return Right(cached);
       return Left(ServerFailure(e.toString()));
     }
-  }
-
-  void _refreshLoungeByIdInBackground(String id, String cacheKey) async {
-    try {
-      final lounge = await remoteDataSource.getLoungeById(id);
-      if (lounge != null) {
-        final model = LoungeModel(
-          id: lounge.id,
-          name: lounge.name,
-          imageUrl: lounge.imageUrl,
-          rating: lounge.rating,
-          distance: lounge.distance,
-          pricePerHour: lounge.pricePerHour,
-          isOpen: lounge.isOpen,
-          location: lounge.location,
-          city: lounge.city,
-          totalReviews: lounge.totalReviews,
-          availableRooms: lounge.availableRooms,
-          descriptionAr: lounge.descriptionAr,
-          descriptionEn: lounge.descriptionEn,
-          images: lounge.images,
-          opensAt: lounge.opensAt,
-          closesAt: lounge.closesAt,
-          lat: lounge.lat,
-          lng: lounge.lng,
-          categoryIcons: lounge.categoryIcons,
-          categoryId: lounge.categoryId,
-          ownerName: lounge.ownerName,
-          ownerEmail: lounge.ownerEmail,
-          status: lounge.status,
-          hasDiscount: lounge.hasDiscount,
-          discountPercentage: lounge.discountPercentage,
-          discountTitleAr: lounge.discountTitleAr,
-          discountTitleEn: lounge.discountTitleEn,
-          discountExpiresAt: lounge.discountExpiresAt,
-        );
-        await localCacheService.setJson(cacheKey, model.toJson());
-      }
-    } catch (_) {}
   }
 
   @override
   Future<Either<Failure, String>> createLounge(Lounge lounge) async {
     try {
-      final id = await remoteDataSource.createLounge(LoungeModel(
-        id: lounge.id,
-        name: lounge.name,
-        location: lounge.location,
-        lat: lounge.lat,
-        lng: lounge.lng,
-        imageUrl: lounge.imageUrl,
-        categoryId: lounge.categoryId,
-        isOpen: lounge.isOpen,
-        opensAt: lounge.opensAt,
-        closesAt: lounge.closesAt,
-      ));
-      await localCacheService.remove('cache_lounges_v2');
+      final model = _cacheHelper.toModel(lounge);
+      final id = await remoteDataSource.createLounge(model);
+      await _cacheHelper.invalidateLounge(id);
       return Right(id);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -300,74 +108,11 @@ class LoungeRepositoryImpl implements LoungeRepository {
   }
 
   @override
-  Future<Either<Failure, String>> createLoungeWithOwner({
-    required String email,
-    required String password,
-    required String ownerName,
-    required String loungeName,
-    String? city,
-    String? address,
-    String? phone,
-  }) async {
-    try {
-      final result = await remoteDataSource.createLoungeWithOwner(
-        email: email,
-        password: password,
-        ownerName: ownerName,
-        loungeName: loungeName,
-        city: city,
-        address: address,
-        phone: phone,
-      );
-      await localCacheService.remove('cache_lounges_v2');
-      return Right(result['lounge_id']?.toString() ?? result['id']?.toString() ?? '');
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  String? _sanitizeTime(String? timeStr) {
-    if (timeStr == null) return null;
-    final trimmed = timeStr.trim();
-    if (trimmed.isEmpty) return null;
-    return trimmed;
-  }
-
-  @override
   Future<Either<Failure, void>> updateLounge(Lounge lounge) async {
     try {
-      final openingTime = _sanitizeTime(lounge.opensAt);
-      final closingTime = _sanitizeTime(lounge.closesAt);
-
-      final updateMap = <String, dynamic>{
-        'name': lounge.name,
-        'description_ar': lounge.descriptionAr,
-        'description_en': lounge.descriptionEn,
-        'city': lounge.city,
-        'location': lounge.location,
-        if (lounge.lat != null && lounge.lng != null)
-          'location_point': 'POINT(${lounge.lng} ${lounge.lat})',
-        'opening_time': openingTime,
-        'closing_time': closingTime,
-        'image_url': lounge.imageUrl,
-        'images': lounge.images,
-        'is_open': lounge.isOpen,
-        'status': lounge.status,
-        'has_discount': lounge.hasDiscount,
-        'discount_percentage': lounge.discountPercentage,
-        'discount_title_ar': lounge.discountTitleAr,
-        'discount_title_en': lounge.discountTitleEn,
-        'discount_expires_at': lounge.discountExpiresAt?.toIso8601String(),
-        'allow_cash_payment': lounge.allowCashPayment,
-        'require_prepaid_first_time': lounge.requirePrepaidFirstTime,
-        'cash_grace_period_minutes': lounge.cashGracePeriodMinutes,
-        if (lounge.vodafoneCashNumber != null) 'vodafone_cash_number': lounge.vodafoneCashNumber,
-        if (lounge.instapayAccount != null) 'instapay_account': lounge.instapayAccount,
-      };
-
-      await remoteDataSource.updateLounge(lounge.id, updateMap);
-      await localCacheService.remove('cache_lounges_v2');
-      await localCacheService.remove('cache_lounge_${lounge.id}');
+      final model = _cacheHelper.toModel(lounge);
+      await remoteDataSource.updateLounge(lounge.id, model.toJson());
+      await _cacheHelper.invalidateLounge(lounge.id);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -396,8 +141,7 @@ class LoungeRepositoryImpl implements LoungeRepository {
         vodafoneCashNumber: vodafoneCashNumber,
         instapayAccount: instapayAccount,
       );
-      await localCacheService.remove('cache_lounges_v2');
-      await localCacheService.remove('cache_lounge_$loungeId');
+      await _cacheHelper.invalidateLounge(loungeId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -422,8 +166,7 @@ class LoungeRepositoryImpl implements LoungeRepository {
         if (instapayAccount != null) 'instapay_account': instapayAccount.trim(),
       };
       await remoteDataSource.updateLounge(loungeId, updateData);
-      await localCacheService.remove('cache_lounges_v2');
-      await localCacheService.remove('cache_lounge_$loungeId');
+      await _cacheHelper.invalidateLounge(loungeId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -436,8 +179,7 @@ class LoungeRepositoryImpl implements LoungeRepository {
       await remoteDataSource.updateLounge(loungeId, {
         'location_point': 'POINT($lng $lat)',
       });
-      await localCacheService.remove('cache_lounges_v2');
-      await localCacheService.remove('cache_lounge_$loungeId');
+      await _cacheHelper.invalidateLounge(loungeId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -445,190 +187,74 @@ class LoungeRepositoryImpl implements LoungeRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> getDashboardStats(String? loungeId) async {
+  Future<Either<Failure, String>> createLoungeWithOwner({
+    required String email,
+    required String password,
+    required String ownerName,
+    required String loungeName,
+    String? city,
+    String? address,
+    String? phone,
+  }) async {
     try {
-      final stats = await remoteDataSource.getDashboardStats(loungeId);
-      return Right(stats);
+      final res = await remoteDataSource.createLoungeWithOwner(
+        email: email,
+        password: password,
+        ownerName: ownerName,
+        loungeName: loungeName,
+        city: city,
+        address: address,
+        phone: phone,
+      );
+      final loungeId = res['lounge_id']?.toString() ?? '';
+      await _cacheHelper.invalidateLounge(loungeId);
+      return Right(loungeId);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> getDashboardOverview() async {
-    try {
-      final overview = await remoteDataSource.getDashboardOverview();
-      return Right(overview);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
+  Future<Either<Failure, Map<String, dynamic>>> getDashboardStats(String? loungeId) =>
+      _analyticsHelper.getDashboardStats(loungeId);
 
   @override
-  Future<Either<Failure, List<Map<String, dynamic>>>> getRevenueOverTime(int daysBack) async {
-    try {
-      final chart = await remoteDataSource.getRevenueOverTime(daysBack);
-      return Right(chart);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
+  Future<Either<Failure, Map<String, dynamic>>> getDashboardOverview() =>
+      _analyticsHelper.getDashboardOverview();
 
   @override
-  Future<Either<Failure, List<Map<String, dynamic>>>> getTopLoungesByRevenue(int limitCount) async {
-    try {
-      final top = await remoteDataSource.getTopLoungesByRevenue(limitCount);
-      return Right(top);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
+  Future<Either<Failure, List<Map<String, dynamic>>>> getRevenueOverTime(int daysBack) =>
+      _analyticsHelper.getRevenueOverTime(daysBack);
 
   @override
-  Future<Either<Failure, List<ExtraEntity>>> getExtras(String loungeId, {bool forceRefresh = false}) async {
-    final cacheKey = 'cache_extras_$loungeId';
-    try {
-      if (!forceRefresh) {
-        final cached = localCacheService.getJson(cacheKey);
-        if (cached is List && cached.isNotEmpty) {
-          final extras = cached
-              .map((item) => ExtraModel.fromJson(Map<String, dynamic>.from(item as Map)))
-              .toList();
-          _refreshExtrasInBackground(loungeId, cacheKey);
-          return Right(extras);
-        }
-      }
-
-      final extras = await remoteDataSource.getExtras(loungeId);
-      final models = extras.map((e) => ExtraModel(
-        id: e.id,
-        loungeId: e.loungeId,
-        nameAr: e.nameAr,
-        nameEn: e.nameEn,
-        name: e.name,
-        price: e.price,
-        category: e.category,
-        iconKey: e.iconKey,
-        isOutOfStock: e.isOutOfStock,
-        imageUrl: e.imageUrl,
-        stockQuantity: e.stockQuantity,
-        trackStock: e.trackStock,
-        minStockAlert: e.minStockAlert,
-      )).toList();
-
-      await localCacheService.setJson(cacheKey, models.map((m) => m.toJson()).toList());
-      return Right(extras);
-    } catch (e) {
-      final cached = localCacheService.getJson(cacheKey);
-      if (cached is List && cached.isNotEmpty) {
-        final extras = cached
-            .map((item) => ExtraModel.fromJson(Map<String, dynamic>.from(item as Map)))
-            .toList();
-        return Right(extras);
-      }
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  void _refreshExtrasInBackground(String loungeId, String cacheKey) async {
-    try {
-      final extras = await remoteDataSource.getExtras(loungeId);
-      final models = extras.map((e) => ExtraModel(
-        id: e.id,
-        loungeId: e.loungeId,
-        nameAr: e.nameAr,
-        nameEn: e.nameEn,
-        name: e.name,
-        price: e.price,
-        category: e.category,
-        iconKey: e.iconKey,
-        isOutOfStock: e.isOutOfStock,
-        imageUrl: e.imageUrl,
-        stockQuantity: e.stockQuantity,
-        trackStock: e.trackStock,
-        minStockAlert: e.minStockAlert,
-      )).toList();
-
-      await localCacheService.setJson(cacheKey, models.map((m) => m.toJson()).toList());
-    } catch (_) {}
-  }
+  Future<Either<Failure, List<Map<String, dynamic>>>> getTopLoungesByRevenue(int limitCount) =>
+      _analyticsHelper.getTopLoungesByRevenue(limitCount);
 
   @override
-  Future<Either<Failure, void>> addExtra(ExtraEntity extra) async {
-    try {
-      await remoteDataSource.addExtra(ExtraModel(
-        id: extra.id,
-        loungeId: extra.loungeId,
-        nameAr: extra.nameAr,
-        nameEn: extra.nameEn,
-        name: extra.name,
-        price: extra.price,
-        category: extra.category,
-        isOutOfStock: extra.isOutOfStock,
-        iconKey: extra.iconKey,
-        imageUrl: extra.imageUrl,
-        stockQuantity: extra.stockQuantity,
-        trackStock: extra.trackStock,
-        minStockAlert: extra.minStockAlert,
-      ));
-      await localCacheService.remove('cache_extras_${extra.loungeId}');
-      return const Right(null);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
+  Future<Either<Failure, List<ExtraEntity>>> getExtras(String loungeId, {bool forceRefresh = false}) =>
+      _extrasHelper.getExtras(loungeId, forceRefresh: forceRefresh);
 
   @override
-  Future<Either<Failure, void>> updateExtra(ExtraEntity extra) async {
-    try {
-      await remoteDataSource.updateExtra(ExtraModel(
-        id: extra.id,
-        loungeId: extra.loungeId,
-        nameAr: extra.nameAr,
-        nameEn: extra.nameEn,
-        name: extra.name,
-        price: extra.price,
-        category: extra.category,
-        isOutOfStock: extra.isOutOfStock,
-        iconKey: extra.iconKey,
-        imageUrl: extra.imageUrl,
-        stockQuantity: extra.stockQuantity,
-        trackStock: extra.trackStock,
-        minStockAlert: extra.minStockAlert,
-      ));
-      await localCacheService.remove('cache_extras_${extra.loungeId}');
-      return const Right(null);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
+  Future<Either<Failure, void>> addExtra(ExtraEntity extra) =>
+      _extrasHelper.addExtra(extra);
 
   @override
-  Future<Either<Failure, void>> deleteExtra(String extraId) async {
-    try {
-      await remoteDataSource.deleteExtra(extraId);
-      return const Right(null);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
+  Future<Either<Failure, void>> updateExtra(ExtraEntity extra) =>
+      _extrasHelper.updateExtra(extra);
 
   @override
-  Future<Either<Failure, void>> toggleExtraStock(String extraId, bool isOutOfStock) async {
-    try {
-      await remoteDataSource.toggleExtraStock(extraId, isOutOfStock);
-      return const Right(null);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
+  Future<Either<Failure, void>> deleteExtra(String extraId) =>
+      _extrasHelper.deleteExtra(extraId);
+
+  @override
+  Future<Either<Failure, void>> toggleExtraStock(String extraId, bool isOutOfStock) =>
+      _extrasHelper.toggleExtraStock(extraId, isOutOfStock);
 
   @override
   Future<Either<Failure, void>> toggleLoungeOpenStatus(String loungeId, bool isOpen) async {
     try {
       await remoteDataSource.toggleLoungeOpenStatus(loungeId, isOpen);
-      await localCacheService.remove('cache_lounges');
-      await localCacheService.remove('cache_lounge_$loungeId');
+      await _cacheHelper.invalidateLounge(loungeId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -675,13 +301,10 @@ class LoungeRepositoryImpl implements LoungeRepository {
   Future<Either<Failure, void>> deleteLounge(String id) async {
     try {
       await remoteDataSource.deleteLounge(id);
-      await localCacheService.remove('cache_lounges');
-      await localCacheService.remove('cache_lounges_v2');
-      await localCacheService.remove('cache_lounge_$id');
+      await _cacheHelper.invalidateLounge(id);
       return const Right(null);
     } catch (e) {
-      await localCacheService.remove('cache_lounges_v2');
-      await localCacheService.remove('cache_lounge_$id');
+      await _cacheHelper.invalidateLounge(id);
       return Left(ServerFailure(e.toString()));
     }
   }

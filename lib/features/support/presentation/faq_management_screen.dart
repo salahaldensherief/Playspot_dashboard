@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../art_core/app_strings.dart';
 import '../../../art_core/theme/app_colors.dart';
 import '../../../art_core/widgets/app_adaptive_page_header.dart';
 import '../../../art_core/widgets/app_button.dart';
@@ -45,15 +46,15 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: AppColors.cardBackground,
-          title: const Text('تأكيد الحذف', style: TextStyle(color: AppColors.textPrimary)),
-          content: const Text('هل أنت تأكد من رغبتك في حذف هذا السؤال الشائع؟', style: TextStyle(color: AppColors.textSecondary)),
+          title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),
+          content: Text(AppStrings.deleteFaqConfirm, style: const TextStyle(color: AppColors.textSecondary)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('إلغاء'),
+              child: Text(AppStrings.cancel),
             ),
             AppButton(
-              text: 'حذف',
+              text: AppStrings.delete,
               variant: AppButtonVariant.danger,
               onPressed: () {
                 context.read<SupportCubit>().removeFaq(id);
@@ -99,10 +100,10 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppAdaptivePageHeader(
-                  title: 'إدارة الأسئلة الشائعة (FAQ)',
-                  subtitle: 'إضافة وتعديل الأسئلة الشائعة وإجاباتها والمعروضة بداخل قسم الدعم بالتطبيق',
+                  title: AppStrings.faqManagement,
+                  subtitle: AppStrings.faqManagementSubtitle,
                   primaryAction: AppButton(
-                    text: 'إضافة سؤال جديد',
+                    text: AppStrings.addFaq,
                     variant: AppButtonVariant.gradient,
                     icon: Icons.add,
                     onPressed: () => _openFaqDialog(),
@@ -113,7 +114,7 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
                   const Center(child: CircularProgressIndicator(color: AppColors.neonBlue))
                 else if (state.faqs.isEmpty)
                   SectionContainer(
-                    title: 'جدول الأسئلة الشائعة',
+                    title: AppStrings.faqTable,
                     children: [
                       Center(
                         child: Padding(
@@ -123,7 +124,7 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
                               Icon(Icons.help_outline, color: AppColors.textMuted, size: 48.r),
                               SizedBox(height: 12.h),
                               Text(
-                                'لا توجد أسئلة شائعة مضافة حالياً',
+                                AppStrings.noDataFound,
                                 style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp),
                               ),
                             ],
@@ -134,7 +135,7 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
                   )
                 else
                   SectionContainer(
-                    title: 'جدول الأسئلة الشائعة (${state.faqs.length})',
+                    title: '${AppStrings.faqTable} (${state.faqs.length})',
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8.r),
