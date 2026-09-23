@@ -292,7 +292,9 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
               final activeShift = shiftState.activeShift;
 
               if (bookingState.status == BookingStatusState.loading && bookingState.bookings.isEmpty) {
-                return const GridShimmer(itemCount: 4, aspectRatio: 1.3);
+                return const SliverToBoxAdapter(
+                  child: GridShimmer(itemCount: 4, aspectRatio: 1.3),
+                );
               }
 
               final List<Booking> list = _selectedTabIndex == 0
@@ -303,12 +305,14 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
 
               final filtered = _applyFilters(list, activeShift);
 
-              return BookingsActiveGrid(
-                bookings: filtered,
-                isTableView: _isTableView,
-                onShowDetails: (b) => _showBookingDetails(context, b),
-                onApprove: (id) => context.read<BookingCubit>().approveBooking(id),
-                onReject: (id) => context.read<BookingCubit>().rejectBooking(id),
+              return SliverToBoxAdapter(
+                child: BookingsActiveGrid(
+                  bookings: filtered,
+                  isTableView: _isTableView,
+                  onShowDetails: (b) => _showBookingDetails(context, b),
+                  onApprove: (id) => context.read<BookingCubit>().approveBooking(id),
+                  onReject: (id) => context.read<BookingCubit>().rejectBooking(id),
+                ),
               );
             },
           );

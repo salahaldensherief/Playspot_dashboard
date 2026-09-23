@@ -105,7 +105,7 @@ class _AppVersionsCardState extends State<AppVersionsCard> {
             Expanded(
               child: AppTextField(
                 label: AppStrings.minAndroidVersion,
-                hintText: '1.0.0',
+                hintText: AppStrings.hintVersionNumber,
                 controller: _minAndroidController,
                 prefixIcon: Icons.android,
               ),
@@ -114,7 +114,7 @@ class _AppVersionsCardState extends State<AppVersionsCard> {
             Expanded(
               child: AppTextField(
                 label: AppStrings.minIosVersion,
-                hintText: '1.0.0',
+                hintText: AppStrings.hintVersionNumber,
                 controller: _minIosController,
                 prefixIcon: Icons.apple,
               ),
@@ -129,7 +129,7 @@ class _AppVersionsCardState extends State<AppVersionsCard> {
             Expanded(
               child: AppTextField(
                 label: AppStrings.latestAndroidVersion,
-                hintText: '1.2.0',
+                hintText: AppStrings.hintVersionNumber,
                 controller: _latestAndroidController,
                 prefixIcon: Icons.system_update_alt,
               ),
@@ -138,7 +138,7 @@ class _AppVersionsCardState extends State<AppVersionsCard> {
             Expanded(
               child: AppTextField(
                 label: AppStrings.latestIosVersion,
-                hintText: '1.2.0',
+                hintText: AppStrings.hintVersionNumber,
                 controller: _latestIosController,
                 prefixIcon: Icons.system_update_alt,
               ),
@@ -153,7 +153,7 @@ class _AppVersionsCardState extends State<AppVersionsCard> {
             Expanded(
               child: AppTextField(
                 label: AppStrings.playStoreUrl,
-                hintText: 'https://play.google.com/store/apps/details?id=com.playspot.app',
+                hintText: AppStrings.hintPlayStoreUrl,
                 controller: _storeAndroidController,
                 prefixIcon: Icons.link,
               ),
@@ -162,7 +162,7 @@ class _AppVersionsCardState extends State<AppVersionsCard> {
             Expanded(
               child: AppTextField(
                 label: AppStrings.appStoreUrl,
-                hintText: 'https://apps.apple.com/app/playspot/id123456789',
+                hintText: AppStrings.hintAppStoreUrl,
                 controller: _storeIosController,
                 prefixIcon: Icons.link,
               ),

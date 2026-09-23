@@ -107,8 +107,8 @@ class AppButton extends StatelessWidget {
       final Gradient effectiveGradient = gradient ??
           const LinearGradient(
             colors: [AppColors.neonBlue, AppColors.neonPurple],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
+            begin: AlignmentDirectional.centerStart,
+            end: AlignmentDirectional.centerEnd,
           );
 
       return Padding(

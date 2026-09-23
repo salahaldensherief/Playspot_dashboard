@@ -74,9 +74,9 @@ class CashierPerformanceWidget extends StatelessWidget {
                 final isHealthy = p.totalDifference >= 0;
                 return DataRow(cells: [
                   DataCell(Text(p.cashierName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
-                  DataCell(Text('${p.shiftCount}', style: const TextStyle(color: Colors.white))),
-                  DataCell(Text('${p.closedShiftCount}', style: const TextStyle(color: AppColors.textSecondary))),
-                  DataCell(Text('${p.approvedShiftCount}', style: const TextStyle(color: AppColors.success))),
+                  DataCell(Text(p.shiftCount.toString(), style: const TextStyle(color: Colors.white))),
+                  DataCell(Text(p.closedShiftCount.toString(), style: const TextStyle(color: AppColors.textSecondary))),
+                  DataCell(Text(p.approvedShiftCount.toString(), style: const TextStyle(color: AppColors.success))),
                   DataCell(Text('${p.totalSales.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold))),
                   DataCell(Text('${p.cashSales.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.success))),
                   DataCell(Text('${p.digitalSales.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.warning))),

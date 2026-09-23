@@ -2,16 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import 'package:play_spot_dashboard/art_core/di/provider_scope.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_products_preview.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_ticker.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/station_control_actions_bar.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/station_control_countdown_gauge.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/station_control_gamer_card.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/station_control_header.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/station_control_requests_section.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 
 /// Slide-over Station Control Drawer for interactive real-time station management.
 class StationControlDrawer extends StatelessWidget {
@@ -27,33 +33,46 @@ class StationControlDrawer extends StatelessWidget {
   });
 
   static void show(
-    BuildContext context, {
+    BuildContext parentContext, {
     required Booking booking,
     VoidCallback? onEndSession,
   }) {
+    final dashboardCubit = parentContext.read<DashboardCubit>();
+    final bookingCubit = parentContext.read<BookingCubit>();
+    final roomCubit = parentContext.read<RoomCubit>();
+    final clientRequestsCubit = parentContext.read<ClientRequestsCubit>();
+
     showGeneralDialog(
-      context: context,
+      context: parentContext,
       barrierDismissible: true,
       barrierLabel: 'StationControlDrawer',
       barrierColor: Colors.black.withValues(alpha: 0.6),
       transitionDuration: const Duration(milliseconds: 250),
-      pageBuilder: (context, anim1, anim2) {
-        return Align(
-          alignment: Alignment.centerRight,
-          child: Material(
-            color: Colors.transparent,
-            child: SizedBox(
-              width: 420.w,
-              height: double.infinity,
-              child: StationControlDrawer(
-                booking: booking,
-                onClose: () => Navigator.of(context).pop(),
-                onEndSession: () {
-                  Navigator.of(context).pop();
-                  if (onEndSession != null) {
-                    onEndSession();
-                  }
-                },
+      pageBuilder: (dialogContext, anim1, anim2) {
+        return MultiBlocProviderScope(
+          providers: [
+            BlocProvider.value(value: dashboardCubit),
+            BlocProvider.value(value: bookingCubit),
+            BlocProvider.value(value: roomCubit),
+            BlocProvider.value(value: clientRequestsCubit),
+          ],
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Material(
+              color: Colors.transparent,
+              child: SizedBox(
+                width: (420.w).clamp(0.0, MediaQuery.sizeOf(dialogContext).width * 0.95),
+                height: double.infinity,
+                child: StationControlDrawer(
+                  booking: booking,
+                  onClose: () => Navigator.of(dialogContext).pop(),
+                  onEndSession: () {
+                    Navigator.of(dialogContext).pop();
+                    if (onEndSession != null) {
+                      onEndSession();
+                    }
+                  },
+                ),
               ),
             ),
           ),
@@ -74,9 +93,9 @@ class StationControlDrawer extends StatelessWidget {
     );
   }
 
-  double _calculateExtrasTotal() {
+  double _calculateExtrasTotal(Booking targetBooking) {
     double total = 0.0;
-    for (final extra in booking.extras) {
+    for (final extra in targetBooking.extras) {
       final price = (extra['price'] ?? extra['total_price'] ?? extra['unit_price'] as num?)?.toDouble() ?? 0.0;
       final qty = (extra['quantity'] ?? extra['qty'] ?? extra['count'] as num?)?.toInt() ?? 1;
       total += (price * qty);
@@ -86,84 +105,96 @@ class StationControlDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final remaining = booking.remainingDuration();
-    final isExpired = booking.isSessionExpired();
-    final extrasTotal = _calculateExtrasTotal();
-    final totalBalance = booking.totalPrice + extrasTotal;
+    final now = SessionTickerScope.nowOf(context);
+    return BlocBuilder<BookingCubit, BookingState>(
+      buildWhen: (previous, current) => previous.bookings != current.bookings,
+      builder: (context, state) {
+        final matching = state.bookings.where((b) => b.id == booking.id);
+        final currentBooking = matching.isNotEmpty ? matching.first : booking;
 
-    final Color accent = isExpired
-        ? AppColors.danger
-        : (remaining.inMinutes <= 5 && !booking.isOpenEnded ? AppColors.warning : AppColors.success);
+        final remaining = currentBooking.remainingDuration(now);
+        final isExpired = currentBooking.isSessionExpired(now);
+        final extrasTotal = _calculateExtrasTotal(currentBooking);
+        final totalBalance = currentBooking.totalPrice + extrasTotal;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        border: const Border(
-          left: BorderSide(color: AppColors.borderDefault, width: 1),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 20,
-            spreadRadius: 5,
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header Bar
-          StationControlHeader(
-            booking: booking,
-            accent: accent,
-            onClose: onClose,
-          ),
+        final Color accent = isExpired
+            ? AppColors.danger
+            : (remaining.inMinutes <= 5 && !currentBooking.isOpenEnded ? AppColors.warning : AppColors.success);
 
-          // Scrollable Body
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(18.r),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Gamer Profile Card
-                  StationControlGamerCard(booking: booking),
-                  SizedBox(height: 16.h),
-
-                  // Session Requests Section (Targeted BlocBuilder)
-                  StationControlRequestsSection(booking: booking),
-
-                  // Countdown Gauge Widget
-                  StationControlCountdownGauge(
-                    booking: booking,
-                    remaining: remaining,
-                    isExpired: isExpired,
-                    accent: accent,
-                  ),
-                  SizedBox(height: 18.h),
-
-                  // Quick Time Extension & Action Bar
-                  StationControlActionsBar(booking: booking),
-                  SizedBox(height: 16.h),
-
-                  // Canteen & Extras Preview
-                  BookingProductsPreview(booking: booking),
-                  SizedBox(height: 16.h),
-
-                  // Itemized Balance Breakdown Card
-                  _buildBalanceBreakdown(extrasTotal, totalBalance),
-                ],
-              ),
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            border: const BorderDirectional(
+              start: BorderSide(color: AppColors.borderDefault, width: 1),
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 20,
+                spreadRadius: 5,
+              ),
+            ],
           ),
+          child: Column(
+            children: [
+              // Header Bar
+              StationControlHeader(
+                booking: currentBooking,
+                accent: accent,
+                onClose: onClose,
+              ),
 
-          // Sticky Footer Checkout Button
-          _buildFooter(context, totalBalance),
-        ],
-      ),
+              // Scrollable Body
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(18.r),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Gamer Profile Card
+                      StationControlGamerCard(booking: currentBooking),
+                      SizedBox(height: 16.h),
+
+                      // Session Requests Section
+                      StationControlRequestsSection(booking: currentBooking),
+
+                      // Countdown Gauge Widget
+                      StationControlCountdownGauge(
+                        booking: currentBooking,
+                        remaining: remaining,
+                        isExpired: isExpired,
+                        accent: accent,
+                      ),
+                      SizedBox(height: 18.h),
+
+                      // Quick Time Extension & Action Bar
+                      StationControlActionsBar(booking: currentBooking),
+                      SizedBox(height: 16.h),
+
+                      // Canteen & Extras Preview
+                      BookingProductsPreview(
+                        booking: currentBooking,
+                        maxVisibleItems: 50,
+                      ),
+                      SizedBox(height: 16.h),
+
+                      // Itemized Balance Breakdown Card
+                      _buildBalanceBreakdown(currentBooking, extrasTotal, totalBalance),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Sticky Footer Checkout Button
+              _buildFooter(context, currentBooking, totalBalance),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildBalanceBreakdown(double extrasTotal, double totalBalance) {
+  Widget _buildBalanceBreakdown(Booking targetBooking, double extrasTotal, double totalBalance) {
     return Container(
       padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
@@ -181,7 +212,7 @@ class StationControlDrawer extends StatelessWidget {
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
               ),
               Text(
-                '${booking.totalPrice.toStringAsFixed(2)} ${AppStrings.egp}',
+                '${targetBooking.totalPrice.toStringAsFixed(2)} ${AppStrings.egp}',
                 style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp, fontWeight: FontWeight.bold),
               ),
             ],
@@ -224,7 +255,7 @@ class StationControlDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildFooter(BuildContext context, double totalBalance) {
+  Widget _buildFooter(BuildContext context, Booking targetBooking, double totalBalance) {
     return Container(
       padding: EdgeInsets.all(16.r),
       decoration: const BoxDecoration(
@@ -234,7 +265,7 @@ class StationControlDrawer extends StatelessWidget {
       child: AppButton(
         onPressed: onEndSession ??
             () {
-              context.read<DashboardCubit>().endSession(booking.id);
+              context.read<DashboardCubit>().endSession(targetBooking.id);
               onClose();
             },
         text: '${AppStrings.endSession} (${totalBalance.toStringAsFixed(2)} ${AppStrings.egp})',

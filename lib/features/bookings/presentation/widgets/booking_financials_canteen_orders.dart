@@ -116,7 +116,7 @@ class BookingFinancialsCanteenOrders extends StatelessWidget {
                 if (orderTotal > 0) ...[
                   SizedBox(height: 4.h),
                   Align(
-                    alignment: Alignment.centerLeft,
+                    alignment: AlignmentDirectional.centerStart,
                     child: AppText.body(
                       'الإجمالي: ${orderTotal.toStringAsFixed(2)} ${AppStrings.egp}',
                       fontSize: 11.sp,

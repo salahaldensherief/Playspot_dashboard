@@ -69,21 +69,44 @@ class BookingMutationHelper {
         : booking;
 
     final jsonMap = bookingToInsert.toJson();
-    if (bookingToInsert.id.isEmpty) {
+    if (bookingToInsert.id.trim().isEmpty) {
       jsonMap.remove('id');
+    }
+    if (bookingToInsert.userId.trim().isEmpty) {
+      jsonMap.remove('user_id');
+    }
+    if (bookingToInsert.shiftId == null || bookingToInsert.shiftId!.trim().isEmpty) {
+      jsonMap.remove('shift_id');
     }
 
     final response = await client.from('bookings').insert(jsonMap).select().single();
     final createdBookingId = (response['id'] ?? bookingToInsert.id)?.toString();
 
-    if (bookingToInsert.status == BookingStatus.inProgress) {
+    if (bookingToInsert.status == BookingStatus.inProgress &&
+        createdBookingId != null &&
+        createdBookingId.isNotEmpty) {
       try {
-        await client
-            .from('rooms')
-            .update({'status': 'occupied', 'is_available': false})
-            .eq('id', bookingToInsert.roomId);
-      } catch (e) {
-        debugPrint('⚠️ [BookingMutationHelper] Failed updating room status to occupied: $e');
+        await client.rpc('complete_booking_payment', params: {
+          'p_booking_id': createdBookingId,
+          'p_payment_method': 'cash',
+          'p_final_amount': null,
+        });
+        debugPrint('🟢 [BookingMutationHelper] complete_booking_payment RPC succeeded for walk-in booking: $createdBookingId');
+      } catch (e1) {
+        debugPrint('⚠️ [BookingMutationHelper] complete_booking_payment RPC failed ($e1), trying start_booking_session');
+        try {
+          await client.rpc('start_booking_session', params: {
+            'p_booking_id': createdBookingId,
+          });
+        } catch (e2) {
+          debugPrint('⚠️ [BookingMutationHelper] start_booking_session RPC failed: $e2');
+          try {
+            await client
+                .from('rooms')
+                .update({'status': 'occupied', 'is_available': false})
+                .eq('id', bookingToInsert.roomId);
+          } catch (_) {}
+        }
       }
     }
 

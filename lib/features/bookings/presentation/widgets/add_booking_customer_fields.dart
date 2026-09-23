@@ -43,7 +43,7 @@ class AddBookingCustomerFields extends StatelessWidget {
               borderSide: const BorderSide(color: AppColors.borderDefault),
             ),
           ),
-          validator: (val) => val == null || val.isEmpty ? AppStrings.fieldRequired : null,
+          validator: (val) => null,
         ),
       ],
     );

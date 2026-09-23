@@ -10,6 +10,7 @@ class AddBookingSummaryCard extends StatelessWidget {
   final int durationMinutes;
   final double extrasTotal;
   final double voucherDiscount;
+  final String playMode;
 
   const AddBookingSummaryCard({
     super.key,
@@ -17,6 +18,7 @@ class AddBookingSummaryCard extends StatelessWidget {
     required this.durationMinutes,
     required this.extrasTotal,
     required this.voucherDiscount,
+    this.playMode = 'single',
   });
 
   @override
@@ -24,7 +26,9 @@ class AddBookingSummaryCard extends StatelessWidget {
     if (room == null) return const SizedBox.shrink();
 
     final double durationHours = durationMinutes / 60.0;
-    final double pricePerHour = room?.pricePerHour ?? 0.0;
+    final double pricePerHour = playMode == 'multi'
+        ? (room!.hourlyRateMulti > 0 ? room!.hourlyRateMulti : room!.pricePerHour)
+        : (room!.hourlyRateSingle > 0 ? room!.hourlyRateSingle : room!.pricePerHour);
     final double roomTotal = durationHours * pricePerHour;
     final double grandTotal = (roomTotal + extrasTotal - voucherDiscount).clamp(0.0, double.infinity);
 

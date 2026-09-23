@@ -180,7 +180,8 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
         children: [
           Icon(icon, color: AppColors.textSecondary, size: 16.r),
           SizedBox(width: 8.w),
-          Text('$label: ', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
+          Text('$label:', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
+          SizedBox(width: 4.w),
           Text(value, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13.sp)),
         ],
       ),

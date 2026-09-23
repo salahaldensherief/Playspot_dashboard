@@ -179,7 +179,11 @@ class BookingModel extends Booking {
         final raw = json['visit_number'] ?? json['out_visit_number'] ?? json['visitNumber'];
         if (raw != null) {
           final val = BookingJsonParser.parseInt(raw, 0);
-          return val > 0 ? val : null;
+          if (val > 0) return val;
+        }
+        final userIdStr = (json['user_id'] ?? json['out_user_id'] ?? '').toString().trim();
+        if (userIdStr.isEmpty) {
+          return 1;
         }
         return null;
       }(),
@@ -200,8 +204,8 @@ class BookingModel extends Booking {
     final expAt = expiresAt;
     final chkAt = checkedInAt;
 
-    return {
-      'user_id': userId,
+    final map = <String, dynamic>{
+      if (userId.trim().isNotEmpty) 'user_id': userId,
       'room_id': roomId,
       'lounge_id': loungeId,
       'date': date.toIso8601String().split('T')[0],
@@ -214,22 +218,24 @@ class BookingModel extends Booking {
       'status': status.toDbString(),
       'payment_status': paymentStatus.name,
       'user_name': userName,
-      'user_phone': userPhone,
+      if (userPhone != null && userPhone!.trim().isNotEmpty) 'user_phone': userPhone,
       'room_name': roomName,
       if (voucherDiscount != null) 'voucher_discount': voucherDiscount,
-      if (vCode != null && vCode.isNotEmpty) 'voucher_code': vCode,
-      'discount_amount': discountAmount,
-      'discount_percentage': discountPercentage,
-      'discount_reason': discountReason,
-      if (shiftId != null) 'shift_id': shiftId,
-      if (playMode != null) 'play_mode': playMode,
-      if (paymentMethod != null) 'payment_method': paymentMethod,
-      if (receiptUrl != null) 'receipt_url': receiptUrl,
+      if (vCode != null && vCode.trim().isNotEmpty) 'voucher_code': vCode,
+      if (discountAmount != null) 'discount_amount': discountAmount,
+      if (discountPercentage != null) 'discount_percentage': discountPercentage,
+      if (discountReason != null && discountReason!.trim().isNotEmpty) 'discount_reason': discountReason,
+      if (shiftId != null && shiftId!.trim().isNotEmpty) 'shift_id': shiftId,
+      if (playMode != null && playMode!.trim().isNotEmpty) 'play_mode': playMode,
+      if (paymentMethod != null && paymentMethod!.trim().isNotEmpty) 'payment_method': paymentMethod,
+      if (receiptUrl != null && receiptUrl!.trim().isNotEmpty) 'receipt_url': receiptUrl,
       if (expAt != null) 'expires_at': expAt.toIso8601String(),
       'is_first_booking': isFirstBooking,
-      if (senderWalletPhone != null) 'sender_wallet_phone': senderWalletPhone,
+      if (senderWalletPhone != null && senderWalletPhone!.trim().isNotEmpty) 'sender_wallet_phone': senderWalletPhone,
       if (chkAt != null) 'checked_in_at': chkAt.toIso8601String(),
-      if (cancellationReason != null) 'cancellation_reason': cancellationReason,
+      if (cancellationReason != null && cancellationReason!.trim().isNotEmpty) 'cancellation_reason': cancellationReason,
     };
+
+    return map;
   }
 }

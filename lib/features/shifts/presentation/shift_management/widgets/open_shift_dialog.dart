@@ -61,7 +61,7 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
               AppTextField(
                 controller: _controller,
                 label: AppStrings.startingCash,
-                hintText: '0.00',
+                hintText: AppStrings.hintAmount,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (val) {
                   if (val == null || val.isEmpty) return AppStrings.fieldRequired;

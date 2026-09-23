@@ -149,7 +149,7 @@ class LoungeCashPolicySection extends StatelessWidget {
               AppTextField(
                 controller: gracePeriodController,
                 label: AppStrings.gracePeriodFieldLabel,
-                hintText: '10',
+                hintText: AppStrings.hintMinutes,
                 keyboardType: TextInputType.number,
                 enabled: canEdit,
                 prefixIcon: Icons.access_time_rounded,

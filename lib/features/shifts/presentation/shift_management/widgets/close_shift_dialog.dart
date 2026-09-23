@@ -166,7 +166,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
             AppTextField(
               controller: _cashController,
               label: AppStrings.actualCash,
-              hintText: '0.00',
+              hintText: AppStrings.hintAmount,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               validator: (val) {
                 if (val == null || val.isEmpty) return AppStrings.fieldRequired;

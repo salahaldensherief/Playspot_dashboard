@@ -119,7 +119,7 @@ class _DisputeResolutionDialogState extends State<DisputeResolutionDialog> {
                     Text(m.player1Name ?? 'P1', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16.sp)),
                   ],
                 ),
-                Text('VS', style: TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold, fontSize: 18.sp)),
+                Text(AppStrings.vs, style: TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold, fontSize: 18.sp)),
                 Column(
                   children: [
                     Text(AppStrings.disputePlayerTwo, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),

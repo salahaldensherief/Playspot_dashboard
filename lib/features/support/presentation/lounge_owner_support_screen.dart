@@ -42,46 +42,44 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
         builder: (context, state) {
           final isLoading = state.status == SupportStatus.loading;
 
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppAdaptivePageHeader(
-                  title: AppStrings.supportCenter,
-                  subtitle: AppStrings.supportCenterSubtitle,
-                  primaryAction: AppButton(
-                    text: AppStrings.refresh,
-                    icon: Icons.refresh,
-                    variant: AppButtonVariant.outlined,
-                    onPressed: () {
-                      context.read<SupportCubit>().loadAppSettings();
-                      context.read<SupportCubit>().loadTickets();
-                    },
-                  ),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppAdaptivePageHeader(
+                title: AppStrings.supportCenter,
+                subtitle: AppStrings.supportCenterSubtitle,
+                primaryAction: AppButton(
+                  text: AppStrings.refresh,
+                  icon: Icons.refresh,
+                  variant: AppButtonVariant.outlined,
+                  onPressed: () {
+                    context.read<SupportCubit>().loadAppSettings();
+                    context.read<SupportCubit>().loadTickets();
+                  },
                 ),
-                SizedBox(height: 24.h),
+              ),
+              SizedBox(height: 24.h),
 
-                // Direct Support Channels
-                _buildSupportSettingsCard(state.settings),
-                SizedBox(height: 24.h),
+              // Direct Support Channels
+              _buildSupportSettingsCard(state.settings),
+              SizedBox(height: 24.h),
 
-                // User's Support Tickets
-                AppText.heading(AppStrings.supportTickets, fontSize: 18.sp),
-                SizedBox(height: 12.h),
+              // User's Support Tickets
+              AppText.heading(AppStrings.supportTickets, fontSize: 18.sp),
+              SizedBox(height: 12.h),
 
-                if (isLoading)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(32.0),
-                      child: CircularProgressIndicator(color: AppColors.neonBlue),
-                    ),
-                  )
-                else if (state.tickets.isEmpty)
-                  _buildEmptyTicketsCard()
-                else
-                  _buildTicketsTable(state.tickets),
-              ],
-            ),
+              if (isLoading)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: CircularProgressIndicator(color: AppColors.neonBlue),
+                  ),
+                )
+              else if (state.tickets.isEmpty)
+                _buildEmptyTicketsCard()
+              else
+                _buildTicketsTable(state.tickets),
+            ],
           );
         },
       ),
@@ -314,7 +312,7 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
         return StatusBadge.warning(AppStrings.inProgress);
       case 'resolved':
       case 'closed':
-        return StatusBadge.success(AppStrings.active);
+        return StatusBadge.success(AppStrings.ticketStatusResolved);
       default:
         return StatusBadge.secondary(status);
     }

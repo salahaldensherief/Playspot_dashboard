@@ -182,7 +182,7 @@ class SessionOperationsRemoteHelper {
     if (isApproved) {
       await supabaseClient.rpc('approve_booking_extension', params: {
         'p_booking_id': bookingId,
-        'p_additional_cost': additionalCost ?? 0.0,
+        'p_additional_cost': null,
       });
     } else {
       await supabaseClient.rpc('reject_booking_extension', params: {

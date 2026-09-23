@@ -5,6 +5,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_extras_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/swap_room_dialog.dart';
 
@@ -20,8 +21,11 @@ class StationControlActionsBar extends StatelessWidget {
     final label = '+$minutes دقيقة';
     return InkWell(
       borderRadius: BorderRadius.circular(10.r),
-      onTap: () {
-        context.read<DashboardCubit>().extendSession(booking.id, minutes);
+      onTap: () async {
+        final success = await context.read<DashboardCubit>().extendSession(booking.id, minutes);
+        if (success && context.mounted) {
+          context.read<BookingCubit>().startWatchingBookings(loungeId: booking.loungeId, forceRefresh: true);
+        }
       },
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 9.h),
@@ -76,19 +80,23 @@ class StationControlActionsBar extends StatelessWidget {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => AddExtrasDialog(
-                      bookingId: booking.id,
-                      loungeId: booking.loungeId,
-                      onConfirm: (extras, totalCost) {
-                        context.read<DashboardCubit>().addExtrasToSession(
-                              booking.id,
-                              extras,
-                              totalCost,
-                            );
-                      },
-                    ),
+                  final dashboardCubit = context.read<DashboardCubit>();
+                  final bookingCubit = context.read<BookingCubit>();
+
+                  AddExtrasDialog.show(
+                    context,
+                    bookingId: booking.id,
+                    loungeId: booking.loungeId,
+                    onConfirm: (extras, totalCost) async {
+                      final success = await dashboardCubit.addExtrasToSession(
+                        booking.id,
+                        extras,
+                        totalCost,
+                      );
+                      if (success) {
+                        bookingCubit.startWatchingBookings(loungeId: booking.loungeId, forceRefresh: true);
+                      }
+                    },
                   );
                 },
                 icon: Icon(Icons.fastfood_rounded, size: 16.sp, color: AppColors.neonPurple),

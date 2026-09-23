@@ -132,7 +132,7 @@ class _BookingFilterBarState extends State<BookingFilterBar> {
                 if (widget.filterState.hasActiveFilters) ...[
                   SizedBox(height: 8.h),
                   Align(
-                    alignment: Alignment.centerLeft,
+                    alignment: AlignmentDirectional.centerStart,
                     child: TextButton.icon(
                       onPressed: widget.onResetFilters,
                       icon: Icon(Icons.clear_all_rounded, color: AppColors.danger, size: 16.r),

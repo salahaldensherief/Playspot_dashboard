@@ -166,13 +166,13 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
                   AppTextField(
                     controller: _vodafoneCashController,
                     label: AppStrings.vodafoneCashNumberStr,
-                    hintText: '01xxxxxxxxx',
+                    hintText: AppStrings.hintPhoneNumber,
                   ),
                   SizedBox(height: 16.h),
                   AppTextField(
                     controller: _instapayController,
                     label: AppStrings.instapayAccountStr,
-                    hintText: 'username@instapay',
+                    hintText: AppStrings.hintInstapay,
                   ),
                 ],
               ),

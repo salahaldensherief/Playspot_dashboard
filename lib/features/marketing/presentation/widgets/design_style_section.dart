@@ -4,6 +4,8 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/section_container.dart';
 
+import '../../../../art_core/app_strings.dart';
+
 class DesignStyleSection extends StatelessWidget {
   final List<List<Color>> colorTemplates;
   final int selectedTemplate;
@@ -31,7 +33,7 @@ class DesignStyleSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SectionContainer(
-      title: 'تصميم العرض والهوية البصرية (Design Style)',
+      title: AppStrings.designStyleTitle,
       children: [
         AppText.subHeading('قالب الألوان (Color Palette):', fontSize: 13.sp, color: AppColors.textPrimary),
         SizedBox(height: 10.h),

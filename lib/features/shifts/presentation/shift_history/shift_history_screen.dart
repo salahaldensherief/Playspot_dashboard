@@ -97,8 +97,8 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AppAdaptivePageHeader(
-                title: 'الورديات',
-                subtitle: 'سجل الورديات وإغلاق الخزينة',
+                title: AppStrings.shifts,
+                subtitle: AppStrings.shiftsHistorySubtitle,
                 primaryAction: AppButton(
                   text: AppStrings.refresh,
                   icon: Icons.refresh,
@@ -196,14 +196,14 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                                     DataCell(Text('${(shift.digitalRevenue ?? 0).toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.warning))),
                                     DataCell(Text('${(shift.expensesTotal ?? 0).toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.danger))),
                                     DataCell(Text('${shift.calculatedExpectedCash.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.neonBlue))),
-                                    DataCell(Text(shift.actualCash != null ? '${shift.actualCash!.toStringAsFixed(0)} ${AppStrings.egp}' : '---', style: const TextStyle(color: Colors.white))),
+                                    DataCell(Text(shift.actualCash != null ? '${shift.actualCash!.toStringAsFixed(0)} ${AppStrings.egp}' : AppStrings.notAvailable, style: const TextStyle(color: Colors.white))),
                                     DataCell(
                                       shift.status == 'closed' 
                                       ? Text(
                                           '${discrepancy.toStringAsFixed(0)} ${AppStrings.egp}',
                                           style: TextStyle(color: isHealthy ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold),
                                         )
-                                      : const Text('---', style: TextStyle(color: AppColors.textSecondary)),
+                                      : Text(AppStrings.notAvailable, style: const TextStyle(color: AppColors.textSecondary)),
                                     ),
                                     DataCell(_buildStatusBadge(shift)),
                                     DataCell(

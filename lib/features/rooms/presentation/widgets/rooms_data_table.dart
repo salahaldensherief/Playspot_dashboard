@@ -64,7 +64,7 @@ class RoomsDataTable extends StatelessWidget {
               ],
             ),
           ),
-          DataCell(Text('+${room.extraControllerPrice.toStringAsFixed(0)} EGP/hr', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp))),
+          DataCell(Text('+${room.extraControllerPrice.toStringAsFixed(0)} ${AppStrings.egpPerHour}', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp))),
           DataCell(_getStatusBadge(room.status)),
           if (canEdit)
             DataCell(

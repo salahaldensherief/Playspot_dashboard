@@ -62,7 +62,7 @@ class LoungeElectronicPaymentSection extends StatelessWidget {
           AppTextField(
             controller: walletNumberController,
             label: AppStrings.walletNumberFieldLabel,
-            hintText: '01xxxxxxxxx',
+            hintText: AppStrings.hintPhoneNumber,
             enabled: canEdit,
             keyboardType: TextInputType.phone,
             prefixIcon: Icons.phone_android_rounded,
@@ -71,7 +71,7 @@ class LoungeElectronicPaymentSection extends StatelessWidget {
           AppTextField(
             controller: instapayHandleController,
             label: AppStrings.instapayHandleFieldLabel,
-            hintText: 'username@instapay',
+            hintText: AppStrings.hintInstapay,
             enabled: canEdit,
             prefixIcon: Icons.alternate_email_rounded,
           ),

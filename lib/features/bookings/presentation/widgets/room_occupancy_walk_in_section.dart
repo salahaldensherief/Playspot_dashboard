@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
+
+import 'add_booking_dialog.dart';
 
 class RoomOccupancyWalkInSection extends StatelessWidget {
   final RoomEntity room;
@@ -36,7 +39,7 @@ class RoomOccupancyWalkInSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'حجز مباشر (Walk-in)',
+                      AppStrings.walkInBooking,
                       style: TextStyle(
                         color: AppColors.danger,
                         fontWeight: FontWeight.bold,
@@ -44,7 +47,7 @@ class RoomOccupancyWalkInSection extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'الأوضة مشغولة بزبون من الصالة',
+                      AppStrings.roomOccupiedByWalkIn,
                       style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 11.sp,
@@ -57,28 +60,51 @@ class RoomOccupancyWalkInSection extends StatelessWidget {
           ),
         ),
         SizedBox(height: 10.h),
-        BlocBuilder<RoomCubit, RoomState>(
-          buildWhen: (prev, curr) =>
-              prev.isRoomUpdating(room.id) != curr.isRoomUpdating(room.id),
-          builder: (context, roomState) {
-            final isUpdating = roomState.isRoomUpdating(room.id);
-            return AppButton(
-              text: 'تفريغ الغرفة (إنهاء الحجز)',
-              icon: Icons.check_circle_outline_rounded,
-              variant: AppButtonVariant.outlined,
-              width: double.infinity,
-              height: 36.h,
-              isLoading: isUpdating,
-              onPressed: isUpdating
-                  ? null
-                  : () {
-                      context
-                          .read<RoomCubit>()
-                          .toggleWalkInStatus(room.id, room.status);
-                    },
-            );
-          },
+        Row(
+          children: [
+            Expanded(
+              child: AppButton(
+                text: AppStrings.bookingAndClientDetails,
+                icon: Icons.play_arrow_rounded,
+                variant: AppButtonVariant.primary,
+                height: 36.h,
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    useRootNavigator: false,
+                    builder: (_) => AddBookingDialog(
+                      loungeId: room.loungeId,
+                      initialRoom: room,
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(width: 8.w),
+            BlocBuilder<RoomCubit, RoomState>(
+              buildWhen: (prev, curr) =>
+                  prev.isRoomUpdating(room.id) != curr.isRoomUpdating(room.id),
+              builder: (context, roomState) {
+                final isUpdating = roomState.isRoomUpdating(room.id);
+                return AppButton(
+                  text: AppStrings.vacateRoom,
+                  icon: Icons.check_circle_outline_rounded,
+                  variant: AppButtonVariant.outlined,
+                  height: 36.h,
+                  isLoading: isUpdating,
+                  onPressed: isUpdating
+                      ? null
+                      : () {
+                          context
+                              .read<RoomCubit>()
+                              .toggleWalkInStatus(room.id, room.status);
+                        },
+                );
+              },
+            ),
+          ],
         ),
+
       ],
     );
   }

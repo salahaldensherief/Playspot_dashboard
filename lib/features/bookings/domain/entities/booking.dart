@@ -260,10 +260,14 @@ class Booking extends Equatable {
   }
 
   /// Calculates the exact end [DateTime].
-  /// Uses parsed [endTime] if available, otherwise calculates [startDateTime] + [durationMinutes].
-  /// Handles ISO string formats and overnight sessions.
+  /// Prefers calculating [startDateTime] + [durationMinutes] when available,
+  /// otherwise falls back to parsing [endTime].
   DateTime? get endDateTime {
     final start = startDateTime;
+
+    if (start != null && durationMinutes > 0) {
+      return start.add(Duration(minutes: durationMinutes));
+    }
 
     if (endTime.trim().isNotEmpty) {
       try {
@@ -294,20 +298,16 @@ class Booking extends Equatable {
     if (status == BookingStatus.completed || status == BookingStatus.cancelled) {
       return false;
     }
+    if (status == BookingStatus.inProgress) {
+      return true;
+    }
     final currentTime = now ?? DateTime.now();
     final end = endDateTime;
     final start = startDateTime;
     if (end == null || start == null) return false;
 
-    if (currentTime.isAfter(end) || currentTime.isAtSameMomentAs(end)) {
-      return false;
-    }
-
-    if (currentTime.isBefore(start)) {
-      return false;
-    }
-
-    return status == BookingStatus.inProgress;
+    return (currentTime.isAfter(start) || currentTime.isAtSameMomentAs(start)) &&
+        currentTime.isBefore(end);
   }
 
   /// Checks if the session or cash hold has expired.

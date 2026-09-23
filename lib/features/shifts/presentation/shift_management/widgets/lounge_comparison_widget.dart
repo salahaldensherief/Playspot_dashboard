@@ -72,8 +72,8 @@ class LoungeComparisonWidget extends StatelessWidget {
                 final isHealthy = c.totalDifference >= 0;
                 return DataRow(cells: [
                   DataCell(Text(c.loungeName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
-                  DataCell(Text('${c.shiftCount}', style: const TextStyle(color: Colors.white))),
-                  DataCell(Text('${c.openShiftCount}', style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.bold))),
+                  DataCell(Text(c.shiftCount.toString(), style: const TextStyle(color: Colors.white))),
+                  DataCell(Text(c.openShiftCount.toString(), style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.bold))),
                   DataCell(Text('${c.totalSales.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold))),
                   DataCell(Text('${c.totalExpenses.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.danger))),
                   DataCell(Text(
@@ -81,7 +81,7 @@ class LoungeComparisonWidget extends StatelessWidget {
                     style: TextStyle(color: isHealthy ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold),
                   )),
                   DataCell(Text('${c.averageShiftSales.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: Colors.white))),
-                  DataCell(Text('${c.pendingApprovalCount}', style: const TextStyle(color: AppColors.warning))),
+                  DataCell(Text(c.pendingApprovalCount.toString(), style: const TextStyle(color: AppColors.warning))),
                 ]);
               }).toList(),
             ),

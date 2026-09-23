@@ -544,6 +544,7 @@ class AppStrings {
   // Shift Management
   static String get shiftActive => 'shift_active'.tr();
   static String get noActiveShift => 'no_active_shift'.tr();
+  static String get shiftRevenue => 'shift_revenue'.tr();
   static String get cashier => 'cashier'.tr();
   static String get startTimeLabel => 'start_time'.tr();
   static String get closeShift => 'close_shift'.tr();
@@ -1177,6 +1178,10 @@ class AppStrings {
   static String get detailedBooking => 'detailed_booking'.tr();
   static String get roomOccupiedByWalkIn => 'room_occupied_by_walk_in'.tr();
   static String get vacateRoom => 'vacate_room'.tr();
+  static String get startSessionImmediatelyTitle =>
+      'start_session_immediately_title'.tr();
+  static String get startSessionImmediatelySub =>
+      'start_session_immediately_sub'.tr();
   static String get single => 'single'.tr();
   static String get multi => 'multi'.tr();
   static String get onlineAvailable => 'online_available'.tr();
@@ -1295,6 +1300,33 @@ class AppStrings {
   static String get loungeDetails => 'lounge_details'.tr();
   static String get contactPhone => 'contact_phone'.tr();
   static String get ownerPhone => 'owner_phone'.tr();
+
+  // Audit Additional Keys
+  static String get notAvailable => 'not_available'.tr();
+  static String get openEndedLabel => 'open_ended'.tr();
+  static String get newBookingAlert => 'new_booking_alert'.tr();
+  static String get productImageLabel => 'product_image_label'.tr();
+  static String get to => 'to_date_separator'.tr();
+  static String get singleRateLabel => 'single_rate_label'.tr();
+  static String get multiRateLabel => 'multi_rate_label'.tr();
+  static String get egpPerHour => 'egp_per_hour'.tr();
+  static String get cardInstapayWallet => 'card_instapay_wallet'.tr();
+  static String get targetLocalCustomers => 'target_local_customers'.tr();
+  static String get targetAllUsers => 'target_all_users'.tr();
+  static String get vs => 'vs'.tr();
+  static String get byeLabel => 'bye_label'.tr();
+  static String get shifts => 'shifts'.tr();
+  static String get hintPhoneNumber => 'hint_phone_number'.tr();
+  static String get hintInstapay => 'hint_instapay'.tr();
+  static String get hintMinutes => 'hint_minutes'.tr();
+  static String get hintPercentRange => 'hint_percent_range'.tr();
+  static String get hintDateFormat => 'hint_date_format'.tr();
+  static String get hintAmount => 'hint_amount'.tr();
+  static String get hintWhatsappNumber => 'hint_whatsapp_number'.tr();
+  static String get hintSupportEmail => 'hint_support_email'.tr();
+  static String get hintVersionNumber => 'hint_version_number'.tr();
+  static String get hintPlayStoreUrl => 'hint_play_store_url'.tr();
+  static String get hintAppStoreUrl => 'hint_app_store_url'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

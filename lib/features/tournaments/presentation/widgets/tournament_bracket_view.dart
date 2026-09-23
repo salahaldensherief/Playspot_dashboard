@@ -123,7 +123,7 @@ class TournamentBracketView extends StatelessWidget {
 
     return Container(
       width: 260.w,
-      margin: EdgeInsets.only(left: 20.w),
+      margin: EdgeInsetsDirectional.only(start: 20.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -185,7 +185,7 @@ class TournamentBracketView extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                   decoration: BoxDecoration(color: Colors.blue.withAlpha(30), borderRadius: BorderRadius.circular(4.r)),
-                  child: Text('Bye', style: TextStyle(color: Colors.blue, fontSize: 10.sp)),
+                  child: Text(AppStrings.byeLabel, style: TextStyle(color: Colors.blue, fontSize: 10.sp)),
                 )
               else if (match.isDisputed)
                 Container(

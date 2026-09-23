@@ -18,15 +18,13 @@ class AddBookingExtrasSection extends StatelessWidget {
   });
 
   void _openAddExtrasModal(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AddExtrasDialog(
-        bookingId: '',
-        loungeId: loungeId,
-        onConfirm: (extras, totalCost) {
-          onExtrasChanged(extras);
-        },
-      ),
+    AddExtrasDialog.show(
+      context,
+      bookingId: '',
+      loungeId: loungeId,
+      onConfirm: (extras, totalCost) {
+        onExtrasChanged(extras);
+      },
     );
   }
 

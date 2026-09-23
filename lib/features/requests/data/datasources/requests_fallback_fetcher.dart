@@ -24,7 +24,7 @@ class RequestsFallbackFetcher {
       try {
         final response = await client
             .from('bookings')
-            .select('*, rooms(name, name_en), profiles(full_name, phone, email)')
+            .select('*, rooms(name, name_en)')
             .eq('lounge_id', loungeId)
             .eq('extension_status', 'pending');
         return (response as List).map((json) {
@@ -45,7 +45,7 @@ class RequestsFallbackFetcher {
     try {
       final res = await client
           .from('service_calls')
-          .select('*, bookings(lounge_id, room_id, rooms(name, name_en), profiles(full_name, phone)), rooms(name, name_en), profiles(full_name, phone)')
+          .select('*, bookings(lounge_id, room_id, rooms(name, name_en))')
           .neq('status', 'resolved')
           .neq('status', 'completed');
 
@@ -57,9 +57,9 @@ class RequestsFallbackFetcher {
         if (bLoungeId == loungeId) {
           final isAttended = map['is_attended'] == true || map['is_read'] == true;
           if (!isAttended) {
-            final String? rName = map['rooms']?['name'] ?? booking?['rooms']?['name'];
-            final String? uName = map['profiles']?['full_name'] ?? booking?['profiles']?['full_name'];
-            final String? uPhone = map['profiles']?['phone'] ?? booking?['profiles']?['phone'];
+            final String? rName = booking?['rooms']?['name'];
+            final String? uName = map['user_name'] ?? booking?['profiles']?['full_name'];
+            final String? uPhone = map['user_phone'] ?? booking?['profiles']?['phone'];
             final String rawId = map['id']?.toString() ?? '';
             map['id'] = rawId.startsWith('sc_') ? rawId : 'sc_$rawId';
             map['lounge_id'] = loungeId;
@@ -79,7 +79,7 @@ class RequestsFallbackFetcher {
     try {
       final res = await client
           .from('canteen_orders')
-          .select('*, bookings(lounge_id, room_id, rooms(name, name_en), profiles(full_name, phone)), profiles(full_name, phone)')
+          .select('*, bookings(lounge_id, room_id, rooms(name, name_en))')
           .or('status.eq.pending,status.eq.new,status.eq.in_progress');
 
       for (var json in (res as List)) {
@@ -91,8 +91,8 @@ class RequestsFallbackFetcher {
           final isAttended = map['is_attended'] == true || map['is_read'] == true;
           if (!isAttended) {
             final String? rName = booking?['rooms']?['name'];
-            final String? uName = map['profiles']?['full_name'] ?? booking?['profiles']?['full_name'];
-            final String? uPhone = map['profiles']?['phone'] ?? booking?['profiles']?['phone'];
+            final String? uName = map['user_name'];
+            final String? uPhone = map['user_phone'];
             final String rawId = map['id']?.toString() ?? '';
             map['id'] = rawId.startsWith('canteen_') ? rawId : 'canteen_$rawId';
             map['lounge_id'] = loungeId;
@@ -112,7 +112,7 @@ class RequestsFallbackFetcher {
     try {
       final res = await client
           .from('client_requests')
-          .select('*, bookings(lounge_id, room_id, rooms(name, name_en), profiles(full_name, phone)), rooms(name, name_en), profiles(full_name, phone)')
+          .select('*, bookings(lounge_id, room_id, rooms(name, name_en))')
           .neq('status', 'resolved')
           .neq('status', 'completed');
 
@@ -125,8 +125,8 @@ class RequestsFallbackFetcher {
           final isAttended = map['is_attended'] == true || map['is_read'] == true;
           if (!isAttended) {
             final String? rName = map['rooms']?['name'] ?? booking?['rooms']?['name'];
-            final String? uName = map['profiles']?['full_name'] ?? booking?['profiles']?['full_name'];
-            final String? uPhone = map['profiles']?['phone'] ?? booking?['profiles']?['phone'];
+            final String? uName = map['profiles']?['full_name'];
+            final String? uPhone = map['profiles']?['phone'];
             final String rawId = map['id']?.toString() ?? '';
             map['id'] = rawId.startsWith('req_') ? rawId : 'req_$rawId';
             map['lounge_id'] = loungeId;
@@ -145,7 +145,7 @@ class RequestsFallbackFetcher {
     try {
       final res = await client
           .from('booking_items')
-          .select('*, bookings!inner(lounge_id, room_id, rooms(name, name_en), profiles(full_name, phone))')
+          .select('*, bookings!inner(lounge_id, room_id, rooms(name, name_en))')
           .eq('status', 'pending');
 
       for (var json in (res as List)) {
@@ -157,8 +157,8 @@ class RequestsFallbackFetcher {
           final isAttended = map['is_attended'] == true || map['is_read'] == true;
           if (!isAttended) {
             final String? rName = booking?['rooms']?['name'];
-            final String? uName = booking?['profiles']?['full_name'];
-            final String? uPhone = booking?['profiles']?['phone'];
+            final String? uName = null;
+            final String? uPhone = null;
             final String rawId = map['id']?.toString() ?? '';
             map['id'] = rawId.startsWith('item_') ? rawId : 'item_$rawId';
             map['lounge_id'] = loungeId;

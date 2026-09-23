@@ -153,7 +153,8 @@ class ShiftHeaderBanner extends StatelessWidget {
   Widget _buildInfoItem(String label, String value) {
     return Row(
       children: [
-        Text('$label: ', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
+        Text('$label:', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
+        SizedBox(width: 4.w),
         Text(value, style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp, fontWeight: FontWeight.bold)),
       ],
     );

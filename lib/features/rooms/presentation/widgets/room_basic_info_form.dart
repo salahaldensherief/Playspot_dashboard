@@ -76,7 +76,7 @@ class RoomBasicInfoForm extends StatelessWidget {
           children: [
             Expanded(
               child: AppTextField(
-                label: 'سعر الساعة (فردي) / Single Rate (EGP/hr)',
+                label: AppStrings.singleRateLabel,
                 hintText: AppStrings.pricePerHourHint,
                 controller: hourlyRateSingleController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -86,7 +86,7 @@ class RoomBasicInfoForm extends StatelessWidget {
             SizedBox(width: 16.w),
             Expanded(
               child: AppTextField(
-                label: 'سعر الساعة (زوجي/مالتي) / Multi Rate (EGP/hr)',
+                label: AppStrings.multiRateLabel,
                 hintText: AppStrings.pricePerHourHint,
                 controller: hourlyRateMultiController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),

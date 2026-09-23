@@ -38,29 +38,32 @@ class UtilizationChart extends StatelessWidget {
 
             if (rooms.isEmpty) {
               return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.pie_chart_outline, size: 40.r, color: AppColors.textMuted),
-                    SizedBox(height: 8.h),
-                    AppText.body(
-                      AppStrings.noRoomsAdded,
-                      color: AppColors.textSecondary,
-                      fontSize: 12.sp,
-                    ),
-                    SizedBox(height: 12.h),
-                    AppButton(
-                      text: AppStrings.refresh,
-                      variant: AppButtonVariant.outlined,
-                      height: 32.h,
-                      onPressed: () {
-                        final loungeId = context.read<LoginCubit>().state.user?.loungeId;
-                        if (loungeId != null) {
-                          context.read<RoomCubit>().watchRooms(loungeId, forceRefresh: true);
-                        }
-                      },
-                    ),
-                  ],
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.pie_chart_outline, size: 36.r, color: AppColors.textMuted),
+                      SizedBox(height: 6.h),
+                      AppText.body(
+                        AppStrings.noRoomsAdded,
+                        color: AppColors.textSecondary,
+                        fontSize: 12.sp,
+                      ),
+                      SizedBox(height: 8.h),
+                      AppButton(
+                        text: AppStrings.refresh,
+                        variant: AppButtonVariant.outlined,
+                        height: 28.h,
+                        onPressed: () {
+                          final loungeId = context.read<LoginCubit>().state.user?.loungeId;
+                          if (loungeId != null) {
+                            context.read<RoomCubit>().watchRooms(loungeId, forceRefresh: true);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               );
             }

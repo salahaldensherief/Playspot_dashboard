@@ -4,6 +4,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/radial_countdown_ring.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_ticker.dart';
 
 class StationControlCountdownGauge extends StatelessWidget {
   final Booking booking;
@@ -33,6 +34,9 @@ class StationControlCountdownGauge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final now = SessionTickerScope.nowOf(context);
+    final currentRemaining = booking.remainingDuration(now);
+    final currentExpired = booking.isSessionExpired(now);
     final totalDuration = Duration(minutes: booking.durationMinutes);
 
     return Container(
@@ -46,8 +50,8 @@ class StationControlCountdownGauge extends StatelessWidget {
         children: [
           RadialCountdownRing(
             totalDuration: totalDuration,
-            remainingDuration: remaining,
-            isExpired: isExpired,
+            remainingDuration: currentRemaining,
+            isExpired: currentExpired,
             isOpenEnded: booking.isOpenEnded,
             size: 68.0,
             strokeWidth: 5.0,
@@ -58,18 +62,18 @@ class StationControlCountdownGauge extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isExpired ? AppStrings.timeExpired : AppStrings.remainingTime,
+                  currentExpired ? AppStrings.timeExpired : AppStrings.remainingTime,
                   style: TextStyle(
-                    color: isExpired ? AppColors.danger : AppColors.textSecondary,
+                    color: currentExpired ? AppColors.danger : AppColors.textSecondary,
                     fontSize: 12.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  booking.isOpenEnded ? 'الوقت مفتوح' : _formatDuration(remaining),
+                  booking.isOpenEnded ? 'الوقت مفتوح' : _formatDuration(currentRemaining),
                   style: TextStyle(
-                    color: isExpired ? AppColors.danger : AppColors.neonBlue,
+                    color: currentExpired ? AppColors.danger : AppColors.neonBlue,
                     fontSize: 20.sp,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'SpaceGrotesk',

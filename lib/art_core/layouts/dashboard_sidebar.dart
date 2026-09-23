@@ -29,6 +29,9 @@ class DashboardSidebar extends StatelessWidget {
         final isSuperAdmin = user?.isSuperAdmin ?? false;
 
         return BlocBuilder<PermissionsCubit, PermissionsState>(
+          buildWhen: (prev, curr) =>
+              prev.status != curr.status ||
+              prev.userPermissions != curr.userPermissions,
           builder: (context, permState) {
             double sidebarWidth = double.infinity;
             if (Responsive.isDesktop(context)) {
@@ -109,11 +112,11 @@ class DashboardSidebar extends StatelessWidget {
     if (user.role == UserRole.owner) return AppStrings.loungeOwnerLabel;
     if (user.role == UserRole.manager) return AppStrings.loungeManager;
     if (user.role == UserRole.cashier) return AppStrings.cashierLabel;
-    return 'Staff';
+    return AppStrings.roleStaff;
   }
 
   Widget _buildLogo(UserEntity? user) {
-    final String roleLabel = user != null ? _getRoleLabel(user) : 'Staff';
+    final String roleLabel = user != null ? _getRoleLabel(user) : AppStrings.roleStaff;
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -143,25 +146,31 @@ class DashboardSidebar extends StatelessWidget {
               ),
             ),
             SizedBox(width: 12.w),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppStrings.appName,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                    fontFamily: 'Orbitron',
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.appName,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                      fontFamily: 'Orbitron',
+                    ),
                   ),
-                ),
-                Text(
-                  roleLabel,
-                  style: TextStyle(
-                      color: AppColors.textSecondary, fontSize: 12.sp),
-                ),
-              ],
+                  Text(
+                    roleLabel,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: TextStyle(
+                        color: AppColors.textSecondary, fontSize: 12.sp),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

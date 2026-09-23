@@ -115,7 +115,7 @@ class ShiftKpiCards extends StatelessWidget {
       _buildCard(
         title: AppStrings.digitalRevenueTitle,
         value: '${totalDigital.toStringAsFixed(0)} ${AppStrings.egp}',
-        subtitle: 'Card / InstaPay / Wallet',
+        subtitle: AppStrings.cardInstapayWallet,
         icon: Icons.credit_card_rounded,
         color: AppColors.warning,
       ),

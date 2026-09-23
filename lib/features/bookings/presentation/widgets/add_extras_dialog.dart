@@ -6,6 +6,7 @@ import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_text.dart';
+import '../../../analytics/presentation/dashboard_cubit.dart';
 import '../../../lounges/domain/entities/extra_entity.dart';
 import '../../../lounges/presentation/cubit/extras_cubit.dart';
 import '../../../lounges/presentation/cubit/extras_state.dart';
@@ -31,6 +32,7 @@ class AddExtrasDialog extends StatefulWidget {
   }) {
     final extrasCubit = context.read<ExtrasCubit?>();
     final bookingCubit = context.read<BookingCubit?>();
+    final dashboardCubit = context.read<DashboardCubit?>();
 
     return showDialog(
       context: context,
@@ -43,6 +45,8 @@ class AddExtrasDialog extends StatefulWidget {
             BlocProvider(create: (_) => sl<ExtrasCubit>()),
           if (bookingCubit != null)
             BlocProvider.value(value: bookingCubit),
+          if (dashboardCubit != null)
+            BlocProvider.value(value: dashboardCubit),
         ],
         child: AddExtrasDialog(
           bookingId: bookingId,
@@ -105,7 +109,9 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
+    final existingCubit = context.read<ExtrasCubit?>();
+
+    Widget content = Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       insetPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
@@ -115,7 +121,7 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
         padding: EdgeInsets.all(20.r),
         child: BlocBuilder<ExtrasCubit, ExtrasState>(
           builder: (context, state) {
-            if (state.status == ExtrasStatus.loading) {
+            if (state.status == ExtrasStatus.loading || state.status == ExtrasStatus.initial) {
               return const Center(
                 child: Padding(
                   padding: EdgeInsets.all(40),
@@ -299,6 +305,15 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
           },
         ),
       ),
+    );
+
+    if (existingCubit != null) {
+      return content;
+    }
+
+    return BlocProvider<ExtrasCubit>(
+      create: (_) => sl<ExtrasCubit>()..loadExtras(widget.loungeId),
+      child: content,
     );
   }
 }

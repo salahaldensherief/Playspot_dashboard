@@ -33,7 +33,7 @@ class DashboardLayout extends StatelessWidget {
 
     if (isScrollable) {
       return SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         child: body,
       );
     }

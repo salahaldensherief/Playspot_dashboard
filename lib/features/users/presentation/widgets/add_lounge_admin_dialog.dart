@@ -54,7 +54,7 @@ class _AddLoungeAdminDialogState extends State<AddLoungeAdminDialog> {
   @override
   Widget build(BuildContext context) {
     return AppDialog(
-      title: "Create Lounge & Owner",
+      title: AppStrings.createLoungeAndOwner,
       width: 550.w,
       actions: [
         AppButton(
@@ -64,7 +64,7 @@ class _AddLoungeAdminDialogState extends State<AddLoungeAdminDialog> {
         ),
         SizedBox(width: 16.w),
         AppButton(
-          text: "Create Lounge & Owner",
+          text: AppStrings.createLoungeAndOwner,
           isLoading: widget.isLoading,
           onPressed: _submit,
         ),

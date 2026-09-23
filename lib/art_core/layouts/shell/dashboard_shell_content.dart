@@ -160,7 +160,7 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                       content: Text(AppStrings.shiftClosedSuccess),
-                      backgroundColor: Colors.green),
+                      backgroundColor: AppColors.success),
                 );
                 context.read<ShiftCubit>().resetToInitial();
                 final currentLoungeId = widget.user?.loungeId;

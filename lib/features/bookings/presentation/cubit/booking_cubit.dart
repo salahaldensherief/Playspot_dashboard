@@ -293,10 +293,17 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
 
     try {
       final client = Supabase.instance.client;
-      await client.rpc('extend_booking_session', params: {
-        'p_booking_id': id,
-        'p_additional_minutes': additionalMinutes,
-      });
+      try {
+        await client.rpc('extend_booking_session', params: {
+          'p_booking_id': id,
+          'p_extension_minutes': additionalMinutes,
+        });
+      } catch (_) {
+        await client.rpc('extend_booking_session', params: {
+          'p_booking_id': id,
+          'p_additional_minutes': additionalMinutes,
+        });
+      }
 
       if (watchedEntityId != null) {
         startWatchingBookings(loungeId: watchedEntityId);

@@ -90,25 +90,26 @@ class LiveSessionCardActions extends StatelessWidget {
 
   void _showAddExtrasDialog(BuildContext context) {
     final dashboardCubit = context.read<DashboardCubit>();
+    final bookingCubit = context.read<BookingCubit>();
 
-    showDialog(
-      context: context,
-      useRootNavigator: false,
-      builder: (diagContext) => AddExtrasDialog(
-        bookingId: booking.id,
-        loungeId: booking.loungeId,
-        onConfirm: (extras, totalCost) async {
-          final success = await dashboardCubit.addExtrasToSession(booking.id, extras, totalCost);
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(success ? AppStrings.extrasAddedSuccess : AppStrings.actionFailed),
-                backgroundColor: success ? AppColors.success : AppColors.danger,
-              ),
-            );
-          }
-        },
-      ),
+    AddExtrasDialog.show(
+      context,
+      bookingId: booking.id,
+      loungeId: booking.loungeId,
+      onConfirm: (extras, totalCost) async {
+        final success = await dashboardCubit.addExtrasToSession(booking.id, extras, totalCost);
+        if (success) {
+          bookingCubit.startWatchingBookings(loungeId: booking.loungeId, forceRefresh: true);
+        }
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(success ? AppStrings.extrasAddedSuccess : AppStrings.actionFailed),
+              backgroundColor: success ? AppColors.success : AppColors.danger,
+            ),
+          );
+        }
+      },
     );
   }
 

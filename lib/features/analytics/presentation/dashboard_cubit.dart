@@ -99,6 +99,9 @@ class DashboardCubit extends Cubit<DashboardState> {
       },
       (_) {
         AppLogger.info('[DASHBOARD_CUBIT] extendSession Succeeded');
+        if (_watchedLoungeId != null) {
+          startWatchingActiveSessions(loungeId: _watchedLoungeId, forceRefresh: true);
+        }
         return true;
       },
     );
@@ -119,6 +122,9 @@ class DashboardCubit extends Cubit<DashboardState> {
       },
       (_) {
         AppLogger.info('[DASHBOARD_CUBIT] addExtrasToSession Succeeded');
+        if (_watchedLoungeId != null) {
+          startWatchingActiveSessions(loungeId: _watchedLoungeId, forceRefresh: true);
+        }
         return true;
       },
     );

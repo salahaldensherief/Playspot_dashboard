@@ -17,25 +17,8 @@ class BookingQueryHelper {
     try {
       var query = client.from('bookings').select('''
         *,
-        canteen_orders (
-          id,
-          items,
-          total_price,
-          note,
-          status,
-          created_at,
-          canteen_order_items (
-            id,
-            quantity,
-            price,
-            unit_price,
-            total_price,
-            extra_id,
-            extras (id, name, name_ar, name_en, price, unit_price)
-          )
-        ),
         booking_items(id, name, quantity, price, total_price, status),
-        profiles(full_name, phone, email),
+        canteen_orders(*),
         rooms(name, name_en, controllers_count, screen_size),
         lounges(name, location, location_point)
       ''');

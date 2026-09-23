@@ -69,21 +69,21 @@ class BookingsCockpitStatsBar extends StatelessWidget {
                       child: Row(
                         children: [
                           _buildCompactMetricCard(
-                            'الجلسات الجارية',
+                            AppStrings.activeSessions,
                             '$activeCount',
                             AppColors.neonBlue,
                             Icons.sports_esports_rounded,
                           ),
                           SizedBox(width: 8.w),
                           _buildCompactMetricCard(
-                            'طلبات بالانتظار',
+                            AppStrings.pendingRequests,
                             '$pendingCount',
                             AppColors.warning,
                             Icons.access_time_filled_rounded,
                           ),
                           SizedBox(width: 8.w),
                           _buildCompactMetricCard(
-                            'إيراد الوردية',
+                            AppStrings.shiftRevenue,
                             '${totalRevenue.toStringAsFixed(0)} ${AppStrings.egp}',
                             AppColors.neonGreen,
                             Icons.account_balance_wallet_rounded,
@@ -125,21 +125,21 @@ class BookingsCockpitStatsBar extends StatelessWidget {
                     child: Row(
                       children: [
                         _buildModernMetricCard(
-                          'الجلسات الجارية',
+                          AppStrings.activeSessions,
                           '$activeCount',
                           AppColors.neonBlue,
                           Icons.sports_esports_rounded,
                         ),
                         SizedBox(width: 12.w),
                         _buildModernMetricCard(
-                          'طلبات بالانتظار',
+                          AppStrings.pendingRequests,
                           '$pendingCount',
                           AppColors.warning,
                           Icons.access_time_filled_rounded,
                         ),
                         SizedBox(width: 12.w),
                         _buildModernMetricCard(
-                          'إيراد الوردية',
+                          AppStrings.shiftRevenue,
                           '${totalRevenue.toStringAsFixed(0)} ${AppStrings.egp}',
                           AppColors.neonGreen,
                           Icons.account_balance_wallet_rounded,

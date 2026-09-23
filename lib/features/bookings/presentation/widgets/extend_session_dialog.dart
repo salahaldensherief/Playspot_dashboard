@@ -20,9 +20,21 @@ class ExtendSessionDialog extends StatefulWidget {
   });
 
   static Future<void> show(BuildContext context, Booking booking, {ValueChanged<int>? onExtendMinutes}) {
+    final dashboardCubit = context.read<DashboardCubit?>();
+    final bookingCubit = context.read<BookingCubit?>();
+
     return showDialog(
       context: context,
-      builder: (_) => ExtendSessionDialog(booking: booking, onExtendMinutes: onExtendMinutes),
+      useRootNavigator: false,
+      builder: (dialogContext) => MultiBlocProvider(
+        providers: [
+          if (dashboardCubit != null)
+            BlocProvider.value(value: dashboardCubit),
+          if (bookingCubit != null)
+            BlocProvider.value(value: bookingCubit),
+        ],
+        child: ExtendSessionDialog(booking: booking, onExtendMinutes: onExtendMinutes),
+      ),
     );
   }
 
@@ -51,7 +63,9 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
     final bookingCubit = context.read<BookingCubit>();
 
     final success = await dashboardCubit.extendSession(widget.booking.id, _selectedMinutes);
-    if (!success) {
+    if (success) {
+      bookingCubit.startWatchingBookings(loungeId: widget.booking.loungeId, forceRefresh: true);
+    } else {
       await bookingCubit.extendBookingDuration(widget.booking.id, _selectedMinutes);
     }
 

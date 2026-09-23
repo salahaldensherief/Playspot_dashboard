@@ -50,7 +50,7 @@ class PromoFormSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SectionContainer(
-      title: 'بيانات العرض الترويجي (Promotion Details)',
+      title: AppStrings.promotionDetails,
       children: [
         // 1. Target Scope (Lounge-wide vs Room-Specific)
         Column(
@@ -219,7 +219,7 @@ class PromoFormSection extends StatelessWidget {
                 child: IgnorePointer(
                   child: AppTextField(
                     label: AppStrings.expirationDate,
-                    hintText: 'YYYY-MM-DD',
+                    hintText: AppStrings.hintDateFormat,
                     controller: expirationDateController,
                     prefixIcon: Icons.calendar_month_rounded,
                     validator: AppValidator.validateRequired,
@@ -239,14 +239,14 @@ class PromoFormSection extends StatelessWidget {
             AppText.subHeading('الجمهور المستهدف (Audience):', fontSize: 13.sp, color: AppColors.textPrimary),
             SizedBox(height: 8.h),
             SegmentedButton<String>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: 'local',
-                  label: Text('📍 عملاء الصالة المحليين'),
+                  label: Text(AppStrings.targetLocalCustomers),
                 ),
                 ButtonSegment(
                   value: 'all',
-                  label: Text('🌐 جميع مستخدمي التطبيق'),
+                  label: Text(AppStrings.targetAllUsers),
                 ),
               ],
               selected: {targetAudience},

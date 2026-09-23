@@ -153,10 +153,10 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
                           ],
                         ),
                         SizedBox(height: 6.h),
-                        Text('سبب البلاغ: ${req.reason}', style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp)),
+                        Text('${AppStrings.reportReason}: ${req.reason}', style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp)),
                         if (req.evidenceNotes != null && req.evidenceNotes!.isNotEmpty) ...[
                           SizedBox(height: 4.h),
-                          Text('ملاحظات/أدلة: ${req.evidenceNotes}', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                          Text('${AppStrings.reportEvidence}: ${req.evidenceNotes}', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
                         ],
                         SizedBox(height: 12.h),
                         Row(

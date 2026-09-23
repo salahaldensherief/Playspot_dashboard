@@ -164,7 +164,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
                 ),
                 SizedBox(height: 20.h),
                 AppImagePicker(
-                  label: 'صورة المنتج / Product Image',
+                  label: AppStrings.productImageLabel,
                   initialImageUrl: _currentImageUrl,
                   height: 120.h,
                   onImageSelected: (bytes, name) {

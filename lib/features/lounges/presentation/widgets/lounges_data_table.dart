@@ -181,7 +181,8 @@ class LoungesDataTable extends StatelessWidget {
       children: [
         Icon(icon, size: 16.r, color: AppColors.textSecondary),
         SizedBox(width: 8.w),
-        Text('$label: ', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+        Text('$label:', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+        SizedBox(width: 4.w),
         Text(value, style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp, fontWeight: FontWeight.w500)),
       ],
     );

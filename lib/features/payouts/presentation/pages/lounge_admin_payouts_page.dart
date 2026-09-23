@@ -157,7 +157,7 @@ class _LoungeAdminPayoutsPageState extends State<LoungeAdminPayoutsPage> {
                                   rows: payouts
                                       .map((p) => DataRow(
                                             cells: [
-                                              DataCell(Text('${p.periodStart} to ${p.periodEnd}',
+                                              DataCell(Text('${p.periodStart} ${AppStrings.to} ${p.periodEnd}',
                                                   style: const TextStyle(color: AppColors.textSecondary))),
                                               DataCell(
                                                 Text(

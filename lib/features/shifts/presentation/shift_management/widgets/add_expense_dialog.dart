@@ -168,7 +168,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
               // Amount Field
               AppTextField(
                 label: AppStrings.amountEgp,
-                hintText: '0.00',
+                hintText: AppStrings.hintAmount,
                 controller: _amountController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: AppValidator.validateNumber,

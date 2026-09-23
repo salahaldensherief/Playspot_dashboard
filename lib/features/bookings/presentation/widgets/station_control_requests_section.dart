@@ -17,6 +17,12 @@ class StationControlRequestsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    try {
+      context.read<ClientRequestsCubit>();
+    } catch (_) {
+      return const SizedBox.shrink();
+    }
+
     return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
       buildWhen: (previous, current) {
         // Only rebuild if requests matching this booking/room have changed

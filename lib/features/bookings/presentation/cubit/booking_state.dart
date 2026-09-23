@@ -84,20 +84,25 @@ class BookingState extends Equatable {
     }
     final DateTime operationalDayEnd = operationalDayStart.add(const Duration(hours: 24));
 
-    final bookingTime = booking.startDateTime ?? DateTime(booking.date.year, booking.date.month, booking.date.day);
+    final bookingTime = booking.checkedInAt ??
+        booking.startDateTime ??
+        DateTime(booking.date.year, booking.date.month, booking.date.day, 12, 0);
+
+    final bool isInOperationalDay =
+        (bookingTime.isAfter(operationalDayStart) || bookingTime.isAtSameMomentAs(operationalDayStart)) &&
+            bookingTime.isBefore(operationalDayEnd);
 
     if (activeShift != null) {
       if (booking.shiftId != null && booking.shiftId == activeShift.id) {
-        return true;
+        return isInOperationalDay;
       }
       final DateTime startTime = activeShift.startTime;
       final bool isAfterShiftStart = bookingTime.isAfter(startTime.subtract(const Duration(minutes: 15))) ||
-          bookingTime.isAtSameMomentAs(startTime);
-      return isAfterShiftStart && bookingTime.isBefore(operationalDayEnd);
+          bookingTime.isAtSameMomentAs(startTime.subtract(const Duration(minutes: 15)));
+      return isAfterShiftStart && isInOperationalDay;
     }
 
-    return (bookingTime.isAfter(operationalDayStart) || bookingTime.isAtSameMomentAs(operationalDayStart)) &&
-        bookingTime.isBefore(operationalDayEnd);
+    return isInOperationalDay;
   }
 
   BookingState copyWith({

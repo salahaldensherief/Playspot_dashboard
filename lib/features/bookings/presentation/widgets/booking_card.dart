@@ -144,16 +144,12 @@ class _BookingCardState extends State<BookingCard> {
     return MouseRegion(
       onEnter: (_) {
         if (mounted && !_isHovered) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) setState(() => _isHovered = true);
-          });
+          setState(() => _isHovered = true);
         }
       },
       onExit: (_) {
         if (mounted && _isHovered) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) setState(() => _isHovered = false);
-          });
+          setState(() => _isHovered = false);
         }
       },
       child: AnimatedContainer(

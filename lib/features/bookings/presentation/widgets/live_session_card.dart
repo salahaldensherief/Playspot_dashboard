@@ -14,6 +14,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_session_requests_badge.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_session_timer_box.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_discount_dialog.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_ticker.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/station_control_drawer.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/swap_room_dialog.dart';
 
@@ -41,9 +42,6 @@ class LiveSessionCard extends StatefulWidget {
 
 class _LiveSessionCardState extends State<LiveSessionCard> {
   bool _isHovered = false;
-
-  Duration get _remainingDuration => widget.booking.remainingDuration();
-  bool get _isExpired => widget.booking.isSessionExpired();
 
   void _openStationControl() {
     StationControlDrawer.show(
@@ -94,6 +92,7 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
     if (!mounted) return;
 
     if (success) {
+      context.read<BookingCubit>().startWatchingBookings(loungeId: widget.booking.loungeId, forceRefresh: true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppStrings.timeExtendedSuccess),
@@ -115,9 +114,10 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
 
   @override
   Widget build(BuildContext context) {
+    final now = SessionTickerScope.nowOf(context);
     final booking = widget.booking;
-    final remaining = _remainingDuration;
-    final isExpired = _isExpired;
+    final remaining = booking.remainingDuration(now);
+    final isExpired = booking.isSessionExpired(now);
 
     final Color accent = isExpired
         ? AppColors.danger

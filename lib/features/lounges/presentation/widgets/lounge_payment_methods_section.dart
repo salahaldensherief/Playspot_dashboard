@@ -52,13 +52,13 @@ class LoungePaymentMethodsSection extends StatelessWidget {
           AppTextField(
             controller: vodafoneCashController,
             label: AppStrings.vodafoneCashNumberStr,
-            hintText: '01xxxxxxxxx',
+            hintText: AppStrings.hintPhoneNumber,
           ),
           SizedBox(height: 16.h),
           AppTextField(
             controller: instapayController,
             label: AppStrings.instapayAccountStr,
-            hintText: 'username@instapay',
+            hintText: AppStrings.hintInstapay,
           ),
         ],
       ),
