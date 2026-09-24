@@ -100,6 +100,8 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
 
   Widget _getStatusBadge(BookingStatus status) {
     switch (status) {
+      case BookingStatus.pendingVerification:
+        return StatusBadge.warning(AppStrings.pendingVerification.toUpperCase());
       case BookingStatus.pending:
         return StatusBadge.warning(AppStrings.pending.toUpperCase());
       case BookingStatus.upcoming:
