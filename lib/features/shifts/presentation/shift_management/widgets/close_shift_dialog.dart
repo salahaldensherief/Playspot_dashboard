@@ -54,7 +54,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
           ),
         ],
       ),
-      content: Container(
+      content: SizedBox(
         width: 400.w,
         child: Form(
           key: _formKey,

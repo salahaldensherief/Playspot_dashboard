@@ -49,8 +49,9 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
 
   void startWatchingBookings({String? loungeId, bool forceRefresh = false}) {
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
+    final entityId = cleanLoungeId ?? 'all';
 
-    if (isAlreadyWatching(cleanLoungeId, forceRefresh: forceRefresh)) {
+    if (isAlreadyWatching(entityId, forceRefresh: forceRefresh)) {
       return;
     }
 
@@ -62,7 +63,7 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
     emit(state.copyWith(status: BookingStatusState.loading));
 
     startWatch<List<Booking>>(
-      entityId: cleanLoungeId!,
+      entityId: entityId,
       stream: watchBookings(loungeId: cleanLoungeId),
       onData: (bookings) {
         final currentIds = bookings.map((b) => b.id).toSet();
@@ -186,7 +187,8 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
       (_) {
         debugPrint('🟢 [CUBIT] $actionName Succeeded');
         if (watchedEntityId != null) {
-          startWatchingBookings(loungeId: watchedEntityId);
+          final targetLoungeId = watchedEntityId == 'all' ? null : watchedEntityId;
+          startWatchingBookings(loungeId: targetLoungeId);
         }
         return true;
       },
@@ -324,7 +326,8 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
       }
 
       if (watchedEntityId != null) {
-        startWatchingBookings(loungeId: watchedEntityId);
+        final targetLoungeId = watchedEntityId == 'all' ? null : watchedEntityId;
+        startWatchingBookings(loungeId: targetLoungeId);
       }
       return true;
     } catch (e) {

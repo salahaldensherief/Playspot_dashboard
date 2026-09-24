@@ -235,9 +235,9 @@ class UsersDataTable extends StatelessWidget {
           AppButton(
             text: AppStrings.delete,
             variant: AppButtonVariant.danger,
-            onPressed: () {
-              cubit.deleteAdmin(adminId);
+            onPressed: () async {
               Navigator.pop(diagContext);
+              await cubit.deleteAdmin(adminId);
             },
           ),
         ],
@@ -252,7 +252,9 @@ class UsersDataTable extends StatelessWidget {
       builder: (diagContext) => BlocConsumer<AdminManagementCubit, AdminManagementState>(
         bloc: cubit,
         listener: (context, state) {
-          if (state.status == AdminManagementStatus.failure) {
+          if (state.status == AdminManagementStatus.success) {
+            Navigator.pop(diagContext);
+          } else if (state.status == AdminManagementStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.errorMessage ?? AppStrings.error), backgroundColor: AppColors.danger),
             );
@@ -264,7 +266,6 @@ class UsersDataTable extends StatelessWidget {
             isLoading: state.status == AdminManagementStatus.loading,
             onSave: (name, email) {
               cubit.updateAdmin(admin.id, name: name, email: email);
-              Navigator.pop(diagContext);
             },
           );
         },

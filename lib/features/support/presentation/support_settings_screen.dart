@@ -64,10 +64,14 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<SupportCubit, SupportState>(
       listenWhen: (prev, curr) =>
+          prev.settings != curr.settings ||
           prev.actionStatus != curr.actionStatus ||
           prev.successMessage != curr.successMessage ||
           prev.errorMessage != curr.errorMessage,
       listener: (context, state) {
+        if (state.settings != null) {
+          _populateFields(state.settings!);
+        }
         if (state.actionStatus == SupportStatus.success && state.successMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -85,10 +89,6 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
         }
       },
       builder: (context, state) {
-        if (state.settings != null) {
-          _populateFields(state.settings!);
-        }
-
         return Scaffold(
           backgroundColor: AppColors.scaffoldBackground,
           body: SingleChildScrollView(

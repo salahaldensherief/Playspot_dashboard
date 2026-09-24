@@ -91,7 +91,7 @@ class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard>
               value: widget.booking.loungeId,
             ),
             callback: (payload) {
-              final newStatus = payload.newRecord?['status']?.toString();
+              final newStatus = payload.newRecord['status']?.toString();
               if (newStatus == 'cancelled' || payload.eventType == PostgresChangeEvent.update) {
                 _fetchSummary();
               }

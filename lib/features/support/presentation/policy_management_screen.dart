@@ -89,10 +89,15 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<SupportCubit, SupportState>(
       listenWhen: (prev, curr) =>
+          prev.status != curr.status ||
           prev.actionStatus != curr.actionStatus ||
+          prev.policies != curr.policies ||
           prev.successMessage != curr.successMessage ||
           prev.errorMessage != curr.errorMessage,
       listener: (context, state) {
+        if (state.policies.isNotEmpty) {
+          _loadPolicyToForm(state.policies);
+        }
         if (state.actionStatus == SupportStatus.success && state.successMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -110,10 +115,6 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
         }
       },
       builder: (context, state) {
-        if (state.policies.isNotEmpty) {
-          _loadPolicyToForm(state.policies);
-        }
-
         final currentPolicy = state.policies.firstWhere(
           (p) => p.policyType == _selectedPolicyType,
           orElse: () => AppPolicyEntity(
@@ -231,6 +232,7 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
       onTap: () {
         setState(() {
           _selectedPolicyType = type;
+          _loadPolicyToForm(context.read<SupportCubit>().state.policies);
         });
       },
       borderRadius: BorderRadius.circular(10.r),

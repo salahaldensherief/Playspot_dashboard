@@ -188,54 +188,78 @@ class KycInspectionDialog extends StatelessWidget {
   }
 
   void _showRejectionDialog(BuildContext context) {
-    final notesController = TextEditingController();
     showDialog(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-        title: AppText.heading("Reject KYC Submission", fontSize: 18.sp),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppText.body("Please provide an optional reason or note for rejecting this KYC application:"),
-            SizedBox(height: 12.h),
-            TextField(
-              controller: notesController,
-              maxLines: 3,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: "Reason for rejection (e.g. Blurry document, expired ID...)",
-                hintStyle: const TextStyle(color: AppColors.textSecondary),
-                filled: true,
-                fillColor: Colors.black26,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-              ),
+      builder: (dialogCtx) => _KycRejectionDialog(
+        onConfirm: (notes) {
+          cubit.reviewKyc(
+            userId: request.userId,
+            approve: false,
+            notes: notes,
+          );
+          Navigator.pop(dialogCtx);
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
+}
+
+class _KycRejectionDialog extends StatefulWidget {
+  final Function(String notes) onConfirm;
+  const _KycRejectionDialog({required this.onConfirm});
+
+  @override
+  State<_KycRejectionDialog> createState() => _KycRejectionDialogState();
+}
+
+class _KycRejectionDialogState extends State<_KycRejectionDialog> {
+  final _notesController = TextEditingController();
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.cardBackground,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      title: AppText.heading(AppStrings.rejectKyc, fontSize: 18.sp),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppText.body(AppStrings.rejectReasonLabel),
+          SizedBox(height: 12.h),
+          TextField(
+            controller: _notesController,
+            maxLines: 3,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: AppStrings.rejectionReasonField,
+              hintStyle: const TextStyle(color: AppColors.textSecondary),
+              filled: true,
+              fillColor: Colors.black26,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
             ),
-          ],
-        ),
-        actions: [
-          AppButton(
-            text: AppStrings.cancel,
-            variant: AppButtonVariant.outlined,
-            onPressed: () => Navigator.pop(dialogCtx),
-          ),
-          AppButton(
-            text: AppStrings.reject,
-            variant: AppButtonVariant.danger,
-            onPressed: () {
-              cubit.reviewKyc(
-                userId: request.userId,
-                approve: false,
-                notes: notesController.text.trim(),
-              );
-              Navigator.pop(dialogCtx);
-              Navigator.pop(context);
-            },
           ),
         ],
       ),
+      actions: [
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.outlined,
+          onPressed: () => Navigator.pop(context),
+        ),
+        AppButton(
+          text: AppStrings.reject,
+          variant: AppButtonVariant.danger,
+          onPressed: () => widget.onConfirm(_notesController.text.trim()),
+        ),
+      ],
     );
   }
 }

@@ -112,7 +112,7 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
                     )
                   : ListView.separated(
                       itemCount: history.length,
-                      separatorBuilder: (_, __) => SizedBox(height: 10.h),
+                      separatorBuilder: (_, _) => SizedBox(height: 10.h),
                       itemBuilder: (context, index) {
                         final item = history[index];
                         return Container(

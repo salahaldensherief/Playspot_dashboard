@@ -40,29 +40,27 @@ class ProfilePage extends StatelessWidget {
                   SizedBox(height: 32.h),
                   AppTextField(
                     label: AppStrings.fullNameLabel,
-                    controller: TextEditingController(text: user?.name),
+                    initialValue: user?.name,
                     readOnly: true,
                   ),
                   SizedBox(height: 20.h),
                   AppTextField(
                     label: AppStrings.emailAddressLabel,
-                    controller: TextEditingController(text: user?.email),
+                    initialValue: user?.email,
                     readOnly: true,
                   ),
                   SizedBox(height: 20.h),
                   AppTextField(
                     label: AppStrings.roleLabel,
-                    controller: TextEditingController(text: user?.role.toString().split('.').last.toUpperCase()),
+                    initialValue: user?.role.toString().split('.').last.toUpperCase(),
                     readOnly: true,
                   ),
                   SizedBox(height: 20.h),
                   AppTextField(
                     label: AppStrings.userCity,
-                    controller: TextEditingController(
-                      text: user?.getDisplayCityName(languageCode: context.locale.languageCode) ??
-                          user?.displayCityName ??
-                          AppStrings.notSpecified,
-                    ),
+                    initialValue: user?.getDisplayCityName(languageCode: context.locale.languageCode) ??
+                        user?.displayCityName ??
+                        AppStrings.notSpecified,
                     readOnly: true,
                   ),
                   SizedBox(height: 16.h),

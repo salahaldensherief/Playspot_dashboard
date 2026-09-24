@@ -96,6 +96,8 @@ class BookingRepositoryImpl implements BookingRepository {
     try {
       await remoteDataSource.approveBooking(id);
       return const Right(null);
+    } on PostgrestException catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.message)));
     } catch (e) {
       return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
     }
@@ -118,6 +120,8 @@ class BookingRepositoryImpl implements BookingRepository {
         discountReason: discountReason,
       );
       return const Right(null);
+    } on PostgrestException catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.message)));
     } catch (e) {
       return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
     }

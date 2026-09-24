@@ -129,41 +129,39 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
 
     return Row(
       children: [
-        _buildStatCard(AppStrings.totalBookings, count.toString(), Icons.confirmation_number_outlined, AppColors.neonBlue),
+        Expanded(child: _buildStatCard(AppStrings.totalBookings, count.toString(), Icons.confirmation_number_outlined, AppColors.neonBlue)),
         SizedBox(width: 20.w),
-        _buildStatCard(AppStrings.totalRevenue, "${revenue.toStringAsFixed(0)} ${AppStrings.egp}", Icons.payments_outlined, AppColors.success),
+        Expanded(child: _buildStatCard(AppStrings.totalRevenue, "${revenue.toStringAsFixed(0)} ${AppStrings.egp}", Icons.payments_outlined, AppColors.success)),
       ],
     );
   }
 
   Widget _buildStatCard(String label, String value, IconData icon, Color color) {
-    return Expanded(
-      child: Container(
-        padding: EdgeInsets.all(24.r),
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: AppColors.borderDefault),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(12.r),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12.r)),
-              child: Icon(icon, color: color, size: 28.r),
+    return Container(
+      padding: EdgeInsets.all(24.r),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12.r)),
+            child: Icon(icon, color: color, size: 28.r),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppText.body(label, color: AppColors.textSecondary, overflow: TextOverflow.ellipsis),
+                AppText.heading(value, fontSize: 24.sp, color: color),
+              ],
             ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppText.body(label, color: AppColors.textSecondary, overflow: TextOverflow.ellipsis),
-                  AppText.heading(value, fontSize: 24.sp, color: color),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

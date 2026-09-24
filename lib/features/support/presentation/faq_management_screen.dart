@@ -152,11 +152,11 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
                             TableRow(
                               decoration: const BoxDecoration(color: AppColors.scaffoldBackground),
                               children: [
-                                _buildHeaderCell('السؤال (عربي)'),
-                                _buildHeaderCell('Question (English)'),
-                                _buildHeaderCell('الترتيب'),
-                                _buildHeaderCell('الحالة'),
-                                _buildHeaderCell('إجراءات'),
+                                _buildHeaderCell(AppStrings.questionAr),
+                                _buildHeaderCell(AppStrings.questionEn),
+                                _buildHeaderCell(AppStrings.sortOrderPriority),
+                                _buildHeaderCell(AppStrings.status),
+                                _buildHeaderCell(AppStrings.actions),
                               ],
                             ),
                             ...state.faqs.map((faq) {
@@ -170,8 +170,8 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
                                     child: Padding(
                                       padding: EdgeInsets.all(8.r),
                                       child: faq.isActive
-                                          ? StatusBadge.success('مفعل')
-                                          : StatusBadge.neutral('غير مفعل'),
+                                          ? StatusBadge.success(AppStrings.active)
+                                          : StatusBadge.neutral(AppStrings.inactive),
                                     ),
                                   ),
                                   TableCell(
