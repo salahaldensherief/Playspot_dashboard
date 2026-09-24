@@ -57,10 +57,23 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
           final newIds = currentUnattendedIds.difference(_knownRequestIds);
           if (newIds.isNotEmpty) {
             _knownRequestIds.addAll(newIds);
-            try {
-              audioService.playUrgentAlertSound();
-            } catch (e) {
-              AppLogger.warning('Audio notification play failed: $e');
+            for (final id in newIds) {
+              final newReqList = requests.where((r) => (r as ClientRequestEntity).id == id);
+              if (newReqList.isNotEmpty) {
+                final newReq = newReqList.first as ClientRequestEntity;
+                try {
+                  if (newReq.type == ClientRequestType.canteenOrder) {
+                    audioService.playCanteenOrderSound();
+                  } else if (newReq.type == ClientRequestType.callStaff ||
+                      newReq.type == ClientRequestType.serviceRequest) {
+                    audioService.playServiceCallSound();
+                  } else {
+                    audioService.playReceiptVerificationSound();
+                  }
+                } catch (e) {
+                  AppLogger.warning('Audio notification play failed: $e');
+                }
+              }
             }
           }
         }

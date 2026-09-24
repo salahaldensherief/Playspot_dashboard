@@ -217,6 +217,30 @@ class BookingRepositoryImpl implements BookingRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, void>> approveManualBooking(String bookingId, String actionBy) async {
+    try {
+      await remoteDataSource.approveManualBooking(bookingId, actionBy);
+      return const Right(null);
+    } on PostgrestException catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.message)));
+    } catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> rejectManualBooking(String bookingId, String reason, String actionBy) async {
+    try {
+      await remoteDataSource.rejectManualBooking(bookingId, reason, actionBy);
+      return const Right(null);
+    } on PostgrestException catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.message)));
+    } catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
+    }
+  }
+
   String _mapBookingErrorMessage(String message) {
     final clean = message.toLowerCase();
     if (clean.contains('cash payment is disabled') || clean.contains('cash is disabled')) {

@@ -324,6 +324,33 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
 
   @override
+  Future<void> approveManualBooking(String bookingId, String actionBy) async {
+    try {
+      await client.rpc('approve_manual_booking', params: {
+        'p_booking_id': bookingId,
+        'p_action_by': actionBy,
+      });
+    } catch (e) {
+      debugPrint('⚠️ [DATA_SOURCE] approve_manual_booking RPC error ($e), falling back to updateBookingStatus');
+      await updateBookingStatus(bookingId, 'upcoming');
+    }
+  }
+
+  @override
+  Future<void> rejectManualBooking(String bookingId, String reason, String actionBy) async {
+    try {
+      await client.rpc('reject_manual_booking', params: {
+        'p_booking_id': bookingId,
+        'p_rejection_reason': reason,
+        'p_action_by': actionBy,
+      });
+    } catch (e) {
+      debugPrint('⚠️ [DATA_SOURCE] reject_manual_booking RPC error ($e), falling back to updateBookingStatus');
+      await updateBookingStatus(bookingId, 'cancelled');
+    }
+  }
+
+  @override
   Future<List<Map<String, dynamic>>> getBookingItems(String bookingId) async {
     try {
       final response = await client

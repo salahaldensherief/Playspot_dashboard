@@ -277,6 +277,24 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
     return changeBookingStatus(id, BookingStatus.cancelled);
   }
 
+  Future<bool> approveManualBooking(String bookingId, String actionBy) async {
+    return _executeOptimisticAction(
+      actionName: 'Approve Manual Booking',
+      optimisticUpdate: (list) =>
+          list.map((b) => b.id == bookingId ? b.copyWith(status: BookingStatus.upcoming) : b).toList(),
+      action: () => repository.approveManualBooking(bookingId, actionBy),
+    );
+  }
+
+  Future<bool> rejectManualBooking(String bookingId, String reason, String actionBy) async {
+    return _executeOptimisticAction(
+      actionName: 'Reject Manual Booking',
+      optimisticUpdate: (list) =>
+          list.map((b) => b.id == bookingId ? b.copyWith(status: BookingStatus.cancelled) : b).toList(),
+      action: () => repository.rejectManualBooking(bookingId, reason, actionBy),
+    );
+  }
+
   Future<bool> changeBookingStatus(String id, BookingStatus newStatus) {
     return _executeOptimisticAction(
       actionName: 'Change Booking Status',

@@ -233,6 +233,7 @@ class _BookingFilterBarState extends State<BookingFilterBar> {
   Widget _buildStatusDropdown() {
     final statusOptions = <_StatusFilterOption>[
       _StatusFilterOption(status: null, name: AppStrings.filterByStatus),
+      _StatusFilterOption(status: BookingStatus.pendingVerification, name: AppStrings.pendingVerification),
       _StatusFilterOption(status: BookingStatus.pending, name: AppStrings.pending),
       _StatusFilterOption(status: BookingStatus.upcoming, name: AppStrings.upcoming),
       _StatusFilterOption(status: BookingStatus.inProgress, name: AppStrings.inProgress),

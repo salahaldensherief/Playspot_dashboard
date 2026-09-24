@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/start_session_button.dart';
+import 'manual_payment_verification_dialog.dart';
 
 class BookingCardActions extends StatelessWidget {
   final Booking booking;
@@ -102,6 +103,23 @@ class BookingCardActions extends StatelessWidget {
           width: double.infinity,
           height: h,
         );
+
+    // 0. Pending Verification (Manual Payment Queue)
+    if (booking.status == BookingStatus.pendingVerification) {
+      return AppButton(
+        text: AppStrings.pendingVerification,
+        variant: AppButtonVariant.primary,
+        backgroundColor: AppColors.warning,
+        icon: Icons.verified_user_rounded,
+        height: h,
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (_) => ManualPaymentVerificationDialog(booking: booking),
+          );
+        },
+      );
+    }
 
     // 1. Pending Bookings (MUST be approved or rejected first)
     if (isPending || booking.status == BookingStatus.pending) {

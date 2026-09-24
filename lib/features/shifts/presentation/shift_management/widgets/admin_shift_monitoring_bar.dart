@@ -13,6 +13,7 @@ import '../shift_cubit.dart';
 import '../shift_state.dart';
 import '../../../domain/entities/live_shift_overview_entity.dart';
 import 'close_shift_dialog.dart';
+import 'shift_handover_summary_dialog.dart';
 
 class AdminShiftMonitoringBar extends StatefulWidget {
   const AdminShiftMonitoringBar({super.key});
@@ -324,12 +325,18 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
       context: context,
       useRootNavigator: false,
       builder: (diagContext) => CloseShiftDialog(
-        onConfirm: (actualCash, notes) {
+        onConfirm: (actualCash, notes) async {
           final shiftId = overview.shiftId;
           if (shiftId != null) {
-            shiftCubit.closeShift(shiftId, actualCash, notes, user?.loungeId ?? '');
             Navigator.pop(diagContext);
+            await shiftCubit.closeShift(shiftId, actualCash, notes, user?.loungeId ?? '');
             _refreshOverview();
+            if (context.mounted && shiftCubit.state.lastClosedShift != null) {
+              showDialog(
+                context: context,
+                builder: (_) => ShiftHandoverSummaryDialog(shift: shiftCubit.state.lastClosedShift!),
+              );
+            }
           }
         },
       ),

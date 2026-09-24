@@ -9,6 +9,9 @@ abstract class AudioService extends ChangeNotifier {
   Future<void> playNotificationSound();
   Future<void> playUrgentAlertSound();
   Future<void> stopUrgentAlertSound();
+  Future<void> playCanteenOrderSound();
+  Future<void> playServiceCallSound();
+  Future<void> playReceiptVerificationSound();
 }
 
 class AudioServiceImpl extends ChangeNotifier implements AudioService {
@@ -128,5 +131,26 @@ class AudioServiceImpl extends ChangeNotifier implements AudioService {
     } catch (e) {
       debugPrint('Error stopping urgent audio: $e');
     }
+  }
+
+  @override
+  Future<void> playCanteenOrderSound() async {
+    if (_isMuted) return;
+    debugPrint('🔔 [AUDIO] Playing Canteen Order chime sound');
+    await playNotificationSound();
+  }
+
+  @override
+  Future<void> playServiceCallSound() async {
+    if (_isMuted) return;
+    debugPrint('🔔 [AUDIO] Playing Service Call chime sound');
+    await playUrgentAlertSound();
+  }
+
+  @override
+  Future<void> playReceiptVerificationSound() async {
+    if (_isMuted) return;
+    debugPrint('🔔 [AUDIO] Playing Receipt Verification chime sound');
+    await playNotificationSound();
   }
 }

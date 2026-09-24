@@ -14,6 +14,7 @@ import '../shift_state.dart';
 import 'open_shift_dialog.dart';
 import 'close_shift_dialog.dart';
 import 'add_expense_dialog.dart';
+import 'shift_handover_summary_dialog.dart';
 
 class ShiftHeaderBanner extends StatelessWidget {
   const ShiftHeaderBanner({super.key});
@@ -201,9 +202,15 @@ class ShiftHeaderBanner extends StatelessWidget {
         ],
         child: CloseShiftDialog(
           expectedCash: shift.expectedCash,
-          onConfirm: (actualCash, notes) {
-            shiftCubit.closeShift(shift.id, actualCash, notes, loungeId);
+          onConfirm: (actualCash, notes) async {
             Navigator.pop(diagContext);
+            await shiftCubit.closeShift(shift.id, actualCash, notes, loungeId);
+            if (context.mounted && shiftCubit.state.lastClosedShift != null) {
+              showDialog(
+                context: context,
+                builder: (_) => ShiftHandoverSummaryDialog(shift: shiftCubit.state.lastClosedShift!),
+              );
+            }
           },
         ),
       ),

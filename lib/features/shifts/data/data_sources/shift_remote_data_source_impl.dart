@@ -260,6 +260,30 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
 
   @override
   Future<ShiftModel> closeShift(String shiftId, double actualCash, String? notes, {String? loungeId}) async {
+    try {
+      final cashierId = _supabase.auth.currentUser?.id ?? '';
+      final response = await _supabase.rpc('blind_close_shift', params: {
+        'p_shift_id': shiftId,
+        'p_cashier_id': cashierId,
+        'p_counted_cash': actualCash,
+        'p_notes': notes,
+      });
+
+      if (response != null) {
+        Map<String, dynamic> shiftJson = {};
+        if (response is List && response.isNotEmpty) {
+          shiftJson = Map<String, dynamic>.from(response.first as Map);
+        } else if (response is Map) {
+          shiftJson = Map<String, dynamic>.from(response);
+        }
+        if (shiftJson.isNotEmpty && shiftJson.containsKey('id')) {
+          return ShiftModel.fromJson(shiftJson);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ [ShiftRemoteDataSource] blind_close_shift RPC error ($e), trying fallbacks');
+    }
+
     if (loungeId != null && loungeId.isNotEmpty) {
       try {
         final response = await _supabase.rpc('close_lounge_shift', params: {

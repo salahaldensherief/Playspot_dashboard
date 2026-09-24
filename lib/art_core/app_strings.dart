@@ -303,6 +303,13 @@ class AppStrings {
 
   static String get approve => 'approve'.tr();
   static String get reject => 'reject'.tr();
+  static String get pendingVerification => 'pending_verification'.tr();
+  static String get currentRoom => 'current_room'.tr();
+  static String get recalculatedRateDifference => 'recalculated_rate_difference'.tr();
+  static String get shiftHandoverSummary => 'shift_handover_summary'.tr();
+  static String get printHandoverSummary => 'print_handover_summary'.tr();
+  static String get printingTriggered => 'printing_triggered'.tr();
+  static String get countedCash => 'counted_cash'.tr();
   static String get pendingRequests => 'pending_requests'.tr();
   static String get activeBookings => 'active_bookings'.tr();
   static String get finishedToday => 'finished_today'.tr();

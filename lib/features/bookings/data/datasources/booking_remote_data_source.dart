@@ -45,5 +45,9 @@ abstract class BookingRemoteDataSource {
 
   Future<void> autoCancelExpiredBookings();
 
+  Future<void> approveManualBooking(String bookingId, String actionBy);
+
+  Future<void> rejectManualBooking(String bookingId, String reason, String actionBy);
+
   Future<List<Map<String, dynamic>>> getBookingItems(String bookingId);
 }
