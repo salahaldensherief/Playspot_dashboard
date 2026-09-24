@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,6 +15,7 @@ import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_state.da
 import 'package:play_spot_dashboard/features/kyc/presentation/widgets/kyc_step.dart';
 import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_state.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/widgets/venue_type_step.dart';
 import 'package:play_spot_dashboard/features/onboarding/presentation/widgets/basic_info_step.dart';
 import 'package:play_spot_dashboard/features/onboarding/presentation/widgets/location_step.dart';
 import 'package:play_spot_dashboard/features/onboarding/presentation/widgets/operating_hours_step.dart';
@@ -28,15 +30,23 @@ class LoungeSetupView extends StatefulWidget {
 }
 
 class _LoungeSetupViewState extends State<LoungeSetupView> {
-  final int _totalSteps = 6;
+  final int _totalSteps = 7;
   
-  // Controllers
+  // Step 0 - Venue Model Controllers & State
+  bool _isChain = false;
+  late final TextEditingController _brandNameController;
+  late final TextEditingController _branchesCountController;
+  late final TextEditingController _branchNameController;
+
+  // Step 1 - Basic Info Controllers
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _cityController;
   late final TextEditingController _addressController;
   late final TextEditingController _opensAtController;
   late final TextEditingController _closesAtController;
+
+  Timer? _saveDraftDebounceTimer;
 
   Uint8List? _mainImageBytes;
   String? _mainImageName;
@@ -52,12 +62,23 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
   void initState() {
     super.initState();
     final draft = context.read<OnboardingCubit>().state.draft;
+    _isChain = draft.isChain;
+    _brandNameController = TextEditingController(text: draft.brandName);
+    _branchesCountController = TextEditingController(
+      text: draft.branchesCount > 1 ? draft.branchesCount.toString() : '2',
+    );
+    _branchNameController = TextEditingController(text: draft.branchName);
+
     _nameController = TextEditingController(text: draft.name);
     _descriptionController = TextEditingController(text: draft.description);
     _cityController = TextEditingController(text: draft.city);
     _addressController = TextEditingController(text: draft.address);
     _opensAtController = TextEditingController(text: draft.opensAt);
     _closesAtController = TextEditingController(text: draft.closesAt);
+
+    _brandNameController.addListener(_onFieldChanged);
+    _branchesCountController.addListener(_onFieldChanged);
+    _branchNameController.addListener(_onBranchNameChanged);
 
     _nameController.addListener(_onFieldChanged);
     _descriptionController.addListener(_onFieldChanged);
@@ -67,21 +88,42 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
     _closesAtController.addListener(_onFieldChanged);
   }
 
+  void _onBranchNameChanged() {
+    if (_isChain && _nameController.text.isEmpty) {
+      _nameController.text = _branchNameController.text;
+    }
+    _onFieldChanged();
+  }
+
   void _onFieldChanged() {
-    final cubit = context.read<OnboardingCubit>();
-    final currentDraft = cubit.state.draft;
-    cubit.saveDraft(currentDraft.copyWith(
-      name: _nameController.text,
-      description: _descriptionController.text,
-      city: _cityController.text,
-      address: _addressController.text,
-      opensAt: _opensAtController.text,
-      closesAt: _closesAtController.text,
-    ));
+    _saveDraftDebounceTimer?.cancel();
+    _saveDraftDebounceTimer = Timer(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+      final cubit = context.read<OnboardingCubit>();
+      final currentDraft = cubit.state.draft;
+      final count = int.tryParse(_branchesCountController.text) ?? 1;
+
+      cubit.saveDraft(currentDraft.copyWith(
+        isChain: _isChain,
+        brandName: _brandNameController.text,
+        branchesCount: count,
+        branchName: _branchNameController.text,
+        name: _nameController.text,
+        description: _descriptionController.text,
+        city: _cityController.text,
+        address: _addressController.text,
+        opensAt: _opensAtController.text,
+        closesAt: _closesAtController.text,
+      ));
+    });
   }
 
   @override
   void dispose() {
+    _saveDraftDebounceTimer?.cancel();
+    _brandNameController.dispose();
+    _branchesCountController.dispose();
+    _branchNameController.dispose();
     _nameController.dispose();
     _descriptionController.dispose();
     _cityController.dispose();
@@ -263,6 +305,19 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
 
     switch (currentStep) {
       case 0:
+        return VenueTypeStep(
+          isChain: _isChain,
+          onTypeChanged: (val) {
+            setState(() {
+              _isChain = val;
+            });
+            _onFieldChanged();
+          },
+          brandNameController: _brandNameController,
+          branchesCountController: _branchesCountController,
+          branchNameController: _branchNameController,
+        );
+      case 1:
         return BasicInfoStep(
           nameController: _nameController,
           descriptionController: _descriptionController,
@@ -274,7 +329,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
             _galleryImages = images;
           },
         );
-      case 1:
+      case 2:
         return LocationStep(
           cityController: _cityController,
           addressController: _addressController,
@@ -282,16 +337,16 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
             cubit.saveDraft(cubit.state.draft.copyWith(lat: lat, lng: lng));
           },
         );
-      case 2:
+      case 3:
         return OperatingHoursStep(
           opensAtController: _opensAtController,
           closesAtController: _closesAtController,
         );
-      case 3:
-        return AssetsStep(loungeId: loungeId);
       case 4:
-        return MarketplaceStep(loungeId: loungeId);
+        return AssetsStep(loungeId: loungeId);
       case 5:
+        return MarketplaceStep(loungeId: loungeId);
+      case 6:
         return KycStep(
           onIdCardSelected: (bytes, name) {
             _idCardBytes = bytes;

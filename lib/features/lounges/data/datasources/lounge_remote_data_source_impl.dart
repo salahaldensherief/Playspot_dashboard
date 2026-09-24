@@ -24,6 +24,26 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   Future<List<LoungeModel>> getLounges() => _queryHelper.getLounges();
 
   @override
+  Future<List<LoungeModel>> getOwnerBranches(String ownerId) =>
+      _queryHelper.getOwnerBranches(ownerId);
+
+  @override
+  Future<Map<String, dynamic>> addLoungeBranch(Map<String, dynamic> branchData) =>
+      _queryHelper.addLoungeBranch(branchData);
+
+  @override
+  Future<Map<String, dynamic>> getMultiBranchOverview({
+    required String ownerId,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) =>
+      _queryHelper.getMultiBranchOverview(
+        ownerId: ownerId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+  @override
   Future<LoungeModel?> getLoungeById(String id) => _queryHelper.getLoungeById(id);
 
   @override

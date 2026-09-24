@@ -15,6 +15,7 @@ class BookingCardActions extends StatelessWidget {
   final bool isPending;
   final bool isCanStartSession;
   final VoidCallback onOpenDetails;
+  final VoidCallback? onApprove;
   final VoidCallback? onStartSession;
   final VoidCallback? onConfirmPayment;
   final VoidCallback? onReject;
@@ -27,6 +28,7 @@ class BookingCardActions extends StatelessWidget {
     required this.isPending,
     required this.isCanStartSession,
     required this.onOpenDetails,
+    this.onApprove,
     this.onStartSession,
     this.onConfirmPayment,
     this.onReject,
@@ -101,7 +103,87 @@ class BookingCardActions extends StatelessWidget {
           height: h,
         );
 
-    // Approved upcoming booking (Cash, Wallet, or Online)
+    // 1. Pending Bookings (MUST be approved or rejected first)
+    if (isPending || booking.status == BookingStatus.pending) {
+      if (!isPaid && !booking.isCashPayment) {
+        // Electronic payment waiting for confirmation
+        return Row(
+          children: [
+            Expanded(
+              child: AppButton(
+                text: AppStrings.confirmReceipt,
+                variant: AppButtonVariant.primary,
+                backgroundColor: AppColors.neonBlue,
+                height: h,
+                onPressed: () {
+                  if (onConfirmPayment != null) {
+                    onConfirmPayment!();
+                  } else {
+                    onOpenDetails();
+                  }
+                },
+              ),
+            ),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: AppButton(
+                text: AppStrings.reject,
+                variant: AppButtonVariant.outlined,
+                height: h,
+                onPressed: () {
+                  if (onReject != null) {
+                    onReject!();
+                  } else {
+                    context.read<BookingCubit>().rejectBooking(booking.id);
+                  }
+                },
+              ),
+            ),
+          ],
+        );
+      }
+
+      // Cash or standard pending booking
+      return Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: AppButton(
+              text: AppStrings.confirmBooking,
+              variant: AppButtonVariant.primary,
+              backgroundColor: AppColors.success,
+              icon: Icons.check_circle_outline_rounded,
+              height: h,
+              onPressed: () {
+                if (onApprove != null) {
+                  onApprove!();
+                } else {
+                  context.read<BookingCubit>().approveBooking(booking.id);
+                }
+              },
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Expanded(
+            flex: 2,
+            child: AppButton(
+              text: AppStrings.reject,
+              variant: AppButtonVariant.outlined,
+              height: h,
+              onPressed: () {
+                if (onReject != null) {
+                  onReject!();
+                } else {
+                  context.read<BookingCubit>().rejectBooking(booking.id);
+                }
+              },
+            ),
+          ),
+        ],
+      );
+    }
+
+    // 2. Approved upcoming booking (Ready to start when time is reached)
     if (booking.status == BookingStatus.upcoming) {
       return Row(
         children: [
@@ -125,75 +207,6 @@ class BookingCardActions extends StatelessWidget {
               onPressed: () => _showNoShowConfirmDialog(context),
             ),
           ),
-        ],
-      );
-    }
-
-    // Cash booking (Pending)
-    if (booking.isCashPayment) {
-      if (!isCanStartSession) return detailsButton();
-      return Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: StartSessionButton(
-              bookingId: booking.id,
-              bookingDate: booking.date,
-              startTime: booking.startTime,
-              onSuccess: onStartSession,
-              height: h,
-            ),
-          ),
-          SizedBox(width: 8.w),
-          Expanded(
-            flex: 2,
-            child: AppButton(
-              text: AppStrings.markNoShowAction,
-              variant: AppButtonVariant.outlined,
-              height: h,
-              onPressed: () => _showNoShowConfirmDialog(context),
-            ),
-          ),
-        ],
-      );
-    }
-
-    // Wallet / e-payment booking
-    if (!isPaid && (isPending || isCanStartSession)) {
-      return Row(
-        children: [
-          Expanded(
-            child: AppButton(
-              text: AppStrings.confirmReceipt,
-              variant: AppButtonVariant.primary,
-              backgroundColor: AppColors.neonBlue,
-              height: h,
-              onPressed: () {
-                if (onConfirmPayment != null) {
-                  onConfirmPayment!();
-                } else {
-                  onOpenDetails();
-                }
-              },
-            ),
-          ),
-          if (isPending) ...[
-            SizedBox(width: 8.w),
-            Expanded(
-              child: AppButton(
-                text: AppStrings.reject,
-                variant: AppButtonVariant.outlined,
-                height: h,
-                onPressed: () {
-                  if (onReject != null) {
-                    onReject!();
-                  } else {
-                    context.read<BookingCubit>().rejectBooking(booking.id);
-                  }
-                },
-              ),
-            ),
-          ],
         ],
       );
     }

@@ -73,6 +73,7 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
         .loadUserPermissions(roleStr, loungeId: loungeId);
 
     final loungeCubit = context.read<LoungeCubit>();
+    loungeCubit.initSelectedLounge(loungeId);
     if (loungeCubit.state.status == LoungeStatus.initial) {
       loungeCubit.fetchLounges();
     }
@@ -193,6 +194,28 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
                   bookingCubit.clearLatestNewBooking();
                 }
               });
+            }
+          },
+        ),
+        BlocListener<LoungeCubit, LoungeState>(
+          listenWhen: (prev, curr) =>
+              curr.selectedLoungeId != null &&
+              prev.selectedLoungeId != curr.selectedLoungeId,
+          listener: (context, state) {
+            final activeId = state.selectedLoungeId;
+            if (activeId != null && activeId.isNotEmpty) {
+              context.read<ShiftCubit>().checkActiveShift(activeId);
+              context
+                  .read<BookingCubit>()
+                  .startWatchingBookings(loungeId: activeId);
+              context
+                  .read<ClientRequestsCubit>()
+                  .startWatchingRequests(loungeId: activeId);
+              final roleStr =
+                  widget.user?.rawRole ?? widget.user?.role.name ?? 'staff';
+              context
+                  .read<PermissionsCubit>()
+                  .loadUserPermissions(roleStr, loungeId: activeId);
             }
           },
         ),

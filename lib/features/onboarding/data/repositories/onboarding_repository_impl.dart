@@ -23,6 +23,26 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
   }
 
   @override
+  Future<Either<Failure, Lounge>> batchCompleteOnboarding({
+    required String loungeId,
+    required Map<String, dynamic> loungeData,
+    required List<Map<String, dynamic>> rooms,
+    required List<Map<String, dynamic>> extras,
+  }) async {
+    try {
+      final result = await remoteDataSource.batchCompleteOnboarding(
+        loungeId: loungeId,
+        loungeData: loungeData,
+        rooms: rooms,
+        extras: extras,
+      );
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> updateIdentity({
     required String loungeId,
     required String name,

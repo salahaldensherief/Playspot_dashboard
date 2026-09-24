@@ -120,7 +120,7 @@ class _BookingCardState extends State<BookingCard> {
     final bool isCashUnconfirmed = booking.isCashPayment && booking.paymentStatus != PaymentStatus.paid;
     final isPending = booking.status == BookingStatus.pending || isCashUnconfirmed;
     final isPaid = booking.paymentStatus == PaymentStatus.paid;
-    final isCanStartSession = isPending || booking.status == BookingStatus.upcoming;
+    final isCanStartSession = booking.status == BookingStatus.upcoming;
     final isOverdue = _isPastStartTime(booking);
     final isInProgress = booking.status == BookingStatus.inProgress;
 
@@ -240,6 +240,7 @@ class _BookingCardState extends State<BookingCard> {
                           isPending: isPending,
                           isCanStartSession: isCanStartSession,
                           onOpenDetails: () => _openDetailsDialog(context),
+                          onApprove: widget.onApprove,
                           onStartSession: widget.onStartSession,
                           onConfirmPayment: widget.onConfirmPayment,
                           onReject: widget.onReject,

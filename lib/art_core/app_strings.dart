@@ -1328,5 +1328,26 @@ class AppStrings {
   static String get hintPlayStoreUrl => 'hint_play_store_url'.tr();
   static String get hintAppStoreUrl => 'hint_app_store_url'.tr();
 
+  // Multi-Branch & Venue Structure
+  static String get venueTypeStepTitle => 'venue_type_step_title'.tr();
+  static String get venueTypeStepSubtitle => 'venue_type_step_subtitle'.tr();
+  static String get singleVenue => 'single_venue'.tr();
+  static String get singleVenueDesc => 'single_venue_desc'.tr();
+  static String get multiBranchChain => 'multi_branch_chain'.tr();
+  static String get multiBranchChainDesc => 'multi_branch_chain_desc'.tr();
+  static String get brandName => 'brand_name'.tr();
+  static String get brandNameHint => 'brand_name_hint'.tr();
+  static String get branchesCount => 'branches_count'.tr();
+  static String get branchesCountHint => 'branches_count_hint'.tr();
+  static String get branchName => 'branch_name'.tr();
+  static String get branchNameHint => 'branch_name_hint'.tr();
+  static String get branchSwitcher => 'branch_switcher'.tr();
+  static String get switchBranch => 'switch_branch'.tr();
+  static String get currentBranch => 'current_branch'.tr();
+  static String get allBranches => 'all_branches'.tr();
+  static String get searchBranches => 'search_branches'.tr();
+  static String get noBranchesFound => 'no_branches_found'.tr();
+  static String get addNewBranch => 'add_new_branch'.tr();
+
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

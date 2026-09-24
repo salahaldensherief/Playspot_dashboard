@@ -205,4 +205,62 @@ class LoungeQueryRemoteHelper {
       throw Exception('فشل تعليق الصالة: لا تملك الصلاحيات الكافية لتعديل حالة الصالة.');
     }
   }
+
+  Future<List<LoungeModel>> getOwnerBranches(String ownerId) async {
+    try {
+      final response = await client.rpc('get_owner_branches', params: {
+        'p_owner_id': ownerId,
+      });
+
+      if (response is List) {
+        return response
+            .map((e) => LoungeModel.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
+      }
+    } catch (e, stackTrace) {
+      AppLogger.warning('get_owner_branches RPC failed ($e), falling back to select query...', e, stackTrace);
+    }
+
+    try {
+      final response = await client
+          .from('lounges')
+          .select()
+          .eq('owner_id', ownerId)
+          .neq('status', 'deleted')
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((e) => LoungeModel.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+    } catch (e) {
+      AppLogger.error('Fallback query for owner branches failed: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> addLoungeBranch(Map<String, dynamic> branchData) async {
+    final response = await client.rpc('add_lounge_branch', params: {
+      'p_branch_data': branchData,
+    });
+    if (response is Map) {
+      return Map<String, dynamic>.from(response);
+    }
+    return {'id': response?.toString() ?? ''};
+  }
+
+  Future<Map<String, dynamic>> getMultiBranchOverview({
+    required String ownerId,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    final response = await client.rpc('get_multi_branch_overview', params: {
+      'p_owner_id': ownerId,
+      'p_start_date': startDate.toUtc().toIso8601String(),
+      'p_end_date': endDate.toUtc().toIso8601String(),
+    });
+    if (response is Map) {
+      return Map<String, dynamic>.from(response);
+    }
+    return {};
+  }
 }

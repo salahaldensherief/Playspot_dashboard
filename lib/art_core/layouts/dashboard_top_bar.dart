@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import 'top_bar/top_bar_audio_toggle.dart';
+import 'top_bar/top_bar_branch_switcher.dart';
 import 'top_bar/top_bar_lounge_status_toggle.dart';
 import 'top_bar/top_bar_notification_bell.dart';
 import 'top_bar/top_bar_shift_indicator.dart';
@@ -36,7 +37,7 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left Side: Title & Menu/Leading
+          // Left Side: Title & Menu/Leading & Branch Switcher
           Expanded(
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -65,6 +66,8 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                   ),
                 ),
+                const SizedBox(width: 16),
+                const TopBarBranchSwitcher(),
               ],
             ),
           ),

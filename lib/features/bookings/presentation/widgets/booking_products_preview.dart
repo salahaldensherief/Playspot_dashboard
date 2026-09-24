@@ -153,51 +153,61 @@ class BookingProductsPreview extends StatelessWidget {
             ],
           ),
           SizedBox(height: 2.h),
-          ...visibleItems.map((item) {
-            final String name = item['name'];
-            final int qty = item['qty'];
-            final double price = item['price'];
-            final double itemTotal = price * qty;
-            final IconData itemIcon = _getItemIcon(name);
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: 65.h),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: visibleItems.map((item) {
+                  final String name = item['name'];
+                  final int qty = item['qty'];
+                  final double price = item['price'];
+                  final double itemTotal = price * qty;
+                  final IconData itemIcon = _getItemIcon(name);
 
-            return Padding(
-              padding: EdgeInsets.symmetric(vertical: 1.h),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 1.h),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Icon(itemIcon, size: 10.r, color: AppColors.neonCyan),
-                        SizedBox(width: 4.w),
                         Expanded(
-                          child: Text(
-                            '${qty}x $name',
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 9.5.sp,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          child: Row(
+                            children: [
+                              Icon(itemIcon, size: 10.r, color: AppColors.neonCyan),
+                              SizedBox(width: 4.w),
+                              Expanded(
+                                child: Text(
+                                  '${qty}x $name',
+                                  style: TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 9.5.sp,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                        if (itemTotal > 0)
+                          Text(
+                            '${itemTotal.toStringAsFixed(0)} ج.م',
+                            style: TextStyle(
+                              color: AppColors.neonGreen,
+                              fontSize: 9.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                       ],
                     ),
-                  ),
-                  if (itemTotal > 0)
-                    Text(
-                      '${itemTotal.toStringAsFixed(0)} ج.م',
-                      style: TextStyle(
-                        color: AppColors.neonGreen,
-                        fontSize: 9.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                ],
+                  );
+                }).toList(),
               ),
-            );
-          }),
+            ),
+          ),
           if (overflowCount > 0) ...[
             SizedBox(height: 2.h),
             Text(

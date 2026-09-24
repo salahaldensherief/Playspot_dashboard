@@ -53,6 +53,45 @@ class LoungeRepositoryImpl implements LoungeRepository {
   }
 
   @override
+  Future<Either<Failure, List<Lounge>>> getOwnerBranches(String ownerId, {bool forceRefresh = false}) async {
+    try {
+      final branches = await remoteDataSource.getOwnerBranches(ownerId);
+      return Right(branches.map((e) => e as Lounge).toList());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> addLoungeBranch(Map<String, dynamic> branchData) async {
+    try {
+      final res = await remoteDataSource.addLoungeBranch(branchData);
+      final newId = res['id']?.toString() ?? res['lounge_id']?.toString() ?? '';
+      return Right(newId);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> getMultiBranchOverview({
+    required String ownerId,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    try {
+      final overview = await remoteDataSource.getMultiBranchOverview(
+        ownerId: ownerId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+      return Right(overview);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, Lounge?>> getLoungeById(String id, {bool forceRefresh = false}) async {
     try {
       if (!forceRefresh) {

@@ -8,6 +8,13 @@ import '../entities/extra_entity.dart';
 
 abstract class LoungeRepository {
   Future<Either<Failure, List<Lounge>>> getLounges({bool forceRefresh = false});
+  Future<Either<Failure, List<Lounge>>> getOwnerBranches(String ownerId, {bool forceRefresh = false});
+  Future<Either<Failure, String>> addLoungeBranch(Map<String, dynamic> branchData);
+  Future<Either<Failure, Map<String, dynamic>>> getMultiBranchOverview({
+    required String ownerId,
+    required DateTime startDate,
+    required DateTime endDate,
+  });
   Future<Either<Failure, Lounge?>> getLoungeById(String id, {bool forceRefresh = false});
   Future<Either<Failure, List<Room>>> getRooms(String loungeId);
   Future<Either<Failure, List<Activity>>> getActivities(String roomId);

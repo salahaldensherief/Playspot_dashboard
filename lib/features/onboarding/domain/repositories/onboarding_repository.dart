@@ -7,6 +7,13 @@ import '../../../lounges/domain/entities/lounge.dart';
 abstract class OnboardingRepository {
   Future<Either<Failure, Lounge>> setupLounge(Lounge lounge);
 
+  Future<Either<Failure, Lounge>> batchCompleteOnboarding({
+    required String loungeId,
+    required Map<String, dynamic> loungeData,
+    required List<Map<String, dynamic>> rooms,
+    required List<Map<String, dynamic>> extras,
+  });
+
   Future<Either<Failure, void>> updateIdentity({
     required String loungeId,
     required String name,

@@ -9,12 +9,26 @@ class LoungeCubit extends Cubit<LoungeState> {
 
   LoungeCubit(this.repository) : super(const LoungeState());
 
-  Future<void> fetchLounges({bool forceRefresh = false}) async {
+  void selectLounge(String loungeId) {
+    if (state.selectedLoungeId != loungeId) {
+      emit(state.copyWith(selectedLoungeId: loungeId));
+    }
+  }
+
+  void initSelectedLounge(String? defaultLoungeId) {
+    if (state.selectedLoungeId == null && defaultLoungeId != null && defaultLoungeId.isNotEmpty) {
+      emit(state.copyWith(selectedLoungeId: defaultLoungeId));
+    }
+  }
+
+  Future<void> fetchLounges({bool forceRefresh = false, String? ownerId}) async {
     if (!forceRefresh && state.status == LoungeStatus.loading) return;
     if (!forceRefresh && state.status == LoungeStatus.success && state.lounges.isNotEmpty) return;
 
     emit(state.copyWith(status: LoungeStatus.loading, clearError: true));
-    final result = await repository.getLounges(forceRefresh: forceRefresh);
+    final result = (ownerId != null && ownerId.isNotEmpty)
+        ? await repository.getOwnerBranches(ownerId, forceRefresh: forceRefresh)
+        : await repository.getLounges(forceRefresh: forceRefresh);
     
     if (isClosed) return;
 
@@ -27,11 +41,55 @@ class LoungeCubit extends Cubit<LoungeState> {
           lounges: state.lounges,
         ));
       },
-      (lounges) => emit(state.copyWith(
-        status: LoungeStatus.success,
-        lounges: lounges,
-        clearError: true,
-      )),
+      (lounges) {
+        final currentSelected = state.selectedLoungeId;
+        final validSelected = (currentSelected != null && lounges.any((l) => l.id == currentSelected))
+            ? currentSelected
+            : (lounges.isNotEmpty ? lounges.first.id : null);
+
+        emit(state.copyWith(
+          status: LoungeStatus.success,
+          lounges: lounges,
+          selectedLoungeId: validSelected,
+          clearError: true,
+        ));
+      },
+    );
+  }
+
+  Future<String?> addBranch(Map<String, dynamic> branchData, {String? ownerId}) async {
+    emit(state.copyWith(status: LoungeStatus.loading));
+    final result = await repository.addLoungeBranch(branchData);
+    if (isClosed) return null;
+
+    return result.fold(
+      (failure) {
+        emit(state.copyWith(
+          status: LoungeStatus.failure,
+          errorMessage: failure.message,
+        ));
+        return null;
+      },
+      (newBranchId) {
+        fetchLounges(forceRefresh: true, ownerId: ownerId);
+        return newBranchId;
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>?> getMultiBranchOverview({
+    required String ownerId,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    final result = await repository.getMultiBranchOverview(
+      ownerId: ownerId,
+      startDate: startDate,
+      endDate: endDate,
+    );
+    return result.fold(
+      (failure) => null,
+      (overview) => overview,
     );
   }
 

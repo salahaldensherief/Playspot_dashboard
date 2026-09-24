@@ -4,6 +4,13 @@ import '../models/lounge_model.dart';
 
 abstract class LoungeRemoteDataSource {
   Future<List<LoungeModel>> getLounges();
+  Future<List<LoungeModel>> getOwnerBranches(String ownerId);
+  Future<Map<String, dynamic>> addLoungeBranch(Map<String, dynamic> branchData);
+  Future<Map<String, dynamic>> getMultiBranchOverview({
+    required String ownerId,
+    required DateTime startDate,
+    required DateTime endDate,
+  });
   Future<LoungeModel?> getLoungeById(String id);
   Future<Map<String, dynamic>> createLoungeWithOwner({
     required String email,

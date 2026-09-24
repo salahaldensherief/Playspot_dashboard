@@ -10,6 +10,10 @@ class LoungeDraftParams extends Equatable {
   final String closesAt;
   final double? lat;
   final double? lng;
+  final bool isChain;
+  final String brandName;
+  final int branchesCount;
+  final String branchName;
 
   const LoungeDraftParams({
     this.step = 0,
@@ -21,6 +25,10 @@ class LoungeDraftParams extends Equatable {
     this.closesAt = '',
     this.lat,
     this.lng,
+    this.isChain = false,
+    this.brandName = '',
+    this.branchesCount = 1,
+    this.branchName = '',
   });
 
   LoungeDraftParams copyWith({
@@ -33,6 +41,10 @@ class LoungeDraftParams extends Equatable {
     String? closesAt,
     double? lat,
     double? lng,
+    bool? isChain,
+    String? brandName,
+    int? branchesCount,
+    String? branchName,
   }) {
     return LoungeDraftParams(
       step: step ?? this.step,
@@ -44,6 +56,10 @@ class LoungeDraftParams extends Equatable {
       closesAt: closesAt ?? this.closesAt,
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
+      isChain: isChain ?? this.isChain,
+      brandName: brandName ?? this.brandName,
+      branchesCount: branchesCount ?? this.branchesCount,
+      branchName: branchName ?? this.branchName,
     );
   }
 
@@ -57,6 +73,10 @@ class LoungeDraftParams extends Equatable {
         'closesAt': closesAt,
         'lat': lat,
         'lng': lng,
+        'isChain': isChain,
+        'brandName': brandName,
+        'branchesCount': branchesCount,
+        'branchName': branchName,
       };
 
   factory LoungeDraftParams.fromJson(Map<String, dynamic> json) {
@@ -70,6 +90,10 @@ class LoungeDraftParams extends Equatable {
       closesAt: json['closesAt']?.toString() ?? '',
       lat: (json['lat'] as num?)?.toDouble(),
       lng: (json['lng'] as num?)?.toDouble(),
+      isChain: json['isChain'] as bool? ?? false,
+      brandName: json['brandName']?.toString() ?? '',
+      branchesCount: json['branchesCount'] as int? ?? 1,
+      branchName: json['branchName']?.toString() ?? '',
     );
   }
 
@@ -84,5 +108,9 @@ class LoungeDraftParams extends Equatable {
         closesAt,
         lat,
         lng,
+        isChain,
+        brandName,
+        branchesCount,
+        branchName,
       ];
 }

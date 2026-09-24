@@ -6,6 +6,12 @@ import 'package:play_spot_dashboard/features/rooms/data/models/room_model.dart';
 
 abstract class OnboardingRemoteDataSource {
   Future<LoungeModel> setupLounge(Lounge lounge);
+  Future<LoungeModel> batchCompleteOnboarding({
+    required String loungeId,
+    required Map<String, dynamic> loungeData,
+    required List<Map<String, dynamic>> rooms,
+    required List<Map<String, dynamic>> extras,
+  });
   Future<void> updateLoungeData(String id, Map<String, dynamic> data);
   Future<RoomModel> addRoom(RoomModel room);
 }
@@ -125,5 +131,70 @@ class OnboardingRemoteDataSourceImpl implements OnboardingRemoteDataSource {
     }
     final response = await _supabase.from('rooms').insert(data).select().single();
     return RoomModel.fromJson(response);
+  }
+
+  @override
+  Future<LoungeModel> batchCompleteOnboarding({
+    required String loungeId,
+    required Map<String, dynamic> loungeData,
+    required List<Map<String, dynamic>> rooms,
+    required List<Map<String, dynamic>> extras,
+  }) async {
+    try {
+      final response = await _supabase.rpc('batch_complete_onboarding', params: {
+        'p_lounge_id': loungeId,
+        'p_lounge_data': loungeData,
+        'p_rooms': rooms,
+        'p_extras': extras,
+      });
+
+      if (response != null && response is Map) {
+        return LoungeModel.fromJson(Map<String, dynamic>.from(response));
+      }
+    } catch (e) {
+      debugPrint('OnboardingRemoteDataSource: batch_complete_onboarding RPC error ($e), executing fallback...');
+    }
+
+    // Fallback: update lounge and profile
+    try {
+      await _supabase.from('lounges').update(loungeData).eq('id', loungeId);
+
+      // Insert rooms if any
+      for (final room in rooms) {
+        try {
+          await _supabase.from('rooms').insert({
+            ...room,
+            'lounge_id': loungeId,
+          });
+        } catch (_) {}
+      }
+
+      // Insert extras if any
+      for (final extra in extras) {
+        try {
+          await _supabase.from('extras').insert({
+            ...extra,
+            'lounge_id': loungeId,
+          });
+        } catch (_) {}
+      }
+
+      final currentUserId = _supabase.auth.currentUser?.id;
+      if (currentUserId != null) {
+        try {
+          await _supabase.from('profiles').update({'is_setup_completed': true}).eq('id', currentUserId);
+        } catch (_) {}
+      }
+
+      final loungeRes = await _supabase.from('lounges').select().eq('id', loungeId).maybeSingle();
+      if (loungeRes != null) {
+        return LoungeModel.fromJson(loungeRes);
+      }
+    } catch (fallbackError) {
+      debugPrint('OnboardingRemoteDataSource: batch fallback error: $fallbackError');
+      throw Exception('Failed to complete onboarding: $fallbackError');
+    }
+
+    throw Exception('Failed to batch complete onboarding');
   }
 }

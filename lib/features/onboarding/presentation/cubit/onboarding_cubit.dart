@@ -13,12 +13,14 @@ import '../../domain/entities/lounge_draft_params.dart';
 import '../../domain/usecases/add_extra_usecase.dart';
 import '../../domain/usecases/add_room_usecase.dart';
 import '../../domain/usecases/setup_lounge_usecase.dart';
+import '../../domain/usecases/batch_complete_onboarding_usecase.dart';
 import 'onboarding_state.dart';
 
 class OnboardingCubit extends Cubit<OnboardingState> {
   final AddRoomUseCase addRoomUseCase;
   final AddExtraUseCase addExtraUseCase;
   final SetupLoungeUseCase setupLoungeUseCase;
+  final BatchCompleteOnboardingUseCase batchCompleteOnboardingUseCase;
   final LocationService locationService;
   final LocalCacheService localCacheService;
 
@@ -28,6 +30,7 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     required this.addRoomUseCase,
     required this.addExtraUseCase,
     required this.setupLoungeUseCase,
+    required this.batchCompleteOnboardingUseCase,
     required this.locationService,
     required this.localCacheService,
   }) : super(const OnboardingState()) {
@@ -52,13 +55,13 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   }
 
   void setStep(int step) {
-    if (step >= 0 && step <= 5) {
+    if (step >= 0 && step <= 6) {
       saveDraft(state.draft.copyWith(step: step));
     }
   }
 
   void nextStep() {
-    if (state.currentStep < 5) {
+    if (state.currentStep < 6) {
       setStep(state.currentStep + 1);
     }
   }
@@ -142,11 +145,55 @@ class OnboardingCubit extends Cubit<OnboardingState> {
         );
       }
 
-      final result = await setupLoungeUseCase(lounge.copyWith(
-        id: loungeId,
-        imageUrl: mainImageUrl,
-        images: galleryUrls,
-      ));
+      final cleanOpensAt = lounge.opensAt.isNotEmpty ? lounge.opensAt : '10:00';
+      final cleanClosesAt = lounge.closesAt.isNotEmpty ? lounge.closesAt : '02:00';
+
+      final loungeData = <String, dynamic>{
+        'name': lounge.name,
+        'name_ar': lounge.name,
+        'name_en': lounge.name,
+        if (state.draft.brandName.isNotEmpty) 'brand_name': state.draft.brandName,
+        if (state.draft.branchName.isNotEmpty) 'branch_name': state.draft.branchName,
+        'city': lounge.city ?? '',
+        'location': lounge.location ?? '',
+        'opening_time': cleanOpensAt,
+        'closing_time': cleanClosesAt,
+        'image_url': mainImageUrl,
+        'images': galleryUrls,
+        'description_ar': lounge.descriptionAr ?? lounge.descriptionEn ?? '',
+        'description_en': lounge.descriptionEn ?? lounge.descriptionAr ?? '',
+        'address': lounge.location ?? '',
+        if (lounge.lat != null) 'lat': lounge.lat,
+        if (lounge.lng != null) 'lng': lounge.lng,
+      };
+
+      final roomsData = state.rooms.map((r) => {
+        'name': r.nameEn.isNotEmpty ? r.nameEn : r.nameAr,
+        'name_ar': r.nameAr.isNotEmpty ? r.nameAr : r.nameEn,
+        'is_available': r.isAvailable,
+        'is_active': true,
+        'status': r.status,
+        'hourly_rate_single': r.hourlyRateSingle,
+        'hourly_rate_multi': r.hourlyRateMulti,
+        'max_capacity': r.maxCapacity,
+      }).toList();
+
+      final extrasData = state.extras.map((e) => {
+        'name': e.nameEn.isNotEmpty ? e.nameEn : e.nameAr,
+        'name_ar': e.nameAr.isNotEmpty ? e.nameAr : e.nameEn,
+        'price': e.price,
+        'category': e.category,
+        'is_available': e.isAvailable,
+        'is_active': true,
+        'stock_quantity': e.stockQuantity,
+      }).toList();
+
+      final result = await batchCompleteOnboardingUseCase(
+        loungeId: loungeId,
+        loungeData: loungeData,
+        rooms: roomsData,
+        extras: extrasData,
+      );
 
       if (isClosed) return;
 
