@@ -1082,5 +1082,17 @@
   "all_branches": "All Branches",
   "search_branches": "Search branches...",
   "no_branches_found": "No matching branches found",
-  "add_new_branch": "Add New Branch"
+  "add_new_branch": "Add New Branch",
+  "cancelled_by_client_after_approval": "Cancelled by Client After Approval",
+  "cancellation_time": "Cancellation Time",
+  "cancellation_reason": "Cancellation Reason",
+  "cancellation_summary": "Customer Cancellation Summary",
+  "after_approval_count_label": "Cancellations After Approval",
+  "last_90_days_count_label": "Last 90 Days",
+  "view_cancellation_history": "View Cancellation History",
+  "cancellation_history_title": "Customer Cancellation History",
+  "no_cancellation_history": "No recorded cancellations after approval for this customer",
+  "cancellation_threshold_warning": "⚠️ Warning: Customer has repeated cancellations after approval!",
+  "issue_warning_btn": "Issue Warning",
+  "request_ban_btn": "Request Ban"
 }

@@ -41,6 +41,9 @@ class BookingsCockpitTabs extends StatelessWidget {
             final finishedCount = bookingState
                 .currentShiftBookings(activeShift: activeShift, userLounge: userLounge)
                 .length;
+            final cancelledCount = bookingState
+                .currentShiftCancelledBookings(activeShift: activeShift, userLounge: userLounge)
+                .length;
 
             return Row(
               children: [
@@ -74,6 +77,7 @@ class BookingsCockpitTabs extends StatelessWidget {
                         Tab(text: '${AppStrings.activeBookings} ($activeCount)'),
                         Tab(text: '${AppStrings.pendingRequests} ($pendingCount)'),
                         Tab(text: '${AppStrings.finishedToday} ($finishedCount)'),
+                        Tab(text: '${AppStrings.cancelled} ($cancelledCount)'),
                       ],
                     ),
                   ),

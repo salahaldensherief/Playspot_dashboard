@@ -39,6 +39,18 @@ class BookingState extends Equatable {
       .where((b) => b.status == BookingStatus.pending)
       .toList();
 
+  /// Cancelled Bookings: bookings with status == BookingStatus.cancelled
+  List<Booking> get cancelledBookings => bookings
+      .where((b) => b.status == BookingStatus.cancelled)
+      .toList();
+
+  /// Current Shift / Today Cancelled Bookings
+  List<Booking> currentShiftCancelledBookings({dynamic activeShift, Lounge? userLounge}) {
+    return bookings
+        .where((b) => b.status == BookingStatus.cancelled && isBookingInCurrentShiftOrToday(b, activeShift, userLounge: userLounge, allowCancelled: true))
+        .toList();
+  }
+
   /// Current Shift / Today Bookings
   List<Booking> currentShiftBookings({dynamic activeShift, Lounge? userLounge}) {
     return bookings
@@ -58,9 +70,10 @@ class BookingState extends Equatable {
     dynamic activeShift, {
     Lounge? userLounge,
     bool requireCompleted = false,
+    bool allowCancelled = false,
   }) {
     if (requireCompleted && booking.status != BookingStatus.completed) return false;
-    if (booking.status == BookingStatus.cancelled) return false;
+    if (!allowCancelled && booking.status == BookingStatus.cancelled) return false;
 
     final now = DateTime.now();
     int thresholdHour = 5;
@@ -84,7 +97,8 @@ class BookingState extends Equatable {
     }
     final DateTime operationalDayEnd = operationalDayStart.add(const Duration(hours: 24));
 
-    final bookingTime = booking.checkedInAt ??
+    final bookingTime = booking.cancelledAt ??
+        booking.checkedInAt ??
         booking.startDateTime ??
         DateTime(booking.date.year, booking.date.month, booking.date.day, 12, 0);
 

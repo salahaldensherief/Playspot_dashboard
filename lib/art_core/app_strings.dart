@@ -1349,5 +1349,19 @@ class AppStrings {
   static String get noBranchesFound => 'no_branches_found'.tr();
   static String get addNewBranch => 'add_new_branch'.tr();
 
+  // Cancellation Summary
+  static String get cancelledByClientAfterApproval => 'cancelled_by_client_after_approval'.tr();
+  static String get cancellationTime => 'cancellation_time'.tr();
+  static String get cancellationReason => 'cancellation_reason'.tr();
+  static String get cancellationSummary => 'cancellation_summary'.tr();
+  static String get afterApprovalCountLabel => 'after_approval_count_label'.tr();
+  static String get last90DaysCountLabel => 'last_90_days_count_label'.tr();
+  static String get viewCancellationHistory => 'view_cancellation_history'.tr();
+  static String get cancellationHistoryTitle => 'cancellation_history_title'.tr();
+  static String get noCancellationHistory => 'no_cancellation_history'.tr();
+  static String get cancellationThresholdWarning => 'cancellation_threshold_warning'.tr();
+  static String get issueWarningBtn => 'issue_warning_btn'.tr();
+  static String get requestBanBtn => 'request_ban_btn'.tr();
+
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

@@ -1,6 +1,6 @@
 import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import 'package:play_spot_dashboard/features/bookings/data/models/booking_model.dart';
-export 'booking_remote_data_source_impl.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/customer_cancellation_summary.dart';
 
 abstract class BookingRemoteDataSource {
   Future<List<BookingModel>> getBookings({
@@ -14,6 +14,11 @@ abstract class BookingRemoteDataSource {
     required String loungeId,
     int page = 1,
     int pageSize = 20,
+  });
+
+  Future<CustomerCancellationSummary> getBookingCancellationSummary({
+    required String loungeId,
+    required String userId,
   });
 
   Future<void> updateBookingStatus(String id, String status);

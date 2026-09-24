@@ -92,7 +92,7 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
                   DataCell(AppText.body(b.roomName, color: AppColors.textSecondary)),
                   DataCell(AppText.body(AppStrings.gaming, color: AppColors.textSecondary)),
                   DataCell(AppText.body(b.startTime, color: AppColors.textSecondary)),
-                  DataCell(_getStatusBadge(b.status.toDbString())),
+                  DataCell(_getStatusBadge(b)),
                   DataCell(_buildActions(context, b)),
                 ],
               )).toList(),
@@ -179,7 +179,7 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
                   fontSize: 13.sp,
                 ),
               ),
-              _getStatusBadge(booking.status.toDbString()),
+              _getStatusBadge(booking),
             ],
           ),
           SizedBox(height: 8.h),
@@ -312,7 +312,11 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
     );
   }
 
-  Widget _getStatusBadge(String status) {
+  Widget _getStatusBadge(Booking b) {
+    if (b.isCancelledByClient) {
+      return StatusBadge.danger(AppStrings.cancelledByClientAfterApproval);
+    }
+    final status = b.status.toDbString();
     switch (status) {
       case 'pending': return StatusBadge.warning(AppStrings.pending);
       case 'upcoming': return StatusBadge.info(AppStrings.upcoming);

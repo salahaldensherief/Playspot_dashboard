@@ -3,9 +3,10 @@ import 'package:play_spot_dashboard/core/constants/app_constants.dart';
 import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_mutation_helper.dart';
 import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_query_helper.dart';
-import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_remote_data_source.dart';
 import 'package:play_spot_dashboard/features/bookings/data/models/booking_model.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/customer_cancellation_summary.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'booking_remote_data_source.dart';
 
 class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   final SupabaseClient client;
@@ -61,6 +62,33 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         page: validPage,
         pageSize: clampedPageSize,
       );
+    }
+  }
+
+  @override
+  Future<CustomerCancellationSummary> getBookingCancellationSummary({
+    required String loungeId,
+    required String userId,
+  }) async {
+    final cleanLoungeId = loungeId.trim();
+    final cleanUserId = userId.trim();
+    if (cleanLoungeId.isEmpty || cleanUserId.isEmpty) {
+      return CustomerCancellationSummary.empty();
+    }
+
+    try {
+      final response = await client.rpc('get_booking_cancellation_summary', params: {
+        'p_lounge_id': cleanLoungeId,
+        'p_user_id': cleanUserId,
+      });
+
+      if (response is Map) {
+        return CustomerCancellationSummary.fromJson(Map<String, dynamic>.from(response));
+      }
+      return CustomerCancellationSummary.empty();
+    } catch (e) {
+      debugPrint('⚠️ [DATA_SOURCE] get_booking_cancellation_summary error ($e)');
+      return CustomerCancellationSummary.empty();
     }
   }
 
@@ -155,6 +183,20 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         debugPrint('🟢 [DATA_SOURCE] Direct booking status update with active shift successful!');
       } else {
         rethrow;
+      }
+    }
+
+    // Automatically make the room available in rooms table if booking is cancelled or completed
+    if (cleanStatus == 'cancelled' || cleanStatus == 'completed') {
+      try {
+        final bookingRes = await client.from('bookings').select('room_id').eq('id', id).maybeSingle();
+        final roomId = bookingRes?['room_id']?.toString();
+        if (roomId != null && roomId.isNotEmpty) {
+          await client.from('rooms').update({'status': 'available'}).eq('id', roomId);
+          debugPrint('🟢 [DATA_SOURCE] Room $roomId status reset to available in rooms table.');
+        }
+      } catch (e) {
+        debugPrint('⚠️ [DATA_SOURCE] Failed to reset room status to available: $e');
       }
     }
   }

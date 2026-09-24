@@ -97,6 +97,100 @@ class BookingSpecificationsCard extends StatelessWidget {
               );
             },
           ),
+          if (booking.status == BookingStatus.cancelled) ...[
+            SizedBox(height: 16.h),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(12.r),
+              decoration: BoxDecoration(
+                color: booking.isCancelledByClient
+                    ? AppColors.danger.withValues(alpha: 0.12)
+                    : AppColors.mutedBackground,
+                borderRadius: BorderRadius.circular(10.r),
+                border: Border.all(
+                  color: booking.isCancelledByClient
+                      ? AppColors.danger.withValues(alpha: 0.4)
+                      : AppColors.borderDefault,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        booking.isCancelledByClient ? Icons.cancel_outlined : Icons.info_outline_rounded,
+                        color: booking.isCancelledByClient ? AppColors.danger : AppColors.textSecondary,
+                        size: 18.r,
+                      ),
+                      SizedBox(width: 8.w),
+                      if (booking.isCancelledByClient)
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                          decoration: BoxDecoration(
+                            color: AppColors.danger,
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                          child: Text(
+                            AppStrings.cancelledByClientAfterApproval,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      else
+                        Text(
+                          AppStrings.cancelled,
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+                  if (booking.cancelledAt != null) ...[
+                    Row(
+                      children: [
+                        Text(
+                          '${AppStrings.cancellationTime}: ',
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          DateFormat('yyyy/MM/dd hh:mm a').format(booking.cancelledAt!),
+                          style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 4.h),
+                  ],
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${AppStrings.cancellationReason}: ',
+                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp, fontWeight: FontWeight.bold),
+                      ),
+                      Expanded(
+                        child: Text(
+                          (booking.cancellationReason != null && booking.cancellationReason!.trim().isNotEmpty)
+                              ? booking.cancellationReason!
+                              : 'لا يوجد سبب مدوّن',
+                          style: TextStyle(
+                            color: booking.isCancelledByClient ? AppColors.danger : AppColors.textPrimary,
+                            fontSize: 12.sp,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

@@ -18,8 +18,26 @@ class BookingCardHeader extends StatelessWidget {
     required this.shortId,
   });
 
-  Widget _getStatusBadge(BookingStatus status) {
-    switch (status) {
+  Widget _getStatusBadge(Booking booking) {
+    if (booking.isCancelledByClient) {
+      return Container(
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+        decoration: BoxDecoration(
+          color: AppColors.danger,
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Text(
+          AppStrings.cancelledByClientAfterApproval,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 10.sp,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+    }
+
+    switch (booking.status) {
       case BookingStatus.pending:
         return StatusBadge.warning(AppStrings.pending.toUpperCase());
       case BookingStatus.upcoming:
@@ -54,7 +72,7 @@ class BookingCardHeader extends StatelessWidget {
               runSpacing: 4.h,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                _getStatusBadge(booking.status),
+                _getStatusBadge(booking),
                 _getPaymentTypeBadge(booking),
               ],
             ),

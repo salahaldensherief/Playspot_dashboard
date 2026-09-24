@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
 import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/customer_cancellation_summary.dart';
 
 abstract class BookingRepository {
   Future<Either<Failure, List<Booking>>> getBookings({
@@ -14,6 +15,10 @@ abstract class BookingRepository {
     required String loungeId,
     int page = 1,
     int pageSize = 20,
+  });
+  Future<Either<Failure, CustomerCancellationSummary>> getBookingCancellationSummary({
+    required String loungeId,
+    required String userId,
   });
   Stream<List<Booking>> watchBookings({String? loungeId});
   Future<Either<Failure, void>> updateBookingStatus(String id, BookingStatus status);

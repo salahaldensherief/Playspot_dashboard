@@ -1077,5 +1077,17 @@
   "all_branches": "كافة الفروع",
   "search_branches": "البحث عن فرع...",
   "no_branches_found": "لا توجد فروع مطابقة",
-  "add_new_branch": "إضافة فرع جديد"
+  "add_new_branch": "إضافة فرع جديد",
+  "cancelled_by_client_after_approval": "ألغاه العميل بعد الموافقة",
+  "cancellation_time": "وقت الإلغاء",
+  "cancellation_reason": "سبب الإلغاء",
+  "cancellation_summary": "ملخص إلغاءات العميل",
+  "after_approval_count_label": "الإلغاءات بعد الموافقة",
+  "last_90_days_count_label": "آخر 90 يومًا",
+  "view_cancellation_history": "عرض سجل الإلغاءات",
+  "cancellation_history_title": "سجل إلغاءات العميل",
+  "no_cancellation_history": "لا توجد إلغاءات مسجلة بعد الموافقة لهذا العميل",
+  "cancellation_threshold_warning": "⚠️ تنبيه: العميل لديه إلغاءات متكررة بعد الموافقة!",
+  "issue_warning_btn": "تحذير",
+  "request_ban_btn": "طلب حظر"
 }

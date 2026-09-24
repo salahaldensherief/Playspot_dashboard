@@ -51,7 +51,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _sessionTickerNotifier = SessionTickerNotifier();
     _mainScrollController = ScrollController();
 
@@ -301,7 +301,9 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                   ? bookingState.activeBookings
                   : (_selectedTabIndex == 1
                       ? bookingState.pendingBookings
-                      : bookingState.currentShiftBookings(activeShift: activeShift, userLounge: userLounge));
+                      : (_selectedTabIndex == 2
+                          ? bookingState.currentShiftBookings(activeShift: activeShift, userLounge: userLounge)
+                          : bookingState.currentShiftCancelledBookings(activeShift: activeShift, userLounge: userLounge)));
 
               final filtered = _applyFilters(list, activeShift);
 

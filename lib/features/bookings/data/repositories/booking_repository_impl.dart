@@ -5,6 +5,7 @@ import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_r
 import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_remote_data_source.dart';
 import 'package:play_spot_dashboard/features/bookings/data/models/booking_model.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/customer_cancellation_summary.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/repositories/booking_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -54,6 +55,22 @@ class BookingRepositoryImpl implements BookingRepository {
       ));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CustomerCancellationSummary>> getBookingCancellationSummary({
+    required String loungeId,
+    required String userId,
+  }) async {
+    try {
+      final summary = await remoteDataSource.getBookingCancellationSummary(
+        loungeId: loungeId,
+        userId: userId,
+      );
+      return Right(summary);
+    } catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
     }
   }
 

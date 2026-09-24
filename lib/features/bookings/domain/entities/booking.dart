@@ -46,6 +46,8 @@ class Booking extends Equatable {
   final String? senderWalletPhone;
   final DateTime? checkedInAt;
   final String? cancellationReason;
+  final String? cancelledBy;
+  final DateTime? cancelledAt;
 
   const Booking({
     required this.id,
@@ -88,9 +90,18 @@ class Booking extends Equatable {
     this.senderWalletPhone,
     this.checkedInAt,
     this.cancellationReason,
+    this.cancelledBy,
+    this.cancelledAt,
   });
 
   bool get isOpenEnded => durationMinutes <= 0;
+
+  /// Helper to determine if booking was cancelled by the client after approval
+  bool get isCancelledByClient =>
+      status == BookingStatus.cancelled &&
+      cancelledBy != null &&
+      cancelledBy!.trim().isNotEmpty &&
+      cancelledBy!.trim() == userId.trim();
 
   @override
   List<Object?> get props => [
@@ -134,6 +145,8 @@ class Booking extends Equatable {
         senderWalletPhone,
         checkedInAt,
         cancellationReason,
+        cancelledBy,
+        cancelledAt,
       ];
 
   Booking copyWith({
@@ -177,6 +190,8 @@ class Booking extends Equatable {
     String? senderWalletPhone,
     DateTime? checkedInAt,
     String? cancellationReason,
+    String? cancelledBy,
+    DateTime? cancelledAt,
   }) {
     return Booking(
       id: id ?? this.id,
@@ -219,6 +234,8 @@ class Booking extends Equatable {
       senderWalletPhone: senderWalletPhone ?? this.senderWalletPhone,
       checkedInAt: checkedInAt ?? this.checkedInAt,
       cancellationReason: cancellationReason ?? this.cancellationReason,
+      cancelledBy: cancelledBy ?? this.cancelledBy,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
     );
   }
 
