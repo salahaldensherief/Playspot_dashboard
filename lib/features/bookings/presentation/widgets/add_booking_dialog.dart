@@ -374,7 +374,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     return s1.compareTo(e2) < 0 && e1.compareTo(s2) > 0;
   }
 
-  void _submit() {
+  void _submit() async {
     if (!_formKey.currentState!.validate() || _selectedRoom == null) return;
 
     final durationMinutes = context.read<BookingCubit>().state.selectedDurationMinutes;
@@ -389,8 +389,20 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     final selectedRoom = _selectedRoom;
     if (selectedRoom == null) return;
 
+    final startDateTime = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _startTime.hour,
+      _startTime.minute,
+    );
+    final endDateTime = startDateTime.add(Duration(minutes: durationMinutes));
+
+    // 1. Local time overlap check
     final isOverlapping = bookingCubit.state.bookings.any((b) {
-      if (b.roomId != selectedRoom.id || b.status == BookingStatus.cancelled) return false;
+      if (b.roomId != selectedRoom.id ||
+          b.status == BookingStatus.cancelled ||
+          b.status == BookingStatus.rejected) return false;
 
       return b.date.year == _selectedDate.year &&
           b.date.month == _selectedDate.month &&
@@ -402,6 +414,24 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppStrings.overlappingBookingError), backgroundColor: AppColors.danger),
       );
+      return;
+    }
+
+    // 2. Server verify_and_hold_slot check
+    try {
+      await bookingCubit.repository.verifyAndHoldSlot(
+        roomId: selectedRoom.id,
+        startTime: startDateTime,
+        endTime: endDateTime,
+        holdMinutes: 10,
+      );
+    } catch (e) {
+      if (mounted) {
+        final cleanMsg = e.toString().replaceFirst('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(cleanMsg), backgroundColor: AppColors.danger),
+        );
+      }
       return;
     }
 
@@ -435,7 +465,9 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
       shiftId: activeShiftId,
     );
 
-    context.read<BookingCubit>().createManualBooking(booking);
-    Navigator.pop(context);
+    await context.read<BookingCubit>().createManualBooking(booking);
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 }

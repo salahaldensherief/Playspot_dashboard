@@ -43,6 +43,7 @@ class BookingModel extends Booking {
     super.senderWalletPhone,
     super.checkedInAt,
     super.cancellationReason,
+    super.rejectionReason,
     super.cancelledBy,
     super.cancelledAt,
   });
@@ -198,6 +199,7 @@ class BookingModel extends Booking {
       senderWalletPhone: (json['sender_wallet_phone'] ?? json['sender_phone'])?.toString(),
       checkedInAt: json['checked_in_at'] != null ? DateTime.tryParse(json['checked_in_at'].toString()) : null,
       cancellationReason: json['cancellation_reason']?.toString(),
+      rejectionReason: json['rejection_reason']?.toString(),
       cancelledBy: (json['cancelled_by'] ?? json['out_cancelled_by'])?.toString(),
       cancelledAt: json['cancelled_at'] != null 
           ? DateTime.tryParse(json['cancelled_at'].toString()) 
@@ -241,6 +243,7 @@ class BookingModel extends Booking {
       if (senderWalletPhone != null && senderWalletPhone!.trim().isNotEmpty) 'sender_wallet_phone': senderWalletPhone,
       if (chkAt != null) 'checked_in_at': chkAt.toIso8601String(),
       if (cancellationReason != null && cancellationReason!.trim().isNotEmpty) 'cancellation_reason': cancellationReason,
+      if (rejectionReason != null && rejectionReason!.trim().isNotEmpty) 'rejection_reason': rejectionReason,
       if (cancelledBy != null && cancelledBy!.trim().isNotEmpty) 'cancelled_by': cancelledBy,
       if (cAt != null) 'cancelled_at': cAt.toIso8601String(),
     };

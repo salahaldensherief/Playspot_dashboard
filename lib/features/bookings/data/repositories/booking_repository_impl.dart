@@ -188,6 +188,50 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
+  Future<Either<Failure, Map<String, dynamic>>> calculateBookingTotal({
+    required String roomId,
+    required double durationHours,
+    String? voucherCode,
+    double manualDiscount = 0.0,
+    String? manualDiscountReason,
+  }) async {
+    try {
+      final res = await remoteDataSource.calculateBookingTotal(
+        roomId: roomId,
+        durationHours: durationHours,
+        voucherCode: voucherCode,
+        manualDiscount: manualDiscount,
+        manualDiscountReason: manualDiscountReason,
+      );
+      return Right(res);
+    } catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> verifyAndHoldSlot({
+    required String roomId,
+    required DateTime startTime,
+    required DateTime endTime,
+    String? userId,
+    int holdMinutes = 10,
+  }) async {
+    try {
+      final res = await remoteDataSource.verifyAndHoldSlot(
+        roomId: roomId,
+        startTime: startTime,
+        endTime: endTime,
+        userId: userId,
+        holdMinutes: holdMinutes,
+      );
+      return Right(res);
+    } catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> swapRoom(String bookingId, String newRoomId, String actionBy) async {
     try {
       await remoteDataSource.swapRoom(bookingId, newRoomId, actionBy);

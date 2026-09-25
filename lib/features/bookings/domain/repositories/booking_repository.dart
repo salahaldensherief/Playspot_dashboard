@@ -33,6 +33,20 @@ abstract class BookingRepository {
   Future<Either<Failure, void>> createBooking(Booking booking);
   Future<Either<Failure, Map<String, dynamic>>> validateVoucherByCode(String voucherCode);
   Future<Either<Failure, void>> consumeVoucherByCode(String voucherCode, String bookingId);
+  Future<Either<Failure, Map<String, dynamic>>> calculateBookingTotal({
+    required String roomId,
+    required double durationHours,
+    String? voucherCode,
+    double manualDiscount = 0.0,
+    String? manualDiscountReason,
+  });
+  Future<Either<Failure, Map<String, dynamic>>> verifyAndHoldSlot({
+    required String roomId,
+    required DateTime startTime,
+    required DateTime endTime,
+    String? userId,
+    int holdMinutes = 10,
+  });
   Future<Either<Failure, void>> swapRoom(String bookingId, String newRoomId, String actionBy);
   Future<Either<Failure, void>> startBookingSession(String bookingId);
   Future<Either<Failure, void>> autoCancelExpiredBookings();

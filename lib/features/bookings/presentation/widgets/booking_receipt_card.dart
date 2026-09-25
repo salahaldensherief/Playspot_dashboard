@@ -30,8 +30,29 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
   }
 
   Future<void> _loadSignedUrl() async {
-    final rawPath = widget.booking.receiptUrl;
+    String? rawPath = widget.booking.receiptUrl;
     debugPrint('🔵 [RECEIPT_CARD] Booking ID: ${widget.booking.id}, raw receiptUrl: $rawPath');
+
+    if (rawPath == null || rawPath.trim().isEmpty || rawPath == 'null') {
+      try {
+        final res = await Supabase.instance.client
+            .from('bookings')
+            .select('receipt_url, receipt_path, payment_receipt, proof_url')
+            .eq('id', widget.booking.id)
+            .maybeSingle();
+        if (res != null) {
+          rawPath = (res['receipt_url'] ??
+                  res['receipt_path'] ??
+                  res['payment_receipt'] ??
+                  res['proof_url'])
+              ?.toString()
+              .trim();
+          debugPrint('🟢 [RECEIPT_CARD] Direct DB query fallback found raw receiptUrl: $rawPath');
+        }
+      } catch (e) {
+        debugPrint('⚠️ [RECEIPT_CARD] Direct DB fallback query failed: $e');
+      }
+    }
 
     if (rawPath == null || rawPath.trim().isEmpty || rawPath == 'null') {
       if (mounted) setState(() => _isLoadingUrl = false);
@@ -65,37 +86,39 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
     }
 
     for (final bucket in bucketsToTry) {
-      try {
-        final url = await Supabase.instance.client.storage
-            .from(bucket)
-            .createSignedUrl(cleanPath, 3600);
-        if (url.isNotEmpty) {
-          debugPrint('🟢 [RECEIPT_CARD] Generated signed URL ($bucket): $url');
-          if (mounted) {
-            setState(() {
-              _signedReceiptUrl = url;
-              _isLoadingUrl = false;
-            });
+      for (final p in [cleanPath, path]) {
+        try {
+          final url = await Supabase.instance.client.storage
+              .from(bucket)
+              .createSignedUrl(p, 3600);
+          if (url.isNotEmpty && !url.contains('error')) {
+            debugPrint('🟢 [RECEIPT_CARD] Generated signed URL ($bucket, path: $p): $url');
+            if (mounted) {
+              setState(() {
+                _signedReceiptUrl = url;
+                _isLoadingUrl = false;
+              });
+            }
+            return;
           }
-          return;
-        }
-      } catch (_) {}
+        } catch (_) {}
 
-      try {
-        final pubUrl = Supabase.instance.client.storage
-            .from(bucket)
-            .getPublicUrl(cleanPath);
-        if (pubUrl.isNotEmpty) {
-          debugPrint('🟢 [RECEIPT_CARD] Fallback public URL ($bucket): $pubUrl');
-          if (mounted) {
-            setState(() {
-              _signedReceiptUrl = pubUrl;
-              _isLoadingUrl = false;
-            });
+        try {
+          final pubUrl = Supabase.instance.client.storage
+              .from(bucket)
+              .getPublicUrl(p);
+          if (pubUrl.isNotEmpty) {
+            debugPrint('🟢 [RECEIPT_CARD] Fallback public URL ($bucket, path: $p): $pubUrl');
+            if (mounted) {
+              setState(() {
+                _signedReceiptUrl = pubUrl;
+                _isLoadingUrl = false;
+              });
+            }
+            return;
           }
-          return;
-        }
-      } catch (_) {}
+        } catch (_) {}
+      }
     }
 
     debugPrint('❌ [RECEIPT_CARD] Unable to resolve receipt URL for $rawPath');

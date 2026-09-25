@@ -39,6 +39,22 @@ abstract class BookingRemoteDataSource {
 
   Future<void> consumeVoucherByCode(String voucherCode, String bookingId);
 
+  Future<Map<String, dynamic>> calculateBookingTotal({
+    required String roomId,
+    required double durationHours,
+    String? voucherCode,
+    double manualDiscount = 0.0,
+    String? manualDiscountReason,
+  });
+
+  Future<Map<String, dynamic>> verifyAndHoldSlot({
+    required String roomId,
+    required DateTime startTime,
+    required DateTime endTime,
+    String? userId,
+    int holdMinutes = 10,
+  });
+
   Future<void> swapRoom(String bookingId, String newRoomId, String actionBy);
 
   Future<void> startBookingSession(String bookingId);

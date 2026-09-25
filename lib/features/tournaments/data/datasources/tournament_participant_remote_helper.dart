@@ -176,4 +176,30 @@ class TournamentParticipantRemoteHelper {
       }
     }
   }
+
+  Future<Map<String, dynamic>> submitTournamentPayment({
+    required String tournamentId,
+    required String participantId,
+    required double amount,
+    String? receiptUrl,
+    String? userId,
+  }) async {
+    try {
+      final response = await client.rpc('submit_tournament_payment', params: {
+        'p_tournament_id': tournamentId,
+        'p_participant_id': participantId,
+        'p_amount': amount,
+        'p_receipt_url': receiptUrl,
+        'p_user_id': userId,
+      });
+
+      if (response is Map) {
+        return Map<String, dynamic>.from(response);
+      }
+      return {'success': true};
+    } catch (e) {
+      AppLogger.error('submitTournamentPayment failed', e);
+      rethrow;
+    }
+  }
 }

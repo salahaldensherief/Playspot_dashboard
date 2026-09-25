@@ -46,6 +46,7 @@ class Booking extends Equatable {
   final String? senderWalletPhone;
   final DateTime? checkedInAt;
   final String? cancellationReason;
+  final String? rejectionReason;
   final String? cancelledBy;
   final DateTime? cancelledAt;
 
@@ -90,6 +91,7 @@ class Booking extends Equatable {
     this.senderWalletPhone,
     this.checkedInAt,
     this.cancellationReason,
+    this.rejectionReason,
     this.cancelledBy,
     this.cancelledAt,
   });
@@ -190,6 +192,7 @@ class Booking extends Equatable {
     String? senderWalletPhone,
     DateTime? checkedInAt,
     String? cancellationReason,
+    String? rejectionReason,
     String? cancelledBy,
     DateTime? cancelledAt,
   }) {
@@ -234,6 +237,7 @@ class Booking extends Equatable {
       senderWalletPhone: senderWalletPhone ?? this.senderWalletPhone,
       checkedInAt: checkedInAt ?? this.checkedInAt,
       cancellationReason: cancellationReason ?? this.cancellationReason,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
       cancelledBy: cancelledBy ?? this.cancelledBy,
       cancelledAt: cancelledAt ?? this.cancelledAt,
     );

@@ -44,8 +44,26 @@ class _ManualPaymentVerificationDialogState extends State<ManualPaymentVerificat
   }
 
   Future<void> _resolveReceiptUrl() async {
-    final path = widget.booking.receiptUrl;
-    if (path == null || path.isEmpty) {
+    String? path = widget.booking.receiptUrl;
+    if (path == null || path.trim().isEmpty || path == 'null') {
+      try {
+        final res = await Supabase.instance.client
+            .from('bookings')
+            .select('receipt_url, receipt_path, payment_receipt, proof_url')
+            .eq('id', widget.booking.id)
+            .maybeSingle();
+        if (res != null) {
+          path = (res['receipt_url'] ??
+                  res['receipt_path'] ??
+                  res['payment_receipt'] ??
+                  res['proof_url'])
+              ?.toString()
+              .trim();
+        }
+      } catch (_) {}
+    }
+
+    if (path == null || path.isEmpty || path == 'null') {
       if (mounted) setState(() => _isLoadingReceipt = false);
       return;
     }
@@ -60,31 +78,42 @@ class _ManualPaymentVerificationDialogState extends State<ManualPaymentVerificat
       return;
     }
 
-    try {
-      final supabase = Supabase.instance.client;
-      final cleanPath = path.replaceAll(RegExp(r'^receipts/'), '');
-      final url = await supabase.storage.from('receipts').createSignedUrl(cleanPath, 3600);
-      if (mounted) {
-        setState(() {
-          _signedReceiptUrl = url;
-          _isLoadingReceipt = false;
-        });
-      }
-    } catch (_) {
-      try {
-        final supabase = Supabase.instance.client;
-        final cleanPath = path.replaceAll(RegExp(r'^receipts/'), '');
-        final pubUrl = supabase.storage.from('receipts').getPublicUrl(cleanPath);
-        if (mounted) {
-          setState(() {
-            _signedReceiptUrl = pubUrl;
-            _isLoadingReceipt = false;
-          });
-        }
-      } catch (_) {
-        if (mounted) setState(() => _isLoadingReceipt = false);
+    final bucketsToTry = ['receipts', 'booking_receipts', 'payment_receipts', 'wallets', 'payouts', 'attachments'];
+    String cleanPath = path.replaceAll(RegExp(r'^(receipts|booking_receipts|payment_receipts|wallets)/'), '');
+
+    for (final bucket in bucketsToTry) {
+      for (final p in [cleanPath, path]) {
+        try {
+          final supabase = Supabase.instance.client;
+          final url = await supabase.storage.from(bucket).createSignedUrl(p, 3600);
+          if (url.isNotEmpty && !url.contains('error')) {
+            if (mounted) {
+              setState(() {
+                _signedReceiptUrl = url;
+                _isLoadingReceipt = false;
+              });
+            }
+            return;
+          }
+        } catch (_) {}
+
+        try {
+          final supabase = Supabase.instance.client;
+          final pubUrl = supabase.storage.from(bucket).getPublicUrl(p);
+          if (pubUrl.isNotEmpty) {
+            if (mounted) {
+              setState(() {
+                _signedReceiptUrl = pubUrl;
+                _isLoadingReceipt = false;
+              });
+            }
+            return;
+          }
+        } catch (_) {}
       }
     }
+
+    if (mounted) setState(() => _isLoadingReceipt = false);
   }
 
   void _handleApprove(BuildContext context) async {

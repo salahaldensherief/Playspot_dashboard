@@ -38,8 +38,26 @@ class _BookingReceiptDialogState extends State<BookingReceiptDialog> {
   }
 
   Future<void> _loadSignedUrl() async {
-    final path = widget.booking.receiptUrl;
-    if (path == null || path.isEmpty) {
+    String? path = widget.booking.receiptUrl;
+    if (path == null || path.trim().isEmpty || path == 'null') {
+      try {
+        final res = await Supabase.instance.client
+            .from('bookings')
+            .select('receipt_url, receipt_path, payment_receipt, proof_url')
+            .eq('id', widget.booking.id)
+            .maybeSingle();
+        if (res != null) {
+          path = (res['receipt_url'] ??
+                  res['receipt_path'] ??
+                  res['payment_receipt'] ??
+                  res['proof_url'])
+              ?.toString()
+              .trim();
+        }
+      } catch (_) {}
+    }
+
+    if (path == null || path.isEmpty || path == 'null') {
       if (mounted) setState(() => _isLoadingUrl = false);
       return;
     }
@@ -52,32 +70,46 @@ class _BookingReceiptDialogState extends State<BookingReceiptDialog> {
       }
       return;
     }
-    try {
-      final url = await Supabase.instance.client.storage
-          .from('receipts')
-          .createSignedUrl(path, 3600);
-      if (mounted) {
-        setState(() {
-          _signedReceiptUrl = url;
-          _isLoadingUrl = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('⚠️ Failed to load signed receipt URL: $e');
-      try {
-        final pubUrl = Supabase.instance.client.storage
-            .from('receipts')
-            .getPublicUrl(path);
-        if (mounted) {
-          setState(() {
-            _signedReceiptUrl = pubUrl;
-            _isLoadingUrl = false;
-          });
-        }
-      } catch (_) {
-        if (mounted) setState(() => _isLoadingUrl = false);
+
+    final bucketsToTry = ['receipts', 'booking_receipts', 'payment_receipts', 'wallets', 'payouts', 'attachments'];
+    String cleanPath = path.replaceAll(RegExp(r'^(receipts|booking_receipts|payment_receipts|wallets)/'), '');
+
+    for (final bucket in bucketsToTry) {
+      for (final p in [cleanPath, path]) {
+        try {
+          final url = await Supabase.instance.client.storage
+              .from(bucket)
+              .createSignedUrl(p, 3600);
+          if (url.isNotEmpty && !url.contains('error')) {
+            if (mounted) {
+              setState(() {
+                _signedReceiptUrl = url;
+                _isLoadingUrl = false;
+              });
+            }
+            return;
+          }
+        } catch (_) {}
+
+        try {
+          final pubUrl = Supabase.instance.client.storage
+              .from(bucket)
+              .getPublicUrl(p);
+          if (pubUrl.isNotEmpty) {
+            if (mounted) {
+              setState(() {
+                _signedReceiptUrl = pubUrl;
+                _isLoadingUrl = false;
+              });
+            }
+            return;
+          }
+        } catch (_) {}
       }
     }
+
+    if (mounted) setState(() => _isLoadingUrl = false);
+  }
   }
 
   @override

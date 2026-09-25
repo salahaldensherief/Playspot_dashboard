@@ -1,4 +1,4 @@
-enum BookingStatus { pending, pendingVerification, upcoming, completed, cancelled, inProgress }
+enum BookingStatus { pending, pendingVerification, upcoming, completed, cancelled, rejected, inProgress }
 
 extension BookingStatusX on BookingStatus {
   String toDbString() {
@@ -13,6 +13,8 @@ extension BookingStatusX on BookingStatus {
         return 'completed';
       case BookingStatus.cancelled:
         return 'cancelled';
+      case BookingStatus.rejected:
+        return 'rejected';
       case BookingStatus.inProgress:
         return 'in_progress';
     }
@@ -29,10 +31,11 @@ extension BookingStatusX on BookingStatus {
         return BookingStatus.upcoming;
       case 'completed':
         return BookingStatus.completed;
-      case 'cancelled':
-      case 'canceled':
       case 'rejected':
       case 'reject':
+        return BookingStatus.rejected;
+      case 'cancelled':
+      case 'canceled':
       case 'no_show':
       case 'noshow':
         return BookingStatus.cancelled;

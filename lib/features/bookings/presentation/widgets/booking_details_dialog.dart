@@ -112,6 +112,8 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
         return StatusBadge.success(AppStrings.completed.toUpperCase());
       case BookingStatus.cancelled:
         return StatusBadge.danger(AppStrings.cancelled.toUpperCase());
+      case BookingStatus.rejected:
+        return StatusBadge.danger(AppStrings.requestRejected.toUpperCase());
     }
   }
 

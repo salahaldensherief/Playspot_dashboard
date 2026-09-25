@@ -138,18 +138,22 @@ class AddBookingSchedulePicker extends StatelessWidget {
                           children: [
                             IconButton(
                               icon: const Icon(Icons.remove, color: AppColors.neonBlue, size: 20),
-                              onPressed: state.selectedDurationMinutes > 30
+                              onPressed: state.selectedDurationMinutes > 15
                                   ? () => context
                                       .read<BookingCubit>()
-                                      .updateSelectedDuration(state.selectedDurationMinutes - 30)
+                                      .updateSelectedDuration(state.selectedDurationMinutes - 15)
                                   : null,
                             ),
-                            AppText.body("${state.selectedDurationMinutes / 60.0} hrs"),
+                            AppText.body(
+                              state.selectedDurationMinutes < 60
+                                  ? "${state.selectedDurationMinutes} min"
+                                  : "${(state.selectedDurationMinutes / 60.0).toStringAsFixed(2)} hrs",
+                            ),
                             IconButton(
                               icon: const Icon(Icons.add, color: AppColors.neonBlue, size: 20),
                               onPressed: () => context
                                   .read<BookingCubit>()
-                                  .updateSelectedDuration(state.selectedDurationMinutes + 30),
+                                  .updateSelectedDuration(state.selectedDurationMinutes + 15),
                             ),
                           ],
                         ),

@@ -298,6 +298,59 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
 
   @override
+  Future<Map<String, dynamic>> calculateBookingTotal({
+    required String roomId,
+    required double durationHours,
+    String? voucherCode,
+    double manualDiscount = 0.0,
+    String? manualDiscountReason,
+  }) async {
+    final cleanVoucherCode = voucherCode?.trim().toUpperCase();
+    debugPrint('🔵 [DATA_SOURCE] Calling calculate_booking_total for room: $roomId, duration: $durationHours hrs');
+    final response = await client.rpc('calculate_booking_total', params: {
+      'p_room_id': roomId,
+      'p_duration_hours': durationHours,
+      'p_voucher_code': (cleanVoucherCode != null && cleanVoucherCode.isNotEmpty) ? cleanVoucherCode : null,
+      'p_manual_discount': manualDiscount,
+      'p_manual_discount_reason': manualDiscountReason,
+    });
+
+    if (response is Map) {
+      return Map<String, dynamic>.from(response);
+    }
+    return {};
+  }
+
+  @override
+  Future<Map<String, dynamic>> verifyAndHoldSlot({
+    required String roomId,
+    required DateTime startTime,
+    required DateTime endTime,
+    String? userId,
+    int holdMinutes = 10,
+  }) async {
+    debugPrint('🔵 [DATA_SOURCE] Calling verify_and_hold_slot for room: $roomId from $startTime to $endTime');
+    final response = await client.rpc('verify_and_hold_slot', params: {
+      'p_room_id': roomId,
+      'p_start_time': startTime.toUtc().toIso8601String(),
+      'p_end_time': endTime.toUtc().toIso8601String(),
+      'p_user_id': (userId != null && userId.trim().isNotEmpty) ? userId.trim() : null,
+      'p_hold_minutes': holdMinutes,
+    });
+
+    if (response is Map) {
+      final map = Map<String, dynamic>.from(response);
+      final success = map['success'] == true;
+      if (!success) {
+        final msg = map['message']?.toString() ?? 'The selected time slot overlaps with an existing booking or hold.';
+        throw Exception(msg);
+      }
+      return map;
+    }
+    return {'success': true};
+  }
+
+  @override
   Future<void> createBooking(BookingModel booking) async {
     return _mutationHelper.executeCreateBooking(booking);
   }
