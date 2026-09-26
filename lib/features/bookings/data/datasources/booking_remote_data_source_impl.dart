@@ -103,8 +103,8 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
     try {
       final response = await client.rpc('get_all_bookings_admin', params: {
-        'p_status': status,
         'p_lounge_id': cleanLoungeId,
+        'p_status': status,
         'p_limit': limit,
         'p_offset': offset,
       });

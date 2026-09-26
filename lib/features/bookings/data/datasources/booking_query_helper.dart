@@ -20,8 +20,7 @@ class BookingQueryHelper {
         booking_items(id, name, quantity, price, total_price, status),
         canteen_orders(*),
         rooms(name, name_en, controllers_count, screen_size),
-        lounges(name, location, location_point),
-        profiles(full_name, phone, email)
+        lounges(name, location, location_point)
       ''');
       if (loungeId != null && loungeId.isNotEmpty) {
         query = query.eq('lounge_id', loungeId);

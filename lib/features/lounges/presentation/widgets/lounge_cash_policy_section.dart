@@ -59,46 +59,52 @@ class LoungeCashPolicySection extends StatelessWidget {
                 ],
               ),
               SizedBox(height: 16.h),
-              SwitchListTile(
-                value: allowCashPayment,
-                onChanged: canEdit ? onAllowCashChanged : null,
-                activeThumbColor: AppColors.neonBlue,
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  AppStrings.allowCashPaymentLabel,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
+              Material(
+                color: Colors.transparent,
+                child: SwitchListTile(
+                  value: allowCashPayment,
+                  onChanged: canEdit ? onAllowCashChanged : null,
+                  activeThumbColor: AppColors.neonBlue,
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    AppStrings.allowCashPaymentLabel,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                subtitle: Text(
-                  AppStrings.allowCashPaymentHint,
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 11.5.sp,
+                  subtitle: Text(
+                    AppStrings.allowCashPaymentHint,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11.5.sp,
+                    ),
                   ),
                 ),
               ),
               const Divider(color: AppColors.borderDefault),
-              SwitchListTile(
-                value: requirePrepaidFirstTime,
-                onChanged: canEdit ? onRequirePrepaidChanged : null,
-                activeThumbColor: AppColors.warning,
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  AppStrings.requirePrepaidFirstTimeLabel,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
+              Material(
+                color: Colors.transparent,
+                child: SwitchListTile(
+                  value: requirePrepaidFirstTime,
+                  onChanged: canEdit ? onRequirePrepaidChanged : null,
+                  activeThumbColor: AppColors.warning,
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    AppStrings.requirePrepaidFirstTimeLabel,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                subtitle: Text(
-                  AppStrings.requirePrepaidFirstTimeHint,
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 11.5.sp,
+                  subtitle: Text(
+                    AppStrings.requirePrepaidFirstTimeHint,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11.5.sp,
+                    ),
                   ),
                 ),
               ),
