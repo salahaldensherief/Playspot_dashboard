@@ -35,14 +35,14 @@ class KycRemoteDataSourceImpl implements KycRemoteDataSource {
     // 1. Upload ID Card to private bucket
     final idPath = '$userId/id_card_${DateTime.now().millisecondsSinceEpoch}.jpg';
     await _client.storage.from('kyc-documents').uploadBinary(idPath, idCardBytes);
-    final idUrl = _client.storage.from('kyc-documents').getPublicUrl(idPath);
+    final idUrl = await _client.storage.from('kyc-documents').createSignedUrl(idPath, 60 * 60 * 24 * 365); // 1-year signed URL
 
     // 2. Upload Business Doc (Optional)
     String? bizUrl;
     if (businessDocBytes != null && businessDocName != null) {
       final bizPath = '$userId/business_doc_${DateTime.now().millisecondsSinceEpoch}.jpg';
       await _client.storage.from('kyc-documents').uploadBinary(bizPath, businessDocBytes);
-      bizUrl = _client.storage.from('kyc-documents').getPublicUrl(bizPath);
+      bizUrl = await _client.storage.from('kyc-documents').createSignedUrl(bizPath, 60 * 60 * 24 * 365);
     }
 
     // 3. Call RPC to submit

@@ -243,48 +243,105 @@ class PermissionsCubit extends Cubit<PermissionsState> {
     }
   }
 
-  /// Evaluates permission dynamically
+  String _normalizeRole(String rawRole) {
+    final clean = rawRole.toLowerCase().trim();
+    if (clean == 'superadmin' || clean == 'super_admin') return 'super_admin';
+    if (clean == 'owner' || clean == 'lounge_owner') return 'owner';
+    if (clean == 'manager' || clean == 'lounge_admin' || clean == 'admin') return 'manager';
+    if (clean == 'cashier') return 'cashier';
+    if (clean == 'staff') return 'staff';
+    return clean;
+  }
+
+  /// Evaluates permission dynamically using strict deny-by-default RBAC principles.
   bool hasPermission(String key, {String? userRole}) {
-    final activeRole = (userRole ?? state.userRole ?? '').toLowerCase().trim();
+    if (key.isEmpty) return false;
+    final activeRole = _normalizeRole(userRole ?? state.userRole ?? '');
 
     // 1. Level 0 Bypass: Super Admin & Lounge Owner always have full access
-    if (activeRole == 'superadmin' || activeRole == 'super_admin' || activeRole == 'owner') {
+    if (activeRole == 'super_admin' || activeRole == 'owner') {
       return true;
     }
 
-    // 2. Check active user permissions map first
+    // 2. Check active user permissions map first if explicitly configured in DB
     if (state.userPermissions.containsKey(key)) {
       return state.userPermissions[key] ?? false;
     }
 
-    // 3. Check selected permissions list if matching
+    // 3. Check selected permissions list if key configured
     try {
       final p = state.permissions.firstWhere((item) => item.key == key);
       return p.isEnabled;
     } catch (_) {}
 
-    // 4. Default Fallbacks if key not configured
-    if (activeRole == 'manager') return true;
-
-    // Restricted keys for cashier by default
-    final restrictedForCashier = [
-      'staff_management',
+    // 4. Strict Allowlist for Manager role (Denies super-admin / platform owner keys if unconfigured)
+    const allowedForManager = [
+      'menu_view',
+      'menu_manage_items',
+      'menu_edit_prices',
+      'extras_update_stock',
+      'pos_checkout',
+      'bookings_view',
+      'bookings_create',
+      'bookings_manage',
+      'bookings_cancel',
+      'rooms_view',
+      'rooms_manage',
+      'shift_start',
+      'shift_close',
+      'shift_view_expected_cash',
+      'shifts_view',
+      'shifts_approve',
+      'booking_discount_apply',
       'financials_view',
       'reports_view',
-      'shifts_approve',
-      'menu_edit_prices',
-      'menu_manage_items',
-      'rooms_manage',
       'marketing_manage',
+      'staff_management',
       'lounge_profile_edit',
-      'kyc_manage',
-      'view_payouts_global',
+      'lounge_toggle_status',
+      'reviews_view',
+      'canteen_orders_view',
+      'canteen_orders_process',
+      'service_calls_view',
+      'service_calls_process',
+      'checkout_process',
+      'cash_register_open',
+      'cash_register_close',
+      'cash_drop_record',
+      'expense_record',
+      'shift_view',
+      'extras_view',
     ];
 
-    if (activeRole == 'cashier' && restrictedForCashier.contains(key)) {
-      return false;
+    if (activeRole == 'manager') {
+      return allowedForManager.contains(key);
     }
 
-    return true;
+    // 5. Strict Allowlist for Cashier role
+    const allowedForCashier = [
+      'bookings_view',
+      'bookings_create',
+      'bookings_manage',
+      'bookings_cancel',
+      'checkout_process',
+      'cash_register_open',
+      'cash_register_close',
+      'cash_drop_record',
+      'expense_record',
+      'shift_view',
+      'canteen_orders_view',
+      'canteen_orders_process',
+      'service_calls_view',
+      'service_calls_process',
+      'extras_view',
+      'rooms_view',
+    ];
+
+    if (activeRole == 'cashier') {
+      return allowedForCashier.contains(key);
+    }
+
+    // 6. Strict Deny-By-Default: Any unhandled role or unlisted key returns false
+    return false;
   }
 }

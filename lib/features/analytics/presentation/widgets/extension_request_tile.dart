@@ -157,73 +157,14 @@ class ExtensionRequestTile extends StatelessWidget {
     ClientRequestEntity request,
     String bookingId,
   ) {
-    final costController = TextEditingController(text: '0.0');
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        title: AppText.subHeading(AppStrings.approveRequest, fontSize: 16.sp),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppText.body(AppStrings.pricePerHour, fontSize: 13.sp),
-            SizedBox(height: 10.h),
-            TextField(
-              controller: costController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 15.sp,
-                fontWeight: FontWeight.bold,
-              ),
-              decoration: InputDecoration(
-                labelText: AppStrings.amount,
-                labelStyle: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
-                filled: true,
-                fillColor: AppColors.scaffoldBackground,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: const BorderSide(color: AppColors.borderDefault),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: const BorderSide(color: AppColors.neonBlue, width: 1.5),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          AppButton(
-            text: AppStrings.cancel,
-            variant: AppButtonVariant.text,
-            onPressed: () => Navigator.of(dialogContext).pop(),
-          ),
-          AppButton(
-            text: AppStrings.approveRequest,
-            variant: AppButtonVariant.primary,
-            onPressed: () async {
-              Navigator.of(dialogContext).pop();
-              final cost = double.tryParse(costController.text) ?? 0.0;
-              final success = await dashboardCubit.reviewExtensionRequest(
-                bookingId: bookingId,
-                isApproved: true,
-                additionalCost: cost,
-              );
-              if (success && context.mounted) {
-                requestsCubit.markAsAttended(request.id);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(AppStrings.requestApproved),
-                    backgroundColor: AppColors.success,
-                  ),
-                );
-              }
-            },
-          ),
-        ],
+      builder: (dialogContext) => _ApproveExtensionDialog(
+        parentContext: context,
+        dashboardCubit: dashboardCubit,
+        requestsCubit: requestsCubit,
+        request: request,
+        bookingId: bookingId,
       ),
     );
   }
@@ -235,58 +176,194 @@ class ExtensionRequestTile extends StatelessWidget {
     ClientRequestEntity request,
     String bookingId,
   ) {
-    final reasonController = TextEditingController();
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        title: AppText.subHeading(AppStrings.rejectRequest, fontSize: 16.sp),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppText.body(AppStrings.disputeReasonLabel, fontSize: 13.sp),
-            SizedBox(height: 10.h),
-            TextField(
-              controller: reasonController,
-              maxLines: 2,
-              decoration: InputDecoration(
-                labelText: AppStrings.disputeReasonLabel,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+      builder: (dialogContext) => _RejectExtensionDialog(
+        parentContext: context,
+        dashboardCubit: dashboardCubit,
+        requestsCubit: requestsCubit,
+        request: request,
+        bookingId: bookingId,
+      ),
+    );
+  }
+}
+
+class _ApproveExtensionDialog extends StatefulWidget {
+  final BuildContext parentContext;
+  final DashboardCubit dashboardCubit;
+  final ClientRequestsCubit requestsCubit;
+  final ClientRequestEntity request;
+  final String bookingId;
+
+  const _ApproveExtensionDialog({
+    required this.parentContext,
+    required this.dashboardCubit,
+    required this.requestsCubit,
+    required this.request,
+    required this.bookingId,
+  });
+
+  @override
+  State<_ApproveExtensionDialog> createState() => _ApproveExtensionDialogState();
+}
+
+class _ApproveExtensionDialogState extends State<_ApproveExtensionDialog> {
+  final _costController = TextEditingController(text: '0.0');
+
+  @override
+  void dispose() {
+    _costController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.cardBackground,
+      title: AppText.subHeading(AppStrings.approveRequest, fontSize: 16.sp),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppText.body(AppStrings.pricePerHour, fontSize: 13.sp),
+          SizedBox(height: 10.h),
+          TextField(
+            controller: _costController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 15.sp,
+              fontWeight: FontWeight.bold,
+            ),
+            decoration: InputDecoration(
+              labelText: AppStrings.amount,
+              labelStyle: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+              filled: true,
+              fillColor: AppColors.scaffoldBackground,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: const BorderSide(color: AppColors.borderDefault),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: const BorderSide(color: AppColors.neonBlue, width: 1.5),
               ),
             ),
-          ],
-        ),
-        actions: [
-          AppButton(
-            text: AppStrings.cancel,
-            variant: AppButtonVariant.text,
-            onPressed: () => Navigator.of(dialogContext).pop(),
-          ),
-          AppButton(
-            text: AppStrings.rejectRequest,
-            variant: AppButtonVariant.danger,
-            onPressed: () async {
-              Navigator.of(dialogContext).pop();
-              final reason = reasonController.text.trim();
-              final success = await dashboardCubit.reviewExtensionRequest(
-                bookingId: bookingId,
-                isApproved: false,
-                reason: reason.isEmpty ? 'Rejected by admin' : reason,
-              );
-              if (success && context.mounted) {
-                requestsCubit.markAsAttended(request.id);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(AppStrings.requestRejected),
-                    backgroundColor: AppColors.danger,
-                  ),
-                );
-              }
-            },
           ),
         ],
       ),
+      actions: [
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.text,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        AppButton(
+          text: AppStrings.approveRequest,
+          variant: AppButtonVariant.primary,
+          onPressed: () async {
+            Navigator.of(context).pop();
+            final cost = double.tryParse(_costController.text) ?? 0.0;
+            final success = await widget.dashboardCubit.reviewExtensionRequest(
+              bookingId: widget.bookingId,
+              isApproved: true,
+              additionalCost: cost,
+            );
+            if (success && widget.parentContext.mounted) {
+              widget.requestsCubit.markAsAttended(widget.request.id);
+              ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+                SnackBar(
+                  content: Text(AppStrings.requestApproved),
+                  backgroundColor: AppColors.success,
+                ),
+              );
+            }
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _RejectExtensionDialog extends StatefulWidget {
+  final BuildContext parentContext;
+  final DashboardCubit dashboardCubit;
+  final ClientRequestsCubit requestsCubit;
+  final ClientRequestEntity request;
+  final String bookingId;
+
+  const _RejectExtensionDialog({
+    required this.parentContext,
+    required this.dashboardCubit,
+    required this.requestsCubit,
+    required this.request,
+    required this.bookingId,
+  });
+
+  @override
+  State<_RejectExtensionDialog> createState() => _RejectExtensionDialogState();
+}
+
+class _RejectExtensionDialogState extends State<_RejectExtensionDialog> {
+  final _reasonController = TextEditingController();
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.cardBackground,
+      title: AppText.subHeading(AppStrings.rejectRequest, fontSize: 16.sp),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppText.body(AppStrings.disputeReasonLabel, fontSize: 13.sp),
+          SizedBox(height: 10.h),
+          TextField(
+            controller: _reasonController,
+            maxLines: 2,
+            decoration: InputDecoration(
+              labelText: AppStrings.disputeReasonLabel,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.text,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        AppButton(
+          text: AppStrings.rejectRequest,
+          variant: AppButtonVariant.danger,
+          onPressed: () async {
+            Navigator.of(context).pop();
+            final success = await widget.dashboardCubit.reviewExtensionRequest(
+              bookingId: widget.bookingId,
+              isApproved: false,
+              additionalCost: 0,
+            );
+            if (success && widget.parentContext.mounted) {
+              widget.requestsCubit.markAsAttended(widget.request.id);
+              ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+                SnackBar(
+                  content: Text(AppStrings.requestRejected),
+                  backgroundColor: AppColors.warning,
+                ),
+              );
+            }
+          },
+        ),
+      ],
     );
   }
 }

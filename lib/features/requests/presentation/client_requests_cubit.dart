@@ -57,23 +57,34 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
           final newIds = currentUnattendedIds.difference(_knownRequestIds);
           if (newIds.isNotEmpty) {
             _knownRequestIds.addAll(newIds);
+            
+            // Determine highest priority request type in this batch to play a single sound alert
+            bool hasStaffCall = false;
+            bool hasCanteenOrder = false;
+
             for (final id in newIds) {
               final newReqList = requests.where((r) => (r as ClientRequestEntity).id == id);
               if (newReqList.isNotEmpty) {
                 final newReq = newReqList.first as ClientRequestEntity;
-                try {
-                  if (newReq.type == ClientRequestType.canteenOrder) {
-                    audioService.playCanteenOrderSound();
-                  } else if (newReq.type == ClientRequestType.callStaff ||
-                      newReq.type == ClientRequestType.serviceRequest) {
-                    audioService.playServiceCallSound();
-                  } else {
-                    audioService.playReceiptVerificationSound();
-                  }
-                } catch (e) {
-                  AppLogger.warning('Audio notification play failed: $e');
+                if (newReq.type == ClientRequestType.callStaff ||
+                    newReq.type == ClientRequestType.serviceRequest) {
+                  hasStaffCall = true;
+                } else if (newReq.type == ClientRequestType.canteenOrder) {
+                  hasCanteenOrder = true;
                 }
               }
+            }
+
+            try {
+              if (hasStaffCall) {
+                audioService.playServiceCallSound();
+              } else if (hasCanteenOrder) {
+                audioService.playCanteenOrderSound();
+              } else {
+                audioService.playReceiptVerificationSound();
+              }
+            } catch (e) {
+              AppLogger.warning('Audio notification play failed: $e');
             }
           }
         }

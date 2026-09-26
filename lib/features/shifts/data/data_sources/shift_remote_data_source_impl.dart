@@ -325,26 +325,11 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
       if (response != null) {
         return ShiftModel.fromJson(Map<String, dynamic>.from(response as Map));
       }
-    } catch (_) {}
-
-    final nowIso = DateTime.now().toIso8601String();
-    final List<dynamic> updatedList = await _supabase
-        .from('shifts')
-        .update({
-          'status': 'closed',
-          'actual_cash_counted': actualCash,
-          'end_time': nowIso,
-          'closed_at': nowIso,
-          if (notes != null && notes.isNotEmpty) 'notes': notes,
-        })
-        .eq('id', shiftId)
-        .select('*, profiles:cashier_id(full_name)');
-
-    if (updatedList.isNotEmpty) {
-      return ShiftModel.fromJson(Map<String, dynamic>.from(updatedList.first as Map));
+    } catch (e) {
+      debugPrint('⚠️ [ShiftRemoteDataSource] close_shift fallback error: $e');
     }
 
-    throw Exception('فشل تقفيل الشيفت: يرجى التأكد من صلاحيات قاعدة البيانات');
+    throw Exception('تعذر إغلاق الشيفت وحساب الميزانية الختامية. يرجى إعادة المحاولة أو التواصل مع المسؤول الحسابي.');
   }
 
   @override

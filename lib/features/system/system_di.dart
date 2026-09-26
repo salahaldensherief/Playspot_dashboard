@@ -9,6 +9,7 @@ import 'domain/usecases/get_announcements_usecase.dart';
 import 'domain/usecases/create_announcement_usecase.dart';
 import 'domain/usecases/deactivate_announcement_usecase.dart';
 import 'presentation/system_settings_cubit.dart';
+import 'presentation/cubit/app_status_cubit.dart';
 
 void initSystemDI(GetIt sl) {
   // Data Source
@@ -30,6 +31,13 @@ void initSystemDI(GetIt sl) {
   sl.registerLazySingleton(() => DeactivateAnnouncementUseCase(sl()));
 
   // Cubit
+  sl.registerLazySingleton<AppStatusCubit>(
+    () => AppStatusCubit(
+      getAppStatusUseCase: sl(),
+      supabaseClient: sl(),
+    )..initAppStatusWatch(),
+  );
+
   sl.registerFactory<SystemSettingsCubit>(
     () => SystemSettingsCubit(
       getAppStatusUseCase: sl(),

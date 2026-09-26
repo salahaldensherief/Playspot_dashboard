@@ -76,7 +76,16 @@ class AdminManagementCubit extends Cubit<AdminManagementState> {
     );
   }
 
-  Future<void> deleteAdmin(String adminId) async {
+  Future<void> deleteAdmin(String adminId, {bool isSuperAdmin = false}) async {
+    if (!isSuperAdmin) {
+      AppLogger.warning('Blocked non-super-admin from calling deleteAdmin');
+      emit(state.copyWith(
+        status: AdminManagementStatus.failure,
+        errorMessage: 'عفواً، يتطلب حذف إدارة الصالات صلاحية المسؤول الفائق (Super Admin).',
+      ));
+      return;
+    }
+
     emit(state.copyWith(status: AdminManagementStatus.loading));
     final result = await deleteAdminUseCase(adminId);
 

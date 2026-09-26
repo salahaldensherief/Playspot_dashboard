@@ -78,10 +78,14 @@ class SystemRemoteDataSourceImpl implements SystemRemoteDataSource {
   @override
   Future<void> createAnnouncement(AnnouncementModel announcement) async {
     final announcementId = announcement.id.isNotEmpty ? announcement.id : const Uuid().v4();
-    final updatedEntity = announcement.copyWith(id: announcementId);
+    final String? currentUserId = supabaseClient.auth.currentUser?.id;
+    final updatedEntity = announcement.copyWith(
+      id: announcementId,
+      createdBy: currentUserId,
+    );
     final payloadWithId = AnnouncementModel.fromEntity(updatedEntity).toJson();
 
-    // 1. Save to database table announcements
+    // 1. Save to database table announcements with creator audit log
     await supabaseClient.from('announcements').insert(payloadWithId);
 
     // 2. Determine FCM topic matching the Edge Function expectation

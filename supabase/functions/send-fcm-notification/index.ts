@@ -199,7 +199,18 @@ Deno.serve(async (req: Request) => {
 
     if (!fcmResponse.ok) {
       console.error("FCM request failed:", fcmResponse.status, JSON.stringify(fcmResult));
-      return new Response(JSON.stringify({ error: "FCM request failed" }), {
+
+      // Clean up stale or unregistered FCM tokens to prevent repeated failed delivery attempts
+      const errStr = JSON.stringify(fcmResult).toUpperCase();
+      if (fcmResponse.status === 404 || errStr.includes("UNREGISTERED") || errStr.includes("NOT_FOUND")) {
+        console.log(`Clearing unregistered FCM token for user ${userId}`);
+        await supabase
+          .from("profiles")
+          .update({ fcm_token: null })
+          .eq("id", userId);
+      }
+
+      return new Response(JSON.stringify({ error: "FCM request failed", details: fcmResult }), {
         status: 502,
         headers: { "Content-Type": "application/json" },
       });

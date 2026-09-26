@@ -9,6 +9,7 @@ import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import '../cubit/admin_management_cubit.dart';
 import '../cubit/admin_management_state.dart';
 import 'edit_admin_dialog.dart';
@@ -237,7 +238,8 @@ class UsersDataTable extends StatelessWidget {
             variant: AppButtonVariant.danger,
             onPressed: () async {
               Navigator.pop(diagContext);
-              await cubit.deleteAdmin(adminId);
+              final currentUser = context.read<LoginCubit>().state.user;
+              await cubit.deleteAdmin(adminId, isSuperAdmin: currentUser?.isSuperAdmin ?? false);
             },
           ),
         ],

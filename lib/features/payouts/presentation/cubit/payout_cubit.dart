@@ -116,11 +116,29 @@ class PayoutCubit extends Cubit<PayoutState> {
     required String periodStart,
     required String periodEnd,
   }) async {
+    if (loungeId.trim().isEmpty || periodStart.trim().isEmpty || periodEnd.trim().isEmpty) {
+      emit(state.copyWith(
+        status: PayoutCubitStatus.failure,
+        errorMessage: 'جميع حقول النطاق الزمني والصالة مطلوبة',
+      ));
+      return false;
+    }
+
+    final startDate = DateTime.tryParse(periodStart.trim());
+    final endDate = DateTime.tryParse(periodEnd.trim());
+    if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
+      emit(state.copyWith(
+        status: PayoutCubitStatus.failure,
+        errorMessage: 'تاريخ نهاية الفترة يجب أن يكون مساوياً أو بعد تاريخ بداية الفترة',
+      ));
+      return false;
+    }
+
     emit(state.copyWith(status: PayoutCubitStatus.loading));
     final result = await _createPayoutUseCase(CreatePayoutParams(
-      loungeId: loungeId,
-      periodStart: periodStart,
-      periodEnd: periodEnd,
+      loungeId: loungeId.trim(),
+      periodStart: periodStart.trim(),
+      periodEnd: periodEnd.trim(),
     ));
 
     if (isClosed) return false;

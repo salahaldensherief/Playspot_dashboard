@@ -15,9 +15,11 @@ class LocalCacheServiceImpl implements LocalCacheService {
 
   @override
   Future<void> setJson(String key, dynamic data) async {
+    final cleanKey = key.trim();
+    if (cleanKey.isEmpty) return;
     try {
       final jsonString = jsonEncode(data);
-      await _prefs.setString(key, jsonString);
+      await _prefs.setString(cleanKey, jsonString);
     } catch (_) {
       // Ignore cache write errors gracefully
     }
@@ -25,11 +27,15 @@ class LocalCacheServiceImpl implements LocalCacheService {
 
   @override
   dynamic getJson(String key) {
+    final cleanKey = key.trim();
+    if (cleanKey.isEmpty) return null;
     try {
-      final jsonString = _prefs.getString(key);
+      final jsonString = _prefs.getString(cleanKey);
       if (jsonString == null || jsonString.isEmpty) return null;
       return jsonDecode(jsonString);
     } catch (_) {
+      // Clean up corrupted cache entry
+      remove(cleanKey);
       return null;
     }
   }

@@ -32,6 +32,7 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
   String _targetAudience = 'all';
   Lounge? _selectedLounge;
   String _announcementType = 'info';
+  bool _isSubmitting = false;
 
   final TextEditingController _titleArController = TextEditingController();
   final TextEditingController _titleEnController = TextEditingController();
@@ -47,7 +48,9 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
+    if (_isSubmitting || widget.isLoading) return;
+
     if (_formKey.currentState!.validate()) {
       if (_targetAudience == 'specific_lounge' && _selectedLounge == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -59,31 +62,105 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
         return;
       }
 
-      final announcement = AnnouncementEntity(
-        id: '',
-        targetAudience: _targetAudience,
-        targetLoungeId: _targetAudience == 'specific_lounge' ? _selectedLounge?.id : null,
-        targetLoungeName: _targetAudience == 'specific_lounge' ? _selectedLounge?.name : null,
-        titleAr: _titleArController.text.trim(),
-        titleEn: _titleEnController.text.trim(),
-        bodyAr: _bodyArController.text.trim(),
-        bodyEn: _bodyEnController.text.trim(),
-        type: _announcementType,
-        isActive: true,
-        createdAt: DateTime.now(),
+      final title = _titleArController.text.trim();
+      final body = _bodyArController.text.trim();
+
+      final confirmed = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppColors.cardBackground,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+          title: Row(
+            children: [
+              Icon(Icons.campaign_outlined, color: AppColors.warning, size: 28.r),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Text(
+                  'تأكيد إرسال الإعلان الجماعي',
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 18.sp, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'هل أنت متاكد من نشر هذا الإعلان وتنبيه جميع المستخدمين المستهدفين عبر Push Notifications؟',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+              ),
+              SizedBox(height: 12.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppColors.mutedBackground,
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: AppColors.borderDefault),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('العنوان: $title', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13.sp)),
+                    SizedBox(height: 4.h),
+                    Text('المحتوى: $body', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text('إلغاء', style: TextStyle(color: AppColors.textMuted)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.neonBlue),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text('تأكيد الإرسال', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
       );
 
-      widget.onSubmit(announcement);
+      if (confirmed != true) return;
 
-      _titleArController.clear();
-      _titleEnController.clear();
-      _bodyArController.clear();
-      _bodyEnController.clear();
-      setState(() {
-        _targetAudience = 'all';
-        _selectedLounge = null;
-        _announcementType = 'info';
-      });
+      setState(() => _isSubmitting = true);
+
+      try {
+        final announcement = AnnouncementEntity(
+          id: '',
+          targetAudience: _targetAudience,
+          targetLoungeId: _targetAudience == 'specific_lounge' ? _selectedLounge?.id : null,
+          targetLoungeName: _targetAudience == 'specific_lounge' ? _selectedLounge?.name : null,
+          titleAr: _titleArController.text.trim(),
+          titleEn: _titleEnController.text.trim(),
+          bodyAr: _bodyArController.text.trim(),
+          bodyEn: _bodyEnController.text.trim(),
+          type: _announcementType,
+          isActive: true,
+          createdAt: DateTime.now(),
+        );
+
+        widget.onSubmit(announcement);
+
+        _titleArController.clear();
+        _titleEnController.clear();
+        _bodyArController.clear();
+        _bodyEnController.clear();
+        if (mounted) {
+          setState(() {
+            _targetAudience = 'all';
+            _selectedLounge = null;
+            _announcementType = 'info';
+          });
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+        }
+      }
     }
   }
 

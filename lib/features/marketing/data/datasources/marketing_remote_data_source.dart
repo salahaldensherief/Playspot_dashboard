@@ -13,7 +13,7 @@ abstract class MarketingRemoteDataSource {
 
   // Notifications & User Preferences
   Future<void> sendNotification(NotificationModel notification);
-  Future<List<NotificationModel>> getNotifications();
+  Future<List<NotificationModel>> getNotifications({String? userId});
   Future<List<NotificationModel>> getNotificationsRpc({String lang = 'ar', int limit = 20, int offset = 0});
   Future<PaginatedResult<NotificationModel>> getNotificationsPage({int page = 1, int pageSize = 20});
   Future<void> markNotificationRead(String notificationId);
@@ -175,12 +175,11 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
       await _supabase.storage.from('tournament-assets').uploadBinary(path, fileBytes);
       return _supabase.storage.from('tournament-assets').getPublicUrl(path);
     } catch (e) {
-      debugPrint('⚠️ [MARKETING_REMOTE] All storage buckets unavailable: $e');
+      debugPrint('🔴 [MARKETING_REMOTE] All storage buckets failed to upload promo poster: $e');
     }
 
-    // Return empty string gracefully if no storage buckets exist on Supabase
-    debugPrint('⚠️ [MARKETING_REMOTE] No storage buckets exist on Supabase. Returning empty image url gracefully.');
-    return '';
+    // Throw explicit Exception so UI/Cubit surfaces error instead of saving a broken blank URL
+    throw Exception('فشل رفع صورة العرض الترويجي على السيرفر. يرجى إعادة المحاولة.');
   }
 
   @override
@@ -209,9 +208,13 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
   }
 
   @override
-  Future<List<NotificationModel>> getNotifications() async {
+  Future<List<NotificationModel>> getNotifications({String? userId}) async {
     try {
-      final response = await _supabase.from('notifications').select().order('created_at', ascending: false);
+      var query = _supabase.from('notifications').select();
+      if (userId != null && userId.trim().isNotEmpty) {
+        query = query.eq('user_id', userId.trim());
+      }
+      final response = await query.order('created_at', ascending: false);
       return (response as List).map((json) => NotificationModel.fromJson(json)).toList();
     } catch (e) {
       debugPrint('⚠️ [MARKETING_REMOTE] getNotifications query error: $e');

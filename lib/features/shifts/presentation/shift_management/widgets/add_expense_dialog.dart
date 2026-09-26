@@ -41,7 +41,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isSubmitting = true);
 
-      final double amount = double.parse(_amountController.text.trim());
+      final double amount = double.tryParse(_amountController.text.trim()) ?? 0.0;
       final String reason = _reasonController.text.trim();
 
       final cubit = context.read<ShiftCubit>();

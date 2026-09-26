@@ -46,29 +46,26 @@ class RequestsFallbackFetcher {
       final res = await client
           .from('service_calls')
           .select('*, bookings(lounge_id, room_id, rooms(name, name_en))')
+          .eq('lounge_id', loungeId)
           .neq('status', 'resolved')
           .neq('status', 'completed');
 
       for (var json in (res as List)) {
         final map = Map<String, dynamic>.from(json);
         final booking = map['bookings'] as Map<String, dynamic>?;
-        final String? bLoungeId = (map['lounge_id'] ?? booking?['lounge_id'])?.toString();
-
-        if (bLoungeId == loungeId) {
-          final isAttended = map['is_attended'] == true || map['is_read'] == true;
-          if (!isAttended) {
-            final String? rName = booking?['rooms']?['name'];
-            final String? uName = map['user_name'] ?? booking?['profiles']?['full_name'];
-            final String? uPhone = map['user_phone'] ?? booking?['profiles']?['phone'];
-            final String rawId = map['id']?.toString() ?? '';
-            map['id'] = rawId.startsWith('sc_') ? rawId : 'sc_$rawId';
-            map['lounge_id'] = loungeId;
-            if (rName != null) map['room_name'] = rName;
-            if (uName != null) map['user_name'] = uName;
-            if (uPhone != null) map['user_phone'] = uPhone;
-            map['type'] = 'service_call';
-            results.add(ClientRequestModel.fromServiceCallJson(map));
-          }
+        final isAttended = map['is_attended'] == true || map['is_read'] == true;
+        if (!isAttended) {
+          final String? rName = booking?['rooms']?['name'];
+          final String? uName = map['user_name'] ?? booking?['profiles']?['full_name'];
+          final String? uPhone = map['user_phone'] ?? booking?['profiles']?['phone'];
+          final String rawId = map['id']?.toString() ?? '';
+          map['id'] = rawId.startsWith('sc_') ? rawId : 'sc_$rawId';
+          map['lounge_id'] = loungeId;
+          if (rName != null) map['room_name'] = rName;
+          if (uName != null) map['user_name'] = uName;
+          if (uPhone != null) map['user_phone'] = uPhone;
+          map['type'] = 'service_call';
+          results.add(ClientRequestModel.fromServiceCallJson(map));
         }
       }
     } catch (e) {
@@ -80,28 +77,25 @@ class RequestsFallbackFetcher {
       final res = await client
           .from('canteen_orders')
           .select('*, bookings(lounge_id, room_id, rooms(name, name_en))')
+          .eq('lounge_id', loungeId)
           .or('status.eq.pending,status.eq.new,status.eq.in_progress');
 
       for (var json in (res as List)) {
         final map = Map<String, dynamic>.from(json);
         final booking = map['bookings'] as Map<String, dynamic>?;
-        final String? bLoungeId = (map['lounge_id'] ?? booking?['lounge_id'])?.toString();
-
-        if (bLoungeId == loungeId) {
-          final isAttended = map['is_attended'] == true || map['is_read'] == true;
-          if (!isAttended) {
-            final String? rName = booking?['rooms']?['name'];
-            final String? uName = map['user_name'];
-            final String? uPhone = map['user_phone'];
-            final String rawId = map['id']?.toString() ?? '';
-            map['id'] = rawId.startsWith('canteen_') ? rawId : 'canteen_$rawId';
-            map['lounge_id'] = loungeId;
-            if (rName != null) map['room_name'] = rName;
-            if (uName != null) map['user_name'] = uName;
-            if (uPhone != null) map['user_phone'] = uPhone;
-            map['type'] = 'canteen_order';
-            results.add(ClientRequestModel.fromCanteenOrderJson(map));
-          }
+        final isAttended = map['is_attended'] == true || map['is_read'] == true;
+        if (!isAttended) {
+          final String? rName = booking?['rooms']?['name'];
+          final String? uName = map['user_name'];
+          final String? uPhone = map['user_phone'];
+          final String rawId = map['id']?.toString() ?? '';
+          map['id'] = rawId.startsWith('canteen_') ? rawId : 'canteen_$rawId';
+          map['lounge_id'] = loungeId;
+          if (rName != null) map['room_name'] = rName;
+          if (uName != null) map['user_name'] = uName;
+          if (uPhone != null) map['user_phone'] = uPhone;
+          map['type'] = 'canteen_order';
+          results.add(ClientRequestModel.fromCanteenOrderJson(map));
         }
       }
     } catch (e) {
@@ -113,28 +107,25 @@ class RequestsFallbackFetcher {
       final res = await client
           .from('client_requests')
           .select('*, bookings(lounge_id, room_id, rooms(name, name_en))')
+          .eq('lounge_id', loungeId)
           .neq('status', 'resolved')
           .neq('status', 'completed');
 
       for (var json in (res as List)) {
         final map = Map<String, dynamic>.from(json);
         final booking = map['bookings'] as Map<String, dynamic>?;
-        final String? bLoungeId = (map['lounge_id'] ?? booking?['lounge_id'])?.toString();
-
-        if (bLoungeId == loungeId) {
-          final isAttended = map['is_attended'] == true || map['is_read'] == true;
-          if (!isAttended) {
-            final String? rName = map['rooms']?['name'] ?? booking?['rooms']?['name'];
-            final String? uName = map['profiles']?['full_name'];
-            final String? uPhone = map['profiles']?['phone'];
-            final String rawId = map['id']?.toString() ?? '';
-            map['id'] = rawId.startsWith('req_') ? rawId : 'req_$rawId';
-            map['lounge_id'] = loungeId;
-            if (rName != null) map['room_name'] = rName;
-            if (uName != null) map['user_name'] = uName;
-            if (uPhone != null) map['user_phone'] = uPhone;
-            results.add(ClientRequestModel.fromNotificationJson(map));
-          }
+        final isAttended = map['is_attended'] == true || map['is_read'] == true;
+        if (!isAttended) {
+          final String? rName = map['rooms']?['name'] ?? booking?['rooms']?['name'];
+          final String? uName = map['profiles']?['full_name'];
+          final String? uPhone = map['profiles']?['phone'];
+          final String rawId = map['id']?.toString() ?? '';
+          map['id'] = rawId.startsWith('req_') ? rawId : 'req_$rawId';
+          map['lounge_id'] = loungeId;
+          if (rName != null) map['room_name'] = rName;
+          if (uName != null) map['user_name'] = uName;
+          if (uPhone != null) map['user_phone'] = uPhone;
+          results.add(ClientRequestModel.fromNotificationJson(map));
         }
       }
     } catch (e) {
@@ -146,36 +137,33 @@ class RequestsFallbackFetcher {
       final res = await client
           .from('booking_items')
           .select('*, bookings!inner(lounge_id, room_id, rooms(name, name_en))')
+          .eq('bookings.lounge_id', loungeId)
           .eq('status', 'pending');
 
       for (var json in (res as List)) {
         final map = Map<String, dynamic>.from(json);
         final booking = map['bookings'] as Map<String, dynamic>?;
-        final String? bLoungeId = booking?['lounge_id']?.toString();
-
-        if (bLoungeId == loungeId) {
-          final isAttended = map['is_attended'] == true || map['is_read'] == true;
-          if (!isAttended) {
-            final String? rName = booking?['rooms']?['name'];
-            final String? uName = null;
-            final String? uPhone = null;
-            final String rawId = map['id']?.toString() ?? '';
-            map['id'] = rawId.startsWith('item_') ? rawId : 'item_$rawId';
-            map['lounge_id'] = loungeId;
-            if (rName != null) map['room_name'] = rName;
-            if (uName != null) map['user_name'] = uName;
-            if (uPhone != null) map['user_phone'] = uPhone;
-            map['type'] = 'canteen_order';
-            map['items'] = [
-              {
-                'name': map['name'],
-                'quantity': map['quantity'] ?? 1,
-                'price': map['price'] ?? 0.0,
-                'total_price': map['total_price'] ?? 0.0,
-              }
-            ];
-            results.add(ClientRequestModel.fromCanteenOrderJson(map));
-          }
+        final isAttended = map['is_attended'] == true || map['is_read'] == true;
+        if (!isAttended) {
+          final String? rName = booking?['rooms']?['name'];
+          final String? uName = null;
+          final String? uPhone = null;
+          final String rawId = map['id']?.toString() ?? '';
+          map['id'] = rawId.startsWith('item_') ? rawId : 'item_$rawId';
+          map['lounge_id'] = loungeId;
+          if (rName != null) map['room_name'] = rName;
+          if (uName != null) map['user_name'] = uName;
+          if (uPhone != null) map['user_phone'] = uPhone;
+          map['type'] = 'canteen_order';
+          map['items'] = [
+            {
+              'name': map['name'],
+              'quantity': map['quantity'] ?? 1,
+              'price': map['price'] ?? 0.0,
+              'total_price': map['total_price'] ?? 0.0,
+            }
+          ];
+          results.add(ClientRequestModel.fromCanteenOrderJson(map));
         }
       }
     } catch (e) {

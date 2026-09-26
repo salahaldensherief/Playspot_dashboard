@@ -12,6 +12,7 @@ class AnnouncementModel extends AnnouncementEntity {
     required super.bodyEn,
     required super.type,
     super.isActive = true,
+    super.createdBy,
     required super.createdAt,
   });
 
@@ -27,6 +28,7 @@ class AnnouncementModel extends AnnouncementEntity {
       bodyEn: json['body_en']?.toString() ?? '',
       type: json['type']?.toString() ?? 'info',
       isActive: json['is_active'] as bool? ?? true,
+      createdBy: json['created_by']?.toString(),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'].toString())
           : DateTime.now(),
@@ -45,6 +47,7 @@ class AnnouncementModel extends AnnouncementEntity {
       'body_en': bodyEn,
       'type': type,
       'is_active': isActive,
+      if (createdBy != null && createdBy!.isNotEmpty) 'created_by': createdBy,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -61,6 +64,7 @@ class AnnouncementModel extends AnnouncementEntity {
       bodyEn: entity.bodyEn,
       type: entity.type,
       isActive: entity.isActive,
+      createdBy: entity.createdBy,
       createdAt: entity.createdAt,
     );
   }

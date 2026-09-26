@@ -102,7 +102,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
           variant: AppButtonVariant.danger,
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              final countedCash = double.parse(_cashController.text.trim());
+              final countedCash = double.tryParse(_cashController.text.trim()) ?? 0.0;
               final notes = _notesController.text.trim().isEmpty ? null : _notesController.text.trim();
               widget.onConfirm(countedCash, notes);
             }

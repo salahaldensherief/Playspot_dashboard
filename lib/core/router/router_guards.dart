@@ -33,6 +33,12 @@ class RouterGuards {
     final bool isStaffUser = user.isStaff;
     final bool isLoungeOwner = user.isOwner;
     final bool isSuperAdmin = user.role == UserRole.superAdmin;
+
+    // Security Guard: Only SuperAdmins and Lounge Staff are allowed to access the Dashboard
+    if (!isSuperAdmin && !isStaffUser) {
+      return RouterKeys.login;
+    }
+
     final bool isOnboardingPath =
         state.matchedLocation == RouterKeys.loungeOnboarding;
     final bool isKycPendingPath =

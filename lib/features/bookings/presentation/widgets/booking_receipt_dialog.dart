@@ -110,7 +110,6 @@ class _BookingReceiptDialogState extends State<BookingReceiptDialog> {
 
     if (mounted) setState(() => _isLoadingUrl = false);
   }
-  }
 
   @override
   void dispose() {

@@ -46,6 +46,13 @@ class _CategoryDialogState extends State<CategoryDialog> {
     _selectedIcon = widget.category?.iconKey ?? 'sports_esports';
   }
 
+  @override
+  void dispose() {
+    _nameAr.dispose();
+    _nameEn.dispose();
+    super.dispose();
+  }
+
   void _submit() {
     if (_formKey.currentState!.validate()) {
       final category = CategoryEntity(

@@ -18,6 +18,8 @@ import 'package:play_spot_dashboard/features/shifts/presentation/shift_managemen
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/open_shift_dialog.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/shift_header_banner.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/shift_summary_modal.dart';
+import 'package:play_spot_dashboard/features/system/presentation/cubit/app_status_cubit.dart';
+import 'package:play_spot_dashboard/features/system/presentation/widgets/maintenance_overlay.dart';
 import '../dashboard_sidebar.dart';
 import '../dashboard_top_bar.dart';
 
@@ -220,46 +222,63 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
           },
         ),
       ],
-      child: Scaffold(
-        backgroundColor: AppColors.scaffoldBackground,
-        drawer: Responsive.isMobile(context)
-            ? Drawer(child: DashboardSidebar(activeRoute: widget.activeRoute))
-            : null,
-        body: Row(
-          children: [
-            if (!Responsive.isMobile(context))
-              DashboardSidebar(activeRoute: widget.activeRoute),
-            Expanded(
-              child: Column(
-                children: [
-                  DashboardTopBar(
-                    title: widget.title,
-                    showMenuButton: Responsive.isMobile(context),
-                    actions: widget.activeRoute == RouterKeys.profile
-                        ? [
-                            IconButton(
-                              icon: const Icon(Icons.edit_outlined,
-                                  color: AppColors.textPrimary),
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content:
-                                          Text(AppStrings.underConstruction)),
-                                );
-                              },
-                            ),
-                          ]
-                        : null,
+      child: BlocBuilder<AppStatusCubit, AppStatusCubitState>(
+        builder: (context, appStatusState) {
+          final isMaintenanceActive = appStatusState.appStatus.isMaintenanceMode && !widget.isSuperAdmin;
+
+          return Scaffold(
+            backgroundColor: AppColors.scaffoldBackground,
+            drawer: Responsive.isMobile(context)
+                ? Drawer(child: DashboardSidebar(activeRoute: widget.activeRoute))
+                : null,
+            body: Stack(
+              children: [
+                Row(
+                  children: [
+                    if (!Responsive.isMobile(context))
+                      DashboardSidebar(activeRoute: widget.activeRoute),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          DashboardTopBar(
+                            title: widget.title,
+                            showMenuButton: Responsive.isMobile(context),
+                            actions: widget.activeRoute == RouterKeys.profile
+                                ? [
+                                    IconButton(
+                                      icon: const Icon(Icons.edit_outlined,
+                                          color: AppColors.textPrimary),
+                                      onPressed: () {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                              content:
+                                                  Text(AppStrings.underConstruction)),
+                                        );
+                                      },
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          if (!widget.isSuperAdmin) const ShiftHeaderBanner(),
+                          Expanded(
+                            child: widget.child,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (isMaintenanceActive)
+                  Positioned.fill(
+                    child: MaintenanceOverlayWidget(
+                      messageAr: appStatusState.appStatus.maintenanceMessageAr,
+                      messageEn: appStatusState.appStatus.maintenanceMessageEn,
+                    ),
                   ),
-                  if (!widget.isSuperAdmin) const ShiftHeaderBanner(),
-                  Expanded(
-                    child: widget.child,
-                  ),
-                ],
-              ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

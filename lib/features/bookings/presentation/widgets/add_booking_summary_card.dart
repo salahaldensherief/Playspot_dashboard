@@ -3,12 +3,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/booking_price_calculator.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
 
 class AddBookingSummaryCard extends StatelessWidget {
   final RoomEntity? room;
   final int durationMinutes;
-  final double extrasTotal;
+  final List<Map<String, dynamic>> selectedExtras;
   final double voucherDiscount;
   final String playMode;
 
@@ -16,7 +17,7 @@ class AddBookingSummaryCard extends StatelessWidget {
     super.key,
     required this.room,
     required this.durationMinutes,
-    required this.extrasTotal,
+    required this.selectedExtras,
     required this.voucherDiscount,
     this.playMode = 'single',
   });
@@ -25,12 +26,15 @@ class AddBookingSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (room == null) return const SizedBox.shrink();
 
+    final calculation = BookingPriceCalculator.calculate(
+      room: room,
+      durationMinutes: durationMinutes,
+      extras: selectedExtras,
+      voucherDiscount: voucherDiscount,
+      playMode: playMode,
+    );
+
     final double durationHours = durationMinutes / 60.0;
-    final double pricePerHour = playMode == 'multi'
-        ? (room!.hourlyRateMulti > 0 ? room!.hourlyRateMulti : room!.pricePerHour)
-        : (room!.hourlyRateSingle > 0 ? room!.hourlyRateSingle : room!.pricePerHour);
-    final double roomTotal = durationHours * pricePerHour;
-    final double grandTotal = (roomTotal + extrasTotal - voucherDiscount).clamp(0.0, double.infinity);
 
     return Container(
       padding: EdgeInsets.all(16.r),
@@ -53,22 +57,22 @@ class AddBookingSummaryCard extends StatelessWidget {
                 ),
                 SizedBox(height: 2.h),
                 AppText.body(
-                  "${AppStrings.pricePerHour}: ${pricePerHour.toStringAsFixed(0)} ${AppStrings.egp}",
+                  "${AppStrings.pricePerHour}: ${calculation.pricePerHour.toStringAsFixed(0)} ${AppStrings.egp}",
                   color: AppColors.textSecondary,
                   fontSize: 12.sp,
                 ),
-                if (extrasTotal > 0) ...[
+                if (calculation.extrasTotal > 0) ...[
                   SizedBox(height: 2.h),
                   AppText.body(
-                    "مجموع الإضافات: ${extrasTotal.toStringAsFixed(0)} ${AppStrings.egp}",
+                    "مجموع الإضافات: ${calculation.extrasTotal.toStringAsFixed(0)} ${AppStrings.egp}",
                     color: AppColors.neonPurple,
                     fontSize: 12.sp,
                   ),
                 ],
-                if (voucherDiscount > 0) ...[
+                if (calculation.voucherDiscount > 0) ...[
                   SizedBox(height: 2.h),
                   AppText.body(
-                    "خصم القسيمة: -${voucherDiscount.toStringAsFixed(2)} ${AppStrings.egp}",
+                    "خصم القسيمة: -${calculation.voucherDiscount.toStringAsFixed(2)} ${AppStrings.egp}",
                     color: AppColors.success,
                     fontSize: 12.sp,
                     fontWeight: FontWeight.bold,
@@ -88,7 +92,7 @@ class AddBookingSummaryCard extends StatelessWidget {
               ),
               SizedBox(height: 4.h),
               AppText.subHeading(
-                "${grandTotal.toStringAsFixed(2)} ${AppStrings.egp}",
+                "${calculation.grandTotal.toStringAsFixed(2)} ${AppStrings.egp}",
                 color: AppColors.neonBlue,
                 fontSize: 18.sp,
               ),

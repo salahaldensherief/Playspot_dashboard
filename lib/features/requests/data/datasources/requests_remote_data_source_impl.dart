@@ -102,7 +102,10 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
                 callback: (_) => fetchAndEmit(),
               )
               .subscribe((status, error) {
-            if (status == RealtimeSubscribeStatus.channelError) {
+            if (status == RealtimeSubscribeStatus.subscribed) {
+              // Guarantee recovery of missed events upon connection establish or reconnect
+              fetchAndEmit();
+            } else if (status == RealtimeSubscribeStatus.channelError) {
               debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Realtime Channel Error: $error');
             }
           });
@@ -118,7 +121,12 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         debounceTimer?.cancel();
         backupSyncTimer?.cancel();
         if (realtimeChannel != null) {
-          client.removeChannel(realtimeChannel!);
+          try {
+            realtimeChannel?.unsubscribe();
+            client.removeChannel(realtimeChannel!);
+          } catch (e) {
+            debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Error removing channel: $e');
+          }
           realtimeChannel = null;
         }
       },
@@ -253,6 +261,9 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
 
   @override
   Future<void> markRequestAsAttended(String id, {bool isCanteenOrder = false}) async {
+    if (_locallyAttendedIds.length > 300) {
+      _locallyAttendedIds.clear();
+    }
     _locallyAttendedIds.add(id);
 
     final String rawDbId = id
@@ -287,7 +298,9 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
                 .eq('booking_id', canteenOrder['booking_id'])
                 .eq('call_type', 'canteen_order');
           }
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Canteen order service_call sync error: $e');
+        }
         return;
       } else if (id.startsWith('item_')) {
         await client
@@ -322,7 +335,9 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
             debugPrint('🟢 [REQUESTS_DATA_SOURCE] Marked request $id as attended in table $table');
             return;
           }
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Table update attempt failed for $table: $e');
+        }
       }
     } catch (e) {
       debugPrint('⚠️ [REQUESTS_DATA_SOURCE] markRequestAsAttended Error for $id: $e');

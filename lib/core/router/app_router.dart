@@ -33,6 +33,7 @@ import 'package:play_spot_dashboard/features/requests/presentation/client_reques
 import 'package:play_spot_dashboard/features/reviews/presentation/reviews_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
+import 'package:play_spot_dashboard/features/system/presentation/cubit/app_status_cubit.dart';
 
 @JS('removeSplash')
 external void _removeWebSplash();
@@ -123,9 +124,12 @@ class AppRouter {
                   BlocProvider<PermissionsCubit>.value(
                     value: sl<PermissionsCubit>(),
                   ),
+                  BlocProvider<AppStatusCubit>.value(
+                    value: sl<AppStatusCubit>(),
+                  ),
                 ],
                 child: DashboardShell(
-                  location: state.matchedLocation,
+                  location: state.uri.toString(),
                   child: child,
                 ),
               );

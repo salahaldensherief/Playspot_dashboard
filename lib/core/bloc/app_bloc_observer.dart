@@ -84,8 +84,6 @@ class AppBlocObserver extends BlocObserver {
   @override
   void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
     super.onError(bloc, error, stackTrace);
-    if (!kDebugMode) return;
-
     final name = bloc.runtimeType.toString();
     _errorCounts[name] = (_errorCounts[name] ?? 0) + 1;
 

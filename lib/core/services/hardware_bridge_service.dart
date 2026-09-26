@@ -19,15 +19,18 @@ class HardwareBridgeService {
       return true;
     }
 
+    final sanitizedAction = Uri.encodeComponent(action.trim().toLowerCase());
     final endpoints = [
-      '$primaryBridgeUrl/$action',
-      '$secondaryBridgeUrl/$action',
+      '$primaryBridgeUrl/$sanitizedAction',
+      '$secondaryBridgeUrl/$sanitizedAction',
     ];
 
     for (final endpoint in endpoints) {
       try {
         debugPrint('🔵 [HARDWARE_BRIDGE] Pinging $endpoint for room $roomId...');
-        final uri = Uri.parse('$endpoint?roomId=$roomId');
+        final uri = Uri.parse(endpoint).replace(queryParameters: {
+          'roomId': roomId.trim(),
+        });
         final response = await http.get(uri).timeout(defaultTimeout);
         if (response.statusCode >= 200 && response.statusCode < 300) {
           debugPrint('🟢 [HARDWARE_BRIDGE] Agent responded successfully at $endpoint');

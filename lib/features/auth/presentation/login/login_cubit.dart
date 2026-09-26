@@ -226,6 +226,8 @@ class LoginCubit extends Cubit<LoginState> {
   }
 
   Future<void> logout() async {
+    _lastUpdatedLat = null;
+    _lastUpdatedLng = null;
     await logoutUseCase(NoParams());
     emit(const LoginState(status: LoginStatus.unauthenticated));
   }

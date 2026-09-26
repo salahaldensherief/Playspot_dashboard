@@ -11,6 +11,7 @@ class AnnouncementEntity extends Equatable {
   final String bodyEn;
   final String type; // 'info', 'warning', 'update'
   final bool isActive;
+  final String? createdBy;
   final DateTime createdAt;
 
   const AnnouncementEntity({
@@ -24,6 +25,7 @@ class AnnouncementEntity extends Equatable {
     required this.bodyEn,
     required this.type,
     this.isActive = true,
+    this.createdBy,
     required this.createdAt,
   });
 
@@ -38,6 +40,7 @@ class AnnouncementEntity extends Equatable {
     String? bodyEn,
     String? type,
     bool? isActive,
+    String? createdBy,
     DateTime? createdAt,
   }) {
     return AnnouncementEntity(
@@ -51,6 +54,7 @@ class AnnouncementEntity extends Equatable {
       bodyEn: bodyEn ?? this.bodyEn,
       type: type ?? this.type,
       isActive: isActive ?? this.isActive,
+      createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -67,6 +71,7 @@ class AnnouncementEntity extends Equatable {
         bodyEn,
         type,
         isActive,
+        createdBy,
         createdAt,
       ];
 }

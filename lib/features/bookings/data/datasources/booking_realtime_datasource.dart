@@ -47,15 +47,16 @@ class BookingRealtimeDataSourceImpl implements BookingRealtimeDataSource {
 
         // 2. Realtime postgres changes listener
         try {
-          realtimeSubscription = _client
-              .from('bookings')
-              .stream(primaryKey: ['id'])
-              .order('created_at')
-              .listen((_) {
-                debouncedFetchAndEmit();
-              }, onError: (e) {
-                // Ignore silent socket drops; backup timer will continue polling
-              });
+          final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
+          var streamQuery = _client.from('bookings').stream(primaryKey: ['id']);
+          if (cleanLoungeId != null) {
+            streamQuery = streamQuery.eq('lounge_id', cleanLoungeId);
+          }
+          realtimeSubscription = streamQuery.order('created_at').listen((_) {
+            debouncedFetchAndEmit();
+          }, onError: (e) {
+            // Ignore silent socket drops; backup timer will continue polling
+          });
         } catch (e) {
           // Ignore stream setup errors; backup polling will fetch updates
         }
