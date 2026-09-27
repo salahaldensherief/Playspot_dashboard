@@ -10,13 +10,11 @@ import 'package:play_spot_dashboard/features/requests/domain/entities/client_req
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 
 class RequestCardActions extends StatelessWidget {
-  final ClientRequestEntity request;
   final DashboardCubit dashboardCubit;
   final ClientRequestsCubit requestsCubit;
 
   const RequestCardActions({
     super.key,
-    required this.request,
     required this.dashboardCubit,
   });
 
@@ -26,7 +24,6 @@ class RequestCardActions extends StatelessWidget {
       builder: (dialogContext) => _LiveApproveExtensionDialog(
         parentContext: context,
         bookingId: bookingId,
-        request: request,
         dashboardCubit: dashboardCubit,
       ),
     );
