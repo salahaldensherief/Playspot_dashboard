@@ -58,48 +58,29 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
 
   @override
   Future<void> createPromotion(PromoModel promo) async {
-    final promoJson = promo.toJson();
-    final payload = <String, dynamic>{
-      ...promoJson,
-      'title': promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn,
-      'tag': promo.tagAr.isNotEmpty ? promo.tagAr : promo.tagEn,
-      'is_active': true,
-    };
+    final colors = promo.hexColors.length >= 2
+        ? promo.hexColors
+        : const ['#1E88E5', '#1565C0'];
 
-    if (payload['id'] == null || (payload['id'] is String && (payload['id'] as String).isEmpty)) {
-      payload.remove('id');
-    }
-
-    if (payload['room_id'] != null && payload['room_id'].toString().trim().isEmpty) {
-      payload['room_id'] = null;
-    }
-
-    if (payload['lounge_id'] != null && payload['lounge_id'].toString().trim().isEmpty) {
-      payload['lounge_id'] = null;
-    }
-
-    payload.removeWhere((key, value) => value == null && (key == 'room_id' || key == 'lounge_id'));
-
-    await _supabase.from('promotions').insert(payload);
-    debugPrint('🟢 [MARKETING_REMOTE] Successfully inserted promo into promotions table with image_url: ${promo.imageUrl}');
-
-    // Try publish_promotion RPC as secondary step if loungeId exists
-    if (promo.loungeId != null && promo.loungeId!.isNotEmpty) {
-      try {
-        debugPrint('🚀 [MARKETING_REMOTE] Calling publish_promotion RPC for lounge: ${promo.loungeId}');
-        await _supabase.rpc('publish_promotion', params: {
-          'p_expires_at': promo.expiresAt?.toIso8601String(),
-          'p_lounge_id': promo.loungeId,
-          'p_room_id': promo.roomId,
-          'p_tag_ar': promo.tagAr.isNotEmpty ? promo.tagAr : promo.tag,
-          'p_tag_en': promo.tagEn.isNotEmpty ? promo.tagEn : promo.tag,
-          'p_title_ar': promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn,
-          'p_title_en': promo.titleEn.isNotEmpty ? promo.titleEn : promo.titleAr,
-        });
-      } catch (e) {
-        debugPrint('ℹ️ [MARKETING_REMOTE] publish_promotion RPC notice: $e');
-      }
-    }
+    await _supabase.rpc(
+      'create_promotion',
+      params: {
+        'p_lounge_id': promo.loungeId,
+        'p_room_id': promo.roomId,
+        'p_title_ar': promo.titleAr,
+        'p_title_en': promo.titleEn,
+        'p_tag_ar': promo.tagAr,
+        'p_tag_en': promo.tagEn,
+        'p_discount_type': promo.discountType,
+        'p_discount_value': promo.discountValue,
+        'p_expires_at': promo.expiresAt?.toIso8601String(),
+        'p_colors': colors,
+        'p_icon_key': promo.iconKey,
+        'p_image_url': promo.imageUrl,
+        'p_deep_link': promo.deepLink,
+        'p_target_audience': promo.targetAudience,
+      },
+    );
   }
 
   @override
@@ -121,6 +102,8 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
       'room_id': promo.roomId,
       'is_room_specific': promo.isRoomSpecific,
       'target_audience': promo.targetAudience,
+      'discount_type': promo.discountType,
+      'discount_value': promo.discountValue,
       'icon_key': promo.iconKey,
       'colors': promo.hexColors,
     };
