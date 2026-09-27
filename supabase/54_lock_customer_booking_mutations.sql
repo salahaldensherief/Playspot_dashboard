@@ -1,3 +1,4 @@
+-- CI baseline: platform hardening safety net
 BEGIN;
 
 CREATE OR REPLACE FUNCTION public.cancel_my_booking(
