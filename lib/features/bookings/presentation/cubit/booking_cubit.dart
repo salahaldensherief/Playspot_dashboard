@@ -224,7 +224,7 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
       actionName: 'Confirm Cash Payment',
       optimisticUpdate: (list) => list
           .map((b) => b.id == bookingId
-              ? b.copyWith(status: BookingStatus.completed, paymentStatus: PaymentStatus.paid)
+              ? b.copyWith(paymentStatus: PaymentStatus.paid)
               : b)
           .toList(),
       action: () => confirmCashPaymentUseCase(
