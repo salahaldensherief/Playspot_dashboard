@@ -85,10 +85,7 @@ class RequestCardActions extends StatelessWidget {
       variant: AppButtonVariant.primary,
       height: 34.h,
       onPressed: () {
-        requestsCubit.markAsAttended(
-          request.id,
-          isCanteenOrder: isCanteen,
-        );
+        requestsCubit.markAsAttended(request.id, isCanteenOrder: isCanteen);
       },
     );
   }
@@ -106,7 +103,8 @@ class _LiveApproveExtensionDialog extends StatefulWidget {
   });
 
   @override
-  State<_LiveApproveExtensionDialog> createState() => _LiveApproveExtensionDialogState();
+  State<_LiveApproveExtensionDialog> createState() =>
+      _LiveApproveExtensionDialogState();
 }
 
 class _LiveApproveExtensionDialogState
@@ -165,11 +163,15 @@ class _LiveRejectExtensionDialog extends StatefulWidget {
   });
 
   @override
-  State<_LiveRejectExtensionDialog> createState() => _LiveRejectExtensionDialogState();
+  State<_LiveRejectExtensionDialog> createState() =>
+      _LiveRejectExtensionDialogState();
 }
 
-class _LiveRejectExtensionDialogState extends State<_LiveRejectExtensionDialog> {
-  final _reasonController = TextEditingController(text: 'لا يوجد وقت متاح بعد الحجز الحالي');
+class _LiveRejectExtensionDialogState
+    extends State<_LiveRejectExtensionDialog> {
+  final _reasonController = TextEditingController(
+    text: 'لا يوجد وقت متاح بعد الحجز الحالي',
+  );
 
   @override
   void dispose() {
@@ -181,7 +183,10 @@ class _LiveRejectExtensionDialogState extends State<_LiveRejectExtensionDialog> 
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: AppColors.cardBackground,
-      title: AppText.subHeading(AppStrings.rejectExtensionTitle, fontSize: 16.sp),
+      title: AppText.subHeading(
+        AppStrings.rejectExtensionTitle,
+        fontSize: 16.sp,
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,7 +198,9 @@ class _LiveRejectExtensionDialogState extends State<_LiveRejectExtensionDialog> 
             maxLines: 2,
             decoration: InputDecoration(
               labelText: AppStrings.rejectionReasonField,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
             ),
           ),
         ],
