@@ -65,8 +65,7 @@ class _DashboardShellState extends State<DashboardShell> {
     }
 
     final loungeId = user.loungeId?.trim();
-    final identity =
-        '${user.id}|${_permissionRole(user)}|${loungeId ?? ''}';
+    final identity = '${user.id}|${_permissionRole(user)}|${loungeId ?? ''}';
     if (_loadedPermissionIdentity == identity) return;
     _loadedPermissionIdentity = identity;
 
