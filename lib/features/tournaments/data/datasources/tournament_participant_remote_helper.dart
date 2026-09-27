@@ -75,35 +75,30 @@ class TournamentParticipantRemoteHelper {
   }
 
   Future<void> approvePayment(String participantId) async {
-    try {
-      await client.rpc('approve_tournament_payment', params: {'p_participant_id': participantId});
-    } catch (e) {
-      try {
-        await client.rpc('approve_tournament_payment', params: {'participant_id': participantId});
-      } catch (e2) {
-        AppLogger.warning('approve_tournament_payment error', e2);
-        rethrow;
-      }
-    }
+    await client.rpc(
+      'review_tournament_payment_for_participant',
+      params: {
+        'p_participant_id': participantId,
+        'p_approved': true,
+        'p_reason': null,
+      },
+    );
   }
 
   Future<void> rejectPayment(String participantId, String reason) async {
-    try {
-      await client.rpc('reject_tournament_payment', params: {
-        'p_participant_id': participantId,
-        'p_reason': reason,
-      });
-    } catch (e) {
-      try {
-        await client.rpc('reject_tournament_payment', params: {
-          'participant_id': participantId,
-          'reason': reason,
-        });
-      } catch (e2) {
-        AppLogger.warning('reject_tournament_payment error', e2);
-        rethrow;
-      }
+    final cleanReason = reason.trim();
+    if (cleanReason.isEmpty) {
+      throw ArgumentError('Rejection reason is required');
     }
+
+    await client.rpc(
+      'review_tournament_payment_for_participant',
+      params: {
+        'p_participant_id': participantId,
+        'p_approved': false,
+        'p_reason': cleanReason,
+      },
+    );
   }
 
   Future<void> recordCashPayment(String participantId) async {
