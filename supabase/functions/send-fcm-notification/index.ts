@@ -158,6 +158,35 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    const { data: settings, error: settingsError } = await supabase
+      .from("notification_settings")
+      .select(
+        "push_enabled, booking_updates, offers_enabled, events_enabled, system_notifications",
+      )
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (settingsError) {
+      console.error(
+        "Failed to load notification settings:",
+        settingsError.message,
+      );
+    }
+
+    const notificationType = String(record.type ?? "general");
+    if (!shouldDeliverPush(notificationType, settings ?? null)) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Push disabled by user preference",
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
     if (!profile?.fcm_token) {
       return new Response(JSON.stringify({ success: true, message: "User has no FCM token" }), {
         status: 200,
@@ -184,7 +213,7 @@ Deno.serve(async (req: Request) => {
       ? record.metadata as Record<string, unknown>
       : {};
     const data: Record<string, string> = {
-      type: stringifyDataValue(record.type ?? "general"),
+      type: stringifyDataValue(notificationType),
     };
 
     for (const [key, value] of Object.entries(metadata)) {
