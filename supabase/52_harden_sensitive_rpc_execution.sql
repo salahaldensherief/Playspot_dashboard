@@ -329,4 +329,37 @@ GRANT EXECUTE ON FUNCTION public.submit_tournament_payment(
   uuid, uuid, uuid, numeric, text, text
 ) TO service_role, supabase_auth_admin;
 
+
+
+-- Legacy administrative helpers are not used by the current clients.
+-- Keep internal/account provisioning commands service-only and remove anon access
+-- from read helpers that remain available to authenticated users.
+REVOKE EXECUTE ON FUNCTION public.create_lounge_with_admin(
+  text, text, text, text, text
+) FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public.create_lounge_with_admin(
+  text, text, text, text, text
+) TO service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.get_all_bookings_admin(
+  uuid, text, integer, integer
+) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.get_all_bookings_admin(
+  uuid, text, integer, integer
+) TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.get_current_user_role()
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.get_current_user_role()
+TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.is_lounge_member_or_admin(uuid)
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.is_lounge_member_or_admin(uuid)
+TO authenticated, service_role, supabase_auth_admin;
+
 COMMIT;
