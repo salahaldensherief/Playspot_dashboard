@@ -72,4 +72,12 @@ BEGIN
   END LOOP;
 END $$;
 
+
+DROP POLICY IF EXISTS activity_types_read_all
+ON public.activity_types;
+DROP POLICY IF EXISTS "Cities are viewable by everyone"
+ON public.cities;
+DROP POLICY IF EXISTS "Public can read reviews"
+ON public.lounge_reviews;
+
 COMMIT;
