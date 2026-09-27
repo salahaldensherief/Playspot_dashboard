@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'app_button.dart';
 
 class AppDialog extends StatelessWidget {
   final String title;
@@ -115,23 +116,16 @@ class AppDialog extends StatelessWidget {
           style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp),
         ),
         actions: [
-          TextButton(
+          AppButton(
+            text: cancelText ?? 'cancel'.tr(),
+            variant: AppButtonVariant.outlined,
             onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              cancelText ?? 'cancel'.tr(),
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
-            ),
           ),
-          ElevatedButton(
+          SizedBox(width: 12.w),
+          AppButton(
+            text: confirmText ?? 'confirm'.tr(),
+            backgroundColor: confirmColor,
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: confirmColor ?? AppColors.neonBlue,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-            ),
-            child: Text(
-              confirmText ?? 'confirm'.tr(),
-              style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.bold),
-            ),
           ),
         ],
       ),

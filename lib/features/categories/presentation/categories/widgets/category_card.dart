@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
-import '../../../data/entities/category_entity.dart';
+import '../../../domain/entities/category_entity.dart';
 
 class CategoryCard extends StatelessWidget {
   final CategoryEntity category;
@@ -29,7 +29,7 @@ class CategoryCard extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(12.r),
             decoration: BoxDecoration(
-              color: AppColors.neonBlue.withOpacity(0.1),
+              color: AppColors.neonBlue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Icon(Icons.category, color: AppColors.neonBlue, size: 24.r),

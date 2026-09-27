@@ -6,7 +6,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import 'package:uuid/uuid.dart';
-import '../../../data/entities/city_entity.dart';
+import '../../../domain/entities/city_entity.dart';
 
 class CityDialog extends StatefulWidget {
   final CityEntity? city;
@@ -66,20 +66,20 @@ class _CityDialogState extends State<CityDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.city == null ? 'Add City' : 'Edit City',
+                widget.city == null ? AppStrings.addCity : AppStrings.edit,
                 style: TextStyle(color: AppColors.textPrimary, fontSize: 24.sp, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 24.h),
               AppTextField(
                 label: AppStrings.nameAr,
-                hintText: 'الاسم بالعربية',
+                hintText: AppStrings.nameAr,
                 controller: _nameArController,
                 validator: AppValidator.validateRequired,
               ),
               SizedBox(height: 16.h),
               AppTextField(
                 label: AppStrings.nameEn,
-                hintText: 'City Name (English)',
+                hintText: AppStrings.nameEn,
                 controller: _nameEnController,
                 validator: AppValidator.validateRequired,
               ),
@@ -91,7 +91,7 @@ class _CityDialogState extends State<CityDialog> {
                     onChanged: (v) => setState(() => _isActive = v ?? true),
                     activeColor: AppColors.neonBlue,
                   ),
-                  Text('Is Active', style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp)),
+                  Text(AppStrings.isActive, style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp)),
                 ],
               ),
               SizedBox(height: 32.h),

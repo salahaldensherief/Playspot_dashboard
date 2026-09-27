@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/room_model.dart';
 
@@ -17,31 +18,70 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
 
   @override
   Future<List<RoomModel>> getRooms(String loungeId) async {
-    // Technical Guard: Always filter by lounge_id to prevent data leaks or dashboard clutter
-    final response = await _supabase
-        .from('rooms_detailed_view')
-        .select()
-        .eq('lounge_id', loungeId)
-        .order('name');
-    return (response as List).map((json) => RoomModel.fromJson(json)).toList();
+    // Query rooms table directly with room_activities relation
+    try {
+      final response = await _supabase
+          .from('rooms')
+          .select('*, room_activities(*, activity_types(*))')
+          .eq('lounge_id', loungeId)
+          .neq('status', 'deleted')
+          .order('created_at', ascending: true);
+      return (response as List)
+          .map((json) => RoomModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint(
+        '⚠️ [ROOM_DATA_SOURCE] Joint query failed ($e), falling back to plain rooms query...',
+      );
+      final response = await _supabase
+          .from('rooms')
+          .select('*')
+          .eq('lounge_id', loungeId)
+          .neq('status', 'deleted');
+      return (response as List)
+          .map((json) => RoomModel.fromJson(json))
+          .toList();
+    }
   }
 
   @override
-  Stream<List<RoomModel>> watchRooms(String loungeId) {
-    // Technical Guard: Realtime filter enforced
-    return _supabase
-        .from('rooms')
-        .stream(primaryKey: ['id'])
-        .eq('lounge_id', loungeId)
-        .asyncMap((event) async {
-          // Re-fetch from view to get names and joined data
-          return await getRooms(loungeId);
-        });
+  Stream<List<RoomModel>> watchRooms(String loungeId) async* {
+    // 1. Initial REST fetch for instant & guaranteed loading
+    try {
+      final initialRooms = await getRooms(loungeId);
+      yield initialRooms;
+    } catch (e) {
+      debugPrint('⚠️ [ROOM_DATA_SOURCE] Initial REST getRooms failed: $e');
+    }
+
+    // 2. Realtime Stream subscription with graceful exception fallback
+    try {
+      final stream = _supabase
+          .from('rooms')
+          .stream(primaryKey: ['id'])
+          .eq('lounge_id', loungeId)
+          .asyncMap((_) async => await getRooms(loungeId));
+
+      await for (final rooms in stream) {
+        yield rooms;
+      }
+    } catch (e) {
+      debugPrint(
+        '⚠️ [ROOM_DATA_SOURCE] Realtime stream failed ($e). Falling back to REST data.',
+      );
+      try {
+        final fallbackRooms = await getRooms(loungeId);
+        yield fallbackRooms;
+      } catch (_) {}
+    }
   }
 
   @override
   Future<void> updateRoomStatus(String roomId, String status) async {
-    await _supabase.from('rooms').update({'status': status}).eq('id', roomId);
+    await _supabase.rpc(
+      'set_room_operational_status',
+      params: {'p_room_id': roomId, 'p_status': status},
+    );
   }
 
   @override
@@ -60,20 +100,29 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
     await _syncRoomActivities(room.id, room.activityIds);
   }
 
-  Future<void> _syncRoomActivities(String roomId, List<String> activityIds) async {
+  Future<void> _syncRoomActivities(
+    String roomId,
+    List<String> activityIds,
+  ) async {
     await _supabase.from('room_activities').delete().eq('room_id', roomId);
-    
+
     if (activityIds.isNotEmpty) {
-      final inserts = activityIds.map((id) => {
-        'room_id': roomId,
-        'activity_type_id': id,
-      }).toList();
+      final inserts = activityIds
+          .map((id) => {'room_id': roomId, 'activity_type_id': id})
+          .toList();
       await _supabase.from('room_activities').insert(inserts);
     }
   }
 
   @override
   Future<void> deleteRoom(String roomId) async {
-    await _supabase.from('rooms').update({'status': 'deleted'}).eq('id', roomId);
+    try {
+      await _supabase.from('rooms').delete().eq('id', roomId);
+    } catch (_) {
+      await _supabase
+          .from('rooms')
+          .update({'status': 'deleted', 'is_available': false})
+          .eq('id', roomId);
+    }
   }
 }

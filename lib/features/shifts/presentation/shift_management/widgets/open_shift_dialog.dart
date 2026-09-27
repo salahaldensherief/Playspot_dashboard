@@ -61,7 +61,7 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
               AppTextField(
                 controller: _controller,
                 label: AppStrings.startingCash,
-                hintText: '0.00',
+                hintText: AppStrings.hintAmount,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (val) {
                   if (val == null || val.isEmpty) return AppStrings.fieldRequired;
@@ -74,14 +74,22 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
         ),
         actionsPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
         actions: [
-          TextButton.icon(
-            onPressed: () {
-              Navigator.pop(context);
-              context.read<LoginCubit>().logout();
-            },
-            icon: const Icon(Icons.logout, size: 18, color: AppColors.danger),
-            label: Text(AppStrings.logout, style: const TextStyle(color: AppColors.danger)),
-          ),
+          if (widget.isDismissible)
+            AppButton(
+              text: AppStrings.cancel,
+              variant: AppButtonVariant.outlined,
+              onPressed: () => Navigator.pop(context),
+            )
+          else
+            AppButton(
+              text: AppStrings.logout,
+              icon: Icons.logout,
+              variant: AppButtonVariant.danger,
+              onPressed: () {
+                Navigator.pop(context);
+                context.read<LoginCubit>().logout();
+              },
+            ),
           SizedBox(width: 8.w),
           AppButton(
             text: AppStrings.openNewShift,

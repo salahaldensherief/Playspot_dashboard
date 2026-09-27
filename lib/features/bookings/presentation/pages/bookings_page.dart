@@ -4,24 +4,33 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
+import 'package:play_spot_dashboard/core/responsive/app_breakpoints.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_booking_dialog.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_details_dialog.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_filter_bar.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/bookings_active_grid.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/bookings_cockpit_stats_bar.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/bookings_cockpit_tabs.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/bookings_collapsible_occupancy.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/bookings_requests_sidebar.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_ticker.dart';
+import 'package:play_spot_dashboard/features/lounges/presentation/cubit/extras_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
-import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_state.dart';
+import 'package:play_spot_dashboard/features/lounges/presentation/widgets/lounge_discount_banner.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
+import 'package:play_spot_dashboard/features/shifts/domain/entities/shift_entity.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_state.dart';
-import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/admin_shift_monitoring_bar.dart';
-import '../../../../core/responsive/responsive.dart';
-import '../../../lounges/domain/entities/lounge.dart';
-import '../../domain/entities/booking.dart';
-import '../cubit/booking_cubit.dart';
-import '../cubit/booking_state.dart';
-import '../widgets/booking_card.dart';
-import '../widgets/add_booking_dialog.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/shift_header_banner.dart';
 
-import '../widgets/booking_details_dialog.dart';
-
+/// Redesigned Modern & Immersive Web Bookings & Live Sessions Page
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
 
@@ -31,168 +40,94 @@ class BookingsPage extends StatefulWidget {
 
 class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late SessionTickerNotifier _sessionTickerNotifier;
+  late ScrollController _mainScrollController;
+
+  int _selectedTabIndex = 0;
+  bool _isTableView = false;
+
+  BookingFilterState _filterState = const BookingFilterState();
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() => setState(() {}));
-    
+    _tabController = TabController(length: 4, vsync: this);
+    _sessionTickerNotifier = SessionTickerNotifier();
+    _mainScrollController = ScrollController();
+
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging && mounted) {
+        setState(() => _selectedTabIndex = _tabController.index);
+      }
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final user = context.read<LoginCubit>().state.user;
-      context.read<BookingCubit>().startWatchingBookings(loungeId: user?.loungeId);
-      context.read<LoungeCubit>().fetchLounges();
+      final loungeId = user?.loungeId;
+      _initRealtimeStreams(loungeId);
     });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _sessionTickerNotifier.dispose();
+    _mainScrollController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final user = context.read<LoginCubit>().state.user;
-    final loungeId = user?.loungeId ?? '';
+  void _initRealtimeStreams(String? loungeId) {
+    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
 
-    return DashboardLayout(
-      title: AppStrings.bookings,
-      activeRoute: 'Bookings',
-      isScrollable: true,
-      child: MultiBlocListener(
-        listeners: [
-          BlocListener<BookingCubit, BookingState>(
-            listenWhen: (previous, current) => previous.status != current.status,
-            listener: (context, state) {
-              if (state.status == BookingStatusState.failure) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.errorMessage ?? AppStrings.actionFailed), backgroundColor: AppColors.danger),
-                );
-              }
-            },
-          ),
-        ],
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (user?.isLoungeOwner == true || user?.isManager == true)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 24),
-                child: AdminShiftMonitoringBar(),
-              ),
-            
-            _buildLiveStatsHeader(context),
-            
-            SizedBox(height: 24.h),
-            
-            _buildTopToolbar(context, loungeId),
-            
-            SizedBox(height: 24.h),
-
-            // Responsive TabBar - No TabBarView
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.cardBackground,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: AppColors.borderDefault),
-              ),
-              child: TabBar(
-                controller: _tabController,
-                indicatorSize: TabBarIndicatorSize.tab,
-                dividerColor: Colors.transparent,
-                indicator: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8.r),
-                  color: AppColors.neonBlue.withOpacity(0.1),
-                ),
-                labelColor: AppColors.neonBlue,
-                unselectedLabelColor: AppColors.textSecondary,
-                labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
-                tabs: [
-                  Tab(text: AppStrings.activeBookings),
-                  Tab(text: AppStrings.pendingRequests),
-                  Tab(text: AppStrings.finishedToday),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 32.h),
-
-            BlocBuilder<BookingCubit, BookingState>(
-              builder: (context, state) {
-                if (state.status == BookingStatusState.loading && state.bookings.isEmpty) {
-                  return const Center(child: Padding(
-                    padding: EdgeInsets.all(100),
-                    child: CircularProgressIndicator(color: AppColors.neonBlue),
-                  ));
-                }
-
-                final List<Booking> displayedBookings;
-                String emptyMsg = '';
-                bool isPending = false;
-                bool isAudit = false;
-
-                switch (_tabController.index) {
-                  case 0:
-                    displayedBookings = state.bookings.where((b) => b.status == BookingStatus.upcoming).toList();
-                    emptyMsg = AppStrings.noActiveBookings;
-                    break;
-                  case 1:
-                    displayedBookings = state.bookings.where((b) => b.status == BookingStatus.pending).toList();
-                    emptyMsg = AppStrings.noNewRequests;
-                    isPending = true;
-                    break;
-                  case 2:
-                    displayedBookings = state.bookings.where((b) => b.status == BookingStatus.completed).toList();
-                    emptyMsg = AppStrings.noFinishedBookings;
-                    isAudit = true;
-                    break;
-                  default:
-                    displayedBookings = [];
-                }
-
-                if (displayedBookings.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 60.h),
-                      child: Column(
-                        children: [
-                          Icon(Icons.inbox_outlined, size: 48.r, color: AppColors.textMuted),
-                          SizedBox(height: 16.h),
-                          AppText.body(emptyMsg, color: AppColors.textSecondary),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                return _buildBookingWrap(context, displayedBookings, isPending: isPending, isAudit: isAudit);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
+    context.read<BookingCubit>().startWatchingBookings(loungeId: cleanLoungeId);
+    if (cleanLoungeId != null) {
+      context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId);
+      context.read<RoomCubit>().watchRooms(cleanLoungeId);
+      context.read<ExtrasCubit>().loadExtras(cleanLoungeId);
+    }
+    context.read<LoungeCubit>().fetchLounges();
   }
 
-  Widget _buildBookingWrap(BuildContext context, List<Booking> bookings, {required bool isPending, bool isAudit = false}) {
-    final shiftState = context.read<ShiftCubit>().state;
-    final activeShiftId = shiftState.activeShift?.id;
-    final cubit = context.read<BookingCubit>();
+  Future<void> _handleRefresh() async {
+    final user = context.read<LoginCubit>().state.user;
+    final loungeId = user?.loungeId;
+    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
 
-    return Wrap(
-      spacing: 20.r,
-      runSpacing: 20.r,
-      children: bookings.map((booking) => BookingCard(
-        key: ValueKey('booking_${booking.id}'),
-        booking: booking,
-        onApprove: isPending ? () => cubit.approveBooking(booking.id) : null,
-        onReject: isPending ? () => cubit.rejectBooking(booking.id) : null,
-        onConfirmPayment: !isPending && !isAudit && booking.paymentStatus != PaymentStatus.paid
-            ? () => _showBookingDetails(context, booking)
-            : null,
-      )).toList(),
-    );
+    context.read<BookingCubit>().startWatchingBookings(loungeId: cleanLoungeId, forceRefresh: true);
+    if (cleanLoungeId != null) {
+      context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId, forceRefresh: true);
+      context.read<RoomCubit>().watchRooms(cleanLoungeId, forceRefresh: true);
+      context.read<ExtrasCubit>().loadExtras(cleanLoungeId, forceRefresh: true);
+    }
+    await context.read<LoungeCubit>().fetchLounges();
+  }
+
+  List<Booking> _applyFilters(List<Booking> raw, ShiftEntity? activeShift) {
+    return raw.where((b) {
+      if (_filterState.searchQuery.isNotEmpty) {
+        final q = _filterState.searchQuery.toLowerCase().trim();
+        final nameMatch = (b.userName ?? '').toLowerCase().contains(q);
+        final phoneMatch = (b.userPhone ?? '').contains(q);
+        final roomMatch = b.roomName.toLowerCase().contains(q);
+        final idMatch = b.id.toLowerCase().contains(q);
+        if (!nameMatch && !phoneMatch && !roomMatch && !idMatch) return false;
+      }
+      if (_filterState.selectedRoomId != null && b.roomId != _filterState.selectedRoomId) {
+        return false;
+      }
+      if (_filterState.selectedStatus != null && b.status != _filterState.selectedStatus) {
+        return false;
+      }
+      if (_filterState.selectedTimeFilter == 'current_shift') {
+        if (!BookingState.isBookingInCurrentShiftOrToday(b, activeShift)) return false;
+      } else if (_filterState.selectedTimeFilter == 'morning' && b.date.hour >= 16) {
+        return false;
+      } else if (_filterState.selectedTimeFilter == 'evening' && b.date.hour < 16) {
+        return false;
+      }
+      return true;
+    }).toList();
   }
 
   void _showBookingDetails(BuildContext context, Booking booking) {
@@ -219,241 +154,172 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildLiveStatsHeader(BuildContext context) {
-    return BlocBuilder<BookingCubit, BookingState>(
-      builder: (context, state) {
-        final activeCount = state.bookings.where((b) => b.status == BookingStatus.upcoming).length;
-        final pendingCount = state.bookings.where((b) => b.status == BookingStatus.pending).length;
-        final totalRevenue = state.bookings
-            .where((b) => b.status == BookingStatus.completed)
-            .fold(0.0, (sum, item) => sum + item.totalPrice);
-
-        return Responsive(
-          mobile: Column(
-            children: [
-              _buildMiniStatCard(AppStrings.activeSessions, activeCount.toString(), AppColors.neonBlue, Icons.sports_esports),
-              SizedBox(height: 12.h),
-              _buildMiniStatCard(AppStrings.pendingRequests, pendingCount.toString(), AppColors.neonPurple, Icons.notification_important),
-            ],
-          ),
-          desktop: Row(
-            children: [
-              Expanded(child: _buildMiniStatCard(AppStrings.activeSessions, activeCount.toString(), AppColors.neonBlue, Icons.sports_esports)),
-              SizedBox(width: 24.w),
-              Expanded(child: _buildMiniStatCard(AppStrings.pendingRequests, pendingCount.toString(), AppColors.neonPurple, Icons.notification_important)),
-              SizedBox(width: 24.w),
-              Expanded(child: _buildMiniStatCard(AppStrings.dailyTotal, "${totalRevenue.toStringAsFixed(0)} ${AppStrings.egp}", AppColors.success, Icons.account_balance_wallet)),
-            ],
-          ),
-        );
-      },
+  void _showAddBookingModal(BuildContext context, String loungeId) {
+    context.read<RoomCubit>().watchRooms(loungeId);
+    showDialog(
+      context: context,
+      useRootNavigator: false,
+      builder: (_) => AddBookingDialog(loungeId: loungeId),
     );
   }
 
-  Widget _buildMiniStatCard(String label, String value, Color color, IconData icon) {
-    return Container(
-      padding: EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(8.r),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: 20.r),
-          ),
-          SizedBox(width: 16.w),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppText.body(label, fontSize: 12.sp, color: AppColors.textSecondary),
-              AppText.heading(value, fontSize: 18.sp, color: color),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  @override
+  Widget build(BuildContext context) {
+    final loginState = context.watch<LoginCubit>().state;
+    final user = loginState.user;
+    final loungeId = user?.loungeId ?? '';
+    final userLounge = loginState.userLounge;
+    final isDesktop = AppBreakpoints.isDesktop(context);
 
-  Widget _buildTabContent(BuildContext context, List<Booking> bookings, {required bool isPending, bool isAudit = false, required String emptyMsg}) {
-    if (bookings.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inbox_outlined, size: 48.r, color: AppColors.textMuted),
-            SizedBox(height: 16.h),
-            AppText.body(emptyMsg, color: AppColors.textSecondary),
-          ],
-        ),
-      );
-    }
-
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(vertical: 8.h),
-      child: _buildBookingGrid(context, context.read<BookingCubit>(), bookings, isPending: isPending, isAudit: isAudit),
-    );
-  }
-
-  Widget _buildTopToolbar(BuildContext context, String loungeId) {
-    final user = context.read<LoginCubit>().state.user;
-    final isMobile = Responsive.isMobile(context);
-
-    return BlocBuilder<LoungeCubit, LoungeState>(
-      buildWhen: (previous, current) => previous.lounges != current.lounges,
-      builder: (context, state) {
-        Lounge? currentLounge;
-        if (state.lounges.isNotEmpty) {
-          final found = state.lounges.where((l) => l.id == loungeId).toList();
-          currentLounge = found.isNotEmpty ? found.first : state.lounges.first;
-        }
-        final isOpen = currentLounge?.isOpen ?? true;
-        
-        return Container(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground, 
-            borderRadius: BorderRadius.circular(12.r), 
-            border: Border.all(color: AppColors.borderDefault),
-          ),
-          child: Flex(
-            direction: isMobile ? Axis.vertical : Axis.horizontal,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: isMobile ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-            children: [
-              Row(
-                children: [
-                  Icon(isOpen ? Icons.door_front_door : Icons.door_back_door, color: isOpen ? AppColors.success : AppColors.danger),
-                  SizedBox(width: 12.w),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppText.subHeading(
-                        isOpen ? AppStrings.loungeIsOpen : AppStrings.loungeIsClosed, 
-                        color: isOpen ? AppColors.success : AppColors.danger, 
-                        fontSize: 16.sp,
-                      ),
-                      AppText.body(
-                        isOpen ? AppStrings.usersCanBookNow : AppStrings.loungeIsHidden, 
-                        fontSize: 12.sp,
-                      ),
-                    ],
-                  ),
-                ],
+    return SessionTickerScope(
+      ticker: _sessionTickerNotifier,
+      child: Scaffold(
+        backgroundColor: AppColors.scaffoldBackground,
+        endDrawer: !isDesktop
+            ? BookingsRequestsSidebar(
+                isDrawer: true,
+                onCloseDrawer: () => Navigator.of(context).pop(),
+              )
+            : null,
+        body: DashboardLayout(
+          title: AppStrings.bookings,
+          activeRoute: 'Bookings',
+          isScrollable: false,
+          child: MultiBlocListener(
+            listeners: [
+              BlocListener<LoginCubit, LoginState>(
+                listenWhen: (previous, current) => previous.user?.loungeId != current.user?.loungeId,
+                listener: (context, state) => _initRealtimeStreams(state.user?.loungeId),
               ),
-              if (isMobile) SizedBox(height: 16.h),
-              Row(
-                mainAxisAlignment: isMobile ? MainAxisAlignment.spaceBetween : MainAxisAlignment.end,
+              BlocListener<BookingCubit, BookingState>(
+                listenWhen: (previous, current) => previous.status != current.status,
+                listener: (context, state) {
+                  if (state.status == BookingStatusState.failure) {
+                    final errMsg = state.errorMessage ?? AppStrings.actionFailed;
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(errMsg), backgroundColor: AppColors.danger),
+                    );
+                  }
+                },
+              ),
+            ],
+            child: RefreshIndicator(
+              onRefresh: _handleRefresh,
+              color: AppColors.neonBlue,
+              backgroundColor: AppColors.cardBackground,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      final roomCubit = context.read<RoomCubit>();
-                      final bookingCubit = context.read<BookingCubit>();
-                      final shiftCubit = context.read<ShiftCubit>();
-                      
-                      roomCubit.watchRooms(loungeId);
-                      showDialog(
-                        context: context,
-                        builder: (context) => MultiBlocProvider(
-                          providers: [
-                            BlocProvider.value(value: roomCubit),
-                            BlocProvider.value(value: bookingCubit),
-                            BlocProvider.value(value: shiftCubit),
-                          ],
-                          child: AddBookingDialog(loungeId: loungeId),
+                  // Main Operations Workspace
+                  Expanded(
+                    flex: 7,
+                    child: CustomScrollView(
+                      controller: _mainScrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        SliverToBoxAdapter(child: LoungeDiscountBanner(lounge: userLounge)),
+                        const SliverToBoxAdapter(child: ShiftHeaderBanner()),
+                        SliverToBoxAdapter(child: SizedBox(height: 12.h)),
+                        SliverToBoxAdapter(
+                          child: BookingsCockpitStatsBar(
+                            loungeId: loungeId,
+                            userLounge: userLounge,
+                            onNewBooking: () => _showAddBookingModal(context, loungeId),
+                          ),
                         ),
-                      );
-                    },
-                    icon: const Icon(Icons.add_circle_outline, color: Colors.white),
-                    label: AppText.body(AppStrings.newBooking, color: Colors.white, fontWeight: FontWeight.bold),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.neonBlue,
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                        SliverToBoxAdapter(child: SizedBox(height: 14.h)),
+                        SliverToBoxAdapter(
+                          child: BookingsCollapsibleOccupancy(
+                            loungeId: loungeId,
+                            initialExpanded: !AppBreakpoints.isMobile(context),
+                          ),
+                        ),
+                        SliverToBoxAdapter(child: SizedBox(height: 16.h)),
+                        SliverToBoxAdapter(
+                          child: BookingFilterBar(
+                            filterState: _filterState,
+                            onFilterChanged: (newState) => setState(() => _filterState = newState),
+                            onResetFilters: () => setState(() => _filterState = const BookingFilterState()),
+                          ),
+                        ),
+                        SliverToBoxAdapter(child: SizedBox(height: 14.h)),
+                        SliverToBoxAdapter(
+                          child: Container(
+                            color: AppColors.scaffoldBackground,
+                            padding: EdgeInsets.symmetric(vertical: 4.h),
+                            child: BookingsCockpitTabs(
+                              tabController: _tabController,
+                              userLounge: userLounge,
+                              isDesktop: isDesktop,
+                              isTableView: _isTableView,
+                              onToggleTableView: () => setState(() => _isTableView = !_isTableView),
+                            ),
+                          ),
+                        ),
+                        SliverToBoxAdapter(child: SizedBox(height: 14.h)),
+                        ..._buildActiveBookingsView(context, userLounge),
+                        SliverToBoxAdapter(child: SizedBox(height: 40.h)),
+                      ],
                     ),
                   ),
-                  if (user?.canToggleLoungeStatus == true) ...[
-                    SizedBox(width: 24.w),
-                    if (!isMobile) AppText.body(isOpen ? AppStrings.closeLounge : AppStrings.openLounge, fontWeight: FontWeight.bold),
-                    if (!isMobile) SizedBox(width: 8.w),
-                    Switch(
-                      value: isOpen, 
-                      activeColor: AppColors.success, 
-                      onChanged: (val) => context.read<LoungeCubit>().toggleLoungeStatus(loungeId, val),
+
+                  // Desktop Realtime Sidebar
+                  if (isDesktop) ...[
+                    SizedBox(width: 16.w),
+                    const Expanded(
+                      flex: 3,
+                      child: BookingsRequestsSidebar(),
                     ),
                   ],
                 ],
               ),
-            ],
+            ),
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSectionHeader(String title, int count, Color color) {
-    return Row(
-      children: [
-        Container(width: 4.w, height: 24.h, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2.r))),
-        SizedBox(width: 12.w),
-        AppText.heading(title, fontSize: 20.sp),
-        SizedBox(width: 12.w),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-          decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12.r)),
-          child: AppText.body(count.toString(), color: color, fontWeight: FontWeight.bold),
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildBookingGrid(BuildContext context, BookingCubit cubit, List<Booking> bookings, {required bool isPending, bool isAudit = false}) {
-    if (bookings.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(24.r),
-        decoration: BoxDecoration(color: AppColors.cardBackground.withOpacity(0.5), borderRadius: BorderRadius.circular(12.r), border: Border.all(color: AppColors.borderDefault)),
-        child: Center(child: AppText.body(isAudit ? AppStrings.noFinishedBookings : (isPending ? AppStrings.noNewRequests : AppStrings.noActiveBookings), color: AppColors.textSecondary)),
-      );
-    }
+  List<Widget> _buildActiveBookingsView(BuildContext context, dynamic userLounge) {
+    return [
+      BlocBuilder<BookingCubit, BookingState>(
+        buildWhen: (prev, curr) => prev.bookings != curr.bookings || prev.status != curr.status,
+        builder: (context, bookingState) {
+          return BlocBuilder<ShiftCubit, ShiftState>(
+            buildWhen: (prev, curr) => prev.activeShift != curr.activeShift,
+            builder: (context, shiftState) {
+              final activeShift = shiftState.activeShift;
 
-    final shiftState = context.read<ShiftCubit>().state;
-    final activeShiftId = shiftState.activeShift?.id;
+              if (bookingState.status == BookingStatusState.loading && bookingState.bookings.isEmpty) {
+                return const SliverToBoxAdapter(
+                  child: GridShimmer(itemCount: 4, aspectRatio: 1.3),
+                );
+              }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Calculate dynamic column count based on available width
-        int crossAxisCount = 3;
-        if (constraints.maxWidth < 900) crossAxisCount = 2;
-        if (constraints.maxWidth < 600) crossAxisCount = 1;
+              final List<Booking> list = _selectedTabIndex == 0
+                  ? bookingState.activeBookings
+                  : (_selectedTabIndex == 1
+                      ? bookingState.pendingBookings
+                      : (_selectedTabIndex == 2
+                          ? bookingState.currentShiftBookings(activeShift: activeShift, userLounge: userLounge)
+                          : bookingState.currentShiftCancelledBookings(activeShift: activeShift, userLounge: userLounge)));
 
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 20.r,
-            mainAxisSpacing: 20.r,
-            childAspectRatio: 0.9, // Dynamic ratio instead of fixed mainAxisExtent
-          ),
-          itemCount: bookings.length,
-          itemBuilder: (context, index) {
-            final booking = bookings[index];
-            return BookingCard(
-              key: ValueKey('booking_${booking.id}'),
-              booking: booking,
-              onApprove: isPending ? () => cubit.approveBooking(booking.id) : null,
-              onReject: isPending ? () => cubit.rejectBooking(booking.id) : null,
-              onConfirmPayment: !isPending && !isAudit && booking.paymentStatus != PaymentStatus.paid
-                  ? () => _showBookingDetails(context, booking)
-                  : null,
-            );
-          },
-        );
-      },
-    );
+              final filtered = _applyFilters(list, activeShift);
+
+              return SliverToBoxAdapter(
+                child: BookingsActiveGrid(
+                  bookings: filtered,
+                  isTableView: _isTableView,
+                  onShowDetails: (b) => _showBookingDetails(context, b),
+                  onApprove: (id) => context.read<BookingCubit>().approveBooking(id),
+                  onReject: (id) => context.read<BookingCubit>().rejectBooking(id),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    ];
   }
 }

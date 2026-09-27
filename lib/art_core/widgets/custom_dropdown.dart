@@ -22,6 +22,11 @@ class CustomDropdown<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveItems = items.toSet().toList();
+    if (value != null && !effectiveItems.contains(value)) {
+      effectiveItems.add(value as T);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -35,7 +40,7 @@ class CustomDropdown<T> extends StatelessWidget {
         ),
         SizedBox(height: 8.h),
         DropdownButtonFormField<T>(
-          value: value,
+          initialValue: value,
           isExpanded: true,
           dropdownColor: AppColors.cardBackground,
           style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
@@ -56,7 +61,7 @@ class CustomDropdown<T> extends StatelessWidget {
               borderSide: const BorderSide(color: AppColors.neonBlue),
             ),
           ),
-          items: items.map((e) => DropdownMenuItem(
+          items: effectiveItems.map((e) => DropdownMenuItem<T>(
             value: e,
             child: Text(itemLabel(e)),
           )).toList(),

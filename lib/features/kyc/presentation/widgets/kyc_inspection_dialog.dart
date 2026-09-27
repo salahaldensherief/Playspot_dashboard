@@ -4,6 +4,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_cached_image.dart';
 import '../../domain/entities/kyc_request.dart';
 import '../cubit/kyc_cubit.dart';
 
@@ -74,7 +75,7 @@ class KycInspectionDialog extends StatelessWidget {
                     child: Container(
                       padding: EdgeInsets.all(24.r),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(color: AppColors.borderDefault),
                       ),
@@ -85,6 +86,8 @@ class KycInspectionDialog extends StatelessWidget {
                           SizedBox(height: 16.h),
                           _buildDetailRow(Icons.person_outline, AppStrings.fullName, request.ownerName),
                           _buildDetailRow(Icons.email_outlined, AppStrings.email, request.ownerEmail),
+                          if (request.ownerPhone.isNotEmpty)
+                            _buildDetailRow(Icons.phone_outlined, AppStrings.phoneNumber, request.ownerPhone),
                           _buildDetailRow(Icons.business_outlined, AppStrings.lounges, request.loungeName),
                           
                           const Spacer(),
@@ -105,10 +108,7 @@ class KycInspectionDialog extends StatelessWidget {
                           SizedBox(height: 12.h),
                           AppButton(
                             text: AppStrings.reject,
-                            onPressed: () {
-                              cubit.reviewKyc(userId: request.userId, approve: false);
-                              Navigator.pop(context);
-                            },
+                            onPressed: () => _showRejectionDialog(context),
                             variant: AppButtonVariant.outlined,
                             width: double.infinity,
                           ),
@@ -142,13 +142,9 @@ class KycInspectionDialog extends StatelessWidget {
               border: Border.all(color: AppColors.borderDefault),
             ),
             clipBehavior: Clip.antiAlias,
-            child: Image.network(
-              url,
+            child: AppCachedImage(
+              imageUrl: url,
               fit: BoxFit.contain,
-              loadingBuilder: (context, child, progress) => progress == null 
-                  ? child 
-                  : const Center(child: CircularProgressIndicator()),
-              errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image_outlined, size: 48, color: AppColors.danger)),
             ),
           ),
         ),
@@ -185,9 +181,85 @@ class KycInspectionDialog extends StatelessWidget {
         backgroundColor: Colors.transparent,
         insetPadding: EdgeInsets.all(40.r),
         child: InteractiveViewer(
-          child: Image.network(url),
+          child: AppCachedImage(imageUrl: url, fit: BoxFit.contain),
         ),
       ),
+    );
+  }
+
+  void _showRejectionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => _KycRejectionDialog(
+        onConfirm: (notes) {
+          cubit.reviewKyc(
+            userId: request.userId,
+            approve: false,
+            notes: notes,
+          );
+          Navigator.pop(dialogCtx);
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
+}
+
+class _KycRejectionDialog extends StatefulWidget {
+  final Function(String notes) onConfirm;
+  const _KycRejectionDialog({required this.onConfirm});
+
+  @override
+  State<_KycRejectionDialog> createState() => _KycRejectionDialogState();
+}
+
+class _KycRejectionDialogState extends State<_KycRejectionDialog> {
+  final _notesController = TextEditingController();
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.cardBackground,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      title: AppText.heading(AppStrings.rejectKyc, fontSize: 18.sp),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppText.body(AppStrings.rejectReasonLabel),
+          SizedBox(height: 12.h),
+          TextField(
+            controller: _notesController,
+            maxLines: 3,
+            style: const TextStyle(color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              hintText: AppStrings.rejectionReasonField,
+              hintStyle: const TextStyle(color: AppColors.textSecondary),
+              filled: true,
+              fillColor: Colors.black26,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.outlined,
+          onPressed: () => Navigator.pop(context),
+        ),
+        AppButton(
+          text: AppStrings.reject,
+          variant: AppButtonVariant.danger,
+          onPressed: () => widget.onConfirm(_notesController.text.trim()),
+        ),
+      ],
     );
   }
 }

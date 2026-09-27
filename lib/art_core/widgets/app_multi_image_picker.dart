@@ -3,7 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
-import '../theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 
 class SelectedImage {
   final Uint8List bytes;
@@ -66,7 +66,7 @@ class _AppMultiImagePickerState extends State<AppMultiImagePicker> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking images: $e'), backgroundColor: AppColors.danger),
+          SnackBar(content: Text(AppStrings.errorPickingImages(e.toString())), backgroundColor: AppColors.danger),
         );
       }
     }
@@ -144,7 +144,7 @@ class _AppMultiImagePickerState extends State<AppMultiImagePicker> {
                             color: AppColors.danger,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.close, color: Colors.white, size: 16),
+                          child: const Icon(Icons.close, color: AppColors.textPrimary, size: 16),
                         ),
                       ),
                     ),
@@ -169,7 +169,7 @@ class _AppMultiImagePickerState extends State<AppMultiImagePicker> {
                         Icon(Icons.add_photo_alternate_outlined, color: AppColors.textSecondary, size: 24.r),
                         SizedBox(height: 4.h),
                         Text(
-                          'Add',
+                          AppStrings.add,
                           style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp),
                         ),
                       ],

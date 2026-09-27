@@ -8,11 +8,12 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
-import 'package:play_spot_dashboard/features/permissions/presentation/cubit/permissions_cubit.dart';
+import '../../../../../art_core/widgets/app_cached_image.dart';
 import '../shift_cubit.dart';
 import '../shift_state.dart';
 import '../../../domain/entities/live_shift_overview_entity.dart';
 import 'close_shift_dialog.dart';
+import 'shift_handover_summary_dialog.dart';
 
 class AdminShiftMonitoringBar extends StatefulWidget {
   const AdminShiftMonitoringBar({super.key});
@@ -82,19 +83,47 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: AppColors.danger.withOpacity(0.1),
-        border: Border(bottom: BorderSide(color: AppColors.danger.withOpacity(0.2))),
+        color: AppColors.danger.withValues(alpha: 0.1),
+        border: Border(bottom: BorderSide(color: AppColors.danger.withValues(alpha: 0.2))),
       ),
       child: Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 20.r),
           SizedBox(width: 12.w),
           AppText.body(
-            "⚠️ No Active Shift Running | لا توجد وردية مفتوحة",
+            "No Active Shift Running | لا توجد وردية مفتوحة",
             color: AppColors.danger,
             fontWeight: FontWeight.bold,
           ),
           const Spacer(),
+          AppButton(
+            text: "فتح وردية فورية الآن",
+            icon: Icons.flash_on_rounded,
+            variant: AppButtonVariant.primary,
+            height: 32.h,
+            onPressed: () async {
+              final user = context.read<LoginCubit>().state.user;
+              if (user?.loungeId != null) {
+                final success = await context.read<ShiftCubit>().quickOpenShift(user!.loungeId!, 0.0);
+                if (mounted && success) {
+                  _refreshOverview();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          const Icon(Icons.check_circle_outline, color: AppColors.textPrimary),
+                          const SizedBox(width: 8),
+                          Text(AppStrings.shiftOpenedSuccess),
+                        ],
+                      ),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+          SizedBox(width: 8.w),
           IconButton(
             icon: Icon(Icons.refresh, color: AppColors.danger, size: 20.r),
             onPressed: _refreshOverview,
@@ -121,19 +150,24 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
         color: AppColors.cardBackground,
         border: Border(bottom: BorderSide(color: AppColors.borderDefault)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Row(
         children: [
           // Cashier Profile
-          CircleAvatar(
-            radius: 24.r,
-            backgroundColor: AppColors.neonBlue.withOpacity(0.1),
-            backgroundImage: overview.cashierAvatar != null ? NetworkImage(overview.cashierAvatar ?? '') : null,
-            child: overview.cashierAvatar == null 
-              ? Icon(Icons.person, color: AppColors.neonBlue, size: 24.r) 
-              : null,
+          Builder(
+            builder: (context) {
+              final bool hasAvatar = overview.cashierAvatar != null && overview.cashierAvatar!.trim().isNotEmpty;
+              return CircleAvatar(
+                radius: 24.r,
+                backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
+                backgroundImage: hasAvatar ? AppCachedImage.provider(overview.cashierAvatar) : null,
+                child: !hasAvatar 
+                  ? Icon(Icons.person, color: AppColors.neonBlue, size: 24.r) 
+                  : null,
+              );
+            },
           ),
           SizedBox(width: 16.w),
           Column(
@@ -196,10 +230,15 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 20.r,
-                backgroundImage: overview.cashierAvatar != null ? NetworkImage(overview.cashierAvatar ?? '') : null,
-                child: overview.cashierAvatar == null ? Icon(Icons.person, size: 20.r) : null,
+              Builder(
+                builder: (context) {
+                  final bool hasAvatar = overview.cashierAvatar != null && overview.cashierAvatar!.trim().isNotEmpty;
+                  return CircleAvatar(
+                    radius: 20.r,
+                    backgroundImage: hasAvatar ? AppCachedImage.provider(overview.cashierAvatar) : null,
+                    child: !hasAvatar ? Icon(Icons.person, size: 20.r) : null,
+                  );
+                },
               ),
               SizedBox(width: 12.w),
               Expanded(
@@ -256,16 +295,21 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
       context: context,
       builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        title: Text("Force Close Shift", style: TextStyle(color: AppColors.textPrimary)),
-        content: Text("Are you sure you want to force close the current shift for ${overview.cashierName ?? 'this cashier'}?"),
+        title: Text(AppStrings.forceCloseShift, style: const TextStyle(color: AppColors.textPrimary)),
+        content: Text(AppStrings.confirmForceCloseMsg(overview.cashierName ?? '')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
-          TextButton(
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.outlined,
+            onPressed: () => Navigator.pop(diagContext),
+          ),
+          AppButton(
+            text: AppStrings.yesCloseIt,
+            variant: AppButtonVariant.danger,
             onPressed: () {
               Navigator.pop(diagContext);
               _showCloseDialog(context, overview);
             },
-            child: Text("Yes, Close It", style: TextStyle(color: AppColors.danger)),
           ),
         ],
       ),
@@ -281,12 +325,18 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
       context: context,
       useRootNavigator: false,
       builder: (diagContext) => CloseShiftDialog(
-        onConfirm: (actualCash, notes) {
+        onConfirm: (actualCash, notes) async {
           final shiftId = overview.shiftId;
           if (shiftId != null) {
-            shiftCubit.closeShift(shiftId, actualCash, notes, user?.loungeId ?? '');
             Navigator.pop(diagContext);
+            await shiftCubit.closeShift(shiftId, actualCash, notes, user?.loungeId ?? '');
             _refreshOverview();
+            if (context.mounted && shiftCubit.state.lastClosedShift != null) {
+              showDialog(
+                context: context,
+                builder: (_) => ShiftHandoverSummaryDialog(shift: shiftCubit.state.lastClosedShift!),
+              );
+            }
           }
         },
       ),

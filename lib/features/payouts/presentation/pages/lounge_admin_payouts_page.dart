@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
-import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:intl/intl.dart';
+import '../cubit/payout_cubit.dart';
+import '../cubit/payout_state.dart';
 
 class LoungeAdminPayoutsPage extends StatefulWidget {
   const LoungeAdminPayoutsPage({super.key});
@@ -19,81 +20,199 @@ class LoungeAdminPayoutsPage extends StatefulWidget {
 }
 
 class _LoungeAdminPayoutsPageState extends State<LoungeAdminPayoutsPage> {
-  List<Map<String, dynamic>> _payouts = [];
-  bool _isLoading = true;
-
   @override
   void initState() {
     super.initState();
     _fetchPayouts();
   }
 
-  Future<void> _fetchPayouts() async {
+  void _fetchPayouts() {
     final loungeId = context.read<LoginCubit>().state.user?.loungeId;
-    if (loungeId == null) return;
+    if (loungeId != null) {
+      context.read<PayoutCubit>().loadLoungePayouts(loungeId);
+    }
+  }
 
-    try {
-      final response = await sl<SupabaseClient>()
-          .from('payouts')
-          .select()
-          .eq('lounge_id', loungeId)
-          .order('created_at', ascending: false);
-      
-      setState(() {
-        _payouts = List<Map<String, dynamic>>.from(response);
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
+  Widget _buildStatusBadge(String status) {
+    switch (status) {
+      case 'pending':
+        return StatusBadge.warning('PENDING');
+      case 'approved':
+        return StatusBadge.info('APPROVED');
+      case 'processing':
+        return StatusBadge(text: 'PROCESSING', color: Colors.purpleAccent);
+      case 'paid':
+        return StatusBadge.success('PAID');
+      case 'failed':
+        return StatusBadge.danger('FAILED');
+      case 'cancelled':
+        return StatusBadge(text: 'CANCELLED', color: Colors.grey);
+      case 'reversed':
+        return StatusBadge(text: 'REVERSED', color: Colors.deepOrange);
+      case 'needs_review':
+        return StatusBadge(text: 'NEEDS REVIEW', color: Colors.redAccent);
+      default:
+        return StatusBadge(text: status.toUpperCase(), color: AppColors.textPrimary);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(24.r),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppStrings.myPayoutsHistory,
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 28.sp,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Orbitron',
-            ),
-          ),
-          SizedBox(height: 32.h),
-          _isLoading 
-            ? const TableShimmer(columns: 5)
-            : _payouts.isEmpty 
-              ? Center(child: Text(AppStrings.noPayoutHistoryFound, style: const TextStyle(color: AppColors.textSecondary)))
-              : DataTableWidget(
-                  columns: [AppStrings.date, AppStrings.period, AppStrings.totalPrice, AppStrings.status, AppStrings.notes],
-                  rows: _payouts.map((p) => DataRow(
-                    cells: [
-                      DataCell(Text(DateFormat('MMM dd, yyyy').format(DateTime.parse(p['created_at'])), style: const TextStyle(color: AppColors.textPrimary))),
-                      DataCell(Text('${p['period_start']} ${AppStrings.back} ${p['period_end']}', style: const TextStyle(color: AppColors.textSecondary))),
-                      DataCell(
-                        Text(
-                          '\$${((p['amount'] as num?) ?? 0).toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            color: AppColors.neonGreen,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),                      DataCell(
-                        p['status'] == 'paid' 
-                          ? StatusBadge.success(AppStrings.paid.toUpperCase())
-                          : StatusBadge.warning(AppStrings.pending.toUpperCase())
-                      ),
-                      DataCell(Text(p['notes'] ?? '-', style: const TextStyle(color: AppColors.textMuted))),
-                    ],
-                  )).toList(),
+    return BlocConsumer<PayoutCubit, PayoutState>(
+      listener: (context, state) {
+        if (state.status == PayoutCubitStatus.failure && state.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.errorMessage!), backgroundColor: AppColors.danger),
+          );
+        }
+      },
+      builder: (context, state) {
+        final payouts = state.loungePayouts;
+        final hasNeedsReview = payouts.any((p) => p.status == 'needs_review');
+        final isLoading = state.status == PayoutCubitStatus.loading && payouts.isEmpty;
+        final loungeId = context.read<LoginCubit>().state.user?.loungeId;
+
+        return Padding(
+          padding: EdgeInsets.all(24.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppStrings.myPayoutsHistory,
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 28.sp,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Orbitron',
                 ),
-        ],
-      ),
+              ),
+              if (hasNeedsReview) ...[
+                SizedBox(height: 16.h),
+                Container(
+                  padding: EdgeInsets.all(12.r),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    border: Border.all(color: Colors.orange),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning, color: Colors.orange),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          AppStrings.payoutReconciliationWarning,
+                          style: const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              SizedBox(height: 24.h),
+              Expanded(
+                child: isLoading
+                    ? const TableShimmer(columns: 5)
+                    : state.status == PayoutCubitStatus.failure && payouts.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.error_outline_rounded, size: 48.r, color: AppColors.danger),
+                                SizedBox(height: 12.h),
+                                Text(
+                                  state.errorMessage ?? AppStrings.actionFailed,
+                                  style: const TextStyle(color: AppColors.textSecondary),
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 16.h),
+                                AppButton(
+                                  text: AppStrings.retry,
+                                  icon: Icons.refresh_rounded,
+                                  onPressed: _fetchPayouts,
+                                ),
+                              ],
+                            ),
+                          )
+                        : payouts.isEmpty
+                            ? Center(
+                                child: Text(
+                                  AppStrings.noPayoutHistoryFound,
+                                  style: const TextStyle(color: AppColors.textSecondary),
+                                ),
+                              )
+                            : SingleChildScrollView(
+                                child: Column(
+                                  children: [
+                                    SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: DataTableWidget(
+                                        columns: [
+                                          AppStrings.period,
+                                          AppStrings.totalAmount,
+                                          AppStrings.paymentsCount,
+                                          AppStrings.status,
+                                          AppStrings.transferMethod,
+                                          AppStrings.transferReference,
+                                          AppStrings.date,
+                                          AppStrings.paidAt,
+                                          AppStrings.notes,
+                                        ],
+                                        rows: payouts
+                                            .map((p) => DataRow(
+                                                  cells: [
+                                                    DataCell(Text('${p.periodStart} ${AppStrings.to} ${p.periodEnd}',
+                                                        style: const TextStyle(color: AppColors.textSecondary))),
+                                                    DataCell(
+                                                      Text(
+                                                        '\$${p.amount.toStringAsFixed(2)}',
+                                                        style: const TextStyle(
+                                                          color: AppColors.neonGreen,
+                                                          fontWeight: FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    DataCell(Text((p.paymentCount ?? '-').toString(),
+                                                        style: const TextStyle(color: AppColors.textSecondary))),
+                                                    DataCell(_buildStatusBadge(p.status)),
+                                                    DataCell(Text(p.transferMethod ?? '-',
+                                                        style: const TextStyle(color: AppColors.textSecondary))),
+                                                    DataCell(Text(p.transferReference ?? '-',
+                                                        style: const TextStyle(color: AppColors.textSecondary))),
+                                                    DataCell(Text(
+                                                        DateFormat('yyyy-MM-dd').format(p.createdAt),
+                                                        style: const TextStyle(color: AppColors.textSecondary))),
+                                                    DataCell(Text(
+                                                        p.paidAt != null
+                                                            ? DateFormat('yyyy-MM-dd hh:mm a').format(p.paidAt!)
+                                                            : '-',
+                                                        style: const TextStyle(color: AppColors.textSecondary))),
+                                                    DataCell(
+                                                        Text(p.notes ?? '-', style: const TextStyle(color: AppColors.textMuted))),
+                                                  ],
+                                                ))
+                                            .toList(),
+                                      ),
+                                    ),
+                                    if (state.loungePayoutsHasMore) ...[
+                                      SizedBox(height: 12.h),
+                                      AppButton(
+                                        text: AppStrings.loadMore,
+                                        variant: AppButtonVariant.outlined,
+                                        isLoading: state.loungePayoutsLoadingMore,
+                                        onPressed: state.loungePayoutsLoadingMore || loungeId == null
+                                            ? null
+                                            : () => context.read<PayoutCubit>().loadMoreLoungePayouts(loungeId),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

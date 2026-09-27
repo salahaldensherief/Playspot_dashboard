@@ -1,18 +1,232 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../lounges/domain/repositories/lounge_repository.dart';
-import 'dashboard_state.dart';
+import '../../../core/utils/app_logger.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/lounges/domain/repositories/lounge_repository.dart';
+import 'package:play_spot_dashboard/features/analytics/domain/usecases/watch_active_sessions_usecase.dart';
+import 'package:play_spot_dashboard/features/analytics/domain/usecases/extend_session_usecase.dart';
+import 'package:play_spot_dashboard/features/analytics/domain/usecases/add_extras_to_session_usecase.dart';
+import 'package:play_spot_dashboard/features/analytics/domain/usecases/end_session_usecase.dart';
+import 'package:play_spot_dashboard/features/analytics/domain/usecases/review_extension_request_usecase.dart';
+import 'package:play_spot_dashboard/features/analytics/domain/usecases/handle_client_request_action_usecase.dart';
+import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_state.dart';
 
 class DashboardCubit extends Cubit<DashboardState> {
   final LoungeRepository loungeRepository;
-  
-  DashboardCubit(this.loungeRepository) : super(DashboardState.init());
+  final WatchActiveSessionsUseCase watchActiveSessionsUseCase;
+  final ExtendSessionUseCase extendSessionUseCase;
+  final AddExtrasToSessionUseCase addExtrasToSessionUseCase;
+  final EndSessionUseCase endSessionUseCase;
+  final ReviewExtensionRequestUseCase reviewExtensionRequestUseCase;
+  final HandleClientRequestActionUseCase handleClientRequestActionUseCase;
+
+  StreamSubscription<List<Booking>>? _activeSessionsSubscription;
+  String? _watchedLoungeId;
+
+  DashboardCubit({
+    required this.loungeRepository,
+    required this.watchActiveSessionsUseCase,
+    required this.extendSessionUseCase,
+    required this.addExtrasToSessionUseCase,
+    required this.endSessionUseCase,
+    required this.reviewExtensionRequestUseCase,
+    required this.handleClientRequestActionUseCase,
+  }) : super(DashboardState.init());
+
+  void startWatchingActiveSessions({String? loungeId, bool forceRefresh = false}) {
+    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
+
+    if (!forceRefresh && _activeSessionsSubscription != null && _watchedLoungeId == cleanLoungeId) {
+      return;
+    }
+
+    _watchedLoungeId = cleanLoungeId;
+    _activeSessionsSubscription?.cancel();
+
+    _activeSessionsSubscription = watchActiveSessionsUseCase(loungeId: cleanLoungeId).listen(
+      (sessions) {
+        if (isClosed) return;
+
+        final activeList = sessions.where((b) => b.isBookingActive()).toList();
+
+        double totalRevenue = 0.0;
+        int totalExtrasCount = 0;
+        double totalPlayHours = 0.0;
+
+        for (final booking in activeList) {
+          totalRevenue += booking.totalPrice;
+          totalExtrasCount += booking.extras.length;
+          totalPlayHours += (booking.durationMinutes / 60.0);
+        }
+
+        final statsMap = {
+          'active_count': activeList.length,
+          'total_revenue': totalRevenue,
+          'total_extras_count': totalExtrasCount,
+          'total_play_hours': totalPlayHours,
+        };
+
+        emit(state.copyWith(
+          status: FeatureStatus.success,
+          activeSessionsList: activeList,
+          activeSessionsStats: statsMap,
+          activeSessions: activeList.length,
+        ));
+      },
+      onError: (error) {
+        if (isClosed) return;
+        AppLogger.error('[DASHBOARD_CUBIT] watchActiveSessions Error', error);
+        emit(state.copyWith(
+          status: FeatureStatus.failure,
+          errorMessage: error.toString(),
+        ));
+      },
+    );
+  }
+
+  Future<bool> extendSession(String bookingId, int additionalMinutes, {double? additionalCost}) async {
+    final result = await extendSessionUseCase(bookingId, additionalMinutes, additionalCost: additionalCost);
+    if (isClosed) return false;
+
+    return result.fold(
+      (failure) {
+        AppLogger.error('[DASHBOARD_CUBIT] extendSession Failed: ${failure.message}');
+        emit(state.copyWith(
+          status: FeatureStatus.failure,
+          errorMessage: failure.message,
+        ));
+        return false;
+      },
+      (_) {
+        AppLogger.info('[DASHBOARD_CUBIT] extendSession Succeeded');
+        if (_watchedLoungeId != null) {
+          startWatchingActiveSessions(loungeId: _watchedLoungeId, forceRefresh: true);
+        }
+        return true;
+      },
+    );
+  }
+
+  Future<bool> addExtrasToSession(String bookingId, List<Map<String, dynamic>> extras, double additionalCost) async {
+    final result = await addExtrasToSessionUseCase(bookingId, extras, additionalCost);
+    if (isClosed) return false;
+
+    return result.fold(
+      (failure) {
+        AppLogger.error('[DASHBOARD_CUBIT] addExtrasToSession Failed: ${failure.message}');
+        emit(state.copyWith(
+          status: FeatureStatus.failure,
+          errorMessage: failure.message,
+        ));
+        return false;
+      },
+      (_) {
+        AppLogger.info('[DASHBOARD_CUBIT] addExtrasToSession Succeeded');
+        if (_watchedLoungeId != null) {
+          startWatchingActiveSessions(loungeId: _watchedLoungeId, forceRefresh: true);
+        }
+        return true;
+      },
+    );
+  }
+
+  Future<bool> endSession(String bookingId) async {
+    final result = await endSessionUseCase(bookingId);
+    if (isClosed) return false;
+
+    return result.fold(
+      (failure) {
+        AppLogger.error('[DASHBOARD_CUBIT] endSession Failed: ${failure.message}');
+        emit(state.copyWith(
+          status: FeatureStatus.failure,
+          errorMessage: failure.message,
+        ));
+        return false;
+      },
+      (_) {
+        AppLogger.info('[DASHBOARD_CUBIT] endSession Succeeded');
+        return true;
+      },
+    );
+  }
+
+  Future<bool> reviewExtensionRequest({
+    required String bookingId,
+    required bool isApproved,
+    double? additionalCost,
+    String? reason,
+    int? requestedMinutes,
+    int? currentDurationMinutes,
+  }) async {
+    final result = await reviewExtensionRequestUseCase(
+      bookingId: bookingId,
+      isApproved: isApproved,
+      additionalCost: additionalCost,
+      reason: reason,
+      requestedMinutes: requestedMinutes,
+      currentDurationMinutes: currentDurationMinutes,
+    );
+
+    if (isClosed) return false;
+
+    return result.fold(
+      (failure) {
+        AppLogger.error('[DASHBOARD_CUBIT] reviewExtensionRequest Failed: ${failure.message}');
+        emit(state.copyWith(
+          status: FeatureStatus.failure,
+          errorMessage: failure.message,
+        ));
+        return false;
+      },
+      (_) {
+        AppLogger.info('[DASHBOARD_CUBIT] reviewExtensionRequest Succeeded');
+        return true;
+      },
+    );
+  }
+
+  Future<bool> handleClientRequestAction({
+    required String requestId,
+    required bool isCanteenOrder,
+    required bool approve,
+    String? bookingId,
+    int? extensionMinutes,
+    List<Map<String, dynamic>>? extraItems,
+    double? extraCost,
+  }) async {
+    final result = await handleClientRequestActionUseCase(
+      requestId: requestId,
+      isCanteenOrder: isCanteenOrder,
+      approve: approve,
+      bookingId: bookingId,
+      extensionMinutes: extensionMinutes,
+      extraItems: extraItems,
+      extraCost: extraCost,
+    );
+
+    if (isClosed) return false;
+
+    return result.fold(
+      (failure) {
+        AppLogger.error('[DASHBOARD_CUBIT] handleClientRequestAction Failed: ${failure.message}');
+        emit(state.copyWith(
+          status: FeatureStatus.failure,
+          errorMessage: failure.message,
+        ));
+        return false;
+      },
+      (_) {
+        AppLogger.info('[DASHBOARD_CUBIT] handleClientRequestAction Succeeded');
+        return true;
+      },
+    );
+  }
 
   Future<void> loadDashboardData({String? loungeId}) async {
     if (isClosed) return;
     emit(state.copyWith(status: FeatureStatus.loading));
     
     try {
-      // Fetch common stats
       final statsResult = await loungeRepository.getDashboardStats(loungeId);
       
       statsResult.fold(
@@ -29,14 +243,15 @@ class DashboardCubit extends Cubit<DashboardState> {
             occupancyTrend: (stats['occupancy_trend'] as num?)?.toDouble() ?? 0.0,
           );
 
-          // If Super Admin (no loungeId), fetch overview and charts
           if (loungeId == null) {
             final overviewResult = await loungeRepository.getDashboardOverview();
             final chartResult = await loungeRepository.getRevenueOverTime(30);
             final topResult = await loungeRepository.getTopLoungesByRevenue(10);
 
+            if (isClosed) return;
+
             overviewResult.fold(
-              (failure) => null, // Silently fail for sub-data or handle as needed
+              (failure) => null,
               (overview) {
                 newState = newState.copyWith(
                   totalLounges: (overview['total_lounges'] as num?)?.toInt() ?? 0,
@@ -57,11 +272,20 @@ class DashboardCubit extends Cubit<DashboardState> {
             topResult.fold((_) => null, (top) => newState = newState.copyWith(topLounges: top));
           }
 
+          if (isClosed) return;
           emit(newState.copyWith(status: FeatureStatus.success));
         },
       );
     } catch (e) {
-      emit(state.copyWith(status: FeatureStatus.failure, errorMessage: e.toString()));
+      if (!isClosed) {
+        emit(state.copyWith(status: FeatureStatus.failure, errorMessage: e.toString()));
+      }
     }
+  }
+
+  @override
+  Future<void> close() {
+    _activeSessionsSubscription?.cancel();
+    return super.close();
   }
 }

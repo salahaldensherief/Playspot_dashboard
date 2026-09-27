@@ -1,17 +1,43 @@
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/utils/paginated_result.dart';
 import '../models/promo_model.dart';
 import '../models/notification_model.dart';
 
 abstract class MarketingRemoteDataSource {
   Future<List<PromoModel>> getPromotions({String? loungeId, String? city});
   Future<void> createPromotion(PromoModel promo);
+  Future<void> updatePromotion(PromoModel promo);
   Future<void> deletePromotion(String id);
-  Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName);
+  Future<String> uploadPromoPoster(
+    Uint8List fileBytes,
+    String fileName,
+    String loungeId,
+  );
 
-  // Notifications
+  // Notifications & User Preferences
   Future<void> sendNotification(NotificationModel notification);
-  Future<List<NotificationModel>> getNotifications();
+  Future<List<NotificationModel>> getNotifications({String? userId});
+  Future<List<NotificationModel>> getNotificationsRpc({
+    String lang = 'ar',
+    int limit = 20,
+    int offset = 0,
+  });
+  Future<PaginatedResult<NotificationModel>> getNotificationsPage({
+    int page = 1,
+    int pageSize = 20,
+  });
+  Future<void> markNotificationRead(String notificationId);
+  Future<void> markAllNotificationsRead();
+  RealtimeChannel subscribeToUserNotifications(
+    String userId,
+    void Function(NotificationModel) onNewNotification,
+  );
+  Future<Map<String, dynamic>?> getUserNotificationSettings(String userId);
+  Future<void> updateUserNotificationSettings(
+    String userId,
+    Map<String, dynamic> settings,
+  );
 }
 
 class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
@@ -20,76 +46,304 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
   MarketingRemoteDataSourceImpl(this._supabase);
 
   @override
-  Future<List<PromoModel>> getPromotions({String? loungeId, String? city}) async {
-    var query = _supabase.from('promotions').select();
-    if (loungeId != null) query = query.eq('lounge_id', loungeId);
-    
-    // Add city filter if provided
-    if (city != null) {
-      // Assuming 'lounge' table has city and we join, or 'promotions' has city
-      // Usually promos are linked to lounges, so we might need a join or the promo itself has a city scope
-      // For now, let's assume 'city' is a column in 'promotions' or we filter after fetch if it's more complex
-      query = query.eq('city', city);
+  Future<List<PromoModel>> getPromotions({
+    String? loungeId,
+    String? city,
+  }) async {
+    try {
+      var query = _supabase.from('promotions').select();
+
+      if (loungeId != null && loungeId.trim().isNotEmpty) {
+        query = query.or('lounge_id.eq.${loungeId.trim()},lounge_id.is.null');
+      }
+
+      if (city != null && city.trim().isNotEmpty) {
+        query = query.eq('city', city.trim());
+      }
+
+      final response = await query.order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => PromoModel.fromJson(Map<String, dynamic>.from(json)))
+          .toList();
+    } catch (e) {
+      debugPrint(
+        '⚠️ [MARKETING_REMOTE] getPromotions error: $e, attempting plain select fallback',
+      );
+      try {
+        final response = await _supabase
+            .from('promotions')
+            .select()
+            .order('created_at', ascending: false);
+        return (response as List)
+            .map((json) => PromoModel.fromJson(Map<String, dynamic>.from(json)))
+            .toList();
+      } catch (e2) {
+        debugPrint(
+          '⚠️ [MARKETING_REMOTE] getPromotions plain fallback error: $e2',
+        );
+        return [];
+      }
     }
-
-    // Filter by expiration date (expires_at > now or expires_at is null)
-    final response = await query
-        .or('expires_at.gt.${DateTime.now().toIso8601String()},expires_at.is.null')
-        .order('created_at', ascending: false);
-
-    return (response as List).map((json) => PromoModel.fromJson(json)).toList();
   }
 
   @override
   Future<void> createPromotion(PromoModel promo) async {
-    final promoJson = promo.toJson();
-    final payload = {
-      ...promoJson,
-      'title': promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn,
-      'tag': promo.tagAr.isNotEmpty ? promo.tagAr : promo.tagEn,
-      'is_active': true,
-    };
+    final colors = promo.hexColors.length >= 2
+        ? promo.hexColors
+        : const ['#1E88E5', '#1565C0'];
 
-    // Clean up UUID fields: convert empty strings to null and remove if null
-    // to prevent Supabase/Postgres from failing on invalid UUID format
-    if (payload['id'] == null || (payload['id'] is String && (payload['id'] as String).isEmpty)) {
-      payload.remove('id'); // Let database generate the ID
+    await _supabase.rpc(
+      'create_promotion',
+      params: {
+        'p_lounge_id': promo.loungeId,
+        'p_room_id': promo.roomId,
+        'p_title_ar': promo.titleAr,
+        'p_title_en': promo.titleEn,
+        'p_tag_ar': promo.tagAr,
+        'p_tag_en': promo.tagEn,
+        'p_discount_type': promo.discountType,
+        'p_discount_value': promo.discountValue,
+        'p_expires_at': promo.expiresAt?.toIso8601String(),
+        'p_colors': colors,
+        'p_icon_key': promo.iconKey,
+        'p_image_url': promo.imageUrl,
+        'p_deep_link': promo.deepLink,
+        'p_target_audience': promo.targetAudience,
+      },
+    );
+  }
+
+  @override
+  Future<void> updatePromotion(PromoModel promo) async {
+    if (promo.id.isEmpty) {
+      throw Exception('Promotion ID is required for update');
     }
 
-    if (payload['room_id'] != null && payload['room_id'].toString().trim().isEmpty) {
-      payload['room_id'] = null;
-    }
-
-    if (payload['lounge_id'] != null && payload['lounge_id'].toString().trim().isEmpty) {
-      payload['lounge_id'] = null;
-    }
-
-    // Explicitly remove room_id if null to allow DB defaults or ensure clean insert
-    payload.removeWhere((key, value) => value == null && (key == 'room_id' || key == 'lounge_id'));
-
-    await _supabase.from('promotions').insert(payload);
+    await _supabase.rpc(
+      'update_promotion',
+      params: {
+        'p_promotion_id': promo.id,
+        'p_room_id': promo.roomId,
+        'p_title_ar': promo.titleAr,
+        'p_title_en': promo.titleEn,
+        'p_tag_ar': promo.tagAr,
+        'p_tag_en': promo.tagEn,
+        'p_discount_type': promo.discountType,
+        'p_discount_value': promo.discountValue,
+        'p_expires_at': promo.expiresAt?.toIso8601String(),
+        'p_colors': promo.hexColors,
+        'p_icon_key': promo.iconKey,
+        'p_image_url': promo.imageUrl,
+        'p_deep_link': promo.deepLink,
+        'p_target_audience': promo.targetAudience,
+      },
+    );
   }
 
   @override
   Future<void> deletePromotion(String id) async {
-    await _supabase.from('promotions').delete().eq('id', id);
+    final cleanId = id.trim();
+    if (cleanId.isEmpty) {
+      throw Exception('Promotion ID is required for delete');
+    }
+
+    await _supabase.rpc(
+      'delete_promotion',
+      params: {'p_promotion_id': cleanId},
+    );
   }
 
   @override
-  Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName) async {
-    final path = 'posters/${DateTime.now().millisecondsSinceEpoch}_$fileName';
-    await _supabase.storage.from('promo-assets').uploadBinary(path, fileBytes);
-    return _supabase.storage.from('promo-assets').getPublicUrl(path);
+  Future<String> uploadPromoPoster(
+    Uint8List fileBytes,
+    String fileName,
+    String loungeId,
+  ) async {
+    final sanitizedFileName = fileName.replaceAll(
+      RegExp(r'[^a-zA-Z0-9._-]'),
+      '_',
+    );
+    final cleanLoungeId = loungeId.trim();
+    if (cleanLoungeId.isEmpty) {
+      throw Exception('Lounge ID is required to upload a promotion poster.');
+    }
+    final path =
+        '$cleanLoungeId/posters/${DateTime.now().millisecondsSinceEpoch}_$sanitizedFileName';
+
+    await _supabase.storage
+        .from('promotion-assets')
+        .uploadBinary(path, fileBytes);
+
+    return _supabase.storage.from('promotion-assets').getPublicUrl(path);
   }
 
   @override
   Future<void> sendNotification(NotificationModel notification) async {
-    await _supabase.from('notifications').insert(notification.toJson());
+    await _supabase.rpc(
+      'send_user_notification',
+      params: {
+        'p_user_id': notification.userId,
+        'p_title_ar': notification.titleAr,
+        'p_title_en': notification.titleEn,
+        'p_body_ar': notification.bodyAr,
+        'p_body_en': notification.bodyEn,
+        'p_type': notification.type.toString().split('.').last,
+        'p_metadata': <String, dynamic>{},
+      },
+    );
   }
 
   @override
-  Future<List<NotificationModel>> getNotifications() async {
-    final response = await _supabase.from('notifications').select().order('created_at', ascending: false);
-    return (response as List).map((json) => NotificationModel.fromJson(json)).toList();
+  Future<List<NotificationModel>> getNotifications({String? userId}) async {
+    try {
+      var query = _supabase.from('notifications').select();
+      if (userId != null && userId.trim().isNotEmpty) {
+        query = query.eq('user_id', userId.trim());
+      }
+      final response = await query.order('created_at', ascending: false);
+      return (response as List)
+          .map((json) => NotificationModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('⚠️ [MARKETING_REMOTE] getNotifications query error: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<List<NotificationModel>> getNotificationsRpc({
+    String lang = 'ar',
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      final response = await _supabase.rpc(
+        'get_notifications',
+        params: {'p_lang': lang, 'p_limit': limit, 'p_offset': offset},
+      );
+      if (response != null && response is List) {
+        return response
+            .map(
+              (json) => NotificationModel.fromJson(
+                Map<String, dynamic>.from(json as Map),
+              ),
+            )
+            .toList();
+      }
+    } catch (e) {
+      debugPrint(
+        '⚠️ [MARKETING_REMOTE] get_notifications RPC error: $e, falling back to direct select',
+      );
+    }
+    return getNotifications();
+  }
+
+  @override
+  Future<PaginatedResult<NotificationModel>> getNotificationsPage({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final clampedPageSize = pageSize.clamp(1, 100);
+    final validPage = page < 1 ? 1 : page;
+
+    try {
+      final response = await _supabase.rpc(
+        'get_notifications_page',
+        params: {'p_page': validPage, 'p_page_size': clampedPageSize},
+      );
+
+      return PaginatedResult.fromRpcResponse<NotificationModel>(
+        response,
+        mapper: (json) => NotificationModel.fromJson(json),
+        requestedPage: validPage,
+        requestedPageSize: clampedPageSize,
+      );
+    } catch (e) {
+      debugPrint(
+        '⚠️ [MARKETING_REMOTE] get_notifications_page RPC error: $e, falling back',
+      );
+      final list = await getNotifications();
+      return PaginatedResult(
+        items: list,
+        totalCount: list.length,
+        page: validPage,
+        pageSize: clampedPageSize,
+      );
+    }
+  }
+
+  @override
+  Future<void> markNotificationRead(String notificationId) async {
+    await _supabase.rpc(
+      'mark_notification_read',
+      params: {'p_notification_id': notificationId},
+    );
+  }
+
+  @override
+  Future<void> markAllNotificationsRead() async {
+    await _supabase.rpc('mark_all_notifications_read');
+  }
+
+  @override
+  RealtimeChannel subscribeToUserNotifications(
+    String userId,
+    void Function(NotificationModel) onNewNotification,
+  ) {
+    final channel = _supabase
+        .channel('public:notifications:user_$userId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'notifications',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
+          callback: (payload) {
+            if (payload.newRecord.isNotEmpty) {
+              final newModel = NotificationModel.fromJson(payload.newRecord);
+              onNewNotification(newModel);
+            }
+          },
+        )
+        .subscribe();
+    return channel;
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getUserNotificationSettings(
+    String userId,
+  ) async {
+    try {
+      final response = await _supabase
+          .from('notification_settings')
+          .select()
+          .eq('user_id', userId)
+          .maybeSingle();
+      return response != null ? Map<String, dynamic>.from(response) : null;
+    } catch (e) {
+      debugPrint(
+        '⚠️ [MARKETING_DATA_SOURCE] getUserNotificationSettings error: $e',
+      );
+      return null;
+    }
+  }
+
+  @override
+  Future<void> updateUserNotificationSettings(
+    String userId,
+    Map<String, dynamic> settings,
+  ) async {
+    final payload = {
+      'user_id': userId,
+      ...settings,
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+    await _supabase
+        .from('notification_settings')
+        .upsert(payload, onConflict: 'user_id');
   }
 }

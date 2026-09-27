@@ -5,8 +5,8 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/stat_card.dart';
 import 'package:play_spot_dashboard/core/responsive/responsive.dart';
-import '../cubit/lounge_stats_cubit.dart';
-import '../cubit/lounge_stats_state.dart';
+import '../lounge_stats_cubit.dart';
+import '../lounge_stats_state.dart';
 import 'occupancy_gauge_card.dart';
 import 'status_alerts_card.dart';
 
@@ -32,15 +32,16 @@ class LoungeOwnerAnalyticsGrid extends StatelessWidget {
         return GridView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
+          addSemanticIndexes: false,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: Responsive.isMobile(context)
                 ? 1
                 : Responsive.isTablet(context)
                     ? 2
                     : 4,
-            crossAxisSpacing: 20.w,
-            mainAxisSpacing: 20.h,
-            mainAxisExtent: 180.h,
+            crossAxisSpacing: 16.w,
+            mainAxisSpacing: 16.h,
+            mainAxisExtent: 130.h.clamp(110.0, 160.0),
           ),
           children: [
             // Today's Revenue

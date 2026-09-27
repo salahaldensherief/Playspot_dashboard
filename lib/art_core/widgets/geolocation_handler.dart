@@ -7,7 +7,6 @@ import 'package:play_spot_dashboard/core/services/location_service.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/repositories/lounge_repository.dart';
-import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 
 class GeolocationHandler extends StatefulWidget {
   final Widget child;
@@ -18,8 +17,6 @@ class GeolocationHandler extends StatefulWidget {
 }
 
 class _GeolocationHandlerState extends State<GeolocationHandler> {
-  bool _locationCaptured = false;
-
   @override
   void initState() {
     super.initState();
@@ -46,18 +43,19 @@ class _GeolocationHandlerState extends State<GeolocationHandler> {
       
       if (position != null && mounted) {
         final cityName = await locationService.getCityFromPosition(position, context);
+        final safeCity = (cityName != null && cityName.trim().isNotEmpty) ? cityName.trim() : lounge.city;
         
         await sl<LoungeRepository>().updateLounge(
           lounge.copyWith(
             lat: position.latitude,
             lng: position.longitude,
-            city: cityName ?? lounge.city,
+            city: safeCity,
           ),
         );
         
         // Mark as captured in global state to prevent loops
-        loginCubit.emit(loginCubit.state.copyWith(locationCaptured: true));
-        debugPrint('${AppConstants.locationCaptureSuccess}${position.latitude}, ${position.longitude}, $cityName');
+        loginCubit.markLocationCaptured();
+        debugPrint('${AppConstants.locationCaptureSuccess}${position.latitude}, ${position.longitude}, $safeCity');
       }
     } catch (e) {
       debugPrint('${AppConstants.locationCaptureError}$e');

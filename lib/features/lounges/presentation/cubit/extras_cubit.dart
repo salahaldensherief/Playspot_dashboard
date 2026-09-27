@@ -8,9 +8,9 @@ class ExtrasCubit extends Cubit<ExtrasState> {
 
   ExtrasCubit(this.repository) : super(const ExtrasState());
 
-  Future<void> loadExtras(String loungeId) async {
+  Future<void> loadExtras(String loungeId, {bool forceRefresh = false}) async {
     emit(state.copyWith(status: ExtrasStatus.loading));
-    final result = await repository.getExtras(loungeId);
+    final result = await repository.getExtras(loungeId, forceRefresh: forceRefresh);
     
     if (isClosed) return;
 

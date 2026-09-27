@@ -7,9 +7,13 @@ class PayoutEntity extends Equatable {
   final double amount;
   final String periodStart;
   final String periodEnd;
-  final String status; // pending, paid
+  final String status; // pending, approved, processing, paid, failed, cancelled, reversed, needs_review
   final String? notes;
   final DateTime createdAt;
+  final DateTime? paidAt;
+  final String? transferReference;
+  final String? transferMethod;
+  final int? paymentCount;
 
   const PayoutEntity({
     required this.id,
@@ -21,10 +25,28 @@ class PayoutEntity extends Equatable {
     required this.status,
     this.notes,
     required this.createdAt,
+    this.paidAt,
+    this.transferReference,
+    this.transferMethod,
+    this.paymentCount,
   });
 
   @override
-  List<Object?> get props => [id, loungeId, loungeName, amount, periodStart, periodEnd, status, notes, createdAt];
+  List<Object?> get props => [
+        id,
+        loungeId,
+        loungeName,
+        amount,
+        periodStart,
+        periodEnd,
+        status,
+        notes,
+        createdAt,
+        paidAt,
+        transferReference,
+        transferMethod,
+        paymentCount,
+      ];
 }
 
 class PendingPayoutOverview extends Equatable {
