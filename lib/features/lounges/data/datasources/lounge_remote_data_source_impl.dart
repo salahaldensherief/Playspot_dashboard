@@ -28,23 +28,24 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
       _queryHelper.getOwnerBranches(ownerId);
 
   @override
-  Future<Map<String, dynamic>> addLoungeBranch(Map<String, dynamic> branchData) =>
-      _queryHelper.addLoungeBranch(branchData);
+  Future<Map<String, dynamic>> addLoungeBranch(
+    Map<String, dynamic> branchData,
+  ) => _queryHelper.addLoungeBranch(branchData);
 
   @override
   Future<Map<String, dynamic>> getMultiBranchOverview({
     required String ownerId,
     required DateTime startDate,
     required DateTime endDate,
-  }) =>
-      _queryHelper.getMultiBranchOverview(
-        ownerId: ownerId,
-        startDate: startDate,
-        endDate: endDate,
-      );
+  }) => _queryHelper.getMultiBranchOverview(
+    ownerId: ownerId,
+    startDate: startDate,
+    endDate: endDate,
+  );
 
   @override
-  Future<LoungeModel?> getLoungeById(String id) => _queryHelper.getLoungeById(id);
+  Future<LoungeModel?> getLoungeById(String id) =>
+      _queryHelper.getLoungeById(id);
 
   @override
   Future<Map<String, dynamic>> createLoungeWithOwner({
@@ -55,16 +56,15 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     String? city,
     String? address,
     String? phone,
-  }) =>
-      _queryHelper.createLoungeWithOwner(
-        email: email,
-        password: password,
-        ownerName: ownerName,
-        loungeName: loungeName,
-        city: city,
-        address: address,
-        phone: phone,
-      );
+  }) => _queryHelper.createLoungeWithOwner(
+    email: email,
+    password: password,
+    ownerName: ownerName,
+    loungeName: loungeName,
+    city: city,
+    address: address,
+    phone: phone,
+  );
 
   @override
   Future<void> updateLounge(String id, Map<String, dynamic> data) async {
@@ -100,7 +100,9 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
       await client.from('lounges').update(cleanData).eq('id', id);
       AppLogger.info('updateLounge Succeeded for id: $id');
     } on PostgrestException catch (e) {
-      AppLogger.error('updateLounge PostgrestException: ${e.message} (code: ${e.code}, details: ${e.details})');
+      AppLogger.error(
+        'updateLounge PostgrestException: ${e.message} (code: ${e.code}, details: ${e.details})',
+      );
       rethrow;
     } catch (e) {
       AppLogger.error('updateLounge Error: $e');
@@ -109,7 +111,8 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   }
 
   @override
-  Future<void> updateLoungeDiscount(String id, {
+  Future<void> updateLoungeDiscount(
+    String id, {
     required bool hasDiscount,
     required int discountPercentage,
     String? titleAr,
