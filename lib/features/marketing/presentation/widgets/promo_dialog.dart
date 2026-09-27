@@ -115,6 +115,7 @@ class _PromoDialogState extends State<PromoDialog> {
           imageUrl = await context.read<MarketingCubit>().uploadPromoPoster(
             _selectedImageBytes!,
             _selectedImageName ?? 'promo_poster.png',
+            widget.promo.loungeId,
           );
         }
 
