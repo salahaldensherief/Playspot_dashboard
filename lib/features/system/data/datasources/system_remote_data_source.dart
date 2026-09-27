@@ -77,8 +77,9 @@ class SystemRemoteDataSourceImpl implements SystemRemoteDataSource {
 
   @override
   Future<void> createAnnouncement(AnnouncementModel announcement) async {
-    final announcementId =
-        announcement.id.isNotEmpty ? announcement.id : const Uuid().v4();
+    final announcementId = announcement.id.isNotEmpty
+        ? announcement.id
+        : const Uuid().v4();
 
     await supabaseClient.rpc(
       'create_system_announcement',
