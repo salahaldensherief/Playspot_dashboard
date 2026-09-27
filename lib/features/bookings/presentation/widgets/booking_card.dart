@@ -54,13 +54,14 @@ class _BookingCardState extends State<BookingCard> {
         booking: widget.booking,
         onConfirmPayment: (amount, percent, reason) {
           context.read<BookingCubit>().confirmCashPayment(
-                widget.booking.id,
-                discountAmount: amount,
-                discountPercentage: percent,
-                discountReason: reason,
-              );
+            widget.booking.id,
+            discountAmount: amount,
+            discountPercentage: percent,
+            discountReason: reason,
+          );
         },
-        onCancel: () => context.read<BookingCubit>().rejectBooking(widget.booking.id),
+        onCancel: () =>
+            context.read<BookingCubit>().rejectBooking(widget.booking.id),
       ),
     );
   }
@@ -70,22 +71,25 @@ class _BookingCardState extends State<BookingCard> {
       context: context,
       useRootNavigator: false,
       builder: (_) => RoomDiscountDialog(
-        roomName: widget.booking.roomName.isNotEmpty ? widget.booking.roomName : AppStrings.roomLabel,
+        roomName: widget.booking.roomName.isNotEmpty
+            ? widget.booking.roomName
+            : AppStrings.roomLabel,
         currentPrice: widget.booking.totalPrice,
         onApplyDiscount: (amount, percent, reason) {
           context.read<BookingCubit>().confirmCashPayment(
-                widget.booking.id,
-                discountAmount: amount,
-                discountPercentage: percent,
-                discountReason: reason,
-              );
+            widget.booking.id,
+            discountAmount: amount,
+            discountPercentage: percent,
+            discountReason: reason,
+          );
         },
       ),
     );
   }
 
   bool _isPastStartTime(Booking booking) {
-    if (booking.status != BookingStatus.pending && booking.status != BookingStatus.upcoming) {
+    if (booking.status != BookingStatus.pending &&
+        booking.status != BookingStatus.upcoming) {
       return false;
     }
     try {
@@ -94,9 +98,16 @@ class _BookingCardState extends State<BookingCard> {
       if (parts.length < 2) return false;
       final hour = int.tryParse(parts[0]) ?? 0;
       final minute = int.tryParse(parts[1]) ?? 0;
-      final scheduledStart = DateTime(date.year, date.month, date.day, hour, minute);
+      final scheduledStart = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        hour,
+        minute,
+      );
       final now = DateTime.now();
-      return now.isAfter(scheduledStart) || now.isAtSameMomentAs(scheduledStart);
+      return now.isAfter(scheduledStart) ||
+          now.isAtSameMomentAs(scheduledStart);
     } catch (_) {
       return false;
     }
@@ -136,9 +147,13 @@ class _BookingCardState extends State<BookingCard> {
 
     final Color borderColor = _isHovered
         ? accent.withValues(alpha: 0.9)
-        : (hasAlertState ? accent.withValues(alpha: 0.55) : AppColors.borderDefault);
+        : (hasAlertState
+              ? accent.withValues(alpha: 0.55)
+              : AppColors.borderDefault);
 
-    final String shortId = booking.id.length > 8 ? booking.id.substring(0, 8) : booking.id;
+    final String shortId = booking.id.length > 8
+        ? booking.id.substring(0, 8)
+        : booking.id;
 
     return MouseRegion(
       onEnter: (_) {
@@ -159,7 +174,10 @@ class _BookingCardState extends State<BookingCard> {
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: borderColor, width: _isHovered || isOverdue ? 1.5 : 1.0),
+          border: Border.all(
+            color: borderColor,
+            width: _isHovered || isOverdue ? 1.5 : 1.0,
+          ),
           boxShadow: [
             BoxShadow(
               color: hasAlertState || _isHovered
@@ -205,7 +223,9 @@ class _BookingCardState extends State<BookingCard> {
                         ),
 
                         // 4) Live state
-                        if (booking.isCashPayment && isCanStartSession && !isInProgress) ...[
+                        if (booking.isCashPayment &&
+                            isCanStartSession &&
+                            !isInProgress) ...[
                           SizedBox(height: 8.h),
                           BookingCountdownTimer(
                             booking: booking,
@@ -221,7 +241,10 @@ class _BookingCardState extends State<BookingCard> {
                         BookingProductsPreview(booking: booking),
 
                         SizedBox(height: 12.h),
-                        Container(height: 1, color: AppColors.borderDefault.withValues(alpha: 0.6)),
+                        Container(
+                          height: 1,
+                          color: AppColors.borderDefault.withValues(alpha: 0.6),
+                        ),
                         SizedBox(height: 10.h),
 
                         // 6) Money
