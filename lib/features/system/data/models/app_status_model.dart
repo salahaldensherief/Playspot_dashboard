@@ -21,20 +21,20 @@ class AppStatusModel extends AppStatusEntity {
   factory AppStatusModel.fromJson(Map<String, dynamic> json) {
     return AppStatusModel(
       id: json['id']?.toString(),
-      isMaintenanceMode: json['is_maintenance_mode'] as bool? ?? false,
-      maintenanceMessageAr: json['maintenance_message_ar']?.toString() ?? '',
-      maintenanceMessageEn: json['maintenance_message_en']?.toString() ?? '',
-      expectedEndTime: json['expected_end_time'] != null
-          ? DateTime.tryParse(json['expected_end_time'].toString())
+      isMaintenanceMode: json['maintenance_mode'] as bool? ?? false,
+      maintenanceMessageAr: (json['maintenance_message_ar'] ?? json['maintenance_message'])?.toString() ?? '',
+      maintenanceMessageEn: (json['maintenance_message_en'] ?? json['maintenance_message'])?.toString() ?? '',
+      expectedEndTime: json['maintenance_until'] != null
+          ? DateTime.tryParse(json['maintenance_until'].toString())
           : null,
-      minAndroidVersion: json['min_android_version']?.toString() ?? '1.0.0',
-      minIosVersion: json['min_ios_version']?.toString() ?? '1.0.0',
-      latestAndroidVersion: json['latest_android_version']?.toString() ?? '1.0.0',
-      latestIosVersion: json['latest_ios_version']?.toString() ?? '1.0.0',
+      minAndroidVersion: json['min_supported_version_android']?.toString() ?? '1.0.0',
+      minIosVersion: json['min_supported_version_ios']?.toString() ?? '1.0.0',
+      latestAndroidVersion: json['latest_version_android']?.toString() ?? '1.0.0',
+      latestIosVersion: json['latest_version_ios']?.toString() ?? '1.0.0',
       storeUrlAndroid: json['store_url_android']?.toString() ?? '',
       storeUrlIos: json['store_url_ios']?.toString() ?? '',
-      updateMessageAr: json['update_message_ar']?.toString() ?? '',
-      updateMessageEn: json['update_message_en']?.toString() ?? '',
+      updateMessageAr: (json['update_message_ar'] ?? json['update_message'])?.toString() ?? '',
+      updateMessageEn: (json['update_message_en'] ?? json['update_message'])?.toString() ?? '',
       updatedAt: json['updated_at'] != null
           ? DateTime.tryParse(json['updated_at'].toString())
           : null,
@@ -44,14 +44,14 @@ class AppStatusModel extends AppStatusEntity {
   Map<String, dynamic> toJson() {
     return {
       if (id != null) 'id': id,
-      'is_maintenance_mode': isMaintenanceMode,
+      'maintenance_mode': isMaintenanceMode,
       'maintenance_message_ar': maintenanceMessageAr,
       'maintenance_message_en': maintenanceMessageEn,
-      'expected_end_time': expectedEndTime?.toIso8601String(),
-      'min_android_version': minAndroidVersion,
-      'min_ios_version': minIosVersion,
-      'latest_android_version': latestAndroidVersion,
-      'latest_ios_version': latestIosVersion,
+      'maintenance_until': expectedEndTime?.toIso8601String(),
+      'min_supported_version_android': minAndroidVersion,
+      'min_supported_version_ios': minIosVersion,
+      'latest_version_android': latestAndroidVersion,
+      'latest_version_ios': latestIosVersion,
       'store_url_android': storeUrlAndroid,
       'store_url_ios': storeUrlIos,
       'update_message_ar': updateMessageAr,
