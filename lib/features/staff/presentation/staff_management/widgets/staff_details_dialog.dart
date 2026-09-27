@@ -3,9 +3,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
-import 'package:play_spot_dashboard/features/staff/data/entities/staff_entity.dart';
+import 'package:play_spot_dashboard/features/staff/domain/entities/staff_entity.dart';
+
+import '../../../../../art_core/widgets/app_cached_image.dart';
 
 class StaffDetailsDialog extends StatelessWidget {
   final StaffEntity staff;
@@ -19,11 +22,16 @@ class StaffDetailsDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       title: Row(
         children: [
-          CircleAvatar(
-            radius: 20.r,
-            backgroundColor: AppColors.neonBlue.withOpacity(0.1),
-            backgroundImage: staff.avatarUrl != null ? NetworkImage(staff.avatarUrl!) : null,
-            child: staff.avatarUrl == null ? Icon(Icons.person, color: AppColors.neonBlue, size: 20.r) : null,
+          Builder(
+            builder: (context) {
+              final bool hasAvatar = staff.avatarUrl != null && staff.avatarUrl!.trim().isNotEmpty;
+              return CircleAvatar(
+                radius: 20.r,
+                backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
+                backgroundImage: hasAvatar ? AppCachedImage.provider(staff.avatarUrl) : null,
+                child: !hasAvatar ? Icon(Icons.person, color: AppColors.neonBlue, size: 20.r) : null,
+              );
+            },
           ),
           SizedBox(width: 12.w),
           Expanded(
@@ -71,9 +79,10 @@ class StaffDetailsDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(
+        AppButton(
+          text: AppStrings.close,
+          variant: AppButtonVariant.outlined,
           onPressed: () => Navigator.pop(context),
-          child: Text(AppStrings.close, style: const TextStyle(color: AppColors.textSecondary)),
         ),
       ],
     );
@@ -121,14 +130,9 @@ class StaffDetailsDialog extends StatelessWidget {
             ),
             clipBehavior: Clip.antiAlias,
             child: url != null 
-              ? Image.network(
-                  url, 
+              ? AppCachedImage(
+                  imageUrl: url, 
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image_outlined, color: AppColors.danger)),
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return const Center(child: CircularProgressIndicator(strokeWidth: 2));
-                  },
                 )
               : const Center(child: Icon(Icons.image_not_supported_outlined, color: AppColors.textSecondary)),
           ),
@@ -147,16 +151,13 @@ class StaffDetailsDialog extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             InteractiveViewer(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12.r),
-                child: Image.network(url),
-              ),
+              child: AppCachedImage(imageUrl: url),
             ),
             Positioned(
               top: 0,
               right: 0,
               child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                icon: const Icon(Icons.close, color: AppColors.textPrimary, size: 30),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
@@ -167,8 +168,16 @@ class StaffDetailsDialog extends StatelessWidget {
   }
 
   Widget _buildRoleBadge(String role) {
-    if (role == 'lounge_owner') return StatusBadge.secondary(AppStrings.manager);
-    if (role == 'manager') return StatusBadge.secondary(AppStrings.manager);
+    final cleanRole = role.toLowerCase().trim();
+    if (cleanRole == 'owner' || cleanRole == 'lounge_owner' || cleanRole == 'lounge_admin') {
+      return StatusBadge.secondary(AppStrings.loungeOwnerLabel);
+    }
+    if (cleanRole == 'manager') {
+      return StatusBadge.secondary(AppStrings.manager);
+    }
+    if (cleanRole == 'super_admin' || cleanRole == 'superadmin') {
+      return StatusBadge.secondary(AppStrings.superAdmin);
+    }
     return StatusBadge.info(AppStrings.cashierLabel);
   }
 }

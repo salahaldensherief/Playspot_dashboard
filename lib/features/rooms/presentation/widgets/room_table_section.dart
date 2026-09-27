@@ -72,7 +72,7 @@ class _RoomTableSectionState extends State<RoomTableSection> {
           backgroundColor: AppColors.mutedBackground,
           selectedColor: AppColors.neonBlue,
           labelStyle: TextStyle(
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         );

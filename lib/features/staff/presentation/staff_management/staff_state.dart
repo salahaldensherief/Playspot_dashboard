@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:play_spot_dashboard/features/staff/data/entities/staff_entity.dart';
+import 'package:play_spot_dashboard/features/staff/domain/entities/staff_entity.dart';
 
 enum StaffStatus {
   initial,

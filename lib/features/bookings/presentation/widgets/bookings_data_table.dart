@@ -13,9 +13,23 @@ import '../../domain/entities/booking.dart';
 import '../cubit/booking_state.dart';
 import 'booking_details_dialog.dart';
 
-class BookingsDataTable extends StatelessWidget {
+class BookingsDataTable extends StatefulWidget {
   final List<Booking>? filteredBookings;
   const BookingsDataTable({super.key, this.filteredBookings});
+
+  @override
+  State<BookingsDataTable> createState() => _BookingsDataTableState();
+}
+
+class _BookingsDataTableState extends State<BookingsDataTable> {
+  int _currentPage = 0;
+  final int _pageSize = 15;
+  String _selectedStatusFilter = 'all';
+
+  List<Booking> _applyStatusFilter(List<Booking> all) {
+    if (_selectedStatusFilter == 'all') return all;
+    return all.where((b) => b.status.toDbString() == _selectedStatusFilter).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,38 +38,231 @@ class BookingsDataTable extends StatelessWidget {
         if (state.status == BookingStatusState.loading && state.bookings.isEmpty) {
           return const TableShimmer(columns: 7);
         }
-        
-        final bookings = filteredBookings ?? state.bookings;
-        
-        return DataTableWidget(
-          columns: [
-            AppStrings.id,
-            AppStrings.userLabel, 
-            AppStrings.roomLabel, 
-            AppStrings.gaming, 
-            AppStrings.schedule, 
-            AppStrings.status, 
-            AppStrings.actions
+
+        final rawList = widget.filteredBookings ?? state.bookings;
+        final filteredList = _applyStatusFilter(rawList);
+        final totalCount = filteredList.length;
+        final totalPages = (totalCount / _pageSize).ceil();
+
+        final startIndex = _currentPage * _pageSize;
+        final endIndex = (startIndex + _pageSize) > totalCount ? totalCount : startIndex + _pageSize;
+        final pagedBookings = (startIndex < totalCount)
+            ? filteredList.sublist(startIndex, endIndex)
+            : <Booking>[];
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Status Filter Bar
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip('all', AppStrings.all),
+                  _buildFilterChip('pending', AppStrings.pending),
+                  _buildFilterChip('upcoming', AppStrings.upcoming),
+                  _buildFilterChip('in_progress', AppStrings.inProgress),
+                  _buildFilterChip('completed', AppStrings.completed),
+                  _buildFilterChip('cancelled', AppStrings.cancelled),
+                ],
+              ),
+            ),
+            SizedBox(height: 16.h),
+
+            // Data Table / Mobile Card ListView
+            DataTableWidget(
+              mobileCardBuilder: (ctx, index) {
+                final b = pagedBookings[index];
+                return _buildMobileBookingCard(ctx, b);
+              },
+              columns: [
+                AppStrings.id,
+                AppStrings.userLabel,
+                AppStrings.roomLabel,
+                AppStrings.gaming,
+                AppStrings.schedule,
+                AppStrings.status,
+                AppStrings.actions
+              ],
+              rows: pagedBookings.map((b) => DataRow(
+                onSelectChanged: (_) => _showBookingDetails(context, b),
+                cells: [
+                  DataCell(AppText.body(b.id.length >= 8 ? b.id.substring(0, 8) : b.id, color: AppColors.textPrimary)),
+                  DataCell(AppText.body(b.userName ?? '${AppStrings.userLabel} ${b.userId.length >= 5 ? b.userId.substring(0, 5) : b.userId}', color: AppColors.textPrimary)),
+                  DataCell(AppText.body(b.roomName, color: AppColors.textSecondary)),
+                  DataCell(AppText.body(AppStrings.gaming, color: AppColors.textSecondary)),
+                  DataCell(AppText.body(b.startTime, color: AppColors.textSecondary)),
+                  DataCell(_getStatusBadge(b)),
+                  DataCell(_buildActions(context, b)),
+                ],
+              )).toList(),
+            ),
+
+            // Pagination Controls Footer
+            SizedBox(height: 16.h),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(10.r),
+                border: Border.all(color: AppColors.borderDefault),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    totalCount == 0
+                        ? '0 - 0 / 0'
+                        : '${startIndex + 1} - $endIndex / $totalCount',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+                  ),
+                  Row(
+                    children: [
+                      AppButton(
+                        text: AppStrings.back,
+                        variant: AppButtonVariant.outlined,
+                        fontSize: 12.sp,
+                        height: 48.h,
+                        onPressed: _currentPage > 0
+                            ? () => setState(() => _currentPage--)
+                            : null,
+                      ),
+                      SizedBox(width: 12.w),
+                      Text(
+                        '${_currentPage + 1} / ${totalPages == 0 ? 1 : totalPages}',
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13.sp,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      AppButton(
+                        text: AppStrings.next,
+                        variant: AppButtonVariant.outlined,
+                        fontSize: 12.sp,
+                        height: 48.h,
+                        onPressed: (_currentPage + 1) < totalPages
+                            ? () => setState(() => _currentPage++)
+                            : null,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
-          rows: bookings.map((b) => DataRow(
-            onSelectChanged: (_) => _showBookingDetails(context, b),
-            cells: [
-              DataCell(AppText.body(b.id.substring(0, 8), color: AppColors.textPrimary)),
-              DataCell(AppText.body(b.userName ?? '${AppStrings.userLabel} ${b.userId.substring(0, 5)}', color: AppColors.textPrimary)),
-              DataCell(AppText.body(b.roomName, color: AppColors.textSecondary)),
-              DataCell(AppText.body(AppStrings.gaming, color: AppColors.textSecondary)),
-              DataCell(AppText.body(b.startTime, color: AppColors.textSecondary)),
-              DataCell(_getStatusBadge(b.status.toString().split('.').last)),
-              DataCell(_buildActions(context, b)),
-            ],
-          )).toList(),
         );
       },
     );
   }
 
+  Widget _buildMobileBookingCard(BuildContext context, Booking booking) {
+    return Container(
+      padding: EdgeInsets.all(14.r),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'حجز #${booking.id.length >= 6 ? booking.id.substring(0, 6) : booking.id}',
+                style: TextStyle(
+                  color: AppColors.neonBlue,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.sp,
+                ),
+              ),
+              _getStatusBadge(booking),
+            ],
+          ),
+          SizedBox(height: 8.h),
+
+          Row(
+            children: [
+              Icon(Icons.person, color: AppColors.textSecondary, size: 14.r),
+              SizedBox(width: 6.w),
+              Text(
+                booking.userName ?? 'عميل زائر',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13.sp,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 4.h),
+
+          Row(
+            children: [
+              Icon(Icons.meeting_room, color: AppColors.textSecondary, size: 14.r),
+              SizedBox(width: 6.w),
+              Text(
+                booking.roomName,
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+              ),
+              SizedBox(width: 12.w),
+              Icon(Icons.access_time, color: AppColors.textSecondary, size: 14.r),
+              SizedBox(width: 4.w),
+              Text(
+                booking.startTime,
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              AppButton(
+                text: 'التفاصيل',
+                variant: AppButtonVariant.outlined,
+                height: 48.h,
+                icon: Icons.info_outline,
+                onPressed: () => _showBookingDetails(context, booking),
+              ),
+              _buildActions(context, booking),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String key, String label) {
+    final isSelected = _selectedStatusFilter == key;
+    return Padding(
+      padding: EdgeInsets.only(right: 8.w),
+      child: ChoiceChip(
+        label: Text(label),
+        selected: isSelected,
+        selectedColor: AppColors.neonBlue,
+        backgroundColor: AppColors.cardBackground,
+        labelStyle: TextStyle(
+          color: isSelected ? Colors.black : AppColors.textPrimary,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+        onSelected: (selected) {
+          if (selected) {
+            setState(() {
+              _selectedStatusFilter = key;
+              _currentPage = 0; // Reset page on filter change
+            });
+          }
+        },
+      ),
+    );
+  }
+
   Widget _buildActions(BuildContext context, Booking booking) {
-    // إذا كان الحجز ينتظر الموافقة، نعرض أزرار القبول والرفض
     if (booking.status == BookingStatus.pending) {
       return Row(
         mainAxisSize: MainAxisSize.min,
@@ -63,30 +270,31 @@ class BookingsDataTable extends StatelessWidget {
           AppButton(
             text: AppStrings.approve,
             variant: AppButtonVariant.primary,
+            height: 48.h,
             onPressed: () => context.read<BookingCubit>().approveBooking(booking.id),
           ),
           SizedBox(width: 8.w),
           AppButton(
             text: AppStrings.reject,
             variant: AppButtonVariant.outlined,
+            height: 48.h,
             onPressed: () => context.read<BookingCubit>().rejectBooking(booking.id),
           ),
         ],
       );
     }
 
-    // إذا تم قبول الحجز (Active)، نعرض زر تأكيد الدفع إذا لم يتم الدفع بعد
     if (booking.status == BookingStatus.upcoming) {
       return booking.paymentStatus == PaymentStatus.paid
         ? const Icon(Icons.check_circle, color: AppColors.success)
         : AppButton(
-            text: AppStrings.confirmCash,
+            text: AppStrings.approve,
             variant: AppButtonVariant.primary,
-            onPressed: () => context.read<BookingCubit>().confirmCashPayment(booking.id),
+            height: 48.h,
+            onPressed: () => context.read<BookingCubit>().approveBooking(booking.id),
           );
     }
 
-    // إذا اكتمل الحجز تماماً
     if (booking.status == BookingStatus.completed) {
       return const Icon(Icons.verified, color: AppColors.success);
     }
@@ -99,23 +307,20 @@ class BookingsDataTable extends StatelessWidget {
       context: context,
       builder: (_) => BookingDetailsDialog(
         booking: booking,
-        onConfirmPayment: (amount, percent, reason) {
-          context.read<BookingCubit>().confirmCashPayment(
-            booking.id,
-            discountAmount: amount,
-            discountPercentage: percent,
-            discountReason: reason,
-          );
-        },
         onCancel: () => context.read<BookingCubit>().rejectBooking(booking.id),
       ),
     );
   }
 
-  Widget _getStatusBadge(String status) {
+  Widget _getStatusBadge(Booking b) {
+    if (b.isCancelledByClient) {
+      return StatusBadge.danger(AppStrings.cancelledByClientAfterApproval);
+    }
+    final status = b.status.toDbString();
     switch (status) {
       case 'pending': return StatusBadge.warning(AppStrings.pending);
       case 'upcoming': return StatusBadge.info(AppStrings.upcoming);
+      case 'in_progress': return StatusBadge.success(AppStrings.inProgress);
       case 'completed': return StatusBadge.success(AppStrings.completed);
       case 'cancelled': return StatusBadge.danger(AppStrings.cancelled);
       default: return StatusBadge.info(status);

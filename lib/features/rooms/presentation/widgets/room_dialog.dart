@@ -1,7 +1,5 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
@@ -10,12 +8,10 @@ import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:uuid/uuid.dart';
-import '../../../categories/data/entities/category_entity.dart';
-import '../../../categories/data/entities/activity_type_entity.dart';
 import '../../../categories/presentation/categories/category_cubit.dart';
-import '../../../categories/presentation/categories/category_state.dart';
 import '../../domain/entities/room_entity.dart';
 import 'room_basic_info_form.dart';
+import 'room_features_section.dart';
 import 'room_specs_form.dart';
 
 class RoomDialog extends StatefulWidget {
@@ -25,8 +21,8 @@ class RoomDialog extends StatefulWidget {
   final Future<void> Function(RoomEntity)? onSave;
 
   const RoomDialog({
-    super.key, 
-    required this.loungeId, 
+    super.key,
+    required this.loungeId,
     required this.categoryCubit,
     this.room,
     this.onSave,
@@ -38,28 +34,26 @@ class RoomDialog extends StatefulWidget {
 
 class _RoomDialogState extends State<RoomDialog> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late TextEditingController _nameArController;
   late TextEditingController _nameEnController;
   late TextEditingController _descriptionArController;
   late TextEditingController _descriptionEnController;
-  late TextEditingController _pricePerHourController;
-  late TextEditingController _capacityController;
+  late TextEditingController _hourlyRateSingleController;
+  late TextEditingController _hourlyRateMultiController;
+  late TextEditingController _maxCapacityController;
   late TextEditingController _controllersController;
   late TextEditingController _screenSizeController;
   late TextEditingController _extraPriceController;
-  
+
   final List<String> _selectedActivityIds = [];
   final List<String> _featuresAr = [];
   final List<String> _featuresEn = [];
-  
+
   RoomStatusEnum _selectedStatus = RoomStatusEnum.available;
   String? _selectedSpaceTypeId;
   List<SelectedImage> _roomImages = [];
   bool _isUploading = false;
-
-  final TextEditingController _featureArController = TextEditingController();
-  final TextEditingController _featureEnController = TextEditingController();
 
   @override
   void initState() {
@@ -69,13 +63,18 @@ class _RoomDialogState extends State<RoomDialog> {
     _nameEnController = TextEditingController(text: r?.nameEn);
     _descriptionArController = TextEditingController(text: r?.descriptionAr);
     _descriptionEnController = TextEditingController(text: r?.descriptionEn);
-    _pricePerHourController = TextEditingController(text: r?.pricePerHour.toString() ?? '0.0');
-    _capacityController = TextEditingController(text: r?.capacity.toString() ?? (r?.isOpenArea == true ? '2' : '4'));
+    _hourlyRateSingleController =
+        TextEditingController(text: r?.hourlyRateSingle.toString() ?? '0.0');
+    _hourlyRateMultiController =
+        TextEditingController(text: r?.hourlyRateMulti.toString() ?? '0.0');
+    _maxCapacityController = TextEditingController(
+      text: r?.maxCapacity.toString() ?? (r?.isOpenArea == true ? '2' : '4'),
+    );
     _controllersController = TextEditingController(text: r?.controllersCount.toString() ?? '2');
     _screenSizeController = TextEditingController(text: r?.screenSize ?? '43"');
-    _extraPriceController = TextEditingController(text: r?.extraControllerPrice.toString() ?? '0.0');
-    
-    // Ensure _selectedSpaceTypeId is one of the valid options
+    _extraPriceController =
+        TextEditingController(text: r?.extraControllerPrice.toString() ?? '0.0');
+
     const validSpaceTypes = ['open_area', 'standard_room', 'vip_room'];
     if (r != null && validSpaceTypes.contains(r.spaceTypeId)) {
       _selectedSpaceTypeId = r.spaceTypeId;
@@ -97,20 +96,20 @@ class _RoomDialogState extends State<RoomDialog> {
     _nameEnController.dispose();
     _descriptionArController.dispose();
     _descriptionEnController.dispose();
-    _pricePerHourController.dispose();
-    _capacityController.dispose();
+    _hourlyRateSingleController.dispose();
+    _hourlyRateMultiController.dispose();
+    _maxCapacityController.dispose();
     _controllersController.dispose();
     _screenSizeController.dispose();
     _extraPriceController.dispose();
-    _featureArController.dispose();
-    _featureEnController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
+    if (_isUploading) return;
     final form = _formKey.currentState;
     if (form != null && form.validate()) {
-      if (_roomImages.isEmpty && (widget.room?.images == null || (widget.room?.images.isEmpty ?? true))) {
+      if (_roomImages.isEmpty && (widget.room?.images.isEmpty ?? true)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppStrings.minImagesError), backgroundColor: AppColors.danger),
         );
@@ -118,12 +117,12 @@ class _RoomDialogState extends State<RoomDialog> {
       }
 
       setState(() => _isUploading = true);
-      
+
       try {
         List<String> images = widget.room?.images ?? [];
         if (_roomImages.isNotEmpty) {
           final newUrls = await sl<StorageService>().uploadRoomImages(
-            _roomImages.map((e) => e.bytes).toList(), 
+            _roomImages.map((e) => e.bytes).toList(),
             _roomImages.map((e) => e.name).toList(),
             widget.loungeId,
           );
@@ -133,7 +132,8 @@ class _RoomDialogState extends State<RoomDialog> {
         if (mounted) {
           final spaceTypeId = _selectedSpaceTypeId ?? 'open_area';
           final isOpenArea = spaceTypeId == 'open_area';
-          final pricePerHour = double.tryParse(_pricePerHourController.text) ?? 0;
+          final singleRate = double.tryParse(_hourlyRateSingleController.text) ?? 0.0;
+          final multiRate = double.tryParse(_hourlyRateMultiController.text) ?? 0.0;
 
           final room = RoomEntity(
             id: widget.room?.id ?? const Uuid().v4(),
@@ -142,13 +142,14 @@ class _RoomDialogState extends State<RoomDialog> {
             nameEn: _nameEnController.text,
             descriptionAr: _descriptionArController.text,
             descriptionEn: _descriptionEnController.text,
-            spaceType: isOpenArea ? 'Open Area' : (spaceTypeId == 'vip_room' ? 'VIP Room' : 'Standard Room'),
+            spaceType: isOpenArea
+                ? 'Open Area'
+                : (spaceTypeId == 'vip_room' ? 'VIP Room' : 'Standard Room'),
             spaceTypeId: spaceTypeId,
-            pricePerHourSingle: pricePerHour,
-            pricePerHourMulti: pricePerHour,
-            pricePerHour: pricePerHour,
+            hourlyRateSingle: singleRate,
+            hourlyRateMulti: multiRate,
             extraControllerPrice: double.tryParse(_extraPriceController.text) ?? 0,
-            capacity: int.tryParse(_capacityController.text) ?? (isOpenArea ? 2 : 4),
+            maxCapacity: int.tryParse(_maxCapacityController.text) ?? (isOpenArea ? 2 : 4),
             controllersCount: isOpenArea ? (int.tryParse(_controllersController.text) ?? 2) : 2,
             screenSize: isOpenArea ? _screenSizeController.text : '',
             activityIds: _selectedActivityIds,
@@ -222,12 +223,13 @@ class _RoomDialogState extends State<RoomDialog> {
                   nameEnController: _nameEnController,
                   descriptionArController: _descriptionArController,
                   descriptionEnController: _descriptionEnController,
-                  pricePerHourController: _pricePerHourController,
+                  hourlyRateSingleController: _hourlyRateSingleController,
+                  hourlyRateMultiController: _hourlyRateMultiController,
                   isOpenArea: _selectedSpaceTypeId == 'open_area',
                 ),
                 SizedBox(height: 20.h),
                 RoomSpecsForm(
-                  capacityController: _capacityController,
+                  capacityController: _maxCapacityController,
                   controllersController: _controllersController,
                   screenSizeController: _screenSizeController,
                   extraPriceController: _extraPriceController,
@@ -244,8 +246,7 @@ class _RoomDialogState extends State<RoomDialog> {
                       if (selected) {
                         if (!_featuresEn.contains(feature)) {
                           _featuresEn.add(feature);
-                          // For simplicity, just add same to AR for now or map them
-                          _featuresAr.add(feature); 
+                          _featuresAr.add(feature);
                         }
                       } else {
                         final idx = _featuresEn.indexOf(feature);
@@ -258,7 +259,30 @@ class _RoomDialogState extends State<RoomDialog> {
                   },
                 ),
                 SizedBox(height: 24.h),
-                _buildFeaturesSection(),
+                RoomFeaturesSection(
+                  featuresAr: _featuresAr,
+                  featuresEn: _featuresEn,
+                  selectedActivityIds: _selectedActivityIds,
+                  activitiesList: widget.categoryCubit.state.activityTypes,
+                  onAddFeature: (en, ar) => setState(() {
+                    _featuresEn.add(en);
+                    _featuresAr.add(ar);
+                  }),
+                  onRemoveFeature: (idx) => setState(() {
+                    _featuresEn.removeAt(idx);
+                    _featuresAr.removeAt(idx);
+                  }),
+                  onToggleTag: (tag) => setState(() {
+                    if (_featuresEn.contains(tag)) {
+                      final idx = _featuresEn.indexOf(tag);
+                      _featuresEn.removeAt(idx);
+                      _featuresAr.removeAt(idx);
+                    } else {
+                      _featuresEn.add(tag);
+                      _featuresAr.add(tag);
+                    }
+                  }),
+                ),
                 SizedBox(height: 32.h),
                 _buildActions(),
               ],
@@ -266,133 +290,6 @@ class _RoomDialogState extends State<RoomDialog> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildFeaturesSection() {
-    final List<String> suggestions = [];
-    final List<ActivityTypeEntity> activitiesList = widget.categoryCubit.state.activityTypes;
-    
-    String firstActivityName = '';
-    if (_selectedActivityIds.isNotEmpty && activitiesList.isNotEmpty) {
-      final String targetId = _selectedActivityIds.first;
-      ActivityTypeEntity? foundActivity;
-      for (int i = 0; i < activitiesList.length; i++) {
-        if (activitiesList[i].id == targetId) {
-          foundActivity = activitiesList[i];
-          break;
-        }
-      }
-      final activity = foundActivity ?? (activitiesList.isNotEmpty ? activitiesList.first : null);
-      firstActivityName = activity?.label.toLowerCase() ?? '';
-    }
-
-    if (firstActivityName.contains('simulator')) {
-      suggestions.addAll(['Force Feedback', 'Direct Drive', 'Load Cell Pedals', 'Bucket Seat', 'Triple Monitor']);
-    } else if (firstActivityName.contains('vr')) {
-      suggestions.addAll(['Meta Quest 3', 'Valve Index', 'Wireless', 'Pro Controllers', 'Pico 4']);
-    } else if (firstActivityName.contains('pc')) {
-      suggestions.addAll(['RTX 4080', 'RTX 4090', 'Mechanical Keyboard', 'Gaming Mouse', '240Hz Monitor']);
-    } else {
-      suggestions.addAll(['PS5', 'PS4 Pro', 'DualSense Edge', '4K TV', 'Home Theater']);
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(AppStrings.specs, style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.w500)),
-        SizedBox(height: 12.h),
-        if (suggestions.isNotEmpty) ...[
-          Text('Suggested Tags:', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
-          SizedBox(height: 8.h),
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: suggestions.map((s) {
-              final isAdded = _featuresEn.contains(s);
-              return ActionChip(
-                label: Text(s, style: TextStyle(fontSize: 10.sp, color: isAdded ? Colors.white : AppColors.textSecondary)),
-                backgroundColor: isAdded ? AppColors.neonBlue.withOpacity(0.5) : AppColors.mutedBackground,
-                onPressed: () {
-                  setState(() {
-                    if (isAdded) {
-                      final idx = _featuresEn.indexOf(s);
-                      _featuresEn.removeAt(idx);
-                      _featuresAr.removeAt(idx);
-                    } else {
-                      _featuresEn.add(s);
-                      _featuresAr.add(s); // Simplification
-                    }
-                  });
-                },
-              );
-            }).toList(),
-          ),
-          SizedBox(height: 16.h),
-        ],
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _featureArController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: AppStrings.nameAr,
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
-                  filled: true,
-                  fillColor: AppColors.mutedBackground,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: BorderSide.none),
-                ),
-              ),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: TextFormField(
-                controller: _featureEnController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: AppStrings.nameEn,
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
-                  filled: true,
-                  fillColor: AppColors.mutedBackground,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: BorderSide.none),
-                ),
-              ),
-            ),
-            SizedBox(width: 12.w),
-            IconButton(
-              onPressed: () {
-                if (_featureArController.text.isNotEmpty && _featureEnController.text.isNotEmpty) {
-                  setState(() {
-                    _featuresAr.add(_featureArController.text);
-                    _featuresEn.add(_featureEnController.text);
-                    _featureArController.clear();
-                    _featureEnController.clear();
-                  });
-                }
-              },
-              icon: const Icon(Icons.add_circle, color: AppColors.neonBlue),
-            ),
-          ],
-        ),
-        SizedBox(height: 12.h),
-        Wrap(
-          spacing: 8.w,
-          runSpacing: 8.h,
-          children: List.generate(_featuresEn.length, (index) {
-            return Chip(
-              label: Text('${_featuresEn[index]} | ${_featuresAr[index]}', style: TextStyle(fontSize: 11.sp)),
-              backgroundColor: AppColors.mutedBackground,
-              deleteIcon: Icon(Icons.close, size: 14.r, color: AppColors.danger),
-              onDeleted: () => setState(() {
-                _featuresAr.removeAt(index);
-                _featuresEn.removeAt(index);
-              }),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.r), side: BorderSide(color: AppColors.borderDefault)),
-            );
-          }),
-        ),
-      ],
     );
   }
 

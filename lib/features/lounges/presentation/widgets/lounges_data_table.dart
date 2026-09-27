@@ -1,4 +1,3 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -19,7 +18,21 @@ class LoungesDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LoungeCubit, LoungeState>(
+    return BlocConsumer<LoungeCubit, LoungeState>(
+      listenWhen: (previous, current) =>
+          previous.status != current.status && current.status == LoungeStatus.failure,
+      listener: (context, state) {
+        if (state.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage!),
+              backgroundColor: AppColors.danger,
+            ),
+          );
+        }
+      },
+      buildWhen: (previous, current) =>
+          previous.status != current.status || previous.lounges != current.lounges,
       builder: (context, state) {
         if (state.status == LoungeStatus.loading && state.lounges.isEmpty) {
           return const TableShimmer(columns: 6);
@@ -168,7 +181,8 @@ class LoungesDataTable extends StatelessWidget {
       children: [
         Icon(icon, size: 16.r, color: AppColors.textSecondary),
         SizedBox(width: 8.w),
-        Text('$label: ', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+        Text('$label:', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+        SizedBox(width: 4.w),
         Text(value, style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp, fontWeight: FontWeight.w500)),
       ],
     );

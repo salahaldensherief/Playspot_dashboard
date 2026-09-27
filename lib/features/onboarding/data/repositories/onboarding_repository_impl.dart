@@ -23,6 +23,26 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
   }
 
   @override
+  Future<Either<Failure, Lounge>> batchCompleteOnboarding({
+    required String loungeId,
+    required Map<String, dynamic> loungeData,
+    required List<Map<String, dynamic>> rooms,
+    required List<Map<String, dynamic>> extras,
+  }) async {
+    try {
+      final result = await remoteDataSource.batchCompleteOnboarding(
+        loungeId: loungeId,
+        loungeData: loungeData,
+        rooms: rooms,
+        extras: extras,
+      );
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> updateIdentity({
     required String loungeId,
     required String name,
@@ -35,8 +55,7 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
       await remoteDataSource.updateLoungeData(loungeId, {
         'name': name,
         'location': location,
-        'lat': lat,
-        'lng': lng,
+        'location_point': 'POINT($lng $lat)',
         'images': images,
       });
       return const Right(null);
@@ -54,8 +73,8 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
   }) async {
     try {
       await remoteDataSource.updateLoungeData(loungeId, {
-        'opens_at': opensAt,
-        'closes_at': closesAt,
+        'opening_time': opensAt,
+        'closing_time': closesAt,
         'weekly_holidays': weeklyHolidays,
       });
       return const Right(null);
@@ -76,11 +95,10 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
         activityIds: room.activityIds,
         spaceType: room.spaceType,
         spaceTypeId: room.spaceTypeId ?? '',
-        pricePerHourSingle: room.pricePerHourSingle,
-        pricePerHourMulti: room.pricePerHourMulti,
-        pricePerHour: room.pricePerHour,
+        hourlyRateSingle: room.hourlyRateSingle,
+        hourlyRateMulti: room.hourlyRateMulti,
         extraControllerPrice: room.extraControllerPrice,
-        capacity: room.capacity,
+        maxCapacity: room.maxCapacity,
         images: room.images,
         featuresAr: room.featuresAr,
         featuresEn: room.featuresEn,

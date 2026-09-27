@@ -5,7 +5,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
-import '../../../data/entities/category_entity.dart';
+import '../../../domain/entities/category_entity.dart';
 
 class CategoryDialog extends StatefulWidget {
   final CategoryEntity? category;
@@ -44,6 +44,13 @@ class _CategoryDialogState extends State<CategoryDialog> {
     _nameAr = TextEditingController(text: widget.category?.nameAr);
     _nameEn = TextEditingController(text: widget.category?.nameEn);
     _selectedIcon = widget.category?.iconKey ?? 'sports_esports';
+  }
+
+  @override
+  void dispose() {
+    _nameAr.dispose();
+    _nameEn.dispose();
+    super.dispose();
   }
 
   void _submit() {
@@ -117,7 +124,7 @@ class _CategoryDialogState extends State<CategoryDialog> {
                       child: Container(
                         padding: EdgeInsets.all(10.r),
                         decoration: BoxDecoration(
-                          color: isSelected ? AppColors.neonBlue.withOpacity(0.1) : Colors.transparent,
+                          color: isSelected ? AppColors.neonBlue.withValues(alpha: 0.1) : Colors.transparent,
                           borderRadius: BorderRadius.circular(8.r),
                           border: Border.all(
                             color: isSelected ? AppColors.neonBlue : Colors.transparent,

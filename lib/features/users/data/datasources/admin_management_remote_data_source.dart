@@ -38,12 +38,25 @@ class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSo
     });
 
     if (result['success'] == true) {
+      final ownerUserId = result['owner_user_id']?.toString();
+      final loungeId = result['lounge_id']?.toString();
+
+      if (ownerUserId != null && ownerUserId.isNotEmpty) {
+        try {
+          await supabaseClient
+              .from('profiles')
+              .update({'is_setup_completed': false})
+              .eq('id', ownerUserId);
+        } catch (_) {}
+      }
+
       return UserEntity(
-        id: result['owner_user_id']?.toString() ?? '',
+        id: ownerUserId ?? '',
         role: UserRole.owner,
         name: name,
         email: email,
-        loungeId: result['lounge_id']?.toString(),
+        loungeId: loungeId,
+        isSetupCompleted: false,
       );
     } else {
       throw Exception(result['message'] ?? 'Failed to create lounge admin');
@@ -52,29 +65,80 @@ class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSo
 
   @override
   Future<List<UserEntity>> getAdmins() async {
-    final response = await supabaseClient.from('profiles').select().order('full_name');
-    return (response as List).map((json) {
-      return UserEntity(
-        id: json['id']?.toString() ?? '',
-        email: json['email']?.toString() ?? '',
-        name: json['full_name']?.toString() ?? '',
-        role: json['role'] == 'super_admin' 
-            ? UserRole.superAdmin 
-            : (json['role'] == 'cashier' ? UserRole.cashier : UserRole.owner),
-        loungeId: json['lounge_id']?.toString(),
-      );
-    }).toList();
+    try {
+      final response = await supabaseClient
+          .from('profiles')
+          .select('id, email, full_name, role, lounge_id, avatar_url, is_setup_completed, points_balance, reward_points, referral_count, referrals_count, is_active, city_id, cities:city_id(id, name_ar, name_en)')
+          .neq('role', 'inactive')
+          .order('full_name');
+      return (response as List)
+          .where((json) => json['is_active'] != false && json['role'] != 'inactive')
+          .map((json) {
+        return UserModel.fromJson(Map<String, dynamic>.from(json));
+      }).toList();
+    } catch (_) {
+      try {
+        final fallbackResponse = await supabaseClient
+            .from('profiles')
+            .select('*, cities:city_id(id, name_ar, name_en)')
+            .neq('role', 'inactive')
+            .order('full_name');
+        return (fallbackResponse as List)
+            .where((json) => json['is_active'] != false && json['role'] != 'inactive')
+            .map((json) {
+          return UserModel.fromJson(Map<String, dynamic>.from(json));
+        }).toList();
+      } catch (fallbackError) {
+        return [];
+      }
+    }
   }
 
   @override
   Future<void> deleteAdmin(String adminId) async {
-    // Soft delete profile/admin record if possible or hard delete from auth if allowed
-    // For now, let's assume we delete from the public schema profiles/admins table
-    await supabaseClient.from('profiles').delete().eq('id', adminId);
+    final cleanAdminId = adminId.trim();
+    if (cleanAdminId.isEmpty) return;
+
+    // 1. Unassign lounge ownership if this admin is a lounge owner
+    try {
+      await supabaseClient
+          .from('lounges')
+          .update({'owner_id': null})
+          .eq('owner_id', cleanAdminId);
+    } catch (e) {
+      // ignore
+    }
+
+    // 2. Remove staff association if any
+    try {
+      await supabaseClient
+          .from('lounge_staff')
+          .delete()
+          .eq('user_id', cleanAdminId);
+    } catch (_) {}
+
+    // 3. Attempt hard delete from profiles
+    try {
+      await supabaseClient.from('profiles').delete().eq('id', cleanAdminId);
+    } on PostgrestException catch (_) {
+      // 4. Soft delete fallback if hard delete is restricted by DB foreign keys or RLS
+      await supabaseClient.from('profiles').update({
+        'is_active': false,
+        'role': 'inactive',
+      }).eq('id', cleanAdminId);
+    } catch (_) {
+      await supabaseClient.from('profiles').update({
+        'is_active': false,
+        'role': 'inactive',
+      }).eq('id', cleanAdminId);
+    }
   }
 
   @override
   Future<void> updateAdmin(String adminId, Map<String, dynamic> data) async {
-    await supabaseClient.from('profiles').update(data).eq('id', adminId);
+    final cleanData = UserModel.sanitizeProfilePayload(data);
+    if (cleanData.isNotEmpty) {
+      await supabaseClient.from('profiles').update(cleanData).eq('id', adminId);
+    }
   }
 }

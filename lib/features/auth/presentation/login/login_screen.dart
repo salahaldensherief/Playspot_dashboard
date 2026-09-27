@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import 'package:play_spot_dashboard/art_core/assets_manager.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_gradient_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/logo/logo_widget.dart';
 import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
@@ -78,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
             height: 300.r,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.neonBlue.withOpacity(0.05),
+              color: AppColors.neonBlue.withValues(alpha: 0.05),
             ),
           ),
         ),
@@ -90,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
             height: 300.r,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.neonPurple.withOpacity(0.05),
+              color: AppColors.neonPurple.withValues(alpha: 0.05),
             ),
           ),
         ),
@@ -101,11 +102,17 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildLogo() {
     return Column(
       children: [
-        LogoWidget(
-          fontSize: 48.sp,
-          width: 50.w,
-          height: 50.h,
-          color: AppColors.neonBlue,
+        Image.asset(
+          AssetsManager.logo,
+          width: 90.r,
+          height: 90.r,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => LogoWidget(
+            fontSize: 48.sp,
+            width: 50.w,
+            height: 50.h,
+            color: AppColors.neonBlue,
+          ),
         ),
         SizedBox(height: 16.h),
         Text(
@@ -182,8 +189,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocSelector<LoginCubit, LoginState, bool>(
       selector: (state) => state.status == LoginStatus.loading,
       builder: (context, isLoading) {
-        return AppGradientButton(
+        return AppButton(
           text: AppStrings.signIn,
+          variant: AppButtonVariant.gradient,
+          width: double.infinity,
           isLoading: isLoading,
           onPressed: () {
             if (_formKey.currentState?.validate() == true) {
@@ -196,22 +205,6 @@ class _LoginScreenState extends State<LoginScreen> {
           },
         );
       },
-    );
-  }
-
-  Widget _buildDemoRow(String label, String value, Color valueColor) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
-        ),
-        Text(
-          value,
-          style: TextStyle(color: valueColor, fontSize: 12.sp, fontWeight: FontWeight.w500),
-        ),
-      ],
     );
   }
 }

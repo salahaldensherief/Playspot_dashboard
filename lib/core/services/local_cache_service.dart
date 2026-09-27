@@ -1,0 +1,56 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+
+abstract class LocalCacheService {
+  Future<void> setJson(String key, dynamic data);
+  dynamic getJson(String key);
+  Future<void> remove(String key);
+  Future<void> clearAll();
+}
+
+class LocalCacheServiceImpl implements LocalCacheService {
+  final SharedPreferences _prefs;
+
+  LocalCacheServiceImpl(this._prefs);
+
+  @override
+  Future<void> setJson(String key, dynamic data) async {
+    final cleanKey = key.trim();
+    if (cleanKey.isEmpty) return;
+    try {
+      final jsonString = jsonEncode(data);
+      await _prefs.setString(cleanKey, jsonString);
+    } catch (_) {
+      // Ignore cache write errors gracefully
+    }
+  }
+
+  @override
+  dynamic getJson(String key) {
+    final cleanKey = key.trim();
+    if (cleanKey.isEmpty) return null;
+    try {
+      final jsonString = _prefs.getString(cleanKey);
+      if (jsonString == null || jsonString.isEmpty) return null;
+      return jsonDecode(jsonString);
+    } catch (_) {
+      // Clean up corrupted cache entry
+      remove(cleanKey);
+      return null;
+    }
+  }
+
+  @override
+  Future<void> remove(String key) async {
+    try {
+      await _prefs.remove(key);
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> clearAll() async {
+    try {
+      await _prefs.clear();
+    } catch (_) {}
+  }
+}
