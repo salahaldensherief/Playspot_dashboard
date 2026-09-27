@@ -66,6 +66,11 @@ BEGIN
     RAISE EXCEPTION 'Not authorized' USING ERRCODE = '42501';
   END IF;
 
+  IF v_actor_role NOT IN ('super_admin', 'owner', 'manager') THEN
+    RAISE EXCEPTION 'Only lounge administrators can manage staff'
+      USING ERRCODE = '42501';
+  END IF;
+
   IF v_actor_role <> 'super_admin'
      AND NOT public.has_lounge_permission(p_lounge_id, 'staff_manage') THEN
     RAISE EXCEPTION 'Missing staff_manage permission'
@@ -164,6 +169,11 @@ BEGIN
 
   IF v_actor_role IS NULL THEN
     RAISE EXCEPTION 'Not authorized' USING ERRCODE = '42501';
+  END IF;
+
+  IF v_actor_role NOT IN ('super_admin', 'owner', 'manager') THEN
+    RAISE EXCEPTION 'Only lounge administrators can manage staff'
+      USING ERRCODE = '42501';
   END IF;
 
   IF v_actor_role <> 'super_admin'
@@ -314,11 +324,11 @@ $function$;
 
 REVOKE EXECUTE ON FUNCTION public.create_lounge_staff(
   text, text, text, uuid, text, text
-) FROM PUBLIC, anon;
+) FROM PUBLIC, anon, authenticated;
 
 GRANT EXECUTE ON FUNCTION public.create_lounge_staff(
   text, text, text, uuid, text, text
-) TO authenticated, service_role, supabase_auth_admin;
+) TO service_role, supabase_auth_admin;
 
 
 CREATE OR REPLACE FUNCTION public.update_lounge_staff_member(
@@ -360,6 +370,11 @@ BEGIN
 
   IF v_actor_role IS NULL THEN
     RAISE EXCEPTION 'Not authorized' USING ERRCODE = '42501';
+  END IF;
+
+  IF v_actor_role NOT IN ('super_admin', 'owner', 'manager') THEN
+    RAISE EXCEPTION 'Only lounge administrators can manage staff'
+      USING ERRCODE = '42501';
   END IF;
 
   IF v_actor_role <> 'super_admin'
@@ -464,6 +479,11 @@ BEGIN
 
   v_actor_role := private.permission_role(auth.uid(), v_target.lounge_id);
 
+  IF v_actor_role NOT IN ('super_admin', 'owner', 'manager') THEN
+    RAISE EXCEPTION 'Only lounge administrators can manage staff'
+      USING ERRCODE = '42501';
+  END IF;
+
   IF v_actor_role IS NULL
      OR (
        v_actor_role <> 'super_admin'
@@ -532,6 +552,11 @@ BEGIN
   END IF;
 
   v_actor_role := private.permission_role(auth.uid(), v_target.lounge_id);
+
+  IF v_actor_role NOT IN ('super_admin', 'owner', 'manager') THEN
+    RAISE EXCEPTION 'Only lounge administrators can manage staff'
+      USING ERRCODE = '42501';
+  END IF;
 
   IF v_actor_role IS NULL
      OR (
