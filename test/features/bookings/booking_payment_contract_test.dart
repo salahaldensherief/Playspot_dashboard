@@ -42,40 +42,40 @@ void main() {
     await client.dispose();
   });
 
-  test('cash payment uses the canonical complete_booking_payment RPC', () async {
-    final requests = <http.Request>[];
-    final client = SupabaseClient(
-      'https://example.invalid',
-      'test-key',
-      httpClient: MockClient((request) async {
-        requests.add(request);
-        return http.Response(
-          'null',
-          200,
-          headers: {'content-type': 'application/json'},
-          request: request,
-        );
-      }),
-    );
+  test(
+    'cash payment uses the canonical complete_booking_payment RPC',
+    () async {
+      final requests = <http.Request>[];
+      final client = SupabaseClient(
+        'https://example.invalid',
+        'test-key',
+        httpClient: MockClient((request) async {
+          requests.add(request);
+          return http.Response(
+            'null',
+            200,
+            headers: {'content-type': 'application/json'},
+            request: request,
+          );
+        }),
+      );
 
-    final source = BookingRemoteDataSourceImpl(client);
+      final source = BookingRemoteDataSourceImpl(client);
 
-    await source.confirmCashPayment('booking-a');
+      await source.confirmCashPayment('booking-a');
 
-    expect(requests, hasLength(1));
-    expect(
-      requests.single.url.path,
-      '/rest/v1/rpc/complete_booking_payment',
-    );
+      expect(requests, hasLength(1));
+      expect(requests.single.url.path, '/rest/v1/rpc/complete_booking_payment');
 
-    final payload = jsonDecode(requests.single.body) as Map<String, dynamic>;
-    expect(payload['p_booking_id'], 'booking-a');
-    expect(payload['p_payment_method'], 'cash');
-    expect(payload.containsKey('p_shift_id'), isFalse);
-    expect(payload.containsKey('p_discount_amount'), isFalse);
+      final payload = jsonDecode(requests.single.body) as Map<String, dynamic>;
+      expect(payload['p_booking_id'], 'booking-a');
+      expect(payload['p_payment_method'], 'cash');
+      expect(payload.containsKey('p_shift_id'), isFalse);
+      expect(payload.containsKey('p_discount_amount'), isFalse);
 
-    await client.dispose();
-  });
+      await client.dispose();
+    },
+  );
 
   test('discount is approved before payment collection', () async {
     final requests = <http.Request>[];
@@ -103,14 +103,8 @@ void main() {
     );
 
     expect(requests, hasLength(2));
-    expect(
-      requests[0].url.path,
-      '/rest/v1/rpc/apply_booking_discount',
-    );
-    expect(
-      requests[1].url.path,
-      '/rest/v1/rpc/complete_booking_payment',
-    );
+    expect(requests[0].url.path, '/rest/v1/rpc/apply_booking_discount');
+    expect(requests[1].url.path, '/rest/v1/rpc/complete_booking_payment');
 
     final discountPayload =
         jsonDecode(requests[0].body) as Map<String, dynamic>;
@@ -122,8 +116,7 @@ void main() {
       'Manager-approved compensation',
     );
 
-    final paymentPayload =
-        jsonDecode(requests[1].body) as Map<String, dynamic>;
+    final paymentPayload = jsonDecode(requests[1].body) as Map<String, dynamic>;
     expect(paymentPayload['p_booking_id'], 'booking-b');
     expect(paymentPayload['p_payment_method'], 'cash');
 
