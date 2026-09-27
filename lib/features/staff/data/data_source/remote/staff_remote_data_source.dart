@@ -1,5 +1,4 @@
 import 'package:play_spot_dashboard/core/utils/app_logger.dart';
-import 'package:play_spot_dashboard/features/auth/data/models/user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/staff_model.dart';
 import '../../models/staff_params.dart';
