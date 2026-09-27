@@ -315,4 +315,13 @@ FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.start_tournament_match(uuid, uuid)
 TO authenticated, service_role, supabase_auth_admin;
 
+
+REVOKE EXECUTE ON FUNCTION public.submit_tournament_payment(
+  uuid, uuid, uuid, numeric, text, text
+) FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public.submit_tournament_payment(
+  uuid, uuid, uuid, numeric, text, text
+) TO service_role;
+
 COMMIT;
