@@ -28,23 +28,24 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
       _queryHelper.getOwnerBranches(ownerId);
 
   @override
-  Future<Map<String, dynamic>> addLoungeBranch(Map<String, dynamic> branchData) =>
-      _queryHelper.addLoungeBranch(branchData);
+  Future<Map<String, dynamic>> addLoungeBranch(
+    Map<String, dynamic> branchData,
+  ) => _queryHelper.addLoungeBranch(branchData);
 
   @override
   Future<Map<String, dynamic>> getMultiBranchOverview({
     required String ownerId,
     required DateTime startDate,
     required DateTime endDate,
-  }) =>
-      _queryHelper.getMultiBranchOverview(
-        ownerId: ownerId,
-        startDate: startDate,
-        endDate: endDate,
-      );
+  }) => _queryHelper.getMultiBranchOverview(
+    ownerId: ownerId,
+    startDate: startDate,
+    endDate: endDate,
+  );
 
   @override
-  Future<LoungeModel?> getLoungeById(String id) => _queryHelper.getLoungeById(id);
+  Future<LoungeModel?> getLoungeById(String id) =>
+      _queryHelper.getLoungeById(id);
 
   @override
   Future<Map<String, dynamic>> createLoungeWithOwner({
@@ -55,16 +56,15 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     String? city,
     String? address,
     String? phone,
-  }) =>
-      _queryHelper.createLoungeWithOwner(
-        email: email,
-        password: password,
-        ownerName: ownerName,
-        loungeName: loungeName,
-        city: city,
-        address: address,
-        phone: phone,
-      );
+  }) => _queryHelper.createLoungeWithOwner(
+    email: email,
+    password: password,
+    ownerName: ownerName,
+    loungeName: loungeName,
+    city: city,
+    address: address,
+    phone: phone,
+  );
 
   @override
   Future<void> updateLounge(String id, Map<String, dynamic> data) async {
@@ -100,7 +100,9 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
       await client.from('lounges').update(cleanData).eq('id', id);
       AppLogger.info('updateLounge Succeeded for id: $id');
     } on PostgrestException catch (e) {
-      AppLogger.error('updateLounge PostgrestException: ${e.message} (code: ${e.code}, details: ${e.details})');
+      AppLogger.error(
+        'updateLounge PostgrestException: ${e.message} (code: ${e.code}, details: ${e.details})',
+      );
       rethrow;
     } catch (e) {
       AppLogger.error('updateLounge Error: $e');
@@ -109,7 +111,8 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   }
 
   @override
-  Future<void> updateLoungeDiscount(String id, {
+  Future<void> updateLoungeDiscount(
+    String id, {
     required bool hasDiscount,
     required int discountPercentage,
     String? titleAr,
@@ -134,7 +137,9 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
       await client.from('lounges').update(updateData).eq('id', id);
       AppLogger.info('updateLoungeDiscount Succeeded for id: $id');
     } on PostgrestException catch (e) {
-      AppLogger.error('updateLoungeDiscount PostgrestException: ${e.message} (code: ${e.code})');
+      AppLogger.error(
+        'updateLoungeDiscount PostgrestException: ${e.message} (code: ${e.code})',
+      );
       rethrow;
     } catch (e) {
       AppLogger.error('updateLoungeDiscount Error: $e');
@@ -185,10 +190,12 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   Future<void> addExtra(ExtraModel extra) => _extrasHelper.addExtra(extra);
 
   @override
-  Future<void> updateExtra(ExtraModel extra) => _extrasHelper.updateExtra(extra);
+  Future<void> updateExtra(ExtraModel extra) =>
+      _extrasHelper.updateExtra(extra);
 
   @override
-  Future<void> deleteExtra(String extraId) => _extrasHelper.deleteExtra(extraId);
+  Future<void> deleteExtra(String extraId) =>
+      _extrasHelper.deleteExtra(extraId);
 
   @override
   Future<void> toggleExtraStock(String extraId, bool isOutOfStock) =>
@@ -198,19 +205,27 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
   Future<void> toggleLoungeOpenStatus(String loungeId, bool isOpen) async {
     try {
       if (isOpen) {
-        await client.rpc('open_lounge_shift', params: {
-          'p_lounge_id': loungeId,
-          'p_starting_cash': 0,
-          'p_notes': null,
-        });
+        await client.rpc(
+          'open_lounge_shift',
+          params: {
+            'p_lounge_id': loungeId,
+            'p_starting_cash': 0,
+            'p_notes': null,
+          },
+        );
       } else {
-        await client.rpc('close_lounge_shift', params: {
-          'p_lounge_id': loungeId,
-          'p_actual_cash_counted': 0,
-          'p_notes': 'Closed via Lounge Toggle',
-        });
+        await client.rpc(
+          'close_lounge_shift',
+          params: {
+            'p_lounge_id': loungeId,
+            'p_actual_cash_counted': 0,
+            'p_notes': 'Closed via Lounge Toggle',
+          },
+        );
       }
-      AppLogger.info('toggleLoungeOpenStatus RPC Succeeded for loungeId: $loungeId, isOpen: $isOpen');
+      AppLogger.info(
+        'toggleLoungeOpenStatus RPC Succeeded for loungeId: $loungeId, isOpen: $isOpen',
+      );
     } catch (e) {
       AppLogger.error(
         'toggleLoungeOpenStatus server command failed for loungeId: $loungeId, isOpen: $isOpen',
@@ -228,7 +243,11 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     data.remove('closes_at');
     data.remove('description');
 
-    final response = await client.from('lounges').insert(data).select('id').single();
+    final response = await client
+        .from('lounges')
+        .insert(data)
+        .select('id')
+        .single();
     return response['id'].toString();
   }
 
