@@ -107,7 +107,11 @@ class MarketingRepositoryImpl implements MarketingRepository {
     String loungeId,
   ) async {
     try {
-      final url = await remoteDataSource.uploadPromoPoster(fileBytes, fileName, loungeId);
+      final url = await remoteDataSource.uploadPromoPoster(
+        fileBytes,
+        fileName,
+        loungeId,
+      );
       return Right(url);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
