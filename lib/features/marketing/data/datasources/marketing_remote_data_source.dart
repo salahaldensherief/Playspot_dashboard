@@ -14,13 +14,26 @@ abstract class MarketingRemoteDataSource {
   // Notifications & User Preferences
   Future<void> sendNotification(NotificationModel notification);
   Future<List<NotificationModel>> getNotifications({String? userId});
-  Future<List<NotificationModel>> getNotificationsRpc({String lang = 'ar', int limit = 20, int offset = 0});
-  Future<PaginatedResult<NotificationModel>> getNotificationsPage({int page = 1, int pageSize = 20});
+  Future<List<NotificationModel>> getNotificationsRpc({
+    String lang = 'ar',
+    int limit = 20,
+    int offset = 0,
+  });
+  Future<PaginatedResult<NotificationModel>> getNotificationsPage({
+    int page = 1,
+    int pageSize = 20,
+  });
   Future<void> markNotificationRead(String notificationId);
   Future<void> markAllNotificationsRead();
-  RealtimeChannel subscribeToUserNotifications(String userId, void Function(NotificationModel) onNewNotification);
+  RealtimeChannel subscribeToUserNotifications(
+    String userId,
+    void Function(NotificationModel) onNewNotification,
+  );
   Future<Map<String, dynamic>?> getUserNotificationSettings(String userId);
-  Future<void> updateUserNotificationSettings(String userId, Map<String, dynamic> settings);
+  Future<void> updateUserNotificationSettings(
+    String userId,
+    Map<String, dynamic> settings,
+  );
 }
 
 class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
@@ -29,28 +42,42 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
   MarketingRemoteDataSourceImpl(this._supabase);
 
   @override
-  Future<List<PromoModel>> getPromotions({String? loungeId, String? city}) async {
+  Future<List<PromoModel>> getPromotions({
+    String? loungeId,
+    String? city,
+  }) async {
     try {
       var query = _supabase.from('promotions').select();
-      
+
       if (loungeId != null && loungeId.trim().isNotEmpty) {
         query = query.or('lounge_id.eq.${loungeId.trim()},lounge_id.is.null');
       }
-      
+
       if (city != null && city.trim().isNotEmpty) {
         query = query.eq('city', city.trim());
       }
 
       final response = await query.order('created_at', ascending: false);
-      
-      return (response as List).map((json) => PromoModel.fromJson(Map<String, dynamic>.from(json))).toList();
+
+      return (response as List)
+          .map((json) => PromoModel.fromJson(Map<String, dynamic>.from(json)))
+          .toList();
     } catch (e) {
-      debugPrint('⚠️ [MARKETING_REMOTE] getPromotions error: $e, attempting plain select fallback');
+      debugPrint(
+        '⚠️ [MARKETING_REMOTE] getPromotions error: $e, attempting plain select fallback',
+      );
       try {
-        final response = await _supabase.from('promotions').select().order('created_at', ascending: false);
-        return (response as List).map((json) => PromoModel.fromJson(Map<String, dynamic>.from(json))).toList();
+        final response = await _supabase
+            .from('promotions')
+            .select()
+            .order('created_at', ascending: false);
+        return (response as List)
+            .map((json) => PromoModel.fromJson(Map<String, dynamic>.from(json)))
+            .toList();
       } catch (e2) {
-        debugPrint('⚠️ [MARKETING_REMOTE] getPromotions plain fallback error: $e2');
+        debugPrint(
+          '⚠️ [MARKETING_REMOTE] getPromotions plain fallback error: $e2',
+        );
         return [];
       }
     }
@@ -109,7 +136,9 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
     };
 
     await _supabase.from('promotions').update(payload).eq('id', promo.id);
-    debugPrint('🟢 [MARKETING_REMOTE] Successfully updated promo ${promo.id} with image_url: ${promo.imageUrl}');
+    debugPrint(
+      '🟢 [MARKETING_REMOTE] Successfully updated promo ${promo.id} with image_url: ${promo.imageUrl}',
+    );
   }
 
   @override
@@ -118,7 +147,9 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
       await _supabase.from('promotions').delete().eq('id', id);
     } on PostgrestException catch (e) {
       if (e.code == '42501' || e.message.contains('permission denied')) {
-        throw Exception('عفواً، لا تملك الصلاحية الكافية لحذف هذا العرض (RLS Restricted).');
+        throw Exception(
+          'عفواً، لا تملك الصلاحية الكافية لحذف هذا العرض (RLS Restricted).',
+        );
       }
       rethrow;
     }
@@ -126,35 +157,53 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
 
   @override
   Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName) async {
-    final sanitizedFileName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
-    final path = 'posters/${DateTime.now().millisecondsSinceEpoch}_$sanitizedFileName';
-    
+    final sanitizedFileName = fileName.replaceAll(
+      RegExp(r'[^a-zA-Z0-9._-]'),
+      '_',
+    );
+    final path =
+        'posters/${DateTime.now().millisecondsSinceEpoch}_$sanitizedFileName';
+
     // 1. Try promotion-assets bucket (newly created bucket)
     try {
-      await _supabase.storage.from('promotion-assets').uploadBinary(path, fileBytes);
+      await _supabase.storage
+          .from('promotion-assets')
+          .uploadBinary(path, fileBytes);
       return _supabase.storage.from('promotion-assets').getPublicUrl(path);
     } catch (e) {
-      debugPrint('⚠️ [MARKETING_REMOTE] promotion-assets bucket upload error ($e), attempting lounge-assets...');
+      debugPrint(
+        '⚠️ [MARKETING_REMOTE] promotion-assets bucket upload error ($e), attempting lounge-assets...',
+      );
     }
 
     // 2. Fallback to lounge-assets bucket
     try {
-      await _supabase.storage.from('lounge-assets').uploadBinary(path, fileBytes);
+      await _supabase.storage
+          .from('lounge-assets')
+          .uploadBinary(path, fileBytes);
       return _supabase.storage.from('lounge-assets').getPublicUrl(path);
     } catch (e) {
-      debugPrint('⚠️ [MARKETING_REMOTE] lounge-assets bucket upload error ($e), attempting tournament-assets...');
+      debugPrint(
+        '⚠️ [MARKETING_REMOTE] lounge-assets bucket upload error ($e), attempting tournament-assets...',
+      );
     }
 
     // 3. Fallback to tournament-assets bucket
     try {
-      await _supabase.storage.from('tournament-assets').uploadBinary(path, fileBytes);
+      await _supabase.storage
+          .from('tournament-assets')
+          .uploadBinary(path, fileBytes);
       return _supabase.storage.from('tournament-assets').getPublicUrl(path);
     } catch (e) {
-      debugPrint('🔴 [MARKETING_REMOTE] All storage buckets failed to upload promo poster: $e');
+      debugPrint(
+        '🔴 [MARKETING_REMOTE] All storage buckets failed to upload promo poster: $e',
+      );
     }
 
     // Throw explicit Exception so UI/Cubit surfaces error instead of saving a broken blank URL
-    throw Exception('فشل رفع صورة العرض الترويجي على السيرفر. يرجى إعادة المحاولة.');
+    throw Exception(
+      'فشل رفع صورة العرض الترويجي على السيرفر. يرجى إعادة المحاولة.',
+    );
   }
 
   @override
@@ -181,7 +230,9 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
         query = query.eq('user_id', userId.trim());
       }
       final response = await query.order('created_at', ascending: false);
-      return (response as List).map((json) => NotificationModel.fromJson(json)).toList();
+      return (response as List)
+          .map((json) => NotificationModel.fromJson(json))
+          .toList();
     } catch (e) {
       debugPrint('⚠️ [MARKETING_REMOTE] getNotifications query error: $e');
       return [];
@@ -195,16 +246,23 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
     int offset = 0,
   }) async {
     try {
-      final response = await _supabase.rpc('get_notifications', params: {
-        'p_lang': lang,
-        'p_limit': limit,
-        'p_offset': offset,
-      });
+      final response = await _supabase.rpc(
+        'get_notifications',
+        params: {'p_lang': lang, 'p_limit': limit, 'p_offset': offset},
+      );
       if (response != null && response is List) {
-        return response.map((json) => NotificationModel.fromJson(Map<String, dynamic>.from(json as Map))).toList();
+        return response
+            .map(
+              (json) => NotificationModel.fromJson(
+                Map<String, dynamic>.from(json as Map),
+              ),
+            )
+            .toList();
       }
     } catch (e) {
-      debugPrint('⚠️ [MARKETING_REMOTE] get_notifications RPC error: $e, falling back to direct select');
+      debugPrint(
+        '⚠️ [MARKETING_REMOTE] get_notifications RPC error: $e, falling back to direct select',
+      );
     }
     return getNotifications();
   }
@@ -218,10 +276,10 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
     final validPage = page < 1 ? 1 : page;
 
     try {
-      final response = await _supabase.rpc('get_notifications_page', params: {
-        'p_page': validPage,
-        'p_page_size': clampedPageSize,
-      });
+      final response = await _supabase.rpc(
+        'get_notifications_page',
+        params: {'p_page': validPage, 'p_page_size': clampedPageSize},
+      );
 
       return PaginatedResult.fromRpcResponse<NotificationModel>(
         response,
@@ -230,7 +288,9 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
         requestedPageSize: clampedPageSize,
       );
     } catch (e) {
-      debugPrint('⚠️ [MARKETING_REMOTE] get_notifications_page RPC error: $e, falling back');
+      debugPrint(
+        '⚠️ [MARKETING_REMOTE] get_notifications_page RPC error: $e, falling back',
+      );
       final list = await getNotifications();
       return PaginatedResult(
         items: list,
@@ -244,13 +304,19 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
   @override
   Future<void> markNotificationRead(String notificationId) async {
     try {
-      await _supabase.rpc('mark_notification_read', params: {
-        'p_notification_id': notificationId,
-      });
+      await _supabase.rpc(
+        'mark_notification_read',
+        params: {'p_notification_id': notificationId},
+      );
       return;
     } catch (e) {
-      debugPrint('⚠️ [MARKETING_REMOTE] mark_notification_read RPC error: $e, fallback update');
-      await _supabase.from('notifications').update({'is_read': true}).eq('id', notificationId);
+      debugPrint(
+        '⚠️ [MARKETING_REMOTE] mark_notification_read RPC error: $e, fallback update',
+      );
+      await _supabase
+          .from('notifications')
+          .update({'is_read': true})
+          .eq('id', notificationId);
     }
   }
 
@@ -260,13 +326,18 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
       await _supabase.rpc('mark_all_notifications_read');
       return;
     } catch (e) {
-      debugPrint('⚠️ [MARKETING_REMOTE] mark_all_notifications_read RPC error: $e, fallback update');
+      debugPrint(
+        '⚠️ [MARKETING_REMOTE] mark_all_notifications_read RPC error: $e, fallback update',
+      );
       await _supabase.from('notifications').update({'is_read': true});
     }
   }
 
   @override
-  RealtimeChannel subscribeToUserNotifications(String userId, void Function(NotificationModel) onNewNotification) {
+  RealtimeChannel subscribeToUserNotifications(
+    String userId,
+    void Function(NotificationModel) onNewNotification,
+  ) {
     final channel = _supabase
         .channel('public:notifications:user_$userId')
         .onPostgresChanges(
@@ -290,7 +361,9 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>?> getUserNotificationSettings(String userId) async {
+  Future<Map<String, dynamic>?> getUserNotificationSettings(
+    String userId,
+  ) async {
     try {
       final response = await _supabase
           .from('notification_settings')
@@ -299,18 +372,25 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
           .maybeSingle();
       return response != null ? Map<String, dynamic>.from(response) : null;
     } catch (e) {
-      debugPrint('⚠️ [MARKETING_DATA_SOURCE] getUserNotificationSettings error: $e');
+      debugPrint(
+        '⚠️ [MARKETING_DATA_SOURCE] getUserNotificationSettings error: $e',
+      );
       return null;
     }
   }
 
   @override
-  Future<void> updateUserNotificationSettings(String userId, Map<String, dynamic> settings) async {
+  Future<void> updateUserNotificationSettings(
+    String userId,
+    Map<String, dynamic> settings,
+  ) async {
     final payload = {
       'user_id': userId,
       ...settings,
       'updated_at': DateTime.now().toIso8601String(),
     };
-    await _supabase.from('notification_settings').upsert(payload, onConflict: 'user_id');
+    await _supabase
+        .from('notification_settings')
+        .upsert(payload, onConflict: 'user_id');
   }
 }
