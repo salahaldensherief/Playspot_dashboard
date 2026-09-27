@@ -125,50 +125,10 @@ class KycRemoteDataSourceImpl implements KycRemoteDataSource {
     required bool approve,
     String? notes,
   }) async {
-    try {
-      await _client.rpc('review_kyc', params: {
-        'p_user_id': userId,
-        'p_approve': approve,
-        'p_notes': notes,
-      });
-      return;
-    } catch (_) {}
-
-    final statusStr = approve ? 'approved' : 'rejected';
-    
-    // Direct table update on kyc_submissions
-    try {
-      await _client
-          .from('kyc_submissions')
-          .update({
-            'status': statusStr,
-            if (notes != null && notes.isNotEmpty) 'notes': notes,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('user_id', userId);
-    } catch (_) {}
-
-    // If approved, update user's profile role and lounge status for full platform access
-    if (approve) {
-      try {
-        await _client
-            .from('profiles')
-            .update({
-              'role': 'owner',
-              'is_active': true,
-              'is_setup_completed': true,
-            })
-            .eq('id', userId);
-      } catch (_) {}
-
-      try {
-        await _client
-            .from('lounges')
-            .update({
-              'status': 'active',
-            })
-            .eq('owner_id', userId);
-      } catch (_) {}
-    }
+    await _client.rpc('review_kyc', params: {
+      'p_user_id': userId,
+      'p_approve': approve,
+      'p_notes': notes,
+    });
   }
 }
