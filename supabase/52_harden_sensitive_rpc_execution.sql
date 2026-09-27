@@ -1,3 +1,4 @@
+-- CI baseline: platform hardening safety net
 BEGIN;
 
 REVOKE EXECUTE ON FUNCTION public.create_lounge_admin(uuid, text, text, text)
