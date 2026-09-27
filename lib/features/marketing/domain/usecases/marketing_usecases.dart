@@ -18,14 +18,18 @@ class GetPromotionsParams extends Equatable {
   List<Object?> get props => [loungeId, city];
 }
 
-class GetPromotionsUseCase implements UseCase<List<PromoEntity>, GetPromotionsParams> {
+class GetPromotionsUseCase
+    implements UseCase<List<PromoEntity>, GetPromotionsParams> {
   final MarketingRepository repository;
 
   GetPromotionsUseCase(this.repository);
 
   @override
   Future<Either<Failure, List<PromoEntity>>> call(GetPromotionsParams params) {
-    return repository.getPromotions(loungeId: params.loungeId, city: params.city);
+    return repository.getPromotions(
+      loungeId: params.loungeId,
+      city: params.city,
+    );
   }
 }
 
@@ -65,25 +69,36 @@ class DeletePromotionUseCase implements UseCase<void, String> {
 class UploadPromoPosterParams extends Equatable {
   final Uint8List fileBytes;
   final String fileName;
+  final String loungeId;
 
-  const UploadPromoPosterParams({required this.fileBytes, required this.fileName});
+  const UploadPromoPosterParams({
+    required this.fileBytes,
+    required this.fileName,
+    required this.loungeId,
+  });
 
   @override
-  List<Object?> get props => [fileBytes, fileName];
+  List<Object?> get props => [fileBytes, fileName, loungeId];
 }
 
-class UploadPromoPosterUseCase implements UseCase<String, UploadPromoPosterParams> {
+class UploadPromoPosterUseCase
+    implements UseCase<String, UploadPromoPosterParams> {
   final MarketingRepository repository;
 
   UploadPromoPosterUseCase(this.repository);
 
   @override
   Future<Either<Failure, String>> call(UploadPromoPosterParams params) {
-    return repository.uploadPromoPoster(params.fileBytes, params.fileName);
+    return repository.uploadPromoPoster(
+      params.fileBytes,
+      params.fileName,
+      params.loungeId,
+    );
   }
 }
 
-class GetNotificationsUseCase implements UseCase<List<NotificationEntity>, NoParams> {
+class GetNotificationsUseCase
+    implements UseCase<List<NotificationEntity>, NoParams> {
   final MarketingRepository repository;
 
   GetNotificationsUseCase(this.repository);
@@ -105,14 +120,23 @@ class GetNotificationsPageParams extends Equatable {
 }
 
 class GetNotificationsPageUseCase
-    implements UseCase<PaginatedResult<NotificationEntity>, GetNotificationsPageParams> {
+    implements
+        UseCase<
+          PaginatedResult<NotificationEntity>,
+          GetNotificationsPageParams
+        > {
   final MarketingRepository repository;
 
   GetNotificationsPageUseCase(this.repository);
 
   @override
-  Future<Either<Failure, PaginatedResult<NotificationEntity>>> call(GetNotificationsPageParams params) {
-    return repository.getNotificationsPage(page: params.page, pageSize: params.pageSize);
+  Future<Either<Failure, PaginatedResult<NotificationEntity>>> call(
+    GetNotificationsPageParams params,
+  ) {
+    return repository.getNotificationsPage(
+      page: params.page,
+      pageSize: params.pageSize,
+    );
   }
 }
 

@@ -41,26 +41,23 @@ class SystemRemoteDataSourceImpl implements SystemRemoteDataSource {
 
   @override
   Future<void> updateAppStatus(AppStatusModel status) async {
-    final payload = status.toJson();
-    if (status.id != null && status.id!.isNotEmpty) {
-      await supabaseClient.from('app_status').upsert(payload, onConflict: 'id');
-    } else {
-      final existing = await supabaseClient
-          .from('app_status')
-          .select('id')
-          .limit(1)
-          .maybeSingle();
-
-      if (existing != null) {
-        payload['id'] = existing['id'];
-        await supabaseClient
-            .from('app_status')
-            .update(payload)
-            .eq('id', existing['id']);
-      } else {
-        await supabaseClient.from('app_status').insert(payload);
-      }
-    }
+    await supabaseClient.rpc(
+      'update_app_status',
+      params: {
+        'p_maintenance_mode': status.isMaintenanceMode,
+        'p_maintenance_message_ar': status.maintenanceMessageAr,
+        'p_maintenance_message_en': status.maintenanceMessageEn,
+        'p_maintenance_until': status.expectedEndTime?.toIso8601String(),
+        'p_min_supported_version_android': status.minAndroidVersion,
+        'p_min_supported_version_ios': status.minIosVersion,
+        'p_latest_version_android': status.latestAndroidVersion,
+        'p_latest_version_ios': status.latestIosVersion,
+        'p_update_message_ar': status.updateMessageAr,
+        'p_update_message_en': status.updateMessageEn,
+        'p_store_url_android': status.storeUrlAndroid,
+        'p_store_url_ios': status.storeUrlIos,
+      },
+    );
   }
 
   @override
@@ -98,9 +95,9 @@ class SystemRemoteDataSourceImpl implements SystemRemoteDataSource {
 
   @override
   Future<void> deactivateAnnouncement(String id) async {
-    await supabaseClient
-        .from('announcements')
-        .update({'is_active': false})
-        .eq('id', id);
+    await supabaseClient.rpc(
+      'deactivate_system_announcement',
+      params: {'p_announcement_id': id},
+    );
   }
 }
