@@ -33,23 +33,33 @@ class KycRemoteDataSourceImpl implements KycRemoteDataSource {
     String? businessDocName,
   }) async {
     // 1. Upload ID Card to private bucket
-    final idPath = '$userId/id_card_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    await _client.storage.from('kyc-documents').uploadBinary(idPath, idCardBytes);
-    final idUrl = await _client.storage.from('kyc-documents').createSignedUrl(idPath, 60 * 60 * 24 * 365); // 1-year signed URL
+    final idPath =
+        '$userId/id_card_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    await _client.storage
+        .from('kyc-documents')
+        .uploadBinary(idPath, idCardBytes);
+    final idUrl = await _client.storage
+        .from('kyc-documents')
+        .createSignedUrl(idPath, 60 * 60 * 24 * 365); // 1-year signed URL
 
     // 2. Upload Business Doc (Optional)
     String? bizUrl;
     if (businessDocBytes != null && businessDocName != null) {
-      final bizPath = '$userId/business_doc_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      await _client.storage.from('kyc-documents').uploadBinary(bizPath, businessDocBytes);
-      bizUrl = await _client.storage.from('kyc-documents').createSignedUrl(bizPath, 60 * 60 * 24 * 365);
+      final bizPath =
+          '$userId/business_doc_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      await _client.storage
+          .from('kyc-documents')
+          .uploadBinary(bizPath, businessDocBytes);
+      bizUrl = await _client.storage
+          .from('kyc-documents')
+          .createSignedUrl(bizPath, 60 * 60 * 24 * 365);
     }
 
     // 3. Call RPC to submit
-    await _client.rpc('submit_kyc_documents', params: {
-      'p_id_document_url': idUrl,
-      'p_business_document_url': bizUrl,
-    });
+    await _client.rpc(
+      'submit_kyc_documents',
+      params: {'p_id_document_url': idUrl, 'p_business_document_url': bizUrl},
+    );
   }
 
   @override
@@ -75,9 +85,16 @@ class KycRemoteDataSourceImpl implements KycRemoteDataSource {
         return {
           'user_id': map['user_id']?.toString() ?? '',
           'submission_id': map['id']?.toString() ?? '',
-          'owner_name': profile['full_name']?.toString() ?? map['owner_name']?.toString() ?? 'Pending Owner',
-          'owner_email': profile['email']?.toString() ?? map['owner_email']?.toString() ?? '',
-          'owner_phone': profile['phone']?.toString() ?? map['phone']?.toString() ?? '',
+          'owner_name':
+              profile['full_name']?.toString() ??
+              map['owner_name']?.toString() ??
+              'Pending Owner',
+          'owner_email':
+              profile['email']?.toString() ??
+              map['owner_email']?.toString() ??
+              '',
+          'owner_phone':
+              profile['phone']?.toString() ?? map['phone']?.toString() ?? '',
           'lounge_name': map['lounge_name']?.toString() ?? 'Lounge',
           'id_document_url': map['id_document_url']?.toString() ?? '',
           'business_document_url': map['business_document_url']?.toString(),
@@ -125,50 +142,9 @@ class KycRemoteDataSourceImpl implements KycRemoteDataSource {
     required bool approve,
     String? notes,
   }) async {
-    try {
-      await _client.rpc('review_kyc', params: {
-        'p_user_id': userId,
-        'p_approve': approve,
-        'p_notes': notes,
-      });
-      return;
-    } catch (_) {}
-
-    final statusStr = approve ? 'approved' : 'rejected';
-    
-    // Direct table update on kyc_submissions
-    try {
-      await _client
-          .from('kyc_submissions')
-          .update({
-            'status': statusStr,
-            if (notes != null && notes.isNotEmpty) 'notes': notes,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('user_id', userId);
-    } catch (_) {}
-
-    // If approved, update user's profile role and lounge status for full platform access
-    if (approve) {
-      try {
-        await _client
-            .from('profiles')
-            .update({
-              'role': 'owner',
-              'is_active': true,
-              'is_setup_completed': true,
-            })
-            .eq('id', userId);
-      } catch (_) {}
-
-      try {
-        await _client
-            .from('lounges')
-            .update({
-              'status': 'active',
-            })
-            .eq('owner_id', userId);
-      } catch (_) {}
-    }
+    await _client.rpc(
+      'review_kyc',
+      params: {'p_user_id': userId, 'p_approve': approve, 'p_notes': notes},
+    );
   }
 }
