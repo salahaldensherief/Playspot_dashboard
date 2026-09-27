@@ -134,42 +134,27 @@ class TournamentParticipantRemoteHelper {
   }
 
   Future<void> checkInParticipant(String participantId) async {
-    try {
-      await client.rpc('check_in_tournament_participant', params: {'p_participant_id': participantId});
-    } catch (e) {
-      try {
-        await client.rpc('check_in_tournament_participant', params: {'participant_id': participantId});
-      } catch (e2) {
-        AppLogger.warning('check_in_tournament_participant error', e2);
-        rethrow;
-      }
-    }
+    await client.rpc(
+      'check_in_tournament_participant',
+      params: {'p_participant_id': participantId},
+    );
   }
 
   Future<void> withdrawParticipant(String participantId) async {
-    try {
-      await client.rpc('withdraw_tournament_participant', params: {'p_participant_id': participantId});
-    } catch (e) {
-      try {
-        await client.rpc('withdraw_tournament_participant', params: {'participant_id': participantId});
-      } catch (e2) {
-        AppLogger.warning('withdraw_tournament_participant error', e2);
-        rethrow;
-      }
-    }
+    await client.rpc(
+      'withdraw_tournament_participant',
+      params: {
+        'p_participant_id': participantId,
+        'p_reason': 'Admin withdrawal',
+      },
+    );
   }
 
   Future<void> promoteWaitlist(String tournamentId) async {
-    try {
-      await client.rpc('promote_tournament_waitlist', params: {'p_tournament_id': tournamentId});
-    } catch (e) {
-      try {
-        await client.rpc('promote_tournament_waitlist', params: {'tournament_id': tournamentId});
-      } catch (e2) {
-        AppLogger.warning('promote_tournament_waitlist error', e2);
-        rethrow;
-      }
-    }
+    await client.rpc(
+      'promote_tournament_waitlist',
+      params: {'p_tournament_id': tournamentId},
+    );
   }
 
   Future<Map<String, dynamic>> submitTournamentPayment({
