@@ -210,72 +210,58 @@ class SessionOperationsRemoteHelper {
     List<Map<String, dynamic>>? extraItems,
     double? extraCost,
   }) async {
-    if (bookingId != null && bookingId.isNotEmpty) {
-      if (approve) {
-        if (extensionMinutes != null && extensionMinutes > 0) {
-          await extendSession(bookingId, extensionMinutes, additionalCost: extraCost);
-        }
-        if (extraItems != null && extraItems.isNotEmpty) {
-          await addExtrasToSession(bookingId, extraItems, extraCost ?? 0.0);
-        }
+    if (bookingId != null && bookingId.isNotEmpty && approve) {
+      if (extensionMinutes != null && extensionMinutes > 0) {
+        await extendSession(
+          bookingId,
+          extensionMinutes,
+          additionalCost: extraCost,
+        );
+      }
+      if (extraItems != null && extraItems.isNotEmpty) {
+        await addExtrasToSession(
+          bookingId,
+          extraItems,
+          extraCost ?? 0.0,
+        );
       }
     }
 
-    final String rawDbId = requestId
-        .replaceFirst('canteen_', '')
-        .replaceFirst('notif_', '')
-        .replaceFirst('sc_', '')
-        .replaceFirst('item_', '')
-        .replaceFirst('req_', '')
-        .replaceFirst('ext_', '');
-
-    if (rawDbId.isEmpty) return;
-
-    final tables = [
-      'booking_items',
-      'canteen_orders',
-      'service_calls',
-      'client_requests',
-      'bookings',
-      'notifications'
-    ];
-    final idCols = ['id', 'call_id', 'order_id', 'request_id', 'booking_id'];
-
-    for (final table in tables) {
-      for (final col in idCols) {
-        try {
-          Map<String, dynamic> updatePayload;
-          if (table == 'bookings') {
-            updatePayload = {'extension_status': approve ? 'approved' : 'rejected'};
-          } else if (table == 'canteen_orders') {
-            updatePayload = {'status': approve ? 'completed' : 'cancelled'};
-          } else if (table == 'booking_items') {
-            updatePayload = {
-              'status': approve ? 'completed' : 'cancelled',
-              'is_attended': true,
-              'is_read': true
-            };
-          } else if (table == 'notifications') {
-            updatePayload = {'is_read': true};
-          } else {
-            updatePayload = {
-              'status': approve ? 'resolved' : 'rejected',
-              'is_attended': true,
-              'is_read': true
-            };
-          }
-
-          final response = await supabaseClient
-              .from(table)
-              .update(updatePayload)
-              .eq(col, rawDbId)
-              .select();
-
-          if ((response as List).isNotEmpty) {
-            return;
-          }
-        } catch (_) {}
-      }
+    if (requestId.startsWith('ext_')) {
+      return;
     }
+
+    final uuidRegExp = RegExp(
+      r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
+    );
+    final match = uuidRegExp.firstMatch(requestId);
+    if (match == null) {
+      throw ArgumentError.value(
+        requestId,
+        'requestId',
+        'Request id must contain a UUID',
+      );
+    }
+
+    final requestType = switch (requestId) {
+      final value when value.startsWith('canteen_') => 'canteen_order',
+      final value when value.startsWith('sc_') => 'service_call',
+      final value when value.startsWith('req_') => 'client_request',
+      _ when isCanteenOrder => 'canteen_order',
+      _ => throw ArgumentError.value(
+          requestId,
+          'requestId',
+          'Unsupported live-request identifier',
+        ),
+    };
+
+    await supabaseClient.rpc(
+      'resolve_live_request',
+      params: {
+        'p_request_type': requestType,
+        'p_request_id': match.group(0)!,
+      },
+    );
   }
+
 }
