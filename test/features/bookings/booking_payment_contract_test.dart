@@ -7,6 +7,41 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_remote_data_source_impl.dart';
 
 void main() {
+  test('booking approval changes status without collecting payment', () async {
+    final requests = <http.Request>[];
+    final client = SupabaseClient(
+      'https://example.invalid',
+      'test-key',
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        return http.Response(
+          'null',
+          200,
+          headers: {'content-type': 'application/json'},
+          request: request,
+        );
+      }),
+    );
+
+    final source = BookingRemoteDataSourceImpl(client);
+
+    await source.approveBooking('booking-approve');
+
+    expect(requests, hasLength(1));
+    expect(
+      requests.single.url.path,
+      '/rest/v1/rpc/update_booking_status_admin',
+    );
+
+    final payload = jsonDecode(requests.single.body) as Map<String, dynamic>;
+    expect(payload['p_booking_id'], 'booking-approve');
+    expect(payload['p_status'], 'upcoming');
+    expect(payload.containsKey('payment_status'), isFalse);
+    expect(payload.containsKey('p_payment_method'), isFalse);
+
+    await client.dispose();
+  });
+
   test('cash payment uses the canonical complete_booking_payment RPC', () async {
     final requests = <http.Request>[];
     final client = SupabaseClient(
