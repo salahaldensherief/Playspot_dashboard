@@ -104,9 +104,10 @@ class MarketingRepositoryImpl implements MarketingRepository {
   Future<Either<Failure, String>> uploadPromoPoster(
     Uint8List fileBytes,
     String fileName,
+    String loungeId,
   ) async {
     try {
-      final url = await remoteDataSource.uploadPromoPoster(fileBytes, fileName);
+      final url = await remoteDataSource.uploadPromoPoster(fileBytes, fileName, loungeId);
       return Right(url);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
