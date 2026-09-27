@@ -17,6 +17,8 @@ class PromoModel extends PromoEntity {
     super.tag,
     super.isRoomSpecific = false,
     super.targetAudience = 'all',
+    super.discountType = 'percentage',
+    super.discountValue = 0,
   });
 
   factory PromoModel.fromJson(Map<String, dynamic> json) {
@@ -58,6 +60,8 @@ class PromoModel extends PromoEntity {
       tag: fallbackTag.isNotEmpty ? fallbackTag : tagAr,
       isRoomSpecific: json['is_room_specific'] == true,
       targetAudience: json['target_audience']?.toString() ?? 'all',
+      discountType: json['discount_type']?.toString() ?? 'percentage',
+      discountValue: (json['discount_value'] as num?)?.toDouble() ?? 0,
     );
   }
 
@@ -82,6 +86,8 @@ class PromoModel extends PromoEntity {
       'tag': tag ?? (tagAr.isNotEmpty ? tagAr : tagEn),
       'is_room_specific': isRoomSpecific,
       'target_audience': targetAudience,
+      'discount_type': discountType,
+      'discount_value': discountValue,
     };
   }
 }
