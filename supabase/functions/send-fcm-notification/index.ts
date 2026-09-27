@@ -82,6 +82,34 @@ function localizedValue(
   return typeof value === "string" ? value.trim() : fallback;
 }
 
+type NotificationSettings = {
+  push_enabled?: boolean | null;
+  booking_updates?: boolean | null;
+  offers_enabled?: boolean | null;
+  events_enabled?: boolean | null;
+  system_notifications?: boolean | null;
+};
+
+function shouldDeliverPush(
+  notificationType: string,
+  settings: NotificationSettings | null,
+): boolean {
+  if (!settings) return true;
+  if (settings.push_enabled === false) return false;
+
+  const type = notificationType.toLowerCase().trim();
+  if (type.includes("booking") || type.includes("canteen") || type.includes("service")) {
+    return settings.booking_updates !== false;
+  }
+  if (type.includes("offer") || type.includes("promo")) {
+    return settings.offers_enabled !== false;
+  }
+  if (type.includes("tournament") || type.includes("event")) {
+    return settings.events_enabled !== false;
+  }
+  return settings.system_notifications !== false;
+}
+
 function stringifyDataValue(value: unknown): string {
   if (value === null || value === undefined) return "";
   if (typeof value === "string") return value;
