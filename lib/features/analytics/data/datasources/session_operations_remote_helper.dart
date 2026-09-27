@@ -38,6 +38,7 @@ class SessionOperationsRemoteHelper {
       rethrow;
     }
   }
+
   Future<void> addExtrasToSession(
     String bookingId,
     List<Map<String, dynamic>> extras,
@@ -46,29 +47,25 @@ class SessionOperationsRemoteHelper {
     if (extras.isEmpty) return;
 
     final items = extras.map((extra) {
-      final extraId = extra['extra_id'] ??
+      final extraId =
+          extra['extra_id'] ??
           extra['id'] ??
           extra['product_id'] ??
           extra['item_id'];
-      final quantity = (extra['quantity'] as num?)?.toInt() ??
+      final quantity =
+          (extra['quantity'] as num?)?.toInt() ??
           (extra['qty'] as num?)?.toInt() ??
           1;
 
-      return {
-        'extra_id': extraId?.toString() ?? '',
-        'quantity': quantity,
-      };
+      return {'extra_id': extraId?.toString() ?? '', 'quantity': quantity};
     }).toList();
 
     await supabaseClient.rpc(
       'place_canteen_order',
-      params: {
-        'p_booking_id': bookingId,
-        'p_items': items,
-        'p_note': null,
-      },
+      params: {'p_booking_id': bookingId, 'p_items': items, 'p_note': null},
     );
   }
+
   Future<void> endSession(String bookingId) async {
     debugPrint('🔵 [SessionOperationsRemoteHelper] Ending session: $bookingId');
 
@@ -79,10 +76,7 @@ class SessionOperationsRemoteHelper {
 
     await supabaseClient.rpc(
       'complete_booking_session',
-      params: {
-        'p_booking_id': bookingId,
-        'p_action_by': userId,
-      },
+      params: {'p_booking_id': bookingId, 'p_action_by': userId},
     );
   }
 
@@ -94,25 +88,34 @@ class SessionOperationsRemoteHelper {
     int? requestedMinutes,
     int? currentDurationMinutes,
   }) async {
-    final uuidRegExp = RegExp(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}');
+    final uuidRegExp = RegExp(
+      r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
+    );
     final match = uuidRegExp.firstMatch(bookingId);
-    final cleanBookingId = match != null ? match.group(0)! : bookingId.replaceAll('ext_', '').trim();
+    final cleanBookingId = match != null
+        ? match.group(0)!
+        : bookingId.replaceAll('ext_', '').trim();
 
     if (!uuidRegExp.hasMatch(cleanBookingId)) {
-      debugPrint('⚠️ [SESSION_OPERATIONS] Invalid booking UUID for extension request: $bookingId');
+      debugPrint(
+        '⚠️ [SESSION_OPERATIONS] Invalid booking UUID for extension request: $bookingId',
+      );
       return;
     }
 
     if (isApproved) {
-      await supabaseClient.rpc('approve_booking_extension', params: {
-        'p_booking_id': cleanBookingId,
-        'p_additional_cost': null,
-      });
+      await supabaseClient.rpc(
+        'approve_booking_extension',
+        params: {'p_booking_id': cleanBookingId, 'p_additional_cost': null},
+      );
     } else {
-      await supabaseClient.rpc('reject_booking_extension', params: {
-        'p_booking_id': cleanBookingId,
-        'p_reason': reason ?? 'لا يوجد وقت متاح بعد الحجز الحالي',
-      });
+      await supabaseClient.rpc(
+        'reject_booking_extension',
+        params: {
+          'p_booking_id': cleanBookingId,
+          'p_reason': reason ?? 'لا يوجد وقت متاح بعد الحجز الحالي',
+        },
+      );
     }
   }
 
@@ -134,11 +137,7 @@ class SessionOperationsRemoteHelper {
         );
       }
       if (extraItems != null && extraItems.isNotEmpty) {
-        await addExtrasToSession(
-          bookingId,
-          extraItems,
-          extraCost ?? 0.0,
-        );
+        await addExtrasToSession(bookingId, extraItems, extraCost ?? 0.0);
       }
     }
 
@@ -164,19 +163,15 @@ class SessionOperationsRemoteHelper {
       final value when value.startsWith('req_') => 'client_request',
       _ when isCanteenOrder => 'canteen_order',
       _ => throw ArgumentError.value(
-          requestId,
-          'requestId',
-          'Unsupported live-request identifier',
-        ),
+        requestId,
+        'requestId',
+        'Unsupported live-request identifier',
+      ),
     };
 
     await supabaseClient.rpc(
       'resolve_live_request',
-      params: {
-        'p_request_type': requestType,
-        'p_request_id': match.group(0)!,
-      },
+      params: {'p_request_type': requestType, 'p_request_id': match.group(0)!},
     );
   }
-
 }
