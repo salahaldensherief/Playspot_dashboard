@@ -1,32 +1,39 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get_it/get_it.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/login/login_cubit.dart';
 import '../../features/permissions/presentation/cubit/permissions_cubit.dart';
 
 extension PermissionExtension on BuildContext {
-  /// Core dynamic permission evaluator based on PermissionsCubit state & cache
+  String _permissionRole(UserEntity user) {
+    final rawRole = user.rawRole?.trim();
+    if (rawRole != null && rawRole.isNotEmpty) return rawRole;
+
+    return switch (user.role) {
+      UserRole.superAdmin => 'super_admin',
+      UserRole.owner => 'owner',
+      UserRole.manager => 'manager',
+      UserRole.cashier => 'cashier',
+      UserRole.staff => 'staff',
+      UserRole.user => 'user',
+    };
+  }
+
+  /// UI permission evaluation mirrors the canonical server permission matrix.
+  ///
+  /// This is a presentation guard only; backend RPC/RLS authorization remains
+  /// authoritative for every sensitive read or mutation.
   bool hasPermission(String key) {
-    UserEntity? user;
-    try {
-      user = read<LoginCubit>().state.user;
-    } catch (_) {
-      if (GetIt.I.isRegistered<LoginCubit>()) {
-        user = GetIt.I<LoginCubit>().state.user;
-      }
-    }
+    final user = read<LoginCubit>().state.user;
+    if (user == null || key.trim().isEmpty) return false;
 
-    if (user == null) return false;
+    // Platform administrators intentionally operate outside lounge-scoped RBAC.
+    if (user.isSuperAdmin) return true;
 
-    final roleStr = user.rawRole ?? user.role.name;
-    try {
-      return read<PermissionsCubit>().hasPermission(key, userRole: roleStr, userId: user.id);
-    } catch (_) {
-      if (GetIt.I.isRegistered<PermissionsCubit>()) {
-        return GetIt.I<PermissionsCubit>().hasPermission(key, userRole: roleStr, userId: user.id);
-      }
-    }
-    return false;
+    return read<PermissionsCubit>().hasPermission(
+      key,
+      userRole: _permissionRole(user),
+      userId: user.id,
+    );
   }
 }

@@ -64,21 +64,17 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
 
     AppLogger.debug('Supabase updateRolePermission: role=$cleanRole, key=$permissionKey, enabled=$isEnabled, loungeId=$cleanLoungeId');
 
-    if (cleanLoungeId != null && cleanLoungeId.isNotEmpty) {
-      await _supabase.from('lounge_role_permissions').upsert({
-        'lounge_id': cleanLoungeId,
-        'role': cleanRole,
-        'permission_key': permissionKey,
-        'is_enabled': isEnabled,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }, onConflict: 'lounge_id,role,permission_key');
-      return;
-    }
-
-    await _supabase.rpc('update_role_permission', params: {
-      'p_role': cleanRole,
-      'p_permission_key': permissionKey,
-      'p_is_enabled': isEnabled,
-    });
+    await _supabase.rpc(
+      'update_role_permission',
+      params: {
+        'p_role': cleanRole,
+        'p_permission_key': permissionKey,
+        'p_is_enabled': isEnabled,
+        'p_lounge_id':
+            cleanLoungeId != null && cleanLoungeId.isNotEmpty
+                ? cleanLoungeId
+                : null,
+      },
+    );
   }
 }

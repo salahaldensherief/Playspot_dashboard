@@ -19,8 +19,8 @@ void main() {
     await expectLater(source.updateRolePermission('cashier', 'bookings.view', false, loungeId: 'lounge-a'),
       throwsA(isA<PostgrestException>()));
     expect(requests, hasLength(1));
-    expect(requests.single.url.path, '/rest/v1/lounge_role_permissions');
-    expect(jsonDecode(requests.single.body)['lounge_id'], 'lounge-a');
+    expect(requests.single.url.path, '/rest/v1/rpc/update_role_permission');
+    expect(jsonDecode(requests.single.body)['p_lounge_id'], 'lounge-a');
     await client.dispose();
   });
 
@@ -36,10 +36,11 @@ void main() {
       ' CASHIER ', 'bookings.view', false, loungeId: ' lounge-a ');
     expect(requests, hasLength(1));
     final payload = jsonDecode(requests.single.body);
-    expect(payload['lounge_id'], 'lounge-a');
-    expect(payload['role'], 'cashier');
-    expect(payload['permission_key'], 'bookings.view');
-    expect(payload['is_enabled'], false);
+    expect(requests.single.url.path, '/rest/v1/rpc/update_role_permission');
+    expect(payload['p_lounge_id'], 'lounge-a');
+    expect(payload['p_role'], 'cashier');
+    expect(payload['p_permission_key'], 'bookings.view');
+    expect(payload['p_is_enabled'], false);
     await client.dispose();
   });
 }
