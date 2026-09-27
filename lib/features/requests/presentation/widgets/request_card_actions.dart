@@ -27,9 +27,7 @@ class RequestCardActions extends StatelessWidget {
       builder: (dialogContext) => _LiveApproveExtensionDialog(
         parentContext: context,
         bookingId: bookingId,
-        request: request,
         dashboardCubit: dashboardCubit,
-        requestsCubit: requestsCubit,
       ),
     );
   }
@@ -40,9 +38,7 @@ class RequestCardActions extends StatelessWidget {
       builder: (dialogContext) => _LiveRejectExtensionDialog(
         parentContext: context,
         bookingId: bookingId,
-        request: request,
         dashboardCubit: dashboardCubit,
-        requestsCubit: requestsCubit,
       ),
     );
   }
@@ -101,67 +97,31 @@ class RequestCardActions extends StatelessWidget {
 class _LiveApproveExtensionDialog extends StatefulWidget {
   final BuildContext parentContext;
   final String bookingId;
-  final ClientRequestEntity request;
   final DashboardCubit dashboardCubit;
-  final ClientRequestsCubit requestsCubit;
 
   const _LiveApproveExtensionDialog({
     required this.parentContext,
     required this.bookingId,
-    required this.request,
     required this.dashboardCubit,
-    required this.requestsCubit,
   });
 
   @override
   State<_LiveApproveExtensionDialog> createState() => _LiveApproveExtensionDialogState();
 }
 
-class _LiveApproveExtensionDialogState extends State<_LiveApproveExtensionDialog> {
-  final _costController = TextEditingController(text: '0.0');
-
-  @override
-  void dispose() {
-    _costController.dispose();
-    super.dispose();
-  }
-
+class _LiveApproveExtensionDialogState
+    extends State<_LiveApproveExtensionDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: AppColors.cardBackground,
-      title: AppText.subHeading(AppStrings.approveExtensionTitle, fontSize: 16.sp),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AppText.body(AppStrings.approveExtensionCostLabel, fontSize: 13.sp),
-          SizedBox(height: 10.h),
-          TextField(
-            controller: _costController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 15.sp,
-              fontWeight: FontWeight.bold,
-            ),
-            decoration: InputDecoration(
-              labelText: AppStrings.additionalCostField,
-              labelStyle: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
-              filled: true,
-              fillColor: AppColors.scaffoldBackground,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: const BorderSide(color: AppColors.borderDefault),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: const BorderSide(color: AppColors.neonBlue, width: 1.5),
-              ),
-            ),
-          ),
-        ],
+      title: AppText.subHeading(
+        AppStrings.approveExtensionTitle,
+        fontSize: 16.sp,
+      ),
+      content: AppText.body(
+        AppStrings.approveExtensionCostLabel,
+        fontSize: 13.sp,
       ),
       actions: [
         AppButton(
@@ -174,14 +134,11 @@ class _LiveApproveExtensionDialogState extends State<_LiveApproveExtensionDialog
           variant: AppButtonVariant.primary,
           onPressed: () async {
             Navigator.of(context).pop();
-            final cost = double.tryParse(_costController.text) ?? 0.0;
             final success = await widget.dashboardCubit.reviewExtensionRequest(
               bookingId: widget.bookingId,
               isApproved: true,
-              additionalCost: cost,
             );
             if (success && widget.parentContext.mounted) {
-              widget.requestsCubit.markAsAttended(widget.request.id);
               ScaffoldMessenger.of(widget.parentContext).showSnackBar(
                 SnackBar(
                   content: Text(AppStrings.requestApproved),
@@ -199,16 +156,12 @@ class _LiveApproveExtensionDialogState extends State<_LiveApproveExtensionDialog
 class _LiveRejectExtensionDialog extends StatefulWidget {
   final BuildContext parentContext;
   final String bookingId;
-  final ClientRequestEntity request;
   final DashboardCubit dashboardCubit;
-  final ClientRequestsCubit requestsCubit;
 
   const _LiveRejectExtensionDialog({
     required this.parentContext,
     required this.bookingId,
-    required this.request,
     required this.dashboardCubit,
-    required this.requestsCubit,
   });
 
   @override
@@ -263,7 +216,6 @@ class _LiveRejectExtensionDialogState extends State<_LiveRejectExtensionDialog> 
               reason: reason.isEmpty ? AppStrings.rejectReasonDefault : reason,
             );
             if (success && widget.parentContext.mounted) {
-              widget.requestsCubit.markAsAttended(widget.request.id);
               ScaffoldMessenger.of(widget.parentContext).showSnackBar(
                 SnackBar(
                   content: Text(AppStrings.requestRejected),
