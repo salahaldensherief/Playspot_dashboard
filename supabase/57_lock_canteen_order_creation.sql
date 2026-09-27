@@ -293,6 +293,32 @@ FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.place_canteen_order(uuid, jsonb, text)
 TO authenticated, service_role, supabase_auth_admin;
 
+-- place_canteen_order owns stock mutation. booking_items is now a projection of
+-- that canonical command and must not mutate stock a second time.
+DROP TRIGGER IF EXISTS trg_booking_items_stock ON public.booking_items;
+
+-- Customers may inspect items attached to their own bookings, but creation is
+-- only allowed through place_canteen_order so price and stock stay authoritative.
+DROP POLICY IF EXISTS "booking_items_policy" ON public.booking_items;
+DROP POLICY IF EXISTS "Users can add items to their active bookings"
+ON public.booking_items;
+
+DROP POLICY IF EXISTS "booking_items_customer_read"
+ON public.booking_items;
+
+CREATE POLICY "booking_items_customer_read"
+ON public.booking_items
+FOR SELECT
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1
+    FROM public.bookings AS b
+    WHERE b.id = booking_items.booking_id
+      AND b.user_id = (SELECT auth.uid())
+  )
+);
+
 DROP POLICY IF EXISTS "canteen_orders_policy" ON public.canteen_orders;
 
 COMMIT;
