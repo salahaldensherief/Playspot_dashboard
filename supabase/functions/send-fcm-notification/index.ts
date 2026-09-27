@@ -82,6 +82,34 @@ function localizedValue(
   return typeof value === "string" ? value.trim() : fallback;
 }
 
+type NotificationSettings = {
+  push_enabled?: boolean | null;
+  booking_updates?: boolean | null;
+  offers_enabled?: boolean | null;
+  events_enabled?: boolean | null;
+  system_notifications?: boolean | null;
+};
+
+function shouldDeliverPush(
+  notificationType: string,
+  settings: NotificationSettings | null,
+): boolean {
+  if (!settings) return true;
+  if (settings.push_enabled === false) return false;
+
+  const type = notificationType.toLowerCase().trim();
+  if (type.includes("booking") || type.includes("canteen") || type.includes("service")) {
+    return settings.booking_updates !== false;
+  }
+  if (type.includes("offer") || type.includes("promo")) {
+    return settings.offers_enabled !== false;
+  }
+  if (type.includes("tournament") || type.includes("event")) {
+    return settings.events_enabled !== false;
+  }
+  return settings.system_notifications !== false;
+}
+
 function stringifyDataValue(value: unknown): string {
   if (value === null || value === undefined) return "";
   if (typeof value === "string") return value;
@@ -130,6 +158,35 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    const { data: settings, error: settingsError } = await supabase
+      .from("notification_settings")
+      .select(
+        "push_enabled, booking_updates, offers_enabled, events_enabled, system_notifications",
+      )
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (settingsError) {
+      console.error(
+        "Failed to load notification settings:",
+        settingsError.message,
+      );
+    }
+
+    const notificationType = String(record.type ?? "general");
+    if (!shouldDeliverPush(notificationType, settings ?? null)) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Push disabled by user preference",
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
     if (!profile?.fcm_token) {
       return new Response(JSON.stringify({ success: true, message: "User has no FCM token" }), {
         status: 200,
@@ -156,7 +213,7 @@ Deno.serve(async (req: Request) => {
       ? record.metadata as Record<string, unknown>
       : {};
     const data: Record<string, string> = {
-      type: stringifyDataValue(record.type ?? "general"),
+      type: stringifyDataValue(notificationType),
     };
 
     for (const [key, value] of Object.entries(metadata)) {

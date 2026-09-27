@@ -77,43 +77,22 @@ class SystemRemoteDataSourceImpl implements SystemRemoteDataSource {
 
   @override
   Future<void> createAnnouncement(AnnouncementModel announcement) async {
-    final announcementId = announcement.id.isNotEmpty ? announcement.id : const Uuid().v4();
-    final String? currentUserId = supabaseClient.auth.currentUser?.id;
-    final updatedEntity = announcement.copyWith(
-      id: announcementId,
-      createdBy: currentUserId,
+    final announcementId =
+        announcement.id.isNotEmpty ? announcement.id : const Uuid().v4();
+
+    await supabaseClient.rpc(
+      'create_system_announcement',
+      params: {
+        'p_id': announcementId,
+        'p_target_audience': announcement.targetAudience,
+        'p_target_lounge_id': announcement.targetLoungeId,
+        'p_title_ar': announcement.titleAr,
+        'p_title_en': announcement.titleEn,
+        'p_body_ar': announcement.bodyAr,
+        'p_body_en': announcement.bodyEn,
+        'p_type': announcement.type,
+      },
     );
-    final payloadWithId = AnnouncementModel.fromEntity(updatedEntity).toJson();
-
-    // 1. Save to database table announcements with creator audit log
-    await supabaseClient.from('announcements').insert(payloadWithId);
-
-    // 2. Determine FCM topic matching the Edge Function expectation
-    String topic = 'all_users';
-    if (announcement.targetAudience == 'lounge_owners') {
-      topic = 'owners';
-    } else if (announcement.targetAudience == 'specific_lounge' && announcement.targetLoungeId != null) {
-      topic = 'lounge_${announcement.targetLoungeId}';
-    }
-
-    // 3. Invoke Supabase Edge Function 'send-system-announcement'
-    try {
-      await supabaseClient.functions.invoke(
-        'send-system-announcement',
-        body: {
-          'topic': topic,
-          'title': announcement.titleAr,
-          'body': announcement.bodyAr,
-          'announcement_id': announcementId,
-          'data': {
-            'type': announcement.type,
-            'target_audience': announcement.targetAudience,
-          },
-        },
-      );
-    } catch (_) {
-      // Edge function push notification trigger handled gracefully
-    }
   }
 
   @override
