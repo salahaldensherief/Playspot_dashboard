@@ -49,7 +49,7 @@ class ReviewsRemoteDataSourceImpl implements ReviewsRemoteDataSource {
         try {
           final profilesResponse = await supabaseClient
               .from('profiles')
-              .select('id, full_name, email, avatar_url')
+              .select('id, full_name, avatar_url')
               .inFilter('id', userIds);
 
           for (final p in profilesResponse as List) {
