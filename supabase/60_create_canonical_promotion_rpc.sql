@@ -82,29 +82,6 @@ BEGIN
   )
   RETURNING id INTO v_id;
 
-  INSERT INTO public.notifications(
-    user_id, lounge_id, title_ar, title_en, body_ar, body_en,
-    type, is_read, metadata
-  )
-  SELECT
-    p.id,
-    p_lounge_id,
-    '🔥 ' || COALESCE(NULLIF(p_title_ar,''),'عرض جديد!'),
-    '🔥 ' || COALESCE(NULLIF(p_title_en,''),'New Offer!'),
-    COALESCE(NULLIF(p_tag_ar,''),'عرض جديد متاح الآن'),
-    COALESCE(NULLIF(p_tag_en,''),'A new offer is available now'),
-    'offer',
-    false,
-    jsonb_build_object(
-      'promo_id',v_id,
-      'lounge_id',p_lounge_id,
-      'room_id',p_room_id,
-      'discount_type',v_type,
-      'discount_value',v_value
-    )
-  FROM public.profiles p
-  WHERE p.role='user' AND COALESCE(p.is_active,true);
-
   RETURN jsonb_build_object(
     'success',true,
     'promo_id',v_id,
