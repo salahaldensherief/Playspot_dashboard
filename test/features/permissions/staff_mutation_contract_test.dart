@@ -35,7 +35,7 @@ void main() {
       await client.dispose();
     });
 
-    test('create staff uses only create_lounge_staff RPC', () async {
+    test('create staff uses only create-lounge-staff Edge Function', () async {
       await source.addStaffMember(
         const AddStaffParams(
           name: 'Manager',
@@ -50,13 +50,13 @@ void main() {
       expect(requests, hasLength(1));
       expect(
         requests.single.url.path,
-        '/rest/v1/rpc/create_lounge_staff',
+        '/functions/v1/create-lounge-staff',
       );
 
       final payload =
           jsonDecode(requests.single.body) as Map<String, dynamic>;
-      expect(payload['p_role'], 'manager');
-      expect(payload['p_lounge_id'], 'lounge-a');
+      expect(payload['role'], 'manager');
+      expect(payload['lounge_id'], 'lounge-a');
     });
 
     test('staff profile update uses canonical RPC', () async {
