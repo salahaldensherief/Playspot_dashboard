@@ -19,8 +19,14 @@ class AnnouncementModel extends AnnouncementEntity {
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) {
     return AnnouncementModel(
       id: json['id']?.toString() ?? '',
-      targetAudience: json['target_audience']?.toString() ?? 'all',
-      targetLoungeId: json['target_lounge_id']?.toString(),
+      targetAudience: switch (json['target_audience']?.toString()) {
+        'owners' => 'lounge_owners',
+        'specific_venue' => 'specific_lounge',
+        final value? => value,
+        null => 'all',
+      },
+      targetLoungeId:
+          (json['target_venue_id'] ?? json['target_lounge_id'])?.toString(),
       targetLoungeName: json['target_lounge_name']?.toString(),
       titleAr: json['title_ar']?.toString() ?? '',
       titleEn: json['title_en']?.toString() ?? '',
@@ -38,9 +44,12 @@ class AnnouncementModel extends AnnouncementEntity {
   Map<String, dynamic> toJson() {
     return {
       if (id.isNotEmpty) 'id': id,
-      'target_audience': targetAudience,
-      'target_lounge_id': targetLoungeId,
-      'target_lounge_name': targetLoungeName,
+      'target_audience': switch (targetAudience) {
+        'lounge_owners' => 'owners',
+        'specific_lounge' => 'specific_venue',
+        final value => value,
+      },
+      'target_venue_id': targetLoungeId,
       'title_ar': titleAr,
       'title_en': titleEn,
       'body_ar': bodyAr,
