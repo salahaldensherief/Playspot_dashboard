@@ -16,7 +16,8 @@ import '../../domain/usecases/watch_bookings.dart';
 import 'booking_session_scheduler.dart';
 import 'booking_state.dart';
 
-class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<BookingState> {
+class BookingCubit extends Cubit<BookingState>
+    with RealtimeWatcherMixin<BookingState> {
   final WatchBookings watchBookings;
   final UpdateBookingStatus updateBookingStatus;
   final ConfirmCashPayment confirmCashPaymentUseCase;
@@ -48,7 +49,9 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
   }
 
   void startWatchingBookings({String? loungeId, bool forceRefresh = false}) {
-    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
+    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty)
+        ? loungeId.trim()
+        : null;
     final entityId = cleanLoungeId ?? 'all';
 
     if (isAlreadyWatching(entityId, forceRefresh: forceRefresh)) {
@@ -76,8 +79,12 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
           final newIds = currentIds.difference(_knownBookingIds);
           if (newIds.isNotEmpty) {
             _knownBookingIds.addAll(newIds);
-            newlyArrivedBooking = bookings.firstWhere((b) => newIds.contains(b.id));
-            debugPrint('🔔 [BOOKING_CUBIT] New booking detected! Playing notification sound...');
+            newlyArrivedBooking = bookings.firstWhere(
+              (b) => newIds.contains(b.id),
+            );
+            debugPrint(
+              '🔔 [BOOKING_CUBIT] New booking detected! Playing notification sound...',
+            );
             try {
               audioService.playNotificationSound();
             } catch (e) {
@@ -86,20 +93,24 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
           }
         }
 
-        emit(state.copyWith(
-          status: BookingStatusState.success,
-          bookings: bookings,
-          latestNewBooking: newlyArrivedBooking,
-        ));
+        emit(
+          state.copyWith(
+            status: BookingStatusState.success,
+            bookings: bookings,
+            latestNewBooking: newlyArrivedBooking,
+          ),
+        );
         _scheduler.checkBookingStartTimesAndNotify(bookings);
         _scheduler.checkAndAutoTransitionExpiredSessions(bookings);
       },
       onError: (error) {
         debugPrint('🔴 [BOOKING_CUBIT] watchBookings Error: $error');
-        emit(state.copyWith(
-          status: BookingStatusState.failure,
-          errorMessage: error.toString(),
-        ));
+        emit(
+          state.copyWith(
+            status: BookingStatusState.failure,
+            errorMessage: error.toString(),
+          ),
+        );
       },
     );
   }
@@ -121,17 +132,21 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: BookingStatusState.failure,
-        errorMessage: failure.message,
-      )),
-      (paginated) => emit(state.copyWith(
-        status: BookingStatusState.success,
-        bookings: paginated.items,
-        page: paginated.page,
-        pageSize: paginated.pageSize,
-        totalCount: paginated.totalCount,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: BookingStatusState.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (paginated) => emit(
+        state.copyWith(
+          status: BookingStatusState.success,
+          bookings: paginated.items,
+          page: paginated.page,
+          pageSize: paginated.pageSize,
+          totalCount: paginated.totalCount,
+        ),
+      ),
     );
   }
 
@@ -142,17 +157,21 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
 
     return result.fold(
       (failure) {
-        emit(state.copyWith(
-          status: BookingStatusState.failure,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: BookingStatusState.failure,
+            errorMessage: failure.message,
+          ),
+        );
         return false;
       },
       (_) {
-        emit(state.copyWith(
-          status: BookingStatusState.success,
-          bookings: [booking, ...state.bookings],
-        ));
+        emit(
+          state.copyWith(
+            status: BookingStatusState.success,
+            bookings: [booking, ...state.bookings],
+          ),
+        );
         return true;
       },
     );
@@ -177,17 +196,21 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
     return result.fold(
       (failure) {
         debugPrint('🔴 [CUBIT] $actionName Failed: ${failure.message}');
-        emit(state.copyWith(
-          status: BookingStatusState.failure,
-          errorMessage: failure.message,
-          bookings: originalBookings,
-        ));
+        emit(
+          state.copyWith(
+            status: BookingStatusState.failure,
+            errorMessage: failure.message,
+            bookings: originalBookings,
+          ),
+        );
         return false;
       },
       (_) {
         debugPrint('🟢 [CUBIT] $actionName Succeeded');
         if (watchedEntityId != null) {
-          final targetLoungeId = watchedEntityId == 'all' ? null : watchedEntityId;
+          final targetLoungeId = watchedEntityId == 'all'
+              ? null
+              : watchedEntityId;
           startWatchingBookings(loungeId: targetLoungeId);
         }
         return true;
@@ -199,9 +222,9 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
     return _executeOptimisticAction(
       actionName: 'Approve Booking',
       optimisticUpdate: (list) => list
-          .map((b) => b.id == id
-              ? b.copyWith(status: BookingStatus.upcoming)
-              : b)
+          .map(
+            (b) => b.id == id ? b.copyWith(status: BookingStatus.upcoming) : b,
+          )
           .toList(),
       action: () => repository.approveBooking(id),
     );
@@ -223,9 +246,11 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
     return _executeOptimisticAction(
       actionName: 'Confirm Cash Payment',
       optimisticUpdate: (list) => list
-          .map((b) => b.id == bookingId
-              ? b.copyWith(paymentStatus: PaymentStatus.paid)
-              : b)
+          .map(
+            (b) => b.id == bookingId
+                ? b.copyWith(paymentStatus: PaymentStatus.paid)
+                : b,
+          )
           .toList(),
       action: () => confirmCashPaymentUseCase(
         bookingId,
@@ -237,7 +262,12 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
     );
   }
 
-  Future<void> swapRoom(String bookingId, String newRoomId, String actionBy, {String? newRoomName}) async {
+  Future<void> swapRoom(
+    String bookingId,
+    String newRoomId,
+    String actionBy, {
+    String? newRoomName,
+  }) async {
     final originalBookings = List<Booking>.from(state.bookings);
 
     final updatedBookings = state.bookings.map((b) {
@@ -257,11 +287,13 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: BookingStatusState.failure,
-        errorMessage: failure.message,
-        bookings: originalBookings,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: BookingStatusState.failure,
+          errorMessage: failure.message,
+          bookings: originalBookings,
+        ),
+      ),
       (_) => null,
     );
   }
@@ -269,8 +301,12 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
   Future<bool> startBookingSession(String id) {
     return _executeOptimisticAction(
       actionName: 'Start Booking Session',
-      optimisticUpdate: (list) =>
-          list.map((b) => b.id == id ? b.copyWith(status: BookingStatus.inProgress) : b).toList(),
+      optimisticUpdate: (list) => list
+          .map(
+            (b) =>
+                b.id == id ? b.copyWith(status: BookingStatus.inProgress) : b,
+          )
+          .toList(),
       action: () => startBookingSessionUseCase(id),
     );
   }
@@ -282,17 +318,31 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
   Future<bool> approveManualBooking(String bookingId, String actionBy) async {
     return _executeOptimisticAction(
       actionName: 'Approve Manual Booking',
-      optimisticUpdate: (list) =>
-          list.map((b) => b.id == bookingId ? b.copyWith(status: BookingStatus.upcoming) : b).toList(),
+      optimisticUpdate: (list) => list
+          .map(
+            (b) => b.id == bookingId
+                ? b.copyWith(status: BookingStatus.upcoming)
+                : b,
+          )
+          .toList(),
       action: () => repository.approveManualBooking(bookingId, actionBy),
     );
   }
 
-  Future<bool> rejectManualBooking(String bookingId, String reason, String actionBy) async {
+  Future<bool> rejectManualBooking(
+    String bookingId,
+    String reason,
+    String actionBy,
+  ) async {
     return _executeOptimisticAction(
       actionName: 'Reject Manual Booking',
-      optimisticUpdate: (list) =>
-          list.map((b) => b.id == bookingId ? b.copyWith(status: BookingStatus.cancelled) : b).toList(),
+      optimisticUpdate: (list) => list
+          .map(
+            (b) => b.id == bookingId
+                ? b.copyWith(status: BookingStatus.cancelled)
+                : b,
+          )
+          .toList(),
       action: () => repository.rejectManualBooking(bookingId, reason, actionBy),
     );
   }
@@ -300,8 +350,9 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
   Future<bool> changeBookingStatus(String id, BookingStatus newStatus) {
     return _executeOptimisticAction(
       actionName: 'Change Booking Status',
-      optimisticUpdate: (list) =>
-          list.map((b) => b.id == id ? b.copyWith(status: newStatus) : b).toList(),
+      optimisticUpdate: (list) => list
+          .map((b) => b.id == id ? b.copyWith(status: newStatus) : b)
+          .toList(),
       action: () => updateBookingStatus(id, newStatus),
     );
   }
@@ -314,19 +365,27 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
     try {
       final client = Supabase.instance.client;
       try {
-        await client.rpc('extend_booking_session', params: {
-          'p_booking_id': id,
-          'p_extension_minutes': additionalMinutes,
-        });
+        await client.rpc(
+          'extend_booking_session',
+          params: {
+            'p_booking_id': id,
+            'p_extension_minutes': additionalMinutes,
+          },
+        );
       } catch (_) {
-        await client.rpc('extend_booking_session', params: {
-          'p_booking_id': id,
-          'p_additional_minutes': additionalMinutes,
-        });
+        await client.rpc(
+          'extend_booking_session',
+          params: {
+            'p_booking_id': id,
+            'p_additional_minutes': additionalMinutes,
+          },
+        );
       }
 
       if (watchedEntityId != null) {
-        final targetLoungeId = watchedEntityId == 'all' ? null : watchedEntityId;
+        final targetLoungeId = watchedEntityId == 'all'
+            ? null
+            : watchedEntityId;
         startWatchingBookings(loungeId: targetLoungeId);
       }
       return true;
@@ -337,24 +396,23 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
           ? 'لا يمكن تمديد الحجز لأن هناك حجزاً آخر يبدأ بعد وقت حجزك مباشرة.'
           : errorStr.replaceFirst('Exception: ', '');
 
-      emit(state.copyWith(
-        status: BookingStatusState.failure,
-        errorMessage: cleanMessage,
-        bookings: originalBookings,
-      ));
+      emit(
+        state.copyWith(
+          status: BookingStatusState.failure,
+          errorMessage: cleanMessage,
+          bookings: originalBookings,
+        ),
+      );
       return false;
     }
   }
 
   Future<Map<String, dynamic>?> validateVoucherCode(String code) async {
     final result = await repository.validateVoucherByCode(code);
-    return result.fold(
-      (failure) {
-        emit(state.copyWith(errorMessage: failure.message));
-        return null;
-      },
-      (data) => data,
-    );
+    return result.fold((failure) {
+      emit(state.copyWith(errorMessage: failure.message));
+      return null;
+    }, (data) => data);
   }
 
   void updateSelectedDuration(int minutes) {
