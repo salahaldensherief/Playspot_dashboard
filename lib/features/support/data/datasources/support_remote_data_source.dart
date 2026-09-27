@@ -55,12 +55,21 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
   Future<void> updateAppSettings(AppSettingsModel settings) async {
     final payload = settings.toJson();
     if (settings.id != null && settings.id!.isNotEmpty) {
-      await supabaseClient.from('support_settings').upsert(payload, onConflict: 'id');
+      await supabaseClient
+          .from('support_settings')
+          .upsert(payload, onConflict: 'id');
     } else {
-      final existing = await supabaseClient.from('support_settings').select('id').limit(1).maybeSingle();
+      final existing = await supabaseClient
+          .from('support_settings')
+          .select('id')
+          .limit(1)
+          .maybeSingle();
       if (existing != null) {
         payload['id'] = existing['id'];
-        await supabaseClient.from('support_settings').update(payload).eq('id', existing['id']);
+        await supabaseClient
+            .from('support_settings')
+            .update(payload)
+            .eq('id', existing['id']);
       } else {
         await supabaseClient.from('support_settings').insert(payload);
       }
@@ -80,7 +89,9 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
   @override
   Future<void> updatePolicy(AppPolicyModel policy) async {
     final payload = policy.toJson();
-    await supabaseClient.from('legal_policies').upsert(payload, onConflict: 'id');
+    await supabaseClient
+        .from('legal_policies')
+        .upsert(payload, onConflict: 'id');
   }
 
   @override
@@ -110,14 +121,20 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
   }
 
   @override
-  Future<List<SupportTicketModel>> getSupportTickets({String? statusFilter}) async {
+  Future<List<SupportTicketModel>> getSupportTickets({
+    String? statusFilter,
+  }) async {
     var query = supabaseClient.from('support_tickets').select();
-    if (statusFilter != null && statusFilter.isNotEmpty && statusFilter != 'all') {
+    if (statusFilter != null &&
+        statusFilter.isNotEmpty &&
+        statusFilter != 'all') {
       query = query.eq('status', statusFilter);
     }
 
     final response = await query.order('created_at', ascending: false);
-    return (response as List).map((e) => SupportTicketModel.fromJson(e)).toList();
+    return (response as List)
+        .map((e) => SupportTicketModel.fromJson(e))
+        .toList();
   }
 
   @override
@@ -127,10 +144,7 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
   }) async {
     await supabaseClient.rpc(
       'create_support_ticket',
-      params: {
-        'p_issue_type': issueType,
-        'p_message': message,
-      },
+      params: {'p_issue_type': issueType, 'p_message': message},
     );
   }
 
