@@ -48,7 +48,7 @@ class BookingDetailsActionPanel extends StatelessWidget {
             height: 40.h,
             onPressed: () => cubit.approveBooking(booking.id),
           ),
-        if (isUpcoming || isInProgress)
+        if ((isUpcoming || isInProgress) && !isUnpaid)
           AppButton(
             text: isInProgress ? 'إنهاء وحساب الجلسة' : 'بدء الجلسة الآن',
             variant: AppButtonVariant.primary,

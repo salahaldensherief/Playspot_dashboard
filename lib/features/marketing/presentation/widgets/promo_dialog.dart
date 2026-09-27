@@ -31,7 +31,8 @@ class _PromoDialogState extends State<PromoDialog> {
   late TextEditingController _titleArController;
   late TextEditingController _titleEnController;
   late TextEditingController _expirationDateController;
-  
+  late TextEditingController _discountValueController;
+
   final List<List<Color>> _colorTemplates = [
     [AppColors.neonPurple, AppColors.neonBlue],
     [Colors.orange, Colors.red],
@@ -47,6 +48,7 @@ class _PromoDialogState extends State<PromoDialog> {
   bool _isRoomSpecific = false;
   String? _selectedRoomId;
   String _targetAudience = 'all';
+  String _discountType = 'percentage';
   Uint8List? _selectedImageBytes;
   String? _selectedImageName;
   String? _currentImageUrl;
@@ -60,6 +62,9 @@ class _PromoDialogState extends State<PromoDialog> {
     _expirationDateController = TextEditingController(
       text: widget.promo.expiresAt?.toLocal().toString().split(' ')[0] ?? '',
     );
+    _discountValueController = TextEditingController(
+      text: widget.promo.discountValue.toString(),
+    );
     _selectedIcon = widget.promo.iconKey;
     _selectedDeepLink = widget.promo.deepLink ?? 'Specific Room';
     _expiresAt = widget.promo.expiresAt;
@@ -67,6 +72,7 @@ class _PromoDialogState extends State<PromoDialog> {
     _isRoomSpecific = widget.promo.isRoomSpecific;
     _selectedRoomId = widget.promo.roomId;
     _targetAudience = widget.promo.targetAudience;
+    _discountType = widget.promo.discountType;
     _currentImageUrl = widget.promo.imageUrl;
   }
 
@@ -114,7 +120,10 @@ class _PromoDialogState extends State<PromoDialog> {
 
         if (!mounted) return;
 
-        final String? formattedDeepLink = (_isRoomSpecific && _selectedRoomId != null && _selectedRoomId!.isNotEmpty)
+        final String? formattedDeepLink =
+            (_isRoomSpecific &&
+                _selectedRoomId != null &&
+                _selectedRoomId!.isNotEmpty)
             ? '/room/$_selectedRoomId'
             : (_selectedDeepLink != 'Specific Room' ? _selectedDeepLink : null);
 
@@ -125,7 +134,9 @@ class _PromoDialogState extends State<PromoDialog> {
             titleEn: _titleEnController.text.trim(),
             tagAr: _selectedTag ?? '',
             tagEn: _selectedTag ?? '',
-            hexColors: _colorTemplates[_selectedTemplate].map((e) => '#${e.toARGB32().toRadixString(16).substring(2)}').toList(),
+            hexColors: _colorTemplates[_selectedTemplate]
+                .map((e) => '#${e.toARGB32().toRadixString(16).substring(2)}')
+                .toList(),
             iconKey: _selectedIcon,
             deepLink: formattedDeepLink,
             expiresAt: _expiresAt,
@@ -134,6 +145,9 @@ class _PromoDialogState extends State<PromoDialog> {
             loungeId: widget.promo.loungeId,
             roomId: _isRoomSpecific ? _selectedRoomId : null,
             targetAudience: _targetAudience,
+            discountType: _discountType,
+            discountValue:
+                double.tryParse(_discountValueController.text.trim()) ?? 0,
             imageUrl: imageUrl,
           );
           widget.onSave!(updatedPromo);
@@ -146,7 +160,10 @@ class _PromoDialogState extends State<PromoDialog> {
         AppLogger.error('[PROMO_DIALOG] Error submitting promo: $e', e);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppStrings.operationError(e.toString())), backgroundColor: AppColors.danger),
+            SnackBar(
+              content: Text(AppStrings.operationError(e.toString())),
+              backgroundColor: AppColors.danger,
+            ),
           );
         }
       } finally {
@@ -156,12 +173,23 @@ class _PromoDialogState extends State<PromoDialog> {
   }
 
   @override
+  void dispose() {
+    _titleArController.dispose();
+    _titleEnController.dispose();
+    _expirationDateController.dispose();
+    _discountValueController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocBuilder<RoomCubit, RoomState>(
       builder: (context, roomState) {
         return Dialog(
           backgroundColor: AppColors.cardBackground,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
           child: Container(
             width: 700.w,
             padding: EdgeInsets.all(32.r),
@@ -181,28 +209,41 @@ class _PromoDialogState extends State<PromoDialog> {
                             titleEnController: _titleEnController,
                             expirationDateController: _expirationDateController,
                             selectedDeepLink: _selectedDeepLink,
-                            onDeepLinkChanged: (v) => setState(() => _selectedDeepLink = v ?? 'Specific Room'),
+                            onDeepLinkChanged: (v) => setState(
+                              () => _selectedDeepLink = v ?? 'Specific Room',
+                            ),
                             expiresAt: _expiresAt,
                             onDateChanged: (v) => setState(() {
                               _expiresAt = v;
-                              _expirationDateController.text = v.toLocal().toString().split(' ')[0];
+                              _expirationDateController.text = v
+                                  .toLocal()
+                                  .toString()
+                                  .split(' ')[0];
                             }),
                             selectedTag: _selectedTag,
-                            onTagChanged: (v) => setState(() => _selectedTag = v),
+                            onTagChanged: (v) =>
+                                setState(() => _selectedTag = v),
                             isRoomSpecific: _isRoomSpecific,
                             onRoomSpecificChanged: (v) => setState(() {
                               _isRoomSpecific = v;
                               if (!v) {
                                 _selectedRoomId = null;
-                              } else if (_selectedRoomId == null && roomState.rooms.isNotEmpty) {
+                              } else if (_selectedRoomId == null &&
+                                  roomState.rooms.isNotEmpty) {
                                 _selectedRoomId = roomState.rooms.first.id;
                               }
                             }),
                             selectedRoomId: _selectedRoomId,
-                            onRoomChanged: (v) => setState(() => _selectedRoomId = v),
+                            onRoomChanged: (v) =>
+                                setState(() => _selectedRoomId = v),
                             targetAudience: _targetAudience,
-                            onTargetAudienceChanged: (v) => setState(() => _targetAudience = v),
+                            onTargetAudienceChanged: (v) =>
+                                setState(() => _targetAudience = v),
                             availableRooms: roomState.rooms,
+                            discountType: _discountType,
+                            onDiscountTypeChanged: (value) =>
+                                setState(() => _discountType = value),
+                            discountValueController: _discountValueController,
                           ),
                         ),
                         SizedBox(width: 32.w),
@@ -227,26 +268,49 @@ class _PromoDialogState extends State<PromoDialog> {
                                   decoration: BoxDecoration(
                                     color: AppColors.mutedBackground,
                                     borderRadius: BorderRadius.circular(12.r),
-                                    border: Border.all(color: AppColors.borderDefault),
+                                    border: Border.all(
+                                      color: AppColors.borderDefault,
+                                    ),
                                     image: (_selectedImageBytes != null)
                                         ? DecorationImage(
-                                            image: MemoryImage(_selectedImageBytes!),
+                                            image: MemoryImage(
+                                              _selectedImageBytes!,
+                                            ),
                                             fit: BoxFit.cover,
                                           )
-                                        : (_currentImageUrl != null && _currentImageUrl!.trim().isNotEmpty)
-                                            ? DecorationImage(
-                                                image: AppCachedImage.provider(_currentImageUrl)!,
-                                                fit: BoxFit.cover,
-                                              )
-                                            : null,
+                                        : (_currentImageUrl != null &&
+                                              _currentImageUrl!
+                                                  .trim()
+                                                  .isNotEmpty)
+                                        ? DecorationImage(
+                                            image: AppCachedImage.provider(
+                                              _currentImageUrl,
+                                            )!,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null,
                                   ),
-                                  child: (_selectedImageBytes == null && _currentImageUrl == null)
+                                  child:
+                                      (_selectedImageBytes == null &&
+                                          _currentImageUrl == null)
                                       ? Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
-                                            Icon(Icons.add_photo_alternate_outlined, size: 48.r, color: AppColors.textSecondary),
+                                            Icon(
+                                              Icons
+                                                  .add_photo_alternate_outlined,
+                                              size: 48.r,
+                                              color: AppColors.textSecondary,
+                                            ),
                                             SizedBox(height: 8.h),
-                                            Text(AppStrings.uploadPoster, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                                            Text(
+                                              AppStrings.uploadPoster,
+                                              style: TextStyle(
+                                                color: AppColors.textSecondary,
+                                                fontSize: 12.sp,
+                                              ),
+                                            ),
                                           ],
                                         )
                                       : Align(
@@ -258,14 +322,22 @@ class _PromoDialogState extends State<PromoDialog> {
                                             }),
                                             icon: Container(
                                               padding: EdgeInsets.all(4.r),
-                                              decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                                              child: const Icon(Icons.close, color: AppColors.textPrimary, size: 16),
+                                              decoration: const BoxDecoration(
+                                                color: Colors.black54,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Icon(
+                                                Icons.close,
+                                                color: AppColors.textPrimary,
+                                                size: 16,
+                                              ),
                                             ),
                                           ),
                                         ),
                                 ),
                               ),
-                              if (_selectedImageBytes != null || _currentImageUrl != null) ...[
+                              if (_selectedImageBytes != null ||
+                                  _currentImageUrl != null) ...[
                                 SizedBox(height: 12.h),
                                 AppButton(
                                   text: AppStrings.changePoster,
@@ -283,9 +355,11 @@ class _PromoDialogState extends State<PromoDialog> {
                     DesignStyleSection(
                       colorTemplates: _colorTemplates,
                       selectedTemplate: _selectedTemplate,
-                      onTemplateSelected: (index) => setState(() => _selectedTemplate = index),
+                      onTemplateSelected: (index) =>
+                          setState(() => _selectedTemplate = index),
                       selectedIcon: _selectedIcon,
-                      onIconChanged: (v) => setState(() => _selectedIcon = v ?? 'Flash'),
+                      onIconChanged: (v) =>
+                          setState(() => _selectedIcon = v ?? 'Flash'),
                     ),
                     SizedBox(height: 32.h),
                     Row(

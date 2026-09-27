@@ -1,5 +1,4 @@
 import 'package:play_spot_dashboard/core/utils/app_logger.dart';
-import 'package:play_spot_dashboard/features/auth/data/models/user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/staff_model.dart';
 import '../../models/staff_params.dart';
@@ -40,7 +39,9 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
           }
         }
         if (staffMap.isNotEmpty) {
-          AppLogger.info('Fetched ${staffMap.length} staff members via get_lounge_staff RPC');
+          AppLogger.info(
+            'Fetched ${staffMap.length} staff members via get_lounge_staff RPC',
+          );
           return staffMap.values.toList();
         }
       }
@@ -60,16 +61,18 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
       for (final dynamic item in (response as List)) {
         final map = Map<String, dynamic>.from(item as Map);
         final profileMap = map['profiles'] as Map<String, dynamic>?;
-        final id = (map['staff_id'] ??
-                map['user_id'] ??
-                profileMap?['id'] ??
-                map['id'])
-            ?.toString() ??
+        final id =
+            (map['staff_id'] ??
+                    map['user_id'] ??
+                    profileMap?['id'] ??
+                    map['id'])
+                ?.toString() ??
             '';
         if (id.isNotEmpty && !staffMap.containsKey(id)) {
           final model = StaffModel.fromJson({
             'id': id,
-            'full_name': profileMap?['full_name'] ??
+            'full_name':
+                profileMap?['full_name'] ??
                 map['name'] ??
                 map['full_name'] ??
                 'Staff Member',
@@ -123,22 +126,19 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
       );
     }
 
-    try {
-      AppLogger.info('Adding staff member via create_lounge_staff RPC');
-      await _supabase.rpc('create_lounge_staff', params: params.toJson());
-      AppLogger.info('create_lounge_staff RPC executed successfully');
-      return;
-    } catch (e) {
-      AppLogger.warning('create_lounge_staff failed ($e), falling back to add_lounge_staff_member...');
-      try {
-        await _supabase.rpc('add_lounge_staff_member', params: params.toJson());
-        AppLogger.info('add_lounge_staff_member RPC executed successfully');
-        return;
-      } catch (e2) {
-        AppLogger.error('Error in staff creation RPC: $e2');
-        rethrow;
-      }
-    }
+    AppLogger.info('Adding staff member via create-lounge-staff Edge Function');
+    await _supabase.functions.invoke(
+      'create-lounge-staff',
+      body: {
+        'full_name': params.name.trim(),
+        'email': params.email.trim().toLowerCase(),
+        'phone': params.phone.trim(),
+        'password': params.password,
+        'role': roleClean,
+        'lounge_id': params.loungeId.trim(),
+      },
+    );
+    AppLogger.info('create-lounge-staff Edge Function executed successfully');
   }
 
   @override
@@ -148,85 +148,40 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
   ) async {
     final cleanStaffId = staffId.trim();
     if (cleanStaffId.isEmpty) {
-      throw Exception('Staff ID cannot be empty');
+      throw ArgumentError('Staff ID cannot be empty');
     }
 
     String? mappedRole;
-    if (data.containsKey('role') && data['role'] != null) {
+    if (data['role'] != null) {
       final rawRole = data['role'].toString().toLowerCase().trim();
-      if (rawRole == 'super_admin' || rawRole == 'system_admin') {
-        throw Exception(
-          'غير مسموح برفع الحساب إلى super_admin من هذه الواجهة.',
-        );
-      }
-      switch (rawRole) {
-        case 'cashier':
-        case 'role_cashier':
-          mappedRole = 'cashier';
-          break;
-        case 'lounge_owner':
-        case 'owner':
-          mappedRole = 'owner';
-          break;
-        case 'manager':
-        case 'lounge_admin':
-        case 'admin':
-          mappedRole = 'manager';
-          break;
-        case 'staff':
-        case 'role_staff':
-          mappedRole = 'staff';
-          break;
-        default:
-          mappedRole = rawRole;
-      }
+      mappedRole = switch (rawRole) {
+        'cashier' || 'role_cashier' => 'cashier',
+        'manager' || 'lounge_admin' || 'admin' => 'manager',
+        'staff' || 'role_staff' => 'staff',
+        _ => rawRole,
+      };
     }
 
-    final updates = <String, dynamic>{
-      if (data.containsKey('name') && data['name'] != null)
-        'full_name': data['name'],
-      if (data.containsKey('phone') && data['phone'] != null)
-        'phone': data['phone'],
-      'role': ?mappedRole,
-      if (data.containsKey('email') && data['email'] != null)
-        'email': data['email'],
-      if (data.containsKey('national_id_number') &&
-          data['national_id_number'] != null)
-        'national_id_number': data['national_id_number'],
-      if (data.containsKey('id_front_url') && data['id_front_url'] != null)
-        'id_front_url': data['id_front_url'],
-      if (data.containsKey('id_back_url') && data['id_back_url'] != null)
-        'id_back_url': data['id_back_url'],
-      if (data.containsKey('city_id')) 'city_id': data['city_id'],
-    };
-
-    final cleanUpdates = UserModel.sanitizeProfilePayload(updates);
-
-    AppLogger.info('Updating staff profile');
-
-    try {
-      if (cleanUpdates.isNotEmpty) {
-        await _supabase
-            .from('profiles')
-            .update(cleanUpdates)
-            .eq('id', cleanStaffId);
-        AppLogger.info('Profile updated successfully for $cleanStaffId');
-      }
-    } catch (e) {
-      AppLogger.error('Failed to update profile $cleanStaffId: $e');
-      rethrow;
-    }
+    await _supabase.rpc(
+      'update_lounge_staff_member',
+      params: {
+        'p_target_user_id': cleanStaffId,
+        'p_full_name': data['name']?.toString(),
+        'p_phone': data['phone']?.toString(),
+        'p_role': mappedRole,
+      },
+    );
   }
 
   @override
   Future<void> updateStaffStatus(String staffId, bool isActive) async {
     final cleanStaffId = staffId.trim();
     if (cleanStaffId.isEmpty) return;
-    await _supabase
-        .from('profiles')
-        .update({'is_active': isActive})
-        .eq('id', cleanStaffId)
-        .neq('role', 'super_admin');
+
+    await _supabase.rpc(
+      'set_lounge_staff_active',
+      params: {'p_target_user_id': cleanStaffId, 'p_is_active': isActive},
+    );
   }
 
   @override
@@ -234,42 +189,9 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
     final cleanStaffId = staffId.trim();
     if (cleanStaffId.isEmpty) return;
 
-    // Rule: Never allow deleting super_admin or modifying system roles from UI
-    try {
-      final targetProfile = await _supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', cleanStaffId)
-          .maybeSingle();
-
-      if (targetProfile != null &&
-          (targetProfile['role'] == 'super_admin' ||
-              targetProfile['role'] == 'system_admin')) {
-        throw Exception('غير مسموح بحذف أو تعديل صلاحيات حساب super_admin.');
-      }
-    } catch (e) {
-      if (e.toString().contains('super_admin')) rethrow;
-    }
-
-    // 1. Delete staff record from lounge_staff
-    try {
-      await _supabase
-          .from('lounge_staff')
-          .delete()
-          .or('id.eq.$cleanStaffId,user_id.eq.$cleanStaffId');
-    } catch (e) {
-      AppLogger.warning('lounge_staff deletion failed ($e)');
-    }
-
-    // 2. Deactivate profile instead of hard profile deletion
-    try {
-      await _supabase
-          .from('profiles')
-          .update({'is_active': false})
-          .eq('id', cleanStaffId)
-          .neq('role', 'super_admin');
-    } catch (e) {
-      AppLogger.warning('profile deactivation failed ($e)');
-    }
+    await _supabase.rpc(
+      'remove_lounge_staff_member',
+      params: {'p_target_user_id': cleanStaffId},
+    );
   }
 }

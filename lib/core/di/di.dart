@@ -32,26 +32,31 @@ import 'package:play_spot_dashboard/features/system/system_di.dart';
 final sl = GetIt.instance;
 
 Future<void> setupInjection() async {
-  await Supabase.initialize(
-    url: supabaseUrl,
-    // ignore: deprecated_member_use - Kept for compatibility until supabase_flutter major bump
-    anonKey: supabaseAnonKey,
-  );
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    throw StateError(
+      'Missing SUPABASE_URL or SUPABASE_ANON_KEY. '
+      'Pass them with --dart-define at build/run time.',
+    );
+  }
+
+  await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
 
   // Register Supabase Client
-  sl.registerLazySingleton<SupabaseClient>(
-        () => Supabase.instance.client,
-  );
+  sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
 
   // Core Services
   final prefs = await SharedPreferences.getInstance();
   sl.registerSingleton<SharedPreferences>(prefs);
-  sl.registerLazySingleton<LocalCacheService>(() => LocalCacheServiceImpl(sl()));
+  sl.registerLazySingleton<LocalCacheService>(
+    () => LocalCacheServiceImpl(sl()),
+  );
 
   sl.registerLazySingleton<AudioService>(() => AudioServiceImpl());
   sl.registerLazySingleton<StorageService>(() => StorageServiceImpl(sl()));
   sl.registerLazySingleton<LocationService>(() => LocationServiceImpl());
-  sl.registerLazySingleton<HardwareBridgeService>(() => HardwareBridgeService());
+  sl.registerLazySingleton<HardwareBridgeService>(
+    () => HardwareBridgeService(),
+  );
 
   // Initialize Feature DI Modules
   initAuthDI(sl);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
@@ -59,8 +60,8 @@ class RequestCard extends StatelessWidget {
     final roomDisplayName = request.roomName ?? AppStrings.roomLabel;
     final userDisplayName =
         (request.userName != null && request.userName!.isNotEmpty)
-            ? request.userName!
-            : AppStrings.anonymous;
+        ? request.userName!
+        : AppStrings.anonymous;
 
     return Container(
       decoration: BoxDecoration(
@@ -88,10 +89,7 @@ class RequestCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             border: Border(
-              right: BorderSide(
-                color: themeColor,
-                width: 4.r,
-              ),
+              right: BorderSide(color: themeColor, width: 4.r),
             ),
           ),
           padding: EdgeInsets.all(14.r),
@@ -104,7 +102,10 @@ class RequestCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 3.h,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.mutedBackground,
                       borderRadius: BorderRadius.circular(6.r),
@@ -133,7 +134,11 @@ class RequestCard extends StatelessWidget {
                   ),
                   Row(
                     children: [
-                      Icon(Icons.access_time_rounded, size: 12.r, color: AppColors.textMuted),
+                      Icon(
+                        Icons.access_time_rounded,
+                        size: 12.r,
+                        color: AppColors.textMuted,
+                      ),
                       SizedBox(width: 4.w),
                       AppText.body(
                         timeFormatted,
@@ -237,18 +242,41 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
         final rawPath = res['receipt_url'].toString().trim();
         if (rawPath.isNotEmpty && rawPath != 'null') {
           if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
-            if (mounted) setState(() { _receiptUrl = rawPath; _isLoading = false; });
+            if (mounted)
+              setState(() {
+                _receiptUrl = rawPath;
+                _isLoading = false;
+              });
             return;
           }
-          final bucketsToTry = ['payment-proofs', 'receipts', 'booking_receipts', 'payment_receipts', 'wallets', 'payouts', 'attachments'];
-          String cleanPath = rawPath.replaceAll(RegExp(r'^(payment-proofs|receipts|booking_receipts|payment_receipts|wallets)/'), '');
+          final bucketsToTry = [
+            'payment-proofs',
+            'receipts',
+            'booking_receipts',
+            'payment_receipts',
+            'wallets',
+            'payouts',
+            'attachments',
+          ];
+          String cleanPath = rawPath.replaceAll(
+            RegExp(
+              r'^(payment-proofs|receipts|booking_receipts|payment_receipts|wallets)/',
+            ),
+            '',
+          );
 
           for (final bucket in bucketsToTry) {
             for (final p in [cleanPath, rawPath]) {
               try {
-                final url = await Supabase.instance.client.storage.from(bucket).createSignedUrl(p, 3600);
+                final url = await Supabase.instance.client.storage
+                    .from(bucket)
+                    .createSignedUrl(p, 3600);
                 if (url.isNotEmpty && !url.contains('error')) {
-                  if (mounted) setState(() { _receiptUrl = url; _isLoading = false; });
+                  if (mounted)
+                    setState(() {
+                      _receiptUrl = url;
+                      _isLoading = false;
+                    });
                   return;
                 }
               } catch (_) {}
@@ -269,18 +297,27 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
         child: const SizedBox(
           width: 16,
           height: 16,
-          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.neonBlue),
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.neonBlue,
+          ),
         ),
       );
     }
 
-    if (_receiptUrl == null || _receiptUrl!.isEmpty) return const SizedBox.shrink();
+    if (_receiptUrl == null || _receiptUrl!.isEmpty)
+      return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(height: 10.h),
-        AppText.body('إيصال تحويل الدفع المرفق:', fontSize: 11.sp, color: AppColors.neonBlue, fontWeight: FontWeight.bold),
+        AppText.body(
+          'إيصال تحويل الدفع المرفق:',
+          fontSize: 11.sp,
+          color: AppColors.neonBlue,
+          fontWeight: FontWeight.bold,
+        ),
         SizedBox(height: 6.h),
         GestureDetector(
           onTap: () {
@@ -288,7 +325,9 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
               context: context,
               builder: (_) => Dialog(
                 backgroundColor: AppColors.cardBackground,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
                 child: Padding(
                   padding: EdgeInsets.all(16.r),
                   child: Column(
@@ -297,9 +336,16 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          AppText.heading('إيصال تحويل الدفع', fontSize: 16.sp, color: Colors.white),
+                          AppText.heading(
+                            'إيصال تحويل الدفع',
+                            fontSize: 16.sp,
+                            color: Colors.white,
+                          ),
                           IconButton(
-                            icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                            icon: const Icon(
+                              Icons.close,
+                              color: AppColors.textSecondary,
+                            ),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ],
@@ -310,7 +356,8 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                         child: Image.network(
                           _receiptUrl!,
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.red),
+                          errorBuilder: (_, __, ___) =>
+                              const Icon(Icons.broken_image, color: Colors.red),
                         ),
                       ),
                     ],
@@ -324,7 +371,9 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10.r),
-              border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.4)),
+              border: Border.all(
+                color: AppColors.neonBlue.withValues(alpha: 0.4),
+              ),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10.r),
@@ -343,16 +392,27 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                     bottom: 6,
                     left: 6,
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.w,
+                        vertical: 3.h,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.75),
                         borderRadius: BorderRadius.circular(6.r),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.zoom_in_rounded, color: AppColors.neonBlue, size: 14.sp),
+                          Icon(
+                            Icons.zoom_in_rounded,
+                            color: AppColors.neonBlue,
+                            size: 14.sp,
+                          ),
                           SizedBox(width: 4.w),
-                          AppText.body('تكبير الإيصال', fontSize: 10.sp, color: Colors.white),
+                          AppText.body(
+                            'تكبير الإيصال',
+                            fontSize: 10.sp,
+                            color: Colors.white,
+                          ),
                         ],
                       ),
                     ),
@@ -366,4 +426,3 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
     );
   }
 }
-

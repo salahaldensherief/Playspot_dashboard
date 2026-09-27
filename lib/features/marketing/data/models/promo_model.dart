@@ -17,28 +17,38 @@ class PromoModel extends PromoEntity {
     super.tag,
     super.isRoomSpecific = false,
     super.targetAudience = 'all',
+    super.discountType = 'percentage',
+    super.discountValue = 0,
   });
 
   factory PromoModel.fromJson(Map<String, dynamic> json) {
     final rawImage = json['image_url']?.toString();
-    final imageUrl = (rawImage != null && rawImage.trim().isNotEmpty) ? rawImage.trim() : null;
+    final imageUrl = (rawImage != null && rawImage.trim().isNotEmpty)
+        ? rawImage.trim()
+        : null;
 
     final String fallbackTitle = json['title']?.toString() ?? '';
     final String fallbackTag = json['tag']?.toString() ?? '';
 
-    final String titleAr = (json['title_ar'] != null && json['title_ar'].toString().trim().isNotEmpty)
+    final String titleAr =
+        (json['title_ar'] != null &&
+            json['title_ar'].toString().trim().isNotEmpty)
         ? json['title_ar'].toString().trim()
         : fallbackTitle;
 
-    final String titleEn = (json['title_en'] != null && json['title_en'].toString().trim().isNotEmpty)
+    final String titleEn =
+        (json['title_en'] != null &&
+            json['title_en'].toString().trim().isNotEmpty)
         ? json['title_en'].toString().trim()
         : fallbackTitle;
 
-    final String tagAr = (json['tag_ar'] != null && json['tag_ar'].toString().trim().isNotEmpty)
+    final String tagAr =
+        (json['tag_ar'] != null && json['tag_ar'].toString().trim().isNotEmpty)
         ? json['tag_ar'].toString().trim()
         : fallbackTag;
 
-    final String tagEn = (json['tag_en'] != null && json['tag_en'].toString().trim().isNotEmpty)
+    final String tagEn =
+        (json['tag_en'] != null && json['tag_en'].toString().trim().isNotEmpty)
         ? json['tag_en'].toString().trim()
         : fallbackTag;
 
@@ -48,22 +58,32 @@ class PromoModel extends PromoEntity {
       titleEn: titleEn,
       tagAr: tagAr,
       tagEn: tagEn,
-      hexColors: json['colors'] is List ? List<String>.from(json['colors']) : <String>[],
+      hexColors: json['colors'] is List
+          ? List<String>.from(json['colors'])
+          : <String>[],
       iconKey: json['icon_key']?.toString() ?? 'Flash',
       imageUrl: imageUrl,
       deepLink: json['deep_link']?.toString(),
       loungeId: json['lounge_id']?.toString(),
       roomId: json['room_id']?.toString(),
-      expiresAt: json['expires_at'] != null ? DateTime.tryParse(json['expires_at'].toString()) : null,
+      expiresAt: json['expires_at'] != null
+          ? DateTime.tryParse(json['expires_at'].toString())
+          : null,
       tag: fallbackTag.isNotEmpty ? fallbackTag : tagAr,
       isRoomSpecific: json['is_room_specific'] == true,
       targetAudience: json['target_audience']?.toString() ?? 'all',
+      discountType: json['discount_type']?.toString() ?? 'percentage',
+      discountValue: (json['discount_value'] as num?)?.toDouble() ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() {
-    final validColors = hexColors.length >= 2 ? hexColors : ['#1E88E5', '#1565C0'];
-    final title = titleEn.isNotEmpty ? titleEn : (titleAr.isNotEmpty ? titleAr : 'Special Offer');
+    final validColors = hexColors.length >= 2
+        ? hexColors
+        : ['#1E88E5', '#1565C0'];
+    final title = titleEn.isNotEmpty
+        ? titleEn
+        : (titleAr.isNotEmpty ? titleAr : 'Special Offer');
 
     return {
       if (id.isNotEmpty) 'id': id,
@@ -82,6 +102,8 @@ class PromoModel extends PromoEntity {
       'tag': tag ?? (tagAr.isNotEmpty ? tagAr : tagEn),
       'is_room_specific': isRoomSpecific,
       'target_audience': targetAudience,
+      'discount_type': discountType,
+      'discount_value': discountValue,
     };
   }
 }

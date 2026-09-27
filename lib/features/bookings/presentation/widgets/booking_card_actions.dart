@@ -41,7 +41,9 @@ class BookingCardActions extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
         title: Row(
           children: [
             const Icon(Icons.person_off, color: AppColors.danger),
@@ -79,8 +81,14 @@ class BookingCardActions extends StatelessWidget {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(success ? AppStrings.noShowSuccess : AppStrings.noShowFailed),
-                    backgroundColor: success ? AppColors.success : AppColors.danger,
+                    content: Text(
+                      success
+                          ? AppStrings.noShowSuccess
+                          : AppStrings.noShowFailed,
+                    ),
+                    backgroundColor: success
+                        ? AppColors.success
+                        : AppColors.danger,
                     duration: const Duration(seconds: 3),
                   ),
                 );
@@ -97,12 +105,12 @@ class BookingCardActions extends StatelessWidget {
     final double h = 36.h;
 
     Widget detailsButton() => AppButton(
-          text: AppStrings.bookingDetails,
-          variant: AppButtonVariant.outlined,
-          onPressed: onOpenDetails,
-          width: double.infinity,
-          height: h,
-        );
+      text: AppStrings.bookingDetails,
+      variant: AppButtonVariant.outlined,
+      onPressed: onOpenDetails,
+      width: double.infinity,
+      height: h,
+    );
 
     // 0. Pending Verification (Manual Payment Queue)
     if (booking.status == BookingStatus.pendingVerification) {
@@ -201,8 +209,50 @@ class BookingCardActions extends StatelessWidget {
       );
     }
 
-    // 2. Approved upcoming booking (Ready to start when time is reached)
-    if (booking.status == BookingStatus.upcoming) {
+    // 2. Approved but unpaid booking: collect payment before session start.
+    if (booking.status == BookingStatus.upcoming && !isPaid) {
+      return Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: AppButton(
+              text: booking.isCashPayment
+                  ? AppStrings.confirmCash
+                  : AppStrings.confirmReceipt,
+              variant: AppButtonVariant.primary,
+              backgroundColor: AppColors.neonBlue,
+              height: h,
+              onPressed: () {
+                if (onConfirmPayment != null) {
+                  onConfirmPayment!();
+                } else {
+                  onOpenDetails();
+                }
+              },
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Expanded(
+            flex: 2,
+            child: AppButton(
+              text: AppStrings.reject,
+              variant: AppButtonVariant.outlined,
+              height: h,
+              onPressed: () {
+                if (onReject != null) {
+                  onReject!();
+                } else {
+                  context.read<BookingCubit>().rejectBooking(booking.id);
+                }
+              },
+            ),
+          ),
+        ],
+      );
+    }
+
+    // 3. Paid upcoming booking (Ready to start when time is reached).
+    if (booking.status == BookingStatus.upcoming && isPaid) {
       return Row(
         children: [
           Expanded(

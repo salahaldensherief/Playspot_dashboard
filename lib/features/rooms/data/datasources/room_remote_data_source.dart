@@ -26,15 +26,21 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
           .eq('lounge_id', loungeId)
           .neq('status', 'deleted')
           .order('created_at', ascending: true);
-      return (response as List).map((json) => RoomModel.fromJson(json)).toList();
+      return (response as List)
+          .map((json) => RoomModel.fromJson(json))
+          .toList();
     } catch (e) {
-      debugPrint('⚠️ [ROOM_DATA_SOURCE] Joint query failed ($e), falling back to plain rooms query...');
+      debugPrint(
+        '⚠️ [ROOM_DATA_SOURCE] Joint query failed ($e), falling back to plain rooms query...',
+      );
       final response = await _supabase
           .from('rooms')
           .select('*')
           .eq('lounge_id', loungeId)
           .neq('status', 'deleted');
-      return (response as List).map((json) => RoomModel.fromJson(json)).toList();
+      return (response as List)
+          .map((json) => RoomModel.fromJson(json))
+          .toList();
     }
   }
 
@@ -60,7 +66,9 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
         yield rooms;
       }
     } catch (e) {
-      debugPrint('⚠️ [ROOM_DATA_SOURCE] Realtime stream failed ($e). Falling back to REST data.');
+      debugPrint(
+        '⚠️ [ROOM_DATA_SOURCE] Realtime stream failed ($e). Falling back to REST data.',
+      );
       try {
         final fallbackRooms = await getRooms(loungeId);
         yield fallbackRooms;
@@ -70,7 +78,10 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
 
   @override
   Future<void> updateRoomStatus(String roomId, String status) async {
-    await _supabase.from('rooms').update({'status': status}).eq('id', roomId);
+    await _supabase.rpc(
+      'set_room_operational_status',
+      params: {'p_room_id': roomId, 'p_status': status},
+    );
   }
 
   @override
@@ -89,14 +100,16 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
     await _syncRoomActivities(room.id, room.activityIds);
   }
 
-  Future<void> _syncRoomActivities(String roomId, List<String> activityIds) async {
+  Future<void> _syncRoomActivities(
+    String roomId,
+    List<String> activityIds,
+  ) async {
     await _supabase.from('room_activities').delete().eq('room_id', roomId);
-    
+
     if (activityIds.isNotEmpty) {
-      final inserts = activityIds.map((id) => {
-        'room_id': roomId,
-        'activity_type_id': id,
-      }).toList();
+      final inserts = activityIds
+          .map((id) => {'room_id': roomId, 'activity_type_id': id})
+          .toList();
       await _supabase.from('room_activities').insert(inserts);
     }
   }
@@ -106,7 +119,10 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
     try {
       await _supabase.from('rooms').delete().eq('id', roomId);
     } catch (_) {
-      await _supabase.from('rooms').update({'status': 'deleted'}).eq('id', roomId);
+      await _supabase
+          .from('rooms')
+          .update({'status': 'deleted', 'is_available': false})
+          .eq('id', roomId);
     }
   }
 }

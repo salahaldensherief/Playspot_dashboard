@@ -15,9 +15,15 @@ class MarketingRepositoryImpl implements MarketingRepository {
   MarketingRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<Either<Failure, List<PromoEntity>>> getPromotions({String? loungeId, String? city}) async {
+  Future<Either<Failure, List<PromoEntity>>> getPromotions({
+    String? loungeId,
+    String? city,
+  }) async {
     try {
-      final promos = await remoteDataSource.getPromotions(loungeId: loungeId, city: city);
+      final promos = await remoteDataSource.getPromotions(
+        loungeId: loungeId,
+        city: city,
+      );
       return Right(promos);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -27,23 +33,27 @@ class MarketingRepositoryImpl implements MarketingRepository {
   @override
   Future<Either<Failure, void>> createPromotion(PromoEntity promo) async {
     try {
-      await remoteDataSource.createPromotion(PromoModel(
-        id: promo.id,
-        titleAr: promo.titleAr,
-        titleEn: promo.titleEn,
-        tagAr: promo.tagAr,
-        tagEn: promo.tagEn,
-        hexColors: promo.hexColors,
-        iconKey: promo.iconKey,
-        imageUrl: promo.imageUrl,
-        deepLink: promo.deepLink,
-        loungeId: promo.loungeId,
-        roomId: promo.roomId,
-        expiresAt: promo.expiresAt,
-        tag: promo.tag,
-        isRoomSpecific: promo.isRoomSpecific,
-        targetAudience: promo.targetAudience,
-      ));
+      await remoteDataSource.createPromotion(
+        PromoModel(
+          id: promo.id,
+          titleAr: promo.titleAr,
+          titleEn: promo.titleEn,
+          tagAr: promo.tagAr,
+          tagEn: promo.tagEn,
+          hexColors: promo.hexColors,
+          iconKey: promo.iconKey,
+          imageUrl: promo.imageUrl,
+          deepLink: promo.deepLink,
+          loungeId: promo.loungeId,
+          roomId: promo.roomId,
+          expiresAt: promo.expiresAt,
+          tag: promo.tag,
+          isRoomSpecific: promo.isRoomSpecific,
+          targetAudience: promo.targetAudience,
+          discountType: promo.discountType,
+          discountValue: promo.discountValue,
+        ),
+      );
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -53,23 +63,27 @@ class MarketingRepositoryImpl implements MarketingRepository {
   @override
   Future<Either<Failure, void>> updatePromotion(PromoEntity promo) async {
     try {
-      await remoteDataSource.updatePromotion(PromoModel(
-        id: promo.id,
-        titleAr: promo.titleAr,
-        titleEn: promo.titleEn,
-        tagAr: promo.tagAr,
-        tagEn: promo.tagEn,
-        hexColors: promo.hexColors,
-        iconKey: promo.iconKey,
-        imageUrl: promo.imageUrl,
-        deepLink: promo.deepLink,
-        loungeId: promo.loungeId,
-        roomId: promo.roomId,
-        expiresAt: promo.expiresAt,
-        tag: promo.tag,
-        isRoomSpecific: promo.isRoomSpecific,
-        targetAudience: promo.targetAudience,
-      ));
+      await remoteDataSource.updatePromotion(
+        PromoModel(
+          id: promo.id,
+          titleAr: promo.titleAr,
+          titleEn: promo.titleEn,
+          tagAr: promo.tagAr,
+          tagEn: promo.tagEn,
+          hexColors: promo.hexColors,
+          iconKey: promo.iconKey,
+          imageUrl: promo.imageUrl,
+          deepLink: promo.deepLink,
+          loungeId: promo.loungeId,
+          roomId: promo.roomId,
+          expiresAt: promo.expiresAt,
+          tag: promo.tag,
+          isRoomSpecific: promo.isRoomSpecific,
+          targetAudience: promo.targetAudience,
+          discountType: promo.discountType,
+          discountValue: promo.discountValue,
+        ),
+      );
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -87,7 +101,10 @@ class MarketingRepositoryImpl implements MarketingRepository {
   }
 
   @override
-  Future<Either<Failure, String>> uploadPromoPoster(Uint8List fileBytes, String fileName) async {
+  Future<Either<Failure, String>> uploadPromoPoster(
+    Uint8List fileBytes,
+    String fileName,
+  ) async {
     try {
       final url = await remoteDataSource.uploadPromoPoster(fileBytes, fileName);
       return Right(url);
@@ -97,19 +114,23 @@ class MarketingRepositoryImpl implements MarketingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> sendNotification(NotificationEntity notification) async {
+  Future<Either<Failure, void>> sendNotification(
+    NotificationEntity notification,
+  ) async {
     try {
-      await remoteDataSource.sendNotification(NotificationModel(
-        id: notification.id,
-        userId: notification.userId,
-        titleAr: notification.titleAr,
-        titleEn: notification.titleEn,
-        bodyAr: notification.bodyAr,
-        bodyEn: notification.bodyEn,
-        type: notification.type,
-        createdAt: notification.createdAt,
-        metadata: notification.metadata,
-      ));
+      await remoteDataSource.sendNotification(
+        NotificationModel(
+          id: notification.id,
+          userId: notification.userId,
+          titleAr: notification.titleAr,
+          titleEn: notification.titleEn,
+          bodyAr: notification.bodyAr,
+          bodyEn: notification.bodyEn,
+          type: notification.type,
+          createdAt: notification.createdAt,
+          metadata: notification.metadata,
+        ),
+      );
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -133,7 +154,11 @@ class MarketingRepositoryImpl implements MarketingRepository {
     int offset = 0,
   }) async {
     try {
-      final notifications = await remoteDataSource.getNotificationsRpc(lang: lang, limit: limit, offset: offset);
+      final notifications = await remoteDataSource.getNotificationsRpc(
+        lang: lang,
+        limit: limit,
+        offset: offset,
+      );
       return Right(notifications);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -141,12 +166,13 @@ class MarketingRepositoryImpl implements MarketingRepository {
   }
 
   @override
-  Future<Either<Failure, PaginatedResult<NotificationEntity>>> getNotificationsPage({
-    int page = 1,
-    int pageSize = 20,
-  }) async {
+  Future<Either<Failure, PaginatedResult<NotificationEntity>>>
+  getNotificationsPage({int page = 1, int pageSize = 20}) async {
     try {
-      final result = await remoteDataSource.getNotificationsPage(page: page, pageSize: pageSize);
+      final result = await remoteDataSource.getNotificationsPage(
+        page: page,
+        pageSize: pageSize,
+      );
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -154,7 +180,9 @@ class MarketingRepositoryImpl implements MarketingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> markNotificationRead(String notificationId) async {
+  Future<Either<Failure, void>> markNotificationRead(
+    String notificationId,
+  ) async {
     try {
       await remoteDataSource.markNotificationRead(notificationId);
       return const Right(null);

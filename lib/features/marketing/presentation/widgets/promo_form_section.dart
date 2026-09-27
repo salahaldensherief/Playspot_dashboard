@@ -23,6 +23,9 @@ class PromoFormSection extends StatelessWidget {
   final String targetAudience;
   final Function(String) onTargetAudienceChanged;
   final List<RoomEntity> availableRooms;
+  final String discountType;
+  final ValueChanged<String> onDiscountTypeChanged;
+  final TextEditingController discountValueController;
   final TextEditingController titleArController;
   final TextEditingController titleEnController;
   final TextEditingController expirationDateController;
@@ -42,6 +45,9 @@ class PromoFormSection extends StatelessWidget {
     required this.targetAudience,
     required this.onTargetAudienceChanged,
     required this.availableRooms,
+    required this.discountType,
+    required this.onDiscountTypeChanged,
+    required this.discountValueController,
     required this.titleArController,
     required this.titleEnController,
     required this.expirationDateController,
@@ -56,7 +62,11 @@ class PromoFormSection extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AppText.subHeading('نطاق العرض الترويجي:', fontSize: 13.sp, color: AppColors.textPrimary),
+            AppText.subHeading(
+              'نطاق العرض الترويجي:',
+              fontSize: 13.sp,
+              color: AppColors.textPrimary,
+            ),
             SizedBox(height: 8.h),
             Row(
               children: [
@@ -67,23 +77,37 @@ class PromoFormSection extends StatelessWidget {
                     child: Container(
                       padding: EdgeInsets.all(12.r),
                       decoration: BoxDecoration(
-                        color: !isRoomSpecific ? AppColors.neonPurple.withValues(alpha: 0.15) : AppColors.cardBackground,
+                        color: !isRoomSpecific
+                            ? AppColors.neonPurple.withValues(alpha: 0.15)
+                            : AppColors.cardBackground,
                         borderRadius: BorderRadius.circular(10.r),
                         border: Border.all(
-                          color: !isRoomSpecific ? AppColors.neonPurple : AppColors.borderDefault,
+                          color: !isRoomSpecific
+                              ? AppColors.neonPurple
+                              : AppColors.borderDefault,
                           width: !isRoomSpecific ? 1.5 : 1.0,
                         ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.storefront_rounded, size: 18.r, color: !isRoomSpecific ? AppColors.neonPurple : AppColors.textMuted),
+                          Icon(
+                            Icons.storefront_rounded,
+                            size: 18.r,
+                            color: !isRoomSpecific
+                                ? AppColors.neonPurple
+                                : AppColors.textMuted,
+                          ),
                           SizedBox(width: 8.w),
                           AppText.body(
                             'الصالة بالكامل',
                             fontSize: 12.sp,
-                            color: !isRoomSpecific ? AppColors.textPrimary : AppColors.textSecondary,
-                            fontWeight: !isRoomSpecific ? FontWeight.bold : FontWeight.normal,
+                            color: !isRoomSpecific
+                                ? AppColors.textPrimary
+                                : AppColors.textSecondary,
+                            fontWeight: !isRoomSpecific
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ],
                       ),
@@ -98,23 +122,37 @@ class PromoFormSection extends StatelessWidget {
                     child: Container(
                       padding: EdgeInsets.all(12.r),
                       decoration: BoxDecoration(
-                        color: isRoomSpecific ? AppColors.neonBlue.withValues(alpha: 0.15) : AppColors.cardBackground,
+                        color: isRoomSpecific
+                            ? AppColors.neonBlue.withValues(alpha: 0.15)
+                            : AppColors.cardBackground,
                         borderRadius: BorderRadius.circular(10.r),
                         border: Border.all(
-                          color: isRoomSpecific ? AppColors.neonBlue : AppColors.borderDefault,
+                          color: isRoomSpecific
+                              ? AppColors.neonBlue
+                              : AppColors.borderDefault,
                           width: isRoomSpecific ? 1.5 : 1.0,
                         ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.sports_esports_rounded, size: 18.r, color: isRoomSpecific ? AppColors.neonBlue : AppColors.textMuted),
+                          Icon(
+                            Icons.sports_esports_rounded,
+                            size: 18.r,
+                            color: isRoomSpecific
+                                ? AppColors.neonBlue
+                                : AppColors.textMuted,
+                          ),
                           SizedBox(width: 8.w),
                           AppText.body(
                             'روم / جهاز معين',
                             fontSize: 12.sp,
-                            color: isRoomSpecific ? AppColors.textPrimary : AppColors.textSecondary,
-                            fontWeight: isRoomSpecific ? FontWeight.bold : FontWeight.normal,
+                            color: isRoomSpecific
+                                ? AppColors.textPrimary
+                                : AppColors.textSecondary,
+                            fontWeight: isRoomSpecific
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ],
                       ),
@@ -132,7 +170,9 @@ class PromoFormSection extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.cardBackground,
                   borderRadius: BorderRadius.circular(10.r),
-                  border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.4)),
+                  border: Border.all(
+                    color: AppColors.neonBlue.withValues(alpha: 0.4),
+                  ),
                 ),
                 child: CustomDropdown<String>(
                   label: AppStrings.selectRoom,
@@ -140,15 +180,23 @@ class PromoFormSection extends StatelessWidget {
                   items: availableRooms.map((room) => room.id).toList(),
                   itemLabel: (id) {
                     final room = availableRooms.cast<RoomEntity?>().firstWhere(
-                          (r) => r?.id == id,
-                          orElse: () => null,
-                        );
+                      (r) => r?.id == id,
+                      orElse: () => null,
+                    );
                     if (room == null) return AppStrings.selectRoom;
-                    final name = room.nameAr.isNotEmpty ? room.nameAr : (room.nameEn.isNotEmpty ? room.nameEn : 'Gaming Room');
-                    return room.controllersCount > 0 ? '$name (${room.controllersCount} دراعات)' : name;
+                    final name = room.nameAr.isNotEmpty
+                        ? room.nameAr
+                        : (room.nameEn.isNotEmpty
+                              ? room.nameEn
+                              : 'Gaming Room');
+                    return room.controllersCount > 0
+                        ? '$name (${room.controllersCount} دراعات)'
+                        : name;
                   },
                   onChanged: onRoomChanged,
-                  validator: (v) => isRoomSpecific && v == null ? AppStrings.fieldRequired : null,
+                  validator: (v) => isRoomSpecific && v == null
+                      ? AppStrings.fieldRequired
+                      : null,
                 ),
               ),
             ],
@@ -209,7 +257,9 @@ class PromoFormSection extends StatelessWidget {
                 onTap: () async {
                   final date = await showDatePicker(
                     context: context,
-                    initialDate: expiresAt ?? DateTime.now().add(const Duration(days: 7)),
+                    initialDate:
+                        expiresAt ??
+                        DateTime.now().add(const Duration(days: 7)),
                     firstDate: DateTime.now(),
                     lastDate: DateTime.now().add(const Duration(days: 365)),
                   );
@@ -232,11 +282,57 @@ class PromoFormSection extends StatelessWidget {
 
         SizedBox(height: 16.h),
 
+        Row(
+          children: [
+            Expanded(
+              child: CustomDropdown<String>(
+                label: 'نوع الخصم',
+                value: discountType,
+                items: const ['percentage', 'fixed'],
+                itemLabel: (value) => value == 'percentage'
+                    ? 'نسبة مئوية (%)'
+                    : 'قيمة ثابتة (EGP)',
+                onChanged: (value) {
+                  if (value != null) onDiscountTypeChanged(value);
+                },
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: AppTextField(
+                controller: discountValueController,
+                label: discountType == 'percentage'
+                    ? 'قيمة الخصم (%)'
+                    : 'قيمة الخصم (EGP)',
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                validator: (value) {
+                  final number = double.tryParse(value?.trim() ?? '');
+                  if (number == null || number < 0) {
+                    return 'أدخل قيمة خصم صحيحة';
+                  }
+                  if (discountType == 'percentage' && number > 100) {
+                    return 'النسبة يجب ألا تتجاوز 100%';
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ],
+        ),
+
+        SizedBox(height: 16.h),
+
         // 4. Target Audience (Local vs All)
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AppText.subHeading('الجمهور المستهدف (Audience):', fontSize: 13.sp, color: AppColors.textPrimary),
+            AppText.subHeading(
+              'الجمهور المستهدف (Audience):',
+              fontSize: 13.sp,
+              color: AppColors.textPrimary,
+            ),
             SizedBox(height: 8.h),
             SegmentedButton<String>(
               segments: [
@@ -263,7 +359,12 @@ class PromoFormSection extends StatelessWidget {
         CustomDropdown<String>(
           label: AppStrings.deepLinkDest,
           value: selectedDeepLink,
-          items: const ['Specific Room', 'Lounge Profile', 'External Link', '/offers'],
+          items: const [
+            'Specific Room',
+            'Lounge Profile',
+            'External Link',
+            '/offers',
+          ],
           itemLabel: (s) => s,
           onChanged: onDeepLinkChanged,
         ),

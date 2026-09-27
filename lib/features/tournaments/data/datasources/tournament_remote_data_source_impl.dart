@@ -21,10 +21,10 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
   final TournamentPrizeRemoteHelper _prizeHelper;
 
   TournamentRemoteDataSourceImpl(this.client)
-      : _participantHelper = TournamentParticipantRemoteHelper(client),
-        _matchHelper = TournamentMatchRemoteHelper(client),
-        _auditHelper = TournamentAuditRemoteHelper(client),
-        _prizeHelper = TournamentPrizeRemoteHelper(client);
+    : _participantHelper = TournamentParticipantRemoteHelper(client),
+      _matchHelper = TournamentMatchRemoteHelper(client),
+      _auditHelper = TournamentAuditRemoteHelper(client),
+      _prizeHelper = TournamentPrizeRemoteHelper(client);
 
   @override
   Future<List<TournamentModel>> getTournaments({
@@ -102,32 +102,44 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
     }
 
     try {
-      final response = await client.rpc('create_tournament', params: {
-        'p_lounge_id': tournament.loungeId,
-        'p_city_id': cityId,
-        'p_title_ar': tournament.titleAr ?? tournament.title,
-        'p_title_en': tournament.titleEn ?? tournament.title,
-        'p_game_name': tournament.gameTitle,
-        'p_bracket_size': tournament.treeSize,
-        'p_max_participants': tournament.maxPlayers,
-        'p_entry_fee': tournament.entryFee,
-        'p_registration_opens_at': tournament.registrationOpensAt?.toUtc().toIso8601String() ??
-            tournament.startDate.toUtc().toIso8601String(),
-        'p_registration_closes_at': (tournament.registrationClosesAt ?? tournament.registrationDeadline)
-            .toUtc()
-            .toIso8601String(),
-        'p_tournament_starts_at': tournament.startDate.toUtc().toIso8601String(),
-        'p_rules': tournament.rules,
-        'p_banner_url': tournament.bannerUrl,
-      });
+      final response = await client.rpc(
+        'create_tournament',
+        params: {
+          'p_lounge_id': tournament.loungeId,
+          'p_city_id': cityId,
+          'p_title_ar': tournament.titleAr ?? tournament.title,
+          'p_title_en': tournament.titleEn ?? tournament.title,
+          'p_game_name': tournament.gameTitle,
+          'p_bracket_size': tournament.treeSize,
+          'p_max_participants': tournament.maxPlayers,
+          'p_entry_fee': tournament.entryFee,
+          'p_registration_opens_at':
+              tournament.registrationOpensAt?.toUtc().toIso8601String() ??
+              tournament.startDate.toUtc().toIso8601String(),
+          'p_registration_closes_at':
+              (tournament.registrationClosesAt ??
+                      tournament.registrationDeadline)
+                  .toUtc()
+                  .toIso8601String(),
+          'p_tournament_starts_at': tournament.startDate
+              .toUtc()
+              .toIso8601String(),
+          'p_rules': tournament.rules,
+          'p_banner_url': tournament.bannerUrl,
+        },
+      );
 
       final createdData = response is List && response.isNotEmpty
           ? response.first
           : (response is Map ? response : null);
       if (createdData != null) {
-        final model = TournamentModel.fromJson(Map<String, dynamic>.from(createdData));
+        final model = TournamentModel.fromJson(
+          Map<String, dynamic>.from(createdData),
+        );
         if (tournament.prizes.isNotEmpty) {
-          final prizeModels = tournament.prizes.map((p) => TournamentPrizeModel.fromEntity(p)).toList();
+          final prizeModels = tournament.prizes
+              .map((p) => TournamentPrizeModel.fromEntity(p))
+              .toList();
           await saveTournamentPrizes(model.id, prizeModels);
         }
         return model;
@@ -153,26 +165,30 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
         .select()
         .single();
 
-    final updatedModel = TournamentModel.fromJson(Map<String, dynamic>.from(response));
+    final updatedModel = TournamentModel.fromJson(
+      Map<String, dynamic>.from(response),
+    );
     if (tournament.prizes.isNotEmpty) {
-      final prizeModels = tournament.prizes.map((p) => TournamentPrizeModel.fromEntity(p)).toList();
+      final prizeModels = tournament.prizes
+          .map((p) => TournamentPrizeModel.fromEntity(p))
+          .toList();
       await saveTournamentPrizes(updatedModel.id, prizeModels);
     }
     return updatedModel;
   }
 
   @override
-  Future<void> saveTournamentPrizes(String tournamentId, List<TournamentPrizeModel> prizes) =>
-      _prizeHelper.saveTournamentPrizes(tournamentId, prizes);
+  Future<void> saveTournamentPrizes(
+    String tournamentId,
+    List<TournamentPrizeModel> prizes,
+  ) => _prizeHelper.saveTournamentPrizes(tournamentId, prizes);
 
   @override
   Future<void> publishTournament(String tournamentId) async {
-    try {
-      await client.rpc('publish_tournament', params: {'p_tournament_id': tournamentId, 'p_open': true});
-    } catch (e) {
-      AppLogger.warning('publish_tournament RPC error, fallback update', e);
-      await client.from('tournaments').update({'status': 'registration_open'}).eq('id', tournamentId);
-    }
+    await client.rpc(
+      'publish_tournament',
+      params: {'p_tournament_id': tournamentId, 'p_open': true},
+    );
   }
 
   @override
@@ -181,37 +197,52 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
     if (cleanReason.isEmpty) {
       throw Exception('سبب إلغاء البطولة إجباري ولا يمكن أن يكون فارغاً.');
     }
-    try {
-      await client.rpc('cancel_tournament', params: {'p_tournament_id': tournamentId, 'p_reason': cleanReason});
-    } catch (e) {
-      AppLogger.warning('cancel_tournament RPC error, fallback update', e);
-      await client.from('tournaments').update({'status': 'cancelled', 'cancellation_reason': cleanReason}).eq('id', tournamentId);
-    }
+
+    await client.rpc(
+      'cancel_tournament',
+      params: {'p_tournament_id': tournamentId, 'p_reason': cleanReason},
+    );
   }
 
   @override
   Future<void> deleteDraftTournament(String tournamentId) async {
     try {
-      final participantsRes = await client.from('tournament_participants').select('id').eq('tournament_id', tournamentId).limit(1);
-      final matchesRes = await client.from('tournament_matches').select('id').eq('tournament_id', tournamentId).limit(1);
-      if ((participantsRes as List).isNotEmpty || (matchesRes as List).isNotEmpty) {
-        throw Exception('لا يمكن حذف المسودة لوجود مشاركين أو مباريات مسجلة فيها. يجب استخدام الإلغاء بدلاً من الحذف.');
+      final participantsRes = await client
+          .from('tournament_participants')
+          .select('id')
+          .eq('tournament_id', tournamentId)
+          .limit(1);
+      final matchesRes = await client
+          .from('tournament_matches')
+          .select('id')
+          .eq('tournament_id', tournamentId)
+          .limit(1);
+      if ((participantsRes as List).isNotEmpty ||
+          (matchesRes as List).isNotEmpty) {
+        throw Exception(
+          'لا يمكن حذف المسودة لوجود مشاركين أو مباريات مسجلة فيها. يجب استخدام الإلغاء بدلاً من الحذف.',
+        );
       }
     } catch (e) {
       if (e.toString().contains('لا يمكن حذف المسودة')) rethrow;
     }
 
-    try {
-      await client.rpc('delete_draft_tournament', params: {'p_tournament_id': tournamentId});
-    } catch (e) {
-      AppLogger.warning('delete_draft_tournament RPC error, fallback delete', e);
-      await client.from('tournaments').delete().eq('id', tournamentId).eq('status', 'draft');
-    }
+    await client.rpc(
+      'delete_draft_tournament',
+      params: {'p_tournament_id': tournamentId},
+    );
   }
 
   @override
-  Future<void> deleteTournament(String tournamentId, {String? cancelReason}) async {
-    final tData = await client.from('tournaments').select('status').eq('id', tournamentId).maybeSingle();
+  Future<void> deleteTournament(
+    String tournamentId, {
+    String? cancelReason,
+  }) async {
+    final tData = await client
+        .from('tournaments')
+        .select('status')
+        .eq('id', tournamentId)
+        .maybeSingle();
     if (tData == null) throw Exception('البطولة غير موجودة');
     final status = tData['status']?.toString() ?? 'draft';
 
@@ -221,7 +252,8 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
         return;
       } catch (e) {
         if (e.toString().contains('لا يمكن حذف المسودة')) {
-          final reason = (cancelReason != null && cancelReason.trim().isNotEmpty)
+          final reason =
+              (cancelReason != null && cancelReason.trim().isNotEmpty)
               ? cancelReason.trim()
               : 'إلغاء مسودة مرتبطة بمشاركين أو مباريات';
           await cancelTournament(tournamentId, reason);
@@ -239,8 +271,9 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
 
   // Delegated Participant Methods
   @override
-  Future<List<TournamentParticipantModel>> getParticipants(String tournamentId) =>
-      _participantHelper.getParticipants(tournamentId);
+  Future<List<TournamentParticipantModel>> getParticipants(
+    String tournamentId,
+  ) => _participantHelper.getParticipants(tournamentId);
 
   @override
   Future<void> approvePayment(String participantId) =>
@@ -286,27 +319,25 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
     required int p1Score,
     required int p2Score,
     required String resolutionNotes,
-  }) =>
-      _matchHelper.resolveDispute(
-        matchId,
-        winnerId: winnerId,
-        p1Score: p1Score,
-        p2Score: p2Score,
-        resolutionNotes: resolutionNotes,
-      );
+  }) => _matchHelper.resolveDispute(
+    matchId,
+    winnerId: winnerId,
+    p1Score: p1Score,
+    p2Score: p2Score,
+    resolutionNotes: resolutionNotes,
+  );
 
   @override
-  Stream<List<TournamentMatchModel>> watchDisputedMatches(String tournamentId) =>
-      _matchHelper.watchDisputedMatches(tournamentId);
+  Stream<List<TournamentMatchModel>> watchDisputedMatches(
+    String tournamentId,
+  ) => _matchHelper.watchDisputedMatches(tournamentId);
 
   @override
   Future<void> completeTournament(String tournamentId) async {
-    try {
-      await client.rpc('complete_tournament', params: {'p_tournament_id': tournamentId});
-    } catch (e) {
-      AppLogger.warning('complete_tournament RPC error, fallback update', e);
-      await client.from('tournaments').update({'status': 'completed'}).eq('id', tournamentId);
-    }
+    await client.rpc(
+      'complete_tournament',
+      params: {'p_tournament_id': tournamentId},
+    );
   }
 
   @override
@@ -322,10 +353,9 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
     required String tournamentId,
     int page = 1,
     int pageSize = 50,
-  }) =>
-      _auditHelper.getTournamentAuditLogsPage(
-        tournamentId: tournamentId,
-        page: page,
-        pageSize: pageSize,
-      );
+  }) => _auditHelper.getTournamentAuditLogsPage(
+    tournamentId: tournamentId,
+    page: page,
+    pageSize: pageSize,
+  );
 }
