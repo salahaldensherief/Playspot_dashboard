@@ -112,9 +112,16 @@ class _PromoDialogState extends State<PromoDialog> {
       try {
         String? imageUrl = _currentImageUrl;
         if (_selectedImageBytes != null) {
+          final loungeId = widget.promo.loungeId?.trim() ?? '';
+          if (loungeId.isEmpty) {
+            throw Exception(
+              'Lounge ID is required to upload a promotion poster.',
+            );
+          }
           imageUrl = await context.read<MarketingCubit>().uploadPromoPoster(
             _selectedImageBytes!,
             _selectedImageName ?? 'promo_poster.png',
+            loungeId,
           );
         }
 
