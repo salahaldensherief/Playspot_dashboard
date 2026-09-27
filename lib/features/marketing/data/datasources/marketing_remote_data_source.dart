@@ -9,7 +9,11 @@ abstract class MarketingRemoteDataSource {
   Future<void> createPromotion(PromoModel promo);
   Future<void> updatePromotion(PromoModel promo);
   Future<void> deletePromotion(String id);
-  Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName, String loungeId);
+  Future<String> uploadPromoPoster(
+    Uint8List fileBytes,
+    String fileName,
+    String loungeId,
+  );
 
   // Notifications & User Preferences
   Future<void> sendNotification(NotificationModel notification);
@@ -156,7 +160,11 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
   }
 
   @override
-  Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName, String loungeId) async {
+  Future<String> uploadPromoPoster(
+    Uint8List fileBytes,
+    String fileName,
+    String loungeId,
+  ) async {
     final sanitizedFileName = fileName.replaceAll(
       RegExp(r'[^a-zA-Z0-9._-]'),
       '_',
