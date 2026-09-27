@@ -168,46 +168,11 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
     final path =
         '$cleanLoungeId/posters/${DateTime.now().millisecondsSinceEpoch}_$sanitizedFileName';
 
-    // 1. Try promotion-assets bucket (newly created bucket)
-    try {
-      await _supabase.storage
-          .from('promotion-assets')
-          .uploadBinary(path, fileBytes);
-      return _supabase.storage.from('promotion-assets').getPublicUrl(path);
-    } catch (e) {
-      debugPrint(
-        '⚠️ [MARKETING_REMOTE] promotion-assets bucket upload error ($e), attempting lounge-assets...',
-      );
-    }
+    await _supabase.storage
+        .from('promotion-assets')
+        .uploadBinary(path, fileBytes);
 
-    // 2. Fallback to lounge-assets bucket
-    try {
-      await _supabase.storage
-          .from('lounge-assets')
-          .uploadBinary(path, fileBytes);
-      return _supabase.storage.from('lounge-assets').getPublicUrl(path);
-    } catch (e) {
-      debugPrint(
-        '⚠️ [MARKETING_REMOTE] lounge-assets bucket upload error ($e), attempting tournament-assets...',
-      );
-    }
-
-    // 3. Fallback to tournament-assets bucket
-    try {
-      await _supabase.storage
-          .from('tournament-assets')
-          .uploadBinary(path, fileBytes);
-      return _supabase.storage.from('tournament-assets').getPublicUrl(path);
-    } catch (e) {
-      debugPrint(
-        '🔴 [MARKETING_REMOTE] All storage buckets failed to upload promo poster: $e',
-      );
-    }
-
-    // Throw explicit Exception so UI/Cubit surfaces error instead of saving a broken blank URL
-    throw Exception(
-      'فشل رفع صورة العرض الترويجي على السيرفر. يرجى إعادة المحاولة.',
-    );
+    return _supabase.storage.from('promotion-assets').getPublicUrl(path);
   }
 
   @override
