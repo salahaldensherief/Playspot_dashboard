@@ -31,6 +31,7 @@ class _PromoDialogState extends State<PromoDialog> {
   late TextEditingController _titleArController;
   late TextEditingController _titleEnController;
   late TextEditingController _expirationDateController;
+  late TextEditingController _discountValueController;
   
   final List<List<Color>> _colorTemplates = [
     [AppColors.neonPurple, AppColors.neonBlue],
@@ -47,6 +48,7 @@ class _PromoDialogState extends State<PromoDialog> {
   bool _isRoomSpecific = false;
   String? _selectedRoomId;
   String _targetAudience = 'all';
+  String _discountType = 'percentage';
   Uint8List? _selectedImageBytes;
   String? _selectedImageName;
   String? _currentImageUrl;
@@ -60,6 +62,9 @@ class _PromoDialogState extends State<PromoDialog> {
     _expirationDateController = TextEditingController(
       text: widget.promo.expiresAt?.toLocal().toString().split(' ')[0] ?? '',
     );
+    _discountValueController = TextEditingController(
+      text: widget.promo.discountValue.toString(),
+    );
     _selectedIcon = widget.promo.iconKey;
     _selectedDeepLink = widget.promo.deepLink ?? 'Specific Room';
     _expiresAt = widget.promo.expiresAt;
@@ -67,6 +72,7 @@ class _PromoDialogState extends State<PromoDialog> {
     _isRoomSpecific = widget.promo.isRoomSpecific;
     _selectedRoomId = widget.promo.roomId;
     _targetAudience = widget.promo.targetAudience;
+    _discountType = widget.promo.discountType;
     _currentImageUrl = widget.promo.imageUrl;
   }
 
@@ -134,6 +140,8 @@ class _PromoDialogState extends State<PromoDialog> {
             loungeId: widget.promo.loungeId,
             roomId: _isRoomSpecific ? _selectedRoomId : null,
             targetAudience: _targetAudience,
+            discountType: _discountType,
+            discountValue: double.tryParse(_discountValueController.text.trim()) ?? 0,
             imageUrl: imageUrl,
           );
           widget.onSave!(updatedPromo);
@@ -153,6 +161,15 @@ class _PromoDialogState extends State<PromoDialog> {
         if (mounted) setState(() => _isUploading = false);
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _titleArController.dispose();
+    _titleEnController.dispose();
+    _expirationDateController.dispose();
+    _discountValueController.dispose();
+    super.dispose();
   }
 
   @override
@@ -203,6 +220,9 @@ class _PromoDialogState extends State<PromoDialog> {
                             targetAudience: _targetAudience,
                             onTargetAudienceChanged: (v) => setState(() => _targetAudience = v),
                             availableRooms: roomState.rooms,
+                            discountType: _discountType,
+                            onDiscountTypeChanged: (value) => setState(() => _discountType = value),
+                            discountValueController: _discountValueController,
                           ),
                         ),
                         SizedBox(width: 32.w),

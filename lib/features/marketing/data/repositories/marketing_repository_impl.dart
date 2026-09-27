@@ -43,6 +43,8 @@ class MarketingRepositoryImpl implements MarketingRepository {
         tag: promo.tag,
         isRoomSpecific: promo.isRoomSpecific,
         targetAudience: promo.targetAudience,
+        discountType: promo.discountType,
+        discountValue: promo.discountValue,
       ));
       return const Right(null);
     } catch (e) {
@@ -69,6 +71,8 @@ class MarketingRepositoryImpl implements MarketingRepository {
         tag: promo.tag,
         isRoomSpecific: promo.isRoomSpecific,
         targetAudience: promo.targetAudience,
+        discountType: promo.discountType,
+        discountValue: promo.discountValue,
       ));
       return const Right(null);
     } catch (e) {

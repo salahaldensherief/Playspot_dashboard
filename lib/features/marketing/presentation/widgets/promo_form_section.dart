@@ -23,6 +23,9 @@ class PromoFormSection extends StatelessWidget {
   final String targetAudience;
   final Function(String) onTargetAudienceChanged;
   final List<RoomEntity> availableRooms;
+  final String discountType;
+  final ValueChanged<String> onDiscountTypeChanged;
+  final TextEditingController discountValueController;
   final TextEditingController titleArController;
   final TextEditingController titleEnController;
   final TextEditingController expirationDateController;
@@ -42,6 +45,9 @@ class PromoFormSection extends StatelessWidget {
     required this.targetAudience,
     required this.onTargetAudienceChanged,
     required this.availableRooms,
+    required this.discountType,
+    required this.onDiscountTypeChanged,
+    required this.discountValueController,
     required this.titleArController,
     required this.titleEnController,
     required this.expirationDateController,
@@ -225,6 +231,45 @@ class PromoFormSection extends StatelessWidget {
                     validator: AppValidator.validateRequired,
                   ),
                 ),
+              ),
+            ),
+          ],
+        ),
+
+        SizedBox(height: 16.h),
+
+        Row(
+          children: [
+            Expanded(
+              child: CustomDropdown<String>(
+                label: 'نوع الخصم',
+                value: discountType,
+                items: const ['percentage', 'fixed'],
+                itemLabel: (value) =>
+                    value == 'percentage' ? 'نسبة مئوية (%)' : 'قيمة ثابتة (EGP)',
+                onChanged: (value) {
+                  if (value != null) onDiscountTypeChanged(value);
+                },
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: AppTextField(
+                controller: discountValueController,
+                label: discountType == 'percentage'
+                    ? 'قيمة الخصم (%)'
+                    : 'قيمة الخصم (EGP)',
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                validator: (value) {
+                  final number = double.tryParse(value?.trim() ?? '');
+                  if (number == null || number < 0) {
+                    return 'أدخل قيمة خصم صحيحة';
+                  }
+                  if (discountType == 'percentage' && number > 100) {
+                    return 'النسبة يجب ألا تتجاوز 100%';
+                  }
+                  return null;
+                },
               ),
             ),
           ],
