@@ -468,4 +468,19 @@ FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.check_and_expire_promos()
 TO service_role, supabase_auth_admin;
 
+
+-- Trigger helpers are internal database implementation details and should not
+-- be callable through the Data API.
+REVOKE EXECUTE ON FUNCTION public.fn_validate_and_clamp_booking_price()
+FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public.fn_validate_and_clamp_booking_price()
+TO service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.check_booking_no_overlap()
+FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public.check_booking_no_overlap()
+TO service_role, supabase_auth_admin;
+
 COMMIT;
