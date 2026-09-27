@@ -122,4 +122,55 @@ GRANT EXECUTE ON FUNCTION public.create_promotion(
   uuid,uuid,text,text,text,text,text,numeric,timestamptz,text[],text,text,text,text
 ) TO authenticated, service_role, supabase_auth_admin;
 
+
+-- Prevent duplicate delivery for the same promotion and user regardless of
+-- whether the insert originated from the promotion trigger, an RPC, or a
+-- repeated broadcast call. Existing historical duplicates are left untouched.
+CREATE OR REPLACE FUNCTION public.guard_duplicate_offer_notification()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path TO ''
+AS $function$
+DECLARE
+  v_promo_id text;
+  v_lock_key text;
+BEGIN
+  IF NEW.type IS DISTINCT FROM 'offer' OR NEW.user_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  v_promo_id := NULLIF(NEW.metadata->>'promo_id', '');
+  IF v_promo_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  v_lock_key :=
+    NEW.user_id::text || ':offer:' || v_promo_id;
+
+  PERFORM pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(v_lock_key, 0)
+  );
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.notifications AS n
+    WHERE n.user_id = NEW.user_id
+      AND n.type = 'offer'
+      AND n.metadata->>'promo_id' = v_promo_id
+  ) THEN
+    RETURN NULL;
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS trg_guard_duplicate_offer_notification
+ON public.notifications;
+
+CREATE TRIGGER trg_guard_duplicate_offer_notification
+BEFORE INSERT ON public.notifications
+FOR EACH ROW
+EXECUTE FUNCTION public.guard_duplicate_offer_notification();
+
 COMMIT;
