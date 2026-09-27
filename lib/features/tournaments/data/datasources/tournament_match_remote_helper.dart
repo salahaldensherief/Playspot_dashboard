@@ -66,10 +66,7 @@ class TournamentMatchRemoteHelper {
   Future<void> startMatch(String matchId, {String? roomId}) async {
     await client.rpc(
       'start_tournament_match',
-      params: {
-        'p_match_id': matchId,
-        'p_room_id': roomId,
-      },
+      params: {'p_match_id': matchId},
     );
   }
 
