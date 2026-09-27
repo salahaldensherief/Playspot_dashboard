@@ -167,12 +167,10 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
 
   @override
   Future<void> publishTournament(String tournamentId) async {
-    try {
-      await client.rpc('publish_tournament', params: {'p_tournament_id': tournamentId, 'p_open': true});
-    } catch (e) {
-      AppLogger.warning('publish_tournament RPC error, fallback update', e);
-      await client.from('tournaments').update({'status': 'registration_open'}).eq('id', tournamentId);
-    }
+    await client.rpc(
+      'publish_tournament',
+      params: {'p_tournament_id': tournamentId, 'p_open': true},
+    );
   }
 
   @override
@@ -181,12 +179,14 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
     if (cleanReason.isEmpty) {
       throw Exception('سبب إلغاء البطولة إجباري ولا يمكن أن يكون فارغاً.');
     }
-    try {
-      await client.rpc('cancel_tournament', params: {'p_tournament_id': tournamentId, 'p_reason': cleanReason});
-    } catch (e) {
-      AppLogger.warning('cancel_tournament RPC error, fallback update', e);
-      await client.from('tournaments').update({'status': 'cancelled', 'cancellation_reason': cleanReason}).eq('id', tournamentId);
-    }
+
+    await client.rpc(
+      'cancel_tournament',
+      params: {
+        'p_tournament_id': tournamentId,
+        'p_reason': cleanReason,
+      },
+    );
   }
 
   @override
@@ -201,12 +201,10 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
       if (e.toString().contains('لا يمكن حذف المسودة')) rethrow;
     }
 
-    try {
-      await client.rpc('delete_draft_tournament', params: {'p_tournament_id': tournamentId});
-    } catch (e) {
-      AppLogger.warning('delete_draft_tournament RPC error, fallback delete', e);
-      await client.from('tournaments').delete().eq('id', tournamentId).eq('status', 'draft');
-    }
+    await client.rpc(
+      'delete_draft_tournament',
+      params: {'p_tournament_id': tournamentId},
+    );
   }
 
   @override
@@ -301,12 +299,10 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
 
   @override
   Future<void> completeTournament(String tournamentId) async {
-    try {
-      await client.rpc('complete_tournament', params: {'p_tournament_id': tournamentId});
-    } catch (e) {
-      AppLogger.warning('complete_tournament RPC error, fallback update', e);
-      await client.from('tournaments').update({'status': 'completed'}).eq('id', tournamentId);
-    }
+    await client.rpc(
+      'complete_tournament',
+      params: {'p_tournament_id': tournamentId},
+    );
   }
 
   @override
