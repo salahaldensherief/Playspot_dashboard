@@ -176,27 +176,18 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
 
   @override
   Future<void> sendNotification(NotificationModel notification) async {
-    try {
-      await _supabase.rpc('send_notification', params: {
+    await _supabase.rpc(
+      'send_user_notification',
+      params: {
         'p_user_id': notification.userId,
         'p_title_ar': notification.titleAr,
         'p_title_en': notification.titleEn,
         'p_body_ar': notification.bodyAr,
         'p_body_en': notification.bodyEn,
         'p_type': notification.type.toString().split('.').last,
-      });
-      return;
-    } catch (e) {
-      debugPrint('⚠️ [MARKETING_REMOTE] send_notification RPC error: $e, attempting direct insert fallback');
-      try {
-        await _supabase.from('notifications').insert(notification.toJson());
-      } on PostgrestException catch (pe) {
-        if (pe.code == '42501' || pe.message.contains('permission denied')) {
-          throw Exception('عفواً، يتطلب إرسال الإشعارات صلاحيات المسؤول الفائق (Super Admin).');
-        }
-        rethrow;
-      }
-    }
+        'p_metadata': <String, dynamic>{},
+      },
+    );
   }
 
   @override
