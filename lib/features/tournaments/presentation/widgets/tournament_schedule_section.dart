@@ -92,7 +92,7 @@ class TournamentScheduleSection extends StatelessWidget {
     DateTime value,
     ValueChanged<DateTime> onPicked,
   ) {
-    final formatted = DateFormat('yyyy/MM/dd HH:mm').format(value);
+    final formatted = DateFormat('yyyy/MM/dd hh:mm a').format(value);
     return InkWell(
       onTap: () => _selectDateTime(context, value, onPicked),
       child: AbsorbPointer(

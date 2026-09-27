@@ -63,7 +63,7 @@ class AuditLogsModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('yyyy/MM/dd HH:mm:ss');
+    final dateFormat = DateFormat('yyyy/MM/dd hh:mm:ss a');
 
     return AppDialog(
       title: AppStrings.auditTrail,

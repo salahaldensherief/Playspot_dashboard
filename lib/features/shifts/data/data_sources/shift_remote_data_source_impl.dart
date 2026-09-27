@@ -88,8 +88,7 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
       var query = _supabase
           .from('shifts')
           .select('*, profiles:cashier_id(full_name)')
-          .eq('status', 'open')
-          .filter('closed_at', 'is', null);
+          .or('status.eq.open,closed_at.is.null');
 
       if (loungeId.isNotEmpty) {
         query = query.eq('lounge_id', loungeId);
@@ -163,7 +162,28 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
         final jsonMap = Map<String, dynamic>.from(response is List && response.isNotEmpty ? response.first as Map : response as Map);
         var overview = LiveShiftOverviewModel.fromJson(jsonMap);
 
-        if (overview.hasActiveShift && (overview.cashierName == null || overview.cashierName == 'N/A' || overview.cashierName!.trim().isEmpty)) {
+        if (!overview.hasActiveShift) {
+          try {
+            final activeShift = await getActiveShift(loungeId);
+            if (activeShift != null) {
+              return LiveShiftOverviewModel(
+                hasActiveShift: true,
+                shiftId: activeShift.id,
+                cashierName: activeShift.cashierName ?? 'الكاشير الحالي',
+                cashierAvatar: null,
+                cashierPhone: null,
+                startTime: activeShift.startTime,
+                startingCash: activeShift.startingCash,
+                cashInDrawer: activeShift.startingCash + (activeShift.cashRevenue ?? 0.0) - (activeShift.expensesTotal ?? 0.0),
+                digitalPayments: activeShift.digitalRevenue ?? 0.0,
+                activeSessions: 0,
+                closedBookings: 0,
+              );
+            }
+          } catch (e) {
+            debugPrint('⚠️ [ShiftRemoteDataSource] Fallback active shift lookup error: $e');
+          }
+        } else if (overview.hasActiveShift && (overview.cashierName == null || overview.cashierName == 'N/A' || overview.cashierName!.trim().isEmpty)) {
           try {
             final activeShift = await getActiveShift(loungeId);
             if (activeShift != null && activeShift.cashierName != 'N/A') {
@@ -192,6 +212,25 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
       debugPrint('⚠️ [ShiftRemoteDataSource] RPC get_lounge_live_shift_overview error ($e)');
     }
 
+    try {
+      final activeShift = await getActiveShift(loungeId);
+      if (activeShift != null) {
+        return LiveShiftOverviewModel(
+          hasActiveShift: true,
+          shiftId: activeShift.id,
+          cashierName: activeShift.cashierName ?? 'الكاشير الحالي',
+          cashierAvatar: null,
+          cashierPhone: null,
+          startTime: activeShift.startTime,
+          startingCash: activeShift.startingCash,
+          cashInDrawer: activeShift.startingCash + (activeShift.cashRevenue ?? 0.0) - (activeShift.expensesTotal ?? 0.0),
+          digitalPayments: activeShift.digitalRevenue ?? 0.0,
+          activeSessions: 0,
+          closedBookings: 0,
+        );
+      }
+    } catch (_) {}
+
     return LiveShiftOverviewModel(
       hasActiveShift: false,
       shiftId: null,
@@ -214,13 +253,16 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
 
     final existingOpenShift = await _supabase
         .from('shifts')
-        .select('id')
+        .select('*, profiles:cashier_id(full_name)')
         .eq('lounge_id', loungeId)
-        .eq('status', 'open')
+        .or('status.eq.open,closed_at.is.null')
+        .order('start_time', ascending: false)
+        .limit(1)
         .maybeSingle();
 
     if (existingOpenShift != null) {
-      throw Exception('يوجد شفت مفتوح بالفعل لهذا الفرع.');
+      debugPrint('🟢 [ShiftRemoteDataSource] Active shift already exists for lounge $loungeId. Syncing existing shift.');
+      return;
     }
 
     try {

@@ -43,16 +43,11 @@ class _BookingReceiptDialogState extends State<BookingReceiptDialog> {
       try {
         final res = await Supabase.instance.client
             .from('bookings')
-            .select('receipt_url, receipt_path, payment_receipt, proof_url')
+            .select('receipt_url')
             .eq('id', widget.booking.id)
             .maybeSingle();
         if (res != null) {
-          path = (res['receipt_url'] ??
-                  res['receipt_path'] ??
-                  res['payment_receipt'] ??
-                  res['proof_url'])
-              ?.toString()
-              .trim();
+          path = res['receipt_url']?.toString().trim();
         }
       } catch (_) {}
     }
@@ -71,8 +66,8 @@ class _BookingReceiptDialogState extends State<BookingReceiptDialog> {
       return;
     }
 
-    final bucketsToTry = ['receipts', 'booking_receipts', 'payment_receipts', 'wallets', 'payouts', 'attachments'];
-    String cleanPath = path.replaceAll(RegExp(r'^(receipts|booking_receipts|payment_receipts|wallets)/'), '');
+    final bucketsToTry = ['payment-proofs', 'receipts', 'booking_receipts', 'payment_receipts', 'wallets', 'payouts', 'attachments'];
+    String cleanPath = path.replaceAll(RegExp(r'^(payment-proofs|receipts|booking_receipts|payment_receipts|wallets)/'), '');
 
     for (final bucket in bucketsToTry) {
       for (final p in [cleanPath, path]) {

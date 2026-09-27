@@ -105,7 +105,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         if (isPlatformSuperAdmin) {
           map['role'] = 'super_admin';
         }
-        debugPrint('AuthRemoteDataSource: Profile found via direct select: $map (isPlatformSuperAdmin: $isPlatformSuperAdmin)');
+        debugPrint('AuthRemoteDataSource: Profile found via direct select');
         return UserModel.fromJson(map);
       }
       
@@ -138,26 +138,45 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw Exception('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى (401)');
     }
 
-    final url =
-        Uri.parse('$supabaseUrl/functions/v1/update-user-location');
-    final response = await http.post(
-      url,
-      headers: {
-        'Authorization': 'Bearer ${session.accessToken}',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
+    try {
+      final url = Uri.parse('$supabaseUrl/functions/v1/update-user-location');
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer ${session.accessToken}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'latitude': latitude,
+          'longitude': longitude,
+        }),
+      );
+
+      if (response.statusCode == 422) {
+        throw Exception('عذراً، المدينة غير مضافة حالياً للنظام (422)');
+      } else if (response.statusCode == 401) {
+        throw Exception('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى (401)');
+      } else if (response.statusCode == 200) {
+        final updated = await getCurrentUser();
+        if (updated != null) return updated;
+      } else {
+        debugPrint('⚠️ [AUTH_REMOTE] Edge function returned status ${response.statusCode}, attempting direct DB fallback');
+      }
+    } catch (e) {
+      if (e is Exception && e.toString().contains('422')) rethrow;
+      if (e is Exception && e.toString().contains('401')) rethrow;
+      debugPrint('⚠️ [AUTH_REMOTE] Edge function call error ($e), attempting direct DB fallback');
+    }
+
+    // Direct DB Fallback if Edge function returned 502/server error
+    try {
+      await supabaseClient.from('profiles').update({
         'latitude': latitude,
         'longitude': longitude,
-      }),
-    );
-
-    if (response.statusCode == 422) {
-      throw Exception('عذراً، المدينة غير مضافة حالياً للنظام (422)');
-    } else if (response.statusCode == 401) {
-      throw Exception('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى (401)');
-    } else if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('فشل تحديث الموقع (${response.statusCode}): ${response.body}');
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', session.user.id);
+    } catch (dbErr) {
+      debugPrint('⚠️ [AUTH_REMOTE] Direct DB location update failed: $dbErr');
     }
 
     final updated = await getCurrentUser();

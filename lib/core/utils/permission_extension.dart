@@ -19,17 +19,12 @@ extension PermissionExtension on BuildContext {
 
     if (user == null) return false;
 
-    // Level 0 Bypass: Platform Admin (Super Admin) & Lounge Owner have full access
-    if (user.isSuperAdmin || user.isOwner) {
-      return true;
-    }
-
     final roleStr = user.rawRole ?? user.role.name;
     try {
-      return read<PermissionsCubit>().hasPermission(key, userRole: roleStr);
+      return read<PermissionsCubit>().hasPermission(key, userRole: roleStr, userId: user.id);
     } catch (_) {
       if (GetIt.I.isRegistered<PermissionsCubit>()) {
-        return GetIt.I<PermissionsCubit>().hasPermission(key, userRole: roleStr);
+        return GetIt.I<PermissionsCubit>().hasPermission(key, userRole: roleStr, userId: user.id);
       }
     }
     return false;

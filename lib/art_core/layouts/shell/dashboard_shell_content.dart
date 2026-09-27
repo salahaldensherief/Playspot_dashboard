@@ -72,7 +72,7 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
     final roleStr = user?.rawRole ?? user?.role.name ?? 'staff';
     context
         .read<PermissionsCubit>()
-        .loadUserPermissions(roleStr, loungeId: loungeId);
+        .loadUserPermissions(roleStr, loungeId: loungeId, userId: user?.id);
 
     final loungeCubit = context.read<LoungeCubit>();
     loungeCubit.initSelectedLounge(loungeId);
@@ -217,7 +217,7 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
                   widget.user?.rawRole ?? widget.user?.role.name ?? 'staff';
               context
                   .read<PermissionsCubit>()
-                  .loadUserPermissions(roleStr, loungeId: activeId);
+                  .loadUserPermissions(roleStr, loungeId: activeId, userId: widget.user?.id);
             }
           },
         ),

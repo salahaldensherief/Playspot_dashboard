@@ -184,7 +184,7 @@ class _LoungeAdminPayoutsPageState extends State<LoungeAdminPayoutsPage> {
                                                         style: const TextStyle(color: AppColors.textSecondary))),
                                                     DataCell(Text(
                                                         p.paidAt != null
-                                                            ? DateFormat('yyyy-MM-dd HH:mm').format(p.paidAt!)
+                                                            ? DateFormat('yyyy-MM-dd hh:mm a').format(p.paidAt!)
                                                             : '-',
                                                         style: const TextStyle(color: AppColors.textSecondary))),
                                                     DataCell(

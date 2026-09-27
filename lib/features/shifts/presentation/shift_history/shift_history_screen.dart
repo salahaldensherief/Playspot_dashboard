@@ -179,10 +179,7 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                                 rows: filteredShifts.map((shift) {
                                   final discrepancy = shift.calculatedDiscrepancy;
                                   final isHealthy = discrepancy >= 0;
-                                  final user = context.read<LoginCubit>().state.user;
-                                  final bool canApprove = context.hasPermission('shifts_approve') || 
-                                      user?.isManager == true || 
-                                      user?.isLoungeAdmin == true;
+                                  final bool canApprove = context.hasPermission('shifts_approve');
 
                                   final startStr = DateFormat('MMM dd, hh:mm a').format(shift.startTime);
                                   final endStr = shift.endTime != null ? DateFormat('hh:mm a').format(shift.endTime!) : AppStrings.currentShiftOngoing;

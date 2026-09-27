@@ -25,6 +25,7 @@ class UserEntity extends Equatable {
   final int pointsBalance;
   final int referralCount;
   final bool isBanned;
+  final bool isActive;
   final String? bannedReason;
 
   const UserEntity({
@@ -42,11 +43,12 @@ class UserEntity extends Equatable {
     this.pointsBalance = 0,
     this.referralCount = 0,
     this.isBanned = false,
+    this.isActive = true,
     this.bannedReason,
   });
 
   /// Access point for all permission logic
-  UserPermissions get permissions => UserPermissions(role);
+  UserPermissions get permissions => UserPermissions(role, userId: id);
 
   /// Role Groups (Proxied to UserPermissions for compatibility)
   bool get isSuperAdmin => permissions.isSuperAdmin;
@@ -104,6 +106,7 @@ class UserEntity extends Equatable {
     int? pointsBalance,
     int? referralCount,
     bool? isBanned,
+    bool? isActive,
     String? bannedReason,
   }) {
     return UserEntity(
@@ -121,6 +124,7 @@ class UserEntity extends Equatable {
       pointsBalance: pointsBalance ?? this.pointsBalance,
       referralCount: referralCount ?? this.referralCount,
       isBanned: isBanned ?? this.isBanned,
+      isActive: isActive ?? this.isActive,
       bannedReason: bannedReason ?? this.bannedReason,
     );
   }
@@ -141,6 +145,7 @@ class UserEntity extends Equatable {
         pointsBalance,
         referralCount,
         isBanned,
+        isActive,
         bannedReason,
       ];
 }

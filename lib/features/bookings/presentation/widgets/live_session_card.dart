@@ -179,40 +179,45 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
                     onSwapRoom: () => _showSwapRoomDialog(context),
                     onOpenStationControl: _openStationControl,
                   ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 12.h),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        BookingCardCustomerRow(booking: booking),
-                        SizedBox(height: 12.h),
-                        LiveSessionTimerBox(
-                          booking: booking,
-                          accent: accent,
-                          isExpired: isExpired,
-                          remaining: remaining,
-                          onOpenStationControl: _openStationControl,
-                          onExtendMinutes: _handleExtendMinutes,
+                  Flexible(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 12.h),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            BookingCardCustomerRow(booking: booking),
+                            SizedBox(height: 12.h),
+                            LiveSessionTimerBox(
+                              booking: booking,
+                              accent: accent,
+                              isExpired: isExpired,
+                              remaining: remaining,
+                              onOpenStationControl: _openStationControl,
+                              onExtendMinutes: _handleExtendMinutes,
+                            ),
+                            LiveSessionRequestsBadge(booking: booking),
+                            BookingProductsPreview(booking: booking),
+                            SizedBox(height: 12.h),
+                            Container(height: 1, color: AppColors.borderDefault.withValues(alpha: 0.6)),
+                            SizedBox(height: 10.h),
+                            BookingCardFinancialRow(
+                              booking: booking,
+                              isPaid: booking.paymentStatus == PaymentStatus.paid,
+                              onShowDiscount: () => _showDiscountDialog(context),
+                            ),
+                            SizedBox(height: 12.h),
+                            LiveSessionCardActions(
+                              booking: booking,
+                              onEndSession: widget.onEndSession,
+                              onExtendSession: widget.onExtendSession,
+                              onExtendMinutes: widget.onExtendMinutes,
+                            ),
+                          ],
                         ),
-                        LiveSessionRequestsBadge(booking: booking),
-                        BookingProductsPreview(booking: booking),
-                        SizedBox(height: 12.h),
-                        Container(height: 1, color: AppColors.borderDefault.withValues(alpha: 0.6)),
-                        SizedBox(height: 10.h),
-                        BookingCardFinancialRow(
-                          booking: booking,
-                          isPaid: booking.paymentStatus == PaymentStatus.paid,
-                          onShowDiscount: () => _showDiscountDialog(context),
-                        ),
-                        SizedBox(height: 12.h),
-                        LiveSessionCardActions(
-                          booking: booking,
-                          onEndSession: widget.onEndSession,
-                          onExtendSession: widget.onExtendSession,
-                          onExtendMinutes: widget.onExtendMinutes,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ],

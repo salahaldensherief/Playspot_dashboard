@@ -53,7 +53,7 @@ class TournamentParticipantsTable extends StatelessWidget {
       );
     }
 
-    final dateFormat = DateFormat('yyyy/MM/dd HH:mm');
+    final dateFormat = DateFormat('yyyy/MM/dd hh:mm a');
     final waitlistCount = participants.where((p) => p.isWaitlist).length;
 
     return Column(

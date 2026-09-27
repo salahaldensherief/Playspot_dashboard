@@ -24,7 +24,7 @@ class StorageServiceImpl implements StorageService {
     final path = '$loungeId/$fileId.$extension';
 
     return _strategy.uploadWithFallback(
-      buckets: ['lounge-assets', 'promo-assets'],
+      buckets: ['lounge-assets', 'promotion-assets'],
       path: path,
       fileBytes: fileBytes,
       userErrorMessage: 'فشل رفع صورة اللاونج. يرجى التأكد من الاتصال بالإنترنت وصحة الصورة ثم إعادة المحاولة.',
@@ -69,7 +69,7 @@ class StorageServiceImpl implements StorageService {
     final path = '$tournamentId/banner.$extension';
 
     return _strategy.uploadWithFallback(
-      buckets: ['tournament-assets', 'promo-assets'],
+      buckets: ['tournament-assets', 'promotion-assets'],
       path: path,
       fileBytes: fileBytes,
       fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
@@ -84,7 +84,7 @@ class StorageServiceImpl implements StorageService {
     final path = 'extras/$loungeId/$fileId.$extension';
 
     return _strategy.uploadWithFallback(
-      buckets: ['lounge-assets', 'promo-assets'],
+      buckets: ['lounge-assets', 'promotion-assets'],
       path: path,
       fileBytes: fileBytes,
       userErrorMessage: 'فشل رفع صورة المنتج. يرجى التأكد من الاتصال بالإنترنت ثم إعادة المحاولة.',

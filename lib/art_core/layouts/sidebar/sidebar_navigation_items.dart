@@ -98,9 +98,7 @@ class SidebarNavigationItems extends StatelessWidget {
     final canViewExtras = context.hasPermission('menu_view');
     final canViewReviews = context.hasPermission('reviews_view');
     final canManageMarketing = context.hasPermission('marketing_manage');
-    final canViewTournaments = context.hasPermission('tournaments_view') ||
-        user.isOwner ||
-        user.isManager;
+    final canViewTournaments = context.hasPermission('tournaments_view');
     final canManageStaff = context.hasPermission('staff_management');
     final canViewShiftHistory = context.hasPermission('shifts_view');
     final canViewReports = context.hasPermission('reports_view');

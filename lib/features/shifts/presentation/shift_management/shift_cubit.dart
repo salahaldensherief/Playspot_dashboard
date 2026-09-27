@@ -66,7 +66,11 @@ class ShiftCubit extends Cubit<ShiftState> {
 
   Future<void> checkActiveShift(String loungeId) async {
     if (loungeId.isEmpty) {
-      emit(state.copyWith(status: ShiftStatus.initial, activeShift: null));
+      emit(state.copyWith(
+        status: ShiftStatus.initial,
+        activeShift: null,
+        clearActiveShift: true,
+      ));
       return;
     }
     if (isClosed) return;
@@ -82,7 +86,9 @@ class ShiftCubit extends Cubit<ShiftState> {
           emit(state.copyWith(
             status: shift != null ? ShiftStatus.active : ShiftStatus.initial,
             activeShift: shift,
+            clearActiveShift: shift == null,
           ));
+          getLiveShiftOverview(loungeId);
         },
       );
     } catch (e) {
@@ -133,10 +139,24 @@ class ShiftCubit extends Cubit<ShiftState> {
       if (isClosed) return;
 
       await openResult.fold(
-        (failure) async => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
+        (failure) async {
+          if (failure.message.contains('مفتوح') || failure.message.contains('already') || failure.message.contains('إغلاق')) {
+            await checkActiveShift(loungeId);
+            if (state.activeShift != null) {
+              return;
+            }
+          }
+          emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message));
+        },
         (_) => _verifyAndSyncShift(loungeId),
       );
     } catch (e) {
+      if (e.toString().contains('مفتوح') || e.toString().contains('already') || e.toString().contains('إغلاق')) {
+        await checkActiveShift(loungeId);
+        if (state.activeShift != null) {
+          return;
+        }
+      }
       emit(state.copyWith(status: ShiftStatus.error, errorMessage: e.toString()));
     }
   }
@@ -157,13 +177,25 @@ class ShiftCubit extends Cubit<ShiftState> {
       if (isClosed) return false;
 
       return await openResult.fold(
-        (failure) {
+        (failure) async {
+          if (failure.message.contains('مفتوح') || failure.message.contains('already') || failure.message.contains('إغلاق')) {
+            await checkActiveShift(loungeId);
+            if (state.activeShift != null) {
+              return true;
+            }
+          }
           emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message));
           return false;
         },
         (_) => _verifyAndSyncShift(loungeId),
       );
     } catch (e) {
+      if (e.toString().contains('مفتوح') || e.toString().contains('already') || e.toString().contains('إغلاق')) {
+        await checkActiveShift(loungeId);
+        if (state.activeShift != null) {
+          return true;
+        }
+      }
       emit(state.copyWith(status: ShiftStatus.error, errorMessage: e.toString()));
       return false;
     }

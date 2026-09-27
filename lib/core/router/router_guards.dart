@@ -36,8 +36,8 @@ class RouterGuards {
     final bool isSuperAdmin = user.role == UserRole.superAdmin;
 
     // Security Guard: Only SuperAdmins and Lounge Staff are allowed to access the Dashboard
-    if (!isSuperAdmin && !isStaffUser) {
-      return RouterKeys.login;
+    if (!user.isActive || user.isBanned || (!isSuperAdmin && !isStaffUser)) {
+      return isLoggingIn ? null : RouterKeys.login;
     }
 
     final bool isOnboardingPath =

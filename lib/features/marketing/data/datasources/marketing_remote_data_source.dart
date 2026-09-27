@@ -151,18 +151,10 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
       await _supabase.storage.from('promotion-assets').uploadBinary(path, fileBytes);
       return _supabase.storage.from('promotion-assets').getPublicUrl(path);
     } catch (e) {
-      debugPrint('⚠️ [MARKETING_REMOTE] promotion-assets bucket upload error ($e), attempting promo-assets...');
+      debugPrint('⚠️ [MARKETING_REMOTE] promotion-assets bucket upload error ($e), attempting lounge-assets...');
     }
 
-    // 2. Fallback to promo-assets bucket
-    try {
-      await _supabase.storage.from('promo-assets').uploadBinary(path, fileBytes);
-      return _supabase.storage.from('promo-assets').getPublicUrl(path);
-    } catch (e) {
-      debugPrint('⚠️ [MARKETING_REMOTE] promo-assets bucket upload error ($e), attempting lounge-assets...');
-    }
-
-    // 3. Fallback to lounge-assets bucket
+    // 2. Fallback to lounge-assets bucket
     try {
       await _supabase.storage.from('lounge-assets').uploadBinary(path, fileBytes);
       return _supabase.storage.from('lounge-assets').getPublicUrl(path);
@@ -170,7 +162,7 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
       debugPrint('⚠️ [MARKETING_REMOTE] lounge-assets bucket upload error ($e), attempting tournament-assets...');
     }
 
-    // 4. Fallback to tournament-assets bucket
+    // 3. Fallback to tournament-assets bucket
     try {
       await _supabase.storage.from('tournament-assets').uploadBinary(path, fileBytes);
       return _supabase.storage.from('tournament-assets').getPublicUrl(path);

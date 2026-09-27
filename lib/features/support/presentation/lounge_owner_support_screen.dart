@@ -230,7 +230,7 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
                   DataCell(_getStatusBadge(ticket.status)),
                   DataCell(
                     Text(
-                      ticket.createdAt != null ? DateFormat('yyyy-MM-dd HH:mm').format(ticket.createdAt!) : 'N/A',
+                      ticket.createdAt != null ? DateFormat('yyyy-MM-dd hh:mm a').format(ticket.createdAt!) : 'N/A',
                       style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
                     ),
                   ),

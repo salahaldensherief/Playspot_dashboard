@@ -4,6 +4,7 @@ import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import '../entities/permission_item_entity.dart';
 
 abstract class PermissionsRepository {
+  Future<Either<Failure, List<PermissionItemEntity>>> getUserPermissions({String? loungeId});
   Future<Either<Failure, List<PermissionItemEntity>>> getRolePermissions(String role, {String? loungeId});
   Future<Either<Failure, PaginatedResult<PermissionItemEntity>>> getLoungeRolePermissionsPage({
     required String loungeId,

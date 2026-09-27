@@ -29,7 +29,7 @@ class ShiftSummaryModal extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildRow(AppStrings.cashier, shift.cashierName ?? 'N/A'),
-            _buildRow(AppStrings.startTimeLabel, DateFormat('yyyy-MM-dd HH:mm').format(shift.startTime)),
+            _buildRow(AppStrings.startTimeLabel, DateFormat('yyyy-MM-dd hh:mm a').format(shift.startTime)),
             const Divider(color: AppColors.borderDefault),
             _buildRow(AppStrings.startingCash, '${shift.startingCash.toStringAsFixed(2)} ${AppStrings.egp}'),
             _buildRow(AppStrings.cashRevenue, '${shift.cashRevenue?.toStringAsFixed(2)} ${AppStrings.egp}'),

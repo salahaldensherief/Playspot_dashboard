@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import '../../domain/entities/user_entity.dart';
 
 class UserModel extends UserEntity {
@@ -17,6 +16,7 @@ class UserModel extends UserEntity {
     super.pointsBalance = 0,
     super.referralCount = 0,
     super.isBanned = false,
+    super.isActive = true,
     super.bannedReason,
   });
 
@@ -60,7 +60,6 @@ class UserModel extends UserEntity {
   }
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
-    debugPrint('UserModel: parsing profile JSON: $json');
     final rawRoleStr = (json['role'] ?? json['out_role'])?.toString();
     final rawAvatar = (json['avatar_url'] ?? json['out_avatar_url'])?.toString();
     final avatar = (rawAvatar != null && rawAvatar.trim().isNotEmpty) ? rawAvatar.trim() : null;
@@ -84,6 +83,7 @@ class UserModel extends UserEntity {
       pointsBalance: (json['points_balance'] ?? json['reward_points'] ?? json['points'] as num?)?.toInt() ?? 0,
       referralCount: (json['referral_count'] ?? json['referrals_count'] ?? json['referrals'] as num?)?.toInt() ?? 0,
       isBanned: json['is_banned'] ?? json['out_is_banned'] ?? false,
+      isActive: json['is_active'] ?? true,
       bannedReason: json['banned_reason']?.toString(),
     );
   }

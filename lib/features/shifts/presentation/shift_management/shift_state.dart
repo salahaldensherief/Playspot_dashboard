@@ -60,6 +60,7 @@ class ShiftState extends Equatable {
   ShiftState copyWith({
     ShiftStatus? status,
     ShiftEntity? activeShift,
+    bool clearActiveShift = false,
     LiveShiftOverviewEntity? liveOverview,
     ShiftEntity? lastClosedShift,
     String? errorMessage,
@@ -74,7 +75,9 @@ class ShiftState extends Equatable {
   }) {
     return ShiftState(
       status: status ?? this.status,
-      activeShift: activeShift ?? (status == ShiftStatus.closed ? null : this.activeShift),
+      activeShift: clearActiveShift
+          ? null
+          : (activeShift ?? (status == ShiftStatus.closed ? null : this.activeShift)),
       liveOverview: liveOverview ?? this.liveOverview,
       lastClosedShift: lastClosedShift ?? this.lastClosedShift,
       errorMessage: errorMessage ?? this.errorMessage,

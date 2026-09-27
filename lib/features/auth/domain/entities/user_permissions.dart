@@ -6,8 +6,9 @@ import 'user_entity.dart';
 /// This keeps UserEntity clean and provides a single source of truth for permissions.
 class UserPermissions {
   final UserRole role;
+  final String? userId;
 
-  const UserPermissions(this.role);
+  const UserPermissions(this.role, {this.userId});
 
   // --- Role Groups ---
   
@@ -25,39 +26,9 @@ class UserPermissions {
 
   /// Evaluates dynamic permission via PermissionsCubit if registered
   bool can(String key) {
-    if (isSuperAdmin || isOwner) return true;
-    if (GetIt.I.isRegistered<PermissionsCubit>()) {
-      try {
-        final cubit = GetIt.I<PermissionsCubit>();
-        if (cubit.state.userPermissions.containsKey(key)) {
-          return cubit.state.userPermissions[key] ?? false;
-        }
-        return cubit.hasPermission(key, userRole: role.name);
-      } catch (_) {}
-    }
-    // Default Fallbacks if dynamic permissions map is empty
-    if (isManager) return true;
-    if (isCashier) {
-      if ([
-        'analytics_view_lounge',
-        'dashboard_view',
-        'rooms_view',
-        'reviews_view',
-        'shifts_view',
-        'reports_view',
-        'staff_management',
-        'financials_view',
-        'shifts_approve',
-        'menu_edit_prices',
-        'menu_manage_items',
-        'rooms_manage',
-        'marketing_manage',
-        'lounge_profile_edit',
-      ].contains(key)) {
-        return false;
-      }
-    }
-    return true;
+    if (!GetIt.I.isRegistered<PermissionsCubit>()) return false;
+    return GetIt.I<PermissionsCubit>().hasPermission(key,
+      userRole: role.name, userId: userId);
   }
 
   // --- Feature Permissions ---

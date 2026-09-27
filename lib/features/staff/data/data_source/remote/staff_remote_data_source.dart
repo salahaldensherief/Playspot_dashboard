@@ -124,7 +124,7 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
     }
 
     try {
-      AppLogger.info('Adding staff member via create_lounge_staff RPC with params: ${params.toJson()}');
+      AppLogger.info('Adding staff member via create_lounge_staff RPC');
       await _supabase.rpc('create_lounge_staff', params: params.toJson());
       AppLogger.info('create_lounge_staff RPC executed successfully');
       return;
@@ -202,7 +202,7 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
 
     final cleanUpdates = UserModel.sanitizeProfilePayload(updates);
 
-    AppLogger.info('Updating profile targeting ID: $cleanStaffId with updates: $cleanUpdates');
+    AppLogger.info('Updating staff profile');
 
     try {
       if (cleanUpdates.isNotEmpty) {

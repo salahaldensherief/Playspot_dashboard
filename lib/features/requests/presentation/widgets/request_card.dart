@@ -182,6 +182,11 @@ class RequestCard extends StatelessWidget {
                   note: request.metadata.notes,
                 ),
               ],
+
+              // 5b. Embedded Receipt Preview if available
+              if (request.bookingId != null && request.bookingId!.isNotEmpty)
+                _RequestReceiptPreview(bookingId: request.bookingId!),
+
               SizedBox(height: 14.h),
 
               // 6. Action Button Footer
@@ -200,3 +205,165 @@ class RequestCard extends StatelessWidget {
     );
   }
 }
+
+class _RequestReceiptPreview extends StatefulWidget {
+  final String bookingId;
+
+  const _RequestReceiptPreview({required this.bookingId});
+
+  @override
+  State<_RequestReceiptPreview> createState() => _RequestReceiptPreviewState();
+}
+
+class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
+  String? _receiptUrl;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReceipt();
+  }
+
+  Future<void> _loadReceipt() async {
+    try {
+      final res = await Supabase.instance.client
+          .from('bookings')
+          .select('receipt_url')
+          .eq('id', widget.bookingId)
+          .maybeSingle();
+
+      if (res != null && res['receipt_url'] != null) {
+        final rawPath = res['receipt_url'].toString().trim();
+        if (rawPath.isNotEmpty && rawPath != 'null') {
+          if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
+            if (mounted) setState(() { _receiptUrl = rawPath; _isLoading = false; });
+            return;
+          }
+          final bucketsToTry = ['payment-proofs', 'receipts', 'booking_receipts', 'payment_receipts', 'wallets', 'payouts', 'attachments'];
+          String cleanPath = rawPath.replaceAll(RegExp(r'^(payment-proofs|receipts|booking_receipts|payment_receipts|wallets)/'), '');
+
+          for (final bucket in bucketsToTry) {
+            for (final p in [cleanPath, rawPath]) {
+              try {
+                final url = await Supabase.instance.client.storage.from(bucket).createSignedUrl(p, 3600);
+                if (url.isNotEmpty && !url.contains('error')) {
+                  if (mounted) setState(() { _receiptUrl = url; _isLoading = false; });
+                  return;
+                }
+              } catch (_) {}
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Container(
+        height: 40.h,
+        alignment: Alignment.center,
+        child: const SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.neonBlue),
+        ),
+      );
+    }
+
+    if (_receiptUrl == null || _receiptUrl!.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: 10.h),
+        AppText.body('إيصال تحويل الدفع المرفق:', fontSize: 11.sp, color: AppColors.neonBlue, fontWeight: FontWeight.bold),
+        SizedBox(height: 6.h),
+        GestureDetector(
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (_) => Dialog(
+                backgroundColor: AppColors.cardBackground,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                child: Padding(
+                  padding: EdgeInsets.all(16.r),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          AppText.heading('إيصال تحويل الدفع', fontSize: 16.sp, color: Colors.white),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12.h),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12.r),
+                        child: Image.network(
+                          _receiptUrl!,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+          child: Container(
+            height: 90.h,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10.r),
+              border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.4)),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10.r),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Image.network(
+                      _receiptUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Center(
+                        child: Icon(Icons.broken_image, color: Colors.red),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 6,
+                    left: 6,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.zoom_in_rounded, color: AppColors.neonBlue, size: 14.sp),
+                          SizedBox(width: 4.w),
+                          AppText.body('تكبير الإيصال', fontSize: 10.sp, color: Colors.white),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+

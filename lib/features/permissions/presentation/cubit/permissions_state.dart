@@ -13,6 +13,7 @@ class PermissionsState extends Equatable {
   final String? errorMessage;
   final String selectedRole;
   final String? userRole;
+  final String? userId;
 
   const PermissionsState({
     required this.status,
@@ -24,6 +25,7 @@ class PermissionsState extends Equatable {
     this.errorMessage,
     this.selectedRole = 'cashier',
     this.userRole,
+    this.userId,
   });
 
   factory PermissionsState.initial() => const PermissionsState(status: PermissionsStatus.initial);
@@ -42,6 +44,7 @@ class PermissionsState extends Equatable {
     String? errorMessage,
     String? selectedRole,
     String? userRole,
+    String? userId,
   }) {
     return PermissionsState(
       status: status ?? this.status,
@@ -53,6 +56,7 @@ class PermissionsState extends Equatable {
       errorMessage: errorMessage ?? this.errorMessage,
       selectedRole: selectedRole ?? this.selectedRole,
       userRole: userRole ?? this.userRole,
+      userId: userId ?? this.userId,
     );
   }
 
@@ -67,5 +71,6 @@ class PermissionsState extends Equatable {
         errorMessage,
         selectedRole,
         userRole,
+        userId,
       ];
 }

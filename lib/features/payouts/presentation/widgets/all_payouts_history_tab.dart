@@ -72,7 +72,7 @@ class AllPayoutsHistoryTab extends StatelessWidget {
               ? DateFormat('yyyy-MM-dd').format(DateTime.parse(p['created_at']))
               : '-';
           final paidAt = p['paid_at'] != null
-              ? DateFormat('yyyy-MM-dd HH:mm').format(DateTime.parse(p['paid_at']))
+              ? DateFormat('yyyy-MM-dd hh:mm a').format(DateTime.parse(p['paid_at']))
               : '-';
 
           final actionButtons = _buildActions(status, payoutId);

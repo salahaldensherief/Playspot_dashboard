@@ -37,16 +37,11 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
       try {
         final res = await Supabase.instance.client
             .from('bookings')
-            .select('receipt_url, receipt_path, payment_receipt, proof_url')
+            .select('receipt_url')
             .eq('id', widget.booking.id)
             .maybeSingle();
         if (res != null) {
-          rawPath = (res['receipt_url'] ??
-                  res['receipt_path'] ??
-                  res['payment_receipt'] ??
-                  res['proof_url'])
-              ?.toString()
-              .trim();
+          rawPath = res['receipt_url']?.toString().trim();
           debugPrint('🟢 [RECEIPT_CARD] Direct DB query fallback found raw receiptUrl: $rawPath');
         }
       } catch (e) {
@@ -75,7 +70,7 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
       path = path.substring(1);
     }
 
-    final bucketsToTry = ['receipts', 'booking_receipts', 'payment_receipts', 'wallets', 'payouts', 'attachments'];
+    final bucketsToTry = ['payment-proofs', 'receipts', 'booking_receipts', 'payment_receipts', 'wallets', 'payouts', 'attachments'];
 
     String cleanPath = path;
     for (final b in bucketsToTry) {

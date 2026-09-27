@@ -144,6 +144,13 @@ class ShiftHeaderBanner extends StatelessWidget {
                 variant: AppButtonVariant.outlined,
                 height: 32.h,
               ),
+            ] else ...[
+              AppButton(
+                text: 'إغلاق الشيفت (تسليم)',
+                onPressed: () => _showCloseShiftDialog(context, shift, loungeId),
+                variant: AppButtonVariant.outlined,
+                height: 32.h,
+              ),
             ],
           ],
         ),

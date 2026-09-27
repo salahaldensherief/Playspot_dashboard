@@ -56,6 +56,26 @@ void main() {
   }
 
   group('RouterGuards.redirect', () {
+    test('inactive staff cannot enter dashboard routes', () {
+      expect(guard(status: LoginStatus.authenticated,
+        user: _user(UserRole.owner).copyWith(isActive: false),
+        location: RouterKeys.loungeAdminDashboard), RouterKeys.login);
+    });
+
+    test('banned staff cannot enter dashboard routes', () {
+      expect(guard(status: LoginStatus.authenticated,
+        user: _user(UserRole.owner).copyWith(isBanned: true),
+        location: RouterKeys.loungeAdminDashboard), RouterKeys.login);
+    });
+
+    test('denied accounts can stay on login without a redirect loop', () {
+      expect(guard(status: LoginStatus.authenticated,
+        user: _user(UserRole.user), location: RouterKeys.login), isNull);
+      expect(guard(status: LoginStatus.authenticated,
+        user: _user(UserRole.owner).copyWith(isBanned: true),
+        location: RouterKeys.login), isNull);
+    });
+
     test('allows navigation while auth status is initial', () {
       expect(guard(status: LoginStatus.initial), isNull);
     });

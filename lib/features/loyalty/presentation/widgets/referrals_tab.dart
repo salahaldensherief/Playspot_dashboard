@@ -44,7 +44,7 @@ class ReferralsTab extends StatelessWidget {
             ],
             rows: referrals.map((ref) {
               final formattedDate = ref.createdAt != null
-                  ? DateFormat('yyyy-MM-dd HH:mm').format(ref.createdAt!)
+                  ? DateFormat('yyyy-MM-dd hh:mm a').format(ref.createdAt!)
                   : '--';
 
               final isCompleted = ref.status == 'completed';

@@ -2,6 +2,7 @@ import '../../../../core/utils/paginated_result.dart';
 import '../models/permission_item_model.dart';
 
 abstract class PermissionsRemoteSource {
+  Future<List<PermissionItemModel>> getUserPermissions({String? loungeId});
   Future<List<PermissionItemModel>> getRolePermissions(String role, {String? loungeId});
   Future<PaginatedResult<PermissionItemModel>> getLoungeRolePermissionsPage({
     required String loungeId,

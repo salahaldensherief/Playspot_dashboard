@@ -179,14 +179,23 @@ class SessionOperationsRemoteHelper {
     int? requestedMinutes,
     int? currentDurationMinutes,
   }) async {
+    final uuidRegExp = RegExp(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}');
+    final match = uuidRegExp.firstMatch(bookingId);
+    final cleanBookingId = match != null ? match.group(0)! : bookingId.replaceAll('ext_', '').trim();
+
+    if (!uuidRegExp.hasMatch(cleanBookingId)) {
+      debugPrint('⚠️ [SESSION_OPERATIONS] Invalid booking UUID for extension request: $bookingId');
+      return;
+    }
+
     if (isApproved) {
       await supabaseClient.rpc('approve_booking_extension', params: {
-        'p_booking_id': bookingId,
+        'p_booking_id': cleanBookingId,
         'p_additional_cost': null,
       });
     } else {
       await supabaseClient.rpc('reject_booking_extension', params: {
-        'p_booking_id': bookingId,
+        'p_booking_id': cleanBookingId,
         'p_reason': reason ?? 'لا يوجد وقت متاح بعد الحجز الحالي',
       });
     }
