@@ -123,22 +123,12 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
       );
     }
 
-    try {
-      AppLogger.info('Adding staff member via create_lounge_staff RPC');
-      await _supabase.rpc('create_lounge_staff', params: params.toJson());
-      AppLogger.info('create_lounge_staff RPC executed successfully');
-      return;
-    } catch (e) {
-      AppLogger.warning('create_lounge_staff failed ($e), falling back to add_lounge_staff_member...');
-      try {
-        await _supabase.rpc('add_lounge_staff_member', params: params.toJson());
-        AppLogger.info('add_lounge_staff_member RPC executed successfully');
-        return;
-      } catch (e2) {
-        AppLogger.error('Error in staff creation RPC: $e2');
-        rethrow;
-      }
-    }
+    AppLogger.info('Adding staff member via create_lounge_staff RPC');
+    await _supabase.rpc(
+      'create_lounge_staff',
+      params: params.toJson(),
+    );
+    AppLogger.info('create_lounge_staff RPC executed successfully');
   }
 
   @override
