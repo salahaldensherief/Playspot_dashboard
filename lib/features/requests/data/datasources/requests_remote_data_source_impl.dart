@@ -260,89 +260,59 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
   }
 
   @override
-  Future<void> markRequestAsAttended(String id, {bool isCanteenOrder = false}) async {
+  Future<void> markRequestAsAttended(
+    String id, {
+    bool isCanteenOrder = false,
+  }) async {
+    final uuidRegExp = RegExp(
+      r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
+    );
+    final match = uuidRegExp.firstMatch(id);
+    if (match == null) {
+      throw ArgumentError.value(id, 'id', 'Request id must contain a UUID');
+    }
+
+    if (id.startsWith('ext_')) {
+      if (_locallyAttendedIds.length > 300) {
+        _locallyAttendedIds.clear();
+      }
+      _locallyAttendedIds.add(id);
+      return;
+    }
+
+    if (id.startsWith('item_')) {
+      // booking_items are no longer a canonical live-request source.
+      if (_locallyAttendedIds.length > 300) {
+        _locallyAttendedIds.clear();
+      }
+      _locallyAttendedIds.add(id);
+      return;
+    }
+
+    final requestType = switch (id) {
+      final value when value.startsWith('canteen_') => 'canteen_order',
+      final value when value.startsWith('sc_') => 'service_call',
+      final value when value.startsWith('req_') => 'client_request',
+      _ when isCanteenOrder => 'canteen_order',
+      _ => throw ArgumentError.value(
+          id,
+          'id',
+          'Unsupported live-request identifier',
+        ),
+    };
+
+    await client.rpc(
+      'resolve_live_request',
+      params: {
+        'p_request_type': requestType,
+        'p_request_id': match.group(0)!,
+      },
+    );
+
     if (_locallyAttendedIds.length > 300) {
       _locallyAttendedIds.clear();
     }
     _locallyAttendedIds.add(id);
-
-    final uuidRegExp = RegExp(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}');
-    final match = uuidRegExp.firstMatch(id);
-    final String rawDbId = match != null ? match.group(0)! : id
-        .replaceFirst('canteen_', '')
-        .replaceFirst('notif_', '')
-        .replaceFirst('sc_', '')
-        .replaceFirst('item_', '')
-        .replaceFirst('req_', '')
-        .replaceFirst('ext_', '');
-
-    if (rawDbId.isEmpty || rawDbId.startsWith('req_') || !uuidRegExp.hasMatch(rawDbId)) {
-      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Skipped DB update for local/temporary non-UUID ID: $id');
-      return;
-    }
-
-    try {
-      if (id.startsWith('ext_')) {
-        await client.from('bookings').update({'extension_status': 'approved'}).eq('id', rawDbId);
-        return;
-      } else if (id.startsWith('canteen_') || isCanteenOrder) {
-        await client.from('canteen_orders').update({'status': 'completed'}).eq('id', rawDbId);
-        try {
-          final canteenOrder = await client
-              .from('canteen_orders')
-              .select('booking_id')
-              .eq('id', rawDbId)
-              .maybeSingle();
-          if (canteenOrder != null && canteenOrder['booking_id'] != null) {
-            await client
-                .from('service_calls')
-                .update({'status': 'completed', 'is_attended': true})
-                .eq('booking_id', canteenOrder['booking_id'])
-                .eq('call_type', 'canteen_order');
-          }
-        } catch (e) {
-          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Canteen order service_call sync error: $e');
-        }
-        return;
-      } else if (id.startsWith('item_')) {
-        await client
-            .from('booking_items')
-            .update({'status': 'completed', 'is_attended': true, 'is_read': true})
-            .eq('id', rawDbId);
-        return;
-      } else if (id.startsWith('sc_')) {
-        await client
-            .from('service_calls')
-            .update({'status': 'resolved', 'is_attended': true, 'is_read': true})
-            .eq('id', rawDbId);
-        return;
-      }
-
-      final tables = ['service_calls', 'client_requests', 'canteen_orders', 'booking_items', 'bookings'];
-      for (final table in tables) {
-        try {
-          Map<String, dynamic> updatePayload;
-          if (table == 'bookings') {
-            updatePayload = {'extension_status': 'approved'};
-          } else if (table == 'canteen_orders') {
-            updatePayload = {'status': 'completed'};
-          } else if (table == 'booking_items') {
-            updatePayload = {'status': 'completed', 'is_attended': true, 'is_read': true};
-          } else {
-            updatePayload = {'status': 'resolved', 'is_attended': true, 'is_read': true};
-          }
-
-          final response = await client.from(table).update(updatePayload).eq('id', rawDbId).select();
-          if ((response as List).isNotEmpty) {
-            debugPrint('🟢 [REQUESTS_DATA_SOURCE] Marked request $id as attended in table $table');
-            return;
-          }
-        } catch (e) {
-          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Table update attempt failed for $table: $e');
-        }
-      }
-    } catch (e) {
-      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] markRequestAsAttended Error for $id: $e');
-    }
   }
+
 }
