@@ -125,24 +125,13 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
     required String issueType,
     required String message,
   }) async {
-    try {
-      await supabaseClient.rpc('create_support_ticket', params: {
-        'issue_type': issueType,
-        'message': message,
-      });
-    } on PostgrestException catch (_) {
-      final user = supabaseClient.auth.currentUser;
-      final userName = user?.userMetadata?['name'] as String? ?? user?.email ?? 'مالك صالة';
-      final userPhone = user?.phone ?? user?.userMetadata?['phone'] as String? ?? '';
-      await supabaseClient.from('support_tickets').insert({
-        'user_id': user?.id,
-        'user_name': userName,
-        'user_phone': userPhone,
-        'issue_type': issueType,
-        'message': message,
-        'status': 'new',
-      });
-    }
+    await supabaseClient.rpc(
+      'create_support_ticket',
+      params: {
+        'p_issue_type': issueType,
+        'p_message': message,
+      },
+    );
   }
 
   @override
@@ -151,21 +140,13 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
     required String status,
     String? adminNotes,
   }) async {
-    final currentUserId = supabaseClient.auth.currentUser?.id;
-    final Map<String, dynamic> payload = {
-      'status': status,
-      'updated_at': DateTime.now().toIso8601String(),
-    };
-    if (adminNotes != null) {
-      payload['admin_notes'] = adminNotes;
-    }
-    if (status == 'resolved') {
-      payload['resolved_at'] = DateTime.now().toIso8601String();
-      if (currentUserId != null) {
-        payload['resolved_by'] = currentUserId;
-      }
-    }
-
-    await supabaseClient.from('support_tickets').update(payload).eq('id', ticketId);
+    await supabaseClient.rpc(
+      'admin_update_support_ticket',
+      params: {
+        'p_ticket_id': ticketId,
+        'p_status': status,
+        'p_admin_notes': adminNotes,
+      },
+    );
   }
 }
