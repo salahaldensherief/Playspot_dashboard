@@ -125,17 +125,13 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   @override
   Future<void> approveBooking(String id) async {
-    debugPrint('🔵 [DATA_SOURCE] Approving booking id=$id (status=upcoming, payment_status=paid)');
-    try {
-      await client.from('bookings').update({
-        'status': 'upcoming',
-        'payment_status': 'paid',
-      }).eq('id', id);
-      debugPrint('🟢 [DATA_SOURCE] Booking approved successfully with payment_status=paid!');
-    } catch (e) {
-      debugPrint('⚠️ [DATA_SOURCE] Failed to approve booking directly ($e), calling updateBookingStatus...');
-      await updateBookingStatus(id, 'upcoming');
-    }
+    await client.rpc(
+      'update_booking_status_admin',
+      params: {
+        'p_booking_id': id,
+        'p_status': 'upcoming',
+      },
+    );
   }
 
   @override
