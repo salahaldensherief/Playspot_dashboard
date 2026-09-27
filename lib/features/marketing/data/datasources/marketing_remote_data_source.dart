@@ -9,7 +9,11 @@ abstract class MarketingRemoteDataSource {
   Future<void> createPromotion(PromoModel promo);
   Future<void> updatePromotion(PromoModel promo);
   Future<void> deletePromotion(String id);
-  Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName);
+  Future<String> uploadPromoPoster(
+    Uint8List fileBytes,
+    String fileName,
+    String loungeId,
+  );
 
   // Notifications & User Preferences
   Future<void> sendNotification(NotificationModel notification);
@@ -116,94 +120,62 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
       throw Exception('Promotion ID is required for update');
     }
 
-    final payload = <String, dynamic>{
-      'title_ar': promo.titleAr,
-      'title_en': promo.titleEn,
-      'tag_ar': promo.tagAr,
-      'tag_en': promo.tagEn,
-      'title': promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn,
-      'tag': promo.tagAr.isNotEmpty ? promo.tagAr : promo.tagEn,
-      'image_url': promo.imageUrl,
-      'deep_link': promo.deepLink,
-      'expires_at': promo.expiresAt?.toIso8601String(),
-      'room_id': promo.roomId,
-      'is_room_specific': promo.isRoomSpecific,
-      'target_audience': promo.targetAudience,
-      'discount_type': promo.discountType,
-      'discount_value': promo.discountValue,
-      'icon_key': promo.iconKey,
-      'colors': promo.hexColors,
-    };
-
-    await _supabase.from('promotions').update(payload).eq('id', promo.id);
-    debugPrint(
-      '🟢 [MARKETING_REMOTE] Successfully updated promo ${promo.id} with image_url: ${promo.imageUrl}',
+    await _supabase.rpc(
+      'update_promotion',
+      params: {
+        'p_promotion_id': promo.id,
+        'p_room_id': promo.roomId,
+        'p_title_ar': promo.titleAr,
+        'p_title_en': promo.titleEn,
+        'p_tag_ar': promo.tagAr,
+        'p_tag_en': promo.tagEn,
+        'p_discount_type': promo.discountType,
+        'p_discount_value': promo.discountValue,
+        'p_expires_at': promo.expiresAt?.toIso8601String(),
+        'p_colors': promo.hexColors,
+        'p_icon_key': promo.iconKey,
+        'p_image_url': promo.imageUrl,
+        'p_deep_link': promo.deepLink,
+        'p_target_audience': promo.targetAudience,
+      },
     );
   }
 
   @override
   Future<void> deletePromotion(String id) async {
-    try {
-      await _supabase.from('promotions').delete().eq('id', id);
-    } on PostgrestException catch (e) {
-      if (e.code == '42501' || e.message.contains('permission denied')) {
-        throw Exception(
-          'عفواً، لا تملك الصلاحية الكافية لحذف هذا العرض (RLS Restricted).',
-        );
-      }
-      rethrow;
+    final cleanId = id.trim();
+    if (cleanId.isEmpty) {
+      throw Exception('Promotion ID is required for delete');
     }
+
+    await _supabase.rpc(
+      'delete_promotion',
+      params: {'p_promotion_id': cleanId},
+    );
   }
 
   @override
-  Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName) async {
+  Future<String> uploadPromoPoster(
+    Uint8List fileBytes,
+    String fileName,
+    String loungeId,
+  ) async {
     final sanitizedFileName = fileName.replaceAll(
       RegExp(r'[^a-zA-Z0-9._-]'),
       '_',
     );
+    final cleanLoungeId = loungeId.trim();
+    if (cleanLoungeId.isEmpty) {
+      throw Exception('Lounge ID is required to upload a promotion poster.');
+    }
     final path =
-        'posters/${DateTime.now().millisecondsSinceEpoch}_$sanitizedFileName';
+        '$cleanLoungeId/posters/${DateTime.now().millisecondsSinceEpoch}_$sanitizedFileName';
 
-    // 1. Try promotion-assets bucket (newly created bucket)
-    try {
-      await _supabase.storage
-          .from('promotion-assets')
-          .uploadBinary(path, fileBytes);
-      return _supabase.storage.from('promotion-assets').getPublicUrl(path);
-    } catch (e) {
-      debugPrint(
-        '⚠️ [MARKETING_REMOTE] promotion-assets bucket upload error ($e), attempting lounge-assets...',
-      );
-    }
+    await _supabase.storage
+        .from('promotion-assets')
+        .uploadBinary(path, fileBytes);
 
-    // 2. Fallback to lounge-assets bucket
-    try {
-      await _supabase.storage
-          .from('lounge-assets')
-          .uploadBinary(path, fileBytes);
-      return _supabase.storage.from('lounge-assets').getPublicUrl(path);
-    } catch (e) {
-      debugPrint(
-        '⚠️ [MARKETING_REMOTE] lounge-assets bucket upload error ($e), attempting tournament-assets...',
-      );
-    }
-
-    // 3. Fallback to tournament-assets bucket
-    try {
-      await _supabase.storage
-          .from('tournament-assets')
-          .uploadBinary(path, fileBytes);
-      return _supabase.storage.from('tournament-assets').getPublicUrl(path);
-    } catch (e) {
-      debugPrint(
-        '🔴 [MARKETING_REMOTE] All storage buckets failed to upload promo poster: $e',
-      );
-    }
-
-    // Throw explicit Exception so UI/Cubit surfaces error instead of saving a broken blank URL
-    throw Exception(
-      'فشل رفع صورة العرض الترويجي على السيرفر. يرجى إعادة المحاولة.',
-    );
+    return _supabase.storage.from('promotion-assets').getPublicUrl(path);
   }
 
   @override
@@ -303,34 +275,15 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
 
   @override
   Future<void> markNotificationRead(String notificationId) async {
-    try {
-      await _supabase.rpc(
-        'mark_notification_read',
-        params: {'p_notification_id': notificationId},
-      );
-      return;
-    } catch (e) {
-      debugPrint(
-        '⚠️ [MARKETING_REMOTE] mark_notification_read RPC error: $e, fallback update',
-      );
-      await _supabase
-          .from('notifications')
-          .update({'is_read': true})
-          .eq('id', notificationId);
-    }
+    await _supabase.rpc(
+      'mark_notification_read',
+      params: {'p_notification_id': notificationId},
+    );
   }
 
   @override
   Future<void> markAllNotificationsRead() async {
-    try {
-      await _supabase.rpc('mark_all_notifications_read');
-      return;
-    } catch (e) {
-      debugPrint(
-        '⚠️ [MARKETING_REMOTE] mark_all_notifications_read RPC error: $e, fallback update',
-      );
-      await _supabase.from('notifications').update({'is_read': true});
-    }
+    await _supabase.rpc('mark_all_notifications_read');
   }
 
   @override
