@@ -80,7 +80,7 @@ class RoomCubit extends Cubit<RoomState> with RealtimeWatcherMixin<RoomState> {
           hourlyRateSingle: room.hourlyRateSingle,
           hourlyRateMulti: room.hourlyRateMulti,
           extraControllerPrice: room.extraControllerPrice,
-          isAvailable: room.isAvailable,
+          isAvailable: newStatus == RoomStatusEnum.available,
           images: room.images,
           featuresAr: room.featuresAr,
           featuresEn: room.featuresEn,
