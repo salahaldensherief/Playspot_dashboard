@@ -123,10 +123,7 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
 
   @override
   Future<void> deleteFaq(String id) async {
-    await supabaseClient.rpc(
-      'admin_delete_faq',
-      params: {'p_id': id},
-    );
+    await supabaseClient.rpc('admin_delete_faq', params: {'p_id': id});
   }
 
   @override
