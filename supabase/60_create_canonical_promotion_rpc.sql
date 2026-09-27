@@ -100,6 +100,78 @@ GRANT EXECUTE ON FUNCTION public.create_promotion(
 ) TO authenticated, service_role, supabase_auth_admin;
 
 
+CREATE OR REPLACE FUNCTION public.handle_promo_geo_notifications()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path TO ''
+AS $function$
+DECLARE
+  v_lounge_name text;
+  v_audience text :=
+    lower(COALESCE(NULLIF(btrim(NEW.target_audience), ''), 'all'));
+BEGIN
+  SELECT COALESCE(l.name_ar, l.name_en, l.name)
+  INTO v_lounge_name
+  FROM public.lounges AS l
+  WHERE l.id = NEW.lounge_id;
+
+  INSERT INTO public.notifications (
+    user_id,
+    lounge_id,
+    title_ar,
+    title_en,
+    body_ar,
+    body_en,
+    type,
+    is_read,
+    metadata
+  )
+  SELECT
+    p.id,
+    NEW.lounge_id,
+    '🔥 ' || COALESCE(NULLIF(NEW.title_ar, ''), 'عرض جديد!'),
+    '🔥 ' || COALESCE(NULLIF(NEW.title_en, ''), 'New Offer!'),
+    COALESCE(NULLIF(NEW.tag_ar, ''), 'خصم خاص')
+      || ' لدى صالة '
+      || COALESCE(v_lounge_name, ''),
+    COALESCE(NULLIF(NEW.tag_en, ''), 'Special discount')
+      || ' at '
+      || COALESCE(v_lounge_name, ''),
+    'offer',
+    false,
+    jsonb_build_object(
+      'promo_id', NEW.id,
+      'lounge_id', NEW.lounge_id,
+      'room_id', NEW.room_id,
+      'target_audience', v_audience
+    )
+  FROM public.profiles AS p
+  WHERE p.role = 'user'
+    AND COALESCE(p.is_active, true)
+    AND (
+      v_audience = 'all'
+      OR (
+        v_audience = 'local'
+        AND (
+          p.lounge_id = NEW.lounge_id
+          OR p.lounge_id IS NULL
+        )
+      )
+    );
+
+  RETURN NEW;
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS trg_promo_geo_notifications
+ON public.promotions;
+
+CREATE TRIGGER trg_promo_geo_notifications
+AFTER INSERT ON public.promotions
+FOR EACH ROW
+WHEN (NEW.is_active = true)
+EXECUTE FUNCTION public.handle_promo_geo_notifications();
+
 -- Prevent duplicate delivery for the same promotion and user regardless of
 -- whether the insert originated from the promotion trigger, an RPC, or a
 -- repeated broadcast call. Existing historical duplicates are left untouched.
