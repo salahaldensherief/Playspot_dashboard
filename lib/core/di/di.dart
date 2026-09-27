@@ -46,7 +46,7 @@ Future<void> setupInjection() async {
 
   // Register Supabase Client
   sl.registerLazySingleton<SupabaseClient>(
-        () => Supabase.instance.client,
+    () => Supabase.instance.client,
   );
 
   // Core Services
