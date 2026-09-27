@@ -16,6 +16,8 @@ class PromoEntity extends Equatable {
   final String? tag;
   final bool isRoomSpecific;
   final String targetAudience;
+  final String discountType;
+  final double discountValue;
 
   const PromoEntity({
     required this.id,
@@ -33,6 +35,8 @@ class PromoEntity extends Equatable {
     this.tag,
     this.isRoomSpecific = false,
     this.targetAudience = 'all',
+    this.discountType = 'percentage',
+    this.discountValue = 0,
   });
 
   @override
@@ -52,5 +56,7 @@ class PromoEntity extends Equatable {
         tag,
         isRoomSpecific,
         targetAudience,
+        discountType,
+        discountValue,
       ];
 }
