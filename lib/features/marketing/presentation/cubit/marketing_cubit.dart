@@ -26,34 +26,37 @@ class MarketingCubit extends Cubit<MarketingState> {
     required GetNotificationsUseCase getNotificationsUseCase,
     required GetNotificationsPageUseCase getNotificationsPageUseCase,
     required SendNotificationUseCase sendNotificationUseCase,
-  })  : _getPromotionsUseCase = getPromotionsUseCase,
-        _createPromotionUseCase = createPromotionUseCase,
-        _updatePromotionUseCase = updatePromotionUseCase,
-        _deletePromotionUseCase = deletePromotionUseCase,
-        _uploadPromoPosterUseCase = uploadPromoPosterUseCase,
-        _getNotificationsUseCase = getNotificationsUseCase,
-        _getNotificationsPageUseCase = getNotificationsPageUseCase,
-        _sendNotificationUseCase = sendNotificationUseCase,
-        super(const MarketingState());
+  }) : _getPromotionsUseCase = getPromotionsUseCase,
+       _createPromotionUseCase = createPromotionUseCase,
+       _updatePromotionUseCase = updatePromotionUseCase,
+       _deletePromotionUseCase = deletePromotionUseCase,
+       _uploadPromoPosterUseCase = uploadPromoPosterUseCase,
+       _getNotificationsUseCase = getNotificationsUseCase,
+       _getNotificationsPageUseCase = getNotificationsPageUseCase,
+       _sendNotificationUseCase = sendNotificationUseCase,
+       super(const MarketingState());
 
   Future<void> loadPromotions({String? loungeId, String? city}) async {
     emit(state.copyWith(status: MarketingStatus.loading));
-    final result = await _getPromotionsUseCase(GetPromotionsParams(loungeId: loungeId, city: city));
+    final result = await _getPromotionsUseCase(
+      GetPromotionsParams(loungeId: loungeId, city: city),
+    );
 
     if (isClosed) return;
 
     result.fold(
       (failure) {
         AppLogger.error('Load promotions error: ${failure.message}');
-        emit(state.copyWith(
-          status: MarketingStatus.failure,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: MarketingStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
-      (promos) => emit(state.copyWith(
-        status: MarketingStatus.success,
-        promotions: promos,
-      )),
+      (promos) => emit(
+        state.copyWith(status: MarketingStatus.success, promotions: promos),
+      ),
     );
   }
 
@@ -63,7 +66,12 @@ class MarketingCubit extends Cubit<MarketingState> {
     result.fold(
       (failure) {
         AppLogger.error('Delete promotion error: ${failure.message}');
-        emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message));
+        emit(
+          state.copyWith(
+            status: MarketingStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (_) {
         emit(state.copyWith(status: MarketingStatus.actionSuccess));
@@ -81,7 +89,12 @@ class MarketingCubit extends Cubit<MarketingState> {
     result.fold(
       (failure) {
         AppLogger.error('Create/update promotion error: ${failure.message}');
-        emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message));
+        emit(
+          state.copyWith(
+            status: MarketingStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (_) {
         emit(state.copyWith(status: MarketingStatus.actionSuccess));
@@ -90,19 +103,28 @@ class MarketingCubit extends Cubit<MarketingState> {
     );
   }
 
-  Future<String?> uploadPromoPoster(Uint8List fileBytes, String fileName) async {
-    final result = await _uploadPromoPosterUseCase(UploadPromoPosterParams(
-      fileBytes: fileBytes,
-      fileName: fileName,
-    ));
-    return result.fold(
-      (failure) {
-        AppLogger.error('Upload promo poster error: ${failure.message}');
-        emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message));
-        return null;
-      },
-      (url) => url,
+  Future<String?> uploadPromoPoster(
+    Uint8List fileBytes,
+    String fileName,
+    String loungeId,
+  ) async {
+    final result = await _uploadPromoPosterUseCase(
+      UploadPromoPosterParams(
+        fileBytes: fileBytes,
+        fileName: fileName,
+        loungeId: loungeId,
+      ),
     );
+    return result.fold((failure) {
+      AppLogger.error('Upload promo poster error: ${failure.message}');
+      emit(
+        state.copyWith(
+          status: MarketingStatus.failure,
+          errorMessage: failure.message,
+        ),
+      );
+      return null;
+    }, (url) => url);
   }
 
   // Notifications
@@ -113,28 +135,47 @@ class MarketingCubit extends Cubit<MarketingState> {
     result.fold(
       (failure) {
         AppLogger.error('Load notifications error: ${failure.message}');
-        emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message));
+        emit(
+          state.copyWith(
+            status: MarketingStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
-      (notifications) => emit(state.copyWith(status: MarketingStatus.success, notifications: notifications)),
+      (notifications) => emit(
+        state.copyWith(
+          status: MarketingStatus.success,
+          notifications: notifications,
+        ),
+      ),
     );
   }
 
   Future<void> loadNotificationsPage({int page = 1, int pageSize = 20}) async {
     emit(state.copyWith(status: MarketingStatus.loading));
-    final result = await _getNotificationsPageUseCase(GetNotificationsPageParams(page: page, pageSize: pageSize));
+    final result = await _getNotificationsPageUseCase(
+      GetNotificationsPageParams(page: page, pageSize: pageSize),
+    );
     if (isClosed) return;
     result.fold(
       (failure) {
         AppLogger.error('Load notifications page error: ${failure.message}');
-        emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message));
+        emit(
+          state.copyWith(
+            status: MarketingStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
-      (paginated) => emit(state.copyWith(
-        status: MarketingStatus.success,
-        notifications: paginated.items,
-        notificationPage: paginated.page,
-        notificationPageSize: paginated.pageSize,
-        totalNotificationsCount: paginated.totalCount,
-      )),
+      (paginated) => emit(
+        state.copyWith(
+          status: MarketingStatus.success,
+          notifications: paginated.items,
+          notificationPage: paginated.page,
+          notificationPageSize: paginated.pageSize,
+          totalNotificationsCount: paginated.totalCount,
+        ),
+      ),
     );
   }
 
@@ -145,7 +186,12 @@ class MarketingCubit extends Cubit<MarketingState> {
     result.fold(
       (failure) {
         AppLogger.error('Send notification error: ${failure.message}');
-        emit(state.copyWith(status: MarketingStatus.failure, errorMessage: failure.message));
+        emit(
+          state.copyWith(
+            status: MarketingStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (_) {
         emit(state.copyWith(status: MarketingStatus.actionSuccess));
