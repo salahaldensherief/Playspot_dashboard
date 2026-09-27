@@ -39,7 +39,9 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
           }
         }
         if (staffMap.isNotEmpty) {
-          AppLogger.info('Fetched ${staffMap.length} staff members via get_lounge_staff RPC');
+          AppLogger.info(
+            'Fetched ${staffMap.length} staff members via get_lounge_staff RPC',
+          );
           return staffMap.values.toList();
         }
       }
@@ -59,16 +61,18 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
       for (final dynamic item in (response as List)) {
         final map = Map<String, dynamic>.from(item as Map);
         final profileMap = map['profiles'] as Map<String, dynamic>?;
-        final id = (map['staff_id'] ??
-                map['user_id'] ??
-                profileMap?['id'] ??
-                map['id'])
-            ?.toString() ??
+        final id =
+            (map['staff_id'] ??
+                    map['user_id'] ??
+                    profileMap?['id'] ??
+                    map['id'])
+                ?.toString() ??
             '';
         if (id.isNotEmpty && !staffMap.containsKey(id)) {
           final model = StaffModel.fromJson({
             'id': id,
-            'full_name': profileMap?['full_name'] ??
+            'full_name':
+                profileMap?['full_name'] ??
                 map['name'] ??
                 map['full_name'] ??
                 'Staff Member',
@@ -170,19 +174,13 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
   }
 
   @override
-  Future<void> updateStaffStatus(
-    String staffId,
-    bool isActive,
-  ) async {
+  Future<void> updateStaffStatus(String staffId, bool isActive) async {
     final cleanStaffId = staffId.trim();
     if (cleanStaffId.isEmpty) return;
 
     await _supabase.rpc(
       'set_lounge_staff_active',
-      params: {
-        'p_target_user_id': cleanStaffId,
-        'p_is_active': isActive,
-      },
+      params: {'p_target_user_id': cleanStaffId, 'p_is_active': isActive},
     );
   }
 
@@ -193,10 +191,7 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
 
     await _supabase.rpc(
       'remove_lounge_staff_member',
-      params: {
-        'p_target_user_id': cleanStaffId,
-      },
+      params: {'p_target_user_id': cleanStaffId},
     );
   }
-
 }
