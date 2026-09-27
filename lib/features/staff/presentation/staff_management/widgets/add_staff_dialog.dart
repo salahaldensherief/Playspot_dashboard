@@ -18,7 +18,12 @@ class AddStaffDialog extends StatefulWidget {
   final StaffCubit cubit;
   final StaffEntity? staff;
 
-  const AddStaffDialog({super.key, required this.loungeId, required this.cubit, this.staff});
+  const AddStaffDialog({
+    super.key,
+    required this.loungeId,
+    required this.cubit,
+    this.staff,
+  });
 
   @override
   State<AddStaffDialog> createState() => _AddStaffDialogState();
@@ -78,7 +83,9 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
       },
       child: Dialog(
         backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
         child: Container(
           width: 500.w,
           padding: EdgeInsets.all(32.r),
@@ -90,7 +97,12 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
               children: [
                 Text(
                   isEdit ? AppStrings.editStaff : AppStrings.addStaff,
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 20.sp, fontWeight: FontWeight.bold, fontFamily: 'Orbitron'),
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Orbitron',
+                  ),
                 ),
                 SizedBox(height: 24.h),
                 AppTextField(
@@ -124,14 +136,19 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                   AppTextField(
                     label: AppStrings.tempPassword,
                     controller: _passwordController,
-                    validator: (v) => AppValidator.validatePassword(v, minLength: 8),
+                    validator: (v) =>
+                        AppValidator.validatePassword(v, minLength: 8),
                     isPassword: true,
                   ),
                 ],
                 SizedBox(height: 24.h),
                 Text(
                   AppStrings.roleLabel,
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 SizedBox(height: 12.h),
                 _buildRoleSelection(),
@@ -146,7 +163,9 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                     ),
                     SizedBox(width: 16.w),
                     AppButton(
-                      text: isEdit ? AppStrings.saveChanges : AppStrings.addStaff,
+                      text: isEdit
+                          ? AppStrings.saveChanges
+                          : AppStrings.addStaff,
                       onPressed: _submit,
                     ),
                   ],
