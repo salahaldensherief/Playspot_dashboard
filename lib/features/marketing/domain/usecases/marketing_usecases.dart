@@ -65,11 +65,16 @@ class DeletePromotionUseCase implements UseCase<void, String> {
 class UploadPromoPosterParams extends Equatable {
   final Uint8List fileBytes;
   final String fileName;
+  final String loungeId;
 
-  const UploadPromoPosterParams({required this.fileBytes, required this.fileName});
+  const UploadPromoPosterParams({
+    required this.fileBytes,
+    required this.fileName,
+    required this.loungeId,
+  });
 
   @override
-  List<Object?> get props => [fileBytes, fileName];
+  List<Object?> get props => [fileBytes, fileName, loungeId];
 }
 
 class UploadPromoPosterUseCase implements UseCase<String, UploadPromoPosterParams> {
@@ -79,7 +84,7 @@ class UploadPromoPosterUseCase implements UseCase<String, UploadPromoPosterParam
 
   @override
   Future<Either<Failure, String>> call(UploadPromoPosterParams params) {
-    return repository.uploadPromoPoster(params.fileBytes, params.fileName);
+    return repository.uploadPromoPoster(params.fileBytes, params.fileName, params.loungeId);
   }
 }
 
