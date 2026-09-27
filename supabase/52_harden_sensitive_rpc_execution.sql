@@ -362,4 +362,28 @@ FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.is_lounge_member_or_admin(uuid)
 TO authenticated, service_role, supabase_auth_admin;
 
+
+-- Scheduled/internal maintenance commands must never be client-callable.
+REVOKE EXECUTE ON FUNCTION public.handle_no_show_paid_bookings()
+FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public.handle_no_show_paid_bookings()
+TO service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.check_and_send_booking_reminders()
+FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public.check_and_send_booking_reminders()
+TO service_role, supabase_auth_admin;
+
+-- Legacy Z-report mutation is not used by the current dashboard close-shift flow
+-- and has no caller authorization in its historical definition.
+REVOKE EXECUTE ON FUNCTION public.close_shift_and_calculate_z_report(
+  uuid, numeric, text
+) FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public.close_shift_and_calculate_z_report(
+  uuid, numeric, text
+) TO service_role, supabase_auth_admin;
+
 COMMIT;
