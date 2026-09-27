@@ -48,26 +48,19 @@ void main() {
       );
 
       expect(requests, hasLength(1));
-      expect(
-        requests.single.url.path,
-        '/functions/v1/create-lounge-staff',
-      );
+      expect(requests.single.url.path, '/functions/v1/create-lounge-staff');
 
-      final payload =
-          jsonDecode(requests.single.body) as Map<String, dynamic>;
+      final payload = jsonDecode(requests.single.body) as Map<String, dynamic>;
       expect(payload['role'], 'manager');
       expect(payload['lounge_id'], 'lounge-a');
     });
 
     test('staff profile update uses canonical RPC', () async {
-      await source.updateStaffMember(
-        'staff-a',
-        {
-          'name': 'Updated',
-          'phone': '01111111111',
-          'role': 'manager',
-        },
-      );
+      await source.updateStaffMember('staff-a', {
+        'name': 'Updated',
+        'phone': '01111111111',
+        'role': 'manager',
+      });
 
       expect(requests, hasLength(1));
       expect(
@@ -75,8 +68,7 @@ void main() {
         '/rest/v1/rpc/update_lounge_staff_member',
       );
 
-      final payload =
-          jsonDecode(requests.single.body) as Map<String, dynamic>;
+      final payload = jsonDecode(requests.single.body) as Map<String, dynamic>;
       expect(payload['p_target_user_id'], 'staff-a');
       expect(payload['p_role'], 'manager');
     });
@@ -85,8 +77,7 @@ void main() {
       await source.updateStaffStatus('staff-a', false);
 
       expect(requests.single.url.path, '/rest/v1/rpc/set_lounge_staff_active');
-      final payload =
-          jsonDecode(requests.single.body) as Map<String, dynamic>;
+      final payload = jsonDecode(requests.single.body) as Map<String, dynamic>;
       expect(payload['p_target_user_id'], 'staff-a');
       expect(payload['p_is_active'], isFalse);
     });
@@ -98,8 +89,7 @@ void main() {
         requests.single.url.path,
         '/rest/v1/rpc/remove_lounge_staff_member',
       );
-      final payload =
-          jsonDecode(requests.single.body) as Map<String, dynamic>;
+      final payload = jsonDecode(requests.single.body) as Map<String, dynamic>;
       expect(payload['p_target_user_id'], 'staff-a');
     });
   });
