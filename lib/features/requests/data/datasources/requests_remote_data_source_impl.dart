@@ -17,7 +17,9 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
   }
 
   @override
-  Stream<List<ClientRequestModel>> watchClientRequests({required String loungeId}) {
+  Stream<List<ClientRequestModel>> watchClientRequests({
+    required String loungeId,
+  }) {
     final cleanLoungeId = loungeId.trim();
     if (cleanLoungeId.isEmpty) {
       return Stream.value([]);
@@ -102,13 +104,15 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
                 callback: (_) => fetchAndEmit(),
               )
               .subscribe((status, error) {
-            if (status == RealtimeSubscribeStatus.subscribed) {
-              // Guarantee recovery of missed events upon connection establish or reconnect
-              fetchAndEmit();
-            } else if (status == RealtimeSubscribeStatus.channelError) {
-              debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Realtime Channel Error: $error');
-            }
-          });
+                if (status == RealtimeSubscribeStatus.subscribed) {
+                  // Guarantee recovery of missed events upon connection establish or reconnect
+                  fetchAndEmit();
+                } else if (status == RealtimeSubscribeStatus.channelError) {
+                  debugPrint(
+                    '⚠️ [REQUESTS_DATA_SOURCE] Realtime Channel Error: $error',
+                  );
+                }
+              });
         } catch (e) {
           debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Realtime setup failed: $e');
         }
@@ -166,11 +170,16 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         );
         requestsList.addAll(paginated.items);
       } catch (e) {
-        debugPrint('⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests_page Error: $e');
+        debugPrint(
+          '⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests_page Error: $e',
+        );
       }
 
-      final extensionRequests = await _fallbackFetcher.fetchPendingExtensionRequests(cleanLoungeId);
-      final fallbackRequests = await _fallbackFetcher.fetchFallbackRequests(cleanLoungeId);
+      final extensionRequests = await _fallbackFetcher
+          .fetchPendingExtensionRequests(cleanLoungeId);
+      final fallbackRequests = await _fallbackFetcher.fetchFallbackRequests(
+        cleanLoungeId,
+      );
 
       final Map<String, ClientRequestModel> uniqueMap = {};
       for (var req in requestsList) {
@@ -183,8 +192,9 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         uniqueMap[req.id] = req;
       }
 
-      final filteredItems =
-          uniqueMap.values.where((m) => !_locallyAttendedIds.contains(m.id)).toList();
+      final filteredItems = uniqueMap.values
+          .where((m) => !_locallyAttendedIds.contains(m.id))
+          .toList();
 
       filteredItems.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
@@ -195,7 +205,9 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         pageSize: pageSize,
       );
     } catch (e) {
-      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests_page Error: $e');
+      debugPrint(
+        '⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests_page Error: $e',
+      );
       final fallbackList = await getClientRequests(loungeId: cleanLoungeId);
       return PaginatedResult(
         items: fallbackList,
@@ -207,7 +219,9 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
   }
 
   @override
-  Future<List<ClientRequestModel>> getClientRequests({required String loungeId}) async {
+  Future<List<ClientRequestModel>> getClientRequests({
+    required String loungeId,
+  }) async {
     final cleanLoungeId = loungeId.trim();
     if (cleanLoungeId.isEmpty) return [];
 
@@ -231,11 +245,16 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         );
         requestsList.addAll(paginated.items);
       } catch (e) {
-        debugPrint('⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests Error: $e');
+        debugPrint(
+          '⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests Error: $e',
+        );
       }
 
-      final extensionRequests = await _fallbackFetcher.fetchPendingExtensionRequests(cleanLoungeId);
-      final fallbackRequests = await _fallbackFetcher.fetchFallbackRequests(cleanLoungeId);
+      final extensionRequests = await _fallbackFetcher
+          .fetchPendingExtensionRequests(cleanLoungeId);
+      final fallbackRequests = await _fallbackFetcher.fetchFallbackRequests(
+        cleanLoungeId,
+      );
 
       final Map<String, ClientRequestModel> uniqueMap = {};
       for (var req in requestsList) {
@@ -248,13 +267,16 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         uniqueMap[req.id] = req;
       }
 
-      final list =
-          uniqueMap.values.where((m) => !_locallyAttendedIds.contains(m.id)).toList();
+      final list = uniqueMap.values
+          .where((m) => !_locallyAttendedIds.contains(m.id))
+          .toList();
 
       list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return list;
     } catch (e) {
-      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests Error: $e');
+      debugPrint(
+        '⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests Error: $e',
+      );
       return await _fallbackFetcher.fetchFallbackRequests(cleanLoungeId);
     }
   }
@@ -295,18 +317,15 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
       final value when value.startsWith('req_') => 'client_request',
       _ when isCanteenOrder => 'canteen_order',
       _ => throw ArgumentError.value(
-          id,
-          'id',
-          'Unsupported live-request identifier',
-        ),
+        id,
+        'id',
+        'Unsupported live-request identifier',
+      ),
     };
 
     await client.rpc(
       'resolve_live_request',
-      params: {
-        'p_request_type': requestType,
-        'p_request_id': match.group(0)!,
-      },
+      params: {'p_request_type': requestType, 'p_request_id': match.group(0)!},
     );
 
     if (_locallyAttendedIds.length > 300) {
@@ -314,5 +333,4 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     }
     _locallyAttendedIds.add(id);
   }
-
 }
