@@ -64,22 +64,13 @@ class TournamentMatchRemoteHelper {
   }
 
   Future<void> startMatch(String matchId, {String? roomId}) async {
-    try {
-      await client.rpc(
-        'start_tournament_match',
-        params: {'p_match_id': matchId, 'p_room_id': roomId},
-      );
-    } catch (e) {
-      try {
-        await client.rpc(
-          'start_tournament_match',
-          params: {'match_id': matchId, 'room_id': roomId},
-        );
-      } catch (e2) {
-        AppLogger.warning('start_tournament_match error', e2);
-        rethrow;
-      }
-    }
+    await client.rpc(
+      'start_tournament_match',
+      params: {
+        'p_match_id': matchId,
+        'p_room_id': roomId,
+      },
+    );
   }
 
   Future<void> resolveDispute(
@@ -89,34 +80,16 @@ class TournamentMatchRemoteHelper {
     required int p2Score,
     required String resolutionNotes,
   }) async {
-    try {
-      await client.rpc(
-        'resolve_tournament_dispute',
-        params: {
-          'p_match_id': matchId,
-          'p_winner_id': winnerId,
-          'p_p1_score': p1Score,
-          'p_p2_score': p2Score,
-          'p_resolution_notes': resolutionNotes,
-        },
-      );
-    } catch (e) {
-      AppLogger.warning(
-        'resolve_tournament_dispute RPC error, fallback update',
-        e,
-      );
-      await client
-          .from('tournament_matches')
-          .update({
-            'status': 'completed',
-            'winner_id': winnerId,
-            'player1_score': p1Score,
-            'player2_score': p2Score,
-            'resolution_notes': resolutionNotes,
-            'completed_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', matchId);
-    }
+    await client.rpc(
+      'resolve_tournament_dispute',
+      params: {
+        'p_match_id': matchId,
+        'p_winner_id': winnerId,
+        'p_score_player1': p1Score,
+        'p_score_player2': p2Score,
+        'p_notes': resolutionNotes,
+      },
+    );
   }
 
   Stream<List<TournamentMatchModel>> watchDisputedMatches(String tournamentId) {
