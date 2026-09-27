@@ -30,18 +30,24 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }) async {
     final cleanLoungeId = loungeId.trim();
     if (cleanLoungeId.isEmpty) {
-      return PaginatedResult.empty(requestedPage: page, requestedPageSize: pageSize);
+      return PaginatedResult.empty(
+        requestedPage: page,
+        requestedPageSize: pageSize,
+      );
     }
 
     final clampedPageSize = pageSize.clamp(1, 100);
     final validPage = page < 1 ? 1 : page;
 
     try {
-      final response = await client.rpc('get_lounge_bookings_page', params: {
-        'p_lounge_id': cleanLoungeId,
-        'p_page': validPage,
-        'p_page_size': clampedPageSize,
-      });
+      final response = await client.rpc(
+        'get_lounge_bookings_page',
+        params: {
+          'p_lounge_id': cleanLoungeId,
+          'p_page': validPage,
+          'p_page_size': clampedPageSize,
+        },
+      );
 
       return PaginatedResult.fromRpcResponse<BookingModel>(
         response,
@@ -50,7 +56,9 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         requestedPageSize: clampedPageSize,
       );
     } catch (e) {
-      debugPrint('⚠️ [DATA_SOURCE] get_lounge_bookings_page RPC error ($e), falling back');
+      debugPrint(
+        '⚠️ [DATA_SOURCE] get_lounge_bookings_page RPC error ($e), falling back',
+      );
       final fallbackList = await getBookings(
         loungeId: cleanLoungeId,
         limit: clampedPageSize,
@@ -77,17 +85,21 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     }
 
     try {
-      final response = await client.rpc('get_booking_cancellation_summary', params: {
-        'p_lounge_id': cleanLoungeId,
-        'p_user_id': cleanUserId,
-      });
+      final response = await client.rpc(
+        'get_booking_cancellation_summary',
+        params: {'p_lounge_id': cleanLoungeId, 'p_user_id': cleanUserId},
+      );
 
       if (response is Map) {
-        return CustomerCancellationSummary.fromJson(Map<String, dynamic>.from(response));
+        return CustomerCancellationSummary.fromJson(
+          Map<String, dynamic>.from(response),
+        );
       }
       return CustomerCancellationSummary.empty();
     } catch (e) {
-      debugPrint('⚠️ [DATA_SOURCE] get_booking_cancellation_summary error ($e)');
+      debugPrint(
+        '⚠️ [DATA_SOURCE] get_booking_cancellation_summary error ($e)',
+      );
       return CustomerCancellationSummary.empty();
     }
   }
@@ -99,15 +111,20 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     int limit = 50,
     int offset = 0,
   }) async {
-    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
+    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty)
+        ? loungeId.trim()
+        : null;
 
     try {
-      final response = await client.rpc('get_all_bookings_admin', params: {
-        'p_lounge_id': cleanLoungeId,
-        'p_status': status,
-        'p_limit': limit,
-        'p_offset': offset,
-      });
+      final response = await client.rpc(
+        'get_all_bookings_admin',
+        params: {
+          'p_lounge_id': cleanLoungeId,
+          'p_status': status,
+          'p_limit': limit,
+          'p_offset': offset,
+        },
+      );
 
       return (response as List).map((json) {
         return BookingModel.fromJson(Map<String, dynamic>.from(json));
@@ -127,10 +144,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   Future<void> approveBooking(String id) async {
     await client.rpc(
       'update_booking_status_admin',
-      params: {
-        'p_booking_id': id,
-        'p_status': 'upcoming',
-      },
+      params: {'p_booking_id': id, 'p_status': 'upcoming'},
     );
   }
 
@@ -144,8 +158,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         cleanStatus == 'canceled' ||
         cleanStatus == 'no_show') {
       cleanStatus = 'cancelled';
-    } else if (cleanStatus == 'inprogress' ||
-        cleanStatus == 'active') {
+    } else if (cleanStatus == 'inprogress' || cleanStatus == 'active') {
       cleanStatus = 'in_progress';
     }
 
@@ -157,19 +170,12 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       'cancelled',
     };
     if (!validDbStatuses.contains(cleanStatus)) {
-      throw ArgumentError.value(
-        status,
-        'status',
-        'Unsupported booking status',
-      );
+      throw ArgumentError.value(status, 'status', 'Unsupported booking status');
     }
 
     await client.rpc(
       'update_booking_status_admin',
-      params: {
-        'p_booking_id': id,
-        'p_status': cleanStatus,
-      },
+      params: {'p_booking_id': id, 'p_status': cleanStatus},
     );
   }
 
@@ -199,10 +205,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
     await client.rpc(
       'complete_booking_payment',
-      params: {
-        'p_booking_id': bookingId,
-        'p_payment_method': 'cash',
-      },
+      params: {'p_booking_id': bookingId, 'p_payment_method': 'cash'},
     );
   }
 
@@ -212,16 +215,27 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     if (cleanCode.isEmpty) {
       throw Exception('يرجى إدخال كود القسيمة');
     }
-    debugPrint('🔵 [DATA_SOURCE] Calling validate_voucher_by_code with p_code: $cleanCode');
-    final response = await client.rpc('validate_voucher_by_code', params: {
-      'p_code': cleanCode,
-    });
+    debugPrint(
+      '🔵 [DATA_SOURCE] Calling validate_voucher_by_code with p_code: $cleanCode',
+    );
+    final response = await client.rpc(
+      'validate_voucher_by_code',
+      params: {'p_code': cleanCode},
+    );
 
     if (response is Map) {
       final resultMap = Map<String, dynamic>.from(response);
-      final isValid = resultMap['is_valid'] ?? resultMap['valid'] ?? resultMap['success'] ?? true;
+      final isValid =
+          resultMap['is_valid'] ??
+          resultMap['valid'] ??
+          resultMap['success'] ??
+          true;
       if (isValid == false) {
-        final errorMsg = resultMap['error'] ?? resultMap['message'] ?? resultMap['reason'] ?? 'كود القسيمة غير صالح أو منتهي الصلاحية';
+        final errorMsg =
+            resultMap['error'] ??
+            resultMap['message'] ??
+            resultMap['reason'] ??
+            'كود القسيمة غير صالح أو منتهي الصلاحية';
         throw Exception(errorMsg);
       }
       return resultMap;
@@ -230,15 +244,22 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
 
   @override
-  Future<void> consumeVoucherByCode(String voucherCode, String bookingId) async {
+  Future<void> consumeVoucherByCode(
+    String voucherCode,
+    String bookingId,
+  ) async {
     final cleanCode = voucherCode.trim().toUpperCase();
     if (cleanCode.isEmpty || bookingId.isEmpty) return;
-    debugPrint('🔵 [DATA_SOURCE] Calling consume_voucher_by_code with p_code: $cleanCode, p_booking_id: $bookingId');
-    await client.rpc('consume_voucher_by_code', params: {
-      'p_code': cleanCode,
-      'p_booking_id': bookingId,
-    });
-    debugPrint('🟢 [DATA_SOURCE] consume_voucher_by_code RPC executed successfully!');
+    debugPrint(
+      '🔵 [DATA_SOURCE] Calling consume_voucher_by_code with p_code: $cleanCode, p_booking_id: $bookingId',
+    );
+    await client.rpc(
+      'consume_voucher_by_code',
+      params: {'p_code': cleanCode, 'p_booking_id': bookingId},
+    );
+    debugPrint(
+      '🟢 [DATA_SOURCE] consume_voucher_by_code RPC executed successfully!',
+    );
   }
 
   @override
@@ -250,14 +271,22 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     String? manualDiscountReason,
   }) async {
     final cleanVoucherCode = voucherCode?.trim().toUpperCase();
-    debugPrint('🔵 [DATA_SOURCE] Calling calculate_booking_total for room: $roomId, duration: $durationHours hrs');
-    final response = await client.rpc('calculate_booking_total', params: {
-      'p_room_id': roomId,
-      'p_duration_hours': durationHours,
-      'p_voucher_code': (cleanVoucherCode != null && cleanVoucherCode.isNotEmpty) ? cleanVoucherCode : null,
-      'p_manual_discount': manualDiscount,
-      'p_manual_discount_reason': manualDiscountReason,
-    });
+    debugPrint(
+      '🔵 [DATA_SOURCE] Calling calculate_booking_total for room: $roomId, duration: $durationHours hrs',
+    );
+    final response = await client.rpc(
+      'calculate_booking_total',
+      params: {
+        'p_room_id': roomId,
+        'p_duration_hours': durationHours,
+        'p_voucher_code':
+            (cleanVoucherCode != null && cleanVoucherCode.isNotEmpty)
+            ? cleanVoucherCode
+            : null,
+        'p_manual_discount': manualDiscount,
+        'p_manual_discount_reason': manualDiscountReason,
+      },
+    );
 
     if (response is Map) {
       return Map<String, dynamic>.from(response);
@@ -273,20 +302,29 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     String? userId,
     int holdMinutes = 10,
   }) async {
-    debugPrint('🔵 [DATA_SOURCE] Calling verify_and_hold_slot for room: $roomId from $startTime to $endTime');
-    final response = await client.rpc('verify_and_hold_slot', params: {
-      'p_room_id': roomId,
-      'p_start_time': startTime.toUtc().toIso8601String(),
-      'p_end_time': endTime.toUtc().toIso8601String(),
-      'p_user_id': (userId != null && userId.trim().isNotEmpty) ? userId.trim() : null,
-      'p_hold_minutes': holdMinutes,
-    });
+    debugPrint(
+      '🔵 [DATA_SOURCE] Calling verify_and_hold_slot for room: $roomId from $startTime to $endTime',
+    );
+    final response = await client.rpc(
+      'verify_and_hold_slot',
+      params: {
+        'p_room_id': roomId,
+        'p_start_time': startTime.toUtc().toIso8601String(),
+        'p_end_time': endTime.toUtc().toIso8601String(),
+        'p_user_id': (userId != null && userId.trim().isNotEmpty)
+            ? userId.trim()
+            : null,
+        'p_hold_minutes': holdMinutes,
+      },
+    );
 
     if (response is Map) {
       final map = Map<String, dynamic>.from(response);
       final success = map['success'] == true;
       if (!success) {
-        final msg = map['message']?.toString() ?? 'The selected time slot overlaps with an existing booking or hold.';
+        final msg =
+            map['message']?.toString() ??
+            'The selected time slot overlaps with an existing booking or hold.';
         throw Exception(msg);
       }
       return map;
@@ -300,49 +338,70 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
 
   @override
-  Future<void> swapRoom(String bookingId, String newRoomId, String actionBy) async {
-    await client.rpc('swap_booking_room', params: {
-      'p_booking_id': bookingId,
-      'p_new_room_id': newRoomId,
-      'p_action_by': actionBy,
-    });
+  Future<void> swapRoom(
+    String bookingId,
+    String newRoomId,
+    String actionBy,
+  ) async {
+    await client.rpc(
+      'swap_booking_room',
+      params: {
+        'p_booking_id': bookingId,
+        'p_new_room_id': newRoomId,
+        'p_action_by': actionBy,
+      },
+    );
   }
 
   @override
   Future<void> startBookingSession(String bookingId) async {
-    await client.rpc('start_booking_session', params: {
-      'p_booking_id': bookingId,
-    });
+    await client.rpc(
+      'start_booking_session',
+      params: {'p_booking_id': bookingId},
+    );
   }
 
   @override
   Future<void> autoCancelExpiredBookings() async {
-    debugPrint('ℹ️ [DATA_SOURCE] autoCancelExpiredBookings is handled automatically by server-side Cron/Triggers.');
+    debugPrint(
+      'ℹ️ [DATA_SOURCE] autoCancelExpiredBookings is handled automatically by server-side Cron/Triggers.',
+    );
   }
 
   @override
   Future<void> approveManualBooking(String bookingId, String actionBy) async {
     try {
-      await client.rpc('approve_manual_booking', params: {
-        'p_booking_id': bookingId,
-        'p_action_by': actionBy,
-      });
+      await client.rpc(
+        'approve_manual_booking',
+        params: {'p_booking_id': bookingId, 'p_action_by': actionBy},
+      );
     } catch (e) {
-      debugPrint('⚠️ [DATA_SOURCE] approve_manual_booking RPC error ($e), falling back to updateBookingStatus');
+      debugPrint(
+        '⚠️ [DATA_SOURCE] approve_manual_booking RPC error ($e), falling back to updateBookingStatus',
+      );
       await updateBookingStatus(bookingId, 'upcoming');
     }
   }
 
   @override
-  Future<void> rejectManualBooking(String bookingId, String reason, String actionBy) async {
+  Future<void> rejectManualBooking(
+    String bookingId,
+    String reason,
+    String actionBy,
+  ) async {
     try {
-      await client.rpc('reject_manual_booking', params: {
-        'p_booking_id': bookingId,
-        'p_rejection_reason': reason,
-        'p_action_by': actionBy,
-      });
+      await client.rpc(
+        'reject_manual_booking',
+        params: {
+          'p_booking_id': bookingId,
+          'p_rejection_reason': reason,
+          'p_action_by': actionBy,
+        },
+      );
     } catch (e) {
-      debugPrint('⚠️ [DATA_SOURCE] reject_manual_booking RPC error ($e), falling back to updateBookingStatus');
+      debugPrint(
+        '⚠️ [DATA_SOURCE] reject_manual_booking RPC error ($e), falling back to updateBookingStatus',
+      );
       await updateBookingStatus(bookingId, 'cancelled');
     }
   }
@@ -355,7 +414,9 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
           .select('*, extras(*)')
           .eq('booking_id', bookingId);
 
-      return (response as List).map((item) => Map<String, dynamic>.from(item)).toList();
+      return (response as List)
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
     } catch (e) {
       debugPrint('⚠️ [DATA_SOURCE] getBookingItems query failed: $e');
       return [];
