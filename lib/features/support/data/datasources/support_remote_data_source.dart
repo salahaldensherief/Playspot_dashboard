@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/app_settings_model.dart';
+
 import '../models/app_policy_model.dart';
+import '../models/app_settings_model.dart';
 import '../models/faq_model.dart';
 import '../models/support_ticket_model.dart';
 
@@ -53,27 +54,15 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
 
   @override
   Future<void> updateAppSettings(AppSettingsModel settings) async {
-    final payload = settings.toJson();
-    if (settings.id != null && settings.id!.isNotEmpty) {
-      await supabaseClient
-          .from('support_settings')
-          .upsert(payload, onConflict: 'id');
-    } else {
-      final existing = await supabaseClient
-          .from('support_settings')
-          .select('id')
-          .limit(1)
-          .maybeSingle();
-      if (existing != null) {
-        payload['id'] = existing['id'];
-        await supabaseClient
-            .from('support_settings')
-            .update(payload)
-            .eq('id', existing['id']);
-      } else {
-        await supabaseClient.from('support_settings').insert(payload);
-      }
-    }
+    await supabaseClient.rpc(
+      'admin_update_support_settings',
+      params: {
+        'p_whatsapp_phone': settings.whatsappPhone,
+        'p_support_phone': settings.supportPhone,
+        'p_support_email': settings.supportEmail,
+        'p_vodafone_cash_number': settings.vodafoneCashNumber,
+      },
+    );
   }
 
   @override
@@ -81,17 +70,28 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
     final response = await supabaseClient
         .from('legal_policies')
         .select()
-        .order('policy_type', ascending: true);
+        .order('policy_key', ascending: true);
 
     return (response as List).map((e) => AppPolicyModel.fromJson(e)).toList();
   }
 
   @override
   Future<void> updatePolicy(AppPolicyModel policy) async {
-    final payload = policy.toJson();
-    await supabaseClient
-        .from('legal_policies')
-        .upsert(payload, onConflict: 'id');
+    final policyKey = policy.policyType.trim().isNotEmpty
+        ? policy.policyType.trim()
+        : policy.id.trim();
+
+    await supabaseClient.rpc(
+      'admin_upsert_legal_policy',
+      params: {
+        'p_policy_key': policyKey,
+        'p_title_ar': policy.titleAr,
+        'p_title_en': policy.titleEn,
+        'p_content_ar': policy.contentAr,
+        'p_content_en': policy.contentEn,
+        'p_is_published': policy.isPublished,
+      },
+    );
   }
 
   @override
@@ -107,17 +107,26 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
 
   @override
   Future<void> saveFaq(FaqModel faq) async {
-    final payload = faq.toJson();
-    if (faq.id.isNotEmpty) {
-      await supabaseClient.from('faqs').update(payload).eq('id', faq.id);
-    } else {
-      await supabaseClient.from('faqs').insert(payload);
-    }
+    await supabaseClient.rpc(
+      'admin_save_faq',
+      params: {
+        'p_id': faq.id.isEmpty ? null : faq.id,
+        'p_question_ar': faq.questionAr,
+        'p_answer_ar': faq.answerAr,
+        'p_question_en': faq.questionEn,
+        'p_answer_en': faq.answerEn,
+        'p_sort_order': faq.sortOrder,
+        'p_is_active': faq.isActive,
+      },
+    );
   }
 
   @override
   Future<void> deleteFaq(String id) async {
-    await supabaseClient.from('faqs').delete().eq('id', id);
+    await supabaseClient.rpc(
+      'admin_delete_faq',
+      params: {'p_id': id},
+    );
   }
 
   @override
