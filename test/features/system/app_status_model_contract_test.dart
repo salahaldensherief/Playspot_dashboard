@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:play_spot_dashboard/features/system/data/models/app_status_model.dart';
 
 void main() {
+  // Regression coverage for canonical platform version columns.
   test('maps canonical app_status columns', () {
     final model = AppStatusModel.fromJson({
       'id': 1,
