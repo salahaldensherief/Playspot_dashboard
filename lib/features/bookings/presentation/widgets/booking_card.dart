@@ -117,8 +117,7 @@ class _BookingCardState extends State<BookingCard> {
   Widget build(BuildContext context) {
     final booking = widget.booking;
 
-    final bool isCashUnconfirmed = booking.isCashPayment && booking.paymentStatus != PaymentStatus.paid;
-    final isPending = booking.status == BookingStatus.pending || isCashUnconfirmed;
+    final isPending = booking.status == BookingStatus.pending;
     final isPaid = booking.paymentStatus == PaymentStatus.paid;
     final isCanStartSession = booking.status == BookingStatus.upcoming;
     final isOverdue = _isPastStartTime(booking);

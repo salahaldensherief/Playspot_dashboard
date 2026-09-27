@@ -125,17 +125,13 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   @override
   Future<void> approveBooking(String id) async {
-    debugPrint('🔵 [DATA_SOURCE] Approving booking id=$id (status=upcoming, payment_status=paid)');
-    try {
-      await client.from('bookings').update({
-        'status': 'upcoming',
-        'payment_status': 'paid',
-      }).eq('id', id);
-      debugPrint('🟢 [DATA_SOURCE] Booking approved successfully with payment_status=paid!');
-    } catch (e) {
-      debugPrint('⚠️ [DATA_SOURCE] Failed to approve booking directly ($e), calling updateBookingStatus...');
-      await updateBookingStatus(id, 'upcoming');
-    }
+    await client.rpc(
+      'update_booking_status_admin',
+      params: {
+        'p_booking_id': id,
+        'p_status': 'upcoming',
+      },
+    );
   }
 
   @override
@@ -143,62 +139,38 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     String cleanStatus = status.contains('.') ? status.split('.').last : status;
     cleanStatus = cleanStatus.trim().toLowerCase().replaceAll(' ', '_');
 
-    if (cleanStatus == 'rejected' || cleanStatus == 'reject' || cleanStatus == 'canceled' || cleanStatus == 'no_show') {
+    if (cleanStatus == 'rejected' ||
+        cleanStatus == 'reject' ||
+        cleanStatus == 'canceled' ||
+        cleanStatus == 'no_show') {
       cleanStatus = 'cancelled';
-    } else if (cleanStatus == 'inprogress' || cleanStatus == 'in_progress' || cleanStatus == 'active') {
+    } else if (cleanStatus == 'inprogress' ||
+        cleanStatus == 'active') {
       cleanStatus = 'in_progress';
     }
 
-    const validDbStatuses = {'pending', 'upcoming', 'in_progress', 'completed', 'cancelled'};
+    const validDbStatuses = {
+      'pending',
+      'upcoming',
+      'in_progress',
+      'completed',
+      'cancelled',
+    };
     if (!validDbStatuses.contains(cleanStatus)) {
-      debugPrint('⚠️ [DATA_SOURCE] Invalid status "$cleanStatus" provided for booking $id. Mapping to "cancelled".');
-      cleanStatus = 'cancelled';
+      throw ArgumentError.value(
+        status,
+        'status',
+        'Unsupported booking status',
+      );
     }
 
-    debugPrint('🔵 [DATA_SOURCE] Calling RPC update_booking_status_admin for id=$id, status=$cleanStatus');
-
-    try {
-      await client.rpc('update_booking_status_admin', params: {
+    await client.rpc(
+      'update_booking_status_admin',
+      params: {
         'p_booking_id': id,
         'p_status': cleanStatus,
-      });
-      debugPrint('🟢 [DATA_SOURCE] RPC Update Successful!');
-    } catch (e) {
-      if (e.toString().contains('shift') || e.toString().contains('الوردية')) {
-        debugPrint('⚠️ [DATA_SOURCE] update_booking_status_admin failed due to shift requirement. Finding active shift and updating directly...');
-        final shiftRes = await client
-            .from('shifts')
-            .select('id')
-            .eq('status', 'open')
-            .order('start_time', ascending: false)
-            .limit(1)
-            .maybeSingle();
-
-        final shiftId = shiftRes?['id']?.toString();
-
-        await client.from('bookings').update({
-          'status': cleanStatus,
-          'shift_id': shiftId,
-        }).eq('id', id);
-        debugPrint('🟢 [DATA_SOURCE] Direct booking status update with active shift successful!');
-      } else {
-        rethrow;
-      }
-    }
-
-    // Automatically make the room available in rooms table if booking is cancelled or completed
-    if (cleanStatus == 'cancelled' || cleanStatus == 'completed') {
-      try {
-        final bookingRes = await client.from('bookings').select('room_id').eq('id', id).maybeSingle();
-        final roomId = bookingRes?['room_id']?.toString();
-        if (roomId != null && roomId.isNotEmpty) {
-          await client.from('rooms').update({'status': 'available'}).eq('id', roomId);
-          debugPrint('🟢 [DATA_SOURCE] Room $roomId status reset to available in rooms table.');
-        }
-      } catch (e) {
-        debugPrint('⚠️ [DATA_SOURCE] Failed to reset room status to available: $e');
-      }
-    }
+      },
+    );
   }
 
   @override
@@ -209,57 +181,29 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     double? discountPercentage,
     String? discountReason,
   }) async {
-    debugPrint('🔵 [DATA_SOURCE] Confirming payment for booking: $bookingId');
-    try {
-      await client.rpc('complete_booking_payment', params: {
-        'p_booking_id': bookingId,
-        'p_shift_id': shiftId,
-        'p_payment_method': 'cash',
-        'p_discount_amount': discountAmount ?? 0,
-        'p_discount_percentage': discountPercentage ?? 0,
-        'p_discount_reason': discountReason,
-      });
+    final fixedDiscount = discountAmount ?? 0;
+    final percentageDiscount = discountPercentage ?? 0;
+    final hasDiscount = fixedDiscount > 0 || percentageDiscount > 0;
 
-      await client.from('bookings').update({
-        'status': 'in_progress',
-      }).eq('id', bookingId).eq('status', 'completed');
-
-      debugPrint('🟢 [DATA_SOURCE] RPC complete_booking_payment succeeded & status safeguarded!');
-      return;
-    } catch (e1) {
-      debugPrint('ℹ️ [DATA_SOURCE] complete_booking_payment failed ($e1), falling back to confirm_cash_payment...');
-      try {
-        await client.rpc('confirm_cash_payment', params: {
+    if (hasDiscount) {
+      await client.rpc(
+        'apply_booking_discount',
+        params: {
           'p_booking_id': bookingId,
-          'p_shift_id': shiftId,
-          'p_discount_amount': discountAmount ?? 0,
-          'p_discount_percentage': discountPercentage ?? 0,
+          'p_discount_amount': fixedDiscount,
+          'p_discount_percentage': percentageDiscount,
           'p_discount_reason': discountReason,
-        });
-
-        await client.from('bookings').update({
-          'status': 'in_progress',
-        }).eq('id', bookingId).eq('status', 'completed');
-
-        debugPrint('🟢 [DATA_SOURCE] RPC confirm_cash_payment succeeded & status safeguarded!');
-        return;
-      } catch (e2) {
-        debugPrint('⚠️ [DATA_SOURCE] RPC confirm_cash_payment failed ($e2), attempting direct update fallback...');
-        final updateData = {
-          'payment_status': 'paid',
-          'status': 'in_progress',
-          'discount_amount': discountAmount,
-          'discount_percentage': discountPercentage,
-          'discount_reason': discountReason,
-          'shift_id': shiftId,
-        };
-
-        final res = await client.from('bookings').update(updateData).eq('id', bookingId).select();
-        if ((res as List).isEmpty) {
-          throw Exception('فشل تأكيد الدفع: لا توجد صلاحيات لتعديل الحجز (RLS Restricted)');
-        }
-      }
+        },
+      );
     }
+
+    await client.rpc(
+      'complete_booking_payment',
+      params: {
+        'p_booking_id': bookingId,
+        'p_payment_method': 'cash',
+      },
+    );
   }
 
   @override

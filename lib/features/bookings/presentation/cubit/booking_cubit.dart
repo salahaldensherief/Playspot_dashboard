@@ -200,7 +200,7 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
       actionName: 'Approve Booking',
       optimisticUpdate: (list) => list
           .map((b) => b.id == id
-              ? b.copyWith(status: BookingStatus.upcoming, paymentStatus: PaymentStatus.paid)
+              ? b.copyWith(status: BookingStatus.upcoming)
               : b)
           .toList(),
       action: () => repository.approveBooking(id),
@@ -224,7 +224,7 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
       actionName: 'Confirm Cash Payment',
       optimisticUpdate: (list) => list
           .map((b) => b.id == bookingId
-              ? b.copyWith(status: BookingStatus.completed, paymentStatus: PaymentStatus.paid)
+              ? b.copyWith(paymentStatus: PaymentStatus.paid)
               : b)
           .toList(),
       action: () => confirmCashPaymentUseCase(
