@@ -7,6 +7,35 @@ FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.create_lounge_admin(uuid, text, text, text)
 TO service_role, supabase_auth_admin;
 
+
+REVOKE EXECUTE ON FUNCTION public.create_lounge_with_admin(
+  text, text, text, text, text
+) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.create_lounge_with_admin(
+  text, text, text, text, text
+) TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.get_all_bookings_admin(
+  uuid, text, integer, integer
+) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.get_all_bookings_admin(
+  uuid, text, integer, integer
+) TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.get_current_user_role()
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.get_current_user_role()
+TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.is_lounge_member_or_admin(uuid)
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.is_lounge_member_or_admin(uuid)
+TO authenticated, service_role, supabase_auth_admin;
+
 CREATE OR REPLACE FUNCTION public.broadcast_promo_notification(
   p_promo_id uuid,
   p_lounge_id uuid,
