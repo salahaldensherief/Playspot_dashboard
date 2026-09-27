@@ -9,7 +9,7 @@ abstract class MarketingRemoteDataSource {
   Future<void> createPromotion(PromoModel promo);
   Future<void> updatePromotion(PromoModel promo);
   Future<void> deletePromotion(String id);
-  Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName);
+  Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName, String loungeId);
 
   // Notifications & User Preferences
   Future<void> sendNotification(NotificationModel notification);
@@ -156,13 +156,17 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
   }
 
   @override
-  Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName) async {
+  Future<String> uploadPromoPoster(Uint8List fileBytes, String fileName, String loungeId) async {
     final sanitizedFileName = fileName.replaceAll(
       RegExp(r'[^a-zA-Z0-9._-]'),
       '_',
     );
+    final cleanLoungeId = loungeId.trim();
+    if (cleanLoungeId.isEmpty) {
+      throw Exception('Lounge ID is required to upload a promotion poster.');
+    }
     final path =
-        'posters/${DateTime.now().millisecondsSinceEpoch}_$sanitizedFileName';
+        '$cleanLoungeId/posters/${DateTime.now().millisecondsSinceEpoch}_$sanitizedFileName';
 
     // 1. Try promotion-assets bucket (newly created bucket)
     try {
