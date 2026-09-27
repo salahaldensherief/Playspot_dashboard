@@ -201,8 +201,50 @@ class BookingCardActions extends StatelessWidget {
       );
     }
 
-    // 2. Approved upcoming booking (Ready to start when time is reached)
-    if (booking.status == BookingStatus.upcoming) {
+    // 2. Approved but unpaid booking: collect payment before session start.
+    if (booking.status == BookingStatus.upcoming && !isPaid) {
+      return Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: AppButton(
+              text: booking.isCashPayment
+                  ? AppStrings.confirmCash
+                  : AppStrings.confirmReceipt,
+              variant: AppButtonVariant.primary,
+              backgroundColor: AppColors.neonBlue,
+              height: h,
+              onPressed: () {
+                if (onConfirmPayment != null) {
+                  onConfirmPayment!();
+                } else {
+                  onOpenDetails();
+                }
+              },
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Expanded(
+            flex: 2,
+            child: AppButton(
+              text: AppStrings.reject,
+              variant: AppButtonVariant.outlined,
+              height: h,
+              onPressed: () {
+                if (onReject != null) {
+                  onReject!();
+                } else {
+                  context.read<BookingCubit>().rejectBooking(booking.id);
+                }
+              },
+            ),
+          ),
+        ],
+      );
+    }
+
+    // 3. Paid upcoming booking (Ready to start when time is reached).
+    if (booking.status == BookingStatus.upcoming && isPaid) {
       return Row(
         children: [
           Expanded(
