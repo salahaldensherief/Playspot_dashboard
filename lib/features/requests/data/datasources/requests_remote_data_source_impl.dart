@@ -266,7 +266,9 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     }
     _locallyAttendedIds.add(id);
 
-    final String rawDbId = id
+    final uuidRegExp = RegExp(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}');
+    final match = uuidRegExp.firstMatch(id);
+    final String rawDbId = match != null ? match.group(0)! : id
         .replaceFirst('canteen_', '')
         .replaceFirst('notif_', '')
         .replaceFirst('sc_', '')
@@ -274,8 +276,8 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         .replaceFirst('req_', '')
         .replaceFirst('ext_', '');
 
-    if (rawDbId.isEmpty || rawDbId.startsWith('req_')) {
-      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Skipped DB update for local/temporary ID: $id');
+    if (rawDbId.isEmpty || rawDbId.startsWith('req_') || !uuidRegExp.hasMatch(rawDbId)) {
+      debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Skipped DB update for local/temporary non-UUID ID: $id');
       return;
     }
 
