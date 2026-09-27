@@ -275,34 +275,15 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
 
   @override
   Future<void> markNotificationRead(String notificationId) async {
-    try {
-      await _supabase.rpc(
-        'mark_notification_read',
-        params: {'p_notification_id': notificationId},
-      );
-      return;
-    } catch (e) {
-      debugPrint(
-        '⚠️ [MARKETING_REMOTE] mark_notification_read RPC error: $e, fallback update',
-      );
-      await _supabase
-          .from('notifications')
-          .update({'is_read': true})
-          .eq('id', notificationId);
-    }
+    await _supabase.rpc(
+      'mark_notification_read',
+      params: {'p_notification_id': notificationId},
+    );
   }
 
   @override
   Future<void> markAllNotificationsRead() async {
-    try {
-      await _supabase.rpc('mark_all_notifications_read');
-      return;
-    } catch (e) {
-      debugPrint(
-        '⚠️ [MARKETING_REMOTE] mark_all_notifications_read RPC error: $e, fallback update',
-      );
-      await _supabase.from('notifications').update({'is_read': true});
-    }
+    await _supabase.rpc('mark_all_notifications_read');
   }
 
   @override
