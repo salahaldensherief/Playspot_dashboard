@@ -120,43 +120,38 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
       throw Exception('Promotion ID is required for update');
     }
 
-    final payload = <String, dynamic>{
-      'title_ar': promo.titleAr,
-      'title_en': promo.titleEn,
-      'tag_ar': promo.tagAr,
-      'tag_en': promo.tagEn,
-      'title': promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn,
-      'tag': promo.tagAr.isNotEmpty ? promo.tagAr : promo.tagEn,
-      'image_url': promo.imageUrl,
-      'deep_link': promo.deepLink,
-      'expires_at': promo.expiresAt?.toIso8601String(),
-      'room_id': promo.roomId,
-      'is_room_specific': promo.isRoomSpecific,
-      'target_audience': promo.targetAudience,
-      'discount_type': promo.discountType,
-      'discount_value': promo.discountValue,
-      'icon_key': promo.iconKey,
-      'colors': promo.hexColors,
-    };
-
-    await _supabase.from('promotions').update(payload).eq('id', promo.id);
-    debugPrint(
-      '🟢 [MARKETING_REMOTE] Successfully updated promo ${promo.id} with image_url: ${promo.imageUrl}',
+    await _supabase.rpc(
+      'update_promotion',
+      params: {
+        'p_promotion_id': promo.id,
+        'p_room_id': promo.roomId,
+        'p_title_ar': promo.titleAr,
+        'p_title_en': promo.titleEn,
+        'p_tag_ar': promo.tagAr,
+        'p_tag_en': promo.tagEn,
+        'p_discount_type': promo.discountType,
+        'p_discount_value': promo.discountValue,
+        'p_expires_at': promo.expiresAt?.toIso8601String(),
+        'p_colors': promo.hexColors,
+        'p_icon_key': promo.iconKey,
+        'p_image_url': promo.imageUrl,
+        'p_deep_link': promo.deepLink,
+        'p_target_audience': promo.targetAudience,
+      },
     );
   }
 
   @override
   Future<void> deletePromotion(String id) async {
-    try {
-      await _supabase.from('promotions').delete().eq('id', id);
-    } on PostgrestException catch (e) {
-      if (e.code == '42501' || e.message.contains('permission denied')) {
-        throw Exception(
-          'عفواً، لا تملك الصلاحية الكافية لحذف هذا العرض (RLS Restricted).',
-        );
-      }
-      rethrow;
+    final cleanId = id.trim();
+    if (cleanId.isEmpty) {
+      throw Exception('Promotion ID is required for delete');
     }
+
+    await _supabase.rpc(
+      'delete_promotion',
+      params: {'p_promotion_id': cleanId},
+    );
   }
 
   @override
