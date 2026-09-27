@@ -12,7 +12,7 @@ void initRoomsDI(GetIt sl) {
 
   // Repositories
   sl.registerLazySingleton<RoomRepository>(
-    () => RoomRepositoryImpl(sl()),
+    () => RoomRepositoryImpl(sl(), sl()),
   );
 
   // Cubits

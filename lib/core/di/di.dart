@@ -1,8 +1,12 @@
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/core/audio/audio_service.dart';
+import 'package:play_spot_dashboard/core/constants/app_constants.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:play_spot_dashboard/core/services/location_service.dart';
+import 'package:play_spot_dashboard/core/services/local_cache_service.dart';
+import 'package:play_spot_dashboard/core/services/hardware_bridge_service.dart';
 
 import 'package:play_spot_dashboard/features/auth/auth_di.dart';
 import 'package:play_spot_dashboard/features/bookings/bookings_di.dart';
@@ -19,25 +23,40 @@ import 'package:play_spot_dashboard/features/loyalty/loyalty_di.dart';
 import 'package:play_spot_dashboard/features/shifts/shifts_di.dart';
 import 'package:play_spot_dashboard/features/staff/staff_di.dart';
 import 'package:play_spot_dashboard/features/permissions/permissions_di.dart';
+import 'package:play_spot_dashboard/features/requests/requests_di.dart';
+import 'package:play_spot_dashboard/features/reviews/reviews_di.dart';
+import 'package:play_spot_dashboard/features/tournaments/tournaments_di.dart';
+import 'package:play_spot_dashboard/features/support/support_di.dart';
+import 'package:play_spot_dashboard/features/system/system_di.dart';
 
 final sl = GetIt.instance;
 
 Future<void> setupInjection() async {
-  await Supabase.initialize(
-    url: 'https://tgpdexoitemmpruepgyt.supabase.co',
-    anonKey:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGRleG9pdGVtbXBydWVwZ3l0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjYyNzYsImV4cCI6MjA5NDI0MjI3Nn0.i5ekdw4CkWh97-BGWzCRQZ4c9bIKWIo2vD-Ev58BVC4',
-  );
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    throw StateError(
+      'Missing SUPABASE_URL or SUPABASE_ANON_KEY. '
+      'Pass them with --dart-define at build/run time.',
+    );
+  }
+
+  await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
 
   // Register Supabase Client
-  sl.registerLazySingleton<SupabaseClient>(
-        () => Supabase.instance.client,
-  );
+  sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
 
   // Core Services
+  final prefs = await SharedPreferences.getInstance();
+  sl.registerSingleton<SharedPreferences>(prefs);
+  sl.registerLazySingleton<LocalCacheService>(
+    () => LocalCacheServiceImpl(sl()),
+  );
+
   sl.registerLazySingleton<AudioService>(() => AudioServiceImpl());
   sl.registerLazySingleton<StorageService>(() => StorageServiceImpl(sl()));
   sl.registerLazySingleton<LocationService>(() => LocationServiceImpl());
+  sl.registerLazySingleton<HardwareBridgeService>(
+    () => HardwareBridgeService(),
+  );
 
   // Initialize Feature DI Modules
   initAuthDI(sl);
@@ -55,4 +74,9 @@ Future<void> setupInjection() async {
   initShiftsDI(sl);
   initStaffDI(sl);
   initPermissionsDI(sl);
+  initRequestsDI(sl);
+  initReviewsDI(sl);
+  initTournamentsDI(sl);
+  initSupportDI(sl);
+  initSystemDI(sl);
 }

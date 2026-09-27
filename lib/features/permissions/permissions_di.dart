@@ -1,8 +1,10 @@
 import 'package:get_it/get_it.dart';
 import 'data/data_sources/permissions_remote_data_source.dart';
+import 'data/data_sources/permissions_remote_data_source_impl.dart';
 import 'data/repositories/permissions_repository_impl.dart';
 import 'domain/repositories/permissions_repository.dart';
 import 'domain/use_cases/get_role_permissions_use_case.dart';
+import 'domain/use_cases/get_user_permissions_use_case.dart';
 import 'domain/use_cases/update_role_permission_use_case.dart';
 import 'presentation/cubit/permissions_cubit.dart';
 
@@ -25,11 +27,16 @@ void initPermissionsDI(GetIt sl) {
   sl.registerLazySingleton(() => GetRolePermissionsUseCase(sl()));
   sl.registerLazySingleton(() => UpdateRolePermissionUseCase(sl()));
 
+  sl.registerLazySingleton(() => GetUserPermissionsUseCase(sl()));
+
   // Cubits
-  sl.registerFactory<PermissionsCubit>(
-    () => PermissionsCubit(
-      getRolePermissionsUseCase: sl(),
-      updateRolePermissionUseCase: sl(),
-    ),
-  );
+  if (!sl.isRegistered<PermissionsCubit>()) {
+    sl.registerLazySingleton<PermissionsCubit>(
+      () => PermissionsCubit(
+        getRolePermissionsUseCase: sl(),
+        getUserPermissionsUseCase: sl(),
+        updateRolePermissionUseCase: sl(),
+      ),
+    );
+  }
 }

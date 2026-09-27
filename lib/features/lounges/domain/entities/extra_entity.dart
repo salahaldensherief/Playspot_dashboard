@@ -31,6 +31,8 @@ class ExtraEntity extends Equatable {
     this.minStockAlert = 5,
   });
 
+  bool get isAvailable => !isOutOfStock;
+
   @override
   List<Object?> get props => [
         id,

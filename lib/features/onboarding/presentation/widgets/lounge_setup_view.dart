@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,13 +13,14 @@ import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart
 import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_cubit.dart';
 import 'package:play_spot_dashboard/features/kyc/presentation/cubit/kyc_state.dart';
 import 'package:play_spot_dashboard/features/kyc/presentation/widgets/kyc_step.dart';
-import '../cubit/onboarding_cubit.dart';
-import '../cubit/onboarding_state.dart';
-import 'basic_info_step.dart';
-import 'location_step.dart';
-import 'operating_hours_step.dart';
-import 'assets_step.dart';
-import 'marketplace_step.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_cubit.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/cubit/onboarding_state.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/widgets/venue_type_step.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/widgets/basic_info_step.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/widgets/location_step.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/widgets/operating_hours_step.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/widgets/assets_step.dart';
+import 'package:play_spot_dashboard/features/onboarding/presentation/widgets/marketplace_step.dart';
 
 class LoungeSetupView extends StatefulWidget {
   const LoungeSetupView({super.key});
@@ -28,16 +30,23 @@ class LoungeSetupView extends StatefulWidget {
 }
 
 class _LoungeSetupViewState extends State<LoungeSetupView> {
-  int _currentStep = 0;
-  final int _totalSteps = 6;
+  final int _totalSteps = 7;
   
-  // Controllers
-  final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _cityController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _opensAtController = TextEditingController();
-  final _closesAtController = TextEditingController();
+  // Step 0 - Venue Model Controllers & State
+  bool _isChain = false;
+  late final TextEditingController _brandNameController;
+  late final TextEditingController _branchesCountController;
+  late final TextEditingController _branchNameController;
+
+  // Step 1 - Basic Info Controllers
+  late final TextEditingController _nameController;
+  late final TextEditingController _descriptionController;
+  late final TextEditingController _cityController;
+  late final TextEditingController _addressController;
+  late final TextEditingController _opensAtController;
+  late final TextEditingController _closesAtController;
+
+  Timer? _saveDraftDebounceTimer;
 
   Uint8List? _mainImageBytes;
   String? _mainImageName;
@@ -50,7 +59,71 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
   String? _businessDocName;
 
   @override
+  void initState() {
+    super.initState();
+    final draft = context.read<OnboardingCubit>().state.draft;
+    _isChain = draft.isChain;
+    _brandNameController = TextEditingController(text: draft.brandName);
+    _branchesCountController = TextEditingController(
+      text: draft.branchesCount > 1 ? draft.branchesCount.toString() : '2',
+    );
+    _branchNameController = TextEditingController(text: draft.branchName);
+
+    _nameController = TextEditingController(text: draft.name);
+    _descriptionController = TextEditingController(text: draft.description);
+    _cityController = TextEditingController(text: draft.city);
+    _addressController = TextEditingController(text: draft.address);
+    _opensAtController = TextEditingController(text: draft.opensAt);
+    _closesAtController = TextEditingController(text: draft.closesAt);
+
+    _brandNameController.addListener(_onFieldChanged);
+    _branchesCountController.addListener(_onFieldChanged);
+    _branchNameController.addListener(_onBranchNameChanged);
+
+    _nameController.addListener(_onFieldChanged);
+    _descriptionController.addListener(_onFieldChanged);
+    _cityController.addListener(_onFieldChanged);
+    _addressController.addListener(_onFieldChanged);
+    _opensAtController.addListener(_onFieldChanged);
+    _closesAtController.addListener(_onFieldChanged);
+  }
+
+  void _onBranchNameChanged() {
+    if (_isChain && _nameController.text.isEmpty) {
+      _nameController.text = _branchNameController.text;
+    }
+    _onFieldChanged();
+  }
+
+  void _onFieldChanged() {
+    _saveDraftDebounceTimer?.cancel();
+    _saveDraftDebounceTimer = Timer(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+      final cubit = context.read<OnboardingCubit>();
+      final currentDraft = cubit.state.draft;
+      final count = int.tryParse(_branchesCountController.text) ?? 1;
+
+      cubit.saveDraft(currentDraft.copyWith(
+        isChain: _isChain,
+        brandName: _brandNameController.text,
+        branchesCount: count,
+        branchName: _branchNameController.text,
+        name: _nameController.text,
+        description: _descriptionController.text,
+        city: _cityController.text,
+        address: _addressController.text,
+        opensAt: _opensAtController.text,
+        closesAt: _closesAtController.text,
+      ));
+    });
+  }
+
+  @override
   void dispose() {
+    _saveDraftDebounceTimer?.cancel();
+    _brandNameController.dispose();
+    _branchesCountController.dispose();
+    _branchNameController.dispose();
     _nameController.dispose();
     _descriptionController.dispose();
     _cityController.dispose();
@@ -60,24 +133,24 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
     super.dispose();
   }
 
-  void _onNext() {
-    if (_currentStep < _totalSteps - 1) {
-      setState(() => _currentStep++);
+  void _onNext(int currentStep) {
+    final onboardingCubit = context.read<OnboardingCubit>();
+    if (currentStep < _totalSteps - 1) {
+      onboardingCubit.nextStep();
     } else {
       _submit();
     }
   }
 
   void _onPrevious() {
-    if (_currentStep > 0) {
-      setState(() => _currentStep--);
-    }
+    context.read<OnboardingCubit>().previousStep();
   }
 
   Future<void> _submit() async {
     final user = context.read<LoginCubit>().state.user;
     final kycCubit = context.read<KycCubit>();
     final onboardingCubit = context.read<OnboardingCubit>();
+    final draft = onboardingCubit.state.draft;
     
     final loungeId = user?.loungeId ?? '';
     final userId = user?.id ?? '';
@@ -104,16 +177,20 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
       closesAt: _closesAtController.text,
       imageUrl: '', 
       categoryId: null,
+      lat: draft.lat,
+      lng: draft.lng,
     );
 
-    onboardingCubit.submitLounge(
-      lounge: lounge,
-      mainImageBytes: _mainImageBytes,
-      mainImageName: _mainImageName,
-      galleryImages: _galleryImages,
-      loungeId: loungeId,
-      context: context,
-    );
+    if (mounted) {
+      onboardingCubit.submitLounge(
+        lounge: lounge,
+        mainImageBytes: _mainImageBytes,
+        mainImageName: _mainImageName,
+        galleryImages: _galleryImages,
+        loungeId: loungeId,
+        context: context,
+      );
+    }
   }
 
   @override
@@ -125,14 +202,17 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
           BlocListener<OnboardingCubit, OnboardingState>(
             listenWhen: (previous, current) => previous.status != current.status,
             listener: (context, state) async {
-              if (state.status == OnboardingStatus.success) {
+              if (state.status == OnboardingStatus.completed) {
                 await Future.delayed(const Duration(milliseconds: 500));
-                if (mounted) {
+                if (context.mounted) {
                   context.read<LoginCubit>().checkInitialAuth();
                 }
               } else if (state.status == OnboardingStatus.failure) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: AppText.body(state.errorMessage ?? AppStrings.actionFailed, color: Colors.white), backgroundColor: AppColors.danger),
+                  SnackBar(
+                    content: AppText.body(state.errorMessage ?? AppStrings.actionFailed, color: AppColors.textPrimary),
+                    backgroundColor: AppColors.danger,
+                  ),
                 );
               }
             },
@@ -142,7 +222,10 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
             listener: (context, state) {
               if (state.status == KycStatus.failure) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: AppText.body('${AppStrings.error}: ${state.errorMessage ?? AppStrings.actionFailed}', color: Colors.white), backgroundColor: AppColors.danger),
+                  SnackBar(
+                    content: AppText.body('${AppStrings.error}: ${state.errorMessage ?? AppStrings.actionFailed}', color: AppColors.textPrimary),
+                    backgroundColor: AppColors.danger,
+                  ),
                 );
               }
             },
@@ -159,21 +242,27 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
               borderRadius: BorderRadius.circular(24.r),
               border: Border.all(color: AppColors.borderDefault),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                SizedBox(height: 20.h),
-                _buildProgressIndicator(),
-                SizedBox(height: 32.h),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: _buildStepContent(),
-                  ),
-                ),
-                SizedBox(height: 32.h),
-                _buildActions(),
-              ],
+            child: BlocBuilder<OnboardingCubit, OnboardingState>(
+              buildWhen: (previous, current) => previous.currentStep != current.currentStep,
+              builder: (context, state) {
+                final currentStep = state.currentStep;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(),
+                    SizedBox(height: 20.h),
+                    _buildProgressIndicator(currentStep),
+                    SizedBox(height: 32.h),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: _buildStepContent(currentStep),
+                      ),
+                    ),
+                    SizedBox(height: 32.h),
+                    _buildActions(currentStep),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -192,7 +281,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
     );
   }
 
-  Widget _buildProgressIndicator() {
+  Widget _buildProgressIndicator(int currentStep) {
     return Row(
       children: List.generate(_totalSteps, (index) {
         return Expanded(
@@ -200,7 +289,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
             height: 4.h,
             margin: EdgeInsets.symmetric(horizontal: 2.w),
             decoration: BoxDecoration(
-              color: index <= _currentStep ? AppColors.neonBlue : AppColors.divider,
+              color: index <= currentStep ? AppColors.neonBlue : AppColors.divider,
               borderRadius: BorderRadius.circular(2.r),
             ),
           ),
@@ -209,12 +298,26 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
     );
   }
 
-  Widget _buildStepContent() {
+  Widget _buildStepContent(int currentStep) {
     final admin = context.read<LoginCubit>().state.user;
     final loungeId = admin?.loungeId ?? 'temp-id';
+    final cubit = context.read<OnboardingCubit>();
 
-    switch (_currentStep) {
+    switch (currentStep) {
       case 0:
+        return VenueTypeStep(
+          isChain: _isChain,
+          onTypeChanged: (val) {
+            setState(() {
+              _isChain = val;
+            });
+            _onFieldChanged();
+          },
+          brandNameController: _brandNameController,
+          branchesCountController: _branchesCountController,
+          branchNameController: _branchNameController,
+        );
+      case 1:
         return BasicInfoStep(
           nameController: _nameController,
           descriptionController: _descriptionController,
@@ -226,18 +329,24 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
             _galleryImages = images;
           },
         );
-      case 1:
-        return const SizedBox.shrink(); // City/Address step no longer needed, handled by Geolocator
       case 2:
+        return LocationStep(
+          cityController: _cityController,
+          addressController: _addressController,
+          onCoordinatesDetected: (lat, lng) {
+            cubit.saveDraft(cubit.state.draft.copyWith(lat: lat, lng: lng));
+          },
+        );
+      case 3:
         return OperatingHoursStep(
           opensAtController: _opensAtController,
           closesAtController: _closesAtController,
         );
-      case 3:
-        return AssetsStep(loungeId: loungeId);
       case 4:
-        return MarketplaceStep(loungeId: loungeId);
+        return AssetsStep(loungeId: loungeId);
       case 5:
+        return MarketplaceStep(loungeId: loungeId);
+      case 6:
         return KycStep(
           onIdCardSelected: (bytes, name) {
             _idCardBytes = bytes;
@@ -253,7 +362,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
     }
   }
 
-  Widget _buildActions() {
+  Widget _buildActions(int currentStep) {
     final onboardingCubit = context.read<OnboardingCubit>();
     final kycCubit = context.read<KycCubit>();
 
@@ -271,7 +380,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                if (_currentStep > 0)
+                if (currentStep > 0)
                   AppButton(
                     text: AppStrings.back,
                     variant: AppButtonVariant.outlined,
@@ -280,9 +389,9 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
                 else
                   const SizedBox.shrink(),
                 AppButton(
-                  text: _currentStep == _totalSteps - 1 ? AppStrings.completeSetup : AppStrings.next,
+                  text: currentStep == _totalSteps - 1 ? AppStrings.completeSetup : AppStrings.next,
                   isLoading: isLoading,
-                  onPressed: _onNext,
+                  onPressed: () => _onNext(currentStep),
                 ),
               ],
             );

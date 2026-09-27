@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'data/data_sources/shift_remote_data_source.dart';
+import 'data/data_sources/shift_remote_data_source_impl.dart';
 import 'data/repositories/shift_repository_impl.dart';
 import 'domain/repositories/shift_repository.dart';
 import 'domain/use_cases/get_active_shift_use_case.dart';

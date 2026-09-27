@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:equatable/equatable.dart';
 
 class Lounge extends Equatable {
@@ -5,11 +6,12 @@ class Lounge extends Equatable {
   final String name;
   final String imageUrl;
   final double rating;
-  final double distance;
+  final double? distance;
   final double pricePerHour;
   final bool isOpen;
   final String? location;
   final String? city;
+  final String? cityId;
   final int? totalReviews;
   final int? availableRooms;
   final String? descriptionAr;
@@ -29,17 +31,25 @@ class Lounge extends Equatable {
   final String? discountTitleAr;
   final String? discountTitleEn;
   final DateTime? discountExpiresAt;
+  final String? vodafoneCashNumber;
+  final String? instapayAccount;
+  final bool allowCashPayment;
+  final bool requirePrepaidFirstTime;
+  final int cashGracePeriodMinutes;
+  final bool isActive;
+  final String? suspensionReason;
 
   const Lounge({
     required this.id,
     required this.name,
     required this.imageUrl,
     this.rating = 0.0,
-    this.distance = 0.0,
+    this.distance,
     this.pricePerHour = 0.0,
     this.isOpen = true,
     this.location,
     this.city,
+    this.cityId,
     this.totalReviews,
     this.availableRooms,
     this.descriptionAr,
@@ -59,7 +69,41 @@ class Lounge extends Equatable {
     this.discountTitleAr,
     this.discountTitleEn,
     this.discountExpiresAt,
+    this.vodafoneCashNumber,
+    this.instapayAccount,
+    this.allowCashPayment = true,
+    this.requirePrepaidFirstTime = false,
+    this.cashGracePeriodMinutes = 15,
+    this.isActive = true,
+    this.suspensionReason,
   });
+
+  /// Calculates dynamic distance in kilometers from device coordinates ([deviceLat], [deviceLng])
+  /// to this lounge's location ([lat], [lng]).
+  /// Returns null if device or lounge coordinates are missing.
+  double? calculateDistance(double? deviceLat, double? deviceLng) {
+    if (deviceLat == null || deviceLng == null || lat == null || lng == null) {
+      return null;
+    }
+    const double earthRadiusKm = 6371.0;
+    final dLat = _degToRad(lat! - deviceLat);
+    final dLng = _degToRad(lng! - deviceLng);
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_degToRad(deviceLat)) *
+            math.cos(_degToRad(lat!)) *
+            math.sin(dLng / 2) *
+            math.sin(dLng / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadiusKm * c;
+  }
+
+  static double _degToRad(double deg) => deg * (math.pi / 180.0);
+
+  /// Returns a copy of this [Lounge] with [distance] calculated dynamically
+  /// from the given device coordinates.
+  Lounge withCalculatedDistance(double? deviceLat, double? deviceLng) {
+    return copyWith(distance: calculateDistance(deviceLat, deviceLng));
+  }
 
   @override
   List<Object?> get props => [
@@ -72,6 +116,7 @@ class Lounge extends Equatable {
         isOpen,
         location,
         city,
+        cityId,
         totalReviews,
         availableRooms,
         descriptionAr,
@@ -91,6 +136,13 @@ class Lounge extends Equatable {
         discountTitleAr,
         discountTitleEn,
         discountExpiresAt,
+        vodafoneCashNumber,
+        instapayAccount,
+        allowCashPayment,
+        requirePrepaidFirstTime,
+        cashGracePeriodMinutes,
+        isActive,
+        suspensionReason,
       ];
 
   Lounge copyWith({
@@ -103,6 +155,7 @@ class Lounge extends Equatable {
     bool? isOpen,
     String? location,
     String? city,
+    String? cityId,
     int? totalReviews,
     int? availableRooms,
     String? descriptionAr,
@@ -122,6 +175,13 @@ class Lounge extends Equatable {
     String? discountTitleAr,
     String? discountTitleEn,
     DateTime? discountExpiresAt,
+    String? vodafoneCashNumber,
+    String? instapayAccount,
+    bool? allowCashPayment,
+    bool? requirePrepaidFirstTime,
+    int? cashGracePeriodMinutes,
+    bool? isActive,
+    String? suspensionReason,
   }) {
     return Lounge(
       id: id ?? this.id,
@@ -133,6 +193,7 @@ class Lounge extends Equatable {
       isOpen: isOpen ?? this.isOpen,
       location: location ?? this.location,
       city: city ?? this.city,
+      cityId: cityId ?? this.cityId,
       totalReviews: totalReviews ?? this.totalReviews,
       availableRooms: availableRooms ?? this.availableRooms,
       descriptionAr: descriptionAr ?? this.descriptionAr,
@@ -152,6 +213,14 @@ class Lounge extends Equatable {
       discountTitleAr: discountTitleAr ?? this.discountTitleAr,
       discountTitleEn: discountTitleEn ?? this.discountTitleEn,
       discountExpiresAt: discountExpiresAt ?? this.discountExpiresAt,
+      vodafoneCashNumber: vodafoneCashNumber ?? this.vodafoneCashNumber,
+      instapayAccount: instapayAccount ?? this.instapayAccount,
+      allowCashPayment: allowCashPayment ?? this.allowCashPayment,
+      requirePrepaidFirstTime: requirePrepaidFirstTime ?? this.requirePrepaidFirstTime,
+      cashGracePeriodMinutes: cashGracePeriodMinutes ?? this.cashGracePeriodMinutes,
+      isActive: isActive ?? this.isActive,
+      suspensionReason: suspensionReason ?? this.suspensionReason,
     );
   }
 }
+

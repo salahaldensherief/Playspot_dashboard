@@ -2,9 +2,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/core/responsive/responsive.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import '../cubit/permissions_cubit.dart';
 import '../cubit/permissions_state.dart';
 import '../../domain/entities/permission_item_entity.dart';
@@ -20,7 +22,9 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
   @override
   void initState() {
     super.initState();
-    context.read<PermissionsCubit>().fetchPermissions('cashier');
+    final loungeId = context.read<LoginCubit>().state.userLounge?.id ??
+        context.read<LoginCubit>().state.user?.loungeId;
+    context.read<PermissionsCubit>().fetchPermissions('cashier', loungeId: loungeId);
   }
 
   @override
@@ -35,7 +39,7 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
             if (state.status == PermissionsStatus.loading && state.permissions.isEmpty)
               const Center(child: CircularProgressIndicator(color: AppColors.neonBlue))
             else if (state.status == PermissionsStatus.failure && state.permissions.isEmpty)
-              Center(child: AppText.body(state.errorMessage ?? 'Error loading permissions', color: AppColors.danger))
+              Center(child: AppText.body(state.errorMessage ?? AppStrings.errorLoadingPermissions, color: AppColors.danger))
             else
               _buildPermissionsGrid(state.permissions, state.selectedRole),
           ],
@@ -47,12 +51,15 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
   Widget _buildRoleSelector(String selectedRole) {
     return SegmentedButton<String>(
       segments: [
+        ButtonSegment(value: 'manager', label: Text('role_manager'.tr())),
         ButtonSegment(value: 'cashier', label: Text('role_cashier'.tr())),
         ButtonSegment(value: 'staff', label: Text('role_staff'.tr())),
       ],
       selected: {selectedRole},
       onSelectionChanged: (Set<String> newSelection) {
-        context.read<PermissionsCubit>().fetchPermissions(newSelection.first);
+        final loungeId = context.read<LoginCubit>().state.userLounge?.id ??
+            context.read<LoginCubit>().state.user?.loungeId;
+        context.read<PermissionsCubit>().fetchPermissions(newSelection.first, loungeId: loungeId);
       },
       style: ButtonStyle(
         backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
@@ -73,7 +80,6 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
       categories.putIfAbsent(p.category, () => []).add(p);
     }
 
-    // Sort categories to be consistent
     final sortedCategoryKeys = categories.keys.toList()..sort();
 
     return GridView.builder(
@@ -83,7 +89,7 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
         crossAxisCount: Responsive.isMobile(context) ? 1 : 2,
         crossAxisSpacing: 24.w,
         mainAxisSpacing: 24.h,
-        mainAxisExtent: Responsive.isMobile(context) ? 450.h : 400.h,
+        mainAxisExtent: Responsive.isMobile(context) ? 480.h : 420.h,
       ),
       itemCount: sortedCategoryKeys.length,
       itemBuilder: (context, index) {
@@ -95,6 +101,7 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
   }
 
   Widget _buildCategoryCard(String category, List<PermissionItemEntity> permissions, String role) {
+    final categoryTitle = category.tr();
     return Material(
       color: AppColors.cardBackground,
       elevation: 0,
@@ -111,7 +118,7 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
               children: [
                 _getCategoryIcon(category),
                 SizedBox(width: 12.w),
-                AppText.heading(category.tr(), fontSize: 18.sp, color: AppColors.neonPurple),
+                AppText.heading(categoryTitle, fontSize: 18.sp, color: AppColors.neonPurple),
               ],
             ),
             SizedBox(height: 16.h),
@@ -131,11 +138,12 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
 
   Widget _getCategoryIcon(String category) {
     IconData icon;
-    if (category.contains('منيو') || category.contains('Menu')) {
+    final lower = category.toLowerCase();
+    if (lower.contains('pos') || lower.contains('منيو') || lower.contains('menu')) {
       icon = Icons.restaurant_menu;
-    } else if (category.contains('مالي') || category.contains('Financial')) {
+    } else if (lower.contains('financial') || lower.contains('مالي')) {
       icon = Icons.account_balance_wallet_outlined;
-    } else if (category.contains('وردية') || category.contains('Shift')) {
+    } else if (lower.contains('shift') || lower.contains('وردية')) {
       icon = Icons.history_toggle_off;
     } else {
       icon = Icons.settings_outlined;
@@ -148,11 +156,14 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
     return SwitchListTile(
       value: p.isEnabled,
       onChanged: (val) {
-        context.read<PermissionsCubit>().togglePermission(role, p.key, val);
+        final loungeId = context.read<LoginCubit>().state.userLounge?.id ??
+            context.read<LoginCubit>().state.user?.loungeId;
+        context.read<PermissionsCubit>().togglePermission(role, p.key, val, loungeId: loungeId);
       },
-      title: AppText.body((isArabic ? p.nameAr : p.nameEn).tr(), fontWeight: FontWeight.bold),
-      subtitle: AppText.body((isArabic ? p.descriptionAr : p.descriptionEn).tr(), color: AppColors.textSecondary, fontSize: 12.sp),
-      activeColor: AppColors.neonBlue,
+      title: AppText.body(p.nameAr.isNotEmpty && isArabic ? p.nameAr : (p.nameEn.isNotEmpty ? p.nameEn : p.key), fontWeight: FontWeight.bold),
+      subtitle: AppText.body(isArabic ? p.descriptionAr : p.descriptionEn, color: AppColors.textSecondary, fontSize: 12.sp),
+      activeTrackColor: AppColors.neonBlue,
+      activeThumbColor: AppColors.textPrimary,
       contentPadding: EdgeInsets.zero,
     );
   }

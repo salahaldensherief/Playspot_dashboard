@@ -1,42 +1,43 @@
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'bucket_upload_strategy.dart';
 
 abstract class StorageService {
   Future<String> uploadLoungeImage(Uint8List fileBytes, String fileName, String loungeId);
   Future<List<String>> uploadLoungeImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId);
   Future<String> uploadRoomImage(Uint8List fileBytes, String fileName, String loungeId);
   Future<List<String>> uploadRoomImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId);
+  Future<String> uploadTournamentBanner(Uint8List fileBytes, String fileName, String tournamentId);
+  Future<String> uploadExtraImage(Uint8List fileBytes, String fileName, String loungeId);
 }
 
 class StorageServiceImpl implements StorageService {
-  final SupabaseClient _supabase;
+  final BucketUploadStrategy _strategy;
 
-  StorageServiceImpl(this._supabase);
+  StorageServiceImpl(SupabaseClient supabase) : _strategy = BucketUploadStrategy(supabase);
 
   @override
   Future<String> uploadLoungeImage(Uint8List fileBytes, String fileName, String loungeId) async {
     final fileId = const Uuid().v4();
     final extension = fileName.split('.').last;
     final path = '$loungeId/$fileId.$extension';
-    
-    await _supabase.storage.from('lounge-assets').uploadBinary(
-      path, 
-      fileBytes,
-      fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+
+    return _strategy.uploadWithFallback(
+      buckets: ['lounge-assets', 'promotion-assets'],
+      path: path,
+      fileBytes: fileBytes,
+      userErrorMessage: 'فشل رفع صورة اللاونج. يرجى التأكد من الاتصال بالإنترنت وصحة الصورة ثم إعادة المحاولة.',
     );
-    
-    return _supabase.storage.from('lounge-assets').getPublicUrl(path);
   }
 
   @override
   Future<List<String>> uploadLoungeImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId) async {
-    final List<String> urls = [];
-    for (int i = 0; i < filesBytes.length; i++) {
-      final url = await uploadLoungeImage(filesBytes[i], fileNames[i], loungeId);
-      urls.add(url);
-    }
-    return urls;
+    final futures = List.generate(
+      filesBytes.length,
+      (i) => uploadLoungeImage(filesBytes[i], fileNames[i], loungeId),
+    );
+    return await Future.wait(futures);
   }
 
   @override
@@ -45,17 +46,48 @@ class StorageServiceImpl implements StorageService {
     final extension = fileName.split('.').last;
     final path = '$loungeId/$fileId.$extension';
 
-    await _supabase.storage.from('room-assets').uploadBinary(path, fileBytes);
-    return _supabase.storage.from('room-assets').getPublicUrl(path);
+    return _strategy.uploadWithFallback(
+      buckets: ['room-assets', 'lounge-assets'],
+      path: path,
+      fileBytes: fileBytes,
+      userErrorMessage: 'فشل رفع صورة الغرفة. يرجى التأكد من الاتصال بالإنترنت وصحة الصورة ثم إعادة المحاولة.',
+    );
   }
 
   @override
   Future<List<String>> uploadRoomImages(List<Uint8List> filesBytes, List<String> fileNames, String loungeId) async {
-    final List<String> urls = [];
-    for (int i = 0; i < filesBytes.length; i++) {
-      final url = await uploadRoomImage(filesBytes[i], fileNames[i], loungeId);
-      urls.add(url);
-    }
-    return urls;
+    final futures = List.generate(
+      filesBytes.length,
+      (i) => uploadRoomImage(filesBytes[i], fileNames[i], loungeId),
+    );
+    return await Future.wait(futures);
+  }
+
+  @override
+  Future<String> uploadTournamentBanner(Uint8List fileBytes, String fileName, String tournamentId) async {
+    final extension = fileName.contains('.') ? fileName.split('.').last : 'webp';
+    final path = '$tournamentId/banner.$extension';
+
+    return _strategy.uploadWithFallback(
+      buckets: ['tournament-assets', 'promotion-assets'],
+      path: path,
+      fileBytes: fileBytes,
+      fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+      userErrorMessage: 'فشل رفع صورة إعلان البطولة. يرجى التأكد من الاتصال بالإنترنت ثم إعادة المحاولة.',
+    );
+  }
+
+  @override
+  Future<String> uploadExtraImage(Uint8List fileBytes, String fileName, String loungeId) async {
+    final fileId = const Uuid().v4();
+    final extension = fileName.contains('.') ? fileName.split('.').last : 'png';
+    final path = 'extras/$loungeId/$fileId.$extension';
+
+    return _strategy.uploadWithFallback(
+      buckets: ['lounge-assets', 'promotion-assets'],
+      path: path,
+      fileBytes: fileBytes,
+      userErrorMessage: 'فشل رفع صورة المنتج. يرجى التأكد من الاتصال بالإنترنت ثم إعادة المحاولة.',
+    );
   }
 }

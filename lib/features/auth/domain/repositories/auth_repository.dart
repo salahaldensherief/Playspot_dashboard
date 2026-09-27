@@ -13,4 +13,9 @@ abstract class AuthRepository {
   Future<Either<Failure, UserEntity?>> getCurrentUser();
   
   Future<Either<Failure, bool>> checkSetupStatus(String loungeId);
+
+  Future<Either<Failure, UserEntity>> updateUserLocation({
+    required double latitude,
+    required double longitude,
+  });
 }

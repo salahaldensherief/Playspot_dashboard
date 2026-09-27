@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
@@ -89,13 +90,18 @@ class LoyaltyDataTable extends StatelessWidget {
         title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),
         content: Text('${AppStrings.deleteWarning} "${option.titleEn}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(diagContext), child: Text(AppStrings.cancel)),
-          TextButton(
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.outlined,
+            onPressed: () => Navigator.pop(diagContext),
+          ),
+          AppButton(
+            text: AppStrings.delete,
+            variant: AppButtonVariant.danger,
             onPressed: () {
               cubit.deleteOption(option.id);
               Navigator.pop(diagContext);
-            }, 
-            child: Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger)),
+            },
           ),
         ],
       ),

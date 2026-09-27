@@ -9,7 +9,8 @@ class RoomBasicInfoForm extends StatelessWidget {
   final TextEditingController nameEnController;
   final TextEditingController descriptionArController;
   final TextEditingController descriptionEnController;
-  final TextEditingController pricePerHourController;
+  final TextEditingController hourlyRateSingleController;
+  final TextEditingController hourlyRateMultiController;
   final bool isOpenArea;
 
   const RoomBasicInfoForm({
@@ -18,7 +19,8 @@ class RoomBasicInfoForm extends StatelessWidget {
     required this.nameEnController,
     required this.descriptionArController,
     required this.descriptionEnController,
-    required this.pricePerHourController,
+    required this.hourlyRateSingleController,
+    required this.hourlyRateMultiController,
     this.isOpenArea = false,
   });
 
@@ -53,7 +55,7 @@ class RoomBasicInfoForm extends StatelessWidget {
             Expanded(
               child: AppTextField(
                 label: AppStrings.descriptionArLabel,
-                hintText: 'وصف الغرفة والمواصفات (مثل نوع الدركسيون في السيميليتور)...',
+                hintText: AppStrings.descriptionArHint,
                 controller: descriptionArController,
                 maxLines: 3,
               ),
@@ -62,7 +64,7 @@ class RoomBasicInfoForm extends StatelessWidget {
             Expanded(
               child: AppTextField(
                 label: AppStrings.descriptionEnLabel,
-                hintText: 'Description & Specs (e.g. Wheel type for Simulators, PC specs)...',
+                hintText: AppStrings.descriptionEnHint,
                 controller: descriptionEnController,
                 maxLines: 3,
               ),
@@ -74,14 +76,23 @@ class RoomBasicInfoForm extends StatelessWidget {
           children: [
             Expanded(
               child: AppTextField(
-                label: AppStrings.roomPricePerHour,
+                label: AppStrings.singleRateLabel,
                 hintText: AppStrings.pricePerHourHint,
-                controller: pricePerHourController,
-                keyboardType: TextInputType.number,
+                controller: hourlyRateSingleController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: AppValidator.validateNumber,
               ),
             ),
-            const Spacer(),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: AppTextField(
+                label: AppStrings.multiRateLabel,
+                hintText: AppStrings.pricePerHourHint,
+                controller: hourlyRateMultiController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                validator: AppValidator.validateNumber,
+              ),
+            ),
           ],
         ),
       ],

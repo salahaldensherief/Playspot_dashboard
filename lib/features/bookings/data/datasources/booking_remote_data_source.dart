@@ -1,7 +1,6 @@
-import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../models/booking_model.dart';
+import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
+import 'package:play_spot_dashboard/features/bookings/data/models/booking_model.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/customer_cancellation_summary.dart';
 
 abstract class BookingRemoteDataSource {
   Future<List<BookingModel>> getBookings({
@@ -10,7 +9,22 @@ abstract class BookingRemoteDataSource {
     int limit = 50,
     int offset = 0,
   });
+
+  Future<PaginatedResult<BookingModel>> getLoungeBookingsPage({
+    required String loungeId,
+    int page = 1,
+    int pageSize = 20,
+  });
+
+  Future<CustomerCancellationSummary> getBookingCancellationSummary({
+    required String loungeId,
+    required String userId,
+  });
+
   Future<void> updateBookingStatus(String id, String status);
+
+  Future<void> approveBooking(String id);
+
   Future<void> confirmCashPayment(
     String bookingId, {
     String? shiftId,
@@ -18,124 +32,38 @@ abstract class BookingRemoteDataSource {
     double? discountPercentage,
     String? discountReason,
   });
+
   Future<void> createBooking(BookingModel booking);
+
+  Future<Map<String, dynamic>> validateVoucherByCode(String voucherCode);
+
+  Future<void> consumeVoucherByCode(String voucherCode, String bookingId);
+
+  Future<Map<String, dynamic>> calculateBookingTotal({
+    required String roomId,
+    required double durationHours,
+    String? voucherCode,
+    double manualDiscount = 0.0,
+    String? manualDiscountReason,
+  });
+
+  Future<Map<String, dynamic>> verifyAndHoldSlot({
+    required String roomId,
+    required DateTime startTime,
+    required DateTime endTime,
+    String? userId,
+    int holdMinutes = 10,
+  });
+
   Future<void> swapRoom(String bookingId, String newRoomId, String actionBy);
-}
 
-class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
-  final SupabaseClient client;
+  Future<void> startBookingSession(String bookingId);
 
-  BookingRemoteDataSourceImpl(this.client);
+  Future<void> autoCancelExpiredBookings();
 
-  @override
-  Future<List<BookingModel>> getBookings({
-    String? loungeId,
-    String? status,
-    int limit = 50,
-    int offset = 0,
-  }) async {
-    // Technical Guard: Skip RPC if loungeId is null (unless it's a super-admin context which we don't differentiate here yet)
-    // This prevents "Not authorized" logs for staff with missing lounge_id
-    if (loungeId == null || loungeId.isEmpty) {
-      return _fetchSafeSelect(loungeId, status, limit, offset);
-    }
+  Future<void> approveManualBooking(String bookingId, String actionBy);
 
-    try {
-      // المحاولة الأساسية عبر الـ RPC
-      final response = await client.rpc('get_all_bookings_admin', params: {
-        'p_status': status,
-        'p_lounge_id': loungeId,
-        'p_limit': limit,
-        'p_offset': offset,
-      });
+  Future<void> rejectManualBooking(String bookingId, String reason, String actionBy);
 
-      return (response as List).map((json) {
-        return BookingModel.fromJson(Map<String, dynamic>.from(json));
-      }).toList();
-    } catch (e) {
-      // خطة بديلة (Fallback) في حالة فشل الـ RPC
-      debugPrint('${AppConstants.bookingFetchAlert}$e');
-      return _fetchSafeSelect(loungeId, status, limit, offset);
-    }
-  }
-
-  Future<List<BookingModel>> _fetchSafeSelect(String? loungeId, String? status, int limit, int offset) async {
-    try {
-      // Technical Guard: If loungeId is null/empty, we should NOT return all bookings 
-      // for a staff member. We return an empty list to maintain data isolation.
-      if (loungeId == null || loungeId.isEmpty) {
-        debugPrint('BookingRemoteDataSource: Skipping fetch, loungeId is null/empty');
-        return [];
-      }
-
-      var query = client.from('bookings').select();
-      query = query.eq('lounge_id', loungeId);
-      
-      if (status != null) {
-        query = query.eq('status', status);
-      }
-      
-      final response = await query
-          .order('created_at', ascending: false)
-          .range(offset, offset + limit - 1);
-      
-      return (response as List).map((json) => BookingModel.fromJson(Map<String, dynamic>.from(json))).toList();
-    } catch (e2) {
-      debugPrint('${AppConstants.criticalFallbackError}$e2');
-      return []; // منع الشاشة الحمراء بإرجاع قائمة فارغة في حالة الفشل التام
-    }
-  }
-
-  @override
-  Future<void> updateBookingStatus(String id, String status) async {
-    // التحديث المباشر للجدول مع دعم مسمى الحقل الصحيح status
-    await client.from('bookings').update({
-      'status': status,
-    }).eq('id', id);
-  }
-
-  @override
-  Future<void> confirmCashPayment(
-    String bookingId, {
-    String? shiftId,
-    double? discountAmount,
-    double? discountPercentage,
-    String? discountReason,
-  }) async {
-    try {
-      await client.rpc('confirm_cash_payment', params: {
-        'p_booking_id': bookingId,
-        if (shiftId != null) 'p_shift_id': shiftId,
-        'p_discount_amount': discountAmount ?? 0,
-        'p_discount_percentage': discountPercentage ?? 0,
-        'p_discount_reason': discountReason,
-      });
-    } catch (e) {
-      // Fallback: Direct update to bookings table
-      // Note: discount info is now stored directly in bookings, not payments.
-      final updateData = {
-        'payment_status': 'paid',
-        if (discountAmount != null) 'discount_amount': discountAmount,
-        if (discountPercentage != null) 'discount_percentage': discountPercentage,
-        if (discountReason != null) 'discount_reason': discountReason,
-        if (shiftId != null) 'shift_id': shiftId,
-      };
-      
-      await client.from('bookings').update(updateData).eq('id', bookingId);
-    }
-  }
-
-  @override
-  Future<void> createBooking(BookingModel booking) async {
-    await client.from('bookings').insert(booking.toJson());
-  }
-
-  @override
-  Future<void> swapRoom(String bookingId, String newRoomId, String actionBy) async {
-    await client.rpc('swap_booking_room', params: {
-      'p_booking_id': bookingId,
-      'p_new_room_id': newRoomId,
-      'p_action_by': actionBy,
-    });
-  }
+  Future<List<Map<String, dynamic>>> getBookingItems(String bookingId);
 }

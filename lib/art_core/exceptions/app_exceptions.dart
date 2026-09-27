@@ -40,11 +40,11 @@ class NetworkException extends AppException {
 }
 
 class ServerException extends AppException {
-  const ServerException([String message = 'Server error'])
-      : super(message, code: 'server_error');
+  const ServerException([super.message = 'Server error'])
+      : super(code: 'server_error');
 }
 
 class UnknownException extends AppException {
-  const UnknownException([String message = 'Something went wrong'])
-      : super(message, code: 'unknown');
+  const UnknownException([super.message = 'Something went wrong'])
+      : super(code: 'unknown');
 }

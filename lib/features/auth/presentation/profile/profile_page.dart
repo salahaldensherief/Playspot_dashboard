@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,80 +8,110 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
+import '../../../../art_core/widgets/app_cached_image.dart';
 import '../login/login_cubit.dart';
+import '../login/login_state.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<LoginCubit>().state.user;
+    return BlocBuilder<LoginCubit, LoginState>(
+      builder: (context, loginState) {
+        final user = loginState.user;
 
-    return DashboardLayout(
-      title: AppStrings.myProfile,
-      activeRoute: AppStrings.myProfile,
-      child: Center(
-        child: Container(
-          width: 600.w,
-          padding: EdgeInsets.all(32.r),
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.borderDefault),
+        return DashboardLayout(
+          title: AppStrings.myProfile,
+          activeRoute: AppStrings.myProfile,
+          child: Center(
+            child: Container(
+              width: 600.w,
+              padding: EdgeInsets.all(32.r),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: AppColors.borderDefault),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildAvatar(context, user?.avatarUrl, user?.name ?? ''),
+                  SizedBox(height: 32.h),
+                  AppTextField(
+                    label: AppStrings.fullNameLabel,
+                    initialValue: user?.name,
+                    readOnly: true,
+                  ),
+                  SizedBox(height: 20.h),
+                  AppTextField(
+                    label: AppStrings.emailAddressLabel,
+                    initialValue: user?.email,
+                    readOnly: true,
+                  ),
+                  SizedBox(height: 20.h),
+                  AppTextField(
+                    label: AppStrings.roleLabel,
+                    initialValue: user?.role.toString().split('.').last.toUpperCase(),
+                    readOnly: true,
+                  ),
+                  SizedBox(height: 20.h),
+                  AppTextField(
+                    label: AppStrings.userCity,
+                    initialValue: user?.getDisplayCityName(languageCode: context.locale.languageCode) ??
+                        user?.displayCityName ??
+                        AppStrings.notSpecified,
+                    readOnly: true,
+                  ),
+                  SizedBox(height: 16.h),
+                  if (loginState.locationErrorMessage != null) ...[
+                    Text(
+                      loginState.locationErrorMessage!,
+                      style: TextStyle(color: AppColors.danger, fontSize: 12.sp),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 12.h),
+                  ],
+                  AppButton(
+                    text: AppStrings.updateMyLocation,
+                    variant: AppButtonVariant.gradient,
+                    isLoading: loginState.isLoadingLocation,
+                    onPressed: () => context.read<LoginCubit>().updateUserLocation(),
+                  ),
+                  SizedBox(height: 20.h),
+                  AppButton(
+                    text: AppStrings.changePassword,
+                    variant: AppButtonVariant.outlined,
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(AppStrings.underConstruction)),
+                      );
+                    },
+                  ),
+                  SizedBox(height: 16.h),
+                  AppButton(
+                    text: AppStrings.logout,
+                    variant: AppButtonVariant.primary,
+                    onPressed: () => context.read<LoginCubit>().logout(),
+                  ),
+                ],
+              ),
+            ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildAvatar(context, user?.avatarUrl, user?.name ?? ''),
-              SizedBox(height: 32.h),
-              AppTextField(
-                label: AppStrings.fullNameLabel,
-                controller: TextEditingController(text: user?.name),
-                readOnly: true,
-              ),
-              SizedBox(height: 20.h),
-              AppTextField(
-                label: AppStrings.emailAddressLabel,
-                controller: TextEditingController(text: user?.email),
-                readOnly: true,
-              ),
-              SizedBox(height: 20.h),
-              AppTextField(
-                label: AppStrings.roleLabel,
-                controller: TextEditingController(text: user?.role.toString().split('.').last.toUpperCase()),
-                readOnly: true,
-              ),
-              SizedBox(height: 40.h),
-              AppButton(
-                text: AppStrings.changePassword,
-                variant: AppButtonVariant.outlined,
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppStrings.underConstruction)),
-                  );
-                },
-              ),
-              SizedBox(height: 16.h),
-              AppButton(
-                text: AppStrings.logout,
-                variant: AppButtonVariant.primary,
-                onPressed: () => context.read<LoginCubit>().logout(),
-              ),
-            ],
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Widget _buildAvatar(BuildContext context, String? url, String name) {
+    final bool hasAvatar = url != null && url.trim().isNotEmpty;
     return Stack(
       children: [
         CircleAvatar(
           radius: 60.r,
-          backgroundColor: AppColors.neonPurple.withOpacity(0.1),
-          backgroundImage: url != null ? NetworkImage(url) : null,
-          child: url == null 
+          backgroundColor: AppColors.neonPurple.withAlpha(25),
+          backgroundImage: hasAvatar ? AppCachedImage.provider(url) : null,
+          child: !hasAvatar 
             ? AppText.heading(
                 name.isNotEmpty ? name[0].toUpperCase() : '?', 
                 fontSize: 40.sp, 
@@ -93,7 +124,6 @@ class ProfilePage extends StatelessWidget {
           right: 0,
           child: InkWell(
             onTap: () {
-              // Image picking logic would go here
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(AppStrings.underConstruction)),
               );
@@ -104,7 +134,7 @@ class ProfilePage extends StatelessWidget {
                 color: AppColors.neonBlue,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.camera_alt, color: Colors.white, size: 20.r),
+              child: Icon(Icons.camera_alt, color: AppColors.textPrimary, size: 20.r),
             ),
           ),
         ),

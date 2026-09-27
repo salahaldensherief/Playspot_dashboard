@@ -1,4 +1,4 @@
-import '../entities/city_entity.dart';
+import '../../domain/entities/city_entity.dart';
 
 class CityModel extends CityEntity {
   const CityModel({
@@ -19,6 +19,7 @@ class CityModel extends CityEntity {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'name_ar': nameAr,
       'name_en': nameEn,
       'is_active': isActive,

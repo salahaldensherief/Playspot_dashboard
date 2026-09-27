@@ -15,7 +15,7 @@ void initAuthDI(GetIt sl) {
 
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(sl()),
+    () => AuthRepositoryImpl(sl(), sl()),
   );
 
   // Use Cases
@@ -31,6 +31,7 @@ void initAuthDI(GetIt sl) {
       getCurrentUserUseCase: sl(),
       loungeRepository: sl(),
       locationService: sl(),
+      authRepository: sl(),
     ),
   );
 }

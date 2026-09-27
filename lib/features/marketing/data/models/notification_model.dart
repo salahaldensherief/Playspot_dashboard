@@ -9,20 +9,22 @@ class NotificationModel extends NotificationEntity {
     required super.bodyAr,
     required super.bodyEn,
     required super.type,
+    super.isRead = false,
     required super.createdAt,
     super.metadata,
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
-      id: json['id']?.toString() ?? '',
+      id: json['id']?.toString() ?? json['notification_id']?.toString() ?? '',
       userId: json['user_id']?.toString(),
-      titleAr: json['title_ar']?.toString() ?? '',
-      titleEn: json['title_en']?.toString() ?? '',
-      bodyAr: json['body_ar']?.toString() ?? '',
-      bodyEn: json['body_en']?.toString() ?? '',
+      titleAr: json['title_ar']?.toString() ?? json['title']?.toString() ?? '',
+      titleEn: json['title_en']?.toString() ?? json['title']?.toString() ?? '',
+      bodyAr: json['body_ar']?.toString() ?? json['body']?.toString() ?? '',
+      bodyEn: json['body_en']?.toString() ?? json['body']?.toString() ?? '',
       type: _parseType(json['type']),
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      isRead: json['is_read'] == true || json['isRead'] == true,
+      createdAt: json['created_at'] != null ? (DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()) : DateTime.now(),
       metadata: json['metadata'],
     );
   }
@@ -32,18 +34,40 @@ class NotificationModel extends NotificationEntity {
       case 'booking': return NotificationType.booking;
       case 'offer': return NotificationType.offer;
       case 'loyalty': return NotificationType.loyalty;
+      case 'kyc': return NotificationType.kyc;
       default: return NotificationType.system;
     }
   }
 
   Map<String, dynamic> toJson() {
+    String validTypeStr;
+    switch (type) {
+      case NotificationType.booking:
+        validTypeStr = 'booking';
+        break;
+      case NotificationType.offer:
+        validTypeStr = 'offer';
+        break;
+      case NotificationType.loyalty:
+        validTypeStr = 'offer';
+        break;
+      case NotificationType.kyc:
+        validTypeStr = 'kyc';
+        break;
+      default:
+        validTypeStr = 'system';
+    }
+
     return {
+      if (id.isNotEmpty) 'id': id,
       'user_id': userId,
+      'title': titleEn.isNotEmpty ? titleEn : titleAr,
       'title_ar': titleAr,
       'title_en': titleEn,
+      'body': bodyEn.isNotEmpty ? bodyEn : bodyAr,
       'body_ar': bodyAr,
       'body_en': bodyEn,
-      'type': type.name,
+      'type': validTypeStr,
       'metadata': metadata,
     };
   }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/staff_model.dart';
 import '../../models/staff_params.dart';
@@ -18,73 +18,180 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
 
   @override
   Future<List<StaffModel>> getLoungeStaff(String loungeId) async {
+    final cleanLoungeId = loungeId.trim();
+    if (cleanLoungeId.isEmpty) return [];
+
+    final Map<String, StaffModel> staffMap = {};
+
+    // 1. Try RPC get_lounge_staff first (most efficient, single RPC)
     try {
-      debugPrint('Fetching staff for loungeId via RPC: $loungeId');
-      
-      final response = await _supabase.rpc('get_lounge_staff', params: {
-        'p_lounge_id': loungeId,
-      });
-      
-      debugPrint('Staff RPC response: $response');
-      if (response == null) return [];
-      
-      return (response as List).map((json) => StaffModel.fromJson(json)).toList();
+      final response = await _supabase.rpc(
+        'get_lounge_staff',
+        params: {'p_lounge_id': cleanLoungeId},
+      );
+      if (response != null && response is List && response.isNotEmpty) {
+        for (final item in response) {
+          final model = StaffModel.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          );
+          if (model.id.isNotEmpty) {
+            staffMap[model.id] = model;
+          }
+        }
+        if (staffMap.isNotEmpty) {
+          AppLogger.info(
+            'Fetched ${staffMap.length} staff members via get_lounge_staff RPC',
+          );
+          return staffMap.values.toList();
+        }
+      }
     } catch (e) {
-      debugPrint('Error in getLoungeStaff RPC: $e');
-      // Fallback logic if RPC doesn't exist yet or fails
+      AppLogger.warning('RPC get_lounge_staff error ($e)');
+    }
+
+    // 2. Fallback: Query lounge_staff joined with profiles
+    try {
+      final response = await _supabase
+          .from('lounge_staff')
+          .select(
+            '*, profiles(id, full_name, email, phone, role, is_active, avatar_url, created_at)',
+          )
+          .eq('lounge_id', cleanLoungeId);
+
+      for (final dynamic item in (response as List)) {
+        final map = Map<String, dynamic>.from(item as Map);
+        final profileMap = map['profiles'] as Map<String, dynamic>?;
+        final id =
+            (map['staff_id'] ??
+                    map['user_id'] ??
+                    profileMap?['id'] ??
+                    map['id'])
+                ?.toString() ??
+            '';
+        if (id.isNotEmpty && !staffMap.containsKey(id)) {
+          final model = StaffModel.fromJson({
+            'id': id,
+            'full_name':
+                profileMap?['full_name'] ??
+                map['name'] ??
+                map['full_name'] ??
+                'Staff Member',
+            'email': profileMap?['email'] ?? map['email'] ?? '',
+            'phone': profileMap?['phone'] ?? map['phone'] ?? '',
+            'role': map['role'] ?? profileMap?['role'] ?? 'staff',
+            'lounge_id': cleanLoungeId,
+            'is_active': map['is_active'] ?? profileMap?['is_active'] ?? true,
+            'created_at': map['created_at'] ?? profileMap?['created_at'],
+          });
+          staffMap[id] = model;
+        }
+      }
+    } catch (e) {
+      AppLogger.warning('lounge_staff join query error ($e)');
+    }
+
+    // 3. Fallback: Direct query on profiles table (only if still empty)
+    if (staffMap.isEmpty) {
       try {
         final response = await _supabase
             .from('profiles')
             .select()
-            .eq('lounge_id', loungeId)
+            .eq('lounge_id', cleanLoungeId)
             .neq('role', 'super_admin')
             .order('full_name');
-        return (response as List).map((json) => StaffModel.fromJson(json)).toList();
-      } catch (e2) {
-        rethrow;
+
+        for (final dynamic item in (response as List)) {
+          final model = StaffModel.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          );
+          if (model.id.isNotEmpty && !staffMap.containsKey(model.id)) {
+            staffMap[model.id] = model;
+          }
+        }
+      } catch (e) {
+        AppLogger.warning('profiles query error ($e)');
       }
     }
+
+    AppLogger.info('getLoungeStaff fetched ${staffMap.length} staff members');
+    return staffMap.values.toList();
   }
 
   @override
   Future<void> addStaffMember(AddStaffParams params) async {
-    try {
-      debugPrint('Adding staff member with params: ${params.toJson()}');
-      // Using add_staff_member as per technical directive, 
-      // ignoring return type to avoid casting issues.
-      await _supabase.rpc('add_staff_member', params: params.toJson());
-      
-      debugPrint('Add staff RPC executed successfully');
-      return;
-    } catch (e) {
-      debugPrint('Error in addStaffMember RPC: $e');
-      rethrow;
+    final roleClean = params.role.trim().toLowerCase();
+    if (roleClean == 'super_admin' || roleClean == 'system_admin') {
+      throw Exception(
+        'غير مسموح بإنشاء حساب super_admin من واجهة إدارة طاقم العمل.',
+      );
     }
+
+    AppLogger.info('Adding staff member via create-lounge-staff Edge Function');
+    await _supabase.functions.invoke(
+      'create-lounge-staff',
+      body: {
+        'full_name': params.name.trim(),
+        'email': params.email.trim().toLowerCase(),
+        'phone': params.phone.trim(),
+        'password': params.password,
+        'role': roleClean,
+        'lounge_id': params.loungeId.trim(),
+      },
+    );
+    AppLogger.info('create-lounge-staff Edge Function executed successfully');
   }
 
   @override
-  Future<void> updateStaffMember(String staffId, Map<String, dynamic> data) async {
-    // Map internal params to DB column names if needed
-    final updates = {
-      if (data.containsKey('name')) 'full_name': data['name'],
-      if (data.containsKey('phone')) 'phone': data['phone'],
-      if (data.containsKey('role')) 'role': data['role'],
-      if (data.containsKey('email')) 'email': data['email'],
-      if (data.containsKey('national_id_number')) 'national_id_number': data['national_id_number'],
-      if (data.containsKey('id_front_url')) 'id_front_url': data['id_front_url'],
-      if (data.containsKey('id_back_url')) 'id_back_url': data['id_back_url'],
-    };
-    
-    await _supabase.from('profiles').update(updates).eq('id', staffId);
+  Future<void> updateStaffMember(
+    String staffId,
+    Map<String, dynamic> data,
+  ) async {
+    final cleanStaffId = staffId.trim();
+    if (cleanStaffId.isEmpty) {
+      throw ArgumentError('Staff ID cannot be empty');
+    }
+
+    String? mappedRole;
+    if (data['role'] != null) {
+      final rawRole = data['role'].toString().toLowerCase().trim();
+      mappedRole = switch (rawRole) {
+        'cashier' || 'role_cashier' => 'cashier',
+        'manager' || 'lounge_admin' || 'admin' => 'manager',
+        'staff' || 'role_staff' => 'staff',
+        _ => rawRole,
+      };
+    }
+
+    await _supabase.rpc(
+      'update_lounge_staff_member',
+      params: {
+        'p_target_user_id': cleanStaffId,
+        'p_full_name': data['name']?.toString(),
+        'p_phone': data['phone']?.toString(),
+        'p_role': mappedRole,
+      },
+    );
   }
 
   @override
   Future<void> updateStaffStatus(String staffId, bool isActive) async {
-    await _supabase.from('profiles').update({'is_active': isActive}).eq('id', staffId);
+    final cleanStaffId = staffId.trim();
+    if (cleanStaffId.isEmpty) return;
+
+    await _supabase.rpc(
+      'set_lounge_staff_active',
+      params: {'p_target_user_id': cleanStaffId, 'p_is_active': isActive},
+    );
   }
 
   @override
   Future<void> deleteStaff(String staffId) async {
-    await _supabase.from('profiles').delete().eq('id', staffId);
+    final cleanStaffId = staffId.trim();
+    if (cleanStaffId.isEmpty) return;
+
+    await _supabase.rpc(
+      'remove_lounge_staff_member',
+      params: {'p_target_user_id': cleanStaffId},
+    );
   }
 }
