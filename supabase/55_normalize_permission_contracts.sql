@@ -62,8 +62,30 @@ BEGIN
 
   v_actor_role := private.permission_role(auth.uid(), p_lounge_id);
 
-  IF v_actor_role IS NULL OR v_actor_role NOT IN ('super_admin', 'owner', 'manager') THEN
+  IF v_actor_role IS NULL THEN
     RAISE EXCEPTION 'Not authorized' USING ERRCODE = '42501';
+  END IF;
+
+  IF v_actor_role <> 'super_admin'
+     AND NOT public.has_lounge_permission(p_lounge_id, 'staff_manage') THEN
+    RAISE EXCEPTION 'Missing staff_manage permission'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF v_role = 'super_admin' THEN
+    RAISE EXCEPTION 'Super admin permissions are global-only'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF v_role = 'owner' AND v_actor_role <> 'super_admin' THEN
+    RAISE EXCEPTION 'Only a super admin can change owner permissions'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF v_actor_role = 'manager'
+     AND v_role NOT IN ('cashier', 'staff') THEN
+    RAISE EXCEPTION 'Managers can only edit cashier or staff permissions'
+      USING ERRCODE = '42501';
   END IF;
 
   INSERT INTO public.lounge_role_permissions (
@@ -105,5 +127,197 @@ GRANT EXECUTE ON FUNCTION public.update_role_permission(
 ) TO authenticated, service_role, supabase_auth_admin;
 
 DROP POLICY IF EXISTS "lounge_staff_policy" ON public.lounge_staff;
+
+
+CREATE OR REPLACE FUNCTION public.create_lounge_staff(
+  p_email text,
+  p_password text,
+  p_full_name text,
+  p_lounge_id uuid,
+  p_role text DEFAULT 'cashier',
+  p_phone text DEFAULT ''
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public', 'auth', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  new_user_id uuid;
+  encrypted_pw text;
+  v_staff_role text;
+  v_actor_role text;
+  v_clean_email text := lower(btrim(p_email));
+  v_clean_phone text := btrim(COALESCE(p_phone, ''));
+  v_clean_name text := btrim(COALESCE(p_full_name, 'Staff Member'));
+  v_requested_role text := lower(btrim(COALESCE(p_role, 'cashier')));
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Authentication required' USING ERRCODE = '28000';
+  END IF;
+
+  IF p_lounge_id IS NULL THEN
+    RAISE EXCEPTION 'Lounge ID is required' USING ERRCODE = '22023';
+  END IF;
+
+  v_actor_role := private.permission_role(auth.uid(), p_lounge_id);
+
+  IF v_actor_role IS NULL THEN
+    RAISE EXCEPTION 'Not authorized' USING ERRCODE = '42501';
+  END IF;
+
+  IF v_actor_role <> 'super_admin'
+     AND NOT public.has_lounge_permission(p_lounge_id, 'staff_manage') THEN
+    RAISE EXCEPTION 'Missing staff_manage permission'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF v_requested_role IN ('owner', 'lounge_owner', 'super_admin', 'superadmin') THEN
+    RAISE EXCEPTION 'Owner accounts cannot be created through staff management'
+      USING ERRCODE = '42501';
+  END IF;
+
+  v_staff_role := CASE
+    WHEN v_requested_role IN ('manager', 'admin', 'lounge_admin') THEN 'manager'
+    WHEN v_requested_role = 'staff' THEN 'staff'
+    ELSE 'cashier'
+  END;
+
+  IF v_actor_role = 'manager' AND v_staff_role = 'manager' THEN
+    RAISE EXCEPTION 'Managers cannot create or promote peer managers'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF v_clean_email = ''
+     OR p_password IS NULL
+     OR length(p_password) < 6 THEN
+    RAISE EXCEPTION 'Valid email and password (min 6 characters) are required'
+      USING ERRCODE = '22023';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM auth.users
+    WHERE lower(email) = v_clean_email
+  ) THEN
+    RAISE EXCEPTION 'Email already registered'
+      USING ERRCODE = '23505';
+  END IF;
+
+  new_user_id := gen_random_uuid();
+  encrypted_pw := crypt(p_password, gen_salt('bf'));
+
+  INSERT INTO auth.users (
+    instance_id,
+    id,
+    aud,
+    role,
+    email,
+    encrypted_password,
+    email_confirmed_at,
+    raw_app_meta_data,
+    raw_user_meta_data,
+    created_at,
+    updated_at
+  )
+  VALUES (
+    '00000000-0000-0000-0000-000000000000',
+    new_user_id,
+    'authenticated',
+    'authenticated',
+    v_clean_email,
+    encrypted_pw,
+    now(),
+    '{"provider":"email","providers":["email"]}'::jsonb,
+    jsonb_build_object(
+      'full_name', v_clean_name,
+      'name', v_clean_name,
+      'role', v_staff_role
+    ),
+    now(),
+    now()
+  );
+
+  INSERT INTO auth.identities (
+    id,
+    user_id,
+    identity_data,
+    provider,
+    provider_id,
+    last_sign_in_at,
+    created_at,
+    updated_at
+  )
+  VALUES (
+    gen_random_uuid(),
+    new_user_id,
+    jsonb_build_object(
+      'sub', new_user_id::text,
+      'email', v_clean_email
+    ),
+    'email',
+    v_clean_email,
+    now(),
+    now(),
+    now()
+  );
+
+  INSERT INTO public.profiles (
+    id,
+    email,
+    full_name,
+    phone,
+    role,
+    lounge_id,
+    is_active,
+    updated_at
+  )
+  VALUES (
+    new_user_id,
+    v_clean_email,
+    v_clean_name,
+    v_clean_phone,
+    v_staff_role,
+    p_lounge_id,
+    true,
+    now()
+  )
+  ON CONFLICT (id)
+  DO UPDATE SET
+    email = EXCLUDED.email,
+    full_name = EXCLUDED.full_name,
+    phone = EXCLUDED.phone,
+    role = EXCLUDED.role,
+    lounge_id = EXCLUDED.lounge_id,
+    is_active = true,
+    updated_at = now();
+
+  INSERT INTO public.lounge_staff (
+    lounge_id,
+    user_id,
+    role
+  )
+  VALUES (
+    p_lounge_id,
+    new_user_id,
+    v_staff_role
+  )
+  ON CONFLICT DO NOTHING;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'user_id', new_user_id,
+    'role', v_staff_role
+  );
+END;
+$function$;
+
+REVOKE EXECUTE ON FUNCTION public.create_lounge_staff(
+  text, text, text, uuid, text, text
+) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.create_lounge_staff(
+  text, text, text, uuid, text, text
+) TO authenticated, service_role, supabase_auth_admin;
 
 COMMIT;
