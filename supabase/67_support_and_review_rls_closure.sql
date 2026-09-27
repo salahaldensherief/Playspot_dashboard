@@ -18,4 +18,10 @@ USING (
 DROP POLICY IF EXISTS "Users can insert review"
 ON public.lounge_reviews;
 
+DROP POLICY IF EXISTS lounge_reviews_insert
+ON public.lounge_reviews;
+
+DROP POLICY IF EXISTS lounge_reviews_update
+ON public.lounge_reviews;
+
 COMMIT;
