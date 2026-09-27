@@ -27,7 +27,7 @@ END
 WHERE commission_rate IS NULL;
 
 ALTER TABLE public.payments
-ALTER COLUMN commission_rate SET DEFAULT private.platform_commission_rate();
+ALTER COLUMN commission_rate DROP DEFAULT;
 
 ALTER TABLE public.payments
 ALTER COLUMN commission_rate SET NOT NULL;
