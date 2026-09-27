@@ -32,10 +32,16 @@ import 'package:play_spot_dashboard/features/system/system_di.dart';
 final sl = GetIt.instance;
 
 Future<void> setupInjection() async {
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    throw StateError(
+      'Missing SUPABASE_URL or SUPABASE_ANON_KEY. '
+      'Pass them with --dart-define at build/run time.',
+    );
+  }
+
   await Supabase.initialize(
     url: supabaseUrl,
-    // ignore: deprecated_member_use - Kept for compatibility until supabase_flutter major bump
-    anonKey: supabaseAnonKey,
+    publishableKey: supabaseAnonKey,
   );
 
   // Register Supabase Client
