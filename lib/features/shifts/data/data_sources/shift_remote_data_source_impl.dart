@@ -247,131 +247,59 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
   }
 
   @override
-  Future<void> openShift(String loungeId, double startingCash, {String? notes}) async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) throw Exception('User not authenticated');
-
-    final existingOpenShift = await _supabase
-        .from('shifts')
-        .select('*, profiles:cashier_id(full_name)')
-        .eq('lounge_id', loungeId)
-        .or('status.eq.open,closed_at.is.null')
-        .order('start_time', ascending: false)
-        .limit(1)
-        .maybeSingle();
-
-    if (existingOpenShift != null) {
-      debugPrint('🟢 [ShiftRemoteDataSource] Active shift already exists for lounge $loungeId. Syncing existing shift.');
-      return;
-    }
-
-    try {
-      await _supabase.rpc('open_lounge_shift', params: {
+  Future<void> openShift(
+    String loungeId,
+    double startingCash, {
+    String? notes,
+  }) async {
+    await _supabase.rpc(
+      'open_lounge_shift',
+      params: {
         'p_lounge_id': loungeId,
         'p_starting_cash': startingCash,
         'p_notes': notes,
-      });
-    } catch (rpcErr) {
-      if (rpcErr.toString().contains('already') || rpcErr.toString().contains('مفتوح')) {
-        throw Exception('يوجد شفت مفتوح بالفعل لهذا الفرع.');
-      }
-      try {
-        await _supabase.from('lounge_staff').upsert({
-          'lounge_id': loungeId,
-          'user_id': userId,
-          'role': 'cashier',
-          'is_active': true,
-        }, onConflict: 'lounge_id,user_id');
-
-        await _supabase.rpc('open_lounge_shift', params: {
-          'p_lounge_id': loungeId,
-          'p_starting_cash': startingCash,
-          'p_notes': notes,
-        });
-      } catch (_) {
-        await _supabase.from('shifts').insert({
-          'cashier_id': userId,
-          'lounge_id': loungeId,
-          'starting_cash': startingCash,
-          'status': 'open',
-          'start_time': DateTime.now().toIso8601String(),
-        });
-      }
-    }
+      },
+    );
   }
 
   @override
-  Future<ShiftModel> closeShift(String shiftId, double actualCash, String? notes, {String? loungeId}) async {
-    try {
-      final cashierId = _supabase.auth.currentUser?.id ?? '';
-      final response = await _supabase.rpc('blind_close_shift', params: {
+  Future<ShiftModel> closeShift(
+    String shiftId,
+    double actualCash,
+    String? notes, {
+    String? loungeId,
+  }) async {
+    final cashierId = _supabase.auth.currentUser?.id;
+    if (cashierId == null || cashierId.isEmpty) {
+      throw Exception('User not authenticated');
+    }
+
+    final response = await _supabase.rpc(
+      'blind_close_shift',
+      params: {
         'p_shift_id': shiftId,
         'p_cashier_id': cashierId,
         'p_counted_cash': actualCash,
         'p_notes': notes,
-      });
+      },
+    );
 
-      if (response != null) {
-        Map<String, dynamic> shiftJson = {};
-        if (response is List && response.isNotEmpty) {
-          shiftJson = Map<String, dynamic>.from(response.first as Map);
-        } else if (response is Map) {
-          shiftJson = Map<String, dynamic>.from(response);
-        }
-        if (shiftJson.isNotEmpty && shiftJson.containsKey('id')) {
-          return ShiftModel.fromJson(shiftJson);
-        }
+    if (response is Map) {
+      final map = Map<String, dynamic>.from(response);
+      final refreshed = await _supabase
+          .from('shifts')
+          .select('*, profiles:cashier_id(full_name)')
+          .eq('id', shiftId)
+          .maybeSingle();
+
+      if (refreshed != null) {
+        return ShiftModel.fromJson(refreshed);
       }
-    } catch (e) {
-      debugPrint('⚠️ [ShiftRemoteDataSource] blind_close_shift RPC error ($e), trying fallbacks');
+
+      return ShiftModel.fromJson(map);
     }
 
-    if (loungeId != null && loungeId.isNotEmpty) {
-      try {
-        final response = await _supabase.rpc('close_lounge_shift', params: {
-          'p_lounge_id': loungeId,
-          'p_actual_cash_counted': actualCash,
-          'p_notes': notes,
-        });
-
-        if (response != null) {
-          Map<String, dynamic> shiftJson = {};
-          if (response is List && response.isNotEmpty) {
-            shiftJson = Map<String, dynamic>.from(response.first as Map);
-          } else if (response is Map) {
-            shiftJson = Map<String, dynamic>.from(response);
-          }
-
-          if (shiftJson.containsKey('current_shift') && shiftJson['current_shift'] is Map) {
-            shiftJson = Map<String, dynamic>.from(shiftJson['current_shift'] as Map);
-          } else if (shiftJson.containsKey('shift') && shiftJson['shift'] is Map) {
-            shiftJson = Map<String, dynamic>.from(shiftJson['shift'] as Map);
-          }
-
-          if (shiftJson.isNotEmpty && shiftJson.containsKey('id')) {
-            return ShiftModel.fromJson(shiftJson);
-          }
-        }
-      } catch (rpcErr) {
-        debugPrint('⚠️ [ShiftRemoteDataSource] close_lounge_shift fallback: $rpcErr');
-      }
-    }
-
-    try {
-      final response = await _supabase.rpc('close_shift', params: {
-        'p_shift_id': shiftId,
-        'p_actual_cash': actualCash,
-        'p_notes': notes,
-      });
-
-      if (response != null) {
-        return ShiftModel.fromJson(Map<String, dynamic>.from(response as Map));
-      }
-    } catch (e) {
-      debugPrint('⚠️ [ShiftRemoteDataSource] close_shift fallback error: $e');
-    }
-
-    throw Exception('تعذر إغلاق الشيفت وحساب الميزانية الختامية. يرجى إعادة المحاولة أو التواصل مع المسؤول الحسابي.');
+    throw Exception('Invalid close shift response');
   }
 
   @override
