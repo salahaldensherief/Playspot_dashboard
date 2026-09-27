@@ -70,7 +70,13 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
 
   @override
   Future<void> updateRoomStatus(String roomId, String status) async {
-    await _supabase.from('rooms').update({'status': status}).eq('id', roomId);
+    await _supabase.rpc(
+      'set_room_operational_status',
+      params: {
+        'p_room_id': roomId,
+        'p_status': status,
+      },
+    );
   }
 
   @override
@@ -106,7 +112,13 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
     try {
       await _supabase.from('rooms').delete().eq('id', roomId);
     } catch (_) {
-      await _supabase.from('rooms').update({'status': 'deleted'}).eq('id', roomId);
+      await _supabase
+          .from('rooms')
+          .update({
+            'status': 'deleted',
+            'is_available': false,
+          })
+          .eq('id', roomId);
     }
   }
 }
