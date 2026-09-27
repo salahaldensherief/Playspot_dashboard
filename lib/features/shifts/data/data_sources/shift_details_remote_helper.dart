@@ -10,28 +10,23 @@ class ShiftDetailsRemoteHelper {
   ShiftDetailsRemoteHelper(this._supabase);
 
   Future<void> addShiftExpense(ShiftExpenseModel expense) async {
-    final shiftRes = await _supabase
-        .from('shifts')
-        .select('status')
-        .eq('id', expense.shiftId)
-        .maybeSingle();
+    debugPrint(
+      '🔵 [ShiftDetailsRemoteHelper] Adding shift expense through RPC: shiftId=${expense.shiftId}',
+    );
 
-    if (shiftRes != null && shiftRes['status'] != 'open') {
-      throw Exception('لا يمكن إضافة مصروفات أو مدفوعات على شفت مغلق.');
-    }
+    await _supabase.rpc(
+      'add_shift_expense',
+      params: {
+        'p_shift_id': expense.shiftId,
+        'p_amount': expense.amount,
+        'p_reason': expense.reason,
+        'p_type': expense.type,
+      },
+    );
 
-    final userId = _supabase.auth.currentUser?.id;
-    final payload = expense.toJson();
-    if (userId != null) {
-      payload['created_by'] = userId;
-    }
-    final rawId = payload['id']?.toString() ?? '';
-    if (rawId.length != 36 || !rawId.contains('-')) {
-      payload.remove('id');
-    }
-    debugPrint('🔵 [ShiftDetailsRemoteHelper] Inserting shift expense: $payload');
-    await _supabase.from('shift_expenses').insert(payload);
-    debugPrint('🟢 [ShiftDetailsRemoteHelper] Inserted shift expense successfully');
+    debugPrint(
+      '🟢 [ShiftDetailsRemoteHelper] Added shift expense successfully',
+    );
   }
 
   Future<List<ShiftExpenseModel>> fetchShiftExpenses(String shiftId) async {
