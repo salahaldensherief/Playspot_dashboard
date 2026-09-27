@@ -27,14 +27,13 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
     String? levelId,
     String? referralStatus,
     String? userId,
-  }) =>
-      _statsHelper.getLoyaltyStats(
-        startDate: startDate,
-        endDate: endDate,
-        levelId: levelId,
-        referralStatus: referralStatus,
-        userId: userId,
-      );
+  }) => _statsHelper.getLoyaltyStats(
+    startDate: startDate,
+    endDate: endDate,
+    levelId: levelId,
+    referralStatus: referralStatus,
+    userId: userId,
+  );
 
   @override
   Future<List<ReferralModel>> getReferrals({
@@ -42,13 +41,12 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
     DateTime? endDate,
     String? status,
     String? userId,
-  }) =>
-      _statsHelper.getReferrals(
-        startDate: startDate,
-        endDate: endDate,
-        status: status,
-        userId: userId,
-      );
+  }) => _statsHelper.getReferrals(
+    startDate: startDate,
+    endDate: endDate,
+    status: status,
+    userId: userId,
+  );
 
   @override
   Future<List<LoyaltyTaskModel>> getTasks() async {
@@ -61,10 +59,12 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
         .map((e) => LoyaltyTaskModel.fromJson(Map<String, dynamic>.from(e)))
         .toList();
   }
+
   @override
   Future<void> updateTask(String id, Map<String, dynamic> data) async {
     await client.from('loyalty_tasks').update(data).eq('id', id);
   }
+
   @override
   Future<List<LoyaltyLevelModel>> getLevels() async {
     final response = await client
@@ -76,6 +76,7 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
         .map((e) => LoyaltyLevelModel.fromJson(Map<String, dynamic>.from(e)))
         .toList();
   }
+
   @override
   Future<void> updateLevel(String id, Map<String, dynamic> data) async {
     await client.from('loyalty_levels').update(data).eq('id', id);
@@ -86,22 +87,20 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
     required String userId,
     required int pointsDelta,
     required String reason,
-  }) =>
-      _transactionsHelper.adjustUserPoints(
-        userId: userId,
-        pointsDelta: pointsDelta,
-        reason: reason,
-      );
+  }) => _transactionsHelper.adjustUserPoints(
+    userId: userId,
+    pointsDelta: pointsDelta,
+    reason: reason,
+  );
 
   @override
   Future<PaginatedResult<PointsTransactionModel>> getPointsTransactionsPage({
     int page = 1,
     int pageSize = 20,
-  }) =>
-      _transactionsHelper.getPointsTransactionsPage(
-        page: page,
-        pageSize: pageSize,
-      );
+  }) => _transactionsHelper.getPointsTransactionsPage(
+    page: page,
+    pageSize: pageSize,
+  );
 
   @override
   Future<List<RedemptionOptionModel>> getRedemptionOptions() async {
@@ -111,7 +110,9 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
         .order('created_at', ascending: false);
 
     return (response as List)
-        .map((e) => RedemptionOptionModel.fromJson(Map<String, dynamic>.from(e)))
+        .map(
+          (e) => RedemptionOptionModel.fromJson(Map<String, dynamic>.from(e)),
+        )
         .toList();
   }
 
@@ -121,7 +122,10 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
   }
 
   @override
-  Future<void> updateRedemptionOption(String id, Map<String, dynamic> data) async {
+  Future<void> updateRedemptionOption(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
     await client.from('redemption_options').update(data).eq('id', id);
   }
 
