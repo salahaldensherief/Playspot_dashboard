@@ -79,14 +79,14 @@ class RoomModel extends RoomEntity {
 
     final double singleRate = parseDouble(
       json['hourly_rate_single'] ??
-      json['price_per_hour_single'] ??
-      json['price_per_hour']
+          json['price_per_hour_single'] ??
+          json['price_per_hour'],
     );
 
     final double multiRate = parseDouble(
       json['hourly_rate_multi'] ??
-      json['price_per_hour_multi'] ??
-      json['price_per_hour']
+          json['price_per_hour_multi'] ??
+          json['price_per_hour'],
     );
 
     return RoomModel(
@@ -98,11 +98,16 @@ class RoomModel extends RoomEntity {
       descriptionEn: json['description_en']?.toString() ?? '',
       activityNames: activities.isNotEmpty
           ? activities
-          : (json['activity_names'] != null ? List<String>.from(json['activity_names']) : []),
+          : (json['activity_names'] != null
+                ? List<String>.from(json['activity_names'])
+                : []),
       activityIds: activityIds.isNotEmpty
           ? activityIds
-          : (json['activity_ids'] != null ? List<String>.from(json['activity_ids']) : []),
-      spaceType: json['space_types']?['label'] ?? json['space_type_name']?.toString(),
+          : (json['activity_ids'] != null
+                ? List<String>.from(json['activity_ids'])
+                : []),
+      spaceType:
+          json['space_types']?['label'] ?? json['space_type_name']?.toString(),
       spaceTypeId: json['space_type_id']?.toString() ?? '',
       maxCapacity: parseInt(json['max_capacity'] ?? json['capacity'], 4),
       hourlyRateSingle: singleRate,
@@ -110,8 +115,12 @@ class RoomModel extends RoomEntity {
       extraControllerPrice: parseDouble(json['extra_controller_price']),
       isAvailable: json['is_available'] ?? json['is_active'] ?? true,
       images: json['images'] != null ? List<String>.from(json['images']) : [],
-      featuresAr: json['features_ar'] != null ? List<String>.from(json['features_ar']) : [],
-      featuresEn: json['features_en'] != null ? List<String>.from(json['features_en']) : [],
+      featuresAr: json['features_ar'] != null
+          ? List<String>.from(json['features_ar'])
+          : [],
+      featuresEn: json['features_en'] != null
+          ? List<String>.from(json['features_en'])
+          : [],
       controllersCount: parseInt(json['controllers_count'], 2),
       screenSize: json['screen_size']?.toString() ?? '43"',
       status: parseStatus(json['status']),
