@@ -137,7 +137,11 @@ class RoomModel extends RoomEntity {
       'features_en': featuresEn,
       'controllers_count': controllersCount,
       'screen_size': screenSize,
-      'status': status == RoomStatusEnum.maintenance ? 'maintenance' : 'available',
+      'status': switch (status) {
+        RoomStatusEnum.available => 'available',
+        RoomStatusEnum.maintenance => 'maintenance',
+        RoomStatusEnum.occupied => 'occupied',
+      },
     };
     if (spaceTypeId != null && spaceTypeId!.isNotEmpty) {
       data['space_type_id'] = spaceTypeId;
