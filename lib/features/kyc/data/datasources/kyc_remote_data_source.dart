@@ -116,11 +116,7 @@ class KycRemoteDataSourceImpl implements KycRemoteDataSource {
   }) async {
     await _client.rpc(
       'review_kyc',
-      params: {
-        'p_user_id': userId,
-        'p_approve': approve,
-        'p_notes': notes,
-      },
+      params: {'p_user_id': userId, 'p_approve': approve, 'p_notes': notes},
     );
   }
 }
