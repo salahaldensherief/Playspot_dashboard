@@ -212,17 +212,11 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
       }
       AppLogger.info('toggleLoungeOpenStatus RPC Succeeded for loungeId: $loungeId, isOpen: $isOpen');
     } catch (e) {
-      AppLogger.warning('toggleLoungeOpenStatus RPC failed ($e), falling back to direct table update...');
-      try {
-        await client.from('lounges').update({'is_open': isOpen}).eq('id', loungeId);
-        AppLogger.info('toggleLoungeOpenStatus direct update succeeded for loungeId: $loungeId, isOpen: $isOpen');
-      } on PostgrestException catch (pe) {
-        AppLogger.error('toggleLoungeOpenStatus PostgrestException: ${pe.message} (code: ${pe.code})');
-        rethrow;
-      } catch (e2) {
-        AppLogger.error('toggleLoungeOpenStatus Error: $e2');
-        rethrow;
-      }
+      AppLogger.error(
+        'toggleLoungeOpenStatus server command failed for loungeId: $loungeId, isOpen: $isOpen',
+        e,
+      );
+      rethrow;
     }
   }
 
@@ -245,12 +239,24 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     required String name,
     required String loungeId,
   }) async {
-    await client.rpc('create_lounge_admin', params: {
-      'p_email': email,
-      'p_password': password,
-      'p_full_name': name,
-      'p_lounge_id': loungeId,
-    });
+    final response = await client.functions.invoke(
+      'create-lounge-staff',
+      body: {
+        'email': email,
+        'password': password,
+        'full_name': name,
+        'lounge_id': loungeId,
+        'role': 'manager',
+      },
+    );
+
+    if (response.status < 200 || response.status >= 300) {
+      final data = response.data;
+      final message = data is Map && data['error'] != null
+          ? data['error'].toString()
+          : 'Failed to create lounge staff account';
+      throw Exception(message);
+    }
   }
 
   @override
