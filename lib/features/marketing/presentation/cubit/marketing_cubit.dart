@@ -90,10 +90,11 @@ class MarketingCubit extends Cubit<MarketingState> {
     );
   }
 
-  Future<String?> uploadPromoPoster(Uint8List fileBytes, String fileName) async {
+  Future<String?> uploadPromoPoster(Uint8List fileBytes, String fileName, String loungeId) async {
     final result = await _uploadPromoPosterUseCase(UploadPromoPosterParams(
       fileBytes: fileBytes,
       fileName: fileName,
+      loungeId: loungeId,
     ));
     return result.fold(
       (failure) {
