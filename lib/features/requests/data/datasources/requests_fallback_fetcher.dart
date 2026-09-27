@@ -132,43 +132,6 @@ class RequestsFallbackFetcher {
       debugPrint('⚠️ [RequestsFallbackFetcher] fallback client_requests error: $e');
     }
 
-    // 4. Fetch booking_items (Extra snacks/items ordered during session)
-    try {
-      final res = await client
-          .from('booking_items')
-          .select('*, bookings!inner(lounge_id, room_id, rooms(name, name_en))')
-          .eq('bookings.lounge_id', loungeId)
-          .eq('status', 'pending');
-
-      for (var json in (res as List)) {
-        final map = Map<String, dynamic>.from(json);
-        final booking = map['bookings'] as Map<String, dynamic>?;
-        final isAttended = map['is_attended'] == true || map['is_read'] == true;
-        if (!isAttended) {
-          final String? rName = booking?['rooms']?['name'];
-          final String? uName = null;
-          final String? uPhone = null;
-          final String rawId = map['id']?.toString() ?? '';
-          map['id'] = rawId.startsWith('item_') ? rawId : 'item_$rawId';
-          map['lounge_id'] = loungeId;
-          if (rName != null) map['room_name'] = rName;
-          if (uName != null) map['user_name'] = uName;
-          if (uPhone != null) map['user_phone'] = uPhone;
-          map['type'] = 'canteen_order';
-          map['items'] = [
-            {
-              'name': map['name'],
-              'quantity': map['quantity'] ?? 1,
-              'price': map['price'] ?? 0.0,
-              'total_price': map['total_price'] ?? 0.0,
-            }
-          ];
-          results.add(ClientRequestModel.fromCanteenOrderJson(map));
-        }
-      }
-    } catch (e) {
-      debugPrint('⚠️ [RequestsFallbackFetcher] fallback booking_items error: $e');
-    }
 
     return results;
   }
