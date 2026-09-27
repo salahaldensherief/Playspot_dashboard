@@ -10,12 +10,15 @@ import 'package:play_spot_dashboard/features/requests/domain/entities/client_req
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 
 class RequestCardActions extends StatelessWidget {
+  final ClientRequestEntity request;
   final DashboardCubit dashboardCubit;
   final ClientRequestsCubit requestsCubit;
 
   const RequestCardActions({
     super.key,
+    required this.request,
     required this.dashboardCubit,
+    required this.requestsCubit,
   });
 
   void _showLiveApproveDialog(BuildContext context, String bookingId) {
@@ -35,9 +38,7 @@ class RequestCardActions extends StatelessWidget {
       builder: (dialogContext) => _LiveRejectExtensionDialog(
         parentContext: context,
         bookingId: bookingId,
-        request: request,
         dashboardCubit: dashboardCubit,
-        requestsCubit: requestsCubit,
       ),
     );
   }
@@ -96,14 +97,12 @@ class RequestCardActions extends StatelessWidget {
 class _LiveApproveExtensionDialog extends StatefulWidget {
   final BuildContext parentContext;
   final String bookingId;
-  final ClientRequestEntity request;
   final DashboardCubit dashboardCubit;
+
   const _LiveApproveExtensionDialog({
     required this.parentContext,
     required this.bookingId,
-    required this.request,
     required this.dashboardCubit,
-    required this.requestsCubit,
   });
 
   @override
@@ -157,14 +156,12 @@ class _LiveApproveExtensionDialogState
 class _LiveRejectExtensionDialog extends StatefulWidget {
   final BuildContext parentContext;
   final String bookingId;
-  final ClientRequestEntity request;
   final DashboardCubit dashboardCubit;
+
   const _LiveRejectExtensionDialog({
     required this.parentContext,
     required this.bookingId,
-    required this.request,
     required this.dashboardCubit,
-    required this.requestsCubit,
   });
 
   @override
