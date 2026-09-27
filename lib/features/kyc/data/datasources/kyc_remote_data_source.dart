@@ -1,5 +1,6 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:typed_data';
+
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class KycRemoteDataSource {
   Future<void> submitKyc({
@@ -20,9 +21,34 @@ abstract class KycRemoteDataSource {
 }
 
 class KycRemoteDataSourceImpl implements KycRemoteDataSource {
+  static const _bucket = 'kyc-documents';
+  static const _signedUrlTtlSeconds = 15 * 60;
+
   final SupabaseClient _client;
 
   KycRemoteDataSourceImpl(this._client);
+
+  String _safeExtension(String fileName) {
+    final raw = fileName.contains('.')
+        ? fileName.split('.').last.toLowerCase()
+        : 'jpg';
+    const allowed = {'jpg', 'jpeg', 'png', 'webp', 'pdf'};
+    return allowed.contains(raw) ? raw : 'jpg';
+  }
+
+  Future<String?> _resolveDocumentReference(Object? value) async {
+    final reference = value?.toString().trim() ?? '';
+    if (reference.isEmpty || reference == 'null') return null;
+
+    // Backward compatibility for legacy rows that stored long-lived signed URLs.
+    if (reference.startsWith('https://') || reference.startsWith('http://')) {
+      return reference;
+    }
+
+    return _client.storage
+        .from(_bucket)
+        .createSignedUrl(reference, _signedUrlTtlSeconds);
+  }
 
   @override
   Future<void> submitKyc({
@@ -32,108 +58,54 @@ class KycRemoteDataSourceImpl implements KycRemoteDataSource {
     Uint8List? businessDocBytes,
     String? businessDocName,
   }) async {
-    // 1. Upload ID Card to private bucket
-    final idPath =
-        '$userId/id_card_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    await _client.storage
-        .from('kyc-documents')
-        .uploadBinary(idPath, idCardBytes);
-    final idUrl = await _client.storage
-        .from('kyc-documents')
-        .createSignedUrl(idPath, 60 * 60 * 24 * 365); // 1-year signed URL
-
-    // 2. Upload Business Doc (Optional)
-    String? bizUrl;
-    if (businessDocBytes != null && businessDocName != null) {
-      final bizPath =
-          '$userId/business_doc_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      await _client.storage
-          .from('kyc-documents')
-          .uploadBinary(bizPath, businessDocBytes);
-      bizUrl = await _client.storage
-          .from('kyc-documents')
-          .createSignedUrl(bizPath, 60 * 60 * 24 * 365);
+    final currentUserId = _client.auth.currentUser?.id;
+    if (currentUserId == null || currentUserId != userId) {
+      throw StateError('KYC documents can only be submitted by their owner.');
     }
 
-    // 3. Call RPC to submit
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final idPath = '$userId/id_card_$now.${_safeExtension(idCardName)}';
+    await _client.storage.from(_bucket).uploadBinary(idPath, idCardBytes);
+
+    String? businessPath;
+    if (businessDocBytes != null && businessDocName != null) {
+      businessPath =
+          '$userId/business_doc_$now.${_safeExtension(businessDocName)}';
+      await _client.storage
+          .from(_bucket)
+          .uploadBinary(businessPath, businessDocBytes);
+    }
+
     await _client.rpc(
       'submit_kyc_documents',
-      params: {'p_id_document_url': idUrl, 'p_business_document_url': bizUrl},
+      params: {
+        'p_id_document_url': idPath,
+        'p_business_document_url': businessPath,
+      },
     );
   }
 
   @override
   Future<List<Map<String, dynamic>>> getPendingReviews() async {
-    try {
-      final response = await _client.rpc('get_pending_kyc_reviews');
-      if (response != null && response is List && response.isNotEmpty) {
-        return List<Map<String, dynamic>>.from(response);
-      }
-    } catch (_) {}
+    final response = await _client.rpc('get_pending_kyc_reviews');
+    if (response is! List) return const [];
 
-    // Direct table query on kyc_submissions joined with profiles via user_id
-    try {
-      final response = await _client
-          .from('kyc_submissions')
-          .select('*, profiles!inner(full_name, email, phone)')
-          .eq('status', 'pending')
-          .order('created_at', ascending: false);
+    return Future.wait(
+      response.map((raw) async {
+        final map = Map<String, dynamic>.from(raw as Map);
+        final idUrl = await _resolveDocumentReference(map['id_document_url']);
+        final businessUrl = await _resolveDocumentReference(
+          map['business_document_url'],
+        );
 
-      final list = (response as List).map((json) {
-        final map = Map<String, dynamic>.from(json as Map);
-        final profile = map['profiles'] as Map<String, dynamic>? ?? {};
-        return {
-          'user_id': map['user_id']?.toString() ?? '',
-          'submission_id': map['id']?.toString() ?? '',
-          'owner_name':
-              profile['full_name']?.toString() ??
-              map['owner_name']?.toString() ??
-              'Pending Owner',
-          'owner_email':
-              profile['email']?.toString() ??
-              map['owner_email']?.toString() ??
-              '',
-          'owner_phone':
-              profile['phone']?.toString() ?? map['phone']?.toString() ?? '',
-          'lounge_name': map['lounge_name']?.toString() ?? 'Lounge',
-          'id_document_url': map['id_document_url']?.toString() ?? '',
-          'business_document_url': map['business_document_url']?.toString(),
+        return <String, dynamic>{
+          ...map,
+          'id_document_url': idUrl ?? '',
+          'business_document_url': businessUrl,
           'status': map['status']?.toString() ?? 'pending',
-          'notes': map['notes']?.toString(),
-          'created_at': map['created_at']?.toString(),
         };
-      }).toList();
-
-      return list;
-    } catch (_) {
-      try {
-        final response = await _client
-            .from('kyc_submissions')
-            .select('*')
-            .eq('status', 'pending');
-
-        final list = (response as List).map((json) {
-          final map = Map<String, dynamic>.from(json as Map);
-          return {
-            'user_id': map['user_id']?.toString() ?? '',
-            'submission_id': map['id']?.toString() ?? '',
-            'owner_name': map['owner_name']?.toString() ?? 'Pending Owner',
-            'owner_email': map['owner_email']?.toString() ?? '',
-            'owner_phone': map['phone']?.toString() ?? '',
-            'lounge_name': map['lounge_name']?.toString() ?? 'Lounge',
-            'id_document_url': map['id_document_url']?.toString() ?? '',
-            'business_document_url': map['business_document_url']?.toString(),
-            'status': map['status']?.toString() ?? 'pending',
-            'notes': map['notes']?.toString(),
-            'created_at': map['created_at']?.toString(),
-          };
-        }).toList();
-
-        return list;
-      } catch (_) {
-        return [];
-      }
-    }
+      }),
+    );
   }
 
   @override
