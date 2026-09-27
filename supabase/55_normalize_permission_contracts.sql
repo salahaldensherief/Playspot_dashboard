@@ -320,4 +320,258 @@ GRANT EXECUTE ON FUNCTION public.create_lounge_staff(
   text, text, text, uuid, text, text
 ) TO authenticated, service_role, supabase_auth_admin;
 
+
+CREATE OR REPLACE FUNCTION public.update_lounge_staff_member(
+  p_target_user_id uuid,
+  p_full_name text DEFAULT NULL,
+  p_phone text DEFAULT NULL,
+  p_role text DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+AS $function$
+DECLARE
+  v_target public.profiles%ROWTYPE;
+  v_actor_role text;
+  v_new_role text;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Authentication required' USING ERRCODE = '28000';
+  END IF;
+
+  SELECT p.*
+  INTO v_target
+  FROM public.profiles AS p
+  WHERE p.id = p_target_user_id
+  FOR UPDATE;
+
+  IF NOT FOUND OR v_target.lounge_id IS NULL THEN
+    RAISE EXCEPTION 'Staff member not found' USING ERRCODE = 'P0002';
+  END IF;
+
+  IF v_target.role IN ('owner', 'lounge_owner', 'super_admin', 'superadmin') THEN
+    RAISE EXCEPTION 'Owner and super admin accounts are protected'
+      USING ERRCODE = '42501';
+  END IF;
+
+  v_actor_role := private.permission_role(auth.uid(), v_target.lounge_id);
+
+  IF v_actor_role IS NULL THEN
+    RAISE EXCEPTION 'Not authorized' USING ERRCODE = '42501';
+  END IF;
+
+  IF v_actor_role <> 'super_admin'
+     AND NOT public.has_lounge_permission(
+       v_target.lounge_id,
+       'staff_manage'
+     ) THEN
+    RAISE EXCEPTION 'Missing staff_manage permission'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF v_actor_role = 'manager'
+     AND v_target.role = 'manager' THEN
+    RAISE EXCEPTION 'Managers cannot modify peer managers'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF p_role IS NOT NULL THEN
+    v_new_role := CASE lower(btrim(p_role))
+      WHEN 'manager' THEN 'manager'
+      WHEN 'admin' THEN 'manager'
+      WHEN 'lounge_admin' THEN 'manager'
+      WHEN 'cashier' THEN 'cashier'
+      WHEN 'staff' THEN 'staff'
+      ELSE NULL
+    END;
+
+    IF v_new_role IS NULL THEN
+      RAISE EXCEPTION 'Unsupported staff role'
+        USING ERRCODE = '22023';
+    END IF;
+
+    IF v_actor_role = 'manager' AND v_new_role = 'manager' THEN
+      RAISE EXCEPTION 'Managers cannot promote staff to manager'
+        USING ERRCODE = '42501';
+    END IF;
+  ELSE
+    v_new_role := v_target.role;
+  END IF;
+
+  UPDATE public.profiles
+  SET full_name = COALESCE(NULLIF(btrim(p_full_name), ''), full_name),
+      phone = COALESCE(NULLIF(btrim(p_phone), ''), phone),
+      role = v_new_role,
+      updated_at = now()
+  WHERE id = p_target_user_id;
+
+  UPDATE public.lounge_staff
+  SET role = v_new_role
+  WHERE lounge_id = v_target.lounge_id
+    AND user_id = p_target_user_id;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'user_id', p_target_user_id,
+    'lounge_id', v_target.lounge_id,
+    'role', v_new_role
+  );
+END;
+$function$;
+
+REVOKE EXECUTE ON FUNCTION public.update_lounge_staff_member(
+  uuid, text, text, text
+) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.update_lounge_staff_member(
+  uuid, text, text, text
+) TO authenticated, service_role, supabase_auth_admin;
+
+
+CREATE OR REPLACE FUNCTION public.set_lounge_staff_active(
+  p_target_user_id uuid,
+  p_is_active boolean
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+AS $function$
+DECLARE
+  v_target public.profiles%ROWTYPE;
+  v_actor_role text;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Authentication required' USING ERRCODE = '28000';
+  END IF;
+
+  SELECT p.*
+  INTO v_target
+  FROM public.profiles AS p
+  WHERE p.id = p_target_user_id
+  FOR UPDATE;
+
+  IF NOT FOUND OR v_target.lounge_id IS NULL THEN
+    RAISE EXCEPTION 'Staff member not found' USING ERRCODE = 'P0002';
+  END IF;
+
+  IF v_target.role IN ('owner', 'lounge_owner', 'super_admin', 'superadmin') THEN
+    RAISE EXCEPTION 'Owner and super admin accounts are protected'
+      USING ERRCODE = '42501';
+  END IF;
+
+  v_actor_role := private.permission_role(auth.uid(), v_target.lounge_id);
+
+  IF v_actor_role IS NULL
+     OR (
+       v_actor_role <> 'super_admin'
+       AND NOT public.has_lounge_permission(
+         v_target.lounge_id,
+         'staff_manage'
+       )
+     ) THEN
+    RAISE EXCEPTION 'Not authorized' USING ERRCODE = '42501';
+  END IF;
+
+  IF v_actor_role = 'manager' AND v_target.role = 'manager' THEN
+    RAISE EXCEPTION 'Managers cannot modify peer managers'
+      USING ERRCODE = '42501';
+  END IF;
+
+  UPDATE public.profiles
+  SET is_active = COALESCE(p_is_active, false),
+      updated_at = now()
+  WHERE id = p_target_user_id;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'user_id', p_target_user_id,
+    'is_active', COALESCE(p_is_active, false)
+  );
+END;
+$function$;
+
+REVOKE EXECUTE ON FUNCTION public.set_lounge_staff_active(uuid, boolean)
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.set_lounge_staff_active(uuid, boolean)
+TO authenticated, service_role, supabase_auth_admin;
+
+
+CREATE OR REPLACE FUNCTION public.remove_lounge_staff_member(
+  p_target_user_id uuid
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+AS $function$
+DECLARE
+  v_target public.profiles%ROWTYPE;
+  v_actor_role text;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Authentication required' USING ERRCODE = '28000';
+  END IF;
+
+  SELECT p.*
+  INTO v_target
+  FROM public.profiles AS p
+  WHERE p.id = p_target_user_id
+  FOR UPDATE;
+
+  IF NOT FOUND OR v_target.lounge_id IS NULL THEN
+    RAISE EXCEPTION 'Staff member not found' USING ERRCODE = 'P0002';
+  END IF;
+
+  IF v_target.role IN ('owner', 'lounge_owner', 'super_admin', 'superadmin') THEN
+    RAISE EXCEPTION 'Owner and super admin accounts are protected'
+      USING ERRCODE = '42501';
+  END IF;
+
+  v_actor_role := private.permission_role(auth.uid(), v_target.lounge_id);
+
+  IF v_actor_role IS NULL
+     OR (
+       v_actor_role <> 'super_admin'
+       AND NOT public.has_lounge_permission(
+         v_target.lounge_id,
+         'staff_manage'
+       )
+     ) THEN
+    RAISE EXCEPTION 'Not authorized' USING ERRCODE = '42501';
+  END IF;
+
+  IF v_actor_role = 'manager' AND v_target.role = 'manager' THEN
+    RAISE EXCEPTION 'Managers cannot remove peer managers'
+      USING ERRCODE = '42501';
+  END IF;
+
+  DELETE FROM public.lounge_staff
+  WHERE lounge_id = v_target.lounge_id
+    AND user_id = p_target_user_id;
+
+  UPDATE public.profiles
+  SET lounge_id = NULL,
+      role = 'user',
+      is_active = false,
+      updated_at = now()
+  WHERE id = p_target_user_id;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'user_id', p_target_user_id,
+    'removed_from_lounge', v_target.lounge_id
+  );
+END;
+$function$;
+
+REVOKE EXECUTE ON FUNCTION public.remove_lounge_staff_member(uuid)
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.remove_lounge_staff_member(uuid)
+TO authenticated, service_role, supabase_auth_admin;
+
 COMMIT;
