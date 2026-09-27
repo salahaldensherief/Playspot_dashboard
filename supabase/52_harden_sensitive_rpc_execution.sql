@@ -386,4 +386,86 @@ GRANT EXECUTE ON FUNCTION public.close_shift_and_calculate_z_report(
   uuid, numeric, text
 ) TO service_role, supabase_auth_admin;
 
+
+-- Production advisor follow-up: these privileged/mutating helpers are not
+-- intentionally anonymous APIs. Keep authenticated access only where the
+-- function already performs caller authorization, and service-only for jobs.
+REVOKE EXECUTE ON FUNCTION public.approve_booking_extension(
+  uuid, numeric, text
+) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.approve_booking_extension(
+  uuid, numeric, text
+) TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.consume_voucher_by_code(text, uuid)
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.consume_voucher_by_code(text, uuid)
+TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.delete_user_account()
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.delete_user_account()
+TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.extend_booking_session(
+  uuid, integer, numeric
+) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.extend_booking_session(
+  uuid, integer, numeric
+) TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.get_active_session_details()
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.get_active_session_details()
+TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.get_all_lounges_with_owners()
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.get_all_lounges_with_owners()
+TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.get_live_bookings_with_items(uuid)
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.get_live_bookings_with_items(uuid)
+TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.get_my_bookings(uuid)
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.get_my_bookings(uuid)
+TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.get_revenue_over_time(uuid, text)
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.get_revenue_over_time(uuid, text)
+TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.update_user_points(
+  uuid, integer, text
+) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.update_user_points(
+  uuid, integer, text
+) TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.update_user_points(uuid, integer)
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.update_user_points(uuid, integer)
+TO authenticated, service_role, supabase_auth_admin;
+
+REVOKE EXECUTE ON FUNCTION public.check_and_expire_promos()
+FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public.check_and_expire_promos()
+TO service_role, supabase_auth_admin;
+
 COMMIT;
