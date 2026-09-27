@@ -41,7 +41,9 @@ class BookingCardActions extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
         title: Row(
           children: [
             const Icon(Icons.person_off, color: AppColors.danger),
@@ -79,8 +81,14 @@ class BookingCardActions extends StatelessWidget {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(success ? AppStrings.noShowSuccess : AppStrings.noShowFailed),
-                    backgroundColor: success ? AppColors.success : AppColors.danger,
+                    content: Text(
+                      success
+                          ? AppStrings.noShowSuccess
+                          : AppStrings.noShowFailed,
+                    ),
+                    backgroundColor: success
+                        ? AppColors.success
+                        : AppColors.danger,
                     duration: const Duration(seconds: 3),
                   ),
                 );
@@ -97,12 +105,12 @@ class BookingCardActions extends StatelessWidget {
     final double h = 36.h;
 
     Widget detailsButton() => AppButton(
-          text: AppStrings.bookingDetails,
-          variant: AppButtonVariant.outlined,
-          onPressed: onOpenDetails,
-          width: double.infinity,
-          height: h,
-        );
+      text: AppStrings.bookingDetails,
+      variant: AppButtonVariant.outlined,
+      onPressed: onOpenDetails,
+      width: double.infinity,
+      height: h,
+    );
 
     // 0. Pending Verification (Manual Payment Queue)
     if (booking.status == BookingStatus.pendingVerification) {
