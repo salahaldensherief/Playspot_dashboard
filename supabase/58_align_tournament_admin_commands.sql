@@ -230,4 +230,89 @@ FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.withdraw_tournament_participant(uuid, text)
 TO authenticated, service_role, supabase_auth_admin;
 
+
+CREATE OR REPLACE FUNCTION public.start_tournament_match(
+  p_match_id uuid,
+  p_room_id uuid
+)
+RETURNS public.tournament_matches
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+AS $function$
+DECLARE
+  v_match public.tournament_matches%ROWTYPE;
+  v_tournament public.tournaments%ROWTYPE;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'not_authenticated' USING ERRCODE = '28000';
+  END IF;
+
+  SELECT *
+  INTO v_match
+  FROM public.tournament_matches
+  WHERE id = p_match_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'match_not_found' USING ERRCODE = 'P0002';
+  END IF;
+
+  SELECT *
+  INTO v_tournament
+  FROM public.tournaments
+  WHERE id = v_match.tournament_id;
+
+  IF NOT (
+    public.is_super_admin()
+    OR private.is_lounge_manager(v_tournament.lounge_id)
+  ) THEN
+    RAISE EXCEPTION 'not_authorized' USING ERRCODE = '42501';
+  END IF;
+
+  IF v_match.status <> 'scheduled'
+     OR v_match.player1_id IS NULL
+     OR v_match.player2_id IS NULL THEN
+    RAISE EXCEPTION 'match_not_ready' USING ERRCODE = '55000';
+  END IF;
+
+  IF p_room_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1
+    FROM public.rooms AS r
+    WHERE r.id = p_room_id
+      AND r.lounge_id = v_tournament.lounge_id
+      AND r.is_active IS TRUE
+      AND r.status <> 'deleted'
+  ) THEN
+    RAISE EXCEPTION 'invalid_tournament_room' USING ERRCODE = '22023';
+  END IF;
+
+  UPDATE public.tournament_matches
+  SET room_id = COALESCE(p_room_id, room_id),
+      status = 'in_progress',
+      started_at = COALESCE(started_at, now()),
+      updated_at = now()
+  WHERE id = v_match.id
+  RETURNING *
+  INTO v_match;
+
+  PERFORM public.tournament_audit(
+    v_tournament.id,
+    'match_started',
+    NULL,
+    v_match.id,
+    NULL,
+    to_jsonb(v_match)
+  );
+
+  RETURN v_match;
+END;
+$function$;
+
+REVOKE EXECUTE ON FUNCTION public.start_tournament_match(uuid, uuid)
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.start_tournament_match(uuid, uuid)
+TO authenticated, service_role, supabase_auth_admin;
+
 COMMIT;
