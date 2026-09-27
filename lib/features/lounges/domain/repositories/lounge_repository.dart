@@ -7,8 +7,15 @@ import '../entities/activity.dart';
 import '../entities/extra_entity.dart';
 
 abstract class LoungeRepository {
-  Future<Either<Failure, List<Lounge>>> getLounges();
-  Future<Either<Failure, Lounge?>> getLoungeById(String id);
+  Future<Either<Failure, List<Lounge>>> getLounges({bool forceRefresh = false});
+  Future<Either<Failure, List<Lounge>>> getOwnerBranches(String ownerId, {bool forceRefresh = false});
+  Future<Either<Failure, String>> addLoungeBranch(Map<String, dynamic> branchData);
+  Future<Either<Failure, Map<String, dynamic>>> getMultiBranchOverview({
+    required String ownerId,
+    required DateTime startDate,
+    required DateTime endDate,
+  });
+  Future<Either<Failure, Lounge?>> getLoungeById(String id, {bool forceRefresh = false});
   Future<Either<Failure, List<Room>>> getRooms(String loungeId);
   Future<Either<Failure, List<Activity>>> getActivities(String roomId);
   Future<Either<Failure, String>> createLounge(Lounge lounge);
@@ -26,6 +33,16 @@ abstract class LoungeRepository {
     String? titleAr,
     String? titleEn,
     DateTime? expiresAt,
+    String? vodafoneCashNumber,
+    String? instapayAccount,
+  });
+  Future<Either<Failure, void>> updateLoungePolicies({
+    required String loungeId,
+    required bool allowCashPayment,
+    required bool requirePrepaidFirstTime,
+    required int cashGracePeriodMinutes,
+    String? vodafoneCashNumber,
+    String? instapayAccount,
   });
   Future<Either<Failure, void>> updateLoungeLocation(String loungeId, double lat, double lng);
   Future<Either<Failure, void>> deleteLounge(String id);
@@ -35,6 +52,8 @@ abstract class LoungeRepository {
     required String ownerName,
     required String loungeName,
     String? city,
+    String? address,
+    String? phone,
   });
   Future<Either<Failure, Map<String, dynamic>>> getDashboardStats(String? loungeId);
   Future<Either<Failure, Map<String, dynamic>>> getDashboardOverview();
@@ -42,7 +61,7 @@ abstract class LoungeRepository {
   Future<Either<Failure, List<Map<String, dynamic>>>> getTopLoungesByRevenue(int limitCount);
   
   // Extras
-  Future<Either<Failure, List<ExtraEntity>>> getExtras(String loungeId);
+  Future<Either<Failure, List<ExtraEntity>>> getExtras(String loungeId, {bool forceRefresh = false});
   Future<Either<Failure, void>> addExtra(ExtraEntity extra);
   Future<Either<Failure, void>> updateExtra(ExtraEntity extra);
   Future<Either<Failure, void>> deleteExtra(String extraId);

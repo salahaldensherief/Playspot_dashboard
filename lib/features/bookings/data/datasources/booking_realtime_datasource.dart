@@ -15,20 +15,61 @@ class BookingRealtimeDataSourceImpl implements BookingRealtimeDataSource {
 
   @override
   Stream<List<BookingModel>> watchBookings({String? loungeId}) {
-    final controller = StreamController<List<BookingModel>>();
+    late StreamController<List<BookingModel>> controller;
+    Timer? backupSyncTimer;
+    Timer? debounceTimer;
+    StreamSubscription? realtimeSubscription;
+    bool isFetching = false;
 
-    // 1. جلب البيانات الأولية فوراً عند فتح الصفحة
-    _fetchAndEmit(controller, loungeId);
+    void debouncedFetchAndEmit() {
+      debounceTimer?.cancel();
+      debounceTimer = Timer(const Duration(milliseconds: 300), () async {
+        if (isFetching || controller.isClosed) return;
+        isFetching = true;
+        try {
+          await _fetchAndEmit(controller, loungeId);
+        } finally {
+          isFetching = false;
+        }
+      });
+    }
 
-    // 2. الاشتراك في التغييرات اللحظية
-    _client
-        .from('bookings')
-        .stream(primaryKey: ['id'])
-        .order('created_at')
-        .listen((_) {
-          // فور حدوث أي تغيير (إضافة، تعديل، حذف)، نعيد جلب البيانات كاملة من الـ RPC
-          _fetchAndEmit(controller, loungeId);
+    void cancelResources() {
+      debounceTimer?.cancel();
+      backupSyncTimer?.cancel();
+      realtimeSubscription?.cancel();
+    }
+
+    controller = StreamController<List<BookingModel>>(
+      onListen: () {
+        // 1. Fetch initial data immediately on subscription
+        _fetchAndEmit(controller, loungeId);
+
+        // 2. Realtime postgres changes listener
+        try {
+          final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
+          var streamQuery = _client.from('bookings').stream(primaryKey: ['id']);
+          if (cleanLoungeId != null) {
+            streamQuery = streamQuery.eq('lounge_id', cleanLoungeId);
+          }
+          realtimeSubscription = streamQuery.order('created_at').listen((_) {
+            debouncedFetchAndEmit();
+          }, onError: (e) {
+            // Ignore silent socket drops; backup timer will continue polling
+          });
+        } catch (e) {
+          // Ignore stream setup errors; backup polling will fetch updates
+        }
+
+        // 3. Periodic 30-second fallback backup poll (safety net for socket drops)
+        backupSyncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+          debouncedFetchAndEmit();
         });
+      },
+      onCancel: () {
+        cancelResources();
+      },
+    );
 
     return controller.stream;
   }

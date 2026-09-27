@@ -1,54 +1,48 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/loyalty_stats_model.dart';
+import '../../../../core/utils/paginated_result.dart';
 import '../../../marketing/data/models/redemption_option_model.dart';
+import '../models/loyalty_level_model.dart';
+import '../models/loyalty_stats_model.dart';
+import '../models/loyalty_task_model.dart';
+import '../models/points_transaction_model.dart';
+import '../models/referral_model.dart';
 
 abstract class LoyaltyRemoteDataSource {
-  Future<LoyaltyStatsModel> getLoyaltyStats();
+  Future<LoyaltyStatsModel> getLoyaltyStats({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? levelId,
+    String? referralStatus,
+    String? userId,
+  });
+
+  Future<List<ReferralModel>> getReferrals({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? status,
+    String? userId,
+  });
+
+  Future<List<LoyaltyTaskModel>> getTasks();
+
+  Future<void> updateTask(String id, Map<String, dynamic> data);
+
+  Future<List<LoyaltyLevelModel>> getLevels();
+
+  Future<void> updateLevel(String id, Map<String, dynamic> data);
+
+  Future<void> adjustUserPoints({
+    required String userId,
+    required int pointsDelta,
+    required String reason,
+  });
+
+  Future<PaginatedResult<PointsTransactionModel>> getPointsTransactionsPage({
+    int page = 1,
+    int pageSize = 20,
+  });
+
   Future<List<RedemptionOptionModel>> getRedemptionOptions();
   Future<void> createRedemptionOption(RedemptionOptionModel option);
   Future<void> updateRedemptionOption(String id, Map<String, dynamic> data);
   Future<void> deleteRedemptionOption(String id);
-}
-
-class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
-  final SupabaseClient client;
-  LoyaltyRemoteDataSourceImpl(this.client);
-
-  @override
-  Future<LoyaltyStatsModel> getLoyaltyStats() async {
-    try {
-      final response = await client.rpc('get_voucher_stats');
-      return LoyaltyStatsModel.fromJson(Map<String, dynamic>.from(response));
-    } catch (e) {
-      // Fallback if RPC is not created yet
-      print('Loyalty Stats Alert: RPC get_voucher_stats failed, using default values. Error: $e');
-      return LoyaltyStatsModel(
-        totalVouchersIssued: 0,
-        totalVouchersUsed: 0,
-        totalVouchersActive: 0,
-        totalDiscountValueUsed: 0.0,
-      );
-    }
-  }
-
-  @override
-  Future<List<RedemptionOptionModel>> getRedemptionOptions() async {
-    final response = await client.from('redemption_options').select().order('created_at', ascending: false);
-    return (response as List).map((e) => RedemptionOptionModel.fromJson(Map<String, dynamic>.from(e))).toList();
-  }
-
-  @override
-  Future<void> createRedemptionOption(RedemptionOptionModel option) async {
-    await client.from('redemption_options').insert(option.toJson());
-  }
-
-  @override
-  Future<void> updateRedemptionOption(String id, Map<String, dynamic> data) async {
-    await client.from('redemption_options').update(data).eq('id', id);
-  }
-
-  @override
-  Future<void> deleteRedemptionOption(String id) async {
-    await client.from('redemption_options').delete().eq('id', id);
-  }
 }

@@ -1,0 +1,6 @@
+- [ ] Refine BookingCard widget UI & model bindings
+- [ ] Refine LiveSessionCard widget UI & timer/progress display
+- [ ] Refine RoomOccupancyGrid widget UI & occupancy states
+- [ ] Refine BookingDetailsDialog widget UI & financial breakdown
+- [ ] Refine AddBookingDialog widget UI & multi-room booking flow
+- [ ] Verify build and UI layout integrity

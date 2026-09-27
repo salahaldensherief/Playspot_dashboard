@@ -44,7 +44,7 @@ class _RoomStatusCardState extends State<RoomStatusCard> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _rooms.length,
-            separatorBuilder: (_, __) => const Divider(color: AppColors.divider),
+            separatorBuilder: (_, _) => const Divider(color: AppColors.divider),
             itemBuilder: (context, index) {
               final room = _rooms[index];
               final isAvailable = room['status'] == 'available';
@@ -60,14 +60,14 @@ class _RoomStatusCardState extends State<RoomStatusCard> {
                       Text(
                         isAvailable ? AppStrings.active : AppStrings.inactive,
                         style: TextStyle(
-                          color: isAvailable ? AppColors.success : AppColors.warning,
+                           color: isAvailable ? AppColors.success : AppColors.warning,
                           fontSize: 12.sp,
                         ),
                       ),
                       SizedBox(width: 8.w),
                       Switch(
                         value: isAvailable,
-                        activeColor: AppColors.neonBlue,
+                        activeThumbColor: AppColors.neonBlue,
                         inactiveThumbColor: AppColors.textMuted,
                         onChanged: (val) {
                           setState(() {

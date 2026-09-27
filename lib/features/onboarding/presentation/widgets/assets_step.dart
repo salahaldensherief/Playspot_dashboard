@@ -34,7 +34,7 @@ class AssetsStep extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: state.rooms.length,
-              separatorBuilder: (_, __) => SizedBox(height: 12.h),
+              separatorBuilder: (_, _) => SizedBox(height: 12.h),
               itemBuilder: (context, index) {
                 final room = state.rooms[index];
                 return _buildRoomItem(context, room);
@@ -57,7 +57,7 @@ class AssetsStep extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(32.r),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground.withOpacity(0.5),
+        color: AppColors.cardBackground.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.borderDefault, style: BorderStyle.solid),
       ),
@@ -87,7 +87,7 @@ class AssetsStep extends StatelessWidget {
             width: 48.w,
             height: 48.h,
             decoration: BoxDecoration(
-              color: AppColors.neonBlue.withOpacity(0.1),
+              color: AppColors.neonBlue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: const Icon(Icons.videogame_asset, color: AppColors.neonBlue),

@@ -13,10 +13,9 @@ class RoomEntity extends Equatable {
   final List<String> activityIds;
   final String? spaceType;
   final String? spaceTypeId;
-  final int capacity;
-  final double pricePerHourSingle;
-  final double pricePerHourMulti;
-  final double pricePerHour; // Kept for backward compatibility if needed
+  final int maxCapacity;
+  final double hourlyRateSingle;
+  final double hourlyRateMulti;
   final double extraControllerPrice;
   final bool isAvailable;
   final List<String> images;
@@ -25,7 +24,17 @@ class RoomEntity extends Equatable {
   final int controllersCount;
   final String screenSize;
   final RoomStatusEnum status;
+  final bool hasOffer;
+  final String? offerTitle;
+  final String? offerTag;
+  final String? activePromotionId;
 
+  // Aliases and backward compatibility getters
+  int get capacity => maxCapacity;
+  double get pricePerHourSingle => hourlyRateSingle;
+  double get pricePerHourMulti => hourlyRateMulti;
+  double get pricePerHour => hourlyRateSingle;
+  bool get isActive => isAvailable;
   bool get isOpenArea => spaceTypeId == 'open_area';
 
   const RoomEntity({
@@ -39,10 +48,13 @@ class RoomEntity extends Equatable {
     this.activityIds = const [],
     this.spaceType,
     this.spaceTypeId,
-    required this.capacity,
-    required this.pricePerHourSingle,
-    required this.pricePerHourMulti,
-    this.pricePerHour = 0.0,
+    int? maxCapacity,
+    int? capacity,
+    double? hourlyRateSingle,
+    double? hourlyRateMulti,
+    double? pricePerHourSingle,
+    double? pricePerHourMulti,
+    double pricePerHour = 0.0,
     this.extraControllerPrice = 0.0,
     required this.isAvailable,
     required this.images,
@@ -51,7 +63,13 @@ class RoomEntity extends Equatable {
     this.controllersCount = 2,
     this.screenSize = '43"',
     this.status = RoomStatusEnum.available,
-  });
+    this.hasOffer = false,
+    this.offerTitle,
+    this.offerTag,
+    this.activePromotionId,
+  })  : maxCapacity = maxCapacity ?? capacity ?? 4,
+        hourlyRateSingle = hourlyRateSingle ?? pricePerHourSingle ?? pricePerHour,
+        hourlyRateMulti = hourlyRateMulti ?? pricePerHourMulti ?? pricePerHour;
 
   @override
   List<Object?> get props => [
@@ -65,10 +83,9 @@ class RoomEntity extends Equatable {
         activityIds,
         spaceType,
         spaceTypeId,
-        capacity,
-        pricePerHourSingle,
-        pricePerHourMulti,
-        pricePerHour,
+        maxCapacity,
+        hourlyRateSingle,
+        hourlyRateMulti,
         extraControllerPrice,
         isAvailable,
         images,
@@ -77,5 +94,9 @@ class RoomEntity extends Equatable {
         controllersCount,
         screenSize,
         status,
+        hasOffer,
+        offerTitle,
+        offerTag,
+        activePromotionId,
       ];
 }

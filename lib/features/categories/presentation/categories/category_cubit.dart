@@ -1,22 +1,67 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/entities/category_entity.dart';
-import '../../data/entities/city_entity.dart';
-import '../../data/entities/activity_type_entity.dart';
-import '../../data/repos/category_repos.dart';
+import 'package:play_spot_dashboard/core/error/failures.dart';
+import '../../domain/entities/category_entity.dart';
+import '../../domain/entities/city_entity.dart';
+import '../../domain/entities/activity_type_entity.dart';
+import '../../domain/usecases/add_category_usecase.dart';
+import '../../domain/usecases/delete_category_usecase.dart';
+import '../../domain/usecases/get_categories_usecase.dart';
+import '../../domain/usecases/manage_activity_types_usecases.dart';
+import '../../domain/usecases/manage_cities_usecases.dart';
+import '../../domain/usecases/update_category_usecase.dart';
 import 'category_state.dart';
 
 class CategoryCubit extends Cubit<CategoryState> {
-  final CategoryRepository _repository;
+  final GetCategoriesUseCase _getCategoriesUseCase;
+  final AddCategoryUseCase _addCategoryUseCase;
+  final UpdateCategoryUseCase _updateCategoryUseCase;
+  final DeleteCategoryUseCase _deleteCategoryUseCase;
 
-  CategoryCubit(this._repository) : super(CategoryState.init());
+  final GetCitiesUseCase _getCitiesUseCase;
+  final AddCityUseCase _addCityUseCase;
+  final UpdateCityUseCase _updateCityUseCase;
+  final DeleteCityUseCase _deleteCityUseCase;
 
-  Future<void> loadCategories() async {
+  final GetActivityTypesUseCase _getActivityTypesUseCase;
+  final AddActivityTypeUseCase _addActivityTypeUseCase;
+
+  CategoryCubit({
+    required GetCategoriesUseCase getCategoriesUseCase,
+    required AddCategoryUseCase addCategoryUseCase,
+    required UpdateCategoryUseCase updateCategoryUseCase,
+    required DeleteCategoryUseCase deleteCategoryUseCase,
+    required GetCitiesUseCase getCitiesUseCase,
+    required AddCityUseCase addCityUseCase,
+    required UpdateCityUseCase updateCityUseCase,
+    required DeleteCityUseCase deleteCityUseCase,
+    required GetActivityTypesUseCase getActivityTypesUseCase,
+    required AddActivityTypeUseCase addActivityTypeUseCase,
+  })  : _getCategoriesUseCase = getCategoriesUseCase,
+        _addCategoryUseCase = addCategoryUseCase,
+        _updateCategoryUseCase = updateCategoryUseCase,
+        _deleteCategoryUseCase = deleteCategoryUseCase,
+        _getCitiesUseCase = getCitiesUseCase,
+        _addCityUseCase = addCityUseCase,
+        _updateCityUseCase = updateCityUseCase,
+        _deleteCityUseCase = deleteCityUseCase,
+        _getActivityTypesUseCase = getActivityTypesUseCase,
+        _addActivityTypeUseCase = addActivityTypeUseCase,
+        super(CategoryState.init());
+
+  Future<void> loadCategories({bool forceRefresh = false}) async {
     emit(state.copyWith(status: CategoryStatus.loading));
-    final catResult = await _repository.getCategories();
-    final cityResult = await _repository.getCities();
-    final activityResult = await _repository.getActivityTypes();
+    final results = await Future.wait([
+      _getCategoriesUseCase(forceRefresh),
+      _getCitiesUseCase(forceRefresh),
+      _getActivityTypesUseCase(forceRefresh),
+    ]);
     
     if (isClosed) return;
+
+    final catResult = results[0] as Either<Failure, List<CategoryEntity>>;
+    final cityResult = results[1] as Either<Failure, List<CityEntity>>;
+    final activityResult = results[2] as Either<Failure, List<ActivityTypeEntity>>;
 
     catResult.fold(
       (failure) => emit(state.copyWith(
@@ -51,7 +96,7 @@ class CategoryCubit extends Cubit<CategoryState> {
   // Activity Types Management
   Future<ActivityTypeEntity?> addActivityType(String name, String label) async {
     final newActivity = ActivityTypeEntity(id: '', name: name, label: label);
-    final result = await _repository.addActivityType(newActivity);
+    final result = await _addActivityTypeUseCase(newActivity);
     
     return result.fold(
       (failure) {
@@ -68,7 +113,7 @@ class CategoryCubit extends Cubit<CategoryState> {
   // Cities Management
   Future<void> addCity(CityEntity city) async {
     emit(state.copyWith(status: CategoryStatus.loading));
-    final result = await _repository.addCity(city);
+    final result = await _addCityUseCase(city);
     if (isClosed) return;
     result.fold(
       (failure) => emit(state.copyWith(status: CategoryStatus.failure, errorMessage: failure.message)),
@@ -78,7 +123,7 @@ class CategoryCubit extends Cubit<CategoryState> {
 
   Future<void> updateCity(CityEntity city) async {
     emit(state.copyWith(status: CategoryStatus.loading));
-    final result = await _repository.updateCity(city);
+    final result = await _updateCityUseCase(city);
     if (isClosed) return;
     result.fold(
       (failure) => emit(state.copyWith(status: CategoryStatus.failure, errorMessage: failure.message)),
@@ -88,7 +133,7 @@ class CategoryCubit extends Cubit<CategoryState> {
 
   Future<void> deleteCity(String id) async {
     emit(state.copyWith(status: CategoryStatus.loading));
-    final result = await _repository.deleteCity(id);
+    final result = await _deleteCityUseCase(id);
     if (isClosed) return;
     result.fold(
       (failure) => emit(state.copyWith(status: CategoryStatus.failure, errorMessage: failure.message)),
@@ -98,7 +143,7 @@ class CategoryCubit extends Cubit<CategoryState> {
 
   Future<void> addCategory(CategoryEntity category) async {
     emit(state.copyWith(status: CategoryStatus.loading));
-    final result = await _repository.addCategory(category);
+    final result = await _addCategoryUseCase(category);
     
     if (isClosed) return;
 
@@ -113,7 +158,7 @@ class CategoryCubit extends Cubit<CategoryState> {
 
   Future<void> updateCategory(CategoryEntity category) async {
     emit(state.copyWith(status: CategoryStatus.loading));
-    final result = await _repository.updateCategory(category);
+    final result = await _updateCategoryUseCase(category);
     
     if (isClosed) return;
 
@@ -128,7 +173,7 @@ class CategoryCubit extends Cubit<CategoryState> {
 
   Future<void> deleteCategory(String id) async {
     emit(state.copyWith(status: CategoryStatus.loading));
-    final result = await _repository.deleteCategory(id);
+    final result = await _deleteCategoryUseCase(id);
     
     if (isClosed) return;
 

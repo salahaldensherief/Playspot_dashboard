@@ -20,7 +20,7 @@ class WorkingHoursSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SectionContainer(
-      title: 'Working Hours',
+      title: AppStrings.schedule,
       children: [
         Row(
           children: [
@@ -28,7 +28,7 @@ class WorkingHoursSection extends StatelessWidget {
               child: AppTextField(
                 label: AppStrings.opensAt,
                 controller: opensAtController,
-                hintText: '10:00 AM',
+                hintText: AppStrings.timeHint,
                 prefixIcon: Icons.access_time,
                 readOnly: true,
                 onTap: onOpensAtTap,
@@ -39,7 +39,7 @@ class WorkingHoursSection extends StatelessWidget {
               child: AppTextField(
                 label: AppStrings.closesAt,
                 controller: closesAtController,
-                hintText: '02:00 AM',
+                hintText: AppStrings.timeHint,
                 prefixIcon: Icons.access_time,
                 readOnly: true,
                 onTap: onClosesAtTap,

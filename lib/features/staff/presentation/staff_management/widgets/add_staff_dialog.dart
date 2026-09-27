@@ -6,7 +6,8 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
-import 'package:play_spot_dashboard/features/staff/data/entities/staff_entity.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/staff/domain/entities/staff_entity.dart';
 import 'package:play_spot_dashboard/features/staff/data/models/staff_params.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_cubit.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_state.dart';
@@ -14,10 +15,15 @@ import 'role_chip.dart';
 
 class AddStaffDialog extends StatefulWidget {
   final String loungeId;
-  final StaffCubit cubit; // Explicitly pass the cubit
+  final StaffCubit cubit;
   final StaffEntity? staff;
 
-  const AddStaffDialog({super.key, required this.loungeId, required this.cubit, this.staff});
+  const AddStaffDialog({
+    super.key,
+    required this.loungeId,
+    required this.cubit,
+    this.staff,
+  });
 
   @override
   State<AddStaffDialog> createState() => _AddStaffDialogState();
@@ -40,7 +46,12 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
     _emailController = TextEditingController(text: widget.staff?.email);
     _phoneController = TextEditingController(text: widget.staff?.phone);
     _passwordController = TextEditingController();
-    _selectedRole = widget.staff?.role ?? 'cashier';
+    final rawRole = (widget.staff?.role ?? 'cashier').toLowerCase().trim();
+    _selectedRole = switch (rawRole) {
+      'manager' || 'admin' || 'lounge_admin' => 'manager',
+      'staff' => 'staff',
+      _ => 'cashier',
+    };
   }
 
   @override
@@ -55,7 +66,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<StaffCubit, StaffState>(
-      bloc: widget.cubit, // Use the explicitly passed cubit instance
+      bloc: widget.cubit,
       listenWhen: (prev, curr) => prev.status != curr.status,
       listener: (context, state) {
         if (state.status.isSuccess) {
@@ -72,7 +83,9 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
       },
       child: Dialog(
         backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
         child: Container(
           width: 500.w,
           padding: EdgeInsets.all(32.r),
@@ -84,7 +97,12 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
               children: [
                 Text(
                   isEdit ? AppStrings.editStaff : AppStrings.addStaff,
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 20.sp, fontWeight: FontWeight.bold, fontFamily: 'Orbitron'),
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Orbitron',
+                  ),
                 ),
                 SizedBox(height: 24.h),
                 AppTextField(
@@ -100,7 +118,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                         label: AppStrings.email,
                         controller: _emailController,
                         validator: AppValidator.validateEmail,
-                        readOnly: isEdit, // Email usually shouldn't be edited if it's the auth ID
+                        readOnly: isEdit,
                       ),
                     ),
                     SizedBox(width: 16.w),
@@ -118,14 +136,19 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                   AppTextField(
                     label: AppStrings.tempPassword,
                     controller: _passwordController,
-                    validator: (v) => (v?.length ?? 0) < 6 ? AppStrings.passwordTooShort : null,
+                    validator: (v) =>
+                        AppValidator.validatePassword(v, minLength: 8),
                     isPassword: true,
                   ),
                 ],
                 SizedBox(height: 24.h),
                 Text(
                   AppStrings.roleLabel,
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 SizedBox(height: 12.h),
                 _buildRoleSelection(),
@@ -140,7 +163,9 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                     ),
                     SizedBox(width: 16.w),
                     AppButton(
-                      text: isEdit ? AppStrings.saveChanges : AppStrings.addStaff,
+                      text: isEdit
+                          ? AppStrings.saveChanges
+                          : AppStrings.addStaff,
                       onPressed: _submit,
                     ),
                   ],
@@ -154,18 +179,19 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
   }
 
   Widget _buildRoleSelection() {
+    final bool isManager = _selectedRole == 'manager';
     return Row(
       children: [
         RoleChip(
           label: AppStrings.cashierLabel,
-          isSelected: _selectedRole == 'cashier',
+          isSelected: !isManager,
           onTap: () => setState(() => _selectedRole = 'cashier'),
         ),
         SizedBox(width: 12.w),
         RoleChip(
           label: AppStrings.manager,
-          isSelected: _selectedRole == 'lounge_owner',
-          onTap: () => setState(() => _selectedRole = 'lounge_owner'),
+          isSelected: isManager,
+          onTap: () => setState(() => _selectedRole = 'manager'),
         ),
       ],
     );
@@ -173,6 +199,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
 
   void _submit() {
     if (_formKey.currentState?.validate() == true) {
+      final currentUser = context.read<LoginCubit>().state.user;
       final staffId = widget.staff?.id;
       if (isEdit && staffId != null) {
         widget.cubit.updateStaffMember(
@@ -183,6 +210,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
             'role': _selectedRole,
           },
           widget.loungeId,
+          currentUser: currentUser,
         );
       } else if (!isEdit) {
         widget.cubit.addStaffMember(
@@ -194,6 +222,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
             role: _selectedRole,
             loungeId: widget.loungeId,
           ),
+          currentUser: currentUser,
         );
       }
     }

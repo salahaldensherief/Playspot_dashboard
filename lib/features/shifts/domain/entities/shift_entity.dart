@@ -2,11 +2,14 @@ import 'package:equatable/equatable.dart';
 
 class ShiftEntity extends Equatable {
   final String id;
+  final String? loungeId;
   final String cashierId;
   final String? cashierName;
   final double startingCash;
   final double? cashRevenue;
   final double? digitalRevenue;
+  final double? expensesTotal;
+  final double? cashDropsTotal;
   final double? expectedCash;
   final double? actualCash;
   final double? discrepancy;
@@ -19,15 +22,37 @@ class ShiftEntity extends Equatable {
   final DateTime? approvedAt;
   final String? managerNotes;
 
+  String get staffId => cashierId;
+  double? get actualCashCounted => actualCash;
+  double? get difference => discrepancy;
+  DateTime get createdAt => startTime;
+
   double get totalRevenue => (cashRevenue ?? 0) + (digitalRevenue ?? 0);
+
+  /// Unified Expected Cash Calculation:
+  /// Expected Cash = Starting Cash + Cash Revenue - Expenses - Cash Drops
+  double get calculatedExpectedCash {
+    if (expectedCash != null && expectedCash! > 0) return expectedCash!;
+    return startingCash + (cashRevenue ?? 0) - (expensesTotal ?? 0) - (cashDropsTotal ?? 0);
+  }
+
+  /// Unified Discrepancy Calculation:
+  /// Discrepancy = Actual Cash Counted - Expected Cash
+  double get calculatedDiscrepancy {
+    if (actualCash == null) return 0.0;
+    return actualCash! - calculatedExpectedCash;
+  }
 
   const ShiftEntity({
     required this.id,
+    this.loungeId,
     required this.cashierId,
     this.cashierName,
     required this.startingCash,
     this.cashRevenue,
     this.digitalRevenue,
+    this.expensesTotal,
+    this.cashDropsTotal,
     this.expectedCash,
     this.actualCash,
     this.discrepancy,
@@ -44,11 +69,14 @@ class ShiftEntity extends Equatable {
   @override
   List<Object?> get props => [
         id,
+        loungeId,
         cashierId,
         cashierName,
         startingCash,
         cashRevenue,
         digitalRevenue,
+        expensesTotal,
+        cashDropsTotal,
         expectedCash,
         actualCash,
         discrepancy,

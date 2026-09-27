@@ -1,28 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
-import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
-import 'package:play_spot_dashboard/features/bookings/presentation/widgets/swap_room_dialog.dart';
-import '../../domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
+import 'booking_details_action_panel.dart';
+import 'booking_details_customer_card.dart';
+import 'booking_details_financial_summary.dart';
+import 'booking_receipt_card.dart';
+import 'booking_specifications_card.dart';
 
 class BookingDetailsDialog extends StatefulWidget {
   final Booking booking;
-  final Function(double discountAmount, double discountPercentage, String? reason) onConfirmPayment;
-  final VoidCallback onCancel;
+  final Function(double discountAmount, double discountPercentage, String? reason)?
+      onConfirmPayment;
+  final VoidCallback? onCancel;
 
   const BookingDetailsDialog({
     super.key,
     required this.booking,
-    required this.onConfirmPayment,
-    required this.onCancel,
+    this.onConfirmPayment,
+    this.onCancel,
   });
 
   @override
@@ -32,7 +35,7 @@ class BookingDetailsDialog extends StatefulWidget {
 class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
   final _discountController = TextEditingController();
   final _reasonController = TextEditingController();
-  bool _isPercentage = false;
+  final bool _isPercentage = false;
 
   @override
   void dispose() {
@@ -41,259 +44,240 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
     super.dispose();
   }
 
-  double get _discountValue => double.tryParse(_discountController.text) ?? 0.0;
+  double get _discountValue =>
+      double.tryParse(_discountController.text) ?? 0.0;
 
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Container(
-        width: 700.w,
-        padding: EdgeInsets.all(32.r),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              SizedBox(height: 24.h),
-              _buildInfoGrid(),
-              if (widget.booking.extras.isNotEmpty) ...[
-                SizedBox(height: 24.h),
-                _buildExtrasSection(),
-              ],
-              if (widget.booking.paymentStatus != PaymentStatus.paid) ...[
-                SizedBox(height: 24.h),
-                _buildDiscountSection(),
-              ],
-              SizedBox(height: 32.h),
-              _buildActions(context),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppText.heading(AppStrings.bookingDetails, fontSize: 24.sp),
-            SizedBox(height: 4.h),
-            AppText.body('ID: ${widget.booking.id}', fontSize: 12.sp),
-          ],
-        ),
-        IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.close, color: AppColors.textSecondary),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoGrid() {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      childAspectRatio: 3,
-      children: [
-        _buildInfoItem(AppStrings.customerName, widget.booking.userName ?? AppStrings.anonymous),
-        _buildInfoItem(AppStrings.phoneNumber, widget.booking.userPhone ?? '-'),
-        _buildInfoItem(AppStrings.roomLabel, widget.booking.roomName),
-        _buildInfoItem(AppStrings.schedule, '${widget.booking.startTime} - ${widget.booking.endTime}'),
-        _buildInfoItem(AppStrings.date, DateFormat('MMM dd, yyyy').format(widget.booking.date)),
-        _buildInfoItem(AppStrings.totalPrice, '${widget.booking.totalPrice.toStringAsFixed(2)} ${AppStrings.egp}', valueColor: AppColors.neonBlue),
-        _buildInfoItem(AppStrings.payment, widget.booking.paymentStatus == PaymentStatus.paid ? AppStrings.paid : AppStrings.unpaid),
-        _buildInfoItem(AppStrings.status, '', customWidget: _getStatusBadge(widget.booking.status)),
-      ],
-    );
-  }
-
-  Widget _buildExtrasSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Icon(Icons.fastfood_outlined, color: AppColors.neonBlue, size: 20),
-            SizedBox(width: 8.w),
-            AppText.subHeading(AppStrings.additionalItems, fontSize: 18.sp),
-          ],
-        ),
-        SizedBox(height: 16.h),
-        Container(
-          padding: EdgeInsets.all(16.r),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppColors.borderDefault),
-          ),
-          child: Column(
-            children: widget.booking.extras.map((item) => Padding(
-              padding: EdgeInsets.only(bottom: 8.h),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  AppText.body('${item['quantity']}x ${item['name_en'] ?? item['name']}', color: AppColors.textPrimary),
-                  AppText.body('${item['price'] ?? 0} ${AppStrings.egp}', color: AppColors.textSecondary),
-                ],
-              ),
-            )).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDiscountSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppText.subHeading(AppStrings.discount, fontSize: 18.sp),
-        SizedBox(height: 16.h),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 2,
-              child: AppTextField(
-                label: AppStrings.discount,
-                controller: _discountController,
-                keyboardType: TextInputType.number,
-                suffix: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextButton(
-                      onPressed: () => setState(() => _isPercentage = false),
-                      child: Text('EGP', style: TextStyle(color: !_isPercentage ? AppColors.neonBlue : Colors.white)),
-                    ),
-                    TextButton(
-                      onPressed: () => setState(() => _isPercentage = true),
-                      child: Text('%', style: TextStyle(color: _isPercentage ? AppColors.neonBlue : Colors.white)),
-                    ),
-                  ],
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              flex: 3,
-              child: AppTextField(
-                label: AppStrings.discountReason,
-                controller: _reasonController,
-                hintText: 'Enter reason for audit...',
-                validator: (val) => (_discountValue > 0 && (val == null || val.isEmpty)) ? AppStrings.reasonRequired : null,
-              ),
-            ),
-          ],
-        ),
-        if (_discountValue > 0) ...[
-          SizedBox(height: 12.h),
-          AppText.body(
-            'Final Price: ${(widget.booking.totalPrice - (_isPercentage ? (widget.booking.totalPrice * _discountValue / 100) : _discountValue)).toStringAsFixed(2)} ${AppStrings.egp}',
-            color: AppColors.success,
-            fontWeight: FontWeight.bold,
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildInfoItem(String label, String value, {Color? valueColor, Widget? customWidget}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppText.body(label, fontSize: 12.sp),
-        SizedBox(height: 4.h),
-        customWidget ?? AppText.subHeading(
-          value,
-          fontSize: 16.sp,
-          color: valueColor,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActions(BuildContext context) {
-    final bool isSessionActive = widget.booking.status == BookingStatus.inProgress || widget.booking.status == BookingStatus.upcoming;
+  void _handleConfirmPayment(BuildContext context, Booking activeBooking) {
     final user = context.read<LoginCubit>().state.user;
-    final bool isCashier = user?.isCashier == true;
+    final isCashier = user?.isCashier == true;
+    final discount = _discountValue;
+    final percent = _isPercentage
+        ? discount
+        : (activeBooking.totalPrice > 0
+            ? (discount / activeBooking.totalPrice * 100)
+            : 0.0);
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        if (isSessionActive)
-          AppButton(
-            text: AppStrings.swapRoom,
-            variant: AppButtonVariant.outlined,
-            onPressed: () {
-              showDialog(
-                context: context,
-                useRootNavigator: false,
-                builder: (_) => SwapRoomDialog(
-                  bookingId: widget.booking.id,
-                  currentRoomId: widget.booking.roomId,
-                ),
-              );
-            },
-          ),
-        SizedBox(width: 16.w),
-        AppButton(
-          text: AppStrings.cancelBooking,
-          variant: AppButtonVariant.outlined,
-          onPressed: () {
-            widget.onCancel();
-            Navigator.pop(context);
-          },
+    if (isCashier && percent > 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.managerOverrideRequired),
+          backgroundColor: AppColors.danger,
         ),
-        SizedBox(width: 16.w),
-        if (widget.booking.paymentStatus != PaymentStatus.paid)
-          AppButton(
-            text: AppStrings.confirmCash,
-            onPressed: () {
-              final discount = _discountValue;
-              final percent = _isPercentage ? discount : (discount / widget.booking.totalPrice * 100);
-              
-              if (isCashier && percent > 10) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(AppStrings.managerOverrideRequired), backgroundColor: AppColors.danger),
-                );
-                return;
-              }
+      );
+      return;
+    }
 
-              if (discount > 0 && _reasonController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                   SnackBar(content: Text(AppStrings.reasonRequired), backgroundColor: AppColors.danger),
-                );
-                return;
-              }
+    if (discount > 0 && _reasonController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.reasonRequired),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
 
-              widget.onConfirmPayment(
-                _isPercentage ? (widget.booking.totalPrice * discount / 100) : discount,
-                percent,
-                _reasonController.text.trim(),
-              );
-              Navigator.pop(context);
-            },
-          ),
-      ],
-    );
+    final calculatedDiscountAmount = _isPercentage
+        ? (activeBooking.totalPrice * discount / 100)
+        : discount;
+
+    if (widget.onConfirmPayment != null) {
+      widget.onConfirmPayment!(
+        calculatedDiscountAmount,
+        percent,
+        _reasonController.text.trim(),
+      );
+    } else {
+      context.read<BookingCubit>().confirmCashPayment(
+            activeBooking.id,
+            discountAmount: calculatedDiscountAmount,
+            discountPercentage: percent,
+            discountReason: _reasonController.text.trim(),
+          );
+    }
+    Navigator.of(context, rootNavigator: false).pop();
   }
 
   Widget _getStatusBadge(BookingStatus status) {
     switch (status) {
-      case BookingStatus.pending: return StatusBadge.warning(AppStrings.pending.toUpperCase());
-      case BookingStatus.upcoming: return StatusBadge.info(AppStrings.upcoming.toUpperCase());
-      case BookingStatus.completed: return StatusBadge.success(AppStrings.completed.toUpperCase());
-      case BookingStatus.cancelled: return StatusBadge.danger(AppStrings.cancelled.toUpperCase());
-      default: return StatusBadge.info(status.name.toUpperCase());
+      case BookingStatus.pendingVerification:
+        return StatusBadge.warning(AppStrings.pendingVerification.toUpperCase());
+      case BookingStatus.pending:
+        return StatusBadge.warning(AppStrings.pending.toUpperCase());
+      case BookingStatus.upcoming:
+        return StatusBadge.info(AppStrings.upcoming.toUpperCase());
+      case BookingStatus.inProgress:
+        return StatusBadge.success(AppStrings.inProgress.toUpperCase());
+      case BookingStatus.completed:
+        return StatusBadge.success(AppStrings.completed.toUpperCase());
+      case BookingStatus.cancelled:
+        return StatusBadge.danger(AppStrings.cancelled.toUpperCase());
+      case BookingStatus.rejected:
+        return StatusBadge.danger(AppStrings.requestRejected.toUpperCase());
     }
+  }
+
+  Widget _buildHeader(BuildContext context, Booking booking) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8.r),
+                decoration: BoxDecoration(
+                  color: AppColors.neonBlue.withAlpha(25),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: const Icon(Icons.confirmation_number_outlined,
+                    color: AppColors.neonBlue),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8.w,
+                      runSpacing: 4.h,
+                      children: [
+                        AppText.heading(AppStrings.bookingDetails,
+                            fontSize: 18.sp),
+                        _getStatusBadge(booking.status),
+                      ],
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      '#${booking.id}',
+                      style: TextStyle(
+                          color: AppColors.textSecondary, fontSize: 12.sp),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          onPressed: () => Navigator.of(context, rootNavigator: false).pop(),
+          icon: const Icon(Icons.close_rounded,
+              color: AppColors.textSecondary),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktopOrTablet = screenWidth >= 850;
+
+    return Dialog(
+      backgroundColor: AppColors.cardBackground,
+      insetPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+      child: Container(
+        width: isDesktopOrTablet ? 900.w : double.infinity,
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
+        ),
+        padding: EdgeInsets.all(20.r),
+        child: BlocBuilder<BookingCubit, BookingState>(
+          builder: (context, state) {
+            final activeBookingList =
+                state.bookings.where((b) => b.id == widget.booking.id).toList();
+            final currentBooking = activeBookingList.isNotEmpty
+                ? activeBookingList.first
+                : widget.booking;
+            final isLoading = state.status == BookingStatusState.loading;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(context, currentBooking),
+                SizedBox(height: 16.h),
+                const Divider(color: AppColors.borderDefault, height: 1),
+                SizedBox(height: 16.h),
+                Expanded(
+                  child: isDesktopOrTablet
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: 6,
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  children: [
+                                    BookingDetailsCustomerCard(
+                                        booking: currentBooking),
+                                    SizedBox(height: 12.h),
+                                    BookingSpecificationsCard(
+                                        booking: currentBooking),
+                                    SizedBox(height: 12.h),
+                                    BookingReceiptCard(
+                                        booking: currentBooking),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 16.w),
+                            Expanded(
+                              flex: 4,
+                              child: Column(
+                                children: [
+                                  Expanded(
+                                    child: SingleChildScrollView(
+                                      child: BookingDetailsFinancialSummary(
+                                          booking: currentBooking),
+                                    ),
+                                  ),
+                                  SizedBox(height: 12.h),
+                                  BookingDetailsActionPanel(
+                                    booking: currentBooking,
+                                    isLoading: isLoading,
+                                    onConfirmCashPayment: () =>
+                                        _handleConfirmPayment(
+                                            context, currentBooking),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        )
+                      : SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              BookingDetailsCustomerCard(
+                                  booking: currentBooking),
+                              SizedBox(height: 12.h),
+                              BookingSpecificationsCard(
+                                  booking: currentBooking),
+                              SizedBox(height: 12.h),
+                              BookingDetailsFinancialSummary(
+                                  booking: currentBooking),
+                              SizedBox(height: 12.h),
+                              BookingReceiptCard(booking: currentBooking),
+                              SizedBox(height: 16.h),
+                              BookingDetailsActionPanel(
+                                booking: currentBooking,
+                                isLoading: isLoading,
+                                onConfirmCashPayment: () =>
+                                    _handleConfirmPayment(
+                                        context, currentBooking),
+                              ),
+                            ],
+                          ),
+                        ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
   }
 }

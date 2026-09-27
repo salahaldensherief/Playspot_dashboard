@@ -1,4 +1,5 @@
-import '../entities/activity_type_entity.dart';
+
+import 'package:play_spot_dashboard/features/categories/domain/entities/activity_type_entity.dart';
 
 class ActivityTypeModel extends ActivityTypeEntity {
   const ActivityTypeModel({
@@ -19,6 +20,7 @@ class ActivityTypeModel extends ActivityTypeEntity {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'name': name,
       'label': label,
       'sort_order': sortOrder,

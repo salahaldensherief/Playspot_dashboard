@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
-import '../../data/entities/category_entity.dart';
-import '../../data/entities/city_entity.dart';
-import '../../data/entities/activity_type_entity.dart';
+import '../../domain/entities/category_entity.dart';
+import '../../domain/entities/city_entity.dart';
+import '../../domain/entities/activity_type_entity.dart';
 
 enum CategoryStatus {
   initial,

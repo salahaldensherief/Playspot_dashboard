@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -8,8 +7,9 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
-import 'package:play_spot_dashboard/features/staff/data/entities/staff_entity.dart';
-import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
+import 'package:play_spot_dashboard/core/responsive/app_breakpoints.dart';
+import 'package:play_spot_dashboard/features/staff/domain/entities/staff_entity.dart';
+import 'package:play_spot_dashboard/core/utils/debouncer.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_cubit.dart';
 import 'package:play_spot_dashboard/features/staff/presentation/staff_management/staff_state.dart';
@@ -24,6 +24,8 @@ class StaffScreen extends StatefulWidget {
 }
 
 class _StaffScreenState extends State<StaffScreen> {
+  final _searchDebouncer = Debouncer(delay: const Duration(milliseconds: 400));
+
   @override
   void initState() {
     super.initState();
@@ -32,6 +34,12 @@ class _StaffScreenState extends State<StaffScreen> {
     if (loungeId != null && loungeId.isNotEmpty) {
       context.read<StaffCubit>().fetchStaff(loungeId);
     }
+  }
+
+  @override
+  void dispose() {
+    _searchDebouncer.dispose();
+    super.dispose();
   }
 
   @override
@@ -56,38 +64,68 @@ class _StaffScreenState extends State<StaffScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppStrings.staffManagement,
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 28.sp, fontWeight: FontWeight.bold, fontFamily: 'Orbitron'),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      AppStrings.staffManagementDesc,
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+            if (AppBreakpoints.isMobile(context))
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.staffManagement,
+                    style: TextStyle(color: AppColors.textPrimary, fontSize: 22.sp, fontWeight: FontWeight.bold, fontFamily: 'Orbitron'),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    AppStrings.staffManagementDesc,
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+                  ),
+                  if (user?.canManageStaff == true) ...[
+                    SizedBox(height: 12.h),
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppButton(
+                        text: AppStrings.addStaff,
+                        icon: Icons.person_add_outlined,
+                        onPressed: () => _showStaffDialog(context, loungeId),
+                      ),
                     ),
                   ],
-                ),
-                if (user?.canManageStaff == true)
-                  AppButton(
-                    text: AppStrings.addStaff,
-                    icon: Icons.person_add_outlined,
-                    onPressed: () => _showStaffDialog(context, loungeId),
+                ],
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings.staffManagement,
+                          style: TextStyle(color: AppColors.textPrimary, fontSize: 28.sp, fontWeight: FontWeight.bold, fontFamily: 'Orbitron'),
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          AppStrings.staffManagementDesc,
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+                        ),
+                      ],
+                    ),
                   ),
-              ],
-            ),
+                  SizedBox(width: 12.w),
+                  if (user?.canManageStaff == true)
+                    AppButton(
+                      text: AppStrings.addStaff,
+                      icon: Icons.person_add_outlined,
+                      onPressed: () => _showStaffDialog(context, loungeId),
+                    ),
+                ],
+              ),
             SizedBox(height: 32.h),
-            Container(
+            SizedBox(
               width: 400.w,
               child: AppTextField(
                 hintText: AppStrings.searchStaff,
                 prefixIcon: Icons.search,
-                onChanged: (val) => context.read<StaffCubit>().setSearchQuery(val),
+                onChanged: (val) => _searchDebouncer.run(() => context.read<StaffCubit>().setSearchQuery(val)),
               ),
             ),
             SizedBox(height: 24.h),
@@ -115,7 +153,7 @@ class _StaffScreenState extends State<StaffScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.people_outline, size: 64.r, color: AppColors.textSecondary.withOpacity(0.2)),
+                          Icon(Icons.people_outline, size: 64.r, color: AppColors.textSecondary.withValues(alpha: 0.2)),
                           SizedBox(height: 16.h),
                           Text(AppStrings.noStaffFound, style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp)),
                         ],
@@ -152,7 +190,7 @@ class _StaffScreenState extends State<StaffScreen> {
                             return DataRow(
                               onSelectChanged: (_) => _showDetailsDialog(staff),
                               cells: [
-                                DataCell(Text(staff.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500))),
+                                DataCell(Text(staff.name, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w500))),
                                 DataCell(Text(staff.email, style: const TextStyle(color: AppColors.textSecondary))),
                                 DataCell(Text(staff.phone ?? AppStrings.notAssigned, style: const TextStyle(color: AppColors.textSecondary))),
                                 DataCell(_buildRoleBadge(staff.role)),
@@ -181,7 +219,16 @@ class _StaffScreenState extends State<StaffScreen> {
   }
 
   Widget _buildRoleBadge(String role) {
-    if (role == 'lounge_owner' || role == 'manager') return StatusBadge.secondary(AppStrings.manager);
+    final cleanRole = role.toLowerCase().trim();
+    if (cleanRole == 'owner' || cleanRole == 'lounge_owner' || cleanRole == 'lounge_admin') {
+      return StatusBadge.secondary(AppStrings.loungeOwnerLabel);
+    }
+    if (cleanRole == 'manager') {
+      return StatusBadge.secondary(AppStrings.manager);
+    }
+    if (cleanRole == 'super_admin' || cleanRole == 'superadmin') {
+      return StatusBadge.secondary(AppStrings.superAdmin);
+    }
     return StatusBadge.info(AppStrings.cashierLabel);
   }
 
@@ -245,7 +292,9 @@ class _StaffScreenState extends State<StaffScreen> {
       confirmColor: AppColors.danger,
     );
 
-    if (confirmed == true && context.mounted) {
+    if (!mounted) return;
+
+    if (confirmed == true) {
       context.read<StaffCubit>().deleteStaff(staff.id, loungeId);
     }
   }

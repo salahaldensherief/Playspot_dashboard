@@ -15,13 +15,13 @@ class LiveBookingItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusStr = booking.status.toString().split('.').last;
+    final statusStr = booking.status.toDbString();
 
     return Row(
       children: [
         CircleAvatar(
           radius: 20.r,
-          backgroundColor: AppColors.neonBlue.withOpacity(0.1),
+          backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
           child: Icon(Icons.person_outline, color: AppColors.neonBlue, size: 20.r),
         ),
         SizedBox(width: 16.w),
@@ -37,7 +37,7 @@ class LiveBookingItem extends StatelessWidget {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
           decoration: BoxDecoration(
-            color: _getStatusColor(statusStr).withOpacity(0.1),
+            color: _getStatusColor(statusStr).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(4.r),
           ),
           child: AppText.body(
@@ -72,7 +72,7 @@ class LiveBookingItem extends StatelessWidget {
       );
     }
     
-    if (booking.status == BookingStatus.upcoming && booking.paymentStatus != 'paid') {
+    if (booking.status == BookingStatus.upcoming && booking.paymentStatus == PaymentStatus.unpaid) {
       return AppButton(
         text: AppStrings.confirmCash,
         onPressed: () => context.read<BookingCubit>().confirmCashPayment(booking.id),
