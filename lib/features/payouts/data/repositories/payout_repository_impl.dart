@@ -20,9 +20,9 @@ class PayoutRepositoryImpl implements PayoutRepository {
   }
 
   @override
-  Future<Either<Failure, List<PayoutEntity>>> getAllPayouts() async {
+  Future<Either<Failure, List<PayoutEntity>>> getAllPayouts({int page = 1, int pageSize = 50}) async {
     try {
-      final payouts = await remoteDataSource.getAllPayouts();
+      final payouts = await remoteDataSource.getAllPayouts(page: page, pageSize: pageSize);
       return Right(payouts);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -167,9 +167,9 @@ class PayoutRepositoryImpl implements PayoutRepository {
   }
 
   @override
-  Future<Either<Failure, List<PayoutEntity>>> getPayoutsByLounge(String loungeId) async {
+  Future<Either<Failure, List<PayoutEntity>>> getPayoutsByLounge(String loungeId, {int page = 1, int pageSize = 50}) async {
     try {
-      final payouts = await remoteDataSource.getPayoutsByLounge(loungeId);
+      final payouts = await remoteDataSource.getPayoutsByLounge(loungeId, page: page, pageSize: pageSize);
       return Right(payouts);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

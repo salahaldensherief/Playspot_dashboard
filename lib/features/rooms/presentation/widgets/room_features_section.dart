@@ -99,7 +99,7 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
                   s,
                   style: TextStyle(
                     fontSize: 10.sp,
-                    color: isAdded ? Colors.white : AppColors.textSecondary,
+                    color: isAdded ? AppColors.textPrimary : AppColors.textSecondary,
                   ),
                 ),
                 backgroundColor: isAdded
@@ -116,7 +116,7 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
             Expanded(
               child: TextFormField(
                 controller: _featureArController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
                   hintText: AppStrings.nameAr,
                   hintStyle: const TextStyle(color: AppColors.textSecondary),
@@ -133,7 +133,7 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
             Expanded(
               child: TextFormField(
                 controller: _featureEnController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
                   hintText: AppStrings.nameEn,
                   hintStyle: const TextStyle(color: AppColors.textSecondary),

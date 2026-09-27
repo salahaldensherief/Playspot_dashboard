@@ -144,7 +144,7 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
                 label: Text(
                   '+$mins دقيقة',
                   style: TextStyle(
-                    color: isSelected ? Colors.white : AppColors.textPrimary,
+                    color: isSelected ? AppColors.textPrimary : AppColors.textPrimary,
                     fontSize: 12.sp,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),

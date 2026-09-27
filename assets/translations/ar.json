@@ -1144,5 +1144,11 @@
   "percentage_label": "نسبة مئوية (%)",
   "fixed_amount_egp": "مبلغ ثابت (ج.م)",
   "station_under_maintenance_warning": "المحطة تحت الصيانة حالياً وغير متاحة للحجز",
-  "must_start_session_before_swap": "يجب بدء الجلسة أولاً قبل تبديل الغرفة"
+  "must_start_session_before_swap": "يجب بدء الجلسة أولاً قبل تبديل الغرفة",
+  "add_new_room": "إضافة غرفة جديدة",
+  "kyc_header_desc": "مراجعة والتحقق من المستندات المقدمة من مالكي الصالات.",
+  "no_kyc_pending": "لا توجد طلبات توثيق معلقة حالياً.",
+  "id_card": "بطاقة الرقم القومي / الهوية",
+  "business_doc": "السجل التجاري",
+  "load_more": "تحميل المزيد"
 }

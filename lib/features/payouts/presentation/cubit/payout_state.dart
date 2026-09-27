@@ -12,6 +12,14 @@ class PayoutState extends Equatable {
   final String? errorMessage;
   final String? successMessage;
 
+  /// Pagination state ("load more" pattern).
+  final int allPayoutsNextPage;
+  final bool allPayoutsHasMore;
+  final bool allPayoutsLoadingMore;
+  final int loungePayoutsNextPage;
+  final bool loungePayoutsHasMore;
+  final bool loungePayoutsLoadingMore;
+
   const PayoutState({
     this.status = PayoutCubitStatus.initial,
     this.pendingOverviews = const [],
@@ -20,6 +28,12 @@ class PayoutState extends Equatable {
     this.selectedPayoutDetails,
     this.errorMessage,
     this.successMessage,
+    this.allPayoutsNextPage = 2,
+    this.allPayoutsHasMore = false,
+    this.allPayoutsLoadingMore = false,
+    this.loungePayoutsNextPage = 2,
+    this.loungePayoutsHasMore = false,
+    this.loungePayoutsLoadingMore = false,
   });
 
   PayoutState copyWith({
@@ -30,6 +44,12 @@ class PayoutState extends Equatable {
     Map<String, dynamic>? selectedPayoutDetails,
     String? errorMessage,
     String? successMessage,
+    int? allPayoutsNextPage,
+    bool? allPayoutsHasMore,
+    bool? allPayoutsLoadingMore,
+    int? loungePayoutsNextPage,
+    bool? loungePayoutsHasMore,
+    bool? loungePayoutsLoadingMore,
   }) {
     return PayoutState(
       status: status ?? this.status,
@@ -39,6 +59,12 @@ class PayoutState extends Equatable {
       selectedPayoutDetails: selectedPayoutDetails ?? this.selectedPayoutDetails,
       errorMessage: errorMessage,
       successMessage: successMessage,
+      allPayoutsNextPage: allPayoutsNextPage ?? this.allPayoutsNextPage,
+      allPayoutsHasMore: allPayoutsHasMore ?? this.allPayoutsHasMore,
+      allPayoutsLoadingMore: allPayoutsLoadingMore ?? this.allPayoutsLoadingMore,
+      loungePayoutsNextPage: loungePayoutsNextPage ?? this.loungePayoutsNextPage,
+      loungePayoutsHasMore: loungePayoutsHasMore ?? this.loungePayoutsHasMore,
+      loungePayoutsLoadingMore: loungePayoutsLoadingMore ?? this.loungePayoutsLoadingMore,
     );
   }
 
@@ -51,5 +77,11 @@ class PayoutState extends Equatable {
         selectedPayoutDetails,
         errorMessage,
         successMessage,
+        allPayoutsNextPage,
+        allPayoutsHasMore,
+        allPayoutsLoadingMore,
+        loungePayoutsNextPage,
+        loungePayoutsHasMore,
+        loungePayoutsLoadingMore,
       ];
 }

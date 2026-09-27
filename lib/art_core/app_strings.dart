@@ -69,6 +69,7 @@ class AppStrings {
   static String get resetFilters => 'reset_filters'.tr();
   static String get refresh => 'refresh'.tr();
   static String get retry => 'retry'.tr();
+  static String get loadMore => 'load_more'.tr();
   static String get totalVouchersIssued => 'total_vouchers_issued'.tr();
   static String get totalVouchersUsed => 'total_vouchers_used'.tr();
   static String get totalVouchersActive => 'total_vouchers_active'.tr();

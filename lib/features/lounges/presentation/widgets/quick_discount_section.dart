@@ -88,7 +88,7 @@ class _QuickDiscountSectionState extends State<QuickDiscountSection> {
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
               primary: AppColors.neonBlue,
-              onPrimary: Colors.white,
+              onPrimary: AppColors.textPrimary,
               surface: AppColors.cardBackground,
               onSurface: AppColors.textPrimary,
             ),
@@ -314,7 +314,7 @@ class _QuickDiscountSectionState extends State<QuickDiscountSection> {
           inputFormatters: inputFormatters,
           readOnly: readOnly,
           onTap: onTap,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 13.sp),

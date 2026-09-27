@@ -4,7 +4,7 @@ import '../entities/payout_entity.dart';
 
 abstract class PayoutRepository {
   Future<Either<Failure, List<PendingPayoutOverview>>> getPendingPayoutsOverview();
-  Future<Either<Failure, List<PayoutEntity>>> getAllPayouts();
+  Future<Either<Failure, List<PayoutEntity>>> getAllPayouts({int page = 1, int pageSize = 50});
   Future<Either<Failure, Map<String, dynamic>>> createPayout({
     required String loungeId,
     required String periodStart,
@@ -44,5 +44,5 @@ abstract class PayoutRepository {
   Future<Either<Failure, Map<String, dynamic>>> getPayoutDetails({
     required String payoutId,
   });
-  Future<Either<Failure, List<PayoutEntity>>> getPayoutsByLounge(String loungeId);
+  Future<Either<Failure, List<PayoutEntity>>> getPayoutsByLounge(String loungeId, {int page = 1, int pageSize = 50});
 }

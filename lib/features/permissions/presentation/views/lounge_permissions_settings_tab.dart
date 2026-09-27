@@ -163,7 +163,7 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
       title: AppText.body(p.nameAr.isNotEmpty && isArabic ? p.nameAr : (p.nameEn.isNotEmpty ? p.nameEn : p.key), fontWeight: FontWeight.bold),
       subtitle: AppText.body(isArabic ? p.descriptionAr : p.descriptionEn, color: AppColors.textSecondary, fontSize: 12.sp),
       activeTrackColor: AppColors.neonBlue,
-      activeThumbColor: Colors.white,
+      activeThumbColor: AppColors.textPrimary,
       contentPadding: EdgeInsets.zero,
     );
   }

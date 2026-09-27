@@ -134,7 +134,7 @@ class BookingSpecificationsCard extends StatelessWidget {
                           child: Text(
                             AppStrings.cancelledByClientAfterApproval,
                             style: TextStyle(
-                              color: Colors.white,
+                              color: AppColors.textPrimary,
                               fontSize: 11.sp,
                               fontWeight: FontWeight.bold,
                             ),

@@ -310,7 +310,7 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                               child: Text(
                                 '$disputedCount',
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textPrimary,
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),

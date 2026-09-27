@@ -29,7 +29,7 @@ class BookingCardHeader extends StatelessWidget {
         child: Text(
           AppStrings.cancelledByClientAfterApproval,
           style: TextStyle(
-            color: Colors.white,
+            color: AppColors.textPrimary,
             fontSize: 10.sp,
             fontWeight: FontWeight.bold,
           ),

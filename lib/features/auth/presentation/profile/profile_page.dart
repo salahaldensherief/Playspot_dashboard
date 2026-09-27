@@ -134,7 +134,7 @@ class ProfilePage extends StatelessWidget {
                 color: AppColors.neonBlue,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.camera_alt, color: Colors.white, size: 20.r),
+              child: Icon(Icons.camera_alt, color: AppColors.textPrimary, size: 20.r),
             ),
           ),
         ),

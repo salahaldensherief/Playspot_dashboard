@@ -25,7 +25,7 @@ class TopBarUserProfile extends StatelessWidget {
     return const CircleAvatar(
       radius: 18,
       backgroundColor: AppColors.neonPurple,
-      child: Icon(Icons.person, color: Colors.white, size: 20),
+      child: Icon(Icons.person, color: AppColors.textPrimary, size: 20),
     );
   }
 

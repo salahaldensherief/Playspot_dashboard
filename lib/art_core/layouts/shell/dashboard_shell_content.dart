@@ -114,13 +114,13 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.lock_outline_rounded, color: Colors.white),
+                const Icon(Icons.lock_outline_rounded, color: AppColors.textPrimary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     AppStrings.unauthorizedAccessMsg,
                     style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
+                        color: AppColors.textPrimary, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],

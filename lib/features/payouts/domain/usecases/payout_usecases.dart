@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/base_usecase.dart';
+import '../../../../core/usecases/page_params.dart';
 import '../entities/payout_entity.dart';
 import '../repositories/payout_repository.dart';
 
@@ -16,14 +17,14 @@ class GetPendingPayoutsOverviewUseCase implements UseCase<List<PendingPayoutOver
   }
 }
 
-class GetAllPayoutsUseCase implements UseCase<List<PayoutEntity>, NoParams> {
+class GetAllPayoutsUseCase implements UseCase<List<PayoutEntity>, PageParams> {
   final PayoutRepository repository;
 
   GetAllPayoutsUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<PayoutEntity>>> call(NoParams params) {
-    return repository.getAllPayouts();
+  Future<Either<Failure, List<PayoutEntity>>> call(PageParams params) {
+    return repository.getAllPayouts(page: params.page, pageSize: params.pageSize);
   }
 }
 
@@ -229,13 +230,32 @@ class GetPayoutDetailsUseCase implements UseCase<Map<String, dynamic>, String> {
   }
 }
 
-class GetPayoutsByLoungeUseCase implements UseCase<List<PayoutEntity>, String> {
+class LoungePayoutsParams extends Equatable {
+  final String loungeId;
+  final int page;
+  final int pageSize;
+
+  const LoungePayoutsParams({
+    required this.loungeId,
+    this.page = 1,
+    this.pageSize = 50,
+  });
+
+  @override
+  List<Object?> get props => [loungeId, page, pageSize];
+}
+
+class GetPayoutsByLoungeUseCase implements UseCase<List<PayoutEntity>, LoungePayoutsParams> {
   final PayoutRepository repository;
 
   GetPayoutsByLoungeUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<PayoutEntity>>> call(String loungeId) {
-    return repository.getPayoutsByLounge(loungeId);
+  Future<Either<Failure, List<PayoutEntity>>> call(LoungePayoutsParams params) {
+    return repository.getPayoutsByLounge(
+      params.loungeId,
+      page: params.page,
+      pageSize: params.pageSize,
+    );
   }
 }

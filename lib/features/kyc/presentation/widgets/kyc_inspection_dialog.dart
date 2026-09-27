@@ -237,7 +237,7 @@ class _KycRejectionDialogState extends State<_KycRejectionDialog> {
           TextField(
             controller: _notesController,
             maxLines: 3,
-            style: const TextStyle(color: Colors.white),
+            style: const TextStyle(color: AppColors.textPrimary),
             decoration: InputDecoration(
               hintText: AppStrings.rejectionReasonField,
               hintStyle: const TextStyle(color: AppColors.textSecondary),

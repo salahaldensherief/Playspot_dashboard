@@ -28,7 +28,7 @@ class AddBookingCustomerFields extends StatelessWidget {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(color: AppColors.textSecondary),

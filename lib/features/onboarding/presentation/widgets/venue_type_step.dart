@@ -226,7 +226,7 @@ class VenueTypeStep extends StatelessWidget {
                         ? Icon(
                             Icons.check,
                             size: 16.r,
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                           )
                         : null,
                   ),

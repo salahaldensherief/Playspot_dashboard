@@ -276,7 +276,7 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
           data: Theme.of(pickerContext).copyWith(
             colorScheme: const ColorScheme.dark(
               primary: AppColors.neonBlue,
-              onPrimary: Colors.white,
+              onPrimary: AppColors.textPrimary,
               surface: AppColors.cardBackground,
               onSurface: AppColors.textPrimary,
             ),

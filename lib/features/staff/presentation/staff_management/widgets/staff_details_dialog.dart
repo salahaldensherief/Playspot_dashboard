@@ -157,7 +157,7 @@ class StaffDetailsDialog extends StatelessWidget {
               top: 0,
               right: 0,
               child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                icon: const Icon(Icons.close, color: AppColors.textPrimary, size: 30),
                 onPressed: () => Navigator.pop(context),
               ),
             ),

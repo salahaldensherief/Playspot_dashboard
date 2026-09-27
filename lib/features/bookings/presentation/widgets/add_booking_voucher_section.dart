@@ -112,7 +112,7 @@ class _AddBookingVoucherSectionState extends State<AddBookingVoucherSection> {
               child: TextFormField(
                 controller: _controller,
                 textCapitalization: TextCapitalization.characters,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'أدخل الكود (مثال: 9326D324)',
                   hintStyle: const TextStyle(color: AppColors.textSecondary),

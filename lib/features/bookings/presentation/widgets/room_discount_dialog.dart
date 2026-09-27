@@ -203,7 +203,7 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
               controller: _valueController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*'))],
-              style: TextStyle(color: Colors.white, fontSize: 13.sp),
+              style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 hintText: _isPercentage ? 'مثال: 15' : 'مثال: 30',
@@ -233,7 +233,7 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
             SizedBox(height: 6.h),
             TextFormField(
               controller: _reasonController,
-              style: TextStyle(color: Colors.white, fontSize: 13.sp),
+              style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
               decoration: InputDecoration(
                 hintText: 'مثال: عرض ساعات الصباح / تعويض عميل',
                 hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),

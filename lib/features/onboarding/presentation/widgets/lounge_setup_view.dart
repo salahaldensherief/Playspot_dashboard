@@ -210,7 +210,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
               } else if (state.status == OnboardingStatus.failure) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: AppText.body(state.errorMessage ?? AppStrings.actionFailed, color: Colors.white),
+                    content: AppText.body(state.errorMessage ?? AppStrings.actionFailed, color: AppColors.textPrimary),
                     backgroundColor: AppColors.danger,
                   ),
                 );
@@ -223,7 +223,7 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
               if (state.status == KycStatus.failure) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: AppText.body('${AppStrings.error}: ${state.errorMessage ?? AppStrings.actionFailed}', color: Colors.white),
+                    content: AppText.body('${AppStrings.error}: ${state.errorMessage ?? AppStrings.actionFailed}', color: AppColors.textPrimary),
                     backgroundColor: AppColors.danger,
                   ),
                 );

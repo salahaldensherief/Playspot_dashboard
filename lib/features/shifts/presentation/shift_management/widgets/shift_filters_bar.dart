@@ -159,7 +159,7 @@ class _ShiftFiltersBarState extends State<ShiftFiltersBar> {
   Widget _buildPeriodChip(String label, String value) {
     final bool isSelected = _selectedPeriod == value;
     return ChoiceChip(
-      label: Text(label, style: TextStyle(color: isSelected ? Colors.white : AppColors.textPrimary, fontSize: 12.sp)),
+      label: Text(label, style: TextStyle(color: isSelected ? AppColors.textPrimary : AppColors.textPrimary, fontSize: 12.sp)),
       selected: isSelected,
       selectedColor: AppColors.neonBlue,
       backgroundColor: AppColors.mutedBackground,

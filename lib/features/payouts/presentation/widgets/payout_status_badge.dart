@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 
 class PayoutStatusBadge extends StatelessWidget {
   final String status;
@@ -26,7 +27,7 @@ class PayoutStatusBadge extends StatelessWidget {
       case 'needs_review':
         return const StatusBadge(text: 'NEEDS REVIEW', color: Colors.redAccent);
       default:
-        return StatusBadge(text: status.toUpperCase(), color: Colors.white);
+        return StatusBadge(text: status.toUpperCase(), color: AppColors.textPrimary);
     }
   }
 }

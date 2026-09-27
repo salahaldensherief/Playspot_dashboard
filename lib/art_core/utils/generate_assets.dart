@@ -3,9 +3,9 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../theme/app_colors.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../assets_manager.dart';
+import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 
 /// utility to render the branding into high-res PNGs for the web folder.
 /// Run this using: flutter run -d macos lib/art_core/utils/generate_assets.dart
@@ -121,7 +121,7 @@ class _IconRendererState extends State<IconRenderer> {
           label: const Text('Generate & Overwrite Web Icons'),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.neonBlue,
-            foregroundColor: Colors.white,
+            foregroundColor: AppColors.textPrimary,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
         ),

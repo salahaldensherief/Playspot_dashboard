@@ -111,7 +111,7 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
                     SnackBar(
                       content: Row(
                         children: [
-                          const Icon(Icons.check_circle_outline, color: Colors.white),
+                          const Icon(Icons.check_circle_outline, color: AppColors.textPrimary),
                           const SizedBox(width: 8),
                           Text(AppStrings.shiftOpenedSuccess),
                         ],

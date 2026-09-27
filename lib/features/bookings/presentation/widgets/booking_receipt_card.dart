@@ -194,7 +194,7 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
                                     top: 16.h,
                                     right: 16.w,
                                     child: IconButton(
-                                      icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                                      icon: const Icon(Icons.close, color: AppColors.textPrimary, size: 30),
                                       onPressed: () => Navigator.pop(context),
                                     ),
                                   ),
@@ -222,9 +222,9 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.zoom_in, color: Colors.white, size: 14),
+                                    const Icon(Icons.zoom_in, color: AppColors.textPrimary, size: 14),
                                     SizedBox(width: 4.w),
-                                    Text('تكبير', style: TextStyle(color: Colors.white, fontSize: 11.sp)),
+                                    Text('تكبير', style: TextStyle(color: AppColors.textPrimary, fontSize: 11.sp)),
                                   ],
                                 ),
                               ),

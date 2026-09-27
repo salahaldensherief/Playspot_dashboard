@@ -10,6 +10,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/router/go_router_refresh_stream.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import 'package:play_spot_dashboard/core/router/lounge_admin_routes.dart';
 import 'package:play_spot_dashboard/core/router/router_guards.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
@@ -42,7 +43,10 @@ void _hideWebSplash() {
   if (kIsWeb) {
     try {
       _removeWebSplash();
-    } catch (_) {}
+    } catch (e) {
+      // If this fails the splash stays visible forever — must be visible in logs.
+      AppLogger.warning('Failed to hide web splash: $e');
+    }
   }
 }
 
@@ -149,7 +153,7 @@ class AppRouter {
           children: [
             Text(
               AppStrings.pageNotFound,
-              style: const TextStyle(color: Colors.white, fontSize: 24),
+              style: const TextStyle(color: AppColors.textPrimary, fontSize: 24),
             ),
             const SizedBox(height: 16),
             AppButton(

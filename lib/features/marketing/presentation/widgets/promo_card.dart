@@ -101,7 +101,7 @@ class PromoCard extends StatelessWidget {
                 Text(
                   title.isNotEmpty ? title : AppStrings.promotionsMarketing,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                     fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
                   ),
@@ -137,7 +137,7 @@ class PromoCard extends StatelessWidget {
                   _CircleActionButton(
                     icon: Icons.edit_outlined,
                     onPressed: onEdit,
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                     tooltip: AppStrings.edit,
                   ),
                 if (onEdit != null && onDelete != null) SizedBox(width: 8.w),

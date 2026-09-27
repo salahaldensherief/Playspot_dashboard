@@ -52,7 +52,7 @@ class _LoungeAdminPayoutsPageState extends State<LoungeAdminPayoutsPage> {
       case 'needs_review':
         return StatusBadge(text: 'NEEDS REVIEW', color: Colors.redAccent);
       default:
-        return StatusBadge(text: status.toUpperCase(), color: Colors.white);
+        return StatusBadge(text: status.toUpperCase(), color: AppColors.textPrimary);
     }
   }
 
@@ -70,6 +70,7 @@ class _LoungeAdminPayoutsPageState extends State<LoungeAdminPayoutsPage> {
         final payouts = state.loungePayouts;
         final hasNeedsReview = payouts.any((p) => p.status == 'needs_review');
         final isLoading = state.status == PayoutCubitStatus.loading && payouts.isEmpty;
+        final loungeId = context.read<LoginCubit>().state.user?.loungeId;
 
         return Padding(
           padding: EdgeInsets.all(24.r),
@@ -141,53 +142,70 @@ class _LoungeAdminPayoutsPageState extends State<LoungeAdminPayoutsPage> {
                                 ),
                               )
                             : SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: DataTableWidget(
-                                  columns: [
-                                    AppStrings.period,
-                                    AppStrings.totalAmount,
-                                    AppStrings.paymentsCount,
-                                    AppStrings.status,
-                                    AppStrings.transferMethod,
-                                    AppStrings.transferReference,
-                                    AppStrings.date,
-                                    AppStrings.paidAt,
-                                    AppStrings.notes,
+                                child: Column(
+                                  children: [
+                                    SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: DataTableWidget(
+                                        columns: [
+                                          AppStrings.period,
+                                          AppStrings.totalAmount,
+                                          AppStrings.paymentsCount,
+                                          AppStrings.status,
+                                          AppStrings.transferMethod,
+                                          AppStrings.transferReference,
+                                          AppStrings.date,
+                                          AppStrings.paidAt,
+                                          AppStrings.notes,
+                                        ],
+                                        rows: payouts
+                                            .map((p) => DataRow(
+                                                  cells: [
+                                                    DataCell(Text('${p.periodStart} ${AppStrings.to} ${p.periodEnd}',
+                                                        style: const TextStyle(color: AppColors.textSecondary))),
+                                                    DataCell(
+                                                      Text(
+                                                        '\$${p.amount.toStringAsFixed(2)}',
+                                                        style: const TextStyle(
+                                                          color: AppColors.neonGreen,
+                                                          fontWeight: FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    DataCell(Text((p.paymentCount ?? '-').toString(),
+                                                        style: const TextStyle(color: AppColors.textSecondary))),
+                                                    DataCell(_buildStatusBadge(p.status)),
+                                                    DataCell(Text(p.transferMethod ?? '-',
+                                                        style: const TextStyle(color: AppColors.textSecondary))),
+                                                    DataCell(Text(p.transferReference ?? '-',
+                                                        style: const TextStyle(color: AppColors.textSecondary))),
+                                                    DataCell(Text(
+                                                        DateFormat('yyyy-MM-dd').format(p.createdAt),
+                                                        style: const TextStyle(color: AppColors.textSecondary))),
+                                                    DataCell(Text(
+                                                        p.paidAt != null
+                                                            ? DateFormat('yyyy-MM-dd HH:mm').format(p.paidAt!)
+                                                            : '-',
+                                                        style: const TextStyle(color: AppColors.textSecondary))),
+                                                    DataCell(
+                                                        Text(p.notes ?? '-', style: const TextStyle(color: AppColors.textMuted))),
+                                                  ],
+                                                ))
+                                            .toList(),
+                                      ),
+                                    ),
+                                    if (state.loungePayoutsHasMore) ...[
+                                      SizedBox(height: 12.h),
+                                      AppButton(
+                                        text: AppStrings.loadMore,
+                                        variant: AppButtonVariant.outlined,
+                                        isLoading: state.loungePayoutsLoadingMore,
+                                        onPressed: state.loungePayoutsLoadingMore || loungeId == null
+                                            ? null
+                                            : () => context.read<PayoutCubit>().loadMoreLoungePayouts(loungeId),
+                                      ),
+                                    ],
                                   ],
-                                  rows: payouts
-                                      .map((p) => DataRow(
-                                            cells: [
-                                              DataCell(Text('${p.periodStart} ${AppStrings.to} ${p.periodEnd}',
-                                                  style: const TextStyle(color: AppColors.textSecondary))),
-                                              DataCell(
-                                                Text(
-                                                  '\$${p.amount.toStringAsFixed(2)}',
-                                                  style: const TextStyle(
-                                                    color: AppColors.neonGreen,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                              DataCell(Text((p.paymentCount ?? '-').toString(),
-                                                  style: const TextStyle(color: AppColors.textSecondary))),
-                                              DataCell(_buildStatusBadge(p.status)),
-                                              DataCell(Text(p.transferMethod ?? '-',
-                                                  style: const TextStyle(color: AppColors.textSecondary))),
-                                              DataCell(Text(p.transferReference ?? '-',
-                                                  style: const TextStyle(color: AppColors.textSecondary))),
-                                              DataCell(Text(
-                                                  DateFormat('yyyy-MM-dd').format(p.createdAt),
-                                                  style: const TextStyle(color: AppColors.textSecondary))),
-                                              DataCell(Text(
-                                                  p.paidAt != null
-                                                      ? DateFormat('yyyy-MM-dd HH:mm').format(p.paidAt!)
-                                                      : '-',
-                                                  style: const TextStyle(color: AppColors.textSecondary))),
-                                              DataCell(
-                                                  Text(p.notes ?? '-', style: const TextStyle(color: AppColors.textMuted))),
-                                            ],
-                                          ))
-                                      .toList(),
                                 ),
                               ),
               ),

@@ -5,6 +5,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/utils/app_logger.dart';
+import '../../domain/entities/payout_entity.dart';
 import '../../domain/repositories/payout_repository.dart';
 import '../widgets/all_payouts_history_tab.dart';
 import '../widgets/complete_payout_dialog.dart';
@@ -27,6 +28,11 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
   List<Map<String, dynamic>> _pendingOverview = [];
   List<Map<String, dynamic>> _allPayouts = [];
   bool _isLoading = true;
+  int _allPayoutsNextPage = 2;
+  bool _allPayoutsHasMore = false;
+  bool _allPayoutsLoadingMore = false;
+
+  static const int _pageSize = 50;
 
   @override
   void initState() {
@@ -41,11 +47,60 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
     super.dispose();
   }
 
+  Future<void> _loadMorePayouts() async {
+    if (_allPayoutsLoadingMore || !_allPayoutsHasMore) return;
+    setState(() => _allPayoutsLoadingMore = true);
+
+    final payoutsRes = await sl<PayoutRepository>().getAllPayouts(
+      page: _allPayoutsNextPage,
+      pageSize: _pageSize,
+    );
+    if (!mounted) return;
+
+    payoutsRes.fold(
+      (failure) {
+        AppLogger.error('Failed to load more payouts: ${failure.message}');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message)));
+        setState(() {
+          _allPayoutsLoadingMore = false;
+          _allPayoutsHasMore = false;
+        });
+      },
+      (payouts) {
+        setState(() {
+          _allPayouts.addAll(payouts.map(_payoutToMap));
+          _allPayoutsNextPage += 1;
+          _allPayoutsHasMore = payouts.length == _pageSize;
+          _allPayoutsLoadingMore = false;
+        });
+      },
+    );
+  }
+
+  Map<String, dynamic> _payoutToMap(PayoutEntity p) {
+    return {
+      'id': p.id,
+      'lounge_id': p.loungeId,
+      'lounges': {'name': p.loungeName ?? '-'},
+      'amount': p.amount,
+      'total_amount': p.amount,
+      'period_start': p.periodStart,
+      'period_end': p.periodEnd,
+      'status': p.status,
+      'notes': p.notes,
+      'created_at': p.createdAt.toIso8601String(),
+      'paid_at': p.paidAt?.toIso8601String(),
+      'transfer_reference': p.transferReference,
+      'transfer_method': p.transferMethod,
+      'payment_count': p.paymentCount,
+    };
+  }
+
   Future<void> _fetchData() async {
     setState(() => _isLoading = true);
     final repo = sl<PayoutRepository>();
     final overviewRes = await repo.getPendingPayoutsOverview();
-    final payoutsRes = await repo.getAllPayouts();
+    final payoutsRes = await repo.getAllPayouts(page: 1, pageSize: _pageSize);
 
     if (!mounted) return;
 
@@ -72,24 +127,9 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
                         'pending_payments_count': o.pendingPaymentsCount,
                       })
                   .toList();
-              _allPayouts = payouts
-                  .map((p) => {
-                        'id': p.id,
-                        'lounge_id': p.loungeId,
-                        'lounges': {'name': p.loungeName ?? '-'},
-                        'amount': p.amount,
-                        'total_amount': p.amount,
-                        'period_start': p.periodStart,
-                        'period_end': p.periodEnd,
-                        'status': p.status,
-                        'notes': p.notes,
-                        'created_at': p.createdAt.toIso8601String(),
-                        'paid_at': p.paidAt?.toIso8601String(),
-                        'transfer_reference': p.transferReference,
-                        'transfer_method': p.transferMethod,
-                        'payment_count': p.paymentCount,
-                      })
-                  .toList();
+              _allPayouts = payouts.map(_payoutToMap).toList();
+              _allPayoutsNextPage = 2;
+              _allPayoutsHasMore = payouts.length == _pageSize;
               _isLoading = false;
             });
           },
@@ -224,6 +264,9 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
                       ),
                       AllPayoutsHistoryTab(
                         payouts: _allPayouts,
+                        hasMore: _allPayoutsHasMore,
+                        isLoadingMore: _allPayoutsLoadingMore,
+                        onLoadMore: _loadMorePayouts,
                         onApprove: _approvePayout,
                         onCancel: (id) => _showActionWithReason(AppStrings.cancelPayout, 'cancel_payout', id),
                         onProcess: _processPayout,

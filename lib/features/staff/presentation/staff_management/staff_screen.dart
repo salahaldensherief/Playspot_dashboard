@@ -190,7 +190,7 @@ class _StaffScreenState extends State<StaffScreen> {
                             return DataRow(
                               onSelectChanged: (_) => _showDetailsDialog(staff),
                               cells: [
-                                DataCell(Text(staff.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500))),
+                                DataCell(Text(staff.name, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w500))),
                                 DataCell(Text(staff.email, style: const TextStyle(color: AppColors.textSecondary))),
                                 DataCell(Text(staff.phone ?? AppStrings.notAssigned, style: const TextStyle(color: AppColors.textSecondary))),
                                 DataCell(_buildRoleBadge(staff.role)),

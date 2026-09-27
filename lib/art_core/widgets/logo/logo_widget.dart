@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../assets_manager.dart';
 import '../app_text.dart';
+import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 
 class LogoWidget extends StatefulWidget {
   final double? width;
@@ -84,7 +85,7 @@ class _LogoWidgetState extends State<LogoWidget>
           AppText(
             'PlaySp',
             fontSize: widget.fontSize ?? 23.sp,
-            color: widget.color ?? Colors.white,
+            color: widget.color ?? AppColors.textPrimary,
             fontFamily: GoogleFonts.orbitron().fontFamily,
           ),
           widget.animate
@@ -102,7 +103,7 @@ class _LogoWidgetState extends State<LogoWidget>
           AppText(
             't',
             fontSize: widget.fontSize ?? 23.sp,
-            color: widget.color ?? Colors.white,
+            color: widget.color ?? AppColors.textPrimary,
             fontFamily: GoogleFonts.orbitron().fontFamily,
           ),
         ],
@@ -114,7 +115,7 @@ class _LogoWidgetState extends State<LogoWidget>
     return SvgPicture.asset(
       AssetsManager.joystickIcon,
       colorFilter: ColorFilter.mode(
-        widget.color ?? Colors.white,
+        widget.color ?? AppColors.textPrimary,
         BlendMode.srcIn,
       ),
       width: widget.width ?? 24.w,

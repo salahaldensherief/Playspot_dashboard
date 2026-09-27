@@ -123,7 +123,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                       label: Center(
                         child: AppText.body(
                           AppStrings.operationalExpense,
-                          color: _selectedType == 'expense' ? Colors.white : AppColors.textPrimary,
+                          color: _selectedType == 'expense' ? AppColors.textPrimary : AppColors.textPrimary,
                           fontSize: 12.sp,
                           fontWeight: FontWeight.bold,
                         ),
@@ -145,7 +145,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                       label: Center(
                         child: AppText.body(
                           AppStrings.cashDrop,
-                          color: _selectedType == 'cash_drop' ? Colors.white : AppColors.textPrimary,
+                          color: _selectedType == 'cash_drop' ? AppColors.textPrimary : AppColors.textPrimary,
                           fontSize: 12.sp,
                           fontWeight: FontWeight.bold,
                         ),

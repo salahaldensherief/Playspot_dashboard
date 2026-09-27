@@ -178,7 +178,7 @@ class _StartSessionButtonState extends State<StartSessionButton> {
       width: widget.width,
       height: widget.height ?? 32.h,
       backgroundColor: isReadyToStart ? AppColors.success : AppColors.cardBackground,
-      foregroundColor: isReadyToStart ? Colors.white : AppColors.textMuted,
+      foregroundColor: isReadyToStart ? AppColors.textPrimary : AppColors.textMuted,
       disabledBackgroundColor: AppColors.cardBackground,
       disabledForegroundColor: AppColors.textMuted,
       onPressed: (!isReadyToStart || _isLoading)

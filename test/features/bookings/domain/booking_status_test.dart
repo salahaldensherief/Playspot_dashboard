@@ -14,7 +14,9 @@ void main() {
       expect(BookingStatusX.fromString('cancelled'), BookingStatus.cancelled);
       expect(BookingStatusX.fromString('canceled'), BookingStatus.cancelled);
       expect(BookingStatusX.fromString('no_show'), BookingStatus.cancelled);
-      expect(BookingStatusX.fromString('rejected'), BookingStatus.cancelled);
+      // 'rejected' is its own status — the UI renders it with a dedicated badge.
+      expect(BookingStatusX.fromString('rejected'), BookingStatus.rejected);
+      expect(BookingStatusX.fromString('reject'), BookingStatus.rejected);
 
       expect(BookingStatusX.fromString('pending'), BookingStatus.pending);
       expect(BookingStatusX.fromString(null), BookingStatus.pending);

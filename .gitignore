@@ -43,3 +43,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Analysis output & JVM crash logs
+analyze_output.txt
+hs_err_pid*.log
+
+# Supabase CLI local state
+supabase/.temp/

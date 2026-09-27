@@ -118,7 +118,7 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.neonBlue),
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text('تأكيد الإرسال', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: Text('تأكيد الإرسال', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
             ),
           ],
         ),

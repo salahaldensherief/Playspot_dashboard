@@ -100,7 +100,7 @@ class LoungeDiscountBanner extends StatelessWidget {
                           AppText.subHeading(
                             '🎉 $promoTitle',
                             fontSize: 13.sp,
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                           SizedBox(width: 8.w),

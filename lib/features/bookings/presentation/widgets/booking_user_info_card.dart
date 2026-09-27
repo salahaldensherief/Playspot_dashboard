@@ -104,7 +104,7 @@ class BookingUserInfoCard extends StatelessWidget {
                 child: Text(
                   initials,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 18.sp,
                   ),

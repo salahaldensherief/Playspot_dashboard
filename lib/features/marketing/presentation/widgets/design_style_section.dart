@@ -51,7 +51,7 @@ class DesignStyleSection extends StatelessWidget {
                   gradient: LinearGradient(colors: colorTemplates[index]),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected ? Colors.white : Colors.transparent,
+                    color: isSelected ? AppColors.textPrimary : Colors.transparent,
                     width: isSelected ? 2.5 : 0,
                   ),
                   boxShadow: isSelected
@@ -64,7 +64,7 @@ class DesignStyleSection extends StatelessWidget {
                         ]
                       : null,
                 ),
-                child: isSelected ? Icon(Icons.check_rounded, color: Colors.white, size: 22.r) : null,
+                child: isSelected ? Icon(Icons.check_rounded, color: AppColors.textPrimary, size: 22.r) : null,
               ),
             );
           }),

@@ -416,7 +416,7 @@ class _BranchPickerDialogState extends State<_BranchPickerDialog> {
                                         ),
                                         child: Icon(
                                           Icons.check,
-                                          color: Colors.white,
+                                          color: AppColors.textPrimary,
                                           size: 14.r,
                                         ),
                                       ),

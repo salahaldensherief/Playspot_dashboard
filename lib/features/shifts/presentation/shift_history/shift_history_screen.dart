@@ -188,15 +188,15 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                                   final endStr = shift.endTime != null ? DateFormat('hh:mm a').format(shift.endTime!) : AppStrings.currentShiftOngoing;
 
                                   return DataRow(cells: [
-                                    DataCell(Text(startStr, style: const TextStyle(color: Colors.white))),
+                                    DataCell(Text(startStr, style: const TextStyle(color: AppColors.textPrimary))),
                                     DataCell(Text(endStr, style: const TextStyle(color: AppColors.textSecondary))),
-                                    DataCell(Text(shift.cashierName ?? AppStrings.system, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
-                                    DataCell(Text('${shift.startingCash.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: Colors.white))),
+                                    DataCell(Text(shift.cashierName ?? AppStrings.system, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold))),
+                                    DataCell(Text('${shift.startingCash.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.textPrimary))),
                                     DataCell(Text('${(shift.cashRevenue ?? 0).toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.success))),
                                     DataCell(Text('${(shift.digitalRevenue ?? 0).toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.warning))),
                                     DataCell(Text('${(shift.expensesTotal ?? 0).toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.danger))),
                                     DataCell(Text('${shift.calculatedExpectedCash.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.neonBlue))),
-                                    DataCell(Text(shift.actualCash != null ? '${shift.actualCash!.toStringAsFixed(0)} ${AppStrings.egp}' : AppStrings.notAvailable, style: const TextStyle(color: Colors.white))),
+                                    DataCell(Text(shift.actualCash != null ? '${shift.actualCash!.toStringAsFixed(0)} ${AppStrings.egp}' : AppStrings.notAvailable, style: const TextStyle(color: AppColors.textPrimary))),
                                     DataCell(
                                       shift.status == 'closed' 
                                       ? Text(

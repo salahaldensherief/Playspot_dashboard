@@ -3,7 +3,7 @@ import '../models/payout_model.dart';
 
 abstract class PayoutRemoteDataSource {
   Future<List<PendingPayoutOverviewModel>> getPendingPayoutsOverview();
-  Future<List<PayoutModel>> getAllPayouts();
+  Future<List<PayoutModel>> getAllPayouts({int page = 1, int pageSize = 50});
   Future<Map<String, dynamic>> createPayout({
     required String loungeId,
     required String periodStart,
@@ -43,7 +43,11 @@ abstract class PayoutRemoteDataSource {
   Future<Map<String, dynamic>> getPayoutDetails({
     required String payoutId,
   });
-  Future<List<PayoutModel>> getPayoutsByLounge(String loungeId);
+  Future<List<PayoutModel>> getPayoutsByLounge(
+    String loungeId, {
+    int page = 1,
+    int pageSize = 50,
+  });
 }
 
 class PayoutRemoteDataSourceImpl implements PayoutRemoteDataSource {
@@ -58,11 +62,13 @@ class PayoutRemoteDataSourceImpl implements PayoutRemoteDataSource {
   }
 
   @override
-  Future<List<PayoutModel>> getAllPayouts() async {
+  Future<List<PayoutModel>> getAllPayouts({int page = 1, int pageSize = 50}) async {
+    final from = (page - 1) * pageSize;
     final response = await _supabase
         .from('payouts')
         .select('*, lounges(name)')
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .range(from, from + pageSize - 1);
     return (response as List).map((e) => PayoutModel.fromJson(e)).toList();
   }
 
@@ -174,12 +180,18 @@ class PayoutRemoteDataSourceImpl implements PayoutRemoteDataSource {
   }
 
   @override
-  Future<List<PayoutModel>> getPayoutsByLounge(String loungeId) async {
+  Future<List<PayoutModel>> getPayoutsByLounge(
+    String loungeId, {
+    int page = 1,
+    int pageSize = 50,
+  }) async {
+    final from = (page - 1) * pageSize;
     final response = await _supabase
         .from('payouts')
         .select('*, lounges(name)')
         .eq('lounge_id', loungeId)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .range(from, from + pageSize - 1);
     return (response as List).map((e) => PayoutModel.fromJson(e)).toList();
   }
 }

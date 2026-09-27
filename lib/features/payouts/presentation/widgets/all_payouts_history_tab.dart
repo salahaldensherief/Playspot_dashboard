@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'payout_status_badge.dart';
 
@@ -15,6 +16,9 @@ class AllPayoutsHistoryTab extends StatelessWidget {
   final void Function(String payoutId) onFail;
   final void Function(String payoutId) onResolve;
   final void Function(String payoutId) onViewDetails;
+  final bool hasMore;
+  final bool isLoadingMore;
+  final VoidCallback? onLoadMore;
 
   const AllPayoutsHistoryTab({
     super.key,
@@ -26,6 +30,9 @@ class AllPayoutsHistoryTab extends StatelessWidget {
     required this.onFail,
     required this.onResolve,
     required this.onViewDetails,
+    this.hasMore = false,
+    this.isLoadingMore = false,
+    this.onLoadMore,
   });
 
   @override
@@ -40,8 +47,11 @@ class AllPayoutsHistoryTab extends StatelessWidget {
     }
 
     return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTableWidget(
+      child: Column(
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTableWidget(
         columns: [
           AppStrings.lounge,
           AppStrings.periodStart,
@@ -96,6 +106,18 @@ class AllPayoutsHistoryTab extends StatelessWidget {
             ],
           );
         }).toList(),
+            ),
+          ),
+          if (hasMore && onLoadMore != null) ...[
+            SizedBox(height: 12.h),
+            AppButton(
+              text: AppStrings.loadMore,
+              variant: AppButtonVariant.outlined,
+              isLoading: isLoadingMore,
+              onPressed: isLoadingMore ? null : onLoadMore,
+            ),
+          ],
+        ],
       ),
     );
   }

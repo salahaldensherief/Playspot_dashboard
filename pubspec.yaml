@@ -62,7 +62,9 @@ dev_dependencies:
   mocktail: ^1.0.4
 
 dependency_overrides:
-  intl: any
+  # Pinned to the resolved lock version — removes the `any` wildcard so future
+  # Flutter/easy_localization upgrades surface conflicts explicitly.
+  intl: 0.20.3
 
 flutter:
   uses-material-design: true

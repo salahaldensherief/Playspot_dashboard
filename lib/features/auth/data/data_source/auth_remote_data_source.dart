@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:play_spot_dashboard/core/constants/app_constants.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
@@ -137,7 +138,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw Exception('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى (401)');
     }
 
-    final url = Uri.parse('https://tgpdexoitemmpruepgyt.supabase.co/functions/v1/update-user-location');
+    final url =
+        Uri.parse('$supabaseUrl/functions/v1/update-user-location');
     final response = await http.post(
       url,
       headers: {

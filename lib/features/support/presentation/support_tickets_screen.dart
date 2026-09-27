@@ -236,7 +236,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             fontSize: 13.sp,
           ),

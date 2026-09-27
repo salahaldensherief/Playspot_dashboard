@@ -58,7 +58,7 @@ class StationControlGamerCard extends StatelessWidget {
             child: Text(
               _getInitials(userName),
               style: TextStyle(
-                color: Colors.white,
+                color: AppColors.textPrimary,
                 fontWeight: FontWeight.bold,
                 fontSize: 14.sp,
               ),

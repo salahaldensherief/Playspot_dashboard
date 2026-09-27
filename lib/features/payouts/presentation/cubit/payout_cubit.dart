@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/core/usecases/base_usecase.dart';
+import 'package:play_spot_dashboard/core/usecases/page_params.dart';
 import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import '../../domain/usecases/payout_usecases.dart';
 import 'payout_state.dart';
@@ -45,11 +46,13 @@ class PayoutCubit extends Cubit<PayoutState> {
         _getPayoutsByLoungeUseCase = getPayoutsByLoungeUseCase,
         super(const PayoutState());
 
+  static const int _pageSize = 50;
+
   Future<void> loadSuperAdminPayouts() async {
     emit(state.copyWith(status: PayoutCubitStatus.loading));
 
     final pendingResult = await _getPendingPayoutsOverviewUseCase(const NoParams());
-    final allResult = await _getAllPayoutsUseCase(const NoParams());
+    final allResult = await _getAllPayoutsUseCase(const PageParams(page: 1, pageSize: _pageSize));
 
     if (isClosed) return;
 
@@ -69,6 +72,9 @@ class PayoutCubit extends Cubit<PayoutState> {
               status: PayoutCubitStatus.success,
               pendingOverviews: pending,
               allPayouts: all,
+              allPayoutsNextPage: 2,
+              allPayoutsHasMore: all.length == _pageSize,
+              allPayoutsLoadingMore: false,
             ));
           },
         );
@@ -76,9 +82,40 @@ class PayoutCubit extends Cubit<PayoutState> {
     );
   }
 
+  Future<void> loadMoreAllPayouts() async {
+    if (state.allPayoutsLoadingMore || !state.allPayoutsHasMore) return;
+    emit(state.copyWith(allPayoutsLoadingMore: true));
+
+    final result = await _getAllPayoutsUseCase(PageParams(page: state.allPayoutsNextPage, pageSize: _pageSize));
+    if (isClosed) return;
+
+    result.fold(
+      (failure) {
+        AppLogger.error('Failed to load more payouts: ${failure.message}');
+        emit(state.copyWith(
+          status: PayoutCubitStatus.failure,
+          errorMessage: failure.message,
+          allPayoutsLoadingMore: false,
+          allPayoutsHasMore: false,
+        ));
+      },
+      (page) {
+        emit(state.copyWith(
+          status: PayoutCubitStatus.success,
+          allPayouts: [...state.allPayouts, ...page],
+          allPayoutsNextPage: state.allPayoutsNextPage + 1,
+          allPayoutsHasMore: page.length == _pageSize,
+          allPayoutsLoadingMore: false,
+        ));
+      },
+    );
+  }
+
   Future<void> loadLoungePayouts(String loungeId) async {
     emit(state.copyWith(status: PayoutCubitStatus.loading));
-    final result = await _getPayoutsByLoungeUseCase(loungeId);
+    final result = await _getPayoutsByLoungeUseCase(
+      LoungePayoutsParams(loungeId: loungeId, page: 1, pageSize: _pageSize),
+    );
 
     if (isClosed) return;
 
@@ -91,6 +128,42 @@ class PayoutCubit extends Cubit<PayoutState> {
         emit(state.copyWith(
           status: PayoutCubitStatus.success,
           loungePayouts: payouts,
+          loungePayoutsNextPage: 2,
+          loungePayoutsHasMore: payouts.length == _pageSize,
+          loungePayoutsLoadingMore: false,
+        ));
+      },
+    );
+  }
+
+  Future<void> loadMoreLoungePayouts(String loungeId) async {
+    if (state.loungePayoutsLoadingMore || !state.loungePayoutsHasMore) return;
+    emit(state.copyWith(loungePayoutsLoadingMore: true));
+
+    final result = await _getPayoutsByLoungeUseCase(LoungePayoutsParams(
+      loungeId: loungeId,
+      page: state.loungePayoutsNextPage,
+      pageSize: _pageSize,
+    ));
+    if (isClosed) return;
+
+    result.fold(
+      (failure) {
+        AppLogger.error('Failed to load more lounge payouts: ${failure.message}');
+        emit(state.copyWith(
+          status: PayoutCubitStatus.failure,
+          errorMessage: failure.message,
+          loungePayoutsLoadingMore: false,
+          loungePayoutsHasMore: false,
+        ));
+      },
+      (page) {
+        emit(state.copyWith(
+          status: PayoutCubitStatus.success,
+          loungePayouts: [...state.loungePayouts, ...page],
+          loungePayoutsNextPage: state.loungePayoutsNextPage + 1,
+          loungePayoutsHasMore: page.length == _pageSize,
+          loungePayoutsLoadingMore: false,
         ));
       },
     );

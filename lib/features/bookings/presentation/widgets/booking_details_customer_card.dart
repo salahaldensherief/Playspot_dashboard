@@ -409,10 +409,10 @@ class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard>
                                   minimumSize: Size.zero,
                                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 ),
-                                icon: Icon(Icons.gavel_rounded, size: 14.r, color: Colors.white),
+                                icon: Icon(Icons.gavel_rounded, size: 14.r, color: AppColors.textPrimary),
                                 label: Text(
                                   AppStrings.requestBanBtn,
-                                  style: TextStyle(fontSize: 11.sp, color: Colors.white),
+                                  style: TextStyle(fontSize: 11.sp, color: AppColors.textPrimary),
                                 ),
                                 onPressed: () => _openBanReportDialog(context),
                               ),

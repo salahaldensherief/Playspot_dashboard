@@ -59,7 +59,7 @@ class TopBarNotificationBell extends StatelessWidget {
                           '$pendingCount',
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
                           ),

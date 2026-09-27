@@ -28,7 +28,8 @@ class RouterGuards {
       return isLoggingIn ? null : RouterKeys.login;
     }
 
-    if (user == null) return isLoggingIn ? null : null;
+    // Authenticated but profile not loaded yet — hold navigation until refresh.
+    if (user == null) return null;
 
     final bool isStaffUser = user.isStaff;
     final bool isLoungeOwner = user.isOwner;
@@ -45,10 +46,7 @@ class RouterGuards {
         state.matchedLocation == RouterKeys.kycPending;
 
     final lounge = authState.userLounge;
-    final bool isLoungePending = lounge != null &&
-        (lounge.status == 'pending' ||
-            lounge.status == 'pending_approval' ||
-            lounge.status != 'active');
+    final bool isLoungePending = lounge != null && lounge.status != 'active';
 
     // 1. Only Lounge Owners who haven't completed setup need Onboarding
     if (!isSuperAdmin && isLoungeOwner && !user.isSetupCompleted) {
