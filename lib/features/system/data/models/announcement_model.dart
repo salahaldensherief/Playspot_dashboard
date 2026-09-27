@@ -25,8 +25,8 @@ class AnnouncementModel extends AnnouncementEntity {
         final value? => value,
         null => 'all',
       },
-      targetLoungeId:
-          (json['target_venue_id'] ?? json['target_lounge_id'])?.toString(),
+      targetLoungeId: (json['target_venue_id'] ?? json['target_lounge_id'])
+          ?.toString(),
       targetLoungeName: json['target_lounge_name']?.toString(),
       titleAr: json['title_ar']?.toString() ?? '',
       titleEn: json['title_en']?.toString() ?? '',
