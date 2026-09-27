@@ -1,5 +1,4 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import '../../../../core/utils/paginated_result.dart';
 import '../../../marketing/data/models/redemption_option_model.dart';
 import '../models/loyalty_level_model.dart';
