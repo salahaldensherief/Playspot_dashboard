@@ -13,28 +13,35 @@ class AppPolicyModel extends AppPolicyEntity {
   });
 
   factory AppPolicyModel.fromJson(Map<String, dynamic> json) {
+    final policyKey =
+        json['policy_key']?.toString() ??
+        json['policy_type']?.toString() ??
+        json['id']?.toString() ??
+        '';
+
     return AppPolicyModel(
-      id: json['id']?.toString() ?? '',
-      policyType: json['policy_type'] as String? ?? 'terms_of_service',
+      id: policyKey,
+      policyType: policyKey,
       titleAr: json['title_ar'] as String? ?? '',
       titleEn: json['title_en'] as String? ?? '',
       contentAr: json['content_ar'] as String? ?? '',
       contentEn: json['content_en'] as String? ?? '',
       isPublished: json['is_published'] as bool? ?? true,
-      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'] as String) : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'].toString())
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() {
+    final key = policyType.trim().isNotEmpty ? policyType.trim() : id.trim();
     return {
-      if (id.isNotEmpty) 'id': id,
-      'policy_type': policyType,
+      'policy_key': key,
       'title_ar': titleAr,
       'title_en': titleEn,
       'content_ar': contentAr,
       'content_en': contentEn,
       'is_published': isPublished,
-      'updated_at': DateTime.now().toIso8601String(),
     };
   }
 }
