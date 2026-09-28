@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
@@ -59,8 +60,10 @@ class _StaffScreenState extends State<StaffScreen> {
           );
         }
       },
-      child: Padding(
-        padding: EdgeInsets.all(24.r),
+      child: DashboardLayout(
+        title: AppStrings.staffManagement,
+        activeRoute: 'Staff',
+        isScrollable: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -70,12 +73,20 @@ class _StaffScreenState extends State<StaffScreen> {
                 children: [
                   Text(
                     AppStrings.staffManagement,
-                    style: TextStyle(color: AppColors.textPrimary, fontSize: 22.sp, fontWeight: FontWeight.bold, fontFamily: 'Orbitron'),
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Orbitron',
+                    ),
                   ),
                   SizedBox(height: 4.h),
                   Text(
                     AppStrings.staffManagementDesc,
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13.sp,
+                    ),
                   ),
                   if (user?.canManageStaff == true) ...[
                     SizedBox(height: 12.h),
@@ -100,12 +111,20 @@ class _StaffScreenState extends State<StaffScreen> {
                       children: [
                         Text(
                           AppStrings.staffManagement,
-                          style: TextStyle(color: AppColors.textPrimary, fontSize: 28.sp, fontWeight: FontWeight.bold, fontFamily: 'Orbitron'),
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 28.sp,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Orbitron',
+                          ),
                         ),
                         SizedBox(height: 8.h),
                         Text(
                           AppStrings.staffManagementDesc,
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14.sp,
+                          ),
                         ),
                       ],
                     ),
@@ -119,30 +138,44 @@ class _StaffScreenState extends State<StaffScreen> {
                     ),
                 ],
               ),
-            SizedBox(height: 32.h),
-            SizedBox(
-              width: 400.w,
+            SizedBox(height: 20.h),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: AppBreakpoints.isMobile(context)
+                    ? double.infinity
+                    : 400.w,
+              ),
               child: AppTextField(
                 hintText: AppStrings.searchStaff,
                 prefixIcon: Icons.search,
-                onChanged: (val) => _searchDebouncer.run(() => context.read<StaffCubit>().setSearchQuery(val)),
+                onChanged: (val) => _searchDebouncer.run(
+                  () => context.read<StaffCubit>().setSearchQuery(val),
+                ),
               ),
             ),
-            SizedBox(height: 24.h),
+            SizedBox(height: 20.h),
             Expanded(
               child: BlocBuilder<StaffCubit, StaffState>(
-                buildWhen: (previous, current) => previous.status != current.status || 
-                                                 previous.staffList != current.staffList ||
-                                                 previous.searchQuery != current.searchQuery,
+                buildWhen: (previous, current) =>
+                    previous.status != current.status ||
+                    previous.staffList != current.staffList ||
+                    previous.searchQuery != current.searchQuery,
                 builder: (context, state) {
                   if (state.status.isLoading) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const CircularProgressIndicator(color: AppColors.neonBlue),
+                          const CircularProgressIndicator(
+                            color: AppColors.neonBlue,
+                          ),
                           const SizedBox(height: 16),
-                          Text(AppStrings.loadingTeam, style: const TextStyle(color: AppColors.textSecondary)),
+                          Text(
+                            AppStrings.loadingTeam,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                         ],
                       ),
                     );
@@ -153,9 +186,21 @@ class _StaffScreenState extends State<StaffScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.people_outline, size: 64.r, color: AppColors.textSecondary.withValues(alpha: 0.2)),
+                          Icon(
+                            Icons.people_outline,
+                            size: 64.r,
+                            color: AppColors.textSecondary.withValues(
+                              alpha: 0.2,
+                            ),
+                          ),
                           SizedBox(height: 16.h),
-                          Text(AppStrings.noStaffFound, style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp)),
+                          Text(
+                            AppStrings.noStaffFound,
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 16.sp,
+                            ),
+                          ),
                         ],
                       ),
                     );
@@ -164,7 +209,27 @@ class _StaffScreenState extends State<StaffScreen> {
                   final filteredList = state.filteredStaff;
 
                   if (filteredList.isEmpty && state.searchQuery.isNotEmpty) {
-                    return Center(child: Text(AppStrings.noResultsMatching.replaceFirst("\"{}\"", state.searchQuery), style: const TextStyle(color: AppColors.textSecondary)));
+                    return Center(
+                      child: Text(
+                        AppStrings.noResultsMatching.replaceFirst(
+                          "\"{}\"",
+                          state.searchQuery,
+                        ),
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    );
+                  }
+
+                  if (AppBreakpoints.isMobile(context)) {
+                    return ListView.separated(
+                      itemCount: filteredList.length,
+                      separatorBuilder: (_, _) => SizedBox(height: 12.h),
+                      itemBuilder: (context, index) => _buildMobileStaffCard(
+                        filteredList[index],
+                        user?.canManageStaff == true,
+                        loungeId,
+                      ),
+                    );
                   }
 
                   return Container(
@@ -175,30 +240,62 @@ class _StaffScreenState extends State<StaffScreen> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16.r),
-                      child: SingleChildScrollView(
-                        child: DataTable(
-                          headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
-                          columns: [
-                            _buildColumn(AppStrings.fullName),
-                            _buildColumn(AppStrings.email),
-                            _buildColumn(AppStrings.staffPhone),
-                            _buildColumn(AppStrings.roleLabel),
-                            _buildColumn(AppStrings.accountStatus),
-                            if (user?.canManageStaff == true) _buildColumn(AppStrings.actions),
-                          ],
-                          rows: filteredList.map((staff) {
-                            return DataRow(
-                              onSelectChanged: (_) => _showDetailsDialog(staff),
-                              cells: [
-                                DataCell(Text(staff.name, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w500))),
-                                DataCell(Text(staff.email, style: const TextStyle(color: AppColors.textSecondary))),
-                                DataCell(Text(staff.phone ?? AppStrings.notAssigned, style: const TextStyle(color: AppColors.textSecondary))),
-                                DataCell(_buildRoleBadge(staff.role)),
-                                DataCell(_buildStatusBadge(staff.isActive)),
-                                if (user?.canManageStaff == true) DataCell(_buildActions(staff, loungeId)),
+                      child: Scrollbar(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: SingleChildScrollView(
+                            child: DataTable(
+                              headingRowColor: WidgetStateProperty.all(
+                                AppColors.mutedBackground,
+                              ),
+                              columns: [
+                                _buildColumn(AppStrings.fullName),
+                                _buildColumn(AppStrings.email),
+                                _buildColumn(AppStrings.staffPhone),
+                                _buildColumn(AppStrings.roleLabel),
+                                _buildColumn(AppStrings.accountStatus),
+                                if (user?.canManageStaff == true)
+                                  _buildColumn(AppStrings.actions),
                               ],
-                            );
-                          }).toList(),
+                              rows: filteredList.map((staff) {
+                                return DataRow(
+                                  onSelectChanged: (_) =>
+                                      _showDetailsDialog(staff),
+                                  cells: [
+                                    DataCell(
+                                      Text(
+                                        staff.name,
+                                        style: const TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      Text(
+                                        staff.email,
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      Text(
+                                        staff.phone ?? AppStrings.notAssigned,
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(_buildRoleBadge(staff.role)),
+                                    DataCell(_buildStatusBadge(staff.isActive)),
+                                    if (user?.canManageStaff == true)
+                                      DataCell(_buildActions(staff, loungeId)),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -214,13 +311,116 @@ class _StaffScreenState extends State<StaffScreen> {
 
   DataColumn _buildColumn(String label) {
     return DataColumn(
-      label: Text(label, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp)),
+      label: Text(
+        label,
+        style: TextStyle(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.bold,
+          fontSize: 14.sp,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileStaffCard(
+    StaffEntity staff,
+    bool canManage,
+    String loungeId,
+  ) {
+    return Container(
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18.r,
+                    backgroundColor: AppColors.neonBlue.withValues(alpha: 0.15),
+                    child: Text(
+                      staff.name.isNotEmpty ? staff.name[0].toUpperCase() : '?',
+                      style: TextStyle(
+                        color: AppColors.neonBlue,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.sp,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        staff.name,
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14.sp,
+                        ),
+                      ),
+                      Text(
+                        staff.email,
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              _buildRoleBadge(staff.role),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.phone_outlined,
+                    size: 16,
+                    color: AppColors.textMuted,
+                  ),
+                  SizedBox(width: 6.w),
+                  Text(
+                    staff.phone ?? AppStrings.notAssigned,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                ],
+              ),
+              _buildStatusBadge(staff.isActive),
+            ],
+          ),
+          if (canManage) ...[
+            const Divider(color: AppColors.borderDefault, height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [_buildActions(staff, loungeId)],
+            ),
+          ],
+        ],
+      ),
     );
   }
 
   Widget _buildRoleBadge(String role) {
     final cleanRole = role.toLowerCase().trim();
-    if (cleanRole == 'owner' || cleanRole == 'lounge_owner' || cleanRole == 'lounge_admin') {
+    if (cleanRole == 'owner' ||
+        cleanRole == 'lounge_owner' ||
+        cleanRole == 'lounge_admin') {
       return StatusBadge.secondary(AppStrings.loungeOwnerLabel);
     }
     if (cleanRole == 'manager') {
@@ -233,8 +433,8 @@ class _StaffScreenState extends State<StaffScreen> {
   }
 
   Widget _buildStatusBadge(bool isActive) {
-    return isActive 
-        ? StatusBadge.success(AppStrings.active) 
+    return isActive
+        ? StatusBadge.success(AppStrings.active)
         : StatusBadge.danger(AppStrings.freezeAccount);
   }
 
@@ -243,15 +443,28 @@ class _StaffScreenState extends State<StaffScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(Icons.edit_outlined, color: AppColors.neonBlue, size: 20.r),
+          icon: Icon(
+            Icons.edit_outlined,
+            color: AppColors.neonBlue,
+            size: 20.r,
+          ),
           onPressed: () => _showStaffDialog(context, loungeId, staff: staff),
           tooltip: AppStrings.editStaff,
         ),
         IconButton(
-          icon: Icon(staff.isActive ? Icons.block : Icons.check_circle_outline, 
-               color: staff.isActive ? AppColors.warning : AppColors.success, size: 20.r),
-          onPressed: () => context.read<StaffCubit>().toggleStaffStatus(staff.id, staff.isActive, loungeId),
-          tooltip: staff.isActive ? AppStrings.freezeAccount : AppStrings.activate,
+          icon: Icon(
+            staff.isActive ? Icons.block : Icons.check_circle_outline,
+            color: staff.isActive ? AppColors.warning : AppColors.success,
+            size: 20.r,
+          ),
+          onPressed: () => context.read<StaffCubit>().toggleStaffStatus(
+            staff.id,
+            staff.isActive,
+            loungeId,
+          ),
+          tooltip: staff.isActive
+              ? AppStrings.freezeAccount
+              : AppStrings.activate,
         ),
         IconButton(
           icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
@@ -262,16 +475,17 @@ class _StaffScreenState extends State<StaffScreen> {
     );
   }
 
-  void _showStaffDialog(BuildContext context, String loungeId, {StaffEntity? staff}) {
+  void _showStaffDialog(
+    BuildContext context,
+    String loungeId, {
+    StaffEntity? staff,
+  }) {
     final staffCubit = context.read<StaffCubit>();
     showDialog(
       context: context,
       useRootNavigator: false,
-      builder: (diagContext) => AddStaffDialog(
-        loungeId: loungeId,
-        cubit: staffCubit,
-        staff: staff,
-      ),
+      builder: (diagContext) =>
+          AddStaffDialog(loungeId: loungeId, cubit: staffCubit, staff: staff),
     );
   }
 

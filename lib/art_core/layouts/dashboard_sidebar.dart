@@ -33,19 +33,17 @@ class DashboardSidebar extends StatelessWidget {
               prev.status != curr.status ||
               prev.userPermissions != curr.userPermissions,
           builder: (context, permState) {
-            double sidebarWidth = double.infinity;
-            if (Responsive.isDesktop(context)) {
-              sidebarWidth = 260.0;
-            } else if (Responsive.isTablet(context)) {
-              sidebarWidth = 220.0;
-            }
+            final double sidebarWidth = Responsive.isDesktop(context)
+                ? 260.0
+                : 280.0;
 
             return Container(
               width: sidebarWidth,
               decoration: const BoxDecoration(
                 color: AppColors.sidebarBackground,
                 border: BorderDirectional(
-                    end: BorderSide(color: AppColors.borderDefault)),
+                  end: BorderSide(color: AppColors.borderDefault),
+                ),
               ),
               child: Column(
                 children: [
@@ -116,7 +114,9 @@ class DashboardSidebar extends StatelessWidget {
   }
 
   Widget _buildLogo(UserEntity? user) {
-    final String roleLabel = user != null ? _getRoleLabel(user) : AppStrings.roleStaff;
+    final String roleLabel = user != null
+        ? _getRoleLabel(user)
+        : AppStrings.roleStaff;
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -167,7 +167,9 @@ class DashboardSidebar extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                     style: TextStyle(
-                        color: AppColors.textSecondary, fontSize: 12.sp),
+                      color: AppColors.textSecondary,
+                      fontSize: 12.sp,
+                    ),
                   ),
                 ],
               ),

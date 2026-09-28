@@ -37,35 +37,37 @@ class DataTableWidget extends StatelessWidget {
         border: Border.all(color: AppColors.borderDefault),
       ),
       child: Theme(
-        data: Theme.of(context).copyWith(
-          dividerColor: AppColors.divider,
-        ),
+        data: Theme.of(context).copyWith(dividerColor: AppColors.divider),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minWidth: isMobile
-                  ? MediaQuery.sizeOf(context).width - 32.w
-                  : MediaQuery.sizeOf(context).width - 310.w,
+              minWidth: AppBreakpoints.isDesktop(context)
+                  ? MediaQuery.sizeOf(context).width - 320.w
+                  : MediaQuery.sizeOf(context).width - 48.w,
             ),
             child: DataTable(
-              headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
+              headingRowColor: WidgetStateProperty.all(
+                AppColors.mutedBackground,
+              ),
               horizontalMargin: 16.w,
               columnSpacing: 16.w,
               headingRowHeight: 52.h,
               dataRowMinHeight: 60.h,
               dataRowMaxHeight: 80.h,
               columns: columns
-                  .map((col) => DataColumn(
-                        label: Text(
-                          col,
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13.sp,
-                          ),
+                  .map(
+                    (col) => DataColumn(
+                      label: Text(
+                        col,
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13.sp,
                         ),
-                      ))
+                      ),
+                    ),
+                  )
                   .toList(),
               rows: rows,
             ),

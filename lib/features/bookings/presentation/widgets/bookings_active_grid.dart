@@ -42,7 +42,11 @@ class BookingsActiveGrid extends StatelessWidget {
                 color: AppColors.scaffoldBackground,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.inbox_rounded, size: 48.r, color: AppColors.textMuted),
+              child: Icon(
+                Icons.inbox_rounded,
+                size: 48.r,
+                color: AppColors.textMuted,
+              ),
             ),
             SizedBox(height: 12.h),
             Text(
@@ -65,15 +69,34 @@ class BookingsActiveGrid extends StatelessWidget {
       );
     }
 
+    final width = MediaQuery.sizeOf(context).width;
+    final isMobile = width < 600;
+    final isTablet = width >= 600 && width < 1024;
+
+    final gridDelegate = isMobile
+        ? SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 1,
+            mainAxisExtent: 510.h,
+            mainAxisSpacing: 14.h,
+          )
+        : (isTablet
+              ? SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisExtent: 520.h,
+                  crossAxisSpacing: 14.w,
+                  mainAxisSpacing: 14.h,
+                )
+              : SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 440.w,
+                  mainAxisExtent: 525.h,
+                  crossAxisSpacing: 14.r,
+                  mainAxisSpacing: 14.r,
+                ));
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 420.w,
-        mainAxisExtent: 515.h,
-        crossAxisSpacing: 14.r,
-        mainAxisSpacing: 14.r,
-      ),
+      gridDelegate: gridDelegate,
       itemCount: bookings.length,
       itemBuilder: (context, index) {
         final b = bookings[index];
@@ -88,8 +111,12 @@ class BookingsActiveGrid extends StatelessWidget {
           key: ValueKey('booking_${b.id}'),
           booking: b,
           width: double.infinity,
-          onApprove: b.status == BookingStatus.pending ? () => onApprove(b.id) : null,
-          onReject: b.status == BookingStatus.pending ? () => onReject(b.id) : null,
+          onApprove: b.status == BookingStatus.pending
+              ? () => onApprove(b.id)
+              : null,
+          onReject: b.status == BookingStatus.pending
+              ? () => onReject(b.id)
+              : null,
           onConfirmPayment: () => onShowDetails(b),
         );
       },

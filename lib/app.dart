@@ -13,12 +13,12 @@ class AppScrollBehavior extends MaterialScrollBehavior {
 
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.trackpad,
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.unknown,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.unknown,
+  };
 }
 
 class MyApp extends StatefulWidget {
@@ -41,28 +41,47 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ScreenUtilInit(
-      designSize: const Size(1440, 1024),
-      minTextAdapt: true,
-      splitScreenMode: true,
-      builder: (context, child) {
-        return MaterialApp.router(
-          title: 'PlaySpot Dashboard',
-          debugShowCheckedModeBanner: false,
-          scrollBehavior: const AppScrollBehavior(),
-          localizationsDelegates: context.localizationDelegates,
-          supportedLocales: context.supportedLocales,
-          locale: context.locale,
-          theme: ThemeData(
-            scaffoldBackgroundColor: AppColors.scaffoldBackground,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: AppColors.neonBlue,
-              brightness: Brightness.dark,
-            ),
-            useMaterial3: true,
-            textTheme: GoogleFonts.cairoTextTheme(Theme.of(context).textTheme),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final Size designSize;
+        if (width < 600) {
+          designSize = const Size(390, 844); // Mobile standard
+        } else if (width < 1024) {
+          designSize = const Size(768, 1024); // Tablet standard
+        } else {
+          designSize = const Size(1440, 1024); // Desktop standard
+        }
+
+        return ScreenUtilInit(
+          key: ValueKey(
+            '${designSize.width.toInt()}x${designSize.height.toInt()}',
           ),
-          routerConfig: _appRouter.router,
+          designSize: designSize,
+          minTextAdapt: true,
+          splitScreenMode: true,
+          builder: (context, child) {
+            return MaterialApp.router(
+              title: 'PlaySpot Dashboard',
+              debugShowCheckedModeBanner: false,
+              scrollBehavior: const AppScrollBehavior(),
+              localizationsDelegates: context.localizationDelegates,
+              supportedLocales: context.supportedLocales,
+              locale: context.locale,
+              theme: ThemeData(
+                scaffoldBackgroundColor: AppColors.scaffoldBackground,
+                colorScheme: ColorScheme.fromSeed(
+                  seedColor: AppColors.neonBlue,
+                  brightness: Brightness.dark,
+                ),
+                useMaterial3: true,
+                textTheme: GoogleFonts.cairoTextTheme(
+                  Theme.of(context).textTheme,
+                ),
+              ),
+              routerConfig: _appRouter.router,
+            );
+          },
         );
       },
     );

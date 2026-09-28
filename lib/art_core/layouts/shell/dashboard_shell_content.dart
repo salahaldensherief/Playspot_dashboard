@@ -56,9 +56,9 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
       if (loungeId != null && loungeId.isNotEmpty) {
         context.read<ShiftCubit>().checkActiveShift(loungeId);
         context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
-        context
-            .read<ClientRequestsCubit>()
-            .startWatchingRequests(loungeId: loungeId);
+        context.read<ClientRequestsCubit>().startWatchingRequests(
+          loungeId: loungeId,
+        );
       } else if (widget.isSuperAdmin) {
         context.read<BookingCubit>().startWatchingBookings();
       }
@@ -70,9 +70,11 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
     final user = loginState.user;
     final loungeId = user?.loungeId ?? loginState.userLounge?.id;
     final roleStr = user?.rawRole ?? user?.role.name ?? 'staff';
-    context
-        .read<PermissionsCubit>()
-        .loadUserPermissions(roleStr, loungeId: loungeId, userId: user?.id);
+    context.read<PermissionsCubit>().loadUserPermissions(
+      roleStr,
+      loungeId: loungeId,
+      userId: user?.id,
+    );
 
     final loungeCubit = context.read<LoungeCubit>();
     loungeCubit.initSelectedLounge(loungeId);
@@ -96,9 +98,9 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
       final loungeId = widget.user?.loungeId;
       if (loungeId != null && loungeId.isNotEmpty) {
         context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
-        context
-            .read<ClientRequestsCubit>()
-            .startWatchingRequests(loungeId: loungeId);
+        context.read<ClientRequestsCubit>().startWatchingRequests(
+          loungeId: loungeId,
+        );
       } else if (widget.isSuperAdmin) {
         context.read<BookingCubit>().startWatchingBookings();
       }
@@ -114,13 +116,18 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.lock_outline_rounded, color: AppColors.textPrimary),
+                const Icon(
+                  Icons.lock_outline_rounded,
+                  color: AppColors.textPrimary,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     AppStrings.unauthorizedAccessMsg,
                     style: const TextStyle(
-                        color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -146,7 +153,8 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                      AppStrings.errorCheckingShift(state.errorMessage ?? '')),
+                    AppStrings.errorCheckingShift(state.errorMessage ?? ''),
+                  ),
                   backgroundColor: AppColors.danger,
                 ),
               );
@@ -162,15 +170,16 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text(AppStrings.shiftClosedSuccess),
-                      backgroundColor: AppColors.success),
+                    content: Text(AppStrings.shiftClosedSuccess),
+                    backgroundColor: AppColors.success,
+                  ),
                 );
                 context.read<ShiftCubit>().resetToInitial();
                 final currentLoungeId = widget.user?.loungeId;
                 if (currentLoungeId != null && currentLoungeId.isNotEmpty) {
-                  context
-                      .read<ShiftCubit>()
-                      .getLiveShiftOverview(currentLoungeId);
+                  context.read<ShiftCubit>().getLiveShiftOverview(
+                    currentLoungeId,
+                  );
                 }
               }
             }
@@ -207,52 +216,64 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
             final activeId = state.selectedLoungeId;
             if (activeId != null && activeId.isNotEmpty) {
               context.read<ShiftCubit>().checkActiveShift(activeId);
-              context
-                  .read<BookingCubit>()
-                  .startWatchingBookings(loungeId: activeId);
-              context
-                  .read<ClientRequestsCubit>()
-                  .startWatchingRequests(loungeId: activeId);
+              context.read<BookingCubit>().startWatchingBookings(
+                loungeId: activeId,
+              );
+              context.read<ClientRequestsCubit>().startWatchingRequests(
+                loungeId: activeId,
+              );
               final roleStr =
                   widget.user?.rawRole ?? widget.user?.role.name ?? 'staff';
-              context
-                  .read<PermissionsCubit>()
-                  .loadUserPermissions(roleStr, loungeId: activeId, userId: widget.user?.id);
+              context.read<PermissionsCubit>().loadUserPermissions(
+                roleStr,
+                loungeId: activeId,
+                userId: widget.user?.id,
+              );
             }
           },
         ),
       ],
       child: BlocBuilder<AppStatusCubit, AppStatusCubitState>(
         builder: (context, appStatusState) {
-          final isMaintenanceActive = appStatusState.appStatus.isMaintenanceMode && !widget.isSuperAdmin;
+          final isMaintenanceActive =
+              appStatusState.appStatus.isMaintenanceMode &&
+              !widget.isSuperAdmin;
 
           return Scaffold(
             backgroundColor: AppColors.scaffoldBackground,
-            drawer: Responsive.isMobile(context)
-                ? Drawer(child: DashboardSidebar(activeRoute: widget.activeRoute))
+            drawer: !Responsive.isDesktop(context)
+                ? Drawer(
+                    child: DashboardSidebar(activeRoute: widget.activeRoute),
+                  )
                 : null,
             body: Stack(
               children: [
                 Row(
                   children: [
-                    if (!Responsive.isMobile(context))
+                    if (Responsive.isDesktop(context))
                       DashboardSidebar(activeRoute: widget.activeRoute),
                     Expanded(
                       child: Column(
                         children: [
                           DashboardTopBar(
                             title: widget.title,
-                            showMenuButton: Responsive.isMobile(context),
+                            showMenuButton: !Responsive.isDesktop(context),
                             actions: widget.activeRoute == RouterKeys.profile
                                 ? [
                                     IconButton(
-                                      icon: const Icon(Icons.edit_outlined,
-                                          color: AppColors.textPrimary),
+                                      icon: const Icon(
+                                        Icons.edit_outlined,
+                                        color: AppColors.textPrimary,
+                                      ),
                                       onPressed: () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           SnackBar(
-                                              content:
-                                                  Text(AppStrings.underConstruction)),
+                                            content: Text(
+                                              AppStrings.underConstruction,
+                                            ),
+                                          ),
                                         );
                                       },
                                     ),
@@ -260,9 +281,7 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
                                 : null,
                           ),
                           if (!widget.isSuperAdmin) const ShiftHeaderBanner(),
-                          Expanded(
-                            child: widget.child,
-                          ),
+                          Expanded(child: widget.child),
                         ],
                       ),
                     ),
