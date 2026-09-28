@@ -49,6 +49,10 @@ class Booking extends Equatable {
   final String? rejectionReason;
   final String? cancelledBy;
   final DateTime? cancelledAt;
+  final bool isOpenTime;
+  final DateTime? openTimeStartedAt;
+  final DateTime? openTimeEndedAt;
+  final Map<String, dynamic> openTimePricingSnapshot;
 
   const Booking({
     required this.id,
@@ -94,9 +98,13 @@ class Booking extends Equatable {
     this.rejectionReason,
     this.cancelledBy,
     this.cancelledAt,
+    this.isOpenTime = false,
+    this.openTimeStartedAt,
+    this.openTimeEndedAt,
+    this.openTimePricingSnapshot = const {},
   });
 
-  bool get isOpenEnded => durationMinutes <= 0;
+  bool get isOpenEnded => isOpenTime || durationMinutes <= 0;
 
   /// Helper to determine if booking was cancelled by the client after approval
   bool get isCancelledByClient =>
@@ -149,6 +157,10 @@ class Booking extends Equatable {
         cancellationReason,
         cancelledBy,
         cancelledAt,
+        isOpenTime,
+        openTimeStartedAt,
+        openTimeEndedAt,
+        openTimePricingSnapshot,
       ];
 
   Booking copyWith({
@@ -195,6 +207,10 @@ class Booking extends Equatable {
     String? rejectionReason,
     String? cancelledBy,
     DateTime? cancelledAt,
+    bool? isOpenTime,
+    DateTime? openTimeStartedAt,
+    DateTime? openTimeEndedAt,
+    Map<String, dynamic>? openTimePricingSnapshot,
   }) {
     return Booking(
       id: id ?? this.id,
@@ -240,6 +256,11 @@ class Booking extends Equatable {
       rejectionReason: rejectionReason ?? this.rejectionReason,
       cancelledBy: cancelledBy ?? this.cancelledBy,
       cancelledAt: cancelledAt ?? this.cancelledAt,
+      isOpenTime: isOpenTime ?? this.isOpenTime,
+      openTimeStartedAt: openTimeStartedAt ?? this.openTimeStartedAt,
+      openTimeEndedAt: openTimeEndedAt ?? this.openTimeEndedAt,
+      openTimePricingSnapshot:
+          openTimePricingSnapshot ?? this.openTimePricingSnapshot,
     );
   }
 
@@ -322,6 +343,7 @@ class Booking extends Equatable {
     if (status == BookingStatus.inProgress) {
       return true;
     }
+    if (isOpenEnded) return false;
     final currentTime = now ?? DateTime.now();
     final end = endDateTime;
     final start = startDateTime;
@@ -340,6 +362,7 @@ class Booking extends Equatable {
     if (status == BookingStatus.pending && holdExpiry != null) {
       return currentTime.isAfter(holdExpiry) || currentTime.isAtSameMomentAs(holdExpiry);
     }
+    if (isOpenEnded) return false;
     final end = endDateTime;
     if (end == null) return false;
     final endWithGrace = end.add(gracePeriod);
@@ -351,6 +374,12 @@ class Booking extends Equatable {
 
   /// Helper to get remaining duration based on real-world clock.
   Duration remainingDuration([DateTime? now]) {
+    if (isOpenEnded) {
+      final start = openTimeStartedAt ?? startDateTime;
+      if (start == null) return Duration.zero;
+      final currentTime = now ?? DateTime.now();
+      return currentTime.difference(start);
+    }
     final end = endDateTime;
     if (end == null) return Duration.zero;
     final currentTime = now ?? DateTime.now();

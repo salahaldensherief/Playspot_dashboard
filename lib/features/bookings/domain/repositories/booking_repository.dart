@@ -49,6 +49,13 @@ abstract class BookingRepository {
   });
   Future<Either<Failure, void>> swapRoom(String bookingId, String newRoomId, String actionBy);
   Future<Either<Failure, void>> startBookingSession(String bookingId);
+  Future<Either<Failure, Map<String, dynamic>>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  });
+  Future<Either<Failure, Map<String, dynamic>>> completeOpenTimeSession(String bookingId);
   Future<Either<Failure, void>> autoCancelExpiredBookings();
   Future<Either<Failure, void>> approveManualBooking(String bookingId, String actionBy);
   Future<Either<Failure, void>> rejectManualBooking(String bookingId, String reason, String actionBy);

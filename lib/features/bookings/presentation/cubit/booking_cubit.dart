@@ -311,6 +311,67 @@ class BookingCubit extends Cubit<BookingState>
     );
   }
 
+  Future<Map<String, dynamic>?> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  }) async {
+    emit(state.copyWith(status: BookingStatusState.loading));
+    final result = await repository.startOpenTimeSession(
+      roomId: roomId,
+      customerName: customerName,
+      customerPhone: customerPhone,
+      playMode: playMode,
+    );
+
+    if (isClosed) return null;
+
+    return result.fold(
+      (failure) {
+        emit(
+          state.copyWith(
+            status: BookingStatusState.failure,
+            errorMessage: failure.message,
+          ),
+        );
+        return null;
+      },
+      (data) {
+        final targetLoungeId = watchedEntityId == 'all' ? null : watchedEntityId;
+        if (watchedEntityId != null) {
+          startWatchingBookings(loungeId: targetLoungeId, forceRefresh: true);
+        }
+        return data;
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>?> completeOpenTimeSession(String bookingId) async {
+    final result = await repository.completeOpenTimeSession(bookingId);
+
+    if (isClosed) return null;
+
+    return result.fold(
+      (failure) {
+        emit(
+          state.copyWith(
+            status: BookingStatusState.failure,
+            errorMessage: failure.message,
+          ),
+        );
+        return null;
+      },
+      (data) {
+        final targetLoungeId = watchedEntityId == 'all' ? null : watchedEntityId;
+        if (watchedEntityId != null) {
+          startWatchingBookings(loungeId: targetLoungeId, forceRefresh: true);
+        }
+        return data;
+      },
+    );
+  }
+
   Future<bool> markNoShow(String id) {
     return changeBookingStatus(id, BookingStatus.cancelled);
   }

@@ -59,6 +59,15 @@ abstract class BookingRemoteDataSource {
 
   Future<void> startBookingSession(String bookingId);
 
+  Future<Map<String, dynamic>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  });
+
+  Future<Map<String, dynamic>> completeOpenTimeSession(String bookingId);
+
   Future<void> autoCancelExpiredBookings();
 
   Future<void> approveManualBooking(String bookingId, String actionBy);
