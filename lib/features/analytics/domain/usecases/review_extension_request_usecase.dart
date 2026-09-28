@@ -14,6 +14,7 @@ class ReviewExtensionRequestUseCase {
     String? reason,
     int? requestedMinutes,
     int? currentDurationMinutes,
+    String paymentMethod = 'cash',
   }) {
     return repository.reviewExtensionRequest(
       bookingId: bookingId,
@@ -22,6 +23,7 @@ class ReviewExtensionRequestUseCase {
       reason: reason,
       requestedMinutes: requestedMinutes,
       currentDurationMinutes: currentDurationMinutes,
+      paymentMethod: paymentMethod,
     );
   }
 }

@@ -23,72 +23,134 @@ class RequestCardActions extends StatelessWidget {
 
   void _showLiveApproveDialog(BuildContext context, String bookingId) {
     final costController = TextEditingController(text: '0.0');
+    String selectedPaymentMethod = 'cash';
+
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        title: AppText.subHeading(AppStrings.approveExtensionTitle, fontSize: 16.sp),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppText.body(AppStrings.approveExtensionCostLabel, fontSize: 13.sp),
-            SizedBox(height: 10.h),
-            TextField(
-              controller: costController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 15.sp,
-                fontWeight: FontWeight.bold,
-              ),
-              decoration: InputDecoration(
-                labelText: AppStrings.additionalCostField,
-                labelStyle: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
-                filled: true,
-                fillColor: AppColors.scaffoldBackground,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-                enabledBorder: OutlineInputBorder(
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.cardBackground,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+          title: AppText.subHeading(AppStrings.approveExtensionTitle, fontSize: 16.sp),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppText.body(AppStrings.paymentMethod, fontSize: 13.sp, fontWeight: FontWeight.bold),
+              SizedBox(height: 8.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                decoration: BoxDecoration(
+                  color: AppColors.scaffoldBackground,
                   borderRadius: BorderRadius.circular(8.r),
-                  borderSide: const BorderSide(color: AppColors.borderDefault),
+                  border: Border.all(color: AppColors.borderDefault),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: const BorderSide(color: AppColors.neonBlue, width: 1.5),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedPaymentMethod,
+                    dropdownColor: AppColors.cardBackground,
+                    isExpanded: true,
+                    style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'cash',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.payments_outlined, color: AppColors.success, size: 18),
+                            SizedBox(width: 8.w),
+                            Text(AppStrings.confirmCash),
+                          ],
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'vodafone_cash',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.phone_android_rounded, color: AppColors.danger, size: 18),
+                            SizedBox(width: 8.w),
+                            Text(AppStrings.vodafoneCash),
+                          ],
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'instapay',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.account_balance_rounded, color: AppColors.neonBlue, size: 18),
+                            SizedBox(width: 8.w),
+                            Text(AppStrings.instapayAccountStr),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setDialogState(() => selectedPaymentMethod = val);
+                      }
+                    },
+                  ),
                 ),
               ),
+              SizedBox(height: 16.h),
+              AppText.body(AppStrings.approveExtensionCostLabel, fontSize: 13.sp),
+              SizedBox(height: 8.h),
+              TextField(
+                controller: costController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+                decoration: InputDecoration(
+                  labelText: AppStrings.additionalCostField,
+                  labelStyle: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+                  filled: true,
+                  fillColor: AppColors.scaffoldBackground,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                    borderSide: const BorderSide(color: AppColors.borderDefault),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                    borderSide: const BorderSide(color: AppColors.neonBlue, width: 1.5),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            AppButton(
+              text: AppStrings.cancel,
+              variant: AppButtonVariant.text,
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+            AppButton(
+              text: AppStrings.approveRequest,
+              variant: AppButtonVariant.primary,
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                final cost = double.tryParse(costController.text) ?? 0.0;
+                final success = await dashboardCubit.reviewExtensionRequest(
+                  bookingId: bookingId,
+                  isApproved: true,
+                  additionalCost: cost,
+                  paymentMethod: selectedPaymentMethod,
+                );
+                if (success && context.mounted) {
+                  requestsCubit.markAsAttended(request.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(AppStrings.requestApproved),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }
+              },
             ),
           ],
         ),
-        actions: [
-          AppButton(
-            text: AppStrings.cancel,
-            variant: AppButtonVariant.text,
-            onPressed: () => Navigator.of(dialogContext).pop(),
-          ),
-          AppButton(
-            text: AppStrings.approveRequest,
-            variant: AppButtonVariant.primary,
-            onPressed: () async {
-              Navigator.of(dialogContext).pop();
-              final cost = double.tryParse(costController.text) ?? 0.0;
-              final success = await dashboardCubit.reviewExtensionRequest(
-                bookingId: bookingId,
-                isApproved: true,
-                additionalCost: cost,
-              );
-              if (success && context.mounted) {
-                requestsCubit.markAsAttended(request.id);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(AppStrings.requestApproved),
-                    backgroundColor: AppColors.success,
-                  ),
-                );
-              }
-            },
-          ),
-        ],
       ),
     );
   }

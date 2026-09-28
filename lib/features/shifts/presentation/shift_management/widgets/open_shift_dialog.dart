@@ -7,6 +7,8 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 
+import 'package:play_spot_dashboard/core/utils/app_validator.dart';
+
 class OpenShiftDialog extends StatefulWidget {
   final Function(double) onConfirm;
   final bool isDismissible;
@@ -24,6 +26,12 @@ class OpenShiftDialog extends StatefulWidget {
 class _OpenShiftDialogState extends State<OpenShiftDialog> {
   final _controller = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,11 +71,7 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
                 label: AppStrings.startingCash,
                 hintText: AppStrings.hintAmount,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: (val) {
-                  if (val == null || val.isEmpty) return AppStrings.fieldRequired;
-                  if (double.tryParse(val) == null) return AppStrings.invalidNumber;
-                  return null;
-                },
+                validator: (val) => AppValidator.validateNumber(val, allowNegative: false, min: 0),
               ),
             ],
           ),

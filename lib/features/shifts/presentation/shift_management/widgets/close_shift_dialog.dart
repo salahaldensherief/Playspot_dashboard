@@ -5,6 +5,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
+import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 
 /// Blind Shift Closing Dialog.
 /// Prompts the cashier ONLY for the physical counted cash (`p_counted_cash`) and notes.
@@ -54,7 +55,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
           ),
         ],
       ),
-      content: Container(
+      content: SizedBox(
         width: 400.w,
         child: Form(
           key: _formKey,
@@ -72,11 +73,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
                 label: AppStrings.actualCash,
                 hintText: AppStrings.hintAmount,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty) return AppStrings.fieldRequired;
-                  if (double.tryParse(val.trim()) == null) return AppStrings.invalidNumber;
-                  return null;
-                },
+                validator: (val) => AppValidator.validateNumber(val, allowNegative: false, min: 0),
               ),
               SizedBox(height: 16.h),
               AppTextField(

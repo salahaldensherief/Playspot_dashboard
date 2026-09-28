@@ -42,7 +42,7 @@ class BookingDetailsActionPanel extends StatelessWidget {
       children: [
         if (isPending)
           AppButton(
-            text: 'قبول الحجز الآن',
+            text: AppStrings.approveBookingNow,
             variant: AppButtonVariant.primary,
             backgroundColor: AppColors.success,
             height: 40.h,
@@ -50,7 +50,7 @@ class BookingDetailsActionPanel extends StatelessWidget {
           ),
         if (isUpcoming || isInProgress)
           AppButton(
-            text: isInProgress ? 'إنهاء وحساب الجلسة' : 'بدء الجلسة الآن',
+            text: isInProgress ? AppStrings.endSessionAndCheckout : AppStrings.startSessionNow,
             variant: AppButtonVariant.primary,
             height: 40.h,
             onPressed: () {

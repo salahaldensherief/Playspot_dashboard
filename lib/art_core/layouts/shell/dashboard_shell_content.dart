@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/new_booking_alert_dialog.dart';
@@ -50,17 +51,27 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkUnauthorizedNotice();
       _initializePermissionsAndLounges();
-      final loungeId = widget.user?.loungeId;
-      if (loungeId != null && loungeId.isNotEmpty) {
-        context.read<ShiftCubit>().checkActiveShift(loungeId);
-        context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
-        context
-            .read<ClientRequestsCubit>()
-            .startWatchingRequests(loungeId: loungeId);
-      } else if (widget.isSuperAdmin) {
-        context.read<BookingCubit>().startWatchingBookings();
-      }
+      _startBookingWatchingIfAuthorized();
     });
+  }
+
+  void _startBookingWatchingIfAuthorized() {
+    final user = widget.user;
+    if (user == null) return;
+
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null || session.isExpired) return;
+
+    final loungeId = user.loungeId;
+    if (loungeId != null && loungeId.isNotEmpty) {
+      context.read<ShiftCubit>().checkActiveShift(loungeId);
+      context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
+      context
+          .read<ClientRequestsCubit>()
+          .startWatchingRequests(loungeId: loungeId);
+    } else if (widget.isSuperAdmin) {
+      context.read<BookingCubit>().startWatchingBookings();
+    }
   }
 
   void _initializePermissionsAndLounges() {
@@ -90,15 +101,16 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
         widget.user?.loungeId != oldWidget.user?.loungeId) {
       _initializePermissionsAndLounges();
     }
-    if (widget.user?.loungeId != oldWidget.user?.loungeId) {
-      final loungeId = widget.user?.loungeId;
-      if (loungeId != null && loungeId.isNotEmpty) {
-        context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
-        context
-            .read<ClientRequestsCubit>()
-            .startWatchingRequests(loungeId: loungeId);
-      } else if (widget.isSuperAdmin) {
-        context.read<BookingCubit>().startWatchingBookings();
+
+    final userChanged = widget.user?.id != oldWidget.user?.id;
+    final loungeChanged = widget.user?.loungeId != oldWidget.user?.loungeId;
+    final roleChanged = widget.isSuperAdmin != oldWidget.isSuperAdmin;
+
+    if (userChanged || loungeChanged || roleChanged) {
+      if (widget.user == null) {
+        context.read<BookingCubit>().stopWatchingBookings();
+      } else {
+        _startBookingWatchingIfAuthorized();
       }
     }
   }

@@ -6,8 +6,10 @@ import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/core/responsive/app_breakpoints.dart';
+import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
@@ -63,9 +65,10 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final user = context.read<LoginCubit>().state.user;
-      final loungeId = user?.loungeId;
-      _initRealtimeStreams(loungeId);
+      final authState = context.read<LoginCubit>().state;
+      if (authState.status == LoginStatus.authenticated && authState.user != null) {
+        _initRealtimeStreams(authState.user);
+      }
     });
   }
 
@@ -77,11 +80,18 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     super.dispose();
   }
 
-  void _initRealtimeStreams(String? loungeId) {
+  void _initRealtimeStreams(UserEntity? user) {
+    if (user == null) return;
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null || session.isExpired) return;
+
+    final loungeId = user.loungeId;
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
 
-    context.read<BookingCubit>().startWatchingBookings(loungeId: cleanLoungeId);
-    if (cleanLoungeId != null) {
+    if (user.isSuperAdmin) {
+      context.read<BookingCubit>().startWatchingBookings();
+    } else if (cleanLoungeId != null) {
+      context.read<BookingCubit>().startWatchingBookings(loungeId: cleanLoungeId);
       context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId);
       context.read<RoomCubit>().watchRooms(cleanLoungeId);
       context.read<ExtrasCubit>().loadExtras(cleanLoungeId);
@@ -90,12 +100,19 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
   }
 
   Future<void> _handleRefresh() async {
-    final user = context.read<LoginCubit>().state.user;
-    final loungeId = user?.loungeId;
+    final authState = context.read<LoginCubit>().state;
+    if (authState.status != LoginStatus.authenticated || authState.user == null) return;
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null || session.isExpired) return;
+
+    final user = authState.user!;
+    final loungeId = user.loungeId;
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
 
-    context.read<BookingCubit>().startWatchingBookings(loungeId: cleanLoungeId, forceRefresh: true);
-    if (cleanLoungeId != null) {
+    if (user.isSuperAdmin) {
+      context.read<BookingCubit>().startWatchingBookings(forceRefresh: true);
+    } else if (cleanLoungeId != null) {
+      context.read<BookingCubit>().startWatchingBookings(loungeId: cleanLoungeId, forceRefresh: true);
       context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId, forceRefresh: true);
       context.read<RoomCubit>().watchRooms(cleanLoungeId, forceRefresh: true);
       context.read<ExtrasCubit>().loadExtras(cleanLoungeId, forceRefresh: true);
@@ -188,8 +205,16 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
           child: MultiBlocListener(
             listeners: [
               BlocListener<LoginCubit, LoginState>(
-                listenWhen: (previous, current) => previous.user?.loungeId != current.user?.loungeId,
-                listener: (context, state) => _initRealtimeStreams(state.user?.loungeId),
+                listenWhen: (previous, current) {
+                  final wasAuth = previous.status == LoginStatus.authenticated;
+                  final isAuth = current.status == LoginStatus.authenticated;
+                  return (!wasAuth && isAuth) || (previous.user?.loungeId != current.user?.loungeId);
+                },
+                listener: (context, state) {
+                  if (state.status == LoginStatus.authenticated && state.user != null) {
+                    _initRealtimeStreams(state.user);
+                  }
+                },
               ),
               BlocListener<BookingCubit, BookingState>(
                 listenWhen: (previous, current) => previous.status != current.status,
@@ -258,7 +283,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                           ),
                         ),
                         SliverToBoxAdapter(child: SizedBox(height: 14.h)),
-                        ..._buildActiveBookingsView(context, userLounge),
+                        ..._buildActiveBookingsView(context, userLounge, loungeId),
                         SliverToBoxAdapter(child: SizedBox(height: 40.h)),
                       ],
                     ),
@@ -281,7 +306,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     );
   }
 
-  List<Widget> _buildActiveBookingsView(BuildContext context, dynamic userLounge) {
+  List<Widget> _buildActiveBookingsView(BuildContext context, dynamic userLounge, String loungeId) {
     return [
       BlocBuilder<BookingCubit, BookingState>(
         buildWhen: (prev, curr) => prev.bookings != curr.bookings || prev.status != curr.status,
@@ -314,6 +339,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                   onShowDetails: (b) => _showBookingDetails(context, b),
                   onApprove: (id) => context.read<BookingCubit>().approveBooking(id),
                   onReject: (id) => context.read<BookingCubit>().rejectBooking(id),
+                  onNewBooking: loungeId.isNotEmpty ? () => _showAddBookingModal(context, loungeId) : null,
                 ),
               );
             },

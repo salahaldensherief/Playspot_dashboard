@@ -42,6 +42,18 @@ class BookingRealtimeDataSourceImpl implements BookingRealtimeDataSource {
 
     controller = StreamController<List<BookingModel>>(
       onListen: () {
+        // Validate active admin session before setting up streams or timer
+        final session = _client.auth.currentSession;
+        if (session == null || session.isExpired) {
+          if (!controller.isClosed) {
+            controller.addError(const AuthException(
+              'لا توجد جلسة نشطة للمدير أو صاحب الصالة، يرجى تسجيل الدخول أولاً (403 Not authorized)',
+              statusCode: '403',
+            ));
+          }
+          return;
+        }
+
         // 1. Fetch initial data immediately on subscription
         _fetchAndEmit(controller, loungeId);
 
@@ -62,6 +74,17 @@ class BookingRealtimeDataSourceImpl implements BookingRealtimeDataSource {
 
         // 3. Periodic 30-second fallback backup poll (safety net for socket drops)
         backupSyncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+          final currentSession = _client.auth.currentSession;
+          if (currentSession == null || currentSession.isExpired) {
+            cancelResources();
+            if (!controller.isClosed) {
+              controller.addError(const AuthException(
+                'انتهت صلاحية جلسة المدير أو صاحب الصالة (403 Not authorized)',
+                statusCode: '403',
+              ));
+            }
+            return;
+          }
           debouncedFetchAndEmit();
         });
       },
@@ -74,6 +97,17 @@ class BookingRealtimeDataSourceImpl implements BookingRealtimeDataSource {
   }
 
   Future<void> _fetchAndEmit(StreamController<List<BookingModel>> controller, String? loungeId) async {
+    final session = _client.auth.currentSession;
+    if (session == null || session.isExpired) {
+      if (!controller.isClosed) {
+        controller.addError(const AuthException(
+          'لا توجد جلسة نشطة للمدير أو صاحب الصالة (403 Not authorized)',
+          statusCode: '403',
+        ));
+      }
+      return;
+    }
+
     try {
       final bookings = await _remoteDataSource.getBookings(loungeId: loungeId);
       if (!controller.isClosed) {

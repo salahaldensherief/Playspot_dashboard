@@ -50,6 +50,16 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
   void startWatchingBookings({String? loungeId, bool forceRefresh = false}) {
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
 
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null || session.isExpired) {
+      debugPrint('⚠️ [BOOKING_CUBIT] Cannot watch bookings: No active admin/owner session found.');
+      emit(state.copyWith(
+        status: BookingStatusState.failure,
+        errorMessage: 'لا توجد جلسة نشطة للمدير أو صاحب الصالة، يرجى تسجيل الدخول (403 Not authorized)',
+      ));
+      return;
+    }
+
     if (isAlreadyWatching(cleanLoungeId, forceRefresh: forceRefresh)) {
       return;
     }
@@ -62,7 +72,7 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
     emit(state.copyWith(status: BookingStatusState.loading));
 
     startWatch<List<Booking>>(
-      entityId: cleanLoungeId!,
+      entityId: cleanLoungeId ?? 'all_lounges',
       stream: watchBookings(loungeId: cleanLoungeId),
       onData: (bookings) {
         final currentIds = bookings.map((b) => b.id).toSet();
@@ -109,6 +119,17 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
     int pageSize = 20,
   }) async {
     if (loungeId.isEmpty) return;
+
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null || session.isExpired) {
+      debugPrint('⚠️ [BOOKING_CUBIT] Cannot fetch bookings page: No active admin/owner session found.');
+      emit(state.copyWith(
+        status: BookingStatusState.failure,
+        errorMessage: 'لا توجد جلسة نشطة للمدير أو صاحب الصالة، يرجى تسجيل الدخول (403 Not authorized)',
+      ));
+      return;
+    }
+
     emit(state.copyWith(status: BookingStatusState.loading));
 
     final result = await repository.getLoungeBookingsPage(
@@ -360,6 +381,13 @@ class BookingCubit extends Cubit<BookingState> with RealtimeWatcherMixin<Booking
 
   void clearLatestNewBooking() {
     emit(state.copyWith(clearLatestNewBooking: true));
+  }
+
+  void stopWatchingBookings() {
+    cancelRealtimeSubscription();
+    _scheduler.dispose();
+    _knownBookingIds.clear();
+    emit(const BookingState());
   }
 
   @override

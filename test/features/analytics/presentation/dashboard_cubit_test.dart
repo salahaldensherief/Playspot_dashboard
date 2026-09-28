@@ -26,6 +26,7 @@ class FakeDashboardRepository implements DashboardRepository {
     String? reason,
     int? requestedMinutes,
     int? currentDurationMinutes,
+    String paymentMethod = 'cash',
   }) async {
     if (shouldFail) {
       return const Left(ServerFailure('Database error'));

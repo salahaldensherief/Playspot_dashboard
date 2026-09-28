@@ -14,6 +14,7 @@ abstract class DashboardRemoteDataSource {
     String? reason,
     int? requestedMinutes,
     int? currentDurationMinutes,
+    String paymentMethod = 'cash',
   });
   Future<void> handleClientRequestAction({
     required String requestId,

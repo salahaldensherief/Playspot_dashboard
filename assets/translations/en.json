@@ -1113,5 +1113,20 @@
   "shift_handover_summary": "Shift Handover Summary",
   "print_handover_summary": "Print Handover Summary",
   "printing_triggered": "Printing handover summary report...",
-  "counted_cash": "Counted Physical Cash"
+  "counted_cash": "Counted Physical Cash",
+  "invalid_phone_number": "Please enter a valid phone number",
+  "passwords_do_not_match": "Passwords do not match",
+  "value_too_small": "Value must not be less than {}",
+  "value_too_large": "Value must not be greater than {}",
+  "too_short": "Must be at least {} characters",
+  "invalid_url": "Invalid URL",
+  "select_room_first": "Please select a room first",
+  "discount_exceeds_total": "Discount amount cannot exceed total price",
+  "discount_percent_exceeds_100": "Discount percentage cannot exceed 100%",
+  "play_mode_label": "Play Mode",
+  "approve_booking_now": "Approve Booking Now",
+  "end_session_and_checkout": "End Session & Checkout",
+  "start_session_now": "Start Session Now",
+  "no_matching_bookings": "No bookings or matching requests in this tab",
+  "record_expense_or_drop": "Record Expense / Drop"
 }

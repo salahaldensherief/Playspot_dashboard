@@ -1369,6 +1369,16 @@ class AppStrings {
   static String get cancellationThresholdWarning => 'cancellation_threshold_warning'.tr();
   static String get issueWarningBtn => 'issue_warning_btn'.tr();
   static String get requestBanBtn => 'request_ban_btn'.tr();
+  static String get selectRoomFirst => 'select_room_first'.tr();
+  static String get discountExceedsTotal => 'discount_exceeds_total'.tr();
+  static String get discountPercentExceeds100 => 'discount_percent_exceeds_100'.tr();
+  static String get playModeLabel => 'play_mode_label'.tr();
+  static String get approveBookingNow => 'approve_booking_now'.tr();
+  static String get endSessionAndCheckout => 'end_session_and_checkout'.tr();
+  static String get startSessionNow => 'start_session_now'.tr();
+  static String get noMatchingBookings => 'no_matching_bookings'.tr();
+  static String get recordExpenseOrDrop => 'record_expense_or_drop'.tr();
+  static String get invalidPhoneNumber => 'invalid_phone_number'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

@@ -10,7 +10,10 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/core/responsive/app_breakpoints.dart';
+import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/login/login_cubit.dart';
+import '../../../auth/presentation/login/login_state.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/booking.dart';
 import '../cubit/booking_cubit.dart';
 import '../cubit/booking_state.dart';
@@ -29,43 +32,69 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = context.read<LoginCubit>().state.user;
-      context.read<BookingCubit>().startWatchingBookings(loungeId: user?.loungeId);
+      if (!mounted) return;
+      final authState = context.read<LoginCubit>().state;
+      if (authState.status == LoginStatus.authenticated && authState.user != null) {
+        _initWatchingBookings(authState.user!);
+      }
     });
+  }
+
+  void _initWatchingBookings(UserEntity user) {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null || session.isExpired) return;
+
+    if (user.isSuperAdmin) {
+      context.read<BookingCubit>().startWatchingBookings();
+    } else if (user.loungeId != null && user.loungeId!.isNotEmpty) {
+      context.read<BookingCubit>().startWatchingBookings(loungeId: user.loungeId);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return DashboardLayout(
-      title: AppStrings.monthlyReports,
-      activeRoute: 'Reports',
-      child: BlocBuilder<BookingCubit, BookingState>(
-        buildWhen: (previous, current) => 
-            previous.status != current.status || 
-            previous.bookings != current.bookings,
-        builder: (context, state) {
-          final monthlyBookings = state.bookings.where((b) => 
-            b.date.month == _selectedDate.month && 
-            b.date.year == _selectedDate.year &&
-            b.status == BookingStatus.completed
-          ).toList();
+    return BlocListener<LoginCubit, LoginState>(
+      listenWhen: (prev, curr) {
+        final wasAuth = prev.status == LoginStatus.authenticated;
+        final isAuth = curr.status == LoginStatus.authenticated;
+        return (!wasAuth && isAuth) || (prev.user?.loungeId != curr.user?.loungeId);
+      },
+      listener: (context, state) {
+        if (state.status == LoginStatus.authenticated && state.user != null) {
+          _initWatchingBookings(state.user!);
+        }
+      },
+      child: DashboardLayout(
+        title: AppStrings.monthlyReports,
+        activeRoute: 'Reports',
+        child: BlocBuilder<BookingCubit, BookingState>(
+          buildWhen: (previous, current) => 
+              previous.status != current.status || 
+              previous.bookings != current.bookings,
+          builder: (context, state) {
+            final monthlyBookings = state.bookings.where((b) => 
+              b.date.month == _selectedDate.month && 
+              b.date.year == _selectedDate.year &&
+              b.status == BookingStatus.completed
+            ).toList();
 
-          double totalRevenue = 0;
-          for (var b in monthlyBookings) {
-            totalRevenue += b.totalPrice;
-          }
+            double totalRevenue = 0;
+            for (var b in monthlyBookings) {
+              totalRevenue += b.totalPrice;
+            }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              SizedBox(height: 32.h),
-              _buildStatsGrid(monthlyBookings.length, totalRevenue),
-              SizedBox(height: 32.h),
-              _buildHistoryTable(monthlyBookings),
-            ],
-          );
-        },
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(context),
+                SizedBox(height: 32.h),
+                _buildStatsGrid(monthlyBookings.length, totalRevenue),
+                SizedBox(height: 32.h),
+                _buildHistoryTable(monthlyBookings),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

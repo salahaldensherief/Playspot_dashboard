@@ -71,15 +71,16 @@ class AppValidator {
     return validateNumber(value, allowNegative: false, min: 0);
   }
 
-  /// Validates a phone number (Generic or Egyptian format).
+  /// Validates a phone number (Egyptian format or international).
   static String? validatePhone(String? value) {
     if (value == null || value.trim().isEmpty) {
       return AppStrings.fieldRequired;
     }
-    // Generic phone regex or specific Egyptian format: 01xxxxxxxxx
-    final phoneRegex = RegExp(r'^(01)[0-2,5]{1}[0-9]{8}$'); 
-    if (!phoneRegex.hasMatch(value.trim())) {
-      return 'invalid_phone_number'.tr();
+    final clean = value.trim().replaceAll(RegExp(r'[\s\-]'), '');
+    final egRegex = RegExp(r'^(\+?20)?0?1[0125][0-9]{8}$');
+    final intlRegex = RegExp(r'^\+?[0-9]{8,15}$');
+    if (!egRegex.hasMatch(clean) && !intlRegex.hasMatch(clean)) {
+      return AppStrings.invalidPhoneNumber;
     }
     return null;
   }

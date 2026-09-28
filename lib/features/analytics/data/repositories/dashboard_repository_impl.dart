@@ -64,6 +64,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
     String? reason,
     int? requestedMinutes,
     int? currentDurationMinutes,
+    String paymentMethod = 'cash',
   }) async {
     try {
       await remoteDataSource.reviewExtensionRequest(
@@ -73,6 +74,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         reason: reason,
         requestedMinutes: requestedMinutes,
         currentDurationMinutes: currentDurationMinutes,
+        paymentMethod: paymentMethod,
       );
       return const Right(null);
     } catch (e) {

@@ -30,7 +30,13 @@ class BookingRepositoryImpl implements BookingRepository {
         offset: offset,
       );
       return Right(bookings);
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
     } catch (e) {
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('403') || errStr.contains('not authorized') || errStr.contains('unauthorized')) {
+        return const Left(AuthFailure('غير مصرح لك بالوصول إلى الحجوزات أو انتهت صلاحية الجلسة (403 Not authorized)'));
+      }
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -53,7 +59,13 @@ class BookingRepositoryImpl implements BookingRepository {
         page: result.page,
         pageSize: result.pageSize,
       ));
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
     } catch (e) {
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('403') || errStr.contains('not authorized') || errStr.contains('unauthorized')) {
+        return const Left(AuthFailure('غير مصرح لك بالوصول إلى الحجوزات أو انتهت صلاحية الجلسة (403 Not authorized)'));
+      }
       return Left(ServerFailure(e.toString()));
     }
   }

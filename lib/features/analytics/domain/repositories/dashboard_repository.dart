@@ -16,6 +16,7 @@ abstract class DashboardRepository {
     String? reason,
     int? requestedMinutes,
     int? currentDurationMinutes,
+    String paymentMethod = 'cash',
   });
   Future<Either<Failure, void>> handleClientRequestAction({
     required String requestId,

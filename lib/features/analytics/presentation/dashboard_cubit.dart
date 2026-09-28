@@ -157,6 +157,7 @@ class DashboardCubit extends Cubit<DashboardState> {
     String? reason,
     int? requestedMinutes,
     int? currentDurationMinutes,
+    String paymentMethod = 'cash',
   }) async {
     final result = await reviewExtensionRequestUseCase(
       bookingId: bookingId,
@@ -165,6 +166,7 @@ class DashboardCubit extends Cubit<DashboardState> {
       reason: reason,
       requestedMinutes: requestedMinutes,
       currentDurationMinutes: currentDurationMinutes,
+      paymentMethod: paymentMethod,
     );
 
     if (isClosed) return false;

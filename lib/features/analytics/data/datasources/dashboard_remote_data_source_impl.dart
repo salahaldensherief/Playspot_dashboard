@@ -71,6 +71,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
     String? reason,
     int? requestedMinutes,
     int? currentDurationMinutes,
+    String paymentMethod = 'cash',
   }) =>
       _operationsHelper.reviewExtensionRequest(
         bookingId: bookingId,
@@ -79,6 +80,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
         reason: reason,
         requestedMinutes: requestedMinutes,
         currentDurationMinutes: currentDurationMinutes,
+        paymentMethod: paymentMethod,
       );
 
   @override

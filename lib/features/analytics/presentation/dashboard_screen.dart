@@ -12,6 +12,7 @@ import 'package:play_spot_dashboard/features/analytics/presentation/widgets/util
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
@@ -47,22 +48,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final loungeId = context.read<LoginCubit>().state.user?.loungeId;
-      _initRealtimeStreams(loungeId);
+      final authState = context.read<LoginCubit>().state;
+      if (authState.status == LoginStatus.authenticated && authState.user != null) {
+        _initRealtimeStreams(authState.user);
+      }
     });
   }
 
-  void _initRealtimeStreams(String? loungeId) {
+  void _initRealtimeStreams(UserEntity? user) {
+    if (user == null) return;
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null || session.isExpired) return;
+
+    final loungeId = user.loungeId;
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
 
     if (widget.role != UserRole.superAdmin) {
+      if (cleanLoungeId == null) {
+        debugPrint('⚠️ [DASHBOARD_SCREEN] Skipping stream init: loungeId is null for role ${widget.role}');
+        return;
+      }
       context.read<LoungeStatsCubit>().fetchStats(cleanLoungeId);
       context.read<DashboardCubit>().startWatchingActiveSessions(loungeId: cleanLoungeId);
       context.read<BookingCubit>().startWatchingBookings(loungeId: cleanLoungeId);
-      if (cleanLoungeId != null) {
-        context.read<RoomCubit>().watchRooms(cleanLoungeId);
-        context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId);
-      }
+      context.read<RoomCubit>().watchRooms(cleanLoungeId);
+      context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId);
     } else {
       context.read<DashboardCubit>().loadDashboardData();
     }
@@ -73,10 +83,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isSuperAdmin = widget.role == UserRole.superAdmin;
 
     return BlocListener<LoginCubit, LoginState>(
-      listenWhen: (prev, curr) => prev.user?.loungeId != curr.user?.loungeId,
+      listenWhen: (prev, curr) {
+        final wasAuth = prev.status == LoginStatus.authenticated;
+        final isAuth = curr.status == LoginStatus.authenticated;
+        return (!wasAuth && isAuth) || (prev.user?.loungeId != curr.user?.loungeId);
+      },
       listener: (context, loginState) {
-        final loungeId = loginState.user?.loungeId;
-        _initRealtimeStreams(loungeId);
+        if (loginState.status == LoginStatus.authenticated && loginState.user != null) {
+          _initRealtimeStreams(loginState.user);
+        }
       },
       child: DashboardLayout(
         title: AppStrings.dashboard,
@@ -191,17 +206,22 @@ class _LoungeOwnerDashboardView extends StatelessWidget {
   });
 
   Future<void> _handleRefresh(BuildContext context) async {
-    final loungeId = context.read<LoginCubit>().state.user?.loungeId;
+    final loginState = context.read<LoginCubit>().state;
+    if (loginState.status != LoginStatus.authenticated || loginState.user == null) return;
+
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null || session.isExpired) return;
+
+    final loungeId = loginState.user?.loungeId;
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
+    if (cleanLoungeId == null) return;
 
     await context.read<LoungeStatsCubit>().fetchStats(cleanLoungeId);
     if (context.mounted) {
       context.read<DashboardCubit>().startWatchingActiveSessions(loungeId: cleanLoungeId, forceRefresh: true);
       context.read<BookingCubit>().startWatchingBookings(loungeId: cleanLoungeId, forceRefresh: true);
-      if (cleanLoungeId != null) {
-        context.read<RoomCubit>().watchRooms(cleanLoungeId, forceRefresh: true);
-        context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId, forceRefresh: true);
-      }
+      context.read<RoomCubit>().watchRooms(cleanLoungeId, forceRefresh: true);
+      context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId, forceRefresh: true);
     }
   }
 

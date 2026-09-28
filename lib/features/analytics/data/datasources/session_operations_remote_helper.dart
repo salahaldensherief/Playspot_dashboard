@@ -178,12 +178,25 @@ class SessionOperationsRemoteHelper {
     String? reason,
     int? requestedMinutes,
     int? currentDurationMinutes,
+    String paymentMethod = 'cash',
   }) async {
     if (isApproved) {
-      await supabaseClient.rpc('approve_booking_extension', params: {
-        'p_booking_id': bookingId,
-        'p_additional_cost': null,
-      });
+      try {
+        await supabaseClient.rpc('approve_booking_extension', params: {
+          'p_booking_id': bookingId,
+          'p_payment_method': paymentMethod,
+        });
+      } catch (e) {
+        if (e.toString().contains('p_additional_cost') || (e is PostgrestException && e.code == 'PGRST202')) {
+          await supabaseClient.rpc('approve_booking_extension', params: {
+            'p_booking_id': bookingId,
+            'p_payment_method': paymentMethod,
+            'p_additional_cost': additionalCost,
+          });
+        } else {
+          rethrow;
+        }
+      }
     } else {
       await supabaseClient.rpc('reject_booking_extension', params: {
         'p_booking_id': bookingId,

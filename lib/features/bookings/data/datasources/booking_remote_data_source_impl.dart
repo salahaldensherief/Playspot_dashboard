@@ -22,6 +22,41 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     );
   }
 
+  Future<Session> _ensureActiveAdminSession() async {
+    var session = client.auth.currentSession;
+    if (session == null || session.accessToken.isEmpty) {
+      throw const AuthException(
+        'لا توجد جلسة نشطة للمدير أو صاحب الصالة، يرجى تسجيل الدخول أولاً (403 Not authorized)',
+        statusCode: '403',
+      );
+    }
+
+    if (session.isExpired) {
+      try {
+        final res = await client.auth.refreshSession();
+        session = res.session ?? client.auth.currentSession;
+      } catch (e) {
+        debugPrint('⚠️ [DATA_SOURCE] Failed to refresh admin session: $e');
+      }
+
+      if (session == null || session.isExpired || session.accessToken.isEmpty) {
+        throw const AuthException(
+          'انتهت صلاحية جلسة المدير أو صاحب الصالة، يرجى إعادة تسجيل الدخول (403 Not authorized)',
+          statusCode: '403',
+        );
+      }
+    }
+
+    if (client.auth.currentUser == null) {
+      throw const AuthException(
+        'لا يوجد مستخدم مسجل الدخول حالياً (403 Not authorized)',
+        statusCode: '403',
+      );
+    }
+
+    return session;
+  }
+
   @override
   Future<PaginatedResult<BookingModel>> getLoungeBookingsPage({
     required String loungeId,
@@ -36,12 +71,32 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     final clampedPageSize = pageSize.clamp(1, 100);
     final validPage = page < 1 ? 1 : page;
 
+    // Verify active admin session before calling booking RPCs
+    await _ensureActiveAdminSession();
+
     try {
-      final response = await client.rpc('get_lounge_bookings_page', params: {
-        'p_lounge_id': cleanLoungeId,
-        'p_page': validPage,
-        'p_page_size': clampedPageSize,
-      });
+      dynamic response;
+      try {
+        response = await client.rpc('get_lounge_bookings_page', params: {
+          'p_lounge_id': cleanLoungeId,
+          'p_page': validPage,
+          'p_page_size': clampedPageSize,
+        });
+      } on PostgrestException catch (e) {
+        final isFuncMissing = e.code == 'PGRST202' ||
+            (e.message.toLowerCase().contains('function') &&
+                e.message.toLowerCase().contains('does not exist'));
+        if (isFuncMissing) {
+          debugPrint('⚠️ [DATA_SOURCE] get_lounge_bookings_page not found, trying get_lounge_bookings...');
+          response = await client.rpc('get_lounge_bookings', params: {
+            'p_lounge_id': cleanLoungeId,
+            'p_page': validPage,
+            'p_page_size': clampedPageSize,
+          });
+        } else {
+          rethrow;
+        }
+      }
 
       return PaginatedResult.fromRpcResponse<BookingModel>(
         response,
@@ -50,7 +105,18 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         requestedPageSize: clampedPageSize,
       );
     } catch (e) {
-      debugPrint('⚠️ [DATA_SOURCE] get_lounge_bookings_page RPC error ($e), falling back');
+      final errStr = e.toString().toLowerCase();
+      final isUnauthorized = errStr.contains('403') ||
+          errStr.contains('not authorized') ||
+          errStr.contains('unauthorized') ||
+          (e is AuthException && (e.statusCode == '403' || e.statusCode == '401'));
+
+      if (isUnauthorized) {
+        debugPrint('⛔ [DATA_SOURCE] get_lounge_bookings 403 Not authorized: $e');
+        rethrow;
+      }
+
+      debugPrint('⚠️ [DATA_SOURCE] get_lounge_bookings RPC error ($e), falling back');
       final fallbackList = await getBookings(
         loungeId: cleanLoungeId,
         limit: clampedPageSize,
@@ -75,6 +141,8 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     if (cleanLoungeId.isEmpty || cleanUserId.isEmpty) {
       return CustomerCancellationSummary.empty();
     }
+
+    await _ensureActiveAdminSession();
 
     try {
       final response = await client.rpc('get_booking_cancellation_summary', params: {
@@ -101,6 +169,9 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }) async {
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
 
+    // Verify active admin session before calling booking RPCs
+    await _ensureActiveAdminSession();
+
     try {
       final response = await client.rpc('get_all_bookings_admin', params: {
         'p_status': status,
@@ -113,6 +184,17 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         return BookingModel.fromJson(Map<String, dynamic>.from(json));
       }).toList();
     } catch (e) {
+      final errStr = e.toString().toLowerCase();
+      final isUnauthorized = errStr.contains('403') ||
+          errStr.contains('not authorized') ||
+          errStr.contains('unauthorized') ||
+          (e is AuthException && (e.statusCode == '403' || e.statusCode == '401'));
+
+      if (isUnauthorized) {
+        debugPrint('⛔ [DATA_SOURCE] get_all_bookings_admin 403 Not authorized: $e');
+        rethrow;
+      }
+
       debugPrint('${AppConstants.bookingFetchAlert}$e');
       return _queryHelper.fetchSafeSelect(
         loungeId: cleanLoungeId,

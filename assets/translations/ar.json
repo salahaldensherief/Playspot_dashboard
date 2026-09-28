@@ -1108,5 +1108,20 @@
   "shift_handover_summary": "ملخص تسليم الوردية",
   "print_handover_summary": "طباعة تقرير الوردية",
   "printing_triggered": "جاري تجهيز تقرير تسليم الوردية للطباعة...",
-  "counted_cash": "النقدية الفعلية بالدرج"
+  "counted_cash": "النقدية الفعلية بالدرج",
+  "invalid_phone_number": "يرجى إدخال رقم هاتف صحيح",
+  "passwords_do_not_match": "كلمتا المرور غير متطابقتين",
+  "value_too_small": "القيمة يجب ألا تقل عن {}",
+  "value_too_large": "القيمة يجب ألا تزيد عن {}",
+  "too_short": "يجب ألا يقل عن {} أحرف",
+  "invalid_url": "رابط غير صالح",
+  "select_room_first": "يرجى اختيار الغرفة أولاً",
+  "discount_exceeds_total": "قيمة الخصم لا يمكن أن تتجاوز السعر الإجمالي",
+  "discount_percent_exceeds_100": "نسبة الخصم لا يمكن أن تتجاوز 100%",
+  "play_mode_label": "طريقة اللعب",
+  "approve_booking_now": "قبول الحجز الآن",
+  "end_session_and_checkout": "إنهاء وحساب الجلسة",
+  "start_session_now": "بدء الجلسة الآن",
+  "no_matching_bookings": "لا توجد حجوزات أو طلبات مطابقة في هذا التبويب",
+  "record_expense_or_drop": "تسجيل مصروف / سحب"
 }

@@ -59,8 +59,28 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
     final reason = _reasonController.text.trim();
     if (_inputValue <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('يرجى أدخال نسبة أو مبلغ خصم صحيح'),
+        SnackBar(
+          content: Text(AppStrings.invalidDiscountValue),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
+
+    if (_isPercentage && _inputValue > 100) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.discountPercentExceeds100),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
+
+    if (!_isPercentage && _inputValue > widget.currentPrice) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.discountExceedsTotal),
           backgroundColor: AppColors.danger,
         ),
       );
@@ -155,7 +175,7 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          'نسبة مئوية (%)',
+                          AppStrings.percentageDiscount,
                           style: TextStyle(
                             color: _isPercentage ? Colors.black : AppColors.textSecondary,
                             fontSize: 11.sp,
@@ -177,7 +197,7 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          'مبلغ ثابت (ج.م)',
+                          AppStrings.fixedDiscount,
                           style: TextStyle(
                             color: !_isPercentage ? Colors.black : AppColors.textSecondary,
                             fontSize: 11.sp,
@@ -306,7 +326,7 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                 SizedBox(width: 10.w),
                 Expanded(
                   child: AppButton(
-                    text: 'تطبيق الخصم',
+                    text: AppStrings.applyDiscount,
                     onPressed: _handleConfirm,
                   ),
                 ),

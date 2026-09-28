@@ -4,6 +4,9 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 
+import 'package:flutter/services.dart';
+import 'package:play_spot_dashboard/core/utils/app_validator.dart';
+
 class AddBookingCustomerFields extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController phoneController;
@@ -19,6 +22,8 @@ class AddBookingCustomerFields extends StatelessWidget {
     required String label,
     required String hint,
     TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+    String? Function(String?)? validator,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,6 +33,7 @@ class AddBookingCustomerFields extends StatelessWidget {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: hint,
@@ -43,7 +49,7 @@ class AddBookingCustomerFields extends StatelessWidget {
               borderSide: const BorderSide(color: AppColors.borderDefault),
             ),
           ),
-          validator: (val) => null,
+          validator: validator,
         ),
       ],
     );
@@ -58,6 +64,10 @@ class AddBookingCustomerFields extends StatelessWidget {
             controller: nameController,
             label: AppStrings.customerName,
             hint: AppStrings.fullName,
+            validator: (val) => AppValidator.validateOptional(
+              val,
+              (v) => AppValidator.validateMinLength(v, 2),
+            ),
           ),
         ),
         SizedBox(width: 16.w),
@@ -65,8 +75,15 @@ class AddBookingCustomerFields extends StatelessWidget {
           child: _buildTextField(
             controller: phoneController,
             label: AppStrings.phoneNumber,
-            hint: "01xxxxxxxxx",
+            hint: AppStrings.hintPhoneNumber,
             keyboardType: TextInputType.phone,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
+            ],
+            validator: (val) => AppValidator.validateOptional(
+              val,
+              AppValidator.validatePhone,
+            ),
           ),
         ),
       ],

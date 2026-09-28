@@ -337,7 +337,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppText.body("طريقة اللعب (Play Mode)", fontWeight: FontWeight.bold),
+        AppText.body(AppStrings.playModeLabel, fontWeight: FontWeight.bold),
         SizedBox(height: 8.h),
         SegmentedButton<String>(
           segments: [
@@ -375,7 +375,13 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
   }
 
   void _submit() {
-    if (!_formKey.currentState!.validate() || _selectedRoom == null) return;
+    if (_selectedRoom == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppStrings.selectRoomFirst), backgroundColor: AppColors.danger),
+      );
+      return;
+    }
+    if (!_formKey.currentState!.validate()) return;
 
     final durationMinutes = context.read<BookingCubit>().state.selectedDurationMinutes;
     final endTime = _calculateEndTime(_startTime, durationMinutes);
