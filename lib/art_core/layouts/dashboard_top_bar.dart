@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:play_spot_dashboard/core/responsive/app_breakpoints.dart';
 import '../theme/app_colors.dart';
 import 'top_bar/top_bar_audio_toggle.dart';
 import 'top_bar/top_bar_branch_switcher.dart';
@@ -25,14 +26,16 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = AppBreakpoints.isMobile(context);
+    final height = isMobile ? 58.0 : _defaultHeight;
+    final horizontalPadding = isMobile ? 12.0 : 24.0;
+
     return Container(
-      height: _defaultHeight,
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      height: height,
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       decoration: const BoxDecoration(
         color: AppColors.scaffoldBackground,
-        border: Border(
-          bottom: BorderSide(color: AppColors.divider),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.divider)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -49,10 +52,7 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                   const SizedBox(width: 8),
                 ],
-                if (leading != null) ...[
-                  leading!,
-                  const SizedBox(width: 16),
-                ],
+                if (leading != null) ...[leading!, const SizedBox(width: 16)],
                 Flexible(
                   child: Text(
                     title,

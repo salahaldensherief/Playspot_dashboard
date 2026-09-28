@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_text.dart';
+import '../../../../art_core/widgets/shimmer_loading.dart';
 import '../../../bookings/domain/entities/booking.dart';
 import '../../../bookings/presentation/cubit/booking_cubit.dart';
 import '../../../bookings/presentation/cubit/booking_state.dart';
@@ -26,16 +27,24 @@ class LiveBookingsFeed extends StatelessWidget {
           prev.activeSessionsStats != curr.activeSessionsStats,
       builder: (context, dashState) {
         return BlocBuilder<BookingCubit, BookingState>(
-          buildWhen: (prev, curr) => prev.status != curr.status || prev.bookings != curr.bookings,
+          buildWhen: (prev, curr) =>
+              prev.status != curr.status || prev.bookings != curr.bookings,
           builder: (context, bookingState) {
-            final List<Booking> activeSessions = dashState.activeSessionsList.isNotEmpty
-                ? dashState.activeSessionsList.where((b) => b.isBookingActive()).toList()
-                : bookingState.bookings.where((b) => b.isBookingActive()).toList();
+            final List<Booking> activeSessions =
+                dashState.activeSessionsList.isNotEmpty
+                ? dashState.activeSessionsList
+                      .where((b) => b.isBookingActive())
+                      .toList()
+                : bookingState.bookings
+                      .where((b) => b.isBookingActive())
+                      .toList();
 
             final stats = dashState.activeSessionsStats;
-            final double activeRevenue = (stats['total_revenue'] as num?)?.toDouble() ??
+            final double activeRevenue =
+                (stats['total_revenue'] as num?)?.toDouble() ??
                 activeSessions.fold(0.0, (sum, item) => sum + item.totalPrice);
-            final int activeExtrasCount = (stats['total_extras_count'] as num?)?.toInt() ??
+            final int activeExtrasCount =
+                (stats['total_extras_count'] as num?)?.toInt() ??
                 activeSessions.fold(0, (sum, item) => sum + item.extras.length);
 
             return Container(
@@ -50,7 +59,9 @@ class LiveBookingsFeed extends StatelessWidget {
                 children: [
                   _LiveFeedHeader(
                     activeCount: activeSessions.length,
-                    isLoading: dashState.status == FeatureStatus.loading && activeSessions.isEmpty,
+                    isLoading:
+                        dashState.status == FeatureStatus.loading &&
+                        activeSessions.isEmpty,
                   ),
                   SizedBox(height: 16.h),
 
@@ -61,18 +72,40 @@ class LiveBookingsFeed extends StatelessWidget {
                       extrasCount: activeExtrasCount,
                     ),
                     SizedBox(height: 20.h),
-                    Wrap(
-                      spacing: 16.r,
-                      runSpacing: 16.r,
-                      children: activeSessions.map((session) {
-                        return RepaintBoundary(
-                          child: LiveSessionCard(
-                            key: ValueKey('dash_live_${session.id}'),
-                            booking: session,
-                            width: 320.w,
-                          ),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isMobile = constraints.maxWidth < 600;
+                        final double cardWidth = isMobile
+                            ? double.infinity
+                            : (constraints.maxWidth < 900
+                                  ? ((constraints.maxWidth - 16.r) / 2).clamp(
+                                      280.0,
+                                      420.0,
+                                    )
+                                  : 320.w.clamp(280.0, 360.0));
+
+                        return Wrap(
+                          spacing: 16.r,
+                          runSpacing: 16.r,
+                          children: activeSessions.map((session) {
+                            return RepaintBoundary(
+                              child: LiveSessionCard(
+                                key: ValueKey('dash_live_${session.id}'),
+                                booking: session,
+                                width: cardWidth,
+                              ),
+                            );
+                          }).toList(),
                         );
-                      }).toList(),
+                      },
+                    ),
+                  ] else if (dashState.status == FeatureStatus.loading) ...[
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                      child: ShimmerLoading.rounded(
+                        width: double.infinity,
+                        height: 120.h,
+                      ),
                     ),
                   ] else ...[
                     const _EmptyActiveSessionsState(),
@@ -92,7 +125,8 @@ class LiveBookingsFeed extends StatelessWidget {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: bookingState.bookings.take(5).length,
-                      separatorBuilder: (context, index) => Divider(color: AppColors.divider, height: 20.h),
+                      separatorBuilder: (context, index) =>
+                          Divider(color: AppColors.divider, height: 20.h),
                       itemBuilder: (context, index) {
                         final booking = bookingState.bookings[index];
                         return LiveBookingItem(booking: booking);
@@ -131,10 +165,7 @@ class _LiveFeedHeader extends StatelessWidget {
               ),
             ),
             SizedBox(width: 12.w),
-            AppText.heading(
-              AppStrings.activeSessions,
-              fontSize: 18.sp,
-            ),
+            AppText.heading(AppStrings.activeSessions, fontSize: 18.sp),
             SizedBox(width: 8.w),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
@@ -152,7 +183,11 @@ class _LiveFeedHeader extends StatelessWidget {
           ],
         ),
         if (isLoading)
-          SizedBox(width: 16.r, height: 16.r, child: const CircularProgressIndicator(strokeWidth: 2)),
+          SizedBox(
+            width: 16.r,
+            height: 16.r,
+            child: const CircularProgressIndicator(strokeWidth: 2),
+          ),
       ],
     );
   }
@@ -236,7 +271,12 @@ class _MiniStatTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AppText.body(title, fontSize: 10.sp, color: AppColors.textMuted),
-            AppText.subHeading(value, fontSize: 13.sp, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+            AppText.subHeading(
+              value,
+              fontSize: 13.sp,
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
           ],
         ),
       ],
@@ -254,7 +294,11 @@ class _EmptyActiveSessionsState extends StatelessWidget {
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.sports_esports_outlined, size: 40.r, color: AppColors.textMuted),
+            Icon(
+              Icons.sports_esports_outlined,
+              size: 40.r,
+              color: AppColors.textMuted,
+            ),
             SizedBox(height: 8.h),
             AppText.body(
               AppStrings.noActiveSessions,
