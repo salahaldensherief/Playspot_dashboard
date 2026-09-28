@@ -47,6 +47,10 @@ class BookingModel extends Booking {
     super.rejectionReason,
     super.cancelledBy,
     super.cancelledAt,
+    super.isOpenTime,
+    super.openTimeStartedAt,
+    super.openTimeEndedAt,
+    super.openTimePricingSnapshot,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
@@ -206,6 +210,16 @@ class BookingModel extends Booking {
       cancelledAt: json['cancelled_at'] != null 
           ? DateTime.tryParse(json['cancelled_at'].toString()) 
           : (json['out_cancelled_at'] != null ? DateTime.tryParse(json['out_cancelled_at'].toString()) : null),
+      isOpenTime: json['is_open_time'] == true,
+      openTimeStartedAt: json['open_time_started_at'] != null
+          ? DateTime.tryParse(json['open_time_started_at'].toString())
+          : null,
+      openTimeEndedAt: json['open_time_ended_at'] != null
+          ? DateTime.tryParse(json['open_time_ended_at'].toString())
+          : null,
+      openTimePricingSnapshot: json['open_time_pricing_snapshot'] is Map
+          ? Map<String, dynamic>.from(json['open_time_pricing_snapshot'] as Map)
+          : const {},
     );
   }
 
@@ -248,6 +262,13 @@ class BookingModel extends Booking {
       if (rejectionReason != null && rejectionReason!.trim().isNotEmpty) 'rejection_reason': rejectionReason,
       if (cancelledBy != null && cancelledBy!.trim().isNotEmpty) 'cancelled_by': cancelledBy,
       if (cAt != null) 'cancelled_at': cAt.toIso8601String(),
+      'is_open_time': isOpenTime,
+      if (openTimeStartedAt != null)
+        'open_time_started_at': openTimeStartedAt!.toIso8601String(),
+      if (openTimeEndedAt != null)
+        'open_time_ended_at': openTimeEndedAt!.toIso8601String(),
+      if (openTimePricingSnapshot.isNotEmpty)
+        'open_time_pricing_snapshot': openTimePricingSnapshot,
     };
 
     return map;

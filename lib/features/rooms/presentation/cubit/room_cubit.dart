@@ -96,6 +96,15 @@ class RoomCubit extends Cubit<RoomState> with RealtimeWatcherMixin<RoomState> {
           offerTitle: room.offerTitle,
           offerTag: room.offerTag,
           activePromotionId: room.activePromotionId,
+          openTimeEnabled: room.openTimeEnabled,
+          openTimePricingMode: room.openTimePricingMode,
+          openTimeCustomHourlyRate: room.openTimeCustomHourlyRate,
+          openTimePriceMultiplier: room.openTimePriceMultiplier,
+          openTimeMinimumMinutes: room.openTimeMinimumMinutes,
+          openTimeRoundingMinutes: room.openTimeRoundingMinutes,
+          openTimeMaxMinutes: room.openTimeMaxMinutes,
+          openTimeBufferBeforeBookingMinutes:
+              room.openTimeBufferBeforeBookingMinutes,
         );
       }
       return room;

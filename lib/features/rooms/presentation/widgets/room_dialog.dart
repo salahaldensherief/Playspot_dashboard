@@ -46,6 +46,12 @@ class _RoomDialogState extends State<RoomDialog> {
   late TextEditingController _controllersController;
   late TextEditingController _screenSizeController;
   late TextEditingController _extraPriceController;
+  late TextEditingController _openTimeCustomRateController;
+  late TextEditingController _openTimeMarkupPercentController;
+  late TextEditingController _openTimeMinimumMinutesController;
+  late TextEditingController _openTimeRoundingMinutesController;
+  late TextEditingController _openTimeMaxMinutesController;
+  late TextEditingController _openTimeBufferMinutesController;
 
   final List<String> _selectedActivityIds = [];
   final List<String> _featuresAr = [];
@@ -55,6 +61,8 @@ class _RoomDialogState extends State<RoomDialog> {
   String? _selectedSpaceTypeId;
   List<SelectedImage> _roomImages = [];
   bool _isUploading = false;
+  bool _openTimeEnabled = false;
+  String _openTimePricingMode = 'same_hourly';
 
   @override
   void initState() {
@@ -75,6 +83,28 @@ class _RoomDialogState extends State<RoomDialog> {
     _screenSizeController = TextEditingController(text: r?.screenSize ?? '43"');
     _extraPriceController =
         TextEditingController(text: r?.extraControllerPrice.toString() ?? '0.0');
+    _openTimeEnabled = r?.openTimeEnabled ?? false;
+    _openTimePricingMode = r?.openTimePricingMode ?? 'same_hourly';
+    _openTimeCustomRateController = TextEditingController(
+      text: r?.openTimeCustomHourlyRate?.toString() ?? '',
+    );
+    _openTimeMarkupPercentController = TextEditingController(
+      text: (((r?.openTimePriceMultiplier ?? 1.0) - 1) * 100)
+          .clamp(0, 1000)
+          .toStringAsFixed(0),
+    );
+    _openTimeMinimumMinutesController = TextEditingController(
+      text: (r?.openTimeMinimumMinutes ?? 30).toString(),
+    );
+    _openTimeRoundingMinutesController = TextEditingController(
+      text: (r?.openTimeRoundingMinutes ?? 15).toString(),
+    );
+    _openTimeMaxMinutesController = TextEditingController(
+      text: r?.openTimeMaxMinutes?.toString() ?? '',
+    );
+    _openTimeBufferMinutesController = TextEditingController(
+      text: (r?.openTimeBufferBeforeBookingMinutes ?? 15).toString(),
+    );
 
     const validSpaceTypes = ['open_area', 'standard_room', 'vip_room'];
     if (r != null && validSpaceTypes.contains(r.spaceTypeId)) {
@@ -103,6 +133,12 @@ class _RoomDialogState extends State<RoomDialog> {
     _controllersController.dispose();
     _screenSizeController.dispose();
     _extraPriceController.dispose();
+    _openTimeCustomRateController.dispose();
+    _openTimeMarkupPercentController.dispose();
+    _openTimeMinimumMinutesController.dispose();
+    _openTimeRoundingMinutesController.dispose();
+    _openTimeMaxMinutesController.dispose();
+    _openTimeBufferMinutesController.dispose();
     super.dispose();
   }
 
@@ -135,6 +171,8 @@ class _RoomDialogState extends State<RoomDialog> {
           final isOpenArea = spaceTypeId == 'open_area';
           final singleRate = double.tryParse(_hourlyRateSingleController.text) ?? 0.0;
           final multiRate = double.tryParse(_hourlyRateMultiController.text) ?? 0.0;
+          final markupPercent =
+              double.tryParse(_openTimeMarkupPercentController.text) ?? 0;
 
           final room = RoomEntity(
             id: widget.room?.id ?? const Uuid().v4(),
@@ -159,6 +197,19 @@ class _RoomDialogState extends State<RoomDialog> {
             images: images,
             isAvailable: _selectedStatus == RoomStatusEnum.available,
             status: _selectedStatus,
+            openTimeEnabled: _openTimeEnabled,
+            openTimePricingMode: _openTimePricingMode,
+            openTimeCustomHourlyRate:
+                double.tryParse(_openTimeCustomRateController.text),
+            openTimePriceMultiplier: 1 + (markupPercent / 100),
+            openTimeMinimumMinutes:
+                int.tryParse(_openTimeMinimumMinutesController.text) ?? 30,
+            openTimeRoundingMinutes:
+                int.tryParse(_openTimeRoundingMinutesController.text) ?? 15,
+            openTimeMaxMinutes:
+                int.tryParse(_openTimeMaxMinutesController.text),
+            openTimeBufferBeforeBookingMinutes:
+                int.tryParse(_openTimeBufferMinutesController.text) ?? 15,
           );
 
           if (widget.onSave != null) {
@@ -260,6 +311,8 @@ class _RoomDialogState extends State<RoomDialog> {
                   },
                 ),
                 SizedBox(height: 24.h),
+                _buildOpenTimeSettings(),
+                SizedBox(height: 24.h),
                 RoomFeaturesSection(
                   featuresAr: _featuresAr,
                   featuresEn: _featuresEn,
@@ -319,6 +372,128 @@ class _RoomDialogState extends State<RoomDialog> {
           icon: const Icon(Icons.close, color: AppColors.textSecondary),
         ),
       ],
+    );
+  }
+
+  Widget _buildOpenTimeSettings() {
+    Widget numberField({
+      required TextEditingController controller,
+      required String label,
+      String? suffix,
+    }) {
+      return TextFormField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        style: const TextStyle(color: AppColors.textPrimary),
+        decoration: InputDecoration(
+          labelText: label,
+          suffixText: suffix,
+          filled: true,
+          fillColor: AppColors.mutedBackground,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+        ),
+      );
+    }
+
+    return Container(
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: AppColors.mutedBackground.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SwitchListTile(
+            value: _openTimeEnabled,
+            contentPadding: EdgeInsets.zero,
+            activeThumbColor: AppColors.neonBlue,
+            title: const Text(
+              'تفعيل الوقت المفتوح',
+              style: TextStyle(color: AppColors.textPrimary),
+            ),
+            subtitle: const Text(
+              'يسمح للكاشير ببدء جلسة بدون وقت نهاية ثابت وحسابها عند الإغلاق.',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            onChanged: (value) => setState(() => _openTimeEnabled = value),
+          ),
+          SizedBox(height: 12.h),
+          CustomDropdown<String>(
+            label: 'طريقة تسعير الوقت المفتوح',
+            value: _openTimePricingMode,
+            items: const [
+              'same_hourly',
+              'custom_hourly',
+              'hourly_plus_percentage',
+            ],
+            itemLabel: (value) => switch (value) {
+              'custom_hourly' => 'سعر ساعة مخصص',
+              'hourly_plus_percentage' => 'سعر الساعة + نسبة',
+              _ => 'نفس سعر الساعة',
+            },
+            onChanged: (value) {
+              if (value != null) {
+                setState(() => _openTimePricingMode = value);
+              }
+            },
+          ),
+          SizedBox(height: 12.h),
+          if (_openTimePricingMode == 'custom_hourly')
+            numberField(
+              controller: _openTimeCustomRateController,
+              label: 'سعر الساعة المخصص',
+              suffix: AppStrings.egp,
+            ),
+          if (_openTimePricingMode == 'hourly_plus_percentage')
+            numberField(
+              controller: _openTimeMarkupPercentController,
+              label: 'نسبة الزيادة على سعر الساعة',
+              suffix: '%',
+            ),
+          SizedBox(height: 12.h),
+          Row(
+            children: [
+              Expanded(
+                child: numberField(
+                  controller: _openTimeMinimumMinutesController,
+                  label: 'أقل مدة تتحاسب',
+                  suffix: 'دقيقة',
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: numberField(
+                  controller: _openTimeRoundingMinutesController,
+                  label: 'التقريب كل',
+                  suffix: 'دقيقة',
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Row(
+            children: [
+              Expanded(
+                child: numberField(
+                  controller: _openTimeMaxMinutesController,
+                  label: 'حد أقصى اختياري',
+                  suffix: 'دقيقة',
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: numberField(
+                  controller: _openTimeBufferMinutesController,
+                  label: 'فاصل قبل الحجز القادم',
+                  suffix: 'دقيقة',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

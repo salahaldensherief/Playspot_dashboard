@@ -6,10 +6,12 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_details_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/extend_session_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_occupancy_requests_badge.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 
 class RoomOccupancyActiveSection extends StatelessWidget {
   final Booking activeBooking;
@@ -30,6 +32,7 @@ class RoomOccupancyActiveSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final phone = activeBooking.userPhone;
+    final isOpenTime = activeBooking.isOpenEnded;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,13 +127,17 @@ class RoomOccupancyActiveSection extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    isExpired ? Icons.timer_off : Icons.timer,
+                    isOpenTime
+                        ? Icons.all_inclusive_rounded
+                        : (isExpired ? Icons.timer_off : Icons.timer),
                     size: 16.r,
                     color: isExpired ? AppColors.danger : AppColors.neonBlue,
                   ),
                   SizedBox(width: 6.w),
                   AppText.body(
-                    isExpired ? AppStrings.timeExpired : AppStrings.remainingTime,
+                    isOpenTime
+                        ? 'المدة الحالية'
+                        : (isExpired ? AppStrings.timeExpired : AppStrings.remainingTime),
                     fontSize: 11.sp,
                     color: isExpired ? AppColors.danger : AppColors.textSecondary,
                     fontWeight: FontWeight.bold,
@@ -138,7 +145,9 @@ class RoomOccupancyActiveSection extends StatelessWidget {
                 ],
               ),
               AppText.subHeading(
-                isExpired ? '-$formattedRemaining' : formattedRemaining,
+                isOpenTime
+                    ? formattedRemaining
+                    : (isExpired ? '-$formattedRemaining' : formattedRemaining),
                 fontSize: 14.sp,
                 color: isExpired ? AppColors.danger : AppColors.neonBlue,
                 fontWeight: FontWeight.bold,
@@ -169,15 +178,47 @@ class RoomOccupancyActiveSection extends StatelessWidget {
             ),
             SizedBox(width: 8.w),
             AppButton(
-              text: 'تمديد',
-              icon: Icons.add_alarm_rounded,
+              text: isOpenTime ? 'إنهاء وحساب' : 'تمديد',
+              icon: isOpenTime
+                  ? Icons.price_check_rounded
+                  : Icons.add_alarm_rounded,
               variant: AppButtonVariant.primary,
               height: 32.h,
-              onPressed: () => ExtendSessionDialog.show(context, activeBooking),
+              onPressed: isOpenTime
+                  ? () => _completeOpenTimeSession(context)
+                  : () => ExtendSessionDialog.show(context, activeBooking),
             ),
           ],
         ),
       ],
+    );
+  }
+
+  Future<void> _completeOpenTimeSession(BuildContext context) async {
+    final bookingCubit = context.read<BookingCubit>();
+    final roomCubit = context.read<RoomCubit>();
+    final result = await bookingCubit.completeOpenTimeSession(activeBooking.id);
+
+    if (!context.mounted) return;
+
+    if (result == null) {
+      final message = bookingCubit.state.errorMessage ?? 'تعذر إنهاء الجلسة';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: AppColors.danger),
+      );
+      return;
+    }
+
+    roomCubit.watchRooms(activeBooking.loungeId, forceRefresh: true);
+    final total = result['final_total'];
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          total == null
+              ? 'تم إنهاء الوقت المفتوح'
+              : 'تم إنهاء الوقت المفتوح. الإجمالي: $total ${AppStrings.egp}',
+        ),
+      ),
     );
   }
 }

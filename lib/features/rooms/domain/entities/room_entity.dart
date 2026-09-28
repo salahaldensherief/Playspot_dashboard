@@ -28,6 +28,14 @@ class RoomEntity extends Equatable {
   final String? offerTitle;
   final String? offerTag;
   final String? activePromotionId;
+  final bool openTimeEnabled;
+  final String openTimePricingMode;
+  final double? openTimeCustomHourlyRate;
+  final double openTimePriceMultiplier;
+  final int openTimeMinimumMinutes;
+  final int openTimeRoundingMinutes;
+  final int? openTimeMaxMinutes;
+  final int openTimeBufferBeforeBookingMinutes;
 
   // Aliases and backward compatibility getters
   int get capacity => maxCapacity;
@@ -67,6 +75,14 @@ class RoomEntity extends Equatable {
     this.offerTitle,
     this.offerTag,
     this.activePromotionId,
+    this.openTimeEnabled = false,
+    this.openTimePricingMode = 'same_hourly',
+    this.openTimeCustomHourlyRate,
+    this.openTimePriceMultiplier = 1.0,
+    this.openTimeMinimumMinutes = 30,
+    this.openTimeRoundingMinutes = 15,
+    this.openTimeMaxMinutes,
+    this.openTimeBufferBeforeBookingMinutes = 15,
   })  : maxCapacity = maxCapacity ?? capacity ?? 4,
         hourlyRateSingle = hourlyRateSingle ?? pricePerHourSingle ?? pricePerHour,
         hourlyRateMulti = hourlyRateMulti ?? pricePerHourMulti ?? pricePerHour;
@@ -98,5 +114,13 @@ class RoomEntity extends Equatable {
         offerTitle,
         offerTag,
         activePromotionId,
+        openTimeEnabled,
+        openTimePricingMode,
+        openTimeCustomHourlyRate,
+        openTimePriceMultiplier,
+        openTimeMinimumMinutes,
+        openTimeRoundingMinutes,
+        openTimeMaxMinutes,
+        openTimeBufferBeforeBookingMinutes,
       ];
 }

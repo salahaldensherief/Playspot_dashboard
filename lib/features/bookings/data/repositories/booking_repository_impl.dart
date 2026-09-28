@@ -256,6 +256,42 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
+  Future<Either<Failure, Map<String, dynamic>>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  }) async {
+    try {
+      final result = await remoteDataSource.startOpenTimeSession(
+        roomId: roomId,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        playMode: playMode,
+      );
+      return Right(result);
+    } on PostgrestException catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.message)));
+    } catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> completeOpenTimeSession(
+    String bookingId,
+  ) async {
+    try {
+      final result = await remoteDataSource.completeOpenTimeSession(bookingId);
+      return Right(result);
+    } on PostgrestException catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.message)));
+    } catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> autoCancelExpiredBookings() async {
     try {
       await remoteDataSource.autoCancelExpiredBookings();
@@ -302,6 +338,15 @@ class BookingRepositoryImpl implements BookingRepository {
     }
     if (clean.contains('23p01') || clean.contains('bookings_room_booking_period_excl') || clean.contains('exclusion')) {
       return 'الوقت المحدد تم حجزه بالفعل، يرجى اختيار وقت آخر.';
+    }
+    if (clean.contains('open_time_disabled')) {
+      return 'الوقت المفتوح غير مفعل لهذه الغرفة.';
+    }
+    if (clean.contains('next_booking_too_soon')) {
+      return 'يوجد حجز قريب جدًا، لا يمكن بدء وقت مفتوح الآن.';
+    }
+    if (clean.contains('open_time_max_exceeded')) {
+      return 'الجلسة تجاوزت الحد الأقصى للوقت المفتوح. راجع سياسة الصالة قبل الإغلاق.';
     }
     return message.replaceFirst('Exception: ', '');
   }

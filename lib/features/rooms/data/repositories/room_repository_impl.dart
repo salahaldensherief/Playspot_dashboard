@@ -51,6 +51,15 @@ class RoomRepositoryImpl implements RoomRepository {
         controllersCount: r.controllersCount,
         screenSize: r.screenSize,
         status: r.status,
+        openTimeEnabled: r.openTimeEnabled,
+        openTimePricingMode: r.openTimePricingMode,
+        openTimeCustomHourlyRate: r.openTimeCustomHourlyRate,
+        openTimePriceMultiplier: r.openTimePriceMultiplier,
+        openTimeMinimumMinutes: r.openTimeMinimumMinutes,
+        openTimeRoundingMinutes: r.openTimeRoundingMinutes,
+        openTimeMaxMinutes: r.openTimeMaxMinutes,
+        openTimeBufferBeforeBookingMinutes:
+            r.openTimeBufferBeforeBookingMinutes,
       )).toList();
 
       await _localCacheService.setJson(cacheKey, roomModels.map((m) => m.toJson()).toList());
@@ -93,6 +102,15 @@ class RoomRepositoryImpl implements RoomRepository {
         controllersCount: r.controllersCount,
         screenSize: r.screenSize,
         status: r.status,
+        openTimeEnabled: r.openTimeEnabled,
+        openTimePricingMode: r.openTimePricingMode,
+        openTimeCustomHourlyRate: r.openTimeCustomHourlyRate,
+        openTimePriceMultiplier: r.openTimePriceMultiplier,
+        openTimeMinimumMinutes: r.openTimeMinimumMinutes,
+        openTimeRoundingMinutes: r.openTimeRoundingMinutes,
+        openTimeMaxMinutes: r.openTimeMaxMinutes,
+        openTimeBufferBeforeBookingMinutes:
+            r.openTimeBufferBeforeBookingMinutes,
       )).toList();
 
       await _localCacheService.setJson(cacheKey, roomModels.map((m) => m.toJson()).toList());
@@ -142,6 +160,15 @@ class RoomRepositoryImpl implements RoomRepository {
         images: room.images,
         controllersCount: room.controllersCount,
         screenSize: room.screenSize,
+        openTimeEnabled: room.openTimeEnabled,
+        openTimePricingMode: room.openTimePricingMode,
+        openTimeCustomHourlyRate: room.openTimeCustomHourlyRate,
+        openTimePriceMultiplier: room.openTimePriceMultiplier,
+        openTimeMinimumMinutes: room.openTimeMinimumMinutes,
+        openTimeRoundingMinutes: room.openTimeRoundingMinutes,
+        openTimeMaxMinutes: room.openTimeMaxMinutes,
+        openTimeBufferBeforeBookingMinutes:
+            room.openTimeBufferBeforeBookingMinutes,
       ));
       await _localCacheService.remove('cache_rooms_${room.loungeId}');
       return const Right(null);
@@ -173,6 +200,15 @@ class RoomRepositoryImpl implements RoomRepository {
         images: room.images,
         controllersCount: room.controllersCount,
         screenSize: room.screenSize,
+        openTimeEnabled: room.openTimeEnabled,
+        openTimePricingMode: room.openTimePricingMode,
+        openTimeCustomHourlyRate: room.openTimeCustomHourlyRate,
+        openTimePriceMultiplier: room.openTimePriceMultiplier,
+        openTimeMinimumMinutes: room.openTimeMinimumMinutes,
+        openTimeRoundingMinutes: room.openTimeRoundingMinutes,
+        openTimeMaxMinutes: room.openTimeMaxMinutes,
+        openTimeBufferBeforeBookingMinutes:
+            room.openTimeBufferBeforeBookingMinutes,
       ));
       await _localCacheService.remove('cache_rooms_${room.loungeId}');
       return const Right(null);

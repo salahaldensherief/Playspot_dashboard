@@ -362,6 +362,40 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
 
   @override
+  Future<Map<String, dynamic>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  }) async {
+    final response = await client.rpc(
+      'start_open_time_session',
+      params: {
+        'p_room_id': roomId,
+        'p_customer_name': customerName,
+        'p_customer_phone': customerPhone,
+        'p_play_mode': playMode,
+      },
+    );
+
+    return response is Map
+        ? Map<String, dynamic>.from(response)
+        : <String, dynamic>{'success': true};
+  }
+
+  @override
+  Future<Map<String, dynamic>> completeOpenTimeSession(String bookingId) async {
+    final response = await client.rpc(
+      'complete_open_time_session',
+      params: {'p_booking_id': bookingId},
+    );
+
+    return response is Map
+        ? Map<String, dynamic>.from(response)
+        : <String, dynamic>{'success': true};
+  }
+
+  @override
   Future<void> autoCancelExpiredBookings() async {
     debugPrint(
       'ℹ️ [DATA_SOURCE] autoCancelExpiredBookings is handled automatically by server-side Cron/Triggers.',
