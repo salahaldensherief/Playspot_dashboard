@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -7,6 +8,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_remote_data_source_impl.dart';
 
 void main() {
+  test('walk-in creation has no client-side session or room fallback', () {
+    final source = File(
+      'lib/features/bookings/data/datasources/booking_mutation_helper.dart',
+    ).readAsStringSync();
+
+    expect(source, contains("'complete_booking_payment'"));
+    expect(source, isNot(contains("client.rpc('start_booking_session'")));
+    expect(source, isNot(contains(".from('rooms')")));
+  });
+
   test('booking approval changes status without collecting payment', () async {
     final requests = <http.Request>[];
     final client = SupabaseClient(

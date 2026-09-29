@@ -5,8 +5,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class BookingMutationHelper {
   final SupabaseClient client;
-  final Future<void> Function(String voucherCode, String bookingId) consumeVoucher;
-  final Future<Map<String, dynamic>> Function(String voucherCode) validateVoucher;
+  final Future<void> Function(String voucherCode, String bookingId)
+  consumeVoucher;
+  final Future<Map<String, dynamic>> Function(String voucherCode)
+  validateVoucher;
 
   BookingMutationHelper({
     required this.client,
@@ -24,7 +26,9 @@ class BookingMutationHelper {
         .maybeSingle();
 
     if (activeShift == null) {
-      throw Exception('لا توجد وردية مفتوحة حالياً لهذا المقر. يرجى فتح وردية أولاً قبل إضافة أي حجز.');
+      throw Exception(
+        'لا توجد وردية مفتوحة حالياً لهذا المقر. يرجى فتح وردية أولاً قبل إضافة أي حجز.',
+      );
     }
 
     final cleanVoucherCode = booking.voucherCode?.trim().toUpperCase();
@@ -33,7 +37,9 @@ class BookingMutationHelper {
     }
 
     final activeShiftId = activeShift['id']?.toString();
-    final bookingToInsert = (activeShiftId != null && (booking.shiftId == null || booking.shiftId!.isEmpty))
+    final bookingToInsert =
+        (activeShiftId != null &&
+            (booking.shiftId == null || booking.shiftId!.isEmpty))
         ? BookingModel(
             id: booking.id,
             userId: booking.userId,
@@ -75,57 +81,63 @@ class BookingMutationHelper {
     if (bookingToInsert.userId.trim().isEmpty) {
       jsonMap.remove('user_id');
     }
-    if (bookingToInsert.shiftId == null || bookingToInsert.shiftId!.trim().isEmpty) {
+    if (bookingToInsert.shiftId == null ||
+        bookingToInsert.shiftId!.trim().isEmpty) {
       jsonMap.remove('shift_id');
     }
 
-    final response = await client.from('bookings').insert(jsonMap).select().single();
+    final response = await client
+        .from('bookings')
+        .insert(jsonMap)
+        .select()
+        .single();
     final createdBookingId = (response['id'] ?? bookingToInsert.id)?.toString();
 
     if (bookingToInsert.status == BookingStatus.inProgress &&
         createdBookingId != null &&
         createdBookingId.isNotEmpty) {
-      try {
-        await client.rpc('complete_booking_payment', params: {
+      await client.rpc(
+        'complete_booking_payment',
+        params: {
           'p_booking_id': createdBookingId,
           'p_payment_method': 'cash',
           'p_final_amount': null,
-        });
-        debugPrint('🟢 [BookingMutationHelper] complete_booking_payment RPC succeeded for walk-in booking: $createdBookingId');
-      } catch (e1) {
-        debugPrint('⚠️ [BookingMutationHelper] complete_booking_payment RPC failed ($e1), trying start_booking_session');
-        try {
-          await client.rpc('start_booking_session', params: {
-            'p_booking_id': createdBookingId,
-          });
-        } catch (e2) {
-          debugPrint('⚠️ [BookingMutationHelper] start_booking_session RPC failed: $e2');
-          try {
-            await client
-                .from('rooms')
-                .update({'status': 'occupied', 'is_available': false})
-                .eq('id', bookingToInsert.roomId);
-          } catch (_) {}
-        }
-      }
+        },
+      );
+      debugPrint(
+        '🟢 [BookingMutationHelper] complete_booking_payment RPC succeeded for walk-in booking: $createdBookingId',
+      );
     }
 
-    if (bookingToInsert.extras.isNotEmpty && createdBookingId != null && createdBookingId.isNotEmpty) {
-      final itemsToInsert = bookingToInsert.extras.map((extra) => {
-            'booking_id': createdBookingId,
-            'extra_id': extra['id'] ?? extra['extra_id'],
-            'name': extra['name_ar'] ?? extra['name'] ?? extra['name_en'] ?? 'صنف',
-            'quantity': extra['quantity'] ?? extra['qty'] ?? 1,
-            'unit_price': extra['unit_price'] ?? extra['price'] ?? 0.0,
-            'total_price': extra['total_price'] ??
-                ((extra['unit_price'] ?? extra['price'] ?? 0.0) *
-                    (extra['quantity'] ?? extra['qty'] ?? 1)),
-          }).toList();
+    if (bookingToInsert.extras.isNotEmpty &&
+        createdBookingId != null &&
+        createdBookingId.isNotEmpty) {
+      final itemsToInsert = bookingToInsert.extras
+          .map(
+            (extra) => {
+              'booking_id': createdBookingId,
+              'extra_id': extra['id'] ?? extra['extra_id'],
+              'name':
+                  extra['name_ar'] ??
+                  extra['name'] ??
+                  extra['name_en'] ??
+                  'صنف',
+              'quantity': extra['quantity'] ?? extra['qty'] ?? 1,
+              'unit_price': extra['unit_price'] ?? extra['price'] ?? 0.0,
+              'total_price':
+                  extra['total_price'] ??
+                  ((extra['unit_price'] ?? extra['price'] ?? 0.0) *
+                      (extra['quantity'] ?? extra['qty'] ?? 1)),
+            },
+          )
+          .toList();
 
       try {
         await client.from('booking_items').insert(itemsToInsert);
       } catch (e) {
-        debugPrint('⚠️ [BookingMutationHelper] Failed inserting booking_items: $e');
+        debugPrint(
+          '⚠️ [BookingMutationHelper] Failed inserting booking_items: $e',
+        );
       }
     }
 
