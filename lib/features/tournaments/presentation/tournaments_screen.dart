@@ -5,7 +5,6 @@ import '../../../art_core/app_strings.dart';
 import '../../../art_core/layouts/dashboard_layout.dart';
 import '../../../art_core/theme/app_colors.dart';
 import '../../../art_core/widgets/app_button.dart';
-import '../../../core/responsive/responsive.dart';
 import '../../auth/presentation/login/login_cubit.dart';
 import '../domain/entities/tournament_entity.dart';
 import 'tournament_cubit.dart';
@@ -26,7 +25,8 @@ class TournamentsScreen extends StatefulWidget {
   State<TournamentsScreen> createState() => _TournamentsScreenState();
 }
 
-class _TournamentsScreenState extends State<TournamentsScreen> with SingleTickerProviderStateMixin {
+class _TournamentsScreenState extends State<TournamentsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -51,13 +51,15 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
   }
 
   void _refreshTournaments() {
-    final loungeId = context.read<LoginCubit>().state.userLounge?.id ??
+    final loungeId =
+        context.read<LoginCubit>().state.userLounge?.id ??
         context.read<LoginCubit>().state.user?.loungeId;
     context.read<TournamentCubit>().loadTournaments(loungeId: loungeId);
   }
 
   void _openCreateDialog() {
-    final activeLoungeId = context.read<LoginCubit>().state.userLounge?.id ??
+    final activeLoungeId =
+        context.read<LoginCubit>().state.userLounge?.id ??
         context.read<LoginCubit>().state.user?.loungeId;
     showDialog(
       context: context,
@@ -88,7 +90,10 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
       builder: (ctx) => TournamentPrizesDialog(
         tournament: tournament,
         onSave: (prizes) {
-          context.read<TournamentCubit>().saveTournamentPrizes(tournament.id, prizes);
+          context.read<TournamentCubit>().saveTournamentPrizes(
+            tournament.id,
+            prizes,
+          );
         },
       ),
     );
@@ -100,16 +105,24 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
         title: Text(
           AppStrings.cancelTournament,
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 18.sp, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('${AppStrings.cancelTournament} "${tournament.title}"؟',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp)),
+            Text(
+              '${AppStrings.cancelTournament} "${tournament.title}"؟',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+            ),
             SizedBox(height: 12.h),
             TextField(
               controller: reasonController,
@@ -119,7 +132,9 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
                 hintStyle: const TextStyle(color: AppColors.textSecondary),
                 filled: true,
                 fillColor: AppColors.mutedBackground,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
               ),
             ),
           ],
@@ -143,7 +158,10 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
     );
 
     if (confirmed == true && mounted) {
-      context.read<TournamentCubit>().cancelTournament(tournament.id, reasonController.text.trim());
+      context.read<TournamentCubit>().cancelTournament(
+        tournament.id,
+        reasonController.text.trim(),
+      );
     }
   }
 
@@ -152,10 +170,16 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
         title: Text(
           AppStrings.deleteDraft,
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 18.sp, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: Text(
           '${AppStrings.deleteWarning} "${tournament.title}"؟',
@@ -212,13 +236,21 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
     return BlocConsumer<TournamentCubit, TournamentState>(
       listenWhen: (prev, curr) => prev.status != curr.status,
       listener: (context, state) {
-        if (state.status == TournamentCubitStatus.actionSuccess && state.successMessage != null) {
+        if (state.status == TournamentCubitStatus.actionSuccess &&
+            state.successMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.successMessage!), backgroundColor: AppColors.success),
+            SnackBar(
+              content: Text(state.successMessage!),
+              backgroundColor: AppColors.success,
+            ),
           );
-        } else if (state.status == TournamentCubitStatus.failure && state.errorMessage != null) {
+        } else if (state.status == TournamentCubitStatus.failure &&
+            state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage!), backgroundColor: AppColors.danger),
+            SnackBar(
+              content: Text(state.errorMessage!),
+              backgroundColor: AppColors.danger,
+            ),
           );
         }
       },
@@ -235,108 +267,118 @@ class _TournamentsScreenState extends State<TournamentsScreen> with SingleTicker
         final disputedCount = state.disputedMatches.length;
 
         return DashboardLayout(
+          title: AppStrings.tournaments,
           activeRoute: '/super-admin/tournaments',
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(Responsive.isDesktop(context) ? 24.r : 16.r),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TournamentHeaderBar(
-                  onRefresh: _refreshTournaments,
-                  onCreate: _openCreateDialog,
+          isScrollable: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TournamentHeaderBar(
+                onRefresh: _refreshTournaments,
+                onCreate: _openCreateDialog,
+              ),
+              SizedBox(height: 12.h),
+              if (state.status == TournamentCubitStatus.loading) ...[
+                const LinearProgressIndicator(
+                  color: AppColors.neonBlue,
+                  backgroundColor: AppColors.mutedBackground,
                 ),
-                SizedBox(height: 16.h),
-                if (state.status == TournamentCubitStatus.loading) ...[
-                  const LinearProgressIndicator(
-                    color: AppColors.neonBlue,
-                    backgroundColor: AppColors.mutedBackground,
+                SizedBox(height: 12.h),
+              ],
+              TournamentDisputesAlertBanner(
+                disputedCount: disputedCount,
+                player1Name:
+                    state.disputedMatches.firstOrNull?.player1Name ?? 'P1',
+                player2Name:
+                    state.disputedMatches.firstOrNull?.player2Name ?? 'P2',
+                onResolve: () => _tabController.animateTo(3),
+              ),
+              if (disputedCount > 0) SizedBox(height: 12.h),
+              TournamentSelectorBar(
+                tournaments: state.tournaments,
+                selected: selected,
+                onSelect: _onSelectTournament,
+                onManagePrizes: () {
+                  if (selected != null) _openPrizesDialog(selected);
+                },
+                onPublish: () {
+                  if (selected != null) {
+                    context.read<TournamentCubit>().publishTournament(
+                      selected.id,
+                    );
+                  }
+                },
+                onDeleteDraft: () {
+                  if (selected != null) _confirmDeleteDraft(selected);
+                },
+                onCancel: () {
+                  if (selected != null) _confirmCancel(selected);
+                },
+                onAwardPrizes: () {
+                  if (selected != null) {
+                    context.read<TournamentCubit>().awardPrizes(selected.id);
+                  }
+                },
+              ),
+              if (state.tournaments.isNotEmpty) SizedBox(height: 14.h),
+              TabBar(
+                controller: _tabController,
+                isScrollable: true,
+                indicatorColor: AppColors.neonBlue,
+                labelColor: AppColors.neonBlue,
+                unselectedLabelColor: AppColors.textSecondary,
+                tabs: [
+                  Tab(text: AppStrings.tournaments),
+                  Tab(
+                    text: '${AppStrings.users} (${state.participants.length})',
                   ),
-                  SizedBox(height: 16.h),
-                ],
-                TournamentDisputesAlertBanner(
-                  disputedCount: disputedCount,
-                  player1Name: state.disputedMatches.firstOrNull?.player1Name ?? 'P1',
-                  player2Name: state.disputedMatches.firstOrNull?.player2Name ?? 'P2',
-                  onResolve: () => _tabController.animateTo(3),
-                ),
-                if (disputedCount > 0) SizedBox(height: 16.h),
-                TournamentSelectorBar(
-                  tournaments: state.tournaments,
-                  selected: selected,
-                  onSelect: _onSelectTournament,
-                  onManagePrizes: () {
-                    if (selected != null) _openPrizesDialog(selected);
-                  },
-                  onPublish: () {
-                    if (selected != null) {
-                      context.read<TournamentCubit>().publishTournament(selected.id);
-                    }
-                  },
-                  onDeleteDraft: () {
-                    if (selected != null) _confirmDeleteDraft(selected);
-                  },
-                  onCancel: () {
-                    if (selected != null) _confirmCancel(selected);
-                  },
-                  onAwardPrizes: () {
-                    if (selected != null) {
-                      context.read<TournamentCubit>().awardPrizes(selected.id);
-                    }
-                  },
-                ),
-                if (state.tournaments.isNotEmpty) SizedBox(height: 20.h),
-                TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  indicatorColor: AppColors.neonBlue,
-                  labelColor: AppColors.neonBlue,
-                  unselectedLabelColor: AppColors.textSecondary,
-                  tabs: [
-                    Tab(text: AppStrings.tournaments),
-                    Tab(text: '${AppStrings.users} (${state.participants.length})'),
-                    Tab(text: AppStrings.drawBracket),
-                    Tab(
-                      child: Row(
-                        children: [
-                          Text(AppStrings.disputesRoom),
-                          if (disputedCount > 0) ...[
-                            SizedBox(width: 6.w),
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                              decoration: BoxDecoration(
-                                color: AppColors.danger,
-                                borderRadius: BorderRadius.circular(10.r),
-                              ),
-                              child: Text(
-                                '$disputedCount',
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                  Tab(text: AppStrings.drawBracket),
+                  Tab(
+                    child: Row(
+                      children: [
+                        Text(AppStrings.disputesRoom),
+                        if (disputedCount > 0) ...[
+                          SizedBox(width: 6.w),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 6.w,
+                              vertical: 2.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.danger,
+                              borderRadius: BorderRadius.circular(10.r),
+                            ),
+                            child: Text(
+                              '$disputedCount',
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                          ],
+                          ),
                         ],
-                      ),
+                      ],
                     ),
-                    Tab(text: '${AppStrings.auditTrail} (${state.auditLogs.length})'),
-                  ],
-                ),
-                SizedBox(height: 20.h),
-                SizedBox(
-                  height: 600.h,
-                  child: TournamentTabBarView(
-                    tabController: _tabController,
-                    state: state,
-                    selected: selected,
-                    onManagePrizes: _openPrizesDialog,
-                    onEdit: _openEditDialog,
-                    onDelete: _confirmDelete,
                   ),
+                  Tab(
+                    text:
+                        '${AppStrings.auditTrail} (${state.auditLogs.length})',
+                  ),
+                ],
+              ),
+              SizedBox(height: 14.h),
+              Expanded(
+                child: TournamentTabBarView(
+                  tabController: _tabController,
+                  state: state,
+                  selected: selected,
+                  onManagePrizes: _openPrizesDialog,
+                  onEdit: _openEditDialog,
+                  onDelete: _confirmDelete,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
