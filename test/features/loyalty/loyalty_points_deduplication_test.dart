@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:play_spot_dashboard/features/loyalty/data/datasources/loyalty_transactions_remote_helper.dart';
 
 void main() {
   group('Loyalty & Points Deduplication Guard', () {
@@ -7,7 +8,9 @@ void main() {
       const bookingId = 'booking_abc_123';
 
       void awardPoints(String id, int pts) {
-        final exists = transactions.any((t) => t['reference_id'] == id && t['type'] == 'earn');
+        final exists = transactions.any(
+          (t) => t['reference_id'] == id && t['type'] == 'earn',
+        );
         if (!exists) {
           transactions.add({'reference_id': id, 'points': pts, 'type': 'earn'});
         }
@@ -37,6 +40,21 @@ void main() {
       expect(userPoints, 150);
       expect(transactions.length, 1);
       expect(transactions.first['type'], 'admin_grant');
+    });
+
+    test('admin adjustment uses the canonical server RPC contract', () {
+      final params = LoyaltyTransactionsRemoteHelper.buildAdjustmentParams(
+        userId: 'user-123',
+        pointsDelta: -25,
+        reason: '  Manual correction  ',
+      );
+
+      expect(params, {
+        'p_user_id': 'user-123',
+        'p_points_change': -25,
+        'p_reason': 'Manual correction',
+      });
+      expect(params, isNot(contains('p_points_delta')));
     });
   });
 }
