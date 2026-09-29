@@ -83,8 +83,9 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isCompact = MediaQuery.sizeOf(context).width < 700;
     return Padding(
-      padding: EdgeInsets.all(24.r),
+      padding: EdgeInsets.all(isCompact ? 12.r : 24.r),
       child: BlocBuilder<ShiftCubit, ShiftState>(
         builder: (context, state) {
           if (state.status.isLoading && state.shifts.isEmpty) {
@@ -141,6 +142,15 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                               );
                         },
                       )
+                    : isCompact
+                    ? ListView.separated(
+                        itemCount: filteredShifts.length,
+                        separatorBuilder: (context, index) => SizedBox(height: 10.h),
+                        itemBuilder: (context, index) => _buildShiftCard(
+                          context,
+                          filteredShifts[index],
+                        ),
+                      )
                     : Container(
                         decoration: BoxDecoration(
                           color: AppColors.cardBackground,
@@ -154,9 +164,10 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                             thumbVisibility: true,
                             trackVisibility: true,
                             child: SingleChildScrollView(
-                              controller: _horizontalScrollController,
-                              scrollDirection: Axis.horizontal,
-                              child: DataTable(
+                              child: SingleChildScrollView(
+                                controller: _horizontalScrollController,
+                                scrollDirection: Axis.horizontal,
+                                child: DataTable(
                                 headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
                                 dataRowMaxHeight: 60.h,
                                 dataRowMinHeight: 48.h,
@@ -226,6 +237,7 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                                     ),
                                   ]);
                                 }).toList(),
+                                ),
                               ),
                             ),
                           ),
@@ -242,6 +254,85 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
   DataColumn _buildColumn(String label) {
     return DataColumn(
       label: Text(label, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13.sp)),
+    );
+  }
+
+  Widget _buildShiftCard(BuildContext context, ShiftEntity shift) {
+    final discrepancy = shift.calculatedDiscrepancy;
+    final canApprove = context.hasPermission('shifts_approve');
+    return Container(
+      padding: EdgeInsets.all(14.r),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  DateFormat('MMM dd, hh:mm a').format(shift.startTime),
+                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                ),
+              ),
+              _buildStatusBadge(shift),
+            ],
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            shift.cashierName ?? AppStrings.system,
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+          Divider(height: 20.h, color: AppColors.borderDefault),
+          _shiftValue(AppStrings.cashRevenueTitle, shift.cashRevenue ?? 0),
+          _shiftValue(AppStrings.digitalRevenueTitle, shift.digitalRevenue ?? 0),
+          _shiftValue(AppStrings.expensesAndDrops, shift.expensesTotal ?? 0),
+          _shiftValue(AppStrings.expectedCash, shift.calculatedExpectedCash),
+          _shiftValue(AppStrings.actualCash, shift.actualCash),
+          if (shift.status == 'closed')
+            _shiftValue(AppStrings.discrepancy, discrepancy,
+                color: discrepancy >= 0 ? AppColors.success : AppColors.danger),
+          SizedBox(height: 10.h),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  text: AppStrings.details,
+                  variant: AppButtonVariant.outlined,
+                  onPressed: () => _showDetailsModal(context, shift),
+                ),
+              ),
+              if (shift.status == 'closed' && !shift.isApproved && canApprove) ...[
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: AppButton(
+                    text: AppStrings.approve,
+                    onPressed: () => _showApproveDialog(context, shift),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _shiftValue(String label, double? amount, {Color? color}) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 3.h),
+      child: Row(
+        children: [
+          Expanded(child: Text(label, style: const TextStyle(color: AppColors.textSecondary))),
+          Text(
+            amount == null ? AppStrings.notAvailable : '${amount.toStringAsFixed(0)} ${AppStrings.egp}',
+            style: TextStyle(color: color ?? AppColors.textPrimary, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
     );
   }
 
