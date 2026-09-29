@@ -13,6 +13,7 @@ class AddBookingSchedulePicker extends StatelessWidget {
   final TimeOfDay startTime;
   final ValueChanged<DateTime> onDateChanged;
   final ValueChanged<TimeOfDay> onStartTimeChanged;
+  final bool quickMode;
 
   const AddBookingSchedulePicker({
     super.key,
@@ -20,6 +21,7 @@ class AddBookingSchedulePicker extends StatelessWidget {
     required this.startTime,
     required this.onDateChanged,
     required this.onStartTimeChanged,
+    this.quickMode = false,
   });
 
   TimeOfDay _calculateEndTime(TimeOfDay start, int durationMinutes) {
@@ -96,7 +98,7 @@ class AddBookingSchedulePicker extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
+            if (!quickMode) Expanded(
               flex: 2,
               child: _buildPickerField(
                 label: AppStrings.date,
@@ -105,8 +107,8 @@ class AddBookingSchedulePicker extends StatelessWidget {
                 onTap: () => _pickDate(context),
               ),
             ),
-            SizedBox(width: 16.w),
-            Expanded(
+            if (!quickMode) SizedBox(width: 16.w),
+            if (!quickMode) Expanded(
               flex: 2,
               child: _buildPickerField(
                 label: AppStrings.opensAt,
@@ -115,7 +117,7 @@ class AddBookingSchedulePicker extends StatelessWidget {
                 onTap: () => _pickStartTime(context),
               ),
             ),
-            SizedBox(width: 16.w),
+            if (!quickMode) SizedBox(width: 16.w),
             Expanded(
               flex: 3,
               child: BlocBuilder<BookingCubit, BookingState>(
@@ -165,8 +167,8 @@ class AddBookingSchedulePicker extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: 12.h),
-        BlocBuilder<BookingCubit, BookingState>(
+        if (!quickMode) SizedBox(height: 12.h),
+        if (!quickMode) BlocBuilder<BookingCubit, BookingState>(
           buildWhen: (p, c) => p.selectedDurationMinutes != c.selectedDurationMinutes,
           builder: (context, state) {
             final endTime = _calculateEndTime(startTime, state.selectedDurationMinutes);

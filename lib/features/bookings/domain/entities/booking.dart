@@ -45,6 +45,7 @@ class Booking extends Equatable {
   final bool isFirstBooking;
   final String? senderWalletPhone;
   final DateTime? checkedInAt;
+  final DateTime? createdAt;
   final String? cancellationReason;
   final String? rejectionReason;
   final String? cancelledBy;
@@ -90,6 +91,7 @@ class Booking extends Equatable {
     this.isFirstBooking = false,
     this.senderWalletPhone,
     this.checkedInAt,
+    this.createdAt,
     this.cancellationReason,
     this.rejectionReason,
     this.cancelledBy,
@@ -146,6 +148,7 @@ class Booking extends Equatable {
         isFirstBooking,
         senderWalletPhone,
         checkedInAt,
+        createdAt,
         cancellationReason,
         cancelledBy,
         cancelledAt,
@@ -191,6 +194,7 @@ class Booking extends Equatable {
     bool? isFirstBooking,
     String? senderWalletPhone,
     DateTime? checkedInAt,
+    DateTime? createdAt,
     String? cancellationReason,
     String? rejectionReason,
     String? cancelledBy,
@@ -236,6 +240,7 @@ class Booking extends Equatable {
       isFirstBooking: isFirstBooking ?? this.isFirstBooking,
       senderWalletPhone: senderWalletPhone ?? this.senderWalletPhone,
       checkedInAt: checkedInAt ?? this.checkedInAt,
+      createdAt: createdAt ?? this.createdAt,
       cancellationReason: cancellationReason ?? this.cancellationReason,
       rejectionReason: rejectionReason ?? this.rejectionReason,
       cancelledBy: cancelledBy ?? this.cancelledBy,

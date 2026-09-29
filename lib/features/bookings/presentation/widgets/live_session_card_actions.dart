@@ -43,20 +43,12 @@ class LiveSessionCardActions extends StatelessWidget {
 
     if (confirmed == true && context.mounted) {
       final dashboardCubit = context.read<DashboardCubit>();
-      final bookingCubit = context.read<BookingCubit>();
-
       final success = await dashboardCubit.endSession(booking.id);
-      if (!success) {
-        await bookingCubit.changeBookingStatus(
-          booking.id,
-          BookingStatus.completed,
-        );
-      }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppStrings.sessionEndedSuccess),
-            backgroundColor: AppColors.success,
+            content: Text(success ? AppStrings.sessionEndedSuccess : AppStrings.actionFailed),
+            backgroundColor: success ? AppColors.success : AppColors.danger,
             duration: const Duration(seconds: 3),
           ),
         );

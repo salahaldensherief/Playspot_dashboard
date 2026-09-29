@@ -47,7 +47,7 @@ class BookingCardActions extends StatelessWidget {
     if (confirmed == true && context.mounted) {
       final cubit = context.read<BookingCubit>();
       final success = await cubit.markNoShow(booking.id);
-      if (onNoShow != null) {
+      if (success && onNoShow != null) {
         onNoShow!();
       }
       if (context.mounted) {

@@ -154,8 +154,6 @@ class _LoungeOwnerKpiGrid extends StatelessWidget {
           builder: (context, bookingState) {
             return BlocBuilder<DashboardCubit, DashboardState>(
               buildWhen: (prev, curr) =>
-                  prev.activeSessions != curr.activeSessions ||
-                  prev.totalRevenue != curr.totalRevenue ||
                   prev.activeSessionsList != curr.activeSessionsList,
               builder: (context, dashState) {
                 if (loungeStatsState.status == LoungeStatsStatus.loading &&
@@ -183,15 +181,14 @@ class _LoungeOwnerKpiGrid extends StatelessWidget {
 
                 final now = DateTime.now();
                 final int endingSoonCount = bookings.where((b) {
-                  if (!b.isBookingActive() || b.isOpenEnded) return false;
+                  if (b.status != BookingStatus.inProgress || b.isOpenEnded) return false;
                   final remaining = b.remainingDuration(now);
                   return remaining > Duration.zero &&
                       remaining <= const Duration(minutes: 15);
                 }).length;
 
                 // Today revenue
-                final double todayRevenue =
-                    stats?.todayRevenue ?? dashState.totalRevenue;
+                final double todayRevenue = stats?.todayRevenue ?? 0;
 
                 // Occupancy
                 final double occupancyRate =
@@ -202,32 +199,25 @@ class _LoungeOwnerKpiGrid extends StatelessWidget {
                 // Active sessions count
                 final int activeCount = dashState.activeSessionsList.isNotEmpty
                     ? dashState.activeSessionsList
-                          .where((b) => b.isBookingActive())
+                          .where((b) => b.status == BookingStatus.inProgress)
                           .length
-                    : bookings.where((b) => b.isBookingActive()).length;
+                    : bookings.where((b) => b.status == BookingStatus.inProgress).length;
 
                 // Pending payment proofs count
                 final int pendingProofsCount = bookings.where((b) {
-                  final hasReceipt =
-                      b.receiptUrl != null && b.receiptUrl!.trim().isNotEmpty;
-                  final isUnpaid = b.paymentStatus != PaymentStatus.paid;
-                  final isPendingVerification =
-                      b.status == BookingStatus.pendingVerification;
-                  return (hasReceipt && isUnpaid) || isPendingVerification;
+                  return b.status == BookingStatus.pendingVerification;
                 }).length;
 
                 // Cancellations & No-Shows count
                 final int cancellationsCount = bookings.where((b) {
-                  return b.status == BookingStatus.cancelled ||
-                      (b.cancellationReason != null &&
-                          b.cancellationReason!.trim().isNotEmpty);
+                  final cancelledAt = b.cancelledAt?.toLocal();
+                  return cancelledAt != null &&
+                      cancelledAt.year == now.year &&
+                      cancelledAt.month == now.month &&
+                      cancelledAt.day == now.day &&
+                      (b.status == BookingStatus.cancelled ||
+                          b.status == BookingStatus.rejected);
                 }).length;
-
-                // Canteen revenue
-                final double canteenRevenue = bookings.fold<double>(
-                  0.0,
-                  (sum, b) => sum + (b.addonsPrice ?? 0.0),
-                );
 
                 final crossAxisCount = context.responsive<int>(
                   mobile: 2,
@@ -402,15 +392,18 @@ class _LoungeOwnerKpiGrid extends StatelessWidget {
                                 : AppColors.textMuted,
                           ),
 
-                          // 6. Canteen Revenue
+                          // 6. Unattended Client Requests
                           StatCard(
-                            title: AppStrings.canteenRevenue,
-                            value:
-                                '${canteenRevenue.toStringAsFixed(0)} ${AppStrings.egp}',
-                            subtitle: AppStrings.extras,
+                            title: AppStrings.sessionRequests,
+                            value: '$unattendedRequestsCount',
+                            subtitle: unattendedRequestsCount > 0
+                                ? AppStrings.needsAttention
+                                : AppStrings.systemHealth,
                             trendValue: 0.0,
-                            icon: Icons.fastfood_outlined,
-                            iconColor: AppColors.neonCyan,
+                            icon: Icons.notifications_active_outlined,
+                            iconColor: unattendedRequestsCount > 0
+                                ? AppColors.danger
+                                : AppColors.textMuted,
                           ),
                         ],
                 );
