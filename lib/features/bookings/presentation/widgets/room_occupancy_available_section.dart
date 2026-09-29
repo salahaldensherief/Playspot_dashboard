@@ -78,6 +78,7 @@ class RoomOccupancyAvailableSection extends StatelessWidget {
                     builder: (_) => AddBookingDialog(
                       loungeId: loungeId,
                       initialRoom: room,
+                      quickMode: true,
                     ),
                   );
                 },

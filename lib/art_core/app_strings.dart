@@ -1505,11 +1505,29 @@ class AppStrings {
   static String get bookingTimeline => 'booking_timeline'.tr();
   static String get bookingCreated => 'booking_created'.tr();
   static String get sessionStarted => 'session_started'.tr();
-  static String get bookingCompletedTimeline => 'booking_completed_timeline'.tr();
-  static String get bookingCancelledTimeline => 'booking_cancelled_timeline'.tr();
+  static String get bookingCompletedTimeline =>
+      'booking_completed_timeline'.tr();
+  static String get bookingCancelledTimeline =>
+      'booking_cancelled_timeline'.tr();
   static String get roomBasePrice => 'room_base_price'.tr();
   static String get finalTotalDue => 'final_total_due'.tr();
   static String get financialSummary => 'financial_summary'.tr();
+
+  // Payment Proofs Queue
+  static String get paymentProofsQueue => 'payment_proofs_queue'.tr();
+  static String get noPendingProofs => 'no_pending_proofs'.tr();
+  static String get rejectionReasonUnclear => 'rejection_reason_unclear'.tr();
+  static String get rejectionReasonAmountMismatch =>
+      'rejection_reason_amount_mismatch'.tr();
+  static String get rejectionReasonDuplicate =>
+      'rejection_reason_duplicate'.tr();
+  static String get rejectionReasonUnknownSender =>
+      'rejection_reason_unknown_sender'.tr();
+  static String get rejectionReasonOther => 'rejection_reason_other'.tr();
+  static String get confirmApprovePaymentProof =>
+      'confirm_approve_payment_proof'.tr();
+  static String get confirmRejectPaymentProof =>
+      'confirm_reject_payment_proof'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

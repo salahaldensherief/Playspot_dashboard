@@ -1253,5 +1253,14 @@
   "booking_cancelled_timeline": "Cancelled",
   "room_base_price": "Base Room Price",
   "final_total_due": "Total Amount Due",
-  "financial_summary": "Financial Summary"
+  "financial_summary": "Financial Summary",
+  "payment_proofs_queue": "Payment Proofs Queue",
+  "no_pending_proofs": "No pending payment proofs",
+  "rejection_reason_unclear": "Unclear / illegible receipt",
+  "rejection_reason_amount_mismatch": "Transferred amount does not match booking",
+  "rejection_reason_duplicate": "Duplicate reference / already used",
+  "rejection_reason_unknown_sender": "Unknown sender number or wallet",
+  "rejection_reason_other": "Other reason",
+  "confirm_approve_payment_proof": "Are you sure you want to approve this transfer receipt?",
+  "confirm_reject_payment_proof": "Are you sure you want to reject this transfer receipt?"
 }

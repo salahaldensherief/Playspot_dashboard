@@ -44,7 +44,7 @@ class TournamentParticipantsTable extends StatelessWidget {
               Icon(Icons.people_outline, size: 48.r, color: AppColors.textSecondary),
               SizedBox(height: 12.h),
               Text(
-                AppStrings.noPromotions,
+                AppStrings.users,
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp),
               ),
             ],
@@ -55,6 +55,7 @@ class TournamentParticipantsTable extends StatelessWidget {
 
     final dateFormat = DateFormat('yyyy/MM/dd hh:mm a');
     final waitlistCount = participants.where((p) => p.isWaitlist).length;
+    final isCompact = MediaQuery.sizeOf(context).width < 700;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -62,17 +63,19 @@ class TournamentParticipantsTable extends StatelessWidget {
         if (onPromoteWaitlist != null || waitlistCount > 0) ...[
           Padding(
             padding: EdgeInsets.only(bottom: 12.h),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Wrap(
+              spacing: 12.w,
+              runSpacing: 8.h,
               children: [
-                Row(
+                Wrap(
+                  spacing: 8.w,
+                  runSpacing: 8.h,
                   children: [
                     Text(
                       'المشاركون (${participants.length})',
                       style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp, fontWeight: FontWeight.bold),
                     ),
                     if (waitlistCount > 0) ...[
-                      SizedBox(width: 8.w),
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                         decoration: BoxDecoration(
@@ -101,7 +104,47 @@ class TournamentParticipantsTable extends StatelessWidget {
             ),
           ),
         ],
-        Container(
+        if (isCompact)
+          Expanded(
+            child: ListView.separated(
+              itemCount: participants.length,
+              separatorBuilder: (context, index) => SizedBox(height: 8.h),
+              itemBuilder: (context, index) {
+                final p = participants[index];
+                return Container(
+                  padding: EdgeInsets.all(14.r),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(color: AppColors.borderDefault),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(child: Text(p.userName, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold))),
+                          _buildPaymentBadge(p.paymentStatus),
+                        ],
+                      ),
+                      SizedBox(height: 6.h),
+                      Text(p.userPhone ?? '--', style: const TextStyle(color: AppColors.textSecondary)),
+                      Text(dateFormat.format(p.registeredAt), style: const TextStyle(color: AppColors.textSecondary)),
+                      if (p.isWaitlist) Text(AppStrings.waitlistLabel, style: const TextStyle(color: AppColors.warning)),
+                      if (p.isCheckedIn) Text(AppStrings.attended, style: const TextStyle(color: AppColors.success)),
+                      Divider(height: 20.h, color: AppColors.borderDefault),
+                      _buildActions(context, p),
+                    ],
+                  ),
+                );
+              },
+            ),
+          )
+        else Expanded(
+          child: SingleChildScrollView(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Container(
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(12.r),
@@ -161,66 +204,63 @@ class TournamentParticipantsTable extends StatelessWidget {
                           : Text(AppStrings.unread, style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
                     ),
                     DataCell(Text(dateFormat.format(p.registeredAt), style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp))),
-                    DataCell(
-                      Row(
-                        children: [
-                          if (p.receiptPath != null && p.receiptPath!.isNotEmpty) ...[
-                            AppButton(
-                              text: AppStrings.reviewReceipt,
-                              variant: AppButtonVariant.outlined,
-                              fontSize: 12.sp,
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) => PaymentReceiptDialog(
-                                    participant: p,
-                                    onApprove: () => onApprovePayment(p),
-                                    onReject: (reason) => onRejectPayment(p, reason),
-                                  ),
-                                );
-                              },
-                            ),
-                            SizedBox(width: 8.w),
-                          ],
-                          if (!p.isPaymentApproved) ...[
-                            AppButton(
-                              text: AppStrings.cashPayment,
-                              variant: AppButtonVariant.primary,
-                              fontSize: 12.sp,
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                              onPressed: () => onRecordCash(p),
-                            ),
-                            SizedBox(width: 8.w),
-                          ],
-                          if (p.isPaymentApproved && !p.isCheckedIn) ...[
-                            AppButton(
-                              text: AppStrings.checkIn,
-                              backgroundColor: AppColors.success,
-                              fontSize: 12.sp,
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                              onPressed: () => onCheckIn(p),
-                            ),
-                          ],
-                          if (onWithdraw != null && !p.isWithdrawn) ...[
-                            SizedBox(width: 8.w),
-                            AppButton(
-                              text: AppStrings.withdraw,
-                              variant: AppButtonVariant.danger,
-                              fontSize: 12.sp,
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                              onPressed: () => onWithdraw!(p),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
+                    DataCell(_buildActions(context, p)),
                   ],
                 );
               }).toList(),
             ),
+              ),
+            ),
+          ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildActions(BuildContext context, TournamentParticipantEntity p) {
+    return Wrap(
+      spacing: 8.w,
+      runSpacing: 8.h,
+      children: [
+        if (p.receiptPath != null && p.receiptPath!.isNotEmpty)
+          AppButton(
+            text: AppStrings.reviewReceipt,
+            variant: AppButtonVariant.outlined,
+            fontSize: 12.sp,
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+            onPressed: () => showDialog(
+              context: context,
+              builder: (ctx) => PaymentReceiptDialog(
+                participant: p,
+                onApprove: () => onApprovePayment(p),
+                onReject: (reason) => onRejectPayment(p, reason),
+              ),
+            ),
+          ),
+        if (!p.isPaymentApproved)
+          AppButton(
+            text: AppStrings.cashPayment,
+            fontSize: 12.sp,
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+            onPressed: () => onRecordCash(p),
+          ),
+        if (p.isPaymentApproved && !p.isCheckedIn)
+          AppButton(
+            text: AppStrings.checkIn,
+            backgroundColor: AppColors.success,
+            fontSize: 12.sp,
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+            onPressed: () => onCheckIn(p),
+          ),
+        if (onWithdraw != null && !p.isWithdrawn)
+          AppButton(
+            text: AppStrings.withdraw,
+            variant: AppButtonVariant.danger,
+            fontSize: 12.sp,
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+            onPressed: () => onWithdraw!(p),
+          ),
       ],
     );
   }

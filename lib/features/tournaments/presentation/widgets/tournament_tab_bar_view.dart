@@ -47,6 +47,16 @@ class TournamentTabBarView extends StatelessWidget {
         ),
         BlocBuilder<TournamentParticipantsCubit, TournamentParticipantsState>(
           builder: (context, partState) {
+            if (partState.status == TournamentParticipantsStatus.loading &&
+                partState.participants.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (partState.status == TournamentParticipantsStatus.failure &&
+                partState.participants.isEmpty) {
+              return Center(
+                child: Text(partState.errorMessage ?? 'Failed to load participants'),
+              );
+            }
             return TournamentParticipantsTable(
               participants: partState.participants,
               onApprovePayment: (p) =>

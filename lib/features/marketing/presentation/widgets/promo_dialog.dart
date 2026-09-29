@@ -18,7 +18,7 @@ import 'design_style_section.dart';
 
 class PromoDialog extends StatefulWidget {
   final PromoEntity promo;
-  final Function(PromoEntity)? onSave;
+  final Future<bool> Function(PromoEntity)? onSave;
 
   const PromoDialog({super.key, required this.promo, this.onSave});
 
@@ -123,6 +123,9 @@ class _PromoDialogState extends State<PromoDialog> {
             _selectedImageName ?? 'promo_poster.png',
             loungeId,
           );
+          if (imageUrl == null) {
+            throw Exception(AppStrings.promoPublishError);
+          }
         }
 
         if (!mounted) return;
@@ -157,7 +160,8 @@ class _PromoDialogState extends State<PromoDialog> {
                 double.tryParse(_discountValueController.text.trim()) ?? 0,
             imageUrl: imageUrl,
           );
-          widget.onSave!(updatedPromo);
+          final saved = await widget.onSave!(updatedPromo);
+          if (!saved) return;
         }
 
         if (mounted) {
@@ -190,6 +194,11 @@ class _PromoDialogState extends State<PromoDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isCompact = screenWidth < 700;
+    final dialogWidth = isCompact ? screenWidth * 0.92 : 700.w;
+    final dialogPadding = isCompact ? 16.r : 32.r;
+    final contentWidth = dialogWidth - dialogPadding * 2;
     return BlocBuilder<RoomCubit, RoomState>(
       builder: (context, roomState) {
         return Dialog(
@@ -198,19 +207,21 @@ class _PromoDialogState extends State<PromoDialog> {
             borderRadius: BorderRadius.circular(16.r),
           ),
           child: Container(
-            width: 700.w,
-            padding: EdgeInsets.all(32.r),
+            width: dialogWidth,
+            constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.9),
+            padding: EdgeInsets.all(dialogPadding),
             child: SingleChildScrollView(
               child: Form(
                 key: _formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Wrap(
+                      spacing: 32.w,
+                      runSpacing: 24.h,
                       children: [
-                        Expanded(
-                          flex: 2,
+                        SizedBox(
+                          width: isCompact ? contentWidth : (contentWidth - 32.w) * 2 / 3,
                           child: PromoFormSection(
                             titleArController: _titleArController,
                             titleEnController: _titleEnController,
@@ -253,8 +264,8 @@ class _PromoDialogState extends State<PromoDialog> {
                             discountValueController: _discountValueController,
                           ),
                         ),
-                        SizedBox(width: 32.w),
-                        Expanded(
+                        SizedBox(
+                          width: isCompact ? contentWidth : (contentWidth - 32.w) / 3,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

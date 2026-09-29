@@ -1253,5 +1253,14 @@
   "booking_cancelled_timeline": "تم الإلغاء",
   "room_base_price": "سعر الغرفة الأساسي",
   "final_total_due": "الإجمالي النهائي المطلوب",
-  "financial_summary": "ملخص الحساب والفاتورة"
+  "financial_summary": "ملخص الحساب والفاتورة",
+  "payment_proofs_queue": "طابور مراجعة إيصالات الدفع",
+  "no_pending_proofs": "لا توجد إيصالات دفع معلقة",
+  "rejection_reason_unclear": "إيصال غير واضح أو غير مقروء",
+  "rejection_reason_amount_mismatch": "المبلغ المحول لا يطابق قيمة الحجز",
+  "rejection_reason_duplicate": "المرجع مستخدم سابقاً أو تحويل مكرر",
+  "rejection_reason_unknown_sender": "رقم المرسل أو الحساب غير معروف",
+  "rejection_reason_other": "سبب آخر",
+  "confirm_approve_payment_proof": "هل أنت متأكد من قبول إيصال التحويل وتأكيد الدفع؟",
+  "confirm_reject_payment_proof": "هل أنت متأكد من رفض إيصال التحويل؟"
 }

@@ -67,12 +67,7 @@ class StationControlDrawer extends StatelessWidget {
                 child: StationControlDrawer(
                   booking: booking,
                   onClose: () => Navigator.of(dialogContext).pop(),
-                  onEndSession: () {
-                    Navigator.of(dialogContext).pop();
-                    if (onEndSession != null) {
-                      onEndSession();
-                    }
-                  },
+                  onEndSession: onEndSession,
                 ),
               ),
             ),
@@ -277,8 +272,16 @@ class StationControlDrawer extends StatelessWidget {
             if (onEndSession != null) {
               onEndSession!();
             } else {
-              await context.read<DashboardCubit>().endSession(targetBooking.id);
-              onClose();
+              final success = await context.read<DashboardCubit>().endSession(targetBooking.id);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(success ? AppStrings.sessionEndedSuccess : AppStrings.actionFailed),
+                    backgroundColor: success ? AppColors.success : AppColors.danger,
+                  ),
+                );
+                if (success) onClose();
+              }
             }
           }
         },

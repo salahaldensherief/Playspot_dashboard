@@ -26,6 +26,53 @@ class ReviewsRemoteDataSourceImpl implements ReviewsRemoteDataSource {
 
   ReviewsRemoteDataSourceImpl(this.supabaseClient);
 
+  Future<List<LoungeReviewModel>> _resolveReviewProfiles(
+    List<Map<String, dynamic>> rawList,
+  ) async {
+    if (rawList.isEmpty) return [];
+
+    final userIds = rawList
+        .map((json) => (json['user_id'] ?? json['userId'])?.toString())
+        .where((id) => id != null && id.trim().isNotEmpty)
+        .cast<String>()
+        .toSet()
+        .toList();
+
+    final profilesMap = <String, Map<String, dynamic>>{};
+    if (userIds.isNotEmpty) {
+      try {
+        final profilesResponse = await supabaseClient.rpc(
+          'get_lounge_review_authors',
+          params: {'p_lounge_id': rawList.first['lounge_id']},
+        );
+
+        for (final profile in profilesResponse as List) {
+          final data = Map<String, dynamic>.from(profile as Map);
+          final id = data['user_id']?.toString();
+          if (id != null && userIds.contains(id)) profilesMap[id] = data;
+        }
+      } catch (e) {
+        debugPrint('[REVIEWS_DATA_SOURCE] Profiles batch fetch failed: $e');
+      }
+    }
+
+    return rawList.map((json) {
+      final profile = profilesMap[(json['user_id'] ?? json['userId'])?.toString()];
+      if (profile != null) {
+        json['profiles'] = profile;
+        if (json['user_name'] == null ||
+            json['user_name'].toString().trim().isEmpty) {
+          json['user_name'] = profile['full_name'];
+        }
+        if (json['user_avatar'] == null ||
+            json['user_avatar'].toString().trim().isEmpty) {
+          json['user_avatar'] = profile['avatar_url'];
+        }
+      }
+      return LoungeReviewModel.fromJson(json);
+    }).toList();
+  }
+
   Future<List<LoungeReviewModel>> _fetchReviewsFromSupabase(
     String loungeId,
   ) async {
@@ -40,57 +87,7 @@ class ReviewsRemoteDataSourceImpl implements ReviewsRemoteDataSource {
       final rawList = (response as List)
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
-      if (rawList.isEmpty) return [];
-
-      // 2. Extract unique user_ids to resolve profiles in a batch
-      final userIds = rawList
-          .map((json) => json['user_id']?.toString())
-          .where((id) => id != null && id.trim().isNotEmpty)
-          .cast<String>()
-          .toSet()
-          .toList();
-
-      final Map<String, Map<String, dynamic>> profilesMap = {};
-      if (userIds.isNotEmpty) {
-        try {
-          final profilesResponse = await supabaseClient
-              .from('profiles')
-              .select('id, full_name, avatar_url')
-              .inFilter('id', userIds);
-
-          for (final p in profilesResponse as List) {
-            final pMap = Map<String, dynamic>.from(p as Map);
-            final pId = pMap['id']?.toString();
-            if (pId != null) {
-              profilesMap[pId] = pMap;
-            }
-          }
-        } catch (e) {
-          debugPrint(
-            '⚠️ [REVIEWS_DATA_SOURCE] Profiles batch fetch failed: $e',
-          );
-        }
-      }
-
-      // 3. Attach profile data to review JSON maps
-      final list = rawList.map((json) {
-        final uId = json['user_id']?.toString();
-        if (uId != null && profilesMap.containsKey(uId)) {
-          final p = profilesMap[uId]!;
-          json['profiles'] = p;
-          if (json['user_name'] == null ||
-              json['user_name'].toString().trim().isEmpty) {
-            json['user_name'] = p['full_name'];
-          }
-          if (json['user_avatar'] == null ||
-              json['user_avatar'].toString().trim().isEmpty) {
-            json['user_avatar'] = p['avatar_url'];
-          }
-        }
-        return LoungeReviewModel.fromJson(json);
-      }).toList();
-
-      return list;
+      return _resolveReviewProfiles(rawList);
     } catch (e) {
       debugPrint('🔴 [REVIEWS_DATA_SOURCE] Fetching reviews failed: $e');
       rethrow;
@@ -206,19 +203,29 @@ class ReviewsRemoteDataSourceImpl implements ReviewsRemoteDataSource {
         },
       );
 
-      return PaginatedResult.fromRpcResponse<LoungeReviewModel>(
+      final paginated = PaginatedResult.fromRpcResponse<Map<String, dynamic>>(
         response,
-        mapper: (json) => LoungeReviewModel.fromJson(json),
+        mapper: (json) => json,
         requestedPage: validPage,
         requestedPageSize: clampedPageSize,
+      );
+      final reviews = await _resolveReviewProfiles(paginated.items);
+      return PaginatedResult<LoungeReviewModel>(
+        items: reviews,
+        totalCount: paginated.totalCount,
+        page: paginated.page,
+        pageSize: paginated.pageSize,
       );
     } catch (e) {
       debugPrint(
         '⚠️ [REVIEWS_DATA_SOURCE] get_lounge_reviews_page RPC error ($e), falling back',
       );
       final fallbackList = await getLoungeReviews(loungeId: cleanLoungeId);
+      final start = (validPage - 1) * clampedPageSize;
       return PaginatedResult(
-        items: fallbackList,
+        items: start >= fallbackList.length
+            ? <LoungeReviewModel>[]
+            : fallbackList.skip(start).take(clampedPageSize).toList(),
         totalCount: fallbackList.length,
         page: validPage,
         pageSize: clampedPageSize,

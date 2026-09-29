@@ -13,6 +13,7 @@ import '../domain/entities/app_settings_entity.dart';
 import '../domain/entities/support_ticket_entity.dart';
 import 'support_cubit.dart';
 import 'support_state.dart';
+import 'widgets/new_support_ticket_dialog.dart';
 
 class LoungeOwnerSupportScreen extends StatefulWidget {
   const LoungeOwnerSupportScreen({super.key});
@@ -27,10 +28,33 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<SupportCubit>().loadAppSettings();
-        context.read<SupportCubit>().loadTickets();
+        _reload();
       }
     });
+  }
+
+  Future<void> _reload() async {
+    final cubit = context.read<SupportCubit>();
+    await cubit.loadAppSettings();
+    if (mounted) await cubit.loadTickets();
+  }
+
+  Future<void> _showNewTicketDialog() async {
+    final cubit = context.read<SupportCubit>();
+    final created = await showDialog<bool>(
+      context: context,
+      builder: (_) => NewSupportTicketDialog(
+        onSubmit: (issueType, message) => cubit.createTicket(
+          issueType: issueType,
+          message: message,
+        ),
+      ),
+    );
+    if (created == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(cubit.state.successMessage ?? AppStrings.supportTickets), backgroundColor: AppColors.success),
+      );
+    }
   }
 
   @override
@@ -48,14 +72,16 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
               AppAdaptivePageHeader(
                 title: AppStrings.supportCenter,
                 subtitle: AppStrings.supportCenterSubtitle,
+                secondaryAction: AppButton(
+                  text: AppStrings.create,
+                  icon: Icons.add,
+                  onPressed: _showNewTicketDialog,
+                ),
                 primaryAction: AppButton(
                   text: AppStrings.refresh,
                   icon: Icons.refresh,
                   variant: AppButtonVariant.outlined,
-                  onPressed: () {
-                    context.read<SupportCubit>().loadAppSettings();
-                    context.read<SupportCubit>().loadTickets();
-                  },
+                  onPressed: _reload,
                 ),
               ),
               SizedBox(height: 24.h),
@@ -75,6 +101,9 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
                     child: CircularProgressIndicator(color: AppColors.neonBlue),
                   ),
                 )
+              else if (state.status == SupportStatus.failure && state.tickets.isEmpty)
+                Text(state.errorMessage ?? AppStrings.actionFailed,
+                    style: const TextStyle(color: AppColors.danger))
               else if (state.tickets.isEmpty)
                 _buildEmptyTicketsCard()
               else
@@ -113,25 +142,25 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
                   icon: Icons.chat_bubble_outline,
                   color: AppColors.success,
                   title: AppStrings.whatsappSupport,
-                  value: settings?.whatsappPhone ?? '+201000000000',
+                  value: settings?.whatsappPhone ?? '',
                 ),
                 _buildContactTile(
                   icon: Icons.phone_outlined,
                   color: AppColors.neonBlue,
                   title: AppStrings.phone,
-                  value: settings?.supportPhone ?? '19000',
+                  value: settings?.supportPhone ?? '',
                 ),
                 _buildContactTile(
                   icon: Icons.email_outlined,
                   color: AppColors.warning,
                   title: AppStrings.email,
-                  value: settings?.supportEmail ?? 'support@playspot.app',
+                  value: settings?.supportEmail ?? '',
                 ),
                 _buildContactTile(
                   icon: Icons.account_balance_wallet_outlined,
                   color: AppColors.neonGreen,
                   title: AppStrings.vodafoneCash,
-                  value: settings?.vodafoneCashNumber ?? '01000000000',
+                  value: settings?.vodafoneCashNumber ?? '',
                 ),
               ];
 
@@ -182,6 +211,38 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
   }
 
   Widget _buildTicketsTable(List<SupportTicketEntity> tickets) {
+    if (MediaQuery.sizeOf(context).width < 700) {
+      return Column(
+        children: tickets.map((ticket) => Container(
+          width: double.infinity,
+          margin: EdgeInsets.only(bottom: 10.h),
+          padding: EdgeInsets.all(14.r),
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(8.r),
+            border: Border.all(color: AppColors.borderDefault),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Expanded(child: Text(ticket.issueType,
+                    style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold))),
+                _getStatusBadge(ticket.status),
+              ]),
+              SizedBox(height: 8.h),
+              Text(ticket.message, maxLines: 3, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.textSecondary)),
+              SizedBox(height: 8.h),
+              Text(ticket.createdAt != null
+                  ? DateFormat('yyyy-MM-dd hh:mm a').format(ticket.createdAt!)
+                  : AppStrings.notAvailable,
+                  style: const TextStyle(color: AppColors.textSecondary)),
+            ],
+          ),
+        )).toList(),
+      );
+    }
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
@@ -274,7 +335,7 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
                 Text(title, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
                 SizedBox(height: 2.h),
                 SelectableText(
-                  value,
+                  value.trim().isEmpty ? AppStrings.notAvailable : value,
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,

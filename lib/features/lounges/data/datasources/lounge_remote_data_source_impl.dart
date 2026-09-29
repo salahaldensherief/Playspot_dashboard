@@ -97,7 +97,15 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     cleanData.removeWhere((key, value) => value == null);
 
     try {
-      await client.from('lounges').update(cleanData).eq('id', id);
+      final updated = await client
+          .from('lounges')
+          .update(cleanData)
+          .eq('id', id)
+          .select('id')
+          .maybeSingle();
+      if (updated == null) {
+        throw StateError('Lounge update did not modify a row');
+      }
       AppLogger.info('updateLounge Succeeded for id: $id');
     } on PostgrestException catch (e) {
       AppLogger.error(

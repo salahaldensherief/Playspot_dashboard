@@ -114,7 +114,7 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
       setState(() => _isSaving = true);
       try {
         final lounge = context.read<LoginCubit>().state.userLounge;
-        if (lounge == null) return;
+        if (lounge == null) throw StateError('Lounge profile is not loaded');
 
         String mainImageUrl = lounge.imageUrl;
         if (_mainImageBytes != null) {
@@ -148,15 +148,12 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
             images: galleryUrls,
             lat: _lat,
             lng: _lng,
-            vodafoneCashNumber: _vodafoneCashController.text.trim().isEmpty
-                ? null
-                : _vodafoneCashController.text.trim(),
-            instapayAccount: _instapayController.text.trim().isEmpty
-                ? null
-                : _instapayController.text.trim(),
+            vodafoneCashNumber: _vodafoneCashController.text.trim(),
+            instapayAccount: _instapayController.text.trim(),
           );
 
-          await context.read<LoungeCubit>().updateLounge(updatedLounge);
+          final saved = await context.read<LoungeCubit>().updateLounge(updatedLounge);
+          if (!saved) throw StateError('Lounge profile could not be saved');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -268,9 +265,14 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
   }
 
   Future<void> _selectTime(BuildContext context, TextEditingController controller) async {
+    final parts = controller.text.split(':');
+    final hour = parts.isNotEmpty ? int.tryParse(parts[0]) : null;
+    final minute = parts.length > 1 ? int.tryParse(parts[1]) : null;
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: hour != null && minute != null && hour >= 0 && hour < 24 && minute >= 0 && minute < 60
+          ? TimeOfDay(hour: hour, minute: minute)
+          : TimeOfDay.now(),
       builder: (pickerContext, child) {
         return Theme(
           data: Theme.of(pickerContext).copyWith(
@@ -286,7 +288,7 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
       },
     );
     if (picked != null && context.mounted) {
-      final formatted = picked.format(context);
+      final formatted = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}:00';
       controller.text = formatted;
     }
   }

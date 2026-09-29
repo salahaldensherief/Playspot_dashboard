@@ -23,11 +23,13 @@ import 'package:play_spot_dashboard/features/shifts/presentation/shift_managemen
 class AddBookingDialog extends StatefulWidget {
   final String loungeId;
   final RoomEntity? initialRoom;
+  final bool quickMode;
 
   const AddBookingDialog({
     super.key,
     required this.loungeId,
     this.initialRoom,
+    this.quickMode = false,
   });
 
   @override
@@ -89,6 +91,12 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
 
   void _submit() async {
     if (!_formKey.currentState!.validate() || _selectedRoom == null) return;
+
+    if (widget.quickMode) {
+      final now = DateTime.now();
+      _selectedDate = now;
+      _startTime = TimeOfDay.fromDateTime(now);
+    }
 
     final durationMinutes = context.read<BookingCubit>().state.selectedDurationMinutes;
     final endTime = _calculateEndTime(_startTime, durationMinutes);
@@ -214,7 +222,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    AppText.heading(AppStrings.newBooking, fontSize: 24.sp),
+                    AppText.heading(widget.quickMode ? AppStrings.walkInBooking : AppStrings.detailedBooking, fontSize: 24.sp),
                     IconButton(
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(Icons.close, color: AppColors.textSecondary),
@@ -231,12 +239,12 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                 SizedBox(height: 16.h),
 
                 // Room Selector Widget
-                AddBookingRoomSelector(
+                if (!widget.quickMode) AddBookingRoomSelector(
                   initialRoom: widget.initialRoom,
                   selectedRoom: _selectedRoom,
                   onRoomSelected: (val) => setState(() => _selectedRoom = val),
                 ),
-                SizedBox(height: 16.h),
+                if (!widget.quickMode) SizedBox(height: 16.h),
 
                 // Play Mode Selector Widget
                 AddBookingPlayModeSelector(
@@ -252,27 +260,28 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                   startTime: _startTime,
                   onDateChanged: (date) => setState(() => _selectedDate = date),
                   onStartTimeChanged: (time) => setState(() => _startTime = time),
+                  quickMode: widget.quickMode,
                 ),
                 SizedBox(height: 20.h),
 
                 // Extras Section
-                AddBookingExtrasSection(
+                if (!widget.quickMode) AddBookingExtrasSection(
                   loungeId: widget.loungeId,
                   selectedExtras: _selectedExtras,
                   onExtrasChanged: _onExtrasChanged,
                 ),
-                SizedBox(height: 20.h),
+                if (!widget.quickMode) SizedBox(height: 20.h),
 
                 // Immediate Session Start Toggle
-                AddBookingImmediateToggle(
+                if (!widget.quickMode) AddBookingImmediateToggle(
                   isImmediate: _startSessionImmediately,
                   onChanged: (val) => setState(() => _startSessionImmediately = val),
                 ),
-                SizedBox(height: 20.h),
+                if (!widget.quickMode) SizedBox(height: 20.h),
 
                 // Voucher Section
-                AddBookingVoucherSection(onVoucherChanged: _onVoucherChanged),
-                SizedBox(height: 20.h),
+                if (!widget.quickMode) AddBookingVoucherSection(onVoucherChanged: _onVoucherChanged),
+                if (!widget.quickMode) SizedBox(height: 20.h),
 
                 // Price Calculation Summary Card
                 if (_selectedRoom != null)
@@ -301,7 +310,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                     ),
                     SizedBox(width: 16.w),
                     AppButton(
-                      text: AppStrings.newBooking,
+                      text: widget.quickMode ? AppStrings.walkInBooking : AppStrings.newBooking,
                       variant: AppButtonVariant.primary,
                       onPressed: _submit,
                     ),

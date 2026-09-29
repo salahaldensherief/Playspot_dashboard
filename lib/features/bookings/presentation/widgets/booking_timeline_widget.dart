@@ -13,7 +13,7 @@ class BookingTimelineWidget extends StatelessWidget {
   const BookingTimelineWidget({super.key, required this.booking});
 
   String _formatDateTime(DateTime dt) {
-    return DateFormat('dd/MM HH:mm').format(dt);
+    return DateFormat('dd/MM HH:mm').format(dt.toLocal());
   }
 
   @override
@@ -47,7 +47,9 @@ class BookingTimelineWidget extends StatelessWidget {
               Expanded(
                 child: _buildTimelineStep(
                   title: AppStrings.bookingCreated,
-                  subtitle: '${DateFormat('dd/MM').format(booking.date)} ${booking.startTime}',
+                  subtitle: booking.createdAt != null
+                      ? _formatDateTime(booking.createdAt!)
+                      : '--:--',
                   isDone: true,
                   isActive: false,
                   stepColor: AppColors.success,
@@ -77,9 +79,7 @@ class BookingTimelineWidget extends StatelessWidget {
                     title: AppStrings.sessionStarted,
                     subtitle: booking.checkedInAt != null
                         ? _formatDateTime(booking.checkedInAt!)
-                        : (isInProgress
-                            ? AppStrings.inProgress
-                            : AppStrings.upcoming),
+                        : (isInProgress ? AppStrings.inProgress : '--:--'),
                     isDone: hasCheckedIn,
                     isActive: isInProgress,
                     stepColor: isInProgress ? AppColors.neonBlue : (hasCheckedIn ? AppColors.success : AppColors.textSecondary),
@@ -93,7 +93,7 @@ class BookingTimelineWidget extends StatelessWidget {
                 Expanded(
                   child: _buildTimelineStep(
                     title: AppStrings.bookingCompletedTimeline,
-                    subtitle: isCompleted ? booking.endTime : '--:--',
+                    subtitle: '--:--',
                     isDone: isCompleted,
                     isActive: false,
                     stepColor: isCompleted ? AppColors.success : AppColors.textSecondary,

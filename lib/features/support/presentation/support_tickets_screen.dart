@@ -116,16 +116,19 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                   ),
                 ),
                 SizedBox(height: 24.h),
-                Row(
-                  children: [
-                    _buildFilterChip('all', AppStrings.allTickets, state.activeTicketFilter),
-                    SizedBox(width: 12.w),
-                    _buildFilterChip('new', AppStrings.ticketStatusNew, state.activeTicketFilter),
-                    SizedBox(width: 12.w),
-                    _buildFilterChip('in_progress', AppStrings.ticketStatusInProgress, state.activeTicketFilter),
-                    SizedBox(width: 12.w),
-                    _buildFilterChip('resolved', AppStrings.ticketStatusResolved, state.activeTicketFilter),
-                  ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildFilterChip('all', AppStrings.allTickets, state.activeTicketFilter),
+                      SizedBox(width: 12.w),
+                      _buildFilterChip('new', AppStrings.ticketStatusNew, state.activeTicketFilter),
+                      SizedBox(width: 12.w),
+                      _buildFilterChip('in_progress', AppStrings.ticketStatusInProgress, state.activeTicketFilter),
+                      SizedBox(width: 12.w),
+                      _buildFilterChip('resolved', AppStrings.ticketStatusResolved, state.activeTicketFilter),
+                    ],
+                  ),
                 ),
                 SizedBox(height: 24.h),
                 if (state.status == SupportStatus.loading && state.tickets.isEmpty)
@@ -155,9 +158,13 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                   SectionContainer(
                     title: '${AppStrings.complaintsTable} (${state.tickets.length})',
                     children: [
-                      ClipRRect(
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: ClipRRect(
                         borderRadius: BorderRadius.circular(8.r),
-                        child: Table(
+                        child: SizedBox(
+                          width: 1100.w,
+                          child: Table(
                           border: TableBorder.all(color: AppColors.borderDefault, width: 1),
                           columnWidths: const {
                             0: FlexColumnWidth(1.8),
@@ -207,7 +214,9 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                               );
                             }),
                           ],
+                          ),
                         ),
+                      ),
                       ),
                     ],
                   ),

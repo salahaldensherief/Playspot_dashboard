@@ -25,6 +25,7 @@ void main() {
       endTime: '16:00',
       totalPrice: 200,
       status: BookingStatus.inProgress,
+      createdAt: DateTime(2026, 9, 29, 11, 30),
       checkedInAt: DateTime(2026, 10, 1, 14, 5),
     );
 
@@ -36,6 +37,9 @@ void main() {
 
     expect(find.byType(BookingTimelineWidget), findsOneWidget);
     expect(find.byIcon(Icons.timeline_rounded), findsOneWidget);
+    expect(find.text('29/09 11:30'), findsOneWidget);
+    expect(find.text('01/10 14:05'), findsOneWidget);
+    expect(find.text('01/10 14:00'), findsNothing);
   });
 
   testWidgets('BookingTimelineWidget renders cancelled step for cancelled booking', (tester) async {
@@ -61,5 +65,24 @@ void main() {
 
     expect(find.byType(BookingTimelineWidget), findsOneWidget);
     expect(find.byIcon(Icons.cancel_rounded), findsOneWidget);
+  });
+
+  testWidgets('completed booking does not show planned end as actual end', (tester) async {
+    final booking = Booking(
+      id: 'test-booking-3',
+      userId: 'user-3',
+      loungeId: 'lounge-1',
+      roomId: 'room-1',
+      date: DateTime(2026, 10, 1),
+      startTime: '14:00',
+      endTime: '16:00',
+      totalPrice: 200,
+      status: BookingStatus.completed,
+    );
+
+    await tester.pumpWidget(buildTestableWidget(BookingTimelineWidget(booking: booking)));
+
+    expect(find.text('16:00'), findsNothing);
+    expect(find.text('--:--'), findsNWidgets(3));
   });
 }

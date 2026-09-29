@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
-import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
-import 'package:play_spot_dashboard/core/responsive/app_breakpoints.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
@@ -72,10 +70,8 @@ class _MarketingViewState extends State<MarketingView> {
           );
         }
       },
-      child: DashboardLayout(
-        title: AppStrings.marketing,
-        activeRoute: 'Marketing',
-        isScrollable: false,
+      child: Padding(
+        padding: EdgeInsets.all(24.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -86,8 +82,7 @@ class _MarketingViewState extends State<MarketingView> {
               secondaryAction: isSuperAdmin
                   ? AppButton(
                       text: AppStrings.newNotification,
-                      onPressed: () =>
-                          _showNotificationDialog(context, marketingCubit),
+                      onPressed: () => _showNotificationDialog(context, marketingCubit),
                       icon: Icons.notifications_active_outlined,
                       variant: AppButtonVariant.outlined,
                     )
@@ -131,8 +126,23 @@ class _MarketingViewState extends State<MarketingView> {
           previous.status != current.status,
       builder: (context, state) {
         if (state.status == MarketingStatus.loading) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.neonBlue),
+          return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
+        }
+        if (state.status == MarketingStatus.failure && state.promotions.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(state.errorMessage ?? AppStrings.promoPublishError,
+                    style: const TextStyle(color: AppColors.textSecondary)),
+                SizedBox(height: 12.h),
+                AppButton(
+                  text: AppStrings.refresh,
+                  icon: Icons.refresh,
+                  onPressed: _reloadPromotions,
+                ),
+              ],
+            ),
           );
         }
 
@@ -141,58 +151,42 @@ class _MarketingViewState extends State<MarketingView> {
 
         // Filter by Status (Active / Expired)
         if (_selectedFilterStatus == 'Active') {
-          promos = promos
-              .where((p) => p.expiresAt == null || p.expiresAt!.isAfter(now))
-              .toList();
+          promos = promos.where((p) => p.expiresAt == null || p.expiresAt!.isAfter(now)).toList();
         } else if (_selectedFilterStatus == 'Expired') {
-          promos = promos
-              .where((p) => p.expiresAt != null && p.expiresAt!.isBefore(now))
-              .toList();
+          promos = promos.where((p) => p.expiresAt != null && p.expiresAt!.isBefore(now)).toList();
         }
 
         // Filter by Tag
         if (_selectedFilterTag != 'All') {
-          promos = promos
-              .where(
-                (p) =>
-                    p.tag == _selectedFilterTag ||
-                    p.tagAr == _selectedFilterTag,
-              )
-              .toList();
+          promos = promos.where((p) => p.tag == _selectedFilterTag || p.tagAr == _selectedFilterTag).toList();
         }
 
-        final tags = [
-          'All',
-          ...state.promotions
-              .map((p) => p.tag ?? p.tagAr)
-              .where((t) => t.isNotEmpty)
-              .toSet(),
-        ];
+        final tags = ['All', ...state.promotions.map((p) => p.tag ?? p.tagAr).where((t) => t.isNotEmpty).toSet()];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Status and Tag Filter Chips Row (Responsive Wrap)
-            Wrap(
-              spacing: 12.w,
-              runSpacing: 10.h,
-              crossAxisAlignment: WrapCrossAlignment.center,
+            // Status and Tag Filter Chips Row
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildStatusChip(AppStrings.all, 'All'),
-                    SizedBox(width: 8.w),
-                    _buildStatusChip(AppStrings.active, 'Active'),
-                    SizedBox(width: 8.w),
-                    _buildStatusChip(AppStrings.timeExpired, 'Expired'),
-                  ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildStatusChip(AppStrings.all, 'All'),
+                      SizedBox(width: 8.w),
+                      _buildStatusChip(AppStrings.active, 'Active'),
+                      SizedBox(width: 8.w),
+                      _buildStatusChip(AppStrings.timeExpired, 'Expired'),
+                    ],
+                  ),
                 ),
-                if (tags.length > 1)
+                if (tags.length > 1) ...[
+                  SizedBox(height: 6.h),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: tags.map((tag) {
                         return Padding(
                           padding: EdgeInsetsDirectional.only(start: 6.w),
@@ -209,6 +203,7 @@ class _MarketingViewState extends State<MarketingView> {
                       }).toList(),
                     ),
                   ),
+                ],
               ],
             ),
             SizedBox(height: 20.h),
@@ -220,18 +215,11 @@ class _MarketingViewState extends State<MarketingView> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.local_offer_outlined,
-                        size: 64.r,
-                        color: AppColors.textMuted,
-                      ),
+                      Icon(Icons.local_offer_outlined, size: 64.r, color: AppColors.textMuted),
                       SizedBox(height: 16.h),
                       Text(
                         AppStrings.noPromotions,
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 16.sp,
-                        ),
+                        style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp),
                       ),
                       SizedBox(height: 16.h),
                       AppButton(
@@ -260,37 +248,19 @@ class _MarketingViewState extends State<MarketingView> {
             else
               Expanded(
                 child: GridView.builder(
-                  gridDelegate: AppBreakpoints.isMobile(context)
-                      ? SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 1,
-                          mainAxisExtent: 220.h,
-                          mainAxisSpacing: 14.h,
-                        )
-                      : (AppBreakpoints.isTablet(context)
-                            ? SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                mainAxisExtent: 225.h,
-                                crossAxisSpacing: 14.w,
-                                mainAxisSpacing: 14.h,
-                              )
-                            : SliverGridDelegateWithMaxCrossAxisExtent(
-                                maxCrossAxisExtent: 380.w,
-                                mainAxisExtent: 230.h,
-                                crossAxisSpacing: 20.w,
-                                mainAxisSpacing: 20.h,
-                              )),
+                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 380.w,
+                    mainAxisExtent: 230.h,
+                    crossAxisSpacing: 20.w,
+                    mainAxisSpacing: 20.h,
+                  ),
                   itemCount: promos.length,
                   itemBuilder: (context, index) {
                     final promo = promos[index];
                     return PromoCard(
                       promo: promo,
                       onEdit: () => _showEditPromoDialog(context, cubit, promo),
-                      onDelete: () => _confirmDelete(
-                        context,
-                        cubit,
-                        promo,
-                        loungeId: loungeId,
-                      ),
+                      onDelete: () => _confirmDelete(context, cubit, promo, loungeId: loungeId),
                     );
                   },
                 ),
@@ -320,11 +290,7 @@ class _MarketingViewState extends State<MarketingView> {
     );
   }
 
-  void _showEditPromoDialog(
-    BuildContext context,
-    MarketingCubit cubit,
-    PromoEntity promo,
-  ) {
+  void _showEditPromoDialog(BuildContext context, MarketingCubit cubit, PromoEntity promo) {
     final roomCubit = context.read<RoomCubit>();
     showDialog(
       context: context,
@@ -335,9 +301,7 @@ class _MarketingViewState extends State<MarketingView> {
         ],
         child: PromoDialog(
           promo: promo,
-          onSave: (updatedPromo) {
-            cubit.createPromotion(updatedPromo);
-          },
+          onSave: cubit.createPromotion,
         ),
       ),
     );
@@ -346,31 +310,22 @@ class _MarketingViewState extends State<MarketingView> {
   void _showNotificationDialog(BuildContext context, MarketingCubit cubit) {
     showDialog(
       context: context,
-      builder: (diagContext) =>
-          NotificationDialog(onSend: (n) => cubit.sendNotification(n)),
+      builder: (diagContext) => NotificationDialog(
+        onSend: (n) => cubit.sendNotification(n),
+      ),
     );
   }
 
-  void _confirmDelete(
-    BuildContext context,
-    MarketingCubit cubit,
-    PromoEntity promo, {
-    String? loungeId,
-  }) {
+  void _confirmDelete(BuildContext context, MarketingCubit cubit, PromoEntity promo, {String? loungeId}) {
     final title = promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn;
     showDialog(
       context: context,
       builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
         title: Text(
           AppStrings.deleteConfirmation,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
         ),
         content: Text(
           '${AppStrings.deleteWarning} "$title"؟',
