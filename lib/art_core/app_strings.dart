@@ -1529,5 +1529,42 @@ class AppStrings {
   static String get confirmRejectPaymentProof =>
       'confirm_reject_payment_proof'.tr();
 
+  // Audit Feature
+  static String get auditLogs => 'audit_logs'.tr();
+  static String get auditTitle => 'audit_title'.tr();
+  static String get entityType => 'entity_type'.tr();
+  static String get severity => 'severity'.tr();
+  static String get allEntities => 'all_entities'.tr();
+  static String get allSeverities => 'all_severities'.tr();
+  static String get severityCritical => 'severity_critical'.tr();
+  static String get severityWarning => 'severity_warning'.tr();
+  static String get severityInfo => 'severity_info'.tr();
+  static String get actor => 'actor'.tr();
+  static String get action => 'action'.tr();
+  static String get eventId => 'event_id'.tr();
+  static String get eventDetails => 'event_details'.tr();
+  static String get fieldChanges => 'field_changes'.tr();
+  static String get oldValue => 'old_value'.tr();
+  static String get newValue => 'new_value'.tr();
+  static String get reason => 'reason'.tr();
+  static String get noReasonProvided => 'no_reason_provided'.tr();
+  static String get copyEventId => 'copy_event_id'.tr();
+  static String get eventIdCopied => 'event_id_copied'.tr();
+  static String get exportCsv => 'export_csv'.tr();
+  static String get exportingCsv => 'exporting_csv'.tr();
+  static String get csvExportedSuccess => 'csv_exported_success'.tr();
+  static String get searchBookingId => 'search_booking_id'.tr();
+  static String get searchUser => 'search_user'.tr();
+  static String get auditTimeline => 'audit_timeline'.tr();
+  static String get noAuditLogs => 'no_audit_logs'.tr();
+  static String get noAuditLogsDesc => 'no_audit_logs_desc'.tr();
+  static String get accessDeniedAudit => 'access_denied_audit'.tr();
+  static String get bookingEntity => 'booking_entity'.tr();
+  static String get shiftEntity => 'shift_entity'.tr();
+  static String get roomEntity => 'room_entity'.tr();
+  static String get systemEntity => 'system_entity'.tr();
+  static String get loungeEntity => 'lounge_entity'.tr();
+  static String get userEntity => 'user_entity'.tr();
+
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

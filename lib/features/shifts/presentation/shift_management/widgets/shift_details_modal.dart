@@ -79,7 +79,7 @@ class _ShiftDetailsModalState extends State<ShiftDetailsModal> with SingleTicker
                   const ShiftExpensesTab(),
                   const ShiftPaymentsTab(),
                   const ShiftBookingsTab(),
-                  const ShiftAuditLogsTab(),
+                  ShiftAuditLogsTab(shiftId: widget.shift.id),
                 ],
               ),
             ),

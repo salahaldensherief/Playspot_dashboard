@@ -28,6 +28,7 @@ import 'package:play_spot_dashboard/features/reviews/reviews_di.dart';
 import 'package:play_spot_dashboard/features/tournaments/tournaments_di.dart';
 import 'package:play_spot_dashboard/features/support/support_di.dart';
 import 'package:play_spot_dashboard/features/system/system_di.dart';
+import 'package:play_spot_dashboard/features/audit/audit_di.dart';
 
 final sl = GetIt.instance;
 
@@ -79,4 +80,5 @@ Future<void> setupInjection() async {
   initTournamentsDI(sl);
   initSupportDI(sl);
   initSystemDI(sl);
+  initAuditDI(sl);
 }

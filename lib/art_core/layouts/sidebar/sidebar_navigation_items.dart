@@ -102,6 +102,10 @@ class SidebarNavigationItems extends StatelessWidget {
     final canManageStaff = context.hasPermission('staff_management');
     final canViewShiftHistory = context.hasPermission('shifts_view');
     final canViewReports = context.hasPermission('reports_view');
+    final canViewAudit = user.isSuperAdmin ||
+        user.isOwner ||
+        context.hasPermission('audit.view') ||
+        context.hasPermission('audit_view');
     final canEditLoungeProfile = context.hasPermission('lounge_profile_edit');
 
     return [
@@ -173,6 +177,13 @@ class SidebarNavigationItems extends StatelessWidget {
           label: AppStrings.monthlyReports,
           isActive: activeRoute == RouterKeys.loungeAdminReports,
           onTap: () => context.go(RouterKeys.loungeAdminReports),
+        ),
+      if (canViewAudit)
+        SidebarItem(
+          icon: Icons.history_edu_rounded,
+          label: AppStrings.auditLogs,
+          isActive: activeRoute == RouterKeys.loungeAdminAudit,
+          onTap: () => context.go(RouterKeys.loungeAdminAudit),
         ),
       if (canEditLoungeProfile)
         SidebarItem(

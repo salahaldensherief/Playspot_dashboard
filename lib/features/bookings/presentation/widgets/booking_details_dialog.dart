@@ -9,7 +9,7 @@ import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.da
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_status_badge.dart';
-import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_timeline_widget.dart';
+import 'package:play_spot_dashboard/features/audit/presentation/widgets/audit_timeline.dart';
 import 'booking_details_action_panel.dart';
 import 'booking_details_customer_card.dart';
 import 'booking_details_financial_summary.dart';
@@ -197,8 +197,10 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                                     BookingDetailsCustomerCard(
                                         booking: currentBooking),
                                     SizedBox(height: 12.h),
-                                    BookingTimelineWidget(
-                                        booking: currentBooking),
+                                    AuditTimeline(
+                                      entityType: 'booking',
+                                      entityId: currentBooking.id,
+                                    ),
                                     SizedBox(height: 12.h),
                                     BookingSpecificationsCard(
                                         booking: currentBooking),
@@ -239,8 +241,10 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                               BookingDetailsCustomerCard(
                                   booking: currentBooking),
                               SizedBox(height: 12.h),
-                              BookingTimelineWidget(
-                                  booking: currentBooking),
+                              AuditTimeline(
+                                entityType: 'booking',
+                                entityId: currentBooking.id,
+                              ),
                               SizedBox(height: 12.h),
                               BookingSpecificationsCard(
                                   booking: currentBooking),

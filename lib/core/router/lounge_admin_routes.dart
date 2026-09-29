@@ -40,6 +40,8 @@ import 'package:play_spot_dashboard/features/tournaments/presentation/tournament
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_participants_cubit.dart';
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournaments_screen.dart'
     as tournaments;
+import 'package:play_spot_dashboard/features/audit/presentation/audit_screen.dart'
+    as audit;
 
 List<RouteBase> getLoungeAdminRoutes(LoginCubit authCubit) {
   return [
@@ -117,6 +119,11 @@ List<RouteBase> getLoungeAdminRoutes(LoginCubit authCubit) {
       path: RouterKeys.loungeAdminReports,
       pageBuilder: (context, state) =>
           const NoTransitionPage(child: reports.BookingHistoryPage()),
+    ),
+    GoRoute(
+      path: RouterKeys.loungeAdminAudit,
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: audit.AuditScreen()),
     ),
     GoRoute(
       path: RouterKeys.loungeAdminShifts,
