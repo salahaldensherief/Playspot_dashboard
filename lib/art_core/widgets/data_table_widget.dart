@@ -20,57 +20,159 @@ class DataTableWidget extends StatelessWidget {
     final isMobile = AppBreakpoints.isMobile(context);
 
     final cardBuilder = mobileCardBuilder;
-    if (isMobile && cardBuilder != null && rows.isNotEmpty) {
+    if (isMobile && rows.isNotEmpty) {
       return ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: rows.length,
         separatorBuilder: (_, _) => SizedBox(height: 12.h),
-        itemBuilder: (context, index) => cardBuilder(context, index),
+        itemBuilder: (context, index) => cardBuilder != null
+            ? cardBuilder(context, index)
+            : _buildDefaultMobileCard(context, index),
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.borderDefault),
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          dividerColor: AppColors.divider,
-        ),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minWidth: isMobile
-                  ? MediaQuery.sizeOf(context).width - 32.w
-                  : MediaQuery.sizeOf(context).width - 310.w,
-            ),
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
-              horizontalMargin: 16.w,
-              columnSpacing: 16.w,
-              headingRowHeight: 52.h,
-              dataRowMinHeight: 60.h,
-              dataRowMaxHeight: 80.h,
-              columns: columns
-                  .map((col) => DataColumn(
-                        label: Text(
-                          col,
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13.sp,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+
+        return Container(
+          width: double.infinity,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(8.r),
+            border: Border.all(color: AppColors.borderDefault),
+          ),
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: AppColors.divider),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: availableWidth),
+                child: DataTable(
+                  showCheckboxColumn: false,
+                  headingRowColor: WidgetStateProperty.all(
+                    AppColors.mutedBackground,
+                  ),
+                  dataRowColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.hovered)) {
+                      return AppColors.mutedBackground;
+                    }
+                    return Colors.transparent;
+                  }),
+                  dividerThickness: 0.7,
+                  horizontalMargin: 20.w,
+                  columnSpacing: 28.w,
+                  headingRowHeight: 52.h,
+                  dataRowMinHeight: 58.h,
+                  dataRowMaxHeight: 84.h,
+                  columns: columns
+                      .map(
+                        (col) => DataColumn(
+                          label: Text(
+                            col,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13.sp,
+                            ),
                           ),
                         ),
-                      ))
-                  .toList(),
-              rows: rows,
+                      )
+                      .toList(),
+                  rows: rows,
+                ),
+              ),
             ),
           ),
-        ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDefaultMobileCard(BuildContext context, int index) {
+    final row = rows[index];
+    final cellCount = row.cells.length < columns.length
+        ? row.cells.length
+        : columns.length;
+
+    final card = Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(14.r),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            columns.first,
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11.sp,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: 6.h),
+          DefaultTextStyle.merge(
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w700,
+            ),
+            child: row.cells.first.child,
+          ),
+          if (cellCount > 1) ...[
+            Divider(height: 24.h, color: AppColors.divider),
+            for (var cellIndex = 1; cellIndex < cellCount; cellIndex++)
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: cellIndex == cellCount - 1 ? 0 : 12.h,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 112.w,
+                      child: Text(
+                        columns[cellIndex],
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: row.cells[cellIndex].child,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+
+    if (row.onSelectChanged == null) return card;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8.r),
+        onTap: () => row.onSelectChanged!(true),
+        child: card,
       ),
     );
   }
