@@ -5,6 +5,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/di/provider_scope.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
@@ -263,11 +264,24 @@ class StationControlDrawer extends StatelessWidget {
         border: Border(top: BorderSide(color: AppColors.borderDefault)),
       ),
       child: AppButton(
-        onPressed: onEndSession ??
-            () {
-              context.read<DashboardCubit>().endSession(targetBooking.id);
+        onPressed: () async {
+          final confirmed = await AppDialog.confirm(
+            context: context,
+            title: AppStrings.confirmEndSession,
+            message: AppStrings.confirmEndSessionMessage,
+            confirmText: AppStrings.endSession,
+            cancelText: AppStrings.cancel,
+            confirmColor: AppColors.danger,
+          );
+          if (confirmed == true && context.mounted) {
+            if (onEndSession != null) {
+              onEndSession!();
+            } else {
+              await context.read<DashboardCubit>().endSession(targetBooking.id);
               onClose();
-            },
+            }
+          }
+        },
         text: '${AppStrings.endSession} (${totalBalance.toStringAsFixed(2)} ${AppStrings.egp})',
         backgroundColor: AppColors.danger,
         height: 42.h,

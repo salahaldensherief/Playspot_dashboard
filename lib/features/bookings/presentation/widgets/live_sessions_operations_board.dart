@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_empty_state_widget.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_section_header.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_card.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_session_card.dart';
@@ -196,69 +198,12 @@ class _OperationsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 36.r,
-              height: 36.r,
-              decoration: BoxDecoration(
-                color: data.color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: data.color.withValues(alpha: 0.28)),
-              ),
-              child: Icon(data.icon, size: 19.r, color: data.color),
-            ),
-            SizedBox(width: 10.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          data.title,
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 7.w,
-                          vertical: 2.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: data.color.withValues(alpha: 0.13),
-                          borderRadius: BorderRadius.circular(6.r),
-                        ),
-                        child: Text(
-                          '${data.bookings.length}',
-                          style: TextStyle(
-                            color: data.color,
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    data.subtitle,
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11.sp,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+        AppSectionHeader(
+          title: data.title,
+          subtitle: data.subtitle,
+          icon: data.icon,
+          iconColor: data.color,
+          badgeCount: data.bookings.length,
         ),
         SizedBox(height: 12.h),
         LayoutBuilder(
@@ -309,30 +254,14 @@ class _EmptyOperationsState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 44.h),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(8.r),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: AppColors.borderDefault),
       ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.check_circle_outline_rounded,
-            size: 38.r,
-            color: AppColors.neonGreen,
-          ),
-          SizedBox(height: 10.h),
-          Text(
-            AppStrings.noSessionsInOperations,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+      child: AppEmptyStateWidget(
+        icon: Icons.check_circle_outline_rounded,
+        title: AppStrings.noSessionsInOperations,
       ),
     );
   }

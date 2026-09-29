@@ -4,7 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_icon_badge.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
@@ -25,67 +26,42 @@ class LiveSessionCardActions extends StatelessWidget {
     this.onExtendMinutes,
   });
 
-  void _handleEndSession(BuildContext context) {
+  Future<void> _handleEndSession(BuildContext context) async {
     if (onEndSession != null) {
       onEndSession!();
       return;
     }
 
-    final dashboardCubit = context.read<DashboardCubit>();
-    final bookingCubit = context.read<BookingCubit>();
-
-    showDialog(
+    final confirmed = await AppDialog.confirm(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-        title: Row(
-          children: [
-            const Icon(Icons.stop_circle, color: AppColors.danger),
-            SizedBox(width: 8.w),
-            Expanded(
-              child: AppText.subHeading(
-                AppStrings.confirmEndSession,
-                color: AppColors.danger,
-                fontSize: 16.sp,
-              ),
-            ),
-          ],
-        ),
-        content: AppText.body(
-          AppStrings.confirmEndSessionMessage,
-          fontSize: 13.sp,
-          color: AppColors.textPrimary,
-        ),
-        actions: [
-          AppButton(
-            text: AppStrings.cancel,
-            variant: AppButtonVariant.text,
-            onPressed: () => Navigator.of(dialogContext).pop(),
-          ),
-          AppButton(
-            text: AppStrings.endSession,
-            variant: AppButtonVariant.danger,
-            onPressed: () async {
-              Navigator.of(dialogContext).pop();
-              final success = await dashboardCubit.endSession(booking.id);
-              if (!success) {
-                await bookingCubit.changeBookingStatus(booking.id, BookingStatus.completed);
-              }
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(AppStrings.sessionEndedSuccess),
-                    backgroundColor: AppColors.success,
-                    duration: const Duration(seconds: 3),
-                  ),
-                );
-              }
-            },
-          ),
-        ],
-      ),
+      title: AppStrings.confirmEndSession,
+      message: AppStrings.confirmEndSessionMessage,
+      confirmText: AppStrings.endSession,
+      cancelText: AppStrings.cancel,
+      confirmColor: AppColors.danger,
     );
+
+    if (confirmed == true && context.mounted) {
+      final dashboardCubit = context.read<DashboardCubit>();
+      final bookingCubit = context.read<BookingCubit>();
+
+      final success = await dashboardCubit.endSession(booking.id);
+      if (!success) {
+        await bookingCubit.changeBookingStatus(
+          booking.id,
+          BookingStatus.completed,
+        );
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppStrings.sessionEndedSuccess),
+            backgroundColor: AppColors.success,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   void _showAddExtrasDialog(BuildContext context) {
@@ -129,22 +105,13 @@ class LiveSessionCardActions extends StatelessWidget {
           ),
         ),
         SizedBox(width: 6.w),
-        Tooltip(
-          message: AppStrings.addExtrasToSession,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(8.r),
-            onTap: () => _showAddExtrasDialog(context),
-            child: Container(
-              width: h,
-              height: h,
-              decoration: BoxDecoration(
-                color: AppColors.neonCyan.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.35)),
-              ),
-              child: Icon(Icons.add_shopping_cart, size: 17.r, color: AppColors.neonCyan),
-            ),
-          ),
+        AppIconBadge(
+          icon: Icons.add_shopping_cart,
+          color: AppColors.neonCyan,
+          size: h,
+          iconSize: 17.r,
+          tooltip: AppStrings.addExtrasToSession,
+          onTap: () => _showAddExtrasDialog(context),
         ),
         SizedBox(width: 6.w),
         Expanded(

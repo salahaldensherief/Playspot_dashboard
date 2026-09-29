@@ -1162,6 +1162,7 @@
   "upcoming_sessions": "الجلسات الجاية",
   "upcoming_sessions_subtitle": "حجوزات مؤكدة مستنية ميعاد البداية",
   "no_sessions_in_operations": "لا توجد جلسات نشطة أو قادمة حاليًا",
+  "no_matching_bookings": "لا توجد حجوزات أو طلبات مطابقة في هذا التبويب",
   "growth_opportunities": "فرص النمو والتشغيل",
   "pending_payment_proofs": "إيصالات دفع معلقة",
   "canteen_revenue": "إيرادات الكانتين",
