@@ -67,23 +67,8 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
           .map((json) => PromoModel.fromJson(Map<String, dynamic>.from(json)))
           .toList();
     } catch (e) {
-      debugPrint(
-        '⚠️ [MARKETING_REMOTE] getPromotions error: $e, attempting plain select fallback',
-      );
-      try {
-        final response = await _supabase
-            .from('promotions')
-            .select()
-            .order('created_at', ascending: false);
-        return (response as List)
-            .map((json) => PromoModel.fromJson(Map<String, dynamic>.from(json)))
-            .toList();
-      } catch (e2) {
-        debugPrint(
-          '⚠️ [MARKETING_REMOTE] getPromotions plain fallback error: $e2',
-        );
-        return [];
-      }
+      debugPrint('[MARKETING_REMOTE] getPromotions error: $e');
+      rethrow;
     }
   }
 

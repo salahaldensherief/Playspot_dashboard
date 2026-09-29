@@ -80,13 +80,13 @@ class MarketingCubit extends Cubit<MarketingState> {
     );
   }
 
-  Future<void> createPromotion(PromoEntity promo) async {
+  Future<bool> createPromotion(PromoEntity promo) async {
     emit(state.copyWith(status: MarketingStatus.loading));
     final result = (promo.id.isNotEmpty)
         ? await _updatePromotionUseCase(promo)
         : await _createPromotionUseCase(promo);
-    if (isClosed) return;
-    result.fold(
+    if (isClosed) return false;
+    return result.fold(
       (failure) {
         AppLogger.error('Create/update promotion error: ${failure.message}');
         emit(
@@ -95,10 +95,12 @@ class MarketingCubit extends Cubit<MarketingState> {
             errorMessage: failure.message,
           ),
         );
+        return false;
       },
       (_) {
         emit(state.copyWith(status: MarketingStatus.actionSuccess));
         loadPromotions(loungeId: promo.loungeId);
+        return true;
       },
     );
   }

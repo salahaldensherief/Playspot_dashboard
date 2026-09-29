@@ -128,6 +128,23 @@ class _MarketingViewState extends State<MarketingView> {
         if (state.status == MarketingStatus.loading) {
           return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
         }
+        if (state.status == MarketingStatus.failure && state.promotions.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(state.errorMessage ?? AppStrings.promoPublishError,
+                    style: const TextStyle(color: AppColors.textSecondary)),
+                SizedBox(height: 12.h),
+                AppButton(
+                  text: AppStrings.refresh,
+                  icon: Icons.refresh,
+                  onPressed: _reloadPromotions,
+                ),
+              ],
+            ),
+          );
+        }
 
         final now = DateTime.now();
         var promos = state.promotions;
@@ -150,19 +167,23 @@ class _MarketingViewState extends State<MarketingView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Status and Tag Filter Chips Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    _buildStatusChip(AppStrings.all, 'All'),
-                    SizedBox(width: 8.w),
-                    _buildStatusChip(AppStrings.active, 'Active'),
-                    SizedBox(width: 8.w),
-                    _buildStatusChip(AppStrings.timeExpired, 'Expired'),
-                  ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildStatusChip(AppStrings.all, 'All'),
+                      SizedBox(width: 8.w),
+                      _buildStatusChip(AppStrings.active, 'Active'),
+                      SizedBox(width: 8.w),
+                      _buildStatusChip(AppStrings.timeExpired, 'Expired'),
+                    ],
+                  ),
                 ),
-                if (tags.length > 1)
+                if (tags.length > 1) ...[
+                  SizedBox(height: 6.h),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
@@ -182,6 +203,7 @@ class _MarketingViewState extends State<MarketingView> {
                       }).toList(),
                     ),
                   ),
+                ],
               ],
             ),
             SizedBox(height: 20.h),
@@ -279,9 +301,7 @@ class _MarketingViewState extends State<MarketingView> {
         ],
         child: PromoDialog(
           promo: promo,
-          onSave: (updatedPromo) {
-            cubit.createPromotion(updatedPromo);
-          },
+          onSave: cubit.createPromotion,
         ),
       ),
     );
