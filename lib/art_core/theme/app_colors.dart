@@ -10,6 +10,11 @@ class AppColors {
   static const Color neonPurple = Color(0xFFA855F7); // secondary accent
   static const Color neonCyan = Color(0xFF22D3EE);
   static const Color neonGreen = Color(0xFF10B981);
+
+  static const Color primary = neonBlue;
+  static const Color secondary = neonPurple;
+  static const Color accent = neonCyan;
+  static const Color error = danger;
   
   static const Color textPrimary = Color(0xFFFFFFFF);
   static const Color textSecondary = Color(0xFF9CA3AF);

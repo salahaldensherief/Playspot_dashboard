@@ -35,6 +35,7 @@ import 'package:play_spot_dashboard/features/reviews/presentation/reviews_cubit.
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/system/presentation/cubit/app_status_cubit.dart';
+import 'package:play_spot_dashboard/features/canteen/presentation/canteen_cubit.dart';
 
 @JS('removeSplash')
 external void _removeWebSplash();
@@ -121,6 +122,7 @@ class AppRouter {
                     create: (_) => sl<DashboardCubit>(),
                   ),
                   BlocProvider<ExtrasCubit>(create: (_) => sl<ExtrasCubit>()),
+                  BlocProvider<CanteenCubit>(create: (_) => sl<CanteenCubit>()),
                   BlocProvider<ReviewsCubit>(create: (_) => sl<ReviewsCubit>()),
                   BlocProvider<ClientRequestsCubit>.value(
                     value: sl<ClientRequestsCubit>(),

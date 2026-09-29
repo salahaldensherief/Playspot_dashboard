@@ -75,6 +75,22 @@ class CanteenItemExtractor {
       itemMap['total_price'] = itemMap['total_price'] ??
           ((itemMap['quantity'] as num).toInt() * (itemMap['price'] as num).toDouble());
       itemMap['extra_id'] = (itemMap['extra_id'] ?? itemMap['product_id'] ?? itemMap['id'])?.toString();
+      itemMap['line_kind'] = (itemMap['line_kind'] ?? (itemMap['combo_id'] != null ? 'combo_parent' : 'item')).toString();
+      itemMap['combo_id'] = itemMap['combo_id']?.toString();
+      itemMap['combo_line_id'] = itemMap['combo_line_id']?.toString();
+
+      final dynamic stockQty = itemMap['stock_quantity'] ?? (extraObj is Map ? extraObj['stock_quantity'] : null);
+      final dynamic minStock = itemMap['min_stock_alert'] ?? (extraObj is Map ? extraObj['min_stock_alert'] : 5);
+      final dynamic trackStock = itemMap['track_stock'] ?? (extraObj is Map ? extraObj['track_stock'] : false);
+
+      itemMap['stock_quantity'] = stockQty is num ? stockQty.toInt() : null;
+      itemMap['min_stock_alert'] = minStock is num ? minStock.toInt() : 5;
+      itemMap['track_stock'] = trackStock == true;
+
+      final bool isLow = trackStock == true &&
+          stockQty is num &&
+          stockQty <= (minStock is num ? minStock : 5);
+      itemMap['is_low_stock'] = isLow;
 
       targetList.add(itemMap);
     }

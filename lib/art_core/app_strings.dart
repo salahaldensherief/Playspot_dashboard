@@ -1600,6 +1600,54 @@ class AppStrings {
   static String get groupedBySpaceType => 'grouped_by_space_type'.tr();
   static String get groupedByRoom => 'grouped_by_room'.tr();
   static String get priceRangeLabel => 'price_range_label'.tr();
+  static String get pricingManage => 'pricing_manage'.tr();
+
+  // Canteen Combos & Upsell
+  static String get combosManager => 'combos_manager'.tr();
+  static String get addCombo => 'add_combo'.tr();
+  static String get editCombo => 'edit_combo'.tr();
+  static String get comboNameAr => 'combo_name_ar'.tr();
+  static String get comboNameEn => 'combo_name_en'.tr();
+  static String get comboDescAr => 'combo_desc_ar'.tr();
+  static String get comboDescEn => 'combo_desc_en'.tr();
+  static String get comboItemsSelector => 'combo_items_selector'.tr();
+  static String get addItemToCombo => 'add_item_to_combo'.tr();
+  static String get selectExtra => 'select_extra'.tr();
+  static String get separateItemsTotal => 'separate_items_total'.tr();
+  static String get bundlePrice => 'bundle_price'.tr();
+  static String get profitMargin => 'profit_margin'.tr();
+  static String get savingsBadge => 'savings_badge'.tr();
+  static String get availableDays => 'available_days'.tr();
+  static String get availableHours => 'available_hours'.tr();
+  static String get allDays => 'all_days'.tr();
+  static String get allHours => 'all_hours'.tr();
+  static String get comboImageUrl => 'combo_image_url'.tr();
+  static String get noCombosFound => 'no_combos_found'.tr();
+  static String get upsellRulesManager => 'upsell_rules_manager'.tr();
+  static String get addUpsellRule => 'add_upsell_rule'.tr();
+  static String get editUpsellRule => 'edit_upsell_rule'.tr();
+  static String get triggerTemplate => 'trigger_template'.tr();
+  static String get triggerSessionMinutes => 'trigger_session_minutes'.tr();
+  static String get triggerTimeOfDay => 'trigger_time_of_day'.tr();
+  static String get triggerCartCategory => 'trigger_cart_category'.tr();
+  static String get triggerRoomType => 'trigger_room_type'.tr();
+  static String get triggerSessionStart => 'trigger_session_start'.tr();
+  static String get suggestedItemOrCombo => 'suggested_item_or_combo'.tr();
+  static String get discountPercentOptional => 'discount_percent_optional'.tr();
+  static String get maxImpressions => 'max_impressions'.tr();
+  static String get upsellPerformance => 'upsell_performance'.tr();
+  static String get impressionsCount => 'impressions_count'.tr();
+  static String get conversionsCount => 'conversions_count'.tr();
+  static String get conversionRate => 'conversion_rate'.tr();
+  static String get revenueGenerated => 'revenue_generated'.tr();
+  static String get lowStockWarning => 'low_stock_warning'.tr();
+  static String get expandComboComponents => 'expand_combo_components'.tr();
+  static String get combosTab => 'combos_tab'.tr();
+  static String get singleItemsTab => 'single_items_tab'.tr();
+  static String get upsellTab => 'upsell_tab'.tr();
+  static String get save => saveChanges;
+  static String get required => fieldRequired;
+  static String get priority => sortOrderPriority;
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

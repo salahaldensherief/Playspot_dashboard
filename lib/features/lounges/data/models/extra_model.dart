@@ -15,6 +15,7 @@ class ExtraModel extends ExtraEntity {
     super.stockQuantity,
     super.trackStock,
     super.minStockAlert,
+    super.costPrice,
   });
 
   factory ExtraModel.fromJson(Map<String, dynamic> json) {
@@ -39,6 +40,7 @@ class ExtraModel extends ExtraEntity {
       stockQuantity: (json['stock_quantity'] as num?)?.toInt() ?? 0,
       trackStock: json['track_stock'] ?? false,
       minStockAlert: (json['min_stock_alert'] as num?)?.toInt() ?? 5,
+      costPrice: (json['cost_price'] as num?)?.toDouble(),
     );
   }
 
@@ -60,6 +62,7 @@ class ExtraModel extends ExtraEntity {
       'stock_quantity': stockQuantity,
       'track_stock': trackStock,
       'min_stock_alert': minStockAlert,
+      if (costPrice != null) 'cost_price': costPrice,
     };
   }
 }
