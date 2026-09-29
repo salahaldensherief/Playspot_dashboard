@@ -1241,5 +1241,17 @@
   "audit_timeline_title": "Audit Timeline & Loss Prevention",
   "audit_timeline_desc": "Session time adjustment logs and cashier cash discrepancy tracking",
   "corporate_events_title": "Corporate & Birthday Events",
-  "corporate_events_desc": "Whole-lounge bookings, custom catering packages, and private events"
+  "corporate_events_desc": "Whole-lounge bookings, custom catering packages, and private events",
+  "payment_method_wallet": "Wallet Transfer",
+  "payment_method_cash": "Cash",
+  "payment_method_instapay": "InstaPay",
+  "payment_method_card": "Card",
+  "booking_timeline": "Booking Timeline",
+  "booking_created": "Booking Placed",
+  "session_started": "Session Started",
+  "booking_completed_timeline": "Session Completed",
+  "booking_cancelled_timeline": "Cancelled",
+  "room_base_price": "Base Room Price",
+  "final_total_due": "Total Amount Due",
+  "financial_summary": "Financial Summary"
 }

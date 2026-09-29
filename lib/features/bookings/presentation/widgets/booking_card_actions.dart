@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/start_session_button.dart';
@@ -36,68 +36,32 @@ class BookingCardActions extends StatelessWidget {
     this.onNoShow,
   });
 
-  void _showNoShowConfirmDialog(BuildContext context) {
-    showDialog(
+  Future<void> _showNoShowConfirmDialog(BuildContext context) async {
+    final confirmed = await AppDialog.confirm(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        title: Row(
-          children: [
-            const Icon(Icons.person_off, color: AppColors.danger),
-            SizedBox(width: 8.w),
-            Expanded(
-              child: AppText.subHeading(
-                AppStrings.confirmNoShow,
-                color: AppColors.danger,
-                fontSize: 15.sp,
-              ),
-            ),
-          ],
-        ),
-        content: AppText.body(
-          AppStrings.confirmNoShowMessage,
-          fontSize: 12.sp,
-          color: AppColors.textPrimary,
-        ),
-        actions: [
-          AppButton(
-            text: AppStrings.cancel,
-            variant: AppButtonVariant.text,
-            onPressed: () => Navigator.of(dialogContext).pop(),
-          ),
-          AppButton(
-            text: AppStrings.markNoShow,
-            variant: AppButtonVariant.danger,
-            onPressed: () async {
-              Navigator.of(dialogContext).pop();
-              final cubit = context.read<BookingCubit>();
-              final success = await cubit.markNoShow(booking.id);
-              if (onNoShow != null) {
-                onNoShow!();
-              }
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      success
-                          ? AppStrings.noShowSuccess
-                          : AppStrings.noShowFailed,
-                    ),
-                    backgroundColor: success
-                        ? AppColors.success
-                        : AppColors.danger,
-                    duration: const Duration(seconds: 3),
-                  ),
-                );
-              }
-            },
-          ),
-        ],
-      ),
+      title: AppStrings.confirmNoShow,
+      message: AppStrings.confirmNoShowMessage,
+      confirmText: AppStrings.markNoShow,
+      confirmColor: AppColors.danger,
     );
+    if (confirmed == true && context.mounted) {
+      final cubit = context.read<BookingCubit>();
+      final success = await cubit.markNoShow(booking.id);
+      if (onNoShow != null) {
+        onNoShow!();
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              success ? AppStrings.noShowSuccess : AppStrings.noShowFailed,
+            ),
+            backgroundColor: success ? AppColors.success : AppColors.danger,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   @override

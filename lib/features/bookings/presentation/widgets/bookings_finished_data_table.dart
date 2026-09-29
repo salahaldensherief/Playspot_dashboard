@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
-import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+import 'package:play_spot_dashboard/art_core/widgets/payment_method_badge.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 
@@ -70,11 +70,9 @@ class BookingsFinishedDataTable extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               )),
-              DataCell(StatusBadge(
-                text: b.paymentMethod == 'manual_transfer' ? 'محفظة' : 'كاش',
-                color: b.paymentMethod == 'manual_transfer'
-                    ? AppColors.neonBlue
-                    : AppColors.warning,
+              DataCell(PaymentMethodBadge.fromBookingPaymentMethod(
+                b.paymentMethod,
+                compact: true,
               )),
               DataCell(
                 Row(

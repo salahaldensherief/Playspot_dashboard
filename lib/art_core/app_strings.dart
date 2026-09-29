@@ -1495,5 +1495,21 @@ class AppStrings {
   static String get corporateEventsTitle => 'corporate_events_title'.tr();
   static String get corporateEventsDesc => 'corporate_events_desc'.tr();
 
+  // Payment Methods
+  static String get paymentMethodWallet => 'payment_method_wallet'.tr();
+  static String get paymentMethodCash => 'payment_method_cash'.tr();
+  static String get paymentMethodInstapay => 'payment_method_instapay'.tr();
+  static String get paymentMethodCard => 'payment_method_card'.tr();
+
+  // Booking Timeline
+  static String get bookingTimeline => 'booking_timeline'.tr();
+  static String get bookingCreated => 'booking_created'.tr();
+  static String get sessionStarted => 'session_started'.tr();
+  static String get bookingCompletedTimeline => 'booking_completed_timeline'.tr();
+  static String get bookingCancelledTimeline => 'booking_cancelled_timeline'.tr();
+  static String get roomBasePrice => 'room_base_price'.tr();
+  static String get finalTotalDue => 'final_total_due'.tr();
+  static String get financialSummary => 'financial_summary'.tr();
+
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

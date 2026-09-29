@@ -1241,5 +1241,17 @@
   "audit_timeline_title": "سجل التدقيق ومنع الهدر",
   "audit_timeline_desc": "متابعة تعديلات وقت الجلسات وفروقات الكاش لحظة بلحظة",
   "corporate_events_title": "الفعاليات الخاصة وأعياد الميلاد",
-  "corporate_events_desc": "حجز الصالة بالكامل وباقات الفعاليات المخصصة والضيافة"
+  "corporate_events_desc": "حجز الصالة بالكامل وباقات الفعاليات المخصصة والضيافة",
+  "payment_method_wallet": "تحويل محفظة",
+  "payment_method_cash": "كاش",
+  "payment_method_instapay": "إنستاباي",
+  "payment_method_card": "بطاقة بنكية",
+  "booking_timeline": "الجدول الزمني للحجز",
+  "booking_created": "تم إنشاء الحجز",
+  "session_started": "بدء الجلسة",
+  "booking_completed_timeline": "اكتملت الجلسة",
+  "booking_cancelled_timeline": "تم الإلغاء",
+  "room_base_price": "سعر الغرفة الأساسي",
+  "final_total_due": "الإجمالي النهائي المطلوب",
+  "financial_summary": "ملخص الحساب والفاتورة"
 }

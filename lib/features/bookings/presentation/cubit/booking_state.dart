@@ -34,9 +34,16 @@ class BookingState extends Equatable {
       .where((b) => b.isBookingActive() || (b.status == BookingStatus.upcoming && !b.isSessionExpired()))
       .toList();
 
-  /// Pending Bookings: waiting for approval
+  /// Pending Bookings: waiting for approval or transfer verification
   List<Booking> get pendingBookings => bookings
-      .where((b) => b.status == BookingStatus.pending)
+      .where((b) =>
+          b.status == BookingStatus.pending ||
+          b.status == BookingStatus.pendingVerification)
+      .toList();
+
+  /// Upcoming Bookings: confirmed upcoming bookings not yet started
+  List<Booking> get upcomingBookings => bookings
+      .where((b) => b.status == BookingStatus.upcoming && !b.isSessionExpired())
       .toList();
 
   /// Cancelled Bookings: bookings with status == BookingStatus.cancelled

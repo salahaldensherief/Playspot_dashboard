@@ -117,7 +117,9 @@ class BookingsCockpitTabs extends StatelessWidget {
                     border: Border.all(color: AppColors.borderDefault),
                   ),
                   child: IconButton(
-                    tooltip: isTableView ? 'عرض كبطاقات' : 'عرض كجدول',
+                    tooltip: isTableView
+                        ? AppStrings.showAsCards
+                        : AppStrings.showAsTable,
                     icon: Icon(
                       isTableView ? Icons.grid_view_rounded : Icons.view_list_rounded,
                       color: AppColors.neonBlue,
