@@ -47,6 +47,25 @@ abstract class BookingRemoteDataSource {
     String? manualDiscountReason,
   });
 
+  Future<Map<String, dynamic>> quoteBookingPrice({
+    required String roomId,
+    required String date,
+    required String startTime,
+    required String endTime,
+    String playMode = 'single',
+    int extraControllers = 0,
+    String? couponCode,
+  });
+
+  Future<List<Map<String, dynamic>>> getRoomSlotsWithPrices({
+    required String roomId,
+    required String date,
+  });
+
+  Future<Map<String, dynamic>> getLoungePriceRange({
+    required String loungeId,
+  });
+
   Future<Map<String, dynamic>> verifyAndHoldSlot({
     required String roomId,
     required DateTime startTime,

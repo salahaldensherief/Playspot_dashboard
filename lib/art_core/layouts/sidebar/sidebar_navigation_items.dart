@@ -106,6 +106,10 @@ class SidebarNavigationItems extends StatelessWidget {
         user.isOwner ||
         context.hasPermission('audit.view') ||
         context.hasPermission('audit_view');
+    final canManagePricing = user.isSuperAdmin ||
+        user.isOwner ||
+        context.hasPermission('pricing.manage') ||
+        context.hasPermission('pricing_manage');
     final canEditLoungeProfile = context.hasPermission('lounge_profile_edit');
 
     return [
@@ -184,6 +188,13 @@ class SidebarNavigationItems extends StatelessWidget {
           label: AppStrings.auditLogs,
           isActive: activeRoute == RouterKeys.loungeAdminAudit,
           onTap: () => context.go(RouterKeys.loungeAdminAudit),
+        ),
+      if (canManagePricing)
+        SidebarItem(
+          icon: Icons.style_rounded,
+          label: AppStrings.pricingEngineTitle,
+          isActive: activeRoute == RouterKeys.loungeAdminPricing,
+          onTap: () => context.go(RouterKeys.loungeAdminPricing),
         ),
       if (canEditLoungeProfile)
         SidebarItem(

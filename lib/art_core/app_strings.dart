@@ -1566,5 +1566,40 @@ class AppStrings {
   static String get loungeEntity => 'lounge_entity'.tr();
   static String get userEntity => 'user_entity'.tr();
 
+  // Pricing Engine & Rules
+  static String get pricingEngineTitle => 'pricing_engine_title'.tr();
+  static String get addPricingRule => 'add_pricing_rule'.tr();
+  static String get editPricingRule => 'edit_pricing_rule'.tr();
+  static String get ruleNameAr => 'rule_name_ar'.tr();
+  static String get ruleNameEn => 'rule_name_en'.tr();
+  static String get ruleType => 'rule_type'.tr();
+  static String get peakHours => 'peak_hours'.tr();
+  static String get offPeakHours => 'off_peak_hours'.tr();
+  static String get standardHours => 'standard_hours'.tr();
+  static String get customRule => 'custom_rule'.tr();
+  static String get daysOfWeek => 'days_of_week'.tr();
+  static String get overnightWarning => 'overnight_warning'.tr();
+  static String get validityPeriod => 'validity_period'.tr();
+  static String get adjustmentType => 'adjustment_type'.tr();
+  static String get multiplier => 'multiplier'.tr();
+  static String get percentage => 'percentage'.tr();
+  static String get fixedRate => 'fixed_rate'.tr();
+  static String get liveQuotePreview => 'live_quote_preview'.tr();
+  static String get weeklyPreview => 'weekly_preview'.tr();
+  static String get conflictingRules => 'conflicting_rules'.tr();
+  static String get openConflictingRule => 'open_conflicting_rule'.tr();
+  static String get confirmSaveRule => 'confirm_save_rule'.tr();
+  static String affectedRoomsNotice(int count) =>
+      'affected_rooms_notice'.tr(namedArgs: {'count': count.toString()});
+  static String get existingBookingsUnaffected =>
+      'existing_bookings_unaffected'.tr();
+  static String get activeStatus => 'active_status'.tr();
+  static String get scheduledStatus => 'scheduled_status'.tr();
+  static String get expiredStatus => 'expired_status'.tr();
+  static String get groupedByLounge => 'grouped_by_lounge'.tr();
+  static String get groupedBySpaceType => 'grouped_by_space_type'.tr();
+  static String get groupedByRoom => 'grouped_by_room'.tr();
+  static String get priceRangeLabel => 'price_range_label'.tr();
+
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }
