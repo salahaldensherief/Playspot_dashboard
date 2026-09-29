@@ -1163,6 +1163,7 @@
   "upcoming_sessions_subtitle": "Approved bookings waiting for their start time",
   "no_sessions_in_operations": "No active or upcoming sessions right now",
   "no_matching_bookings": "No matching bookings or requests found in this tab",
+  "sessions_ending_soon": "Ending Soon",
   "growth_opportunities": "Growth Opportunities",
   "pending_payment_proofs": "Pending Payment Proofs",
   "canteen_revenue": "Canteen Revenue",

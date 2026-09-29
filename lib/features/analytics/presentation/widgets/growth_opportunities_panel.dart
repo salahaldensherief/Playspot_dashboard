@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_section_header.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
 import '../lounge_stats_cubit.dart';
 import '../lounge_stats_state.dart';
@@ -78,28 +78,10 @@ class GrowthOpportunitiesPanel extends StatelessWidget {
   }
 
   Widget _buildHeader() {
-    return Row(
-      children: [
-        Container(
-          padding: EdgeInsets.all(6.r),
-          decoration: BoxDecoration(
-            color: AppColors.neonPurple.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8.r),
-          ),
-          child: Icon(
-            Icons.rocket_launch_outlined,
-            color: AppColors.neonPurple,
-            size: 20.r,
-          ),
-        ),
-        SizedBox(width: 10.w),
-        Expanded(
-          child: AppText.heading(
-            AppStrings.growthOpportunities,
-            fontSize: 16.sp,
-          ),
-        ),
-      ],
+    return AppSectionHeader(
+      title: AppStrings.growthOpportunities,
+      icon: Icons.rocket_launch_outlined,
+      iconColor: AppColors.neonPurple,
     );
   }
 }

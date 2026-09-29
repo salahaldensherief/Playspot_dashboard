@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/widgets/room_status_card.dart';
 import 'chart_card.dart';
 import 'cockpit_kpi_grid.dart';
@@ -23,6 +25,9 @@ class MobileLoungeDashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<LoginCubit>().state.user;
+    final isCashier = user?.isCashier ?? false;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -48,48 +53,56 @@ class MobileLoungeDashboardContent extends StatelessWidget {
         const QuickActionsCard(isSuperAdmin: false),
         SizedBox(height: 12.h),
 
-        // Priority 6: Revenue Intelligence
-        const RepaintBoundary(child: RevenueIntelligenceCard()),
-        SizedBox(height: 12.h),
+        // Priority 6: Revenue Intelligence (Owner / Manager only)
+        if (!isCashier) ...[
+          const RepaintBoundary(child: RevenueIntelligenceCard()),
+          SizedBox(height: 12.h),
+        ],
 
-        // Priority 7: Growth Opportunities
-        const RepaintBoundary(child: GrowthOpportunitiesPanel()),
-        SizedBox(height: 12.h),
+        // Priority 7: Growth Opportunities (Owner / Manager only)
+        if (!isCashier) ...[
+          const RepaintBoundary(child: GrowthOpportunitiesPanel()),
+          SizedBox(height: 12.h),
+        ],
 
         // Priority 8: Room Status
         const RepaintBoundary(child: RoomStatusCard()),
         SizedBox(height: 12.h),
 
-        // Priority 9: PlaySpot OS Capabilities & Modules Launchpad
-        const RepaintBoundary(child: LoungeCapabilitiesGrid()),
-        SizedBox(height: 12.h),
+        // Priority 9: PlaySpot OS Capabilities & Modules Launchpad (Owner / Manager only)
+        if (!isCashier) ...[
+          const RepaintBoundary(child: LoungeCapabilitiesGrid()),
+          SizedBox(height: 12.h),
+        ],
 
         // Priority 10: Recent Activity
         const RepaintBoundary(child: RecentActivityCard()),
-        SizedBox(height: 12.h),
 
-        // Priority 11: Charts
-        SizedBox(
-          height: 220.h,
-          child: ChartCard(
-            title: AppStrings.revenueAnalytics,
-            subtitle: AppStrings.weeklyPerformance,
-            actionIcon: Icons.trending_up,
-            actionIconColor: AppColors.success,
-            chart: const RepaintBoundary(child: RevenueChart()),
+        // Priority 11: Charts (Owner / Manager only)
+        if (!isCashier) ...[
+          SizedBox(height: 12.h),
+          SizedBox(
+            height: 220.h,
+            child: ChartCard(
+              title: AppStrings.revenueAnalytics,
+              subtitle: AppStrings.weeklyPerformance,
+              actionIcon: Icons.trending_up,
+              actionIconColor: AppColors.success,
+              chart: const RepaintBoundary(child: RevenueChart()),
+            ),
           ),
-        ),
-        SizedBox(height: 12.h),
-        SizedBox(
-          height: 220.h,
-          child: ChartCard(
-            title: AppStrings.roomUtilization,
-            subtitle: AppStrings.capacityTracking,
-            actionIcon: Icons.pie_chart_outline,
-            actionIconColor: AppColors.neonPurple,
-            chart: const RepaintBoundary(child: UtilizationChart()),
+          SizedBox(height: 12.h),
+          SizedBox(
+            height: 220.h,
+            child: ChartCard(
+              title: AppStrings.roomUtilization,
+              subtitle: AppStrings.capacityTracking,
+              actionIcon: Icons.pie_chart_outline,
+              actionIconColor: AppColors.neonPurple,
+              chart: const RepaintBoundary(child: UtilizationChart()),
+            ),
           ),
-        ),
+        ],
       ],
     );
   }

@@ -7,9 +7,11 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/art_core/widgets/stat_card.dart';
 import 'package:play_spot_dashboard/core/responsive/responsive.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
+import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import '../dashboard_cubit.dart';
 import '../dashboard_state.dart';
 import '../lounge_stats_cubit.dart';
@@ -173,6 +175,19 @@ class _LoungeOwnerKpiGrid extends StatelessWidget {
 
                 final stats = loungeStatsState.stats;
                 final bookings = bookingState.bookings;
+                final user = context.watch<LoginCubit>().state.user;
+                final isCashier = user?.isCashier ?? false;
+                final reqState = context.watch<ClientRequestsCubit>().state;
+                final int unattendedRequestsCount =
+                    reqState.requests.where((r) => !r.isAttended).length;
+
+                final now = DateTime.now();
+                final int endingSoonCount = bookings.where((b) {
+                  if (!b.isBookingActive() || b.isOpenEnded) return false;
+                  final remaining = b.remainingDuration(now);
+                  return remaining > Duration.zero &&
+                      remaining <= const Duration(minutes: 15);
+                }).length;
 
                 // Today revenue
                 final double todayRevenue =
@@ -236,82 +251,168 @@ class _LoungeOwnerKpiGrid extends StatelessWidget {
                     mainAxisSpacing: 14.h,
                     mainAxisExtent: extent,
                   ),
-                  children: [
-                    // 1. Today Revenue
-                    StatCard(
-                      title: AppStrings.dailyRevenue,
-                      value:
-                          '${todayRevenue.toStringAsFixed(0)} ${AppStrings.egp}',
-                      subtitle: AppStrings.dailyTotal,
-                      trendValue: 0.0,
-                      icon: Icons.payments_outlined,
-                      iconColor: AppColors.neonGreen,
-                    ),
+                  children: isCashier
+                      ? [
+                          // 1. Active Bookings / Sessions
+                          StatCard(
+                            title: AppStrings.activeSessions,
+                            value: '$activeCount',
+                            subtitle: AppStrings.openSessionsCount(activeCount),
+                            trendValue: 0.0,
+                            icon: Icons.sports_esports_outlined,
+                            iconColor: AppColors.neonBlue,
+                          ),
 
-                    // 2. Room Occupancy
-                    StatCard(
-                      title: AppStrings.loungeOccupancy,
-                      value: '${(occupancyRate * 100).toStringAsFixed(0)}%',
-                      subtitle: totalRooms > 0
-                          ? AppStrings.occupiedRoomsSubtitle(
-                              occupiedRooms,
-                              totalRooms,
-                            )
-                          : AppStrings.rooms,
-                      trendValue: 0.0,
-                      icon: Icons.meeting_room_outlined,
-                      iconColor: AppColors.neonPurple,
-                    ),
+                          // 2. Ending Soon
+                          StatCard(
+                            title: AppStrings.sessionsEndingSoon,
+                            value: '$endingSoonCount',
+                            subtitle: endingSoonCount > 0
+                                ? AppStrings.sessionsNeedAttention
+                                : AppStrings.systemHealth,
+                            trendValue: 0.0,
+                            icon: Icons.alarm_on_rounded,
+                            iconColor: endingSoonCount > 0
+                                ? AppColors.warning
+                                : AppColors.neonCyan,
+                          ),
 
-                    // 3. Active Bookings / Sessions
-                    StatCard(
-                      title: AppStrings.activeSessions,
-                      value: '$activeCount',
-                      subtitle: AppStrings.openSessionsCount(activeCount),
-                      trendValue: 0.0,
-                      icon: Icons.sports_esports_outlined,
-                      iconColor: AppColors.neonBlue,
-                    ),
+                          // 3. Room Occupancy
+                          StatCard(
+                            title: AppStrings.loungeOccupancy,
+                            value: totalRooms > 0
+                                ? '$occupiedRooms / $totalRooms'
+                                : '0',
+                            subtitle: totalRooms > 0
+                                ? AppStrings.occupiedRoomsSubtitle(
+                                    occupiedRooms,
+                                    totalRooms,
+                                  )
+                                : AppStrings.rooms,
+                            trendValue: 0.0,
+                            icon: Icons.meeting_room_outlined,
+                            iconColor: AppColors.neonPurple,
+                          ),
 
-                    // 4. Pending Payment Proofs
-                    StatCard(
-                      title: AppStrings.pendingPaymentProofs,
-                      value: '$pendingProofsCount',
-                      subtitle: pendingProofsCount > 0
-                          ? AppStrings.pendingRequests
-                          : AppStrings.systemHealth,
-                      trendValue: 0.0,
-                      icon: Icons.receipt_long_outlined,
-                      iconColor: pendingProofsCount > 0
-                          ? AppColors.warning
-                          : AppColors.textMuted,
-                    ),
+                          // 4. Pending Payment Proofs
+                          StatCard(
+                            title: AppStrings.pendingPaymentProofs,
+                            value: '$pendingProofsCount',
+                            subtitle: pendingProofsCount > 0
+                                ? AppStrings.pendingRequests
+                                : AppStrings.systemHealth,
+                            trendValue: 0.0,
+                            icon: Icons.receipt_long_outlined,
+                            iconColor: pendingProofsCount > 0
+                                ? AppColors.warning
+                                : AppColors.textMuted,
+                          ),
 
-                    // 5. No-Shows / Cancellations
-                    StatCard(
-                      title: AppStrings.noShowsAndCancellations,
-                      value: '$cancellationsCount',
-                      subtitle: cancellationsCount > 0
-                          ? AppStrings.cancelled
-                          : AppStrings.systemHealth,
-                      trendValue: 0.0,
-                      icon: Icons.event_busy_outlined,
-                      iconColor: cancellationsCount > 0
-                          ? AppColors.danger
-                          : AppColors.textMuted,
-                    ),
+                          // 5. Unattended Client Requests
+                          StatCard(
+                            title: AppStrings.sessionRequests,
+                            value: '$unattendedRequestsCount',
+                            subtitle: unattendedRequestsCount > 0
+                                ? AppStrings.needsAttention
+                                : AppStrings.systemHealth,
+                            trendValue: 0.0,
+                            icon: Icons.notifications_active_outlined,
+                            iconColor: unattendedRequestsCount > 0
+                                ? AppColors.danger
+                                : AppColors.textMuted,
+                          ),
 
-                    // 6. Canteen Revenue
-                    StatCard(
-                      title: AppStrings.canteenRevenue,
-                      value:
-                          '${canteenRevenue.toStringAsFixed(0)} ${AppStrings.egp}',
-                      subtitle: AppStrings.extras,
-                      trendValue: 0.0,
-                      icon: Icons.fastfood_outlined,
-                      iconColor: AppColors.neonCyan,
-                    ),
-                  ],
+                          // 6. No-Shows / Cancellations
+                          StatCard(
+                            title: AppStrings.noShowsAndCancellations,
+                            value: '$cancellationsCount',
+                            subtitle: cancellationsCount > 0
+                                ? AppStrings.cancelled
+                                : AppStrings.systemHealth,
+                            trendValue: 0.0,
+                            icon: Icons.event_busy_outlined,
+                            iconColor: cancellationsCount > 0
+                                ? AppColors.danger
+                                : AppColors.textMuted,
+                          ),
+                        ]
+                      : [
+                          // 1. Today Revenue
+                          StatCard(
+                            title: AppStrings.dailyRevenue,
+                            value:
+                                '${todayRevenue.toStringAsFixed(0)} ${AppStrings.egp}',
+                            subtitle: AppStrings.dailyTotal,
+                            trendValue: 0.0,
+                            icon: Icons.payments_outlined,
+                            iconColor: AppColors.neonGreen,
+                          ),
+
+                          // 2. Room Occupancy
+                          StatCard(
+                            title: AppStrings.loungeOccupancy,
+                            value:
+                                '${(occupancyRate * 100).toStringAsFixed(0)}%',
+                            subtitle: totalRooms > 0
+                                ? AppStrings.occupiedRoomsSubtitle(
+                                    occupiedRooms,
+                                    totalRooms,
+                                  )
+                                : AppStrings.rooms,
+                            trendValue: 0.0,
+                            icon: Icons.meeting_room_outlined,
+                            iconColor: AppColors.neonPurple,
+                          ),
+
+                          // 3. Active Bookings / Sessions
+                          StatCard(
+                            title: AppStrings.activeSessions,
+                            value: '$activeCount',
+                            subtitle: AppStrings.openSessionsCount(activeCount),
+                            trendValue: 0.0,
+                            icon: Icons.sports_esports_outlined,
+                            iconColor: AppColors.neonBlue,
+                          ),
+
+                          // 4. Pending Payment Proofs
+                          StatCard(
+                            title: AppStrings.pendingPaymentProofs,
+                            value: '$pendingProofsCount',
+                            subtitle: pendingProofsCount > 0
+                                ? AppStrings.pendingRequests
+                                : AppStrings.systemHealth,
+                            trendValue: 0.0,
+                            icon: Icons.receipt_long_outlined,
+                            iconColor: pendingProofsCount > 0
+                                ? AppColors.warning
+                                : AppColors.textMuted,
+                          ),
+
+                          // 5. No-Shows / Cancellations
+                          StatCard(
+                            title: AppStrings.noShowsAndCancellations,
+                            value: '$cancellationsCount',
+                            subtitle: cancellationsCount > 0
+                                ? AppStrings.cancelled
+                                : AppStrings.systemHealth,
+                            trendValue: 0.0,
+                            icon: Icons.event_busy_outlined,
+                            iconColor: cancellationsCount > 0
+                                ? AppColors.danger
+                                : AppColors.textMuted,
+                          ),
+
+                          // 6. Canteen Revenue
+                          StatCard(
+                            title: AppStrings.canteenRevenue,
+                            value:
+                                '${canteenRevenue.toStringAsFixed(0)} ${AppStrings.egp}',
+                            subtitle: AppStrings.extras,
+                            trendValue: 0.0,
+                            icon: Icons.fastfood_outlined,
+                            iconColor: AppColors.neonCyan,
+                          ),
+                        ],
                 );
               },
             );

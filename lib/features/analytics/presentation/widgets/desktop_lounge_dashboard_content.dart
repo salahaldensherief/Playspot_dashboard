@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/widgets/room_status_card.dart';
 import 'chart_card.dart';
 import 'cockpit_kpi_grid.dart';
@@ -23,6 +25,8 @@ class DesktopLoungeDashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<LoginCubit>().state.user;
+    final isCashier = user?.isCashier ?? false;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -37,20 +41,24 @@ class DesktopLoungeDashboardContent extends StatelessWidget {
         SizedBox(height: 16.h),
 
         // 2. Operational Attention & Growth Opportunities
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Expanded(
-              flex: 6,
-              child: RepaintBoundary(child: NeedsAttentionPanel()),
-            ),
-            SizedBox(width: 16.w),
-            const Expanded(
-              flex: 6,
-              child: RepaintBoundary(child: GrowthOpportunitiesPanel()),
-            ),
-          ],
-        ),
+        if (isCashier) ...[
+          const RepaintBoundary(child: NeedsAttentionPanel()),
+        ] else ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Expanded(
+                flex: 6,
+                child: RepaintBoundary(child: NeedsAttentionPanel()),
+              ),
+              SizedBox(width: 16.w),
+              const Expanded(
+                flex: 6,
+                child: RepaintBoundary(child: GrowthOpportunitiesPanel()),
+              ),
+            ],
+          ),
+        ],
         SizedBox(height: 16.h),
 
         // 3. Live Active Operations Feed & Quick Actions
@@ -76,52 +84,60 @@ class DesktopLoungeDashboardContent extends StatelessWidget {
         ),
         SizedBox(height: 16.h),
 
-        // 4. Revenue Intelligence
-        const RepaintBoundary(child: RevenueIntelligenceCard()),
-        SizedBox(height: 16.h),
+        // 4. Revenue Intelligence (Owner / Manager only)
+        if (!isCashier) ...[
+          const RepaintBoundary(child: RevenueIntelligenceCard()),
+          SizedBox(height: 16.h),
+        ],
 
         // 5. Analytics & Utilization Charts + Recent Activity
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 4,
-              child: SizedBox(
-                height: 240.h,
-                child: ChartCard(
-                  title: AppStrings.revenueAnalytics,
-                  subtitle: AppStrings.weeklyPerformance,
-                  actionIcon: Icons.trending_up,
-                  actionIconColor: AppColors.success,
-                  chart: const RepaintBoundary(child: RevenueChart()),
+        if (!isCashier) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 4,
+                child: SizedBox(
+                  height: 240.h,
+                  child: ChartCard(
+                    title: AppStrings.revenueAnalytics,
+                    subtitle: AppStrings.weeklyPerformance,
+                    actionIcon: Icons.trending_up,
+                    actionIconColor: AppColors.success,
+                    chart: const RepaintBoundary(child: RevenueChart()),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              flex: 4,
-              child: SizedBox(
-                height: 240.h,
-                child: ChartCard(
-                  title: AppStrings.roomUtilization,
-                  subtitle: AppStrings.capacityTracking,
-                  actionIcon: Icons.pie_chart_outline,
-                  actionIconColor: AppColors.neonPurple,
-                  chart: const RepaintBoundary(child: UtilizationChart()),
+              SizedBox(width: 16.w),
+              Expanded(
+                flex: 4,
+                child: SizedBox(
+                  height: 240.h,
+                  child: ChartCard(
+                    title: AppStrings.roomUtilization,
+                    subtitle: AppStrings.capacityTracking,
+                    actionIcon: Icons.pie_chart_outline,
+                    actionIconColor: AppColors.neonPurple,
+                    chart: const RepaintBoundary(child: UtilizationChart()),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(width: 16.w),
-            const Expanded(
-              flex: 4,
-              child: RepaintBoundary(child: RecentActivityCard()),
-            ),
-          ],
-        ),
-        SizedBox(height: 16.h),
+              SizedBox(width: 16.w),
+              const Expanded(
+                flex: 4,
+                child: RepaintBoundary(child: RecentActivityCard()),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+        ] else ...[
+          const RepaintBoundary(child: RecentActivityCard()),
+          SizedBox(height: 16.h),
+        ],
 
-        // 6. PlaySpot OS Capabilities & Modules Launchpad
-        const RepaintBoundary(child: LoungeCapabilitiesGrid()),
+        // 6. PlaySpot OS Capabilities & Modules Launchpad (Owner / Manager only)
+        if (!isCashier)
+          const RepaintBoundary(child: LoungeCapabilitiesGrid()),
       ],
     );
   }

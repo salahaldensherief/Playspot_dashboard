@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_section_header.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
@@ -168,48 +168,14 @@ class NeedsAttentionPanel extends StatelessWidget {
   }
 
   Widget _buildHeader(int totalAlerts) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(6.r),
-              decoration: BoxDecoration(
-                color: totalAlerts > 0
-                    ? AppColors.warning.withValues(alpha: 0.15)
-                    : AppColors.success.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Icon(
-                totalAlerts > 0
-                    ? Icons.warning_amber_rounded
-                    : Icons.check_circle_outline,
-                color: totalAlerts > 0 ? AppColors.warning : AppColors.success,
-                size: 20.r,
-              ),
-            ),
-            SizedBox(width: 10.w),
-            AppText.heading(AppStrings.needsAttention, fontSize: 16.sp),
-          ],
-        ),
-        if (totalAlerts > 0)
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
-            decoration: BoxDecoration(
-              color: AppColors.warning,
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Text(
-              '$totalAlerts',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 12.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-      ],
+    return AppSectionHeader(
+      title: AppStrings.needsAttention,
+      icon: totalAlerts > 0
+          ? Icons.warning_amber_rounded
+          : Icons.check_circle_outline,
+      iconColor: totalAlerts > 0 ? AppColors.warning : AppColors.success,
+      badgeCount: totalAlerts > 0 ? totalAlerts : null,
+      badgeColor: AppColors.warning,
     );
   }
 

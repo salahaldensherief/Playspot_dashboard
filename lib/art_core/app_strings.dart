@@ -1393,6 +1393,7 @@ class AppStrings {
       'upcoming_sessions_subtitle'.tr();
   static String get noSessionsInOperations => 'no_sessions_in_operations'.tr();
   static String get noMatchingBookings => 'no_matching_bookings'.tr();
+  static String get sessionsEndingSoon => 'sessions_ending_soon'.tr();
   static String get growthOpportunities => 'growth_opportunities'.tr();
   static String get pendingPaymentProofs => 'pending_payment_proofs'.tr();
   static String get canteenRevenue => 'canteen_revenue'.tr();
