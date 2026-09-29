@@ -1380,6 +1380,18 @@ class AppStrings {
   static String get operationalCockpit => 'operational_cockpit'.tr();
   static String get cockpitSubtitle => 'cockpit_subtitle'.tr();
   static String get needsAttention => 'needs_attention'.tr();
+  static String get sessionsNeedAttention => 'sessions_need_attention'.tr();
+  static String get sessionsNeedAttentionSubtitle =>
+      'sessions_need_attention_subtitle'.tr();
+  static String get openTimeSessions => 'open_time_sessions'.tr();
+  static String get openTimeSessionsSubtitle =>
+      'open_time_sessions_subtitle'.tr();
+  static String get runningSessions => 'running_sessions'.tr();
+  static String get runningSessionsSubtitle => 'running_sessions_subtitle'.tr();
+  static String get upcomingSessions => 'upcoming_sessions'.tr();
+  static String get upcomingSessionsSubtitle =>
+      'upcoming_sessions_subtitle'.tr();
+  static String get noSessionsInOperations => 'no_sessions_in_operations'.tr();
   static String get growthOpportunities => 'growth_opportunities'.tr();
   static String get pendingPaymentProofs => 'pending_payment_proofs'.tr();
   static String get canteenRevenue => 'canteen_revenue'.tr();

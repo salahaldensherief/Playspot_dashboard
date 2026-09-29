@@ -5,6 +5,7 @@ import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.da
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_card.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/bookings_finished_data_table.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_session_card.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_sessions_operations_board.dart';
 
 class BookingsActiveGrid extends StatelessWidget {
   final List<Booking> bookings;
@@ -12,6 +13,7 @@ class BookingsActiveGrid extends StatelessWidget {
   final ValueChanged<Booking> onShowDetails;
   final ValueChanged<String> onApprove;
   final ValueChanged<String> onReject;
+  final bool prioritizeOperations;
 
   const BookingsActiveGrid({
     super.key,
@@ -20,6 +22,7 @@ class BookingsActiveGrid extends StatelessWidget {
     required this.onShowDetails,
     required this.onApprove,
     required this.onReject,
+    this.prioritizeOperations = false,
   });
 
   @override
@@ -42,7 +45,11 @@ class BookingsActiveGrid extends StatelessWidget {
                 color: AppColors.scaffoldBackground,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.inbox_rounded, size: 48.r, color: AppColors.textMuted),
+              child: Icon(
+                Icons.inbox_rounded,
+                size: 48.r,
+                color: AppColors.textMuted,
+              ),
             ),
             SizedBox(height: 12.h),
             Text(
@@ -62,6 +69,15 @@ class BookingsActiveGrid extends StatelessWidget {
       return BookingsFinishedDataTable(
         bookings: bookings,
         onShowDetails: onShowDetails,
+      );
+    }
+
+    if (prioritizeOperations) {
+      return LiveSessionsOperationsBoard(
+        bookings: bookings,
+        onShowDetails: onShowDetails,
+        onApprove: onApprove,
+        onReject: onReject,
       );
     }
 
@@ -88,8 +104,12 @@ class BookingsActiveGrid extends StatelessWidget {
           key: ValueKey('booking_${b.id}'),
           booking: b,
           width: double.infinity,
-          onApprove: b.status == BookingStatus.pending ? () => onApprove(b.id) : null,
-          onReject: b.status == BookingStatus.pending ? () => onReject(b.id) : null,
+          onApprove: b.status == BookingStatus.pending
+              ? () => onApprove(b.id)
+              : null,
+          onReject: b.status == BookingStatus.pending
+              ? () => onReject(b.id)
+              : null,
           onConfirmPayment: () => onShowDetails(b),
         );
       },
