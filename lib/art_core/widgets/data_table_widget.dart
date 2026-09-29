@@ -31,67 +31,7 @@ class DataTableWidget extends StatelessWidget {
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final availableWidth = constraints.hasBoundedWidth
-            ? constraints.maxWidth
-            : MediaQuery.sizeOf(context).width;
-
-        return Container(
-          width: double.infinity,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.borderDefault),
-          ),
-          child: Theme(
-            data: Theme.of(context).copyWith(dividerColor: AppColors.divider),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minWidth: availableWidth),
-                child: DataTable(
-                  showCheckboxColumn: false,
-                  headingRowColor: WidgetStateProperty.all(
-                    AppColors.mutedBackground,
-                  ),
-                  dataRowColor: WidgetStateProperty.resolveWith((states) {
-                    if (states.contains(WidgetState.hovered)) {
-                      return AppColors.mutedBackground;
-                    }
-                    return Colors.transparent;
-                  }),
-                  dividerThickness: 0.7,
-                  horizontalMargin: 20,
-                  columnSpacing: 28,
-                  headingRowHeight: 52,
-                  dataRowMinHeight: 58,
-                  dataRowMaxHeight: 84,
-                  columns: columns
-                      .map(
-                        (col) => DataColumn(
-                          label: Text(
-                            col,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                  rows: rows,
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
+    return _DesktopDataTable(columns: columns, rows: rows);
   }
 
   Widget _buildDefaultMobileCard(BuildContext context, int index) {
@@ -113,7 +53,7 @@ class DataTableWidget extends StatelessWidget {
         children: [
           Text(
             columns.first,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.textMuted,
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -121,7 +61,7 @@ class DataTableWidget extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           DefaultTextStyle.merge(
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.w700,
@@ -142,7 +82,7 @@ class DataTableWidget extends StatelessWidget {
                       width: 104,
                       child: Text(
                         columns[cellIndex],
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
@@ -173,6 +113,98 @@ class DataTableWidget extends StatelessWidget {
         onTap: () => row.onSelectChanged!(true),
         child: card,
       ),
+    );
+  }
+}
+
+class _DesktopDataTable extends StatefulWidget {
+  final List<String> columns;
+  final List<DataRow> rows;
+
+  const _DesktopDataTable({required this.columns, required this.rows});
+
+  @override
+  State<_DesktopDataTable> createState() => _DesktopDataTableState();
+}
+
+class _DesktopDataTableState extends State<_DesktopDataTable> {
+  final ScrollController _horizontalController = ScrollController();
+
+  @override
+  void dispose() {
+    _horizontalController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+
+        return Container(
+          width: double.infinity,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.borderDefault),
+          ),
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: AppColors.divider),
+            child: Scrollbar(
+              controller: _horizontalController,
+              thumbVisibility: true,
+              trackVisibility: true,
+              interactive: true,
+              child: SingleChildScrollView(
+                controller: _horizontalController,
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: availableWidth),
+                  child: DataTable(
+                    showCheckboxColumn: false,
+                    headingRowColor: WidgetStateProperty.all(
+                      AppColors.mutedBackground,
+                    ),
+                    dataRowColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.hovered)) {
+                        return AppColors.mutedBackground;
+                      }
+                      return Colors.transparent;
+                    }),
+                    dividerThickness: 0.7,
+                    horizontalMargin: 20,
+                    columnSpacing: 28,
+                    headingRowHeight: 52,
+                    dataRowMinHeight: 58,
+                    dataRowMaxHeight: 84,
+                    columns: widget.columns
+                        .map(
+                          (col) => DataColumn(
+                            label: Text(
+                              col,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    rows: widget.rows,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

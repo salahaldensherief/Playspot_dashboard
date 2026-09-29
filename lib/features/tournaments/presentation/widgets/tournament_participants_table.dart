@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
+import '../../../../art_core/widgets/data_table_widget.dart';
 import '../../../../art_core/widgets/status_badge.dart';
 import '../../domain/entities/tournament_participant_entity.dart';
 import 'payment_receipt_dialog.dart';
@@ -41,11 +42,18 @@ class TournamentParticipantsTable extends StatelessWidget {
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.people_outline, size: 48.r, color: AppColors.textSecondary),
+              Icon(
+                Icons.people_outline,
+                size: 48.r,
+                color: AppColors.textSecondary,
+              ),
               SizedBox(height: 12.h),
               Text(
                 AppStrings.users,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 16.sp,
+                ),
               ),
             ],
           ),
@@ -73,11 +81,18 @@ class TournamentParticipantsTable extends StatelessWidget {
                   children: [
                     Text(
                       'المشاركون (${participants.length})',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     if (waitlistCount > 0) ...[
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10.w,
+                          vertical: 4.h,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.warning.withAlpha(30),
                           borderRadius: BorderRadius.circular(12.r),
@@ -85,7 +100,11 @@ class TournamentParticipantsTable extends StatelessWidget {
                         ),
                         child: Text(
                           'قائمة الانتظار: $waitlistCount',
-                          style: TextStyle(color: AppColors.warning, fontSize: 12.sp, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: AppColors.warning,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
@@ -97,7 +116,10 @@ class TournamentParticipantsTable extends StatelessWidget {
                     icon: Icons.arrow_upward_rounded,
                     backgroundColor: AppColors.warning,
                     fontSize: 12.sp,
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 6.h,
+                    ),
                     onPressed: onPromoteWaitlist!,
                   ),
               ],
@@ -123,15 +145,37 @@ class TournamentParticipantsTable extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Expanded(child: Text(p.userName, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold))),
+                          Expanded(
+                            child: Text(
+                              p.userName,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                           _buildPaymentBadge(p.paymentStatus),
                         ],
                       ),
                       SizedBox(height: 6.h),
-                      Text(p.userPhone ?? '--', style: const TextStyle(color: AppColors.textSecondary)),
-                      Text(dateFormat.format(p.registeredAt), style: const TextStyle(color: AppColors.textSecondary)),
-                      if (p.isWaitlist) Text(AppStrings.waitlistLabel, style: const TextStyle(color: AppColors.warning)),
-                      if (p.isCheckedIn) Text(AppStrings.attended, style: const TextStyle(color: AppColors.success)),
+                      Text(
+                        p.userPhone ?? '--',
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                      Text(
+                        dateFormat.format(p.registeredAt),
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                      if (p.isWaitlist)
+                        Text(
+                          AppStrings.waitlistLabel,
+                          style: const TextStyle(color: AppColors.warning),
+                        ),
+                      if (p.isCheckedIn)
+                        Text(
+                          AppStrings.attended,
+                          style: const TextStyle(color: AppColors.success),
+                        ),
                       Divider(height: 20.h, color: AppColors.borderDefault),
                       _buildActions(context, p),
                     ],
@@ -140,80 +184,117 @@ class TournamentParticipantsTable extends StatelessWidget {
               },
             ),
           )
-        else Expanded(
-          child: SingleChildScrollView(
+        else
+          Expanded(
             child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppColors.borderDefault),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12.r),
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
-              dataRowMinHeight: 64.h,
-              dataRowMaxHeight: 64.h,
-              columns: [
-                DataColumn(label: Text(AppStrings.customerName, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
-                DataColumn(label: Text(AppStrings.phoneNumber, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
-                DataColumn(label: Text(AppStrings.payment, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
-                DataColumn(label: Text(AppStrings.checkIn, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
-                DataColumn(label: Text(AppStrings.date, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
-                DataColumn(label: Text(AppStrings.actions, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
-              ],
-              rows: participants.map((p) {
-                return DataRow(
-                  cells: [
-                    DataCell(
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: AppColors.neonBlue.withAlpha(40),
-                            child: Text(
-                              p.userName.isNotEmpty ? p.userName[0].toUpperCase() : 'P',
-                              style: const TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold),
+              child: DataTableWidget(
+                columns: [
+                  AppStrings.customerName,
+                  AppStrings.phoneNumber,
+                  AppStrings.payment,
+                  AppStrings.checkIn,
+                  AppStrings.date,
+                  AppStrings.actions,
+                ],
+                rows: participants.map((p) {
+                  return DataRow(
+                    cells: [
+                      DataCell(
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: AppColors.neonBlue.withAlpha(40),
+                              child: Text(
+                                p.userName.isNotEmpty
+                                    ? p.userName[0].toUpperCase()
+                                    : 'P',
+                                style: const TextStyle(
+                                  color: AppColors.neonBlue,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
-                          ),
-                          SizedBox(width: 12.w),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(p.userName, style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.w600)),
-                              if (p.isWaitlist)
-                                Text(AppStrings.waitlistLabel, style: TextStyle(color: AppColors.warning, fontSize: 11.sp, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    DataCell(Text(p.userPhone ?? '--', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp))),
-                    DataCell(_buildPaymentBadge(p.paymentStatus)),
-                    DataCell(
-                      p.isCheckedIn
-                          ? Row(
+                            SizedBox(width: 12.w),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.check_circle, color: AppColors.success, size: 18),
-                                SizedBox(width: 6.w),
-                                Text(AppStrings.attended, style: TextStyle(color: AppColors.success, fontSize: 13.sp, fontWeight: FontWeight.bold)),
+                                Text(
+                                  p.userName,
+                                  style: TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (p.isWaitlist)
+                                  Text(
+                                    AppStrings.waitlistLabel,
+                                    style: TextStyle(
+                                      color: AppColors.warning,
+                                      fontSize: 11.sp,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                               ],
-                            )
-                          : Text(AppStrings.unread, style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
-                    ),
-                    DataCell(Text(dateFormat.format(p.registeredAt), style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp))),
-                    DataCell(_buildActions(context, p)),
-                  ],
-                );
-              }).toList(),
-            ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      DataCell(
+                        Text(
+                          p.userPhone ?? '--',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13.sp,
+                          ),
+                        ),
+                      ),
+                      DataCell(_buildPaymentBadge(p.paymentStatus)),
+                      DataCell(
+                        p.isCheckedIn
+                            ? Row(
+                                children: [
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: AppColors.success,
+                                    size: 18,
+                                  ),
+                                  SizedBox(width: 6.w),
+                                  Text(
+                                    AppStrings.attended,
+                                    style: TextStyle(
+                                      color: AppColors.success,
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Text(
+                                AppStrings.unread,
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 13.sp,
+                                ),
+                              ),
+                      ),
+                      DataCell(
+                        Text(
+                          dateFormat.format(p.registeredAt),
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13.sp,
+                          ),
+                        ),
+                      ),
+                      DataCell(_buildActions(context, p)),
+                    ],
+                  );
+                }).toList(),
               ),
             ),
           ),
-          ),
-        ),
       ],
     );
   }
