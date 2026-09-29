@@ -174,7 +174,7 @@ class SupportCubit extends Cubit<SupportState> {
     );
   }
 
-  Future<void> createTicket({
+  Future<bool> createTicket({
     required String issueType,
     required String message,
   }) async {
@@ -183,17 +183,21 @@ class SupportCubit extends Cubit<SupportState> {
       issueType: issueType,
       message: message,
     );
-    result.fold(
-      (failure) => emit(state.copyWith(
+    return result.fold(
+      (failure) {
+        emit(state.copyWith(
         actionStatus: SupportStatus.failure,
         errorMessage: failure.message,
-      )),
+        ));
+        return false;
+      },
       (_) {
         emit(state.copyWith(
           actionStatus: SupportStatus.success,
           successMessage: 'تم تقديم تذكرة الدعم بنجاح! سيقوم الدعم الفني بمراجعتها والتواصل معك.',
         ));
         loadTickets();
+        return true;
       },
     );
   }
