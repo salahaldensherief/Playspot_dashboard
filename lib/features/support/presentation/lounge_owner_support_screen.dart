@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import '../domain/entities/app_settings_entity.dart';
 import '../domain/entities/support_ticket_entity.dart';
@@ -19,7 +20,8 @@ class LoungeOwnerSupportScreen extends StatefulWidget {
   const LoungeOwnerSupportScreen({super.key});
 
   @override
-  State<LoungeOwnerSupportScreen> createState() => _LoungeOwnerSupportScreenState();
+  State<LoungeOwnerSupportScreen> createState() =>
+      _LoungeOwnerSupportScreenState();
 }
 
 class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
@@ -44,15 +46,18 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
     final created = await showDialog<bool>(
       context: context,
       builder: (_) => NewSupportTicketDialog(
-        onSubmit: (issueType, message) => cubit.createTicket(
-          issueType: issueType,
-          message: message,
-        ),
+        onSubmit: (issueType, message) =>
+            cubit.createTicket(issueType: issueType, message: message),
       ),
     );
     if (created == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(cubit.state.successMessage ?? AppStrings.supportTickets), backgroundColor: AppColors.success),
+        SnackBar(
+          content: Text(
+            cubit.state.successMessage ?? AppStrings.supportTickets,
+          ),
+          backgroundColor: AppColors.success,
+        ),
       );
     }
   }
@@ -101,9 +106,12 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
                     child: CircularProgressIndicator(color: AppColors.neonBlue),
                   ),
                 )
-              else if (state.status == SupportStatus.failure && state.tickets.isEmpty)
-                Text(state.errorMessage ?? AppStrings.actionFailed,
-                    style: const TextStyle(color: AppColors.danger))
+              else if (state.status == SupportStatus.failure &&
+                  state.tickets.isEmpty)
+                Text(
+                  state.errorMessage ?? AppStrings.actionFailed,
+                  style: const TextStyle(color: AppColors.danger),
+                )
               else if (state.tickets.isEmpty)
                 _buildEmptyTicketsCard()
               else
@@ -128,9 +136,16 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.headset_mic_outlined, color: AppColors.neonBlue, size: 24.r),
+              Icon(
+                Icons.headset_mic_outlined,
+                color: AppColors.neonBlue,
+                size: 24.r,
+              ),
               SizedBox(width: 8.w),
-              AppText.heading(AppStrings.directSupportChannels, fontSize: 18.sp),
+              AppText.heading(
+                AppStrings.directSupportChannels,
+                fontSize: 18.sp,
+              ),
             ],
           ),
           SizedBox(height: 16.h),
@@ -167,10 +182,12 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
               if (isNarrow) {
                 return Column(
                   children: tiles
-                      .map((tile) => Padding(
-                            padding: EdgeInsets.only(bottom: 12.h),
-                            child: tile,
-                          ))
+                      .map(
+                        (tile) => Padding(
+                          padding: EdgeInsets.only(bottom: 12.h),
+                          child: tile,
+                        ),
+                      )
                       .toList(),
                 );
               }
@@ -202,9 +219,16 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
       ),
       child: Column(
         children: [
-          Icon(Icons.assignment_outlined, color: AppColors.textSecondary, size: 48.r),
+          Icon(
+            Icons.assignment_outlined,
+            color: AppColors.textSecondary,
+            size: 48.r,
+          ),
           SizedBox(height: 12.h),
-          AppText.body(AppStrings.noTicketsFound, color: AppColors.textSecondary),
+          AppText.body(
+            AppStrings.noTicketsFound,
+            color: AppColors.textSecondary,
+          ),
         ],
       ),
     );
@@ -213,94 +237,114 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
   Widget _buildTicketsTable(List<SupportTicketEntity> tickets) {
     if (MediaQuery.sizeOf(context).width < 700) {
       return Column(
-        children: tickets.map((ticket) => Container(
-          width: double.infinity,
-          margin: EdgeInsets.only(bottom: 10.h),
-          padding: EdgeInsets.all(14.r),
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(color: AppColors.borderDefault),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                Expanded(child: Text(ticket.issueType,
-                    style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold))),
-                _getStatusBadge(ticket.status),
-              ]),
-              SizedBox(height: 8.h),
-              Text(ticket.message, maxLines: 3, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.textSecondary)),
-              SizedBox(height: 8.h),
-              Text(ticket.createdAt != null
-                  ? DateFormat('yyyy-MM-dd hh:mm a').format(ticket.createdAt!)
-                  : AppStrings.notAvailable,
-                  style: const TextStyle(color: AppColors.textSecondary)),
-            ],
-          ),
-        )).toList(),
-      );
-    }
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.borderDefault),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16.r),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
-            columns: [
-              DataColumn(label: _buildHeaderCell(AppStrings.nameAndDetails)),
-              DataColumn(label: _buildHeaderCell(AppStrings.issueType)),
-              DataColumn(label: _buildHeaderCell(AppStrings.status)),
-              DataColumn(label: _buildHeaderCell(AppStrings.date)),
-            ],
-            rows: tickets.map((ticket) {
-              return DataRow(
-                cells: [
-                  DataCell(
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
+        children: tickets
+            .map(
+              (ticket) => Container(
+                width: double.infinity,
+                margin: EdgeInsets.only(bottom: 10.h),
+                padding: EdgeInsets.all(14.r),
+                decoration: BoxDecoration(
+                  color: AppColors.cardBackground,
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: AppColors.borderDefault),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Text(
-                          ticket.userName,
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14.sp,
+                        Expanded(
+                          child: Text(
+                            ticket.issueType,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          ticket.message,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
-                        ),
+                        _getStatusBadge(ticket.status),
                       ],
                     ),
-                  ),
-                  DataCell(Text(ticket.issueType, style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp))),
-                  DataCell(_getStatusBadge(ticket.status)),
-                  DataCell(
+                    SizedBox(height: 8.h),
                     Text(
-                      ticket.createdAt != null ? DateFormat('yyyy-MM-dd hh:mm a').format(ticket.createdAt!) : 'N/A',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                      ticket.message,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      ticket.createdAt != null
+                          ? DateFormat(
+                              'yyyy-MM-dd hh:mm a',
+                            ).format(ticket.createdAt!)
+                          : AppStrings.notAvailable,
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
+      );
+    }
+    return DataTableWidget(
+      columns: [
+        AppStrings.nameAndDetails,
+        AppStrings.issueType,
+        AppStrings.status,
+        AppStrings.date,
+      ],
+      rows: tickets.map((ticket) {
+        return DataRow(
+          cells: [
+            DataCell(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    ticket.userName,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.sp,
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    ticket.message,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12.sp,
                     ),
                   ),
                 ],
-              );
-            }).toList(),
-          ),
-        ),
-      ),
+              ),
+            ),
+            DataCell(
+              Text(
+                ticket.issueType,
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
+              ),
+            ),
+            DataCell(_getStatusBadge(ticket.status)),
+            DataCell(
+              Text(
+                ticket.createdAt != null
+                    ? DateFormat('yyyy-MM-dd hh:mm a').format(ticket.createdAt!)
+                    : AppStrings.notAvailable,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12.sp,
+                ),
+              ),
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 
@@ -332,7 +376,13 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12.sp,
+                  ),
+                ),
                 SizedBox(height: 2.h),
                 SelectableText(
                   value.trim().isEmpty ? AppStrings.notAvailable : value,
@@ -346,20 +396,6 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildHeaderCell(String text) {
-    return Padding(
-      padding: EdgeInsets.all(12.r),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.bold,
-          fontSize: 13.sp,
-        ),
       ),
     );
   }
