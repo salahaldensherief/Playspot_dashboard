@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
-import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+import 'package:play_spot_dashboard/art_core/widgets/payment_method_badge.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_status_badge.dart';
 
 class BookingCardHeader extends StatelessWidget {
   final Booking booking;
@@ -18,48 +18,14 @@ class BookingCardHeader extends StatelessWidget {
     required this.shortId,
   });
 
-  Widget _getStatusBadge(Booking booking) {
-    if (booking.isCancelledByClient) {
-      return Container(
-        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-        decoration: BoxDecoration(
-          color: AppColors.danger,
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        child: Text(
-          AppStrings.cancelledByClientAfterApproval,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 10.sp,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
-    }
-
-    switch (booking.status) {
-      case BookingStatus.pendingVerification:
-        return StatusBadge.warning(AppStrings.pendingVerification.toUpperCase());
-      case BookingStatus.pending:
-        return StatusBadge.warning(AppStrings.pending.toUpperCase());
-      case BookingStatus.upcoming:
-        return StatusBadge.info(AppStrings.upcoming.toUpperCase());
-      case BookingStatus.inProgress:
-        return StatusBadge.success(AppStrings.inProgress.toUpperCase());
-      case BookingStatus.completed:
-        return StatusBadge.success(AppStrings.completed.toUpperCase());
-      case BookingStatus.cancelled:
-        return StatusBadge.danger(AppStrings.cancelled.toUpperCase());
-      case BookingStatus.rejected:
-        return StatusBadge.danger(AppStrings.requestRejected.toUpperCase());
-    }
-  }
-
   Widget _getPaymentTypeBadge(Booking booking) {
     if (booking.isCashPayment) {
-      return StatusBadge.warning(AppStrings.cashBookingBadge);
+      return const PaymentMethodBadge(isCash: true, compact: true);
     }
-    return StatusBadge.info('${AppStrings.walletLabel} (${booking.displayWalletInfo})');
+    return PaymentMethodBadge.fromBookingPaymentMethod(
+      booking.paymentMethod,
+      compact: true,
+    );
   }
 
   @override
@@ -76,7 +42,7 @@ class BookingCardHeader extends StatelessWidget {
               runSpacing: 4.h,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                _getStatusBadge(booking),
+                BookingStatusBadge.fromBooking(booking),
                 _getPaymentTypeBadge(booking),
               ],
             ),

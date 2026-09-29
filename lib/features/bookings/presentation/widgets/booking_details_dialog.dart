@@ -4,11 +4,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
-import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_status_badge.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_timeline_widget.dart';
 import 'booking_details_action_panel.dart';
 import 'booking_details_customer_card.dart';
 import 'booking_details_financial_summary.dart';
@@ -98,25 +99,6 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
     Navigator.of(context, rootNavigator: false).pop();
   }
 
-  Widget _getStatusBadge(BookingStatus status) {
-    switch (status) {
-      case BookingStatus.pendingVerification:
-        return StatusBadge.warning(AppStrings.pendingVerification.toUpperCase());
-      case BookingStatus.pending:
-        return StatusBadge.warning(AppStrings.pending.toUpperCase());
-      case BookingStatus.upcoming:
-        return StatusBadge.info(AppStrings.upcoming.toUpperCase());
-      case BookingStatus.inProgress:
-        return StatusBadge.success(AppStrings.inProgress.toUpperCase());
-      case BookingStatus.completed:
-        return StatusBadge.success(AppStrings.completed.toUpperCase());
-      case BookingStatus.cancelled:
-        return StatusBadge.danger(AppStrings.cancelled.toUpperCase());
-      case BookingStatus.rejected:
-        return StatusBadge.danger(AppStrings.requestRejected.toUpperCase());
-    }
-  }
-
   Widget _buildHeader(BuildContext context, Booking booking) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -145,7 +127,7 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                       children: [
                         AppText.heading(AppStrings.bookingDetails,
                             fontSize: 18.sp),
-                        _getStatusBadge(booking.status),
+                        BookingStatusBadge.fromBooking(booking),
                       ],
                     ),
                     SizedBox(height: 2.h),
@@ -215,6 +197,9 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                                     BookingDetailsCustomerCard(
                                         booking: currentBooking),
                                     SizedBox(height: 12.h),
+                                    BookingTimelineWidget(
+                                        booking: currentBooking),
+                                    SizedBox(height: 12.h),
                                     BookingSpecificationsCard(
                                         booking: currentBooking),
                                     SizedBox(height: 12.h),
@@ -252,6 +237,9 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                           child: Column(
                             children: [
                               BookingDetailsCustomerCard(
+                                  booking: currentBooking),
+                              SizedBox(height: 12.h),
+                              BookingTimelineWidget(
                                   booking: currentBooking),
                               SizedBox(height: 12.h),
                               BookingSpecificationsCard(

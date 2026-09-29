@@ -70,7 +70,7 @@ class BookingDetailsFinancialSummary extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              AppText.subHeading('ملخص الحساب والفاتورة', fontSize: 13.sp),
+              AppText.subHeading(AppStrings.financialSummary, fontSize: 13.sp),
               StatusBadge(
                 text: booking.paymentStatus == PaymentStatus.paid
                     ? AppStrings.paid
@@ -83,7 +83,7 @@ class BookingDetailsFinancialSummary extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           _buildBillRow(
-              'سعر الغرفة الأساسي',
+              AppStrings.roomBasePrice,
               '${roomBasePrice.toStringAsFixed(0)} ${AppStrings.egp}'),
           _buildBillRow(
               AppStrings.extrasTotal,
@@ -96,7 +96,7 @@ class BookingDetailsFinancialSummary extends StatelessWidget {
                 color: AppColors.danger),
           const Divider(color: AppColors.borderDefault),
           _buildBillRow(
-            'الإجمالي النهائي المطلوب',
+            AppStrings.finalTotalDue,
             '${booking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
             isTotal: true,
             color: AppColors.neonGreen,
