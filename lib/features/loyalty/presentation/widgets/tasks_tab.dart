@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
+import '../../../../art_core/widgets/data_table_widget.dart';
 import '../../../../art_core/widgets/app_text.dart';
 import '../../../../art_core/widgets/status_badge.dart';
 
@@ -15,11 +16,7 @@ class TasksTab extends StatelessWidget {
   final List<LoyaltyTaskEntity> tasks;
   final LoyaltyCubit cubit;
 
-  const TasksTab({
-    super.key,
-    required this.tasks,
-    required this.cubit,
-  });
+  const TasksTab({super.key, required this.tasks, required this.cubit});
 
   void _showEditTaskDialog(BuildContext context, LoyaltyTaskEntity task) {
     showDialog(
@@ -50,88 +47,90 @@ class TasksTab extends StatelessWidget {
     final isArabic = context.locale.languageCode == 'ar';
 
     return SingleChildScrollView(
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: AppColors.borderDefault),
-        ),
-        child: DataTable(
-          headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
-          dataRowMaxHeight: 72.h,
-          columns: [
-            DataColumn(label: AppText.body(AppStrings.taskName, fontSize: 12.sp, fontWeight: FontWeight.bold)),
-            DataColumn(label: AppText.body(AppStrings.taskDescription, fontSize: 12.sp, fontWeight: FontWeight.bold)),
-            DataColumn(label: AppText.body(AppStrings.rewardPoints, fontSize: 12.sp, fontWeight: FontWeight.bold)),
-            DataColumn(label: AppText.body(AppStrings.completedUsersCount, fontSize: 12.sp, fontWeight: FontWeight.bold)),
-            DataColumn(label: AppText.body(AppStrings.taskStatus, fontSize: 12.sp, fontWeight: FontWeight.bold)),
-            DataColumn(label: AppText.body(AppStrings.actions, fontSize: 12.sp, fontWeight: FontWeight.bold)),
-          ],
-          rows: tasks.map((task) {
-            final title = isArabic ? task.titleAr : task.titleEn;
-            final description = isArabic ? task.descriptionAr : task.descriptionEn;
+      child: DataTableWidget(
+        columns: [
+          AppStrings.taskName,
+          AppStrings.taskDescription,
+          AppStrings.rewardPoints,
+          AppStrings.completedUsersCount,
+          AppStrings.taskStatus,
+          AppStrings.actions,
+        ],
+        rows: tasks.map((task) {
+          final title = isArabic ? task.titleAr : task.titleEn;
+          final description = isArabic
+              ? task.descriptionAr
+              : task.descriptionEn;
 
-            return DataRow(
-              cells: [
-                DataCell(
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(8.r),
-                        decoration: BoxDecoration(
-                          color: AppColors.neonBlue.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: Icon(Icons.task_alt_outlined, color: AppColors.neonBlue, size: 20.r),
+          return DataRow(
+            cells: [
+              DataCell(
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(8.r),
+                      decoration: BoxDecoration(
+                        color: AppColors.neonBlue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
-                      SizedBox(width: 12.w),
-                      AppText.body(title, fontWeight: FontWeight.bold),
-                    ],
-                  ),
-                ),
-                DataCell(
-                  SizedBox(
-                    width: 250.w,
-                    child: AppText.body(
-                      description,
-                      fontSize: 12.sp,
-                      color: AppColors.textSecondary,
-                      maxLines: 2,
+                      child: Icon(
+                        Icons.task_alt_outlined,
+                        color: AppColors.neonBlue,
+                        size: 20.r,
+                      ),
                     ),
+                    SizedBox(width: 12.w),
+                    Flexible(
+                      child: AppText.body(
+                        title,
+                        fontWeight: FontWeight.bold,
+                        maxLines: 2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              DataCell(
+                SizedBox(
+                  width: 250.w,
+                  child: AppText.body(
+                    description,
+                    fontSize: 12.sp,
+                    color: AppColors.textSecondary,
+                    maxLines: 2,
                   ),
                 ),
-                DataCell(
-                  AppText.body(
-                    '+${task.pointsReward} ${AppStrings.pointsUnit}',
-                    color: AppColors.success,
-                    fontWeight: FontWeight.bold,
-                  ),
+              ),
+              DataCell(
+                AppText.body(
+                  '+${task.pointsReward} ${AppStrings.pointsUnit}',
+                  color: AppColors.success,
+                  fontWeight: FontWeight.bold,
                 ),
-                DataCell(
-                  AppText.body(
-                    '${task.completedCount}',
-                    fontWeight: FontWeight.bold,
-                  ),
+              ),
+              DataCell(
+                AppText.body(
+                  '${task.completedCount}',
+                  fontWeight: FontWeight.bold,
                 ),
-                DataCell(
-                  StatusBadge(
-                    text: task.isActive ? AppStrings.active : AppStrings.inactive,
-                    color: task.isActive ? AppColors.success : AppColors.danger,
-                  ),
+              ),
+              DataCell(
+                StatusBadge(
+                  text: task.isActive ? AppStrings.active : AppStrings.inactive,
+                  color: task.isActive ? AppColors.success : AppColors.danger,
                 ),
-                DataCell(
-                  AppButton(
-                    text: AppStrings.edit,
-                    icon: Icons.edit_outlined,
-                    variant: AppButtonVariant.outlined,
-                    onPressed: () => _showEditTaskDialog(context, task),
-                  ),
+              ),
+              DataCell(
+                AppButton(
+                  text: AppStrings.edit,
+                  icon: Icons.edit_outlined,
+                  variant: AppButtonVariant.outlined,
+                  onPressed: () => _showEditTaskDialog(context, task),
                 ),
-              ],
-            );
-          }).toList(),
-        ),
+              ),
+            ],
+          );
+        }).toList(),
       ),
     );
   }
@@ -141,7 +140,11 @@ class TasksTab extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.assignment_outlined, color: AppColors.textSecondary, size: 64.r),
+          Icon(
+            Icons.assignment_outlined,
+            color: AppColors.textSecondary,
+            size: 64.r,
+          ),
           SizedBox(height: 16.h),
           AppText.body(AppStrings.noResultsMatching, fontSize: 18.sp),
         ],

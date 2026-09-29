@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/core/responsive/app_breakpoints.dart';
 import '../theme/app_colors.dart';
 
@@ -25,7 +24,7 @@ class DataTableWidget extends StatelessWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: rows.length,
-        separatorBuilder: (_, _) => SizedBox(height: 12.h),
+        separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) => cardBuilder != null
             ? cardBuilder(context, index)
             : _buildDefaultMobileCard(context, index),
@@ -43,7 +42,7 @@ class DataTableWidget extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(8.r),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AppColors.borderDefault),
           ),
           child: Theme(
@@ -64,11 +63,11 @@ class DataTableWidget extends StatelessWidget {
                     return Colors.transparent;
                   }),
                   dividerThickness: 0.7,
-                  horizontalMargin: 20.w,
-                  columnSpacing: 28.w,
-                  headingRowHeight: 52.h,
-                  dataRowMinHeight: 58.h,
-                  dataRowMaxHeight: 84.h,
+                  horizontalMargin: 20,
+                  columnSpacing: 28,
+                  headingRowHeight: 52,
+                  dataRowMinHeight: 58,
+                  dataRowMaxHeight: 84,
                   columns: columns
                       .map(
                         (col) => DataColumn(
@@ -79,7 +78,7 @@ class DataTableWidget extends StatelessWidget {
                             style: TextStyle(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w700,
-                              fontSize: 13.sp,
+                              fontSize: 13,
                             ),
                           ),
                         ),
@@ -103,10 +102,10 @@ class DataTableWidget extends StatelessWidget {
 
     final card = Container(
       width: double.infinity,
-      padding: EdgeInsets.all(14.r),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(8.r),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppColors.borderDefault),
       ),
       child: Column(
@@ -116,41 +115,41 @@ class DataTableWidget extends StatelessWidget {
             columns.first,
             style: TextStyle(
               color: AppColors.textMuted,
-              fontSize: 11.sp,
+              fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(height: 6.h),
+          const SizedBox(height: 6),
           DefaultTextStyle.merge(
             style: TextStyle(
               color: AppColors.textPrimary,
-              fontSize: 14.sp,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
             ),
             child: row.cells.first.child,
           ),
           if (cellCount > 1) ...[
-            Divider(height: 24.h, color: AppColors.divider),
+            const Divider(height: 24, color: AppColors.divider),
             for (var cellIndex = 1; cellIndex < cellCount; cellIndex++)
               Padding(
                 padding: EdgeInsets.only(
-                  bottom: cellIndex == cellCount - 1 ? 0 : 12.h,
+                  bottom: cellIndex == cellCount - 1 ? 0 : 12,
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      width: 112.w,
+                      width: 104,
                       child: Text(
                         columns[cellIndex],
                         style: TextStyle(
                           color: AppColors.textSecondary,
-                          fontSize: 12.sp,
+                          fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
-                    SizedBox(width: 12.w),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Align(
                         alignment: AlignmentDirectional.centerEnd,
@@ -170,7 +169,7 @@ class DataTableWidget extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(8.r),
+        borderRadius: BorderRadius.circular(8),
         onTap: () => row.onSelectChanged!(true),
         child: card,
       ),
