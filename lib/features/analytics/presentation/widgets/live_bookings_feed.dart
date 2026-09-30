@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_text.dart';
+import 'live_feed_header.dart';
 import '../../../../art_core/widgets/shimmer_loading.dart';
 import '../../../bookings/domain/entities/booking.dart';
 import '../../../bookings/presentation/cubit/booking_cubit.dart';
@@ -28,16 +29,21 @@ class LiveBookingsFeed extends StatefulWidget {
 
 class _LiveBookingsFeedState extends State<LiveBookingsFeed> {
   late final SessionTickerNotifier _tickerNotifier;
+  late final SessionTickerNotifier _classificationTicker;
 
   @override
   void initState() {
     super.initState();
     _tickerNotifier = SessionTickerNotifier();
+    _classificationTicker = SessionTickerNotifier(
+      interval: const Duration(seconds: 15),
+    );
   }
 
   @override
   void dispose() {
     _tickerNotifier.dispose();
+    _classificationTicker.dispose();
     super.dispose();
   }
 
@@ -46,7 +52,7 @@ class _LiveBookingsFeedState extends State<LiveBookingsFeed> {
     return SessionTickerScope(
       ticker: _tickerNotifier,
       child: AnimatedBuilder(
-        animation: _tickerNotifier,
+        animation: _classificationTicker,
         builder: (context, _) {
           final now = _tickerNotifier.now;
 
@@ -106,7 +112,7 @@ class _LiveBookingsFeedState extends State<LiveBookingsFeed> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _LiveFeedHeader(
+                        LiveFeedHeader(
                           activeCount: activeSessions.length,
                           isLoading:
                               dashState.status == FeatureStatus.loading &&
@@ -231,56 +237,6 @@ class _LiveBookingsFeedState extends State<LiveBookingsFeed> {
           );
         },
       ),
-    );
-  }
-}
-
-class _LiveFeedHeader extends StatelessWidget {
-  final int activeCount;
-  final bool isLoading;
-
-  const _LiveFeedHeader({required this.activeCount, required this.isLoading});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(child: Row(
-          children: [
-            Container(
-              width: 12.r,
-              height: 12.r,
-              decoration: const BoxDecoration(
-                color: AppColors.success,
-                shape: BoxShape.circle,
-              ),
-            ),
-            SizedBox(width: 12.w),
-            Flexible(child: AppText.heading(AppStrings.activeSessions, fontSize: 18.sp)),
-            SizedBox(width: 8.w),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-              decoration: BoxDecoration(
-                color: AppColors.neonBlue.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: AppText.body(
-                '$activeCount',
-                color: AppColors.neonBlue,
-                fontSize: 12.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        )),
-        if (isLoading)
-          SizedBox(
-            width: 16.r,
-            height: 16.r,
-            child: const CircularProgressIndicator(strokeWidth: 2),
-          ),
-      ],
     );
   }
 }
