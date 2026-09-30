@@ -386,13 +386,16 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   @override
   Future<Map<String, dynamic>> completeOpenTimeSession(String bookingId) async {
     final response = await client.rpc(
-      'complete_open_time_session',
-      params: {'p_booking_id': bookingId},
+      'complete_booking_session',
+      params: {
+        'p_booking_id': bookingId,
+        'p_action_by': client.auth.currentUser?.id,
+      },
     );
 
     return response is Map
         ? Map<String, dynamic>.from(response)
-        : <String, dynamic>{'success': true};
+        : throw const FormatException('Invalid session completion response');
   }
 
   @override
@@ -404,17 +407,10 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   @override
   Future<void> approveManualBooking(String bookingId, String actionBy) async {
-    try {
-      await client.rpc(
-        'approve_manual_booking',
-        params: {'p_booking_id': bookingId, 'p_action_by': actionBy},
-      );
-    } catch (e) {
-      debugPrint(
-        '⚠️ [DATA_SOURCE] approve_manual_booking RPC error ($e), falling back to updateBookingStatus',
-      );
-      await updateBookingStatus(bookingId, 'upcoming');
-    }
+    await client.rpc(
+      'approve_manual_booking',
+      params: {'p_booking_id': bookingId, 'p_action_by': actionBy},
+    );
   }
 
   @override
@@ -423,21 +419,14 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     String reason,
     String actionBy,
   ) async {
-    try {
-      await client.rpc(
-        'reject_manual_booking',
-        params: {
-          'p_booking_id': bookingId,
-          'p_rejection_reason': reason,
-          'p_action_by': actionBy,
-        },
-      );
-    } catch (e) {
-      debugPrint(
-        '⚠️ [DATA_SOURCE] reject_manual_booking RPC error ($e), falling back to updateBookingStatus',
-      );
-      await updateBookingStatus(bookingId, 'cancelled');
-    }
+    await client.rpc(
+      'reject_manual_booking',
+      params: {
+        'p_booking_id': bookingId,
+        'p_rejection_reason': reason,
+        'p_action_by': actionBy,
+      },
+    );
   }
 
   @override
