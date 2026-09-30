@@ -18,8 +18,12 @@ import 'booking_specifications_card.dart';
 
 class BookingDetailsDialog extends StatefulWidget {
   final Booking booking;
-  final Function(double discountAmount, double discountPercentage, String? reason)?
-      onConfirmPayment;
+  final Function(
+    double discountAmount,
+    double discountPercentage,
+    String? reason,
+  )?
+  onConfirmPayment;
   final VoidCallback? onCancel;
 
   const BookingDetailsDialog({
@@ -45,8 +49,7 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
     super.dispose();
   }
 
-  double get _discountValue =>
-      double.tryParse(_discountController.text) ?? 0.0;
+  double get _discountValue => double.tryParse(_discountController.text) ?? 0.0;
 
   void _handleConfirmPayment(BuildContext context, Booking activeBooking) {
     final user = context.read<LoginCubit>().state.user;
@@ -55,8 +58,8 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
     final percent = _isPercentage
         ? discount
         : (activeBooking.totalPrice > 0
-            ? (discount / activeBooking.totalPrice * 100)
-            : 0.0);
+              ? (discount / activeBooking.totalPrice * 100)
+              : 0.0);
 
     if (isCashier && percent > 10) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -90,11 +93,11 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
       );
     } else {
       context.read<BookingCubit>().confirmCashPayment(
-            activeBooking.id,
-            discountAmount: calculatedDiscountAmount,
-            discountPercentage: percent,
-            discountReason: _reasonController.text.trim(),
-          );
+        activeBooking.id,
+        discountAmount: calculatedDiscountAmount,
+        discountPercentage: percent,
+        discountReason: _reasonController.text.trim(),
+      );
     }
     Navigator.of(context, rootNavigator: false).pop();
   }
@@ -112,8 +115,10 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                   color: AppColors.neonBlue.withAlpha(25),
                   borderRadius: BorderRadius.circular(10.r),
                 ),
-                child: const Icon(Icons.confirmation_number_outlined,
-                    color: AppColors.neonBlue),
+                child: const Icon(
+                  Icons.confirmation_number_outlined,
+                  color: AppColors.neonBlue,
+                ),
               ),
               SizedBox(width: 12.w),
               Expanded(
@@ -125,8 +130,10 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                       spacing: 8.w,
                       runSpacing: 4.h,
                       children: [
-                        AppText.heading(AppStrings.bookingDetails,
-                            fontSize: 18.sp),
+                        AppText.heading(
+                          AppStrings.bookingDetails,
+                          fontSize: 18.sp,
+                        ),
                         BookingStatusBadge.fromBooking(booking),
                       ],
                     ),
@@ -134,7 +141,9 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                     Text(
                       '#${booking.id}',
                       style: TextStyle(
-                          color: AppColors.textSecondary, fontSize: 12.sp),
+                        color: AppColors.textSecondary,
+                        fontSize: 12.sp,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -145,8 +154,7 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
         ),
         IconButton(
           onPressed: () => Navigator.of(context, rootNavigator: false).pop(),
-          icon: const Icon(Icons.close_rounded,
-              color: AppColors.textSecondary),
+          icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary),
         ),
       ],
     );
@@ -160,8 +168,7 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       insetPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-      shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Container(
         width: isDesktopOrTablet ? 900.w : double.infinity,
         constraints: BoxConstraints(
@@ -170,8 +177,9 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
         padding: EdgeInsets.all(20.r),
         child: BlocBuilder<BookingCubit, BookingState>(
           builder: (context, state) {
-            final activeBookingList =
-                state.bookings.where((b) => b.id == widget.booking.id).toList();
+            final activeBookingList = state.bookings
+                .where((b) => b.id == widget.booking.id)
+                .toList();
             final currentBooking = activeBookingList.isNotEmpty
                 ? activeBookingList.first
                 : widget.booking;
@@ -195,7 +203,8 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                                 child: Column(
                                   children: [
                                     BookingDetailsCustomerCard(
-                                        booking: currentBooking),
+                                      booking: currentBooking,
+                                    ),
                                     SizedBox(height: 12.h),
                                     AuditTimeline(
                                       entityType: 'booking',
@@ -203,10 +212,10 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                                     ),
                                     SizedBox(height: 12.h),
                                     BookingSpecificationsCard(
-                                        booking: currentBooking),
+                                      booking: currentBooking,
+                                    ),
                                     SizedBox(height: 12.h),
-                                    BookingReceiptCard(
-                                        booking: currentBooking),
+                                    BookingReceiptCard(booking: currentBooking),
                                   ],
                                 ),
                               ),
@@ -219,7 +228,8 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                                   Expanded(
                                     child: SingleChildScrollView(
                                       child: BookingDetailsFinancialSummary(
-                                          booking: currentBooking),
+                                        booking: currentBooking,
+                                      ),
                                     ),
                                   ),
                                   SizedBox(height: 12.h),
@@ -228,7 +238,9 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                                     isLoading: isLoading,
                                     onConfirmCashPayment: () =>
                                         _handleConfirmPayment(
-                                            context, currentBooking),
+                                          context,
+                                          currentBooking,
+                                        ),
                                   ),
                                 ],
                               ),
@@ -239,7 +251,8 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                           child: Column(
                             children: [
                               BookingDetailsCustomerCard(
-                                  booking: currentBooking),
+                                booking: currentBooking,
+                              ),
                               SizedBox(height: 12.h),
                               AuditTimeline(
                                 entityType: 'booking',
@@ -247,10 +260,12 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                               ),
                               SizedBox(height: 12.h),
                               BookingSpecificationsCard(
-                                  booking: currentBooking),
+                                booking: currentBooking,
+                              ),
                               SizedBox(height: 12.h),
                               BookingDetailsFinancialSummary(
-                                  booking: currentBooking),
+                                booking: currentBooking,
+                              ),
                               SizedBox(height: 12.h),
                               BookingReceiptCard(booking: currentBooking),
                               SizedBox(height: 16.h),
@@ -259,7 +274,9 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                                 isLoading: isLoading,
                                 onConfirmCashPayment: () =>
                                     _handleConfirmPayment(
-                                        context, currentBooking),
+                                      context,
+                                      currentBooking,
+                                    ),
                               ),
                             ],
                           ),

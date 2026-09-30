@@ -23,6 +23,65 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
 
   @override
+  Future<Map<String, dynamic>> quoteBookingPrice({
+    required String roomId,
+    required String date,
+    required String startTime,
+    required String endTime,
+    String playMode = 'single',
+    int extraControllers = 0,
+    String? couponCode,
+  }) async {
+    final response = await client.rpc(
+      'quote_booking_price',
+      params: {
+        'p_room_id': roomId,
+        'p_date': date,
+        'p_start': startTime,
+        'p_end': endTime,
+        'p_play_mode': playMode,
+        'p_extra_controllers': extraControllers,
+        'p_coupon_code': couponCode,
+      },
+    );
+    if (response is! Map) {
+      throw const FormatException('Invalid booking quote response');
+    }
+    return Map<String, dynamic>.from(response);
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getRoomSlotsWithPrices({
+    required String roomId,
+    required String date,
+  }) async {
+    final response = await client.rpc(
+      'get_room_slots_with_prices',
+      params: {'p_room_id': roomId, 'p_date': date},
+    );
+    if (response is! List) {
+      throw const FormatException('Invalid priced slots response');
+    }
+    return response
+        .map((row) => Map<String, dynamic>.from(row as Map))
+        .toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> getLoungePriceRange({
+    required String loungeId,
+  }) async {
+    final response = await client.rpc(
+      'get_lounge_price_range',
+      params: {'p_lounge_id': loungeId},
+    );
+    if (response is! Map) {
+      throw const FormatException('Invalid lounge price range response');
+    }
+    return Map<String, dynamic>.from(response);
+  }
+
+  @override
   Future<PaginatedResult<BookingModel>> getLoungeBookingsPage({
     required String loungeId,
     int page = 1,
@@ -355,10 +414,20 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   @override
   Future<void> startBookingSession(String bookingId) async {
-    await client.rpc(
-      'start_booking_session',
+    final booking = await client
+        .from('bookings')
+        .select('is_open_time')
+        .eq('id', bookingId)
+        .single();
+    final response = await client.rpc(
+      booking['is_open_time'] == true
+          ? 'start_open_time_booking_session'
+          : 'start_booking_session',
       params: {'p_booking_id': bookingId},
     );
+    if (response is! Map || response['success'] != true) {
+      throw const FormatException('Invalid session start response');
+    }
   }
 
   @override
@@ -378,21 +447,25 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       },
     );
 
-    return response is Map
-        ? Map<String, dynamic>.from(response)
-        : <String, dynamic>{'success': true};
+    if (response is! Map || response['success'] != true) {
+      throw const FormatException('Invalid open-time start response');
+    }
+    return Map<String, dynamic>.from(response);
   }
 
   @override
   Future<Map<String, dynamic>> completeOpenTimeSession(String bookingId) async {
     final response = await client.rpc(
-      'complete_open_time_session',
-      params: {'p_booking_id': bookingId},
+      'complete_booking_session',
+      params: {
+        'p_booking_id': bookingId,
+        'p_action_by': client.auth.currentUser?.id,
+      },
     );
 
     return response is Map
         ? Map<String, dynamic>.from(response)
-        : <String, dynamic>{'success': true};
+        : throw const FormatException('Invalid session completion response');
   }
 
   @override
@@ -404,17 +477,10 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   @override
   Future<void> approveManualBooking(String bookingId, String actionBy) async {
-    try {
-      await client.rpc(
-        'approve_manual_booking',
-        params: {'p_booking_id': bookingId, 'p_action_by': actionBy},
-      );
-    } catch (e) {
-      debugPrint(
-        '⚠️ [DATA_SOURCE] approve_manual_booking RPC error ($e), falling back to updateBookingStatus',
-      );
-      await updateBookingStatus(bookingId, 'upcoming');
-    }
+    await client.rpc(
+      'approve_manual_booking',
+      params: {'p_booking_id': bookingId, 'p_action_by': actionBy},
+    );
   }
 
   @override
@@ -423,21 +489,14 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     String reason,
     String actionBy,
   ) async {
-    try {
-      await client.rpc(
-        'reject_manual_booking',
-        params: {
-          'p_booking_id': bookingId,
-          'p_rejection_reason': reason,
-          'p_action_by': actionBy,
-        },
-      );
-    } catch (e) {
-      debugPrint(
-        '⚠️ [DATA_SOURCE] reject_manual_booking RPC error ($e), falling back to updateBookingStatus',
-      );
-      await updateBookingStatus(bookingId, 'cancelled');
-    }
+    await client.rpc(
+      'reject_manual_booking',
+      params: {
+        'p_booking_id': bookingId,
+        'p_rejection_reason': reason,
+        'p_action_by': actionBy,
+      },
+    );
   }
 
   @override

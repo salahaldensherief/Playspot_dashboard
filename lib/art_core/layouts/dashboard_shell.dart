@@ -58,12 +58,6 @@ class _DashboardShellState extends State<DashboardShell> {
       return;
     }
 
-    if (user.isSuperAdmin) {
-      _loadedPermissionIdentity = 'super_admin:${user.id}';
-      permissionsCubit.setActiveLoungeId(null);
-      return;
-    }
-
     final loungeId = user.loungeId?.trim();
     final identity = '${user.id}|${_permissionRole(user)}|${loungeId ?? ''}';
     if (_loadedPermissionIdentity == identity) return;

@@ -66,8 +66,21 @@ class _BookingReceiptDialogState extends State<BookingReceiptDialog> {
       return;
     }
 
-    final bucketsToTry = ['payment-proofs', 'receipts', 'booking_receipts', 'payment_receipts', 'wallets', 'payouts', 'attachments'];
-    String cleanPath = path.replaceAll(RegExp(r'^(payment-proofs|receipts|booking_receipts|payment_receipts|wallets)/'), '');
+    final bucketsToTry = [
+      'payment-proofs',
+      'receipts',
+      'booking_receipts',
+      'payment_receipts',
+      'wallets',
+      'payouts',
+      'attachments',
+    ];
+    String cleanPath = path.replaceAll(
+      RegExp(
+        r'^(payment-proofs|receipts|booking_receipts|payment_receipts|wallets)/',
+      ),
+      '',
+    );
 
     for (final bucket in bucketsToTry) {
       for (final p in [cleanPath, path]) {
@@ -170,18 +183,44 @@ class _BookingReceiptDialogState extends State<BookingReceiptDialog> {
         children: [
           Row(
             children: [
-              Text('${AppStrings.customerName}: ', style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp)),
-              Text(b.userName ?? 'Client', style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.bold)),
+              Text(
+                '${AppStrings.customerName}: ',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14.sp,
+                ),
+              ),
+              Text(
+                b.userName ?? 'Client',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const Spacer(),
-              if (b.userPhone != null) Text(b.userPhone!, style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp)),
+              if (b.userPhone != null)
+                Text(
+                  b.userPhone!,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14.sp,
+                  ),
+                ),
             ],
           ),
           if (b.paymentMethod != null && b.paymentMethod!.isNotEmpty) ...[
             SizedBox(height: 8.h),
-            Text(AppStrings.paymentMethodLabel(b.paymentMethod!), style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
+            Text(
+              AppStrings.paymentMethodLabel(b.paymentMethod!),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+            ),
           ],
           SizedBox(height: 16.h),
-          Text(AppStrings.reviewReceipt, style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp)),
+          Text(
+            AppStrings.reviewReceipt,
+            style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
+          ),
           SizedBox(height: 8.h),
           Container(
             height: 320.h,
@@ -195,30 +234,41 @@ class _BookingReceiptDialogState extends State<BookingReceiptDialog> {
             child: _isLoadingUrl
                 ? const Center(child: CircularProgressIndicator())
                 : (_signedReceiptUrl != null && _signedReceiptUrl!.isNotEmpty)
-                    ? AppCachedImage(
-                        imageUrl: _signedReceiptUrl!,
-                        fit: BoxFit.contain,
-                      )
-                    : Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.receipt_long, size: 48.r, color: AppColors.textSecondary),
-                            SizedBox(height: 8.h),
-                            Text(
-                              'لم يتم إرفاق إيصال دفع من العميل بعد',
-                              style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
-                            ),
-                            if (b.paymentMethod != null && b.paymentMethod!.isNotEmpty) ...[
-                              SizedBox(height: 4.h),
-                              Text(
-                                'طريقة الدفع: ${b.paymentMethod}',
-                                style: TextStyle(color: AppColors.neonBlue, fontSize: 12.sp),
-                              ),
-                            ],
-                          ],
+                ? AppCachedImage(
+                    imageUrl: _signedReceiptUrl!,
+                    fit: BoxFit.contain,
+                  )
+                : Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.receipt_long,
+                          size: 48.r,
+                          color: AppColors.textSecondary,
                         ),
-                      ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          'لم يتم إرفاق إيصال دفع من العميل بعد',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                        if (b.paymentMethod != null &&
+                            b.paymentMethod!.isNotEmpty) ...[
+                          SizedBox(height: 4.h),
+                          Text(
+                            'طريقة الدفع: ${b.paymentMethod}',
+                            style: TextStyle(
+                              color: AppColors.neonBlue,
+                              fontSize: 12.sp,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
           ),
           if (_showRejectInput) ...[
             SizedBox(height: 20.h),

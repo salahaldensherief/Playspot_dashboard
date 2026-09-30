@@ -27,9 +27,6 @@ extension PermissionExtension on BuildContext {
     final user = read<LoginCubit>().state.user;
     if (user == null || key.trim().isEmpty) return false;
 
-    // Platform administrators intentionally operate outside lounge-scoped RBAC.
-    if (user.isSuperAdmin) return true;
-
     return read<PermissionsCubit>().hasPermission(
       key,
       userRole: _permissionRole(user),

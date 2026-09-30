@@ -7,10 +7,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 class BookingFinancialsExtrasList extends StatelessWidget {
   final List<dynamic> extras;
 
-  const BookingFinancialsExtrasList({
-    super.key,
-    required this.extras,
-  });
+  const BookingFinancialsExtrasList({super.key, required this.extras});
 
   @override
   Widget build(BuildContext context) {
@@ -31,16 +28,28 @@ class BookingFinancialsExtrasList extends StatelessWidget {
           ),
           child: Column(
             children: extras.map((item) {
-              final qty = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
+              final qty =
+                  (item['quantity'] ?? item['qty'] ?? item['count'] as num?)
+                      ?.toInt() ??
+                  1;
               final rawName =
-                  item['name_ar'] ?? item['name_en'] ?? item['name'] ?? item['title'] ?? item['item_name'];
-              final name = (rawName != null &&
+                  item['name_ar'] ??
+                  item['name_en'] ??
+                  item['name'] ??
+                  item['title'] ??
+                  item['item_name'];
+              final name =
+                  (rawName != null &&
                       rawName.toString().trim().isNotEmpty &&
                       rawName.toString().trim() != 'null')
                   ? rawName.toString().trim()
                   : 'صنف';
-              final unitPrice = (item['unit_price'] ?? item['price'] as num?)?.toDouble() ?? 0.0;
-              final itemTotal = (item['total_price'] as num?)?.toDouble() ?? (unitPrice * qty);
+              final unitPrice =
+                  (item['unit_price'] ?? item['price'] as num?)?.toDouble() ??
+                  0.0;
+              final itemTotal =
+                  (item['total_price'] as num?)?.toDouble() ??
+                  (unitPrice * qty);
 
               return Padding(
                 padding: EdgeInsets.symmetric(vertical: 4.h),
@@ -49,9 +58,17 @@ class BookingFinancialsExtrasList extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.local_cafe_outlined, size: 14.r, color: AppColors.neonBlue),
+                        Icon(
+                          Icons.local_cafe_outlined,
+                          size: 14.r,
+                          color: AppColors.neonBlue,
+                        ),
                         SizedBox(width: 6.w),
-                        AppText.body('${qty}x $name', fontSize: 12.sp, color: AppColors.textPrimary),
+                        AppText.body(
+                          '${qty}x $name',
+                          fontSize: 12.sp,
+                          color: AppColors.textPrimary,
+                        ),
                       ],
                     ),
                     AppText.body(

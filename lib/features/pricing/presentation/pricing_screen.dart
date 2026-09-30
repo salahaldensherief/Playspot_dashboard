@@ -67,7 +67,8 @@ class _PricingScreenContentState extends State<_PricingScreenContent> {
     final loungeId = user?.loungeId ?? '';
 
     // Permission Guard
-    final bool canManagePricing = user != null &&
+    final bool canManagePricing =
+        user != null &&
         (user.isSuperAdmin ||
             user.isOwner ||
             context.hasPermission('pricing.manage') ||
@@ -88,8 +89,11 @@ class _PricingScreenContentState extends State<_PricingScreenContent> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.style_outlined,
-                    size: 56.r, color: AppColors.textSecondary),
+                Icon(
+                  Icons.style_outlined,
+                  size: 56.r,
+                  color: AppColors.textSecondary,
+                ),
                 SizedBox(height: 16.h),
                 Text(
                   AppStrings.accessDeniedAudit,
@@ -121,7 +125,7 @@ class _PricingScreenContentState extends State<_PricingScreenContent> {
                   subtitle: AppStrings.pricingRulesDesc,
                   icon: Icons.style_rounded,
                   iconColor: AppColors.neonBlue,
-                  action: AppButton(
+                  trailing: AppButton(
                     text: AppStrings.addPricingRule,
                     icon: Icons.add_rounded,
                     backgroundColor: AppColors.neonBlue,
@@ -175,9 +179,10 @@ class _PricingScreenContentState extends State<_PricingScreenContent> {
                         groupBy: state.groupBy,
                         onEdit: (rule) => _openDrawer(rule),
                         onDelete: (rule) {
-                          context
-                              .read<PricingCubit>()
-                              .deleteRule(rule.id, loungeId: loungeId);
+                          context.read<PricingCubit>().deleteRule(
+                            rule.id,
+                            loungeId: loungeId,
+                          );
                         },
                       );
                     },
@@ -191,9 +196,7 @@ class _PricingScreenContentState extends State<_PricingScreenContent> {
           if (_isDrawerOpen) ...[
             GestureDetector(
               onTap: _closeDrawer,
-              child: Container(
-                color: Colors.black.withAlpha(120),
-              ),
+              child: Container(color: Colors.black.withAlpha(120)),
             ),
             Align(
               alignment: Alignment.centerLeft,

@@ -19,7 +19,11 @@ class ExtendSessionDialog extends StatefulWidget {
     this.onExtendMinutes,
   });
 
-  static Future<void> show(BuildContext context, Booking booking, {ValueChanged<int>? onExtendMinutes}) {
+  static Future<void> show(
+    BuildContext context,
+    Booking booking, {
+    ValueChanged<int>? onExtendMinutes,
+  }) {
     final dashboardCubit = context.read<DashboardCubit?>();
     final bookingCubit = context.read<BookingCubit?>();
 
@@ -28,12 +32,13 @@ class ExtendSessionDialog extends StatefulWidget {
       useRootNavigator: false,
       builder: (dialogContext) => MultiBlocProvider(
         providers: [
-          if (dashboardCubit != null)
-            BlocProvider.value(value: dashboardCubit),
-          if (bookingCubit != null)
-            BlocProvider.value(value: bookingCubit),
+          if (dashboardCubit != null) BlocProvider.value(value: dashboardCubit),
+          if (bookingCubit != null) BlocProvider.value(value: bookingCubit),
         ],
-        child: ExtendSessionDialog(booking: booking, onExtendMinutes: onExtendMinutes),
+        child: ExtendSessionDialog(
+          booking: booking,
+          onExtendMinutes: onExtendMinutes,
+        ),
       ),
     );
   }
@@ -62,11 +67,20 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
     final dashboardCubit = context.read<DashboardCubit>();
     final bookingCubit = context.read<BookingCubit>();
 
-    final success = await dashboardCubit.extendSession(widget.booking.id, _selectedMinutes);
+    final success = await dashboardCubit.extendSession(
+      widget.booking.id,
+      _selectedMinutes,
+    );
     if (success) {
-      bookingCubit.startWatchingBookings(loungeId: widget.booking.loungeId, forceRefresh: true);
+      bookingCubit.startWatchingBookings(
+        loungeId: widget.booking.loungeId,
+        forceRefresh: true,
+      );
     } else {
-      await bookingCubit.extendBookingDuration(widget.booking.id, _selectedMinutes);
+      await bookingCubit.extendBookingDuration(
+        widget.booking.id,
+        _selectedMinutes,
+      );
     }
 
     if (!mounted) return;
@@ -98,7 +112,10 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
               color: AppColors.neonBlue.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10.r),
             ),
-            child: const Icon(Icons.add_alarm_rounded, color: AppColors.neonBlue),
+            child: const Icon(
+              Icons.add_alarm_rounded,
+              color: AppColors.neonBlue,
+            ),
           ),
           SizedBox(width: 12.w),
           AppText.subHeading(
@@ -121,7 +138,11 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
             ),
             child: Row(
               children: [
-                Icon(Icons.meeting_room_outlined, size: 16.r, color: AppColors.textSecondary),
+                Icon(
+                  Icons.meeting_room_outlined,
+                  size: 16.r,
+                  color: AppColors.textSecondary,
+                ),
                 SizedBox(width: 6.w),
                 Expanded(
                   child: AppText.body(
@@ -144,9 +165,13 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
                 label: Text(
                   '+$mins دقيقة',
                   style: TextStyle(
-                    color: isSelected ? AppColors.textPrimary : AppColors.textPrimary,
+                    color: isSelected
+                        ? AppColors.textPrimary
+                        : AppColors.textPrimary,
                     fontSize: 12.sp,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                 ),
                 selected: isSelected,
@@ -155,7 +180,9 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.r),
                   side: BorderSide(
-                    color: isSelected ? AppColors.neonBlue : AppColors.borderDefault,
+                    color: isSelected
+                        ? AppColors.neonBlue
+                        : AppColors.borderDefault,
                   ),
                 ),
                 onSelected: (selected) {

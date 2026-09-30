@@ -9,10 +9,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/custo
 class BookingCardCustomerRow extends StatelessWidget {
   final Booking booking;
 
-  const BookingCardCustomerRow({
-    super.key,
-    required this.booking,
-  });
+  const BookingCardCustomerRow({super.key, required this.booking});
 
   String _getInitials(String? name) {
     if (name == null || name.trim().isEmpty) return 'U';

@@ -6,6 +6,7 @@ class LoungeDraftParams extends Equatable {
   final String description;
   final String city;
   final String address;
+  final String contactPhone;
   final String opensAt;
   final String closesAt;
   final double? lat;
@@ -21,6 +22,7 @@ class LoungeDraftParams extends Equatable {
     this.description = '',
     this.city = '',
     this.address = '',
+    this.contactPhone = '',
     this.opensAt = '',
     this.closesAt = '',
     this.lat,
@@ -37,6 +39,7 @@ class LoungeDraftParams extends Equatable {
     String? description,
     String? city,
     String? address,
+    String? contactPhone,
     String? opensAt,
     String? closesAt,
     double? lat,
@@ -52,6 +55,7 @@ class LoungeDraftParams extends Equatable {
       description: description ?? this.description,
       city: city ?? this.city,
       address: address ?? this.address,
+      contactPhone: contactPhone ?? this.contactPhone,
       opensAt: opensAt ?? this.opensAt,
       closesAt: closesAt ?? this.closesAt,
       lat: lat ?? this.lat,
@@ -64,20 +68,21 @@ class LoungeDraftParams extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'step': step,
-        'name': name,
-        'description': description,
-        'city': city,
-        'address': address,
-        'opensAt': opensAt,
-        'closesAt': closesAt,
-        'lat': lat,
-        'lng': lng,
-        'isChain': isChain,
-        'brandName': brandName,
-        'branchesCount': branchesCount,
-        'branchName': branchName,
-      };
+    'step': step,
+    'name': name,
+    'description': description,
+    'city': city,
+    'address': address,
+    'contactPhone': contactPhone,
+    'opensAt': opensAt,
+    'closesAt': closesAt,
+    'lat': lat,
+    'lng': lng,
+    'isChain': isChain,
+    'brandName': brandName,
+    'branchesCount': branchesCount,
+    'branchName': branchName,
+  };
 
   factory LoungeDraftParams.fromJson(Map<String, dynamic> json) {
     return LoungeDraftParams(
@@ -86,6 +91,7 @@ class LoungeDraftParams extends Equatable {
       description: json['description']?.toString() ?? '',
       city: json['city']?.toString() ?? '',
       address: json['address']?.toString() ?? '',
+      contactPhone: json['contactPhone']?.toString() ?? '',
       opensAt: json['opensAt']?.toString() ?? '',
       closesAt: json['closesAt']?.toString() ?? '',
       lat: (json['lat'] as num?)?.toDouble(),
@@ -99,18 +105,19 @@ class LoungeDraftParams extends Equatable {
 
   @override
   List<Object?> get props => [
-        step,
-        name,
-        description,
-        city,
-        address,
-        opensAt,
-        closesAt,
-        lat,
-        lng,
-        isChain,
-        brandName,
-        branchesCount,
-        branchName,
-      ];
+    step,
+    name,
+    description,
+    city,
+    address,
+    contactPhone,
+    opensAt,
+    closesAt,
+    lat,
+    lng,
+    isChain,
+    brandName,
+    branchesCount,
+    branchName,
+  ];
 }

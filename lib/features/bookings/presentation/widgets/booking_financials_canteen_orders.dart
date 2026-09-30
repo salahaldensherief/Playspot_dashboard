@@ -22,7 +22,10 @@ class BookingFinancialsCanteenOrders extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(height: 16.h),
-        AppText.subHeading('طلبات الكافيتريا - Canteen Orders', fontSize: 14.sp),
+        AppText.subHeading(
+          'طلبات الكافيتريا - Canteen Orders',
+          fontSize: 14.sp,
+        ),
         SizedBox(height: 8.h),
         ...canteenOrders.map((order) {
           final orderId = order['id']?.toString() ?? '';
@@ -71,19 +74,39 @@ class BookingFinancialsCanteenOrders extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                       if (timeFormatted.isNotEmpty)
-                        AppText.body(timeFormatted, fontSize: 11.sp, color: AppColors.textMuted),
+                        AppText.body(
+                          timeFormatted,
+                          fontSize: 11.sp,
+                          color: AppColors.textMuted,
+                        ),
                     ],
                   ),
                   SizedBox(height: 6.h),
                 ],
                 ...orderItems.map((item) {
-                  final quantity = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
-                  final rawName = item['name_ar'] ?? item['name_en'] ?? item['name'] ?? item['title'] ?? item['item_name'];
-                  final name = (rawName != null && rawName.toString().trim().isNotEmpty && rawName.toString().trim() != 'null')
+                  final quantity =
+                      (item['quantity'] ?? item['qty'] ?? item['count'] as num?)
+                          ?.toInt() ??
+                      1;
+                  final rawName =
+                      item['name_ar'] ??
+                      item['name_en'] ??
+                      item['name'] ??
+                      item['title'] ??
+                      item['item_name'];
+                  final name =
+                      (rawName != null &&
+                          rawName.toString().trim().isNotEmpty &&
+                          rawName.toString().trim() != 'null')
                       ? rawName.toString().trim()
                       : 'صنف';
-                  final unitPrice = (item['unit_price'] ?? item['price'] as num?)?.toDouble() ?? 0.0;
-                  final itemTotal = (item['total_price'] as num?)?.toDouble() ?? (unitPrice * quantity);
+                  final unitPrice =
+                      (item['unit_price'] ?? item['price'] as num?)
+                          ?.toDouble() ??
+                      0.0;
+                  final itemTotal =
+                      (item['total_price'] as num?)?.toDouble() ??
+                      (unitPrice * quantity);
 
                   return Padding(
                     padding: EdgeInsets.symmetric(vertical: 2.h),

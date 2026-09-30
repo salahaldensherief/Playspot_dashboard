@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:play_spot_dashboard/features/canteen/data/models/canteen_combo_component_model.dart';
 import 'package:play_spot_dashboard/features/canteen/data/models/canteen_combo_model.dart';
 import 'package:play_spot_dashboard/features/canteen/data/models/low_stock_alert_model.dart';
 import 'package:play_spot_dashboard/features/canteen/data/models/upsell_conversion_model.dart';
@@ -10,47 +9,50 @@ import 'package:play_spot_dashboard/features/requests/data/models/canteen_item_e
 
 void main() {
   group('Canteen Combo Financial & Margin Analytics', () {
-    test('calculates separate items total, cost total, profit margin, and customer savings correctly', () {
-      final combo = CanteenComboEntity(
-        id: 'combo-1',
-        loungeId: 'lounge-1',
-        nameAr: 'كومبو الأبطال',
-        price: 80.0,
-        items: const [
-          CanteenComboComponentEntity(
-            comboId: 'combo-1',
-            extraId: 'extra-1',
-            quantity: 2,
-            extraNameAr: 'بيبسي',
-            extraPrice: 25.0,
-            extraCostPrice: 15.0,
-          ),
-          CanteenComboComponentEntity(
-            comboId: 'combo-1',
-            extraId: 'extra-2',
-            quantity: 1,
-            extraNameAr: 'شيبسي',
-            extraPrice: 40.0,
-            extraCostPrice: 20.0,
-          ),
-        ],
-      );
+    test(
+      'calculates separate items total, cost total, profit margin, and customer savings correctly',
+      () {
+        final combo = CanteenComboEntity(
+          id: 'combo-1',
+          loungeId: 'lounge-1',
+          nameAr: 'كومبو الأبطال',
+          price: 80.0,
+          items: const [
+            CanteenComboComponentEntity(
+              comboId: 'combo-1',
+              extraId: 'extra-1',
+              quantity: 2,
+              extraNameAr: 'بيبسي',
+              extraPrice: 25.0,
+              extraCostPrice: 15.0,
+            ),
+            CanteenComboComponentEntity(
+              comboId: 'combo-1',
+              extraId: 'extra-2',
+              quantity: 1,
+              extraNameAr: 'شيبسي',
+              extraPrice: 40.0,
+              extraCostPrice: 20.0,
+            ),
+          ],
+        );
 
-      // Separate items total: (2 * 25) + (1 * 40) = 90 EGP
-      expect(combo.separateItemsTotal, equals(90.0));
+        // Separate items total: (2 * 25) + (1 * 40) = 90 EGP
+        expect(combo.separateItemsTotal, equals(90.0));
 
-      // Estimated cost total: (2 * 15) + (1 * 20) = 50 EGP
-      expect(combo.estimatedCostTotal, equals(50.0));
+        // Estimated cost total: (2 * 15) + (1 * 20) = 50 EGP
+        expect(combo.estimatedCostTotal, equals(50.0));
 
-      // Customer savings: 90 - 80 = 10 EGP
-      expect(combo.savings, equals(10.0));
+        // Customer savings: 90 - 80 = 10 EGP
+        expect(combo.savings, equals(10.0));
 
-      // Profit margin: 80 - 50 = 30 EGP
-      expect(combo.profitMargin, equals(30.0));
+        // Profit margin: 80 - 50 = 30 EGP
+        expect(combo.profitMargin, equals(30.0));
 
-      // Margin percentage: (30 / 80) * 100 = 37.5%
-      expect(combo.profitMarginPercent, equals(37.5));
-    });
+        // Margin percentage: (30 / 80) * 100 = 37.5%
+        expect(combo.profitMarginPercent, equals(37.5));
+      },
+    );
 
     test('handles combo without image and null cost prices gracefully', () {
       final combo = CanteenComboEntity(
@@ -128,11 +130,7 @@ void main() {
         'max_impressions_per_booking': 2,
         'priority': 150,
         'is_active': true,
-        'extras': {
-          'id': 'extra-1',
-          'name_ar': 'شاي مثلج',
-          'price': 35.0,
-        },
+        'extras': {'id': 'extra-1', 'name_ar': 'شاي مثلج', 'price': 35.0},
       };
 
       final model = UpsellRuleModel.fromJson(json);

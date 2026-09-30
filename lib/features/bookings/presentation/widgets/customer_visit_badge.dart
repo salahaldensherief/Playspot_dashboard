@@ -106,7 +106,10 @@ class CustomerVisitBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.neonBlue.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.25), width: 1.0),
+        border: Border.all(
+          color: AppColors.neonBlue.withValues(alpha: 0.25),
+          width: 1.0,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

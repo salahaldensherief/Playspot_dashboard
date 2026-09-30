@@ -23,7 +23,7 @@ class RoomOccupancyAvailableSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final allowOpenTimePolicy = context.select<LoginCubit, bool>(
-      (c) => c.state.userLounge?.allowOpenTimeSessions ?? true,
+      (c) => c.state.userLounge?.allowOpenTimeSessions ?? false,
     );
 
     return Column(
@@ -42,7 +42,11 @@ class RoomOccupancyAvailableSection extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  AppText.body(AppStrings.singlePriceLabel, fontSize: 11.sp, color: AppColors.textSecondary),
+                  AppText.body(
+                    AppStrings.singlePriceLabel,
+                    fontSize: 11.sp,
+                    color: AppColors.textSecondary,
+                  ),
                   AppText.body(
                     '${room.pricePerHourSingle.toStringAsFixed(0)} ${AppStrings.egp}/${AppStrings.perHour}',
                     fontSize: 11.sp,
@@ -55,7 +59,11 @@ class RoomOccupancyAvailableSection extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  AppText.body(AppStrings.multiPriceLabel, fontSize: 11.sp, color: AppColors.textSecondary),
+                  AppText.body(
+                    AppStrings.multiPriceLabel,
+                    fontSize: 11.sp,
+                    color: AppColors.textSecondary,
+                  ),
                   AppText.body(
                     '${room.pricePerHourMulti.toStringAsFixed(0)} ${AppStrings.egp}/${AppStrings.perHour}',
                     fontSize: 11.sp,
@@ -70,7 +78,9 @@ class RoomOccupancyAvailableSection extends StatelessWidget {
         SizedBox(height: 12.h),
         if (room.openTimeEnabled) ...[
           Tooltip(
-            message: allowOpenTimePolicy ? '' : AppStrings.openTimeDisabledByPolicy,
+            message: allowOpenTimePolicy
+                ? ''
+                : AppStrings.openTimeDisabledByPolicy,
             child: AppButton(
               text: AppStrings.openTime,
               icon: Icons.all_inclusive_rounded,
@@ -89,7 +99,6 @@ class RoomOccupancyAvailableSection extends StatelessWidget {
           ),
           SizedBox(height: 8.h),
         ],
-
 
         // One-Tap Walk-in Quick Toggle & Quick Booking Dialog
         Row(
@@ -123,10 +132,8 @@ class RoomOccupancyAvailableSection extends StatelessWidget {
                 showDialog(
                   context: context,
                   useRootNavigator: false,
-                  builder: (_) => AddBookingDialog(
-                    loungeId: loungeId,
-                    initialRoom: room,
-                  ),
+                  builder: (_) =>
+                      AddBookingDialog(loungeId: loungeId, initialRoom: room),
                 );
               },
             ),

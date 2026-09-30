@@ -28,14 +28,17 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
 
   List<Booking> _applyStatusFilter(List<Booking> all) {
     if (_selectedStatusFilter == 'all') return all;
-    return all.where((b) => b.status.toDbString() == _selectedStatusFilter).toList();
+    return all
+        .where((b) => b.status.toDbString() == _selectedStatusFilter)
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<BookingCubit, BookingState>(
       builder: (context, state) {
-        if (state.status == BookingStatusState.loading && state.bookings.isEmpty) {
+        if (state.status == BookingStatusState.loading &&
+            state.bookings.isEmpty) {
           return const TableShimmer(columns: 7);
         }
 
@@ -45,7 +48,9 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
         final totalPages = (totalCount / _pageSize).ceil();
 
         final startIndex = _currentPage * _pageSize;
-        final endIndex = (startIndex + _pageSize) > totalCount ? totalCount : startIndex + _pageSize;
+        final endIndex = (startIndex + _pageSize) > totalCount
+            ? totalCount
+            : startIndex + _pageSize;
         final pagedBookings = (startIndex < totalCount)
             ? filteredList.sublist(startIndex, endIndex)
             : <Booking>[];
@@ -82,20 +87,50 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
                 AppStrings.gaming,
                 AppStrings.schedule,
                 AppStrings.status,
-                AppStrings.actions
+                AppStrings.actions,
               ],
-              rows: pagedBookings.map((b) => DataRow(
-                onSelectChanged: (_) => _showBookingDetails(context, b),
-                cells: [
-                  DataCell(AppText.body(b.id.length >= 8 ? b.id.substring(0, 8) : b.id, color: AppColors.textPrimary)),
-                  DataCell(AppText.body(b.userName ?? '${AppStrings.userLabel} ${b.userId.length >= 5 ? b.userId.substring(0, 5) : b.userId}', color: AppColors.textPrimary)),
-                  DataCell(AppText.body(b.roomName, color: AppColors.textSecondary)),
-                  DataCell(AppText.body(AppStrings.gaming, color: AppColors.textSecondary)),
-                  DataCell(AppText.body(b.startTime, color: AppColors.textSecondary)),
-                  DataCell(_getStatusBadge(b)),
-                  DataCell(_buildActions(context, b)),
-                ],
-              )).toList(),
+              rows: pagedBookings
+                  .map(
+                    (b) => DataRow(
+                      onSelectChanged: (_) => _showBookingDetails(context, b),
+                      cells: [
+                        DataCell(
+                          AppText.body(
+                            b.id.length >= 8 ? b.id.substring(0, 8) : b.id,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        DataCell(
+                          AppText.body(
+                            b.userName ??
+                                '${AppStrings.userLabel} ${b.userId.length >= 5 ? b.userId.substring(0, 5) : b.userId}',
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        DataCell(
+                          AppText.body(
+                            b.roomName,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        DataCell(
+                          AppText.body(
+                            AppStrings.gaming,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        DataCell(
+                          AppText.body(
+                            b.startTime,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        DataCell(_getStatusBadge(b)),
+                        DataCell(_buildActions(context, b)),
+                      ],
+                    ),
+                  )
+                  .toList(),
             ),
 
             // Pagination Controls Footer
@@ -114,7 +149,10 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
                     totalCount == 0
                         ? '0 - 0 / 0'
                         : '${startIndex + 1} - $endIndex / $totalCount',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13.sp,
+                    ),
                   ),
                   Row(
                     children: [
@@ -202,18 +240,32 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
 
           Row(
             children: [
-              Icon(Icons.meeting_room, color: AppColors.textSecondary, size: 14.r),
+              Icon(
+                Icons.meeting_room,
+                color: AppColors.textSecondary,
+                size: 14.r,
+              ),
               SizedBox(width: 6.w),
               Text(
                 booking.roomName,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12.sp,
+                ),
               ),
               SizedBox(width: 12.w),
-              Icon(Icons.access_time, color: AppColors.textSecondary, size: 14.r),
+              Icon(
+                Icons.access_time,
+                color: AppColors.textSecondary,
+                size: 14.r,
+              ),
               SizedBox(width: 4.w),
               Text(
                 booking.startTime,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12.sp,
+                ),
               ),
             ],
           ),
@@ -271,14 +323,16 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
             text: AppStrings.approve,
             variant: AppButtonVariant.primary,
             height: 48.h,
-            onPressed: () => context.read<BookingCubit>().approveBooking(booking.id),
+            onPressed: () =>
+                context.read<BookingCubit>().approveBooking(booking.id),
           ),
           SizedBox(width: 8.w),
           AppButton(
             text: AppStrings.reject,
             variant: AppButtonVariant.outlined,
             height: 48.h,
-            onPressed: () => context.read<BookingCubit>().rejectBooking(booking.id),
+            onPressed: () =>
+                context.read<BookingCubit>().rejectBooking(booking.id),
           ),
         ],
       );
@@ -286,13 +340,14 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
 
     if (booking.status == BookingStatus.upcoming) {
       return booking.paymentStatus == PaymentStatus.paid
-        ? const Icon(Icons.check_circle, color: AppColors.success)
-        : AppButton(
-            text: AppStrings.approve,
-            variant: AppButtonVariant.primary,
-            height: 48.h,
-            onPressed: () => context.read<BookingCubit>().approveBooking(booking.id),
-          );
+          ? const Icon(Icons.check_circle, color: AppColors.success)
+          : AppButton(
+              text: AppStrings.approve,
+              variant: AppButtonVariant.primary,
+              height: 48.h,
+              onPressed: () =>
+                  context.read<BookingCubit>().approveBooking(booking.id),
+            );
     }
 
     if (booking.status == BookingStatus.completed) {
@@ -318,12 +373,18 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
     }
     final status = b.status.toDbString();
     switch (status) {
-      case 'pending': return StatusBadge.warning(AppStrings.pending);
-      case 'upcoming': return StatusBadge.info(AppStrings.upcoming);
-      case 'in_progress': return StatusBadge.success(AppStrings.inProgress);
-      case 'completed': return StatusBadge.success(AppStrings.completed);
-      case 'cancelled': return StatusBadge.danger(AppStrings.cancelled);
-      default: return StatusBadge.info(status);
+      case 'pending':
+        return StatusBadge.warning(AppStrings.pending);
+      case 'upcoming':
+        return StatusBadge.info(AppStrings.upcoming);
+      case 'in_progress':
+        return StatusBadge.success(AppStrings.inProgress);
+      case 'completed':
+        return StatusBadge.success(AppStrings.completed);
+      case 'cancelled':
+        return StatusBadge.danger(AppStrings.cancelled);
+      default:
+        return StatusBadge.info(status);
     }
   }
 }

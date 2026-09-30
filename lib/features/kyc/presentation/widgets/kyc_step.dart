@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -48,7 +49,9 @@ class KycStep extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.neonBlue.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.2)),
+            border: Border.all(
+              color: AppColors.neonBlue.withValues(alpha: 0.2),
+            ),
           ),
           child: Row(
             children: [
@@ -56,7 +59,7 @@ class KycStep extends StatelessWidget {
               SizedBox(width: 12.w),
               Expanded(
                 child: AppText.body(
-                  'Verification usually takes 24-48 hours. You can still set up your lounge while we review your documents.',
+                  'onboarding_review.kyc_notice'.tr(),
                   fontSize: 12.sp,
                 ),
               ),

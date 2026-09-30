@@ -72,7 +72,11 @@ class _BookingSessionProgressState extends State<BookingSessionProgress> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.timer_outlined, size: 13.r, color: AppColors.success),
+                  Icon(
+                    Icons.timer_outlined,
+                    size: 13.r,
+                    color: AppColors.success,
+                  ),
                   SizedBox(width: 4.w),
                   AppText.body(
                     AppStrings.sessionActive,

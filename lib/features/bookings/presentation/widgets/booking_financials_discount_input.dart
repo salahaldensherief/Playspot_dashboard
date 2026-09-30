@@ -44,11 +44,16 @@ class BookingFinancialsDiscountInput extends StatelessWidget {
                     InkWell(
                       onTap: () => onTogglePercentage?.call(false),
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 4.h,
+                        ),
                         child: Text(
                           'EGP',
                           style: TextStyle(
-                            color: !isPercentage ? AppColors.neonBlue : Colors.white70,
+                            color: !isPercentage
+                                ? AppColors.neonBlue
+                                : Colors.white70,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -57,11 +62,16 @@ class BookingFinancialsDiscountInput extends StatelessWidget {
                     InkWell(
                       onTap: () => onTogglePercentage?.call(true),
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 4.h,
+                        ),
                         child: Text(
                           '%',
                           style: TextStyle(
-                            color: isPercentage ? AppColors.neonBlue : Colors.white70,
+                            color: isPercentage
+                                ? AppColors.neonBlue
+                                : Colors.white70,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

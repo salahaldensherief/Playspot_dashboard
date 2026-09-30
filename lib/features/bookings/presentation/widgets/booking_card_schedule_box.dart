@@ -23,7 +23,10 @@ class BookingCardScheduleBox extends StatelessWidget {
     if (timeStr.isEmpty) return '';
     try {
       final parts = timeStr.split(':');
-      final time = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+      final time = TimeOfDay(
+        hour: int.parse(parts[0]),
+        minute: int.parse(parts[1]),
+      );
       final now = DateTime.now();
       final dt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
       return DateFormat('hh:mm a').format(dt);
@@ -34,8 +37,9 @@ class BookingCardScheduleBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String durationHrsStr =
-        (booking.durationMinutes / 60.0).toStringAsFixed(1).replaceAll('.0', '');
+    final String durationHrsStr = (booking.durationMinutes / 60.0)
+        .toStringAsFixed(1)
+        .replaceAll('.0', '');
     final String formattedDate = DateFormat('MMM dd').format(booking.date);
     final String? playMode = booking.playMode;
     final bool hasPlayMode = playMode != null && playMode.isNotEmpty;
@@ -59,7 +63,9 @@ class BookingCardScheduleBox extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      isOverdue ? Icons.warning_amber_rounded : Icons.schedule_rounded,
+                      isOverdue
+                          ? Icons.warning_amber_rounded
+                          : Icons.schedule_rounded,
                       size: 15.r,
                       color: isOverdue ? AppColors.danger : accent,
                     ),
@@ -68,7 +74,9 @@ class BookingCardScheduleBox extends StatelessWidget {
                       _formatTime(booking.startTime),
                       fontSize: 17.sp,
                       fontWeight: FontWeight.bold,
-                      color: isOverdue ? AppColors.danger : AppColors.textPrimary,
+                      color: isOverdue
+                          ? AppColors.danger
+                          : AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -76,9 +84,17 @@ class BookingCardScheduleBox extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.calendar_today_outlined, size: 11.r, color: AppColors.textMuted),
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 11.r,
+                      color: AppColors.textMuted,
+                    ),
                     SizedBox(width: 4.w),
-                    AppText.body(formattedDate, fontSize: 11.sp, color: AppColors.textMuted),
+                    AppText.body(
+                      formattedDate,
+                      fontSize: 11.sp,
+                      color: AppColors.textMuted,
+                    ),
                     SizedBox(width: 6.w),
                     BookingInfoChip(
                       label: '$durationHrsStr ${AppStrings.hours}',
@@ -103,11 +119,17 @@ class BookingCardScheduleBox extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.sports_esports_outlined, color: AppColors.neonPurple, size: 15.r),
+                      Icon(
+                        Icons.sports_esports_outlined,
+                        color: AppColors.neonPurple,
+                        size: 15.r,
+                      ),
                       SizedBox(width: 4.w),
                       Expanded(
                         child: AppText.subHeading(
-                          booking.roomName.isNotEmpty ? booking.roomName : AppStrings.roomLabel,
+                          booking.roomName.isNotEmpty
+                              ? booking.roomName
+                              : AppStrings.roomLabel,
                           fontSize: 12.5.sp,
                           color: AppColors.textPrimary,
                           maxLines: 1,
@@ -115,17 +137,23 @@ class BookingCardScheduleBox extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (hasPlayMode || booking.controllersCount > 0 || booking.screenSize.isNotEmpty) ...[
+                  if (hasPlayMode ||
+                      booking.controllersCount > 0 ||
+                      booking.screenSize.isNotEmpty) ...[
                     SizedBox(height: 5.h),
                     Wrap(
                       spacing: 4.w,
                       runSpacing: 4.h,
                       children: [
                         if (hasPlayMode)
-                          BookingInfoChip(label: playMode, color: AppColors.neonBlue),
+                          BookingInfoChip(
+                            label: playMode,
+                            color: AppColors.neonBlue,
+                          ),
                         if (booking.controllersCount > 0)
                           BookingInfoChip(
-                            label: '${booking.controllersCount} ${AppStrings.controllersLabel}',
+                            label:
+                                '${booking.controllersCount} ${AppStrings.controllersLabel}',
                             icon: Icons.gamepad_outlined,
                             color: AppColors.textSecondary,
                           ),

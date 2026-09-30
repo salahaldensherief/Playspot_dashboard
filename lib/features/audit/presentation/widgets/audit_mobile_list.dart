@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
-import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../domain/entities/audit_log_entity.dart';
 import 'audit_event_details_dialog.dart';
@@ -29,7 +28,8 @@ class AuditMobileList extends StatelessWidget {
   Widget build(BuildContext context) {
     return NotificationListener<ScrollNotification>(
       onNotification: (ScrollNotification scrollInfo) {
-        if (scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200 &&
+        if (scrollInfo.metrics.pixels >=
+                scrollInfo.metrics.maxScrollExtent - 200 &&
             hasMore &&
             !isLoadingMore) {
           onLoadMore();
@@ -83,7 +83,10 @@ class AuditMobileList extends StatelessWidget {
                     Row(
                       children: [
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 2.h,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.mutedBackground,
                             borderRadius: BorderRadius.circular(4.r),
@@ -118,25 +121,35 @@ class AuditMobileList extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.person_outline_rounded,
-                                size: 14.r, color: AppColors.textSecondary),
+                            Icon(
+                              Icons.person_outline_rounded,
+                              size: 14.r,
+                              color: AppColors.textSecondary,
+                            ),
                             SizedBox(width: 4.w),
                             Text(
                               log.actorName ?? log.actorUserId ?? 'System',
                               style: TextStyle(
-                                  color: AppColors.textSecondary, fontSize: 12.sp),
+                                color: AppColors.textSecondary,
+                                fontSize: 12.sp,
+                              ),
                             ),
                           ],
                         ),
                         Row(
                           children: [
-                            Icon(Icons.access_time_rounded,
-                                size: 14.r, color: AppColors.textSecondary),
+                            Icon(
+                              Icons.access_time_rounded,
+                              size: 14.r,
+                              color: AppColors.textSecondary,
+                            ),
                             SizedBox(width: 4.w),
                             Text(
                               _formatDateTime(log.createdAt),
                               style: TextStyle(
-                                  color: AppColors.textSecondary, fontSize: 11.sp),
+                                color: AppColors.textSecondary,
+                                fontSize: 11.sp,
+                              ),
                             ),
                           ],
                         ),

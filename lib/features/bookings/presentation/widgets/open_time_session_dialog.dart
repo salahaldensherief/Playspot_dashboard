@@ -32,13 +32,17 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
   }
 
   Future<void> _start() async {
-
     if (_isSubmitting) return;
 
-    final allowOpenTime = context.read<LoginCubit>().state.userLounge?.allowOpenTimeSessions ?? true;
+    final allowOpenTime =
+        context.read<LoginCubit>().state.userLounge?.allowOpenTimeSessions ??
+        false;
     if (!allowOpenTime) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppStrings.openTimeDisabledByPolicy), backgroundColor: AppColors.danger),
+        SnackBar(
+          content: Text(AppStrings.openTimeDisabledByPolicy),
+          backgroundColor: AppColors.danger,
+        ),
       );
       return;
     }
@@ -58,7 +62,8 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
     setState(() => _isSubmitting = false);
 
     if (result == null) {
-      final message = bookingCubit.state.errorMessage ?? AppStrings.failedToStartOpenTime;
+      final message =
+          bookingCubit.state.errorMessage ?? AppStrings.failedToStartOpenTime;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message), backgroundColor: AppColors.danger),
       );
@@ -67,11 +72,10 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
 
     roomCubit.watchRooms(widget.room.loungeId, forceRefresh: true);
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppStrings.openTimeStartedSuccess)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(AppStrings.openTimeStartedSuccess)));
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +107,10 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -130,9 +137,12 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
               ),
               SizedBox(height: 14.h),
               SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'single', label: Text('Single')),
-                  ButtonSegment(value: 'multi', label: Text('Multi')),
+                segments: [
+                  ButtonSegment(
+                    value: 'single',
+                    label: Text(AppStrings.single),
+                  ),
+                  ButtonSegment(value: 'multi', label: Text(AppStrings.multi)),
                 ],
                 selected: {_playMode},
                 onSelectionChanged: (values) {

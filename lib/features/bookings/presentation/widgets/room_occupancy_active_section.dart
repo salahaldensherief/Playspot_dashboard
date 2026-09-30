@@ -31,10 +31,12 @@ class RoomOccupancyActiveSection extends StatefulWidget {
   });
 
   @override
-  State<RoomOccupancyActiveSection> createState() => _RoomOccupancyActiveSectionState();
+  State<RoomOccupancyActiveSection> createState() =>
+      _RoomOccupancyActiveSectionState();
 }
 
-class _RoomOccupancyActiveSectionState extends State<RoomOccupancyActiveSection> {
+class _RoomOccupancyActiveSectionState
+    extends State<RoomOccupancyActiveSection> {
   bool _isCompleting = false;
 
   @override
@@ -75,7 +77,10 @@ class _RoomOccupancyActiveSectionState extends State<RoomOccupancyActiveSection>
                     ],
                   ),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 6.w,
+                      vertical: 2.h,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.neonGreen.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(4.r),
@@ -111,7 +116,11 @@ class _RoomOccupancyActiveSectionState extends State<RoomOccupancyActiveSection>
                           ),
                         );
                       },
-                      child: Icon(Icons.copy_rounded, size: 12.r, color: AppColors.textMuted),
+                      child: Icon(
+                        Icons.copy_rounded,
+                        size: 12.r,
+                        color: AppColors.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -130,7 +139,9 @@ class _RoomOccupancyActiveSectionState extends State<RoomOccupancyActiveSection>
                 : AppColors.neonBlue.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8.r),
             border: Border.all(
-              color: isExpired ? AppColors.danger : AppColors.neonBlue.withValues(alpha: 0.3),
+              color: isExpired
+                  ? AppColors.danger
+                  : AppColors.neonBlue.withValues(alpha: 0.3),
             ),
           ),
           child: Row(
@@ -149,9 +160,13 @@ class _RoomOccupancyActiveSectionState extends State<RoomOccupancyActiveSection>
                   AppText.body(
                     isOpenTime
                         ? AppStrings.duration
-                        : (isExpired ? AppStrings.timeExpired : AppStrings.remainingTime),
+                        : (isExpired
+                              ? AppStrings.timeExpired
+                              : AppStrings.remainingTime),
                     fontSize: 11.sp,
-                    color: isExpired ? AppColors.danger : AppColors.textSecondary,
+                    color: isExpired
+                        ? AppColors.danger
+                        : AppColors.textSecondary,
                     fontWeight: FontWeight.bold,
                   ),
                 ],
@@ -183,14 +198,17 @@ class _RoomOccupancyActiveSectionState extends State<RoomOccupancyActiveSection>
                   showDialog(
                     context: context,
                     useRootNavigator: false,
-                    builder: (_) => BookingDetailsDialog(booking: activeBooking),
+                    builder: (_) =>
+                        BookingDetailsDialog(booking: activeBooking),
                   );
                 },
               ),
             ),
             SizedBox(width: 8.w),
             AppButton(
-              text: isOpenTime ? AppStrings.completeAndCalculate : AppStrings.extendTime,
+              text: isOpenTime
+                  ? AppStrings.completeAndCalculate
+                  : AppStrings.extendTime,
               icon: isOpenTime
                   ? Icons.price_check_rounded
                   : Icons.add_alarm_rounded,
@@ -200,8 +218,9 @@ class _RoomOccupancyActiveSectionState extends State<RoomOccupancyActiveSection>
               onPressed: (isOpenTime && _isCompleting)
                   ? null
                   : (isOpenTime
-                      ? () => _completeOpenTimeSession(context)
-                      : () => ExtendSessionDialog.show(context, activeBooking)),
+                        ? () => _completeOpenTimeSession(context)
+                        : () =>
+                              ExtendSessionDialog.show(context, activeBooking)),
             ),
           ],
         ),
@@ -216,12 +235,16 @@ class _RoomOccupancyActiveSectionState extends State<RoomOccupancyActiveSection>
     try {
       final bookingCubit = context.read<BookingCubit>();
       final roomCubit = context.read<RoomCubit>();
-      final result = await bookingCubit.completeOpenTimeSession(widget.activeBooking.id);
+      final result = await bookingCubit.completeOpenTimeSession(
+        widget.activeBooking.id,
+      );
 
       if (!context.mounted) return;
 
       if (result == null) {
-        final message = bookingCubit.state.errorMessage ?? AppStrings.failedToCompleteOpenTime;
+        final message =
+            bookingCubit.state.errorMessage ??
+            AppStrings.failedToCompleteOpenTime;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: AppColors.danger),
         );

@@ -44,10 +44,10 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
     _walletNumberController = TextEditingController();
     _instapayHandleController = TextEditingController();
 
-    _allowOpenTimeSessions = true;
+    _allowOpenTimeSessions = false;
     _openTimeRoundingController = TextEditingController(text: '15');
-    _openTimeMinMinutesController = TextEditingController(text: '30');
-    _openTimeMaxMinutesController = TextEditingController();
+    _openTimeMinMinutesController = TextEditingController(text: '60');
+    _openTimeMaxMinutesController = TextEditingController(text: '720');
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = context.read<LoginCubit>().state.user;
@@ -67,9 +67,12 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
       _instapayHandleController.text = settings.instapayHandle ?? '';
 
       _allowOpenTimeSessions = settings.allowOpenTimeSessions;
-      _openTimeRoundingController.text = settings.openTimeRoundingMinutes.toString();
-      _openTimeMinMinutesController.text = settings.openTimeMinMinutes.toString();
-      _openTimeMaxMinutesController.text = settings.openTimeMaxMinutes?.toString() ?? '';
+      _openTimeRoundingController.text = settings.openTimeRoundingMinutes
+          .toString();
+      _openTimeMinMinutesController.text = settings.openTimeMinMinutes
+          .toString();
+      _openTimeMaxMinutesController.text =
+          settings.openTimeMaxMinutes?.toString() ?? '';
 
       _isInitialized = true;
     });
@@ -92,7 +95,8 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
     }
 
     final user = context.read<LoginCubit>().state.user;
-    final canEdit = user?.isLoungeOwner == true ||
+    final canEdit =
+        user?.isLoungeOwner == true ||
         user?.isSuperAdmin == true ||
         user?.isManager == true;
 
@@ -116,9 +120,9 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
     final rounding =
         int.tryParse(_openTimeRoundingController.text.trim()) ?? 15;
     final minMins =
-        int.tryParse(_openTimeMinMinutesController.text.trim()) ?? 30;
+        int.tryParse(_openTimeMinMinutesController.text.trim()) ?? 60;
     final maxMinsText = _openTimeMaxMinutesController.text.trim();
-    final maxMins = maxMinsText.isNotEmpty ? int.tryParse(maxMinsText) : null;
+    final maxMins = int.tryParse(maxMinsText) ?? 720;
 
     final settings = LoungePaymentSettings(
       loungeId: loungeId,
@@ -133,8 +137,9 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
       openTimeMaxMinutes: maxMins,
     );
 
-    final success =
-        await context.read<LoungePaymentSettingsCubit>().saveSettings(settings);
+    final success = await context
+        .read<LoungePaymentSettingsCubit>()
+        .saveSettings(settings);
 
     if (mounted && success) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -143,14 +148,18 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
           backgroundColor: AppColors.success,
         ),
       );
-      context.read<LoginCubit>().refreshUserLounge(loungeId, forceRefresh: true);
+      context.read<LoginCubit>().refreshUserLounge(
+        loungeId,
+        forceRefresh: true,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final user = context.watch<LoginCubit>().state.user;
-    final canEdit = user?.isLoungeOwner == true ||
+    final canEdit =
+        user?.isLoungeOwner == true ||
         user?.isSuperAdmin == true ||
         user?.isManager == true;
 

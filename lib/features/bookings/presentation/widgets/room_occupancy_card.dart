@@ -77,8 +77,10 @@ class _RoomOccupancyCardState extends State<RoomOccupancyCard> {
   Widget build(BuildContext context) {
     final room = widget.room;
     final activeBooking = widget.activeBooking;
-    final isOccupiedByApp = activeBooking != null && activeBooking.isBookingActive();
-    final isOccupiedByWalkIn = room.status == RoomStatusEnum.occupied && !isOccupiedByApp;
+    final isOccupiedByApp =
+        activeBooking != null && activeBooking.isBookingActive();
+    final isOccupiedByWalkIn =
+        room.status == RoomStatusEnum.occupied && !isOccupiedByApp;
     final isOccupied = isOccupiedByApp || isOccupiedByWalkIn;
     final isMaintenance = room.status == RoomStatusEnum.maintenance;
 
@@ -135,7 +137,9 @@ class _RoomOccupancyCardState extends State<RoomOccupancyCard> {
                 child: Row(
                   children: [
                     Icon(
-                      room.isOpenArea ? Icons.grid_view_rounded : Icons.sports_esports_rounded,
+                      room.isOpenArea
+                          ? Icons.grid_view_rounded
+                          : Icons.sports_esports_rounded,
                       size: 18.r,
                       color: isOccupied ? AppColors.danger : AppColors.neonBlue,
                     ),

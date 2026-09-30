@@ -44,7 +44,11 @@ class AddBookingExtrasSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.restaurant_menu_rounded, size: 18.r, color: AppColors.neonBlue),
+                Icon(
+                  Icons.restaurant_menu_rounded,
+                  size: 18.r,
+                  color: AppColors.neonBlue,
+                ),
                 SizedBox(width: 6.w),
                 AppText.body(AppStrings.extras, fontWeight: FontWeight.bold),
               ],
@@ -56,7 +60,11 @@ class AddBookingExtrasSection extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 child: Row(
                   children: [
-                    Icon(Icons.add_circle_outline, size: 16.r, color: AppColors.neonBlue),
+                    Icon(
+                      Icons.add_circle_outline,
+                      size: 16.r,
+                      color: AppColors.neonBlue,
+                    ),
                     SizedBox(width: 4.w),
                     AppText.body(
                       AppStrings.addExtrasToSession,
@@ -81,7 +89,11 @@ class AddBookingExtrasSection extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline, size: 16.r, color: AppColors.textMuted),
+                Icon(
+                  Icons.info_outline,
+                  size: 16.r,
+                  color: AppColors.textMuted,
+                ),
                 SizedBox(width: 8.w),
                 Expanded(
                   child: AppText.body(
@@ -119,7 +131,10 @@ class AddBookingExtrasSection extends StatelessWidget {
                 ),
                 label: Text(
                   '$name (${price.toStringAsFixed(0)} ${AppStrings.egp})',
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 11.sp),
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 11.sp,
+                  ),
                 ),
                 deleteIcon: const Icon(Icons.close, size: 14),
                 deleteIconColor: AppColors.danger,

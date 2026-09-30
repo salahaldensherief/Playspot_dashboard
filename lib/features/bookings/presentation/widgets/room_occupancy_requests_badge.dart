@@ -62,7 +62,9 @@ class RoomOccupancyRequestsBadge extends StatelessWidget {
               ),
               SizedBox(height: 4.h),
               ...sessionRequests.map((req) {
-                final title = req.titleAr.isNotEmpty ? req.titleAr : req.titleEn;
+                final title = req.titleAr.isNotEmpty
+                    ? req.titleAr
+                    : req.titleEn;
                 final body = req.bodyAr.isNotEmpty ? req.bodyAr : req.bodyEn;
                 return Padding(
                   padding: EdgeInsets.only(top: 4.h),
@@ -84,9 +86,9 @@ class RoomOccupancyRequestsBadge extends StatelessWidget {
                       InkWell(
                         onTap: () {
                           context.read<ClientRequestsCubit>().markAsAttended(
-                                req.id,
-                                isCanteenOrder: req.isCanteenOrder,
-                              );
+                            req.id,
+                            isCanteenOrder: req.isCanteenOrder,
+                          );
                         },
                         child: Container(
                           padding: EdgeInsets.symmetric(

@@ -14,10 +14,7 @@ import 'package:play_spot_dashboard/features/requests/presentation/client_reques
 class LiveSessionRequestsBadge extends StatelessWidget {
   final Booking booking;
 
-  const LiveSessionRequestsBadge({
-    super.key,
-    required this.booking,
-  });
+  const LiveSessionRequestsBadge({super.key, required this.booking});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +31,8 @@ class LiveSessionRequestsBadge extends StatelessWidget {
         if (sessionRequests.isEmpty) return const SizedBox.shrink();
 
         final extrasCubit = context.read<ExtrasCubit?>();
-        final List<ExtraEntity> availableExtras = extrasCubit?.state.extras ?? [];
+        final List<ExtraEntity> availableExtras =
+            extrasCubit?.state.extras ?? [];
 
         return Container(
           margin: EdgeInsets.only(top: 8.h),
@@ -49,7 +47,11 @@ class LiveSessionRequestsBadge extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.notifications_active_rounded, color: AppColors.warning, size: 14.r),
+                  Icon(
+                    Icons.notifications_active_rounded,
+                    color: AppColors.warning,
+                    size: 14.r,
+                  ),
                   SizedBox(width: 4.w),
                   AppText.body(
                     '${AppStrings.sessionRequests} (${sessionRequests.length})',
@@ -63,14 +65,18 @@ class LiveSessionRequestsBadge extends StatelessWidget {
               ...sessionRequests.take(2).map((req) {
                 String displayText = '';
                 if (req.isCanteenOrder && req.canteenItems.isNotEmpty) {
-                  final itemsText = req.canteenItems.map((it) {
-                    final qty = it['quantity'] ?? it['qty'] ?? 1;
-                    final name = resolveItemName(it, availableExtras);
-                    return '${qty}x $name';
-                  }).join(', ');
+                  final itemsText = req.canteenItems
+                      .map((it) {
+                        final qty = it['quantity'] ?? it['qty'] ?? 1;
+                        final name = resolveItemName(it, availableExtras);
+                        return '${qty}x $name';
+                      })
+                      .join(', ');
                   displayText = '${AppStrings.canteenOrderLabel}: $itemsText';
                 } else {
-                  displayText = req.bodyAr.isNotEmpty ? req.bodyAr : req.titleAr;
+                  displayText = req.bodyAr.isNotEmpty
+                      ? req.bodyAr
+                      : req.titleAr;
                 }
 
                 final notes = req.metadata.notes;
@@ -97,12 +103,15 @@ class LiveSessionRequestsBadge extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6.r),
                         onTap: () {
                           context.read<ClientRequestsCubit>().markAsAttended(
-                                req.id,
-                                isCanteenOrder: req.isCanteenOrder,
-                              );
+                            req.id,
+                            isCanteenOrder: req.isCanteenOrder,
+                          );
                         },
                         child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 4.h,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.success,
                             borderRadius: BorderRadius.circular(6.r),

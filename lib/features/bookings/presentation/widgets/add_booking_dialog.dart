@@ -98,7 +98,10 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
       _startTime = TimeOfDay.fromDateTime(now);
     }
 
-    final durationMinutes = context.read<BookingCubit>().state.selectedDurationMinutes;
+    final durationMinutes = context
+        .read<BookingCubit>()
+        .state
+        .selectedDurationMinutes;
     final endTime = _calculateEndTime(_startTime, durationMinutes);
 
     final startTimeStr =
@@ -134,7 +137,10 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
 
     if (isOverlapping) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppStrings.overlappingBookingError), backgroundColor: AppColors.danger),
+        SnackBar(
+          content: Text(AppStrings.overlappingBookingError),
+          backgroundColor: AppColors.danger,
+        ),
       );
       return;
     }
@@ -172,20 +178,28 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
     final booking = Booking(
       id: '',
       userId: '',
-      userName: _nameController.text.trim().isEmpty ? AppStrings.walkInCustomer : _nameController.text.trim(),
+      userName: _nameController.text.trim().isEmpty
+          ? AppStrings.walkInCustomer
+          : _nameController.text.trim(),
       userPhone: _phoneController.text.trim(),
       loungeId: widget.loungeId,
       roomId: selectedRoom.id,
       loungeName: '',
-      roomName: selectedRoom.nameAr.isNotEmpty ? selectedRoom.nameAr : selectedRoom.nameEn,
+      roomName: selectedRoom.nameAr.isNotEmpty
+          ? selectedRoom.nameAr
+          : selectedRoom.nameEn,
       controllersCount: selectedRoom.controllersCount,
       screenSize: selectedRoom.screenSize,
       date: _selectedDate,
       startTime: startTimeStr,
       endTime: endTimeStr,
       durationMinutes: durationMinutes,
-      status: _startSessionImmediately ? BookingStatus.inProgress : BookingStatus.upcoming,
-      paymentStatus: _startSessionImmediately ? PaymentStatus.paid : PaymentStatus.unpaid,
+      status: _startSessionImmediately
+          ? BookingStatus.inProgress
+          : BookingStatus.upcoming,
+      paymentStatus: _startSessionImmediately
+          ? PaymentStatus.paid
+          : PaymentStatus.unpaid,
       totalPrice: calculation.grandTotal,
       voucherDiscount: calculation.voucherDiscount,
       voucherCode: _appliedVoucherCode,
@@ -222,10 +236,18 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    AppText.heading(widget.quickMode ? AppStrings.walkInBooking : AppStrings.detailedBooking, fontSize: 24.sp),
+                    AppText.heading(
+                      widget.quickMode
+                          ? AppStrings.walkInBooking
+                          : AppStrings.detailedBooking,
+                      fontSize: 24.sp,
+                    ),
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                      icon: const Icon(
+                        Icons.close,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -239,11 +261,13 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                 SizedBox(height: 16.h),
 
                 // Room Selector Widget
-                if (!widget.quickMode) AddBookingRoomSelector(
-                  initialRoom: widget.initialRoom,
-                  selectedRoom: _selectedRoom,
-                  onRoomSelected: (val) => setState(() => _selectedRoom = val),
-                ),
+                if (!widget.quickMode)
+                  AddBookingRoomSelector(
+                    initialRoom: widget.initialRoom,
+                    selectedRoom: _selectedRoom,
+                    onRoomSelected: (val) =>
+                        setState(() => _selectedRoom = val),
+                  ),
                 if (!widget.quickMode) SizedBox(height: 16.h),
 
                 // Play Mode Selector Widget
@@ -259,34 +283,40 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                   selectedDate: _selectedDate,
                   startTime: _startTime,
                   onDateChanged: (date) => setState(() => _selectedDate = date),
-                  onStartTimeChanged: (time) => setState(() => _startTime = time),
+                  onStartTimeChanged: (time) =>
+                      setState(() => _startTime = time),
                   quickMode: widget.quickMode,
                 ),
                 SizedBox(height: 20.h),
 
                 // Extras Section
-                if (!widget.quickMode) AddBookingExtrasSection(
-                  loungeId: widget.loungeId,
-                  selectedExtras: _selectedExtras,
-                  onExtrasChanged: _onExtrasChanged,
-                ),
+                if (!widget.quickMode)
+                  AddBookingExtrasSection(
+                    loungeId: widget.loungeId,
+                    selectedExtras: _selectedExtras,
+                    onExtrasChanged: _onExtrasChanged,
+                  ),
                 if (!widget.quickMode) SizedBox(height: 20.h),
 
                 // Immediate Session Start Toggle
-                if (!widget.quickMode) AddBookingImmediateToggle(
-                  isImmediate: _startSessionImmediately,
-                  onChanged: (val) => setState(() => _startSessionImmediately = val),
-                ),
+                if (!widget.quickMode)
+                  AddBookingImmediateToggle(
+                    isImmediate: _startSessionImmediately,
+                    onChanged: (val) =>
+                        setState(() => _startSessionImmediately = val),
+                  ),
                 if (!widget.quickMode) SizedBox(height: 20.h),
 
                 // Voucher Section
-                if (!widget.quickMode) AddBookingVoucherSection(onVoucherChanged: _onVoucherChanged),
+                if (!widget.quickMode)
+                  AddBookingVoucherSection(onVoucherChanged: _onVoucherChanged),
                 if (!widget.quickMode) SizedBox(height: 20.h),
 
                 // Price Calculation Summary Card
                 if (_selectedRoom != null)
                   BlocBuilder<BookingCubit, BookingState>(
-                    buildWhen: (p, c) => p.selectedDurationMinutes != c.selectedDurationMinutes,
+                    buildWhen: (p, c) =>
+                        p.selectedDurationMinutes != c.selectedDurationMinutes,
                     builder: (context, state) {
                       return AddBookingSummaryCard(
                         room: _selectedRoom,
@@ -310,7 +340,9 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                     ),
                     SizedBox(width: 16.w),
                     AppButton(
-                      text: widget.quickMode ? AppStrings.walkInBooking : AppStrings.newBooking,
+                      text: widget.quickMode
+                          ? AppStrings.walkInBooking
+                          : AppStrings.newBooking,
                       variant: AppButtonVariant.primary,
                       onPressed: _submit,
                     ),

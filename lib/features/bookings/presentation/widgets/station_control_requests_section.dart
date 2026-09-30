@@ -10,10 +10,7 @@ import 'package:play_spot_dashboard/features/requests/presentation/client_reques
 class StationControlRequestsSection extends StatelessWidget {
   final Booking booking;
 
-  const StationControlRequestsSection({
-    super.key,
-    required this.booking,
-  });
+  const StationControlRequestsSection({super.key, required this.booking});
 
   @override
   Widget build(BuildContext context) {
@@ -26,10 +23,16 @@ class StationControlRequestsSection extends StatelessWidget {
     return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
       buildWhen: (previous, current) {
         // Only rebuild if requests matching this booking/room have changed
-        final prevMatch = previous.requests.any((r) =>
-            !r.isAttended && (r.bookingId == booking.id || r.roomId == booking.roomId));
-        final currMatch = current.requests.any((r) =>
-            !r.isAttended && (r.bookingId == booking.id || r.roomId == booking.roomId));
+        final prevMatch = previous.requests.any(
+          (r) =>
+              !r.isAttended &&
+              (r.bookingId == booking.id || r.roomId == booking.roomId),
+        );
+        final currMatch = current.requests.any(
+          (r) =>
+              !r.isAttended &&
+              (r.bookingId == booking.id || r.roomId == booking.roomId),
+        );
         return prevMatch != currMatch || previous.requests != current.requests;
       },
       builder: (context, requestsState) {
@@ -55,7 +58,11 @@ class StationControlRequestsSection extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.notifications_active_rounded, color: AppColors.warning, size: 16.r),
+                  Icon(
+                    Icons.notifications_active_rounded,
+                    color: AppColors.warning,
+                    size: 16.r,
+                  ),
                   SizedBox(width: 6.w),
                   Text(
                     '${AppStrings.sessionRequests} (${sessionRequests.length})',
@@ -69,7 +76,9 @@ class StationControlRequestsSection extends StatelessWidget {
               ),
               SizedBox(height: 8.h),
               ...sessionRequests.map((req) {
-                final title = req.titleAr.isNotEmpty ? req.titleAr : req.titleEn;
+                final title = req.titleAr.isNotEmpty
+                    ? req.titleAr
+                    : req.titleEn;
                 final body = req.bodyAr.isNotEmpty ? req.bodyAr : req.bodyEn;
                 return Container(
                   margin: EdgeInsets.only(bottom: 6.h),
@@ -111,21 +120,29 @@ class StationControlRequestsSection extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () {
                           context.read<ClientRequestsCubit>().markAsAttended(
-                                req.id,
-                                isCanteenOrder: req.isCanteenOrder,
-                              );
+                            req.id,
+                            isCanteenOrder: req.isCanteenOrder,
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.success,
                           foregroundColor: Colors.black,
-                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10.w,
+                            vertical: 6.h,
+                          ),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6.r),
+                          ),
                         ),
                         child: Text(
                           AppStrings.done,
-                          style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],

@@ -22,7 +22,9 @@ class AddBookingImmediateToggle extends StatelessWidget {
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(10.r),
         border: Border.all(
-          color: isImmediate ? AppColors.neonBlue.withValues(alpha: 0.5) : AppColors.borderDefault,
+          color: isImmediate
+              ? AppColors.neonBlue.withValues(alpha: 0.5)
+              : AppColors.borderDefault,
         ),
       ),
       child: Row(

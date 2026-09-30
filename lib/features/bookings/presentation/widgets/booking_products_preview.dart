@@ -28,14 +28,21 @@ class BookingProductsPreview extends StatelessWidget {
     return resolveItemName(Map<String, dynamic>.from(itemMap), availableExtras);
   }
 
-  List<Map<String, dynamic>> _extractAllOrderedItems(List<ExtraEntity> availableExtras) {
+  List<Map<String, dynamic>> _extractAllOrderedItems(
+    List<ExtraEntity> availableExtras,
+  ) {
     final List<Map<String, dynamic>> items = [];
 
     for (final extra in booking.extras) {
       final name = _resolveItemName(extra, availableExtras);
-      final qty = (extra['quantity'] ?? extra['qty'] ?? extra['count'] as num?)?.toInt() ?? 1;
-      final unitPrice = (extra['unit_price'] ?? extra['price'] as num?)?.toDouble() ?? 0.0;
-      final totalPrice = (extra['total_price'] as num?)?.toDouble() ?? (unitPrice * qty);
+      final qty =
+          (extra['quantity'] ?? extra['qty'] ?? extra['count'] as num?)
+              ?.toInt() ??
+          1;
+      final unitPrice =
+          (extra['unit_price'] ?? extra['price'] as num?)?.toDouble() ?? 0.0;
+      final totalPrice =
+          (extra['total_price'] as num?)?.toDouble() ?? (unitPrice * qty);
       items.add({
         'name': name,
         'qty': qty,
@@ -63,13 +70,22 @@ class BookingProductsPreview extends StatelessWidget {
           for (final item in rawItems) {
             if (item is Map) {
               final name = _resolveItemName(item, availableExtras);
-              final qty = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
-              final unitPrice = (item['unit_price'] ?? item['price'] as num?)?.toDouble() ?? 0.0;
-              final totalPrice = (item['total_price'] as num?)?.toDouble() ?? (unitPrice * qty);
-              
-              final alreadyExists = items.any((existing) => 
-                existing['name'].toString().toLowerCase() == name.toLowerCase() && 
-                existing['qty'] == qty
+              final qty =
+                  (item['quantity'] ?? item['qty'] ?? item['count'] as num?)
+                      ?.toInt() ??
+                  1;
+              final unitPrice =
+                  (item['unit_price'] ?? item['price'] as num?)?.toDouble() ??
+                  0.0;
+              final totalPrice =
+                  (item['total_price'] as num?)?.toDouble() ??
+                  (unitPrice * qty);
+
+              final alreadyExists = items.any(
+                (existing) =>
+                    existing['name'].toString().toLowerCase() ==
+                        name.toLowerCase() &&
+                    existing['qty'] == qty,
               );
               if (!alreadyExists) {
                 items.add({
@@ -92,13 +108,28 @@ class BookingProductsPreview extends StatelessWidget {
 
   IconData _getItemIcon(String name) {
     final lower = name.toLowerCase();
-    if (lower.contains('بيبسي') || lower.contains('بيسي') || lower.contains('كوكا') || lower.contains('مشروب') || lower.contains('ماء') || lower.contains('cola') || lower.contains('water') || lower.contains('drink') || lower.contains('عصير') || lower.contains('pepsi')) {
+    if (lower.contains('بيبسي') ||
+        lower.contains('بيسي') ||
+        lower.contains('كوكا') ||
+        lower.contains('مشروب') ||
+        lower.contains('ماء') ||
+        lower.contains('cola') ||
+        lower.contains('water') ||
+        lower.contains('drink') ||
+        lower.contains('عصير') ||
+        lower.contains('pepsi')) {
       return Icons.local_drink_rounded;
     }
-    if (lower.contains('قهوة') || lower.contains('شاي') || lower.contains('coffee') || lower.contains('tea') || lower.contains('نسكافيه')) {
+    if (lower.contains('قهوة') ||
+        lower.contains('شاي') ||
+        lower.contains('coffee') ||
+        lower.contains('tea') ||
+        lower.contains('نسكافيه')) {
       return Icons.coffee_rounded;
     }
-    if (lower.contains('دراع') || lower.contains('controller') || lower.contains('ألعاب')) {
+    if (lower.contains('دراع') ||
+        lower.contains('controller') ||
+        lower.contains('ألعاب')) {
       return Icons.sports_esports_rounded;
     }
     return Icons.fastfood_rounded;
@@ -107,7 +138,9 @@ class BookingProductsPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final extrasCubit = context.watch<ExtrasCubit?>();
-    if (extrasCubit != null && extrasCubit.state.extras.isEmpty && booking.loungeId.isNotEmpty) {
+    if (extrasCubit != null &&
+        extrasCubit.state.extras.isEmpty &&
+        booking.loungeId.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
           extrasCubit.loadExtras(booking.loungeId);
@@ -141,7 +174,11 @@ class BookingProductsPreview extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.restaurant_menu_rounded, size: 12.r, color: AppColors.neonPurple),
+                  Icon(
+                    Icons.restaurant_menu_rounded,
+                    size: 12.r,
+                    color: AppColors.neonPurple,
+                  ),
                   SizedBox(width: 4.w),
                   AppText.body(
                     'الطلبات والمنتجات (${allItems.length}):',
@@ -176,7 +213,11 @@ class BookingProductsPreview extends StatelessWidget {
                         Expanded(
                           child: Row(
                             children: [
-                              Icon(itemIcon, size: 10.r, color: AppColors.neonCyan),
+                              Icon(
+                                itemIcon,
+                                size: 10.r,
+                                color: AppColors.neonCyan,
+                              ),
                               SizedBox(width: 4.w),
                               Expanded(
                                 child: Text(

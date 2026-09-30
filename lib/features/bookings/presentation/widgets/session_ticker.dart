@@ -7,8 +7,8 @@ class SessionTickerNotifier extends ChangeNotifier {
 
   DateTime get now => _now;
 
-  SessionTickerNotifier() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+  SessionTickerNotifier({Duration interval = const Duration(seconds: 1)}) {
+    _timer = Timer.periodic(interval, (_) {
       _now = DateTime.now();
       notifyListeners();
     });
@@ -29,6 +29,10 @@ class SessionTickerScope extends InheritedNotifier<SessionTickerNotifier> {
   }) : super(notifier: ticker);
 
   static DateTime nowOf(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<SessionTickerScope>()?.notifier?.now ?? DateTime.now();
+    return context
+            .dependOnInheritedWidgetOfExactType<SessionTickerScope>()
+            ?.notifier
+            ?.now ??
+        DateTime.now();
   }
 }

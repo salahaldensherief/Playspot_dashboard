@@ -57,7 +57,8 @@ class ReviewsRemoteDataSourceImpl implements ReviewsRemoteDataSource {
     }
 
     return rawList.map((json) {
-      final profile = profilesMap[(json['user_id'] ?? json['userId'])?.toString()];
+      final profile =
+          profilesMap[(json['user_id'] ?? json['userId'])?.toString()];
       if (profile != null) {
         json['profiles'] = profile;
         if (json['user_name'] == null ||
@@ -87,7 +88,7 @@ class ReviewsRemoteDataSourceImpl implements ReviewsRemoteDataSource {
       final rawList = (response as List)
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
-      return _resolveReviewProfiles(rawList);
+      return await _resolveReviewProfiles(rawList);
     } catch (e) {
       debugPrint('🔴 [REVIEWS_DATA_SOURCE] Fetching reviews failed: $e');
       rethrow;

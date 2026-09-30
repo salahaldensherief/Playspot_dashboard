@@ -16,10 +16,7 @@ import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state
 class RoomOccupancyGrid extends StatefulWidget {
   final String loungeId;
 
-  const RoomOccupancyGrid({
-    super.key,
-    required this.loungeId,
-  });
+  const RoomOccupancyGrid({super.key, required this.loungeId});
 
   @override
   State<RoomOccupancyGrid> createState() => _RoomOccupancyGridState();
@@ -64,7 +61,9 @@ class _RoomOccupancyGridState extends State<RoomOccupancyGrid> {
               if (room.status == RoomStatusEnum.maintenance) {
                 maintenanceCount++;
               } else {
-                final isOccupied = activeBookings.any((b) => b.roomId == room.id);
+                final isOccupied = activeBookings.any(
+                  (b) => b.roomId == room.id,
+                );
                 if (isOccupied) {
                   occupiedCount++;
                 } else {
@@ -91,12 +90,13 @@ class _RoomOccupancyGridState extends State<RoomOccupancyGrid> {
             final titleWidget = Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.meeting_room_outlined, color: AppColors.neonBlue, size: 20.r),
-                SizedBox(width: 8.w),
-                AppText.heading(
-                  AppStrings.roomUtilization,
-                  fontSize: 15.sp,
+                Icon(
+                  Icons.meeting_room_outlined,
+                  color: AppColors.neonBlue,
+                  size: 20.r,
                 ),
+                SizedBox(width: 8.w),
+                AppText.heading(AppStrings.roomUtilization, fontSize: 15.sp),
               ],
             );
 
@@ -158,7 +158,9 @@ class _RoomOccupancyGridState extends State<RoomOccupancyGrid> {
                   spacing: 16.r,
                   runSpacing: 16.r,
                   children: displayedRooms.map((room) {
-                    final activeBooking = activeBookings.where((b) => b.roomId == room.id).firstOrNull;
+                    final activeBooking = activeBookings
+                        .where((b) => b.roomId == room.id)
+                        .firstOrNull;
                     return RoomOccupancyCard(
                       key: ValueKey('room_card_${room.id}'),
                       room: room,
@@ -188,7 +190,9 @@ class _RoomOccupancyGridState extends State<RoomOccupancyGrid> {
         duration: const Duration(milliseconds: 150),
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.2) : AppColors.cardBackground,
+          color: isSelected
+              ? color.withValues(alpha: 0.2)
+              : AppColors.cardBackground,
           borderRadius: BorderRadius.circular(20.r),
           border: Border.all(
             color: isSelected ? color : AppColors.borderDefault,

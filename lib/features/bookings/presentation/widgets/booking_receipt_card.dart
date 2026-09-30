@@ -10,10 +10,7 @@ import '../../domain/entities/booking.dart';
 class BookingReceiptCard extends StatefulWidget {
   final Booking booking;
 
-  const BookingReceiptCard({
-    super.key,
-    required this.booking,
-  });
+  const BookingReceiptCard({super.key, required this.booking});
 
   @override
   State<BookingReceiptCard> createState() => _BookingReceiptCardState();
@@ -31,7 +28,9 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
 
   Future<void> _loadSignedUrl() async {
     String? rawPath = widget.booking.receiptUrl;
-    debugPrint('🔵 [RECEIPT_CARD] Booking ID: ${widget.booking.id}, raw receiptUrl: $rawPath');
+    debugPrint(
+      '🔵 [RECEIPT_CARD] Booking ID: ${widget.booking.id}, raw receiptUrl: $rawPath',
+    );
 
     if (rawPath == null || rawPath.trim().isEmpty || rawPath == 'null') {
       try {
@@ -42,7 +41,9 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
             .maybeSingle();
         if (res != null) {
           rawPath = res['receipt_url']?.toString().trim();
-          debugPrint('🟢 [RECEIPT_CARD] Direct DB query fallback found raw receiptUrl: $rawPath');
+          debugPrint(
+            '🟢 [RECEIPT_CARD] Direct DB query fallback found raw receiptUrl: $rawPath',
+          );
         }
       } catch (e) {
         debugPrint('⚠️ [RECEIPT_CARD] Direct DB fallback query failed: $e');
@@ -70,7 +71,15 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
       path = path.substring(1);
     }
 
-    final bucketsToTry = ['payment-proofs', 'receipts', 'booking_receipts', 'payment_receipts', 'wallets', 'payouts', 'attachments'];
+    final bucketsToTry = [
+      'payment-proofs',
+      'receipts',
+      'booking_receipts',
+      'payment_receipts',
+      'wallets',
+      'payouts',
+      'attachments',
+    ];
 
     String cleanPath = path;
     for (final b in bucketsToTry) {
@@ -87,7 +96,9 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
               .from(bucket)
               .createSignedUrl(p, 3600);
           if (url.isNotEmpty && !url.contains('error')) {
-            debugPrint('🟢 [RECEIPT_CARD] Generated signed URL ($bucket, path: $p): $url');
+            debugPrint(
+              '🟢 [RECEIPT_CARD] Generated signed URL ($bucket, path: $p): $url',
+            );
             if (mounted) {
               setState(() {
                 _signedReceiptUrl = url;
@@ -103,7 +114,9 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
               .from(bucket)
               .getPublicUrl(p);
           if (pubUrl.isNotEmpty) {
-            debugPrint('🟢 [RECEIPT_CARD] Fallback public URL ($bucket, path: $p): $pubUrl');
+            debugPrint(
+              '🟢 [RECEIPT_CARD] Fallback public URL ($bucket, path: $p): $pubUrl',
+            );
             if (mounted) {
               setState(() {
                 _signedReceiptUrl = pubUrl;
@@ -138,7 +151,11 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
             children: [
               const Icon(Icons.receipt_long_rounded, color: AppColors.neonBlue),
               SizedBox(width: 8.w),
-              AppText.subHeading(AppStrings.reviewReceipt, fontSize: 16.sp, color: AppColors.textPrimary),
+              AppText.subHeading(
+                AppStrings.reviewReceipt,
+                fontSize: 16.sp,
+                color: AppColors.textPrimary,
+              ),
               const Spacer(),
               if (b.paymentMethod != null && b.paymentMethod!.isNotEmpty)
                 Container(
@@ -169,86 +186,108 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
             child: _isLoadingUrl
                 ? const Center(child: CircularProgressIndicator())
                 : (_signedReceiptUrl != null && _signedReceiptUrl!.isNotEmpty)
-                    ? GestureDetector(
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (_) => Dialog(
-                              backgroundColor: Colors.black,
-                              child: Stack(
-                                children: [
-                                  Center(
-                                    child: InteractiveViewer(
-                                      child: AppCachedImage(
-                                        imageUrl: _signedReceiptUrl!,
-                                        fit: BoxFit.contain,
-                                      ),
-                                    ),
+                ? GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => Dialog(
+                          backgroundColor: Colors.black,
+                          child: Stack(
+                            children: [
+                              Center(
+                                child: InteractiveViewer(
+                                  child: AppCachedImage(
+                                    imageUrl: _signedReceiptUrl!,
+                                    fit: BoxFit.contain,
                                   ),
-                                  Positioned(
-                                    top: 16.h,
-                                    right: 16.w,
-                                    child: IconButton(
-                                      icon: const Icon(Icons.close, color: AppColors.textPrimary, size: 30),
-                                      onPressed: () => Navigator.pop(context),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            AppCachedImage(
-                              imageUrl: _signedReceiptUrl!,
-                              fit: BoxFit.cover,
-                            ),
-                            Positioned(
-                              bottom: 8.h,
-                              right: 8.w,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withAlpha(180),
-                                  borderRadius: BorderRadius.circular(6.r),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.zoom_in, color: AppColors.textPrimary, size: 14),
-                                    SizedBox(width: 4.w),
-                                    Text('تكبير', style: TextStyle(color: AppColors.textPrimary, fontSize: 11.sp)),
-                                  ],
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.receipt_long, size: 40.r, color: AppColors.textSecondary),
-                            SizedBox(height: 8.h),
-                            AppText.body(
-                              'لم يتم إرفاق إيصال دفع من العميل بعد',
-                              fontSize: 13.sp,
-                              color: AppColors.textSecondary,
-                            ),
-                            if (b.paymentMethod != null && b.paymentMethod!.isNotEmpty) ...[
-                              SizedBox(height: 4.h),
-                              AppText.body(
-                                'طريقة الدفع: ${b.paymentMethod}',
-                                fontSize: 11.sp,
-                                color: AppColors.neonBlue,
+                              Positioned(
+                                top: 16.h,
+                                right: 16.w,
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.close,
+                                    color: AppColors.textPrimary,
+                                    size: 30,
+                                  ),
+                                  onPressed: () => Navigator.pop(context),
+                                ),
                               ),
                             ],
-                          ],
+                          ),
                         ),
-                      ),
+                      );
+                    },
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        AppCachedImage(
+                          imageUrl: _signedReceiptUrl!,
+                          fit: BoxFit.cover,
+                        ),
+                        Positioned(
+                          bottom: 8.h,
+                          right: 8.w,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 4.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withAlpha(180),
+                              borderRadius: BorderRadius.circular(6.r),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.zoom_in,
+                                  color: AppColors.textPrimary,
+                                  size: 14,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  'تكبير',
+                                  style: TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 11.sp,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.receipt_long,
+                          size: 40.r,
+                          color: AppColors.textSecondary,
+                        ),
+                        SizedBox(height: 8.h),
+                        AppText.body(
+                          'لم يتم إرفاق إيصال دفع من العميل بعد',
+                          fontSize: 13.sp,
+                          color: AppColors.textSecondary,
+                        ),
+                        if (b.paymentMethod != null &&
+                            b.paymentMethod!.isNotEmpty) ...[
+                          SizedBox(height: 4.h),
+                          AppText.body(
+                            'طريقة الدفع: ${b.paymentMethod}',
+                            fontSize: 11.sp,
+                            color: AppColors.neonBlue,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
           ),
         ],
       ),

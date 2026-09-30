@@ -10,10 +10,7 @@ import '../../domain/entities/booking.dart';
 class BookingUserInfoCard extends StatelessWidget {
   final Booking booking;
 
-  const BookingUserInfoCard({
-    super.key,
-    required this.booking,
-  });
+  const BookingUserInfoCard({super.key, required this.booking});
 
   String _getInitials(String? name) {
     if (name == null || name.trim().isEmpty) return 'U';
@@ -28,12 +25,23 @@ class BookingUserInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = booking.userName ?? AppStrings.anonymous;
     final rawEmail = booking.userEmail?.trim();
-    final email = (rawEmail != null && rawEmail.isNotEmpty && rawEmail != 'null') ? rawEmail : '-';
+    final email =
+        (rawEmail != null && rawEmail.isNotEmpty && rawEmail != 'null')
+        ? rawEmail
+        : '-';
     final rawPhone = booking.userPhone?.trim();
-    final phone = (rawPhone != null && rawPhone.isNotEmpty && rawPhone != 'No Phone' && rawPhone != 'null') ? rawPhone : '-';
+    final phone =
+        (rawPhone != null &&
+            rawPhone.isNotEmpty &&
+            rawPhone != 'No Phone' &&
+            rawPhone != 'null')
+        ? rawPhone
+        : '-';
     final initials = _getInitials(name);
     final userIdDisplay = booking.userId.isNotEmpty
-        ? (booking.userId.length > 8 ? booking.userId.substring(0, 8) : booking.userId)
+        ? (booking.userId.length > 8
+              ? booking.userId.substring(0, 8)
+              : booking.userId)
         : 'زائر';
 
     return Container(
@@ -51,7 +59,11 @@ class BookingUserInfoCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.person_pin_rounded, color: AppColors.neonBlue, size: 20),
+                  const Icon(
+                    Icons.person_pin_rounded,
+                    color: AppColors.neonBlue,
+                    size: 20,
+                  ),
                   SizedBox(width: 8.w),
                   AppText.subHeading(
                     AppStrings.userAndContactInfo,
@@ -124,7 +136,10 @@ class BookingUserInfoCard extends StatelessWidget {
                         ),
                         SizedBox(width: 8.w),
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 2.h,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.neonBlue.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(4.r),
@@ -143,7 +158,11 @@ class BookingUserInfoCard extends StatelessWidget {
                     SizedBox(height: 6.h),
                     Row(
                       children: [
-                        const Icon(Icons.phone_android_rounded, color: AppColors.neonBlue, size: 14),
+                        const Icon(
+                          Icons.phone_android_rounded,
+                          color: AppColors.neonBlue,
+                          size: 14,
+                        ),
                         SizedBox(width: 6.w),
                         AppText.body(
                           phone,
@@ -164,20 +183,32 @@ class BookingUserInfoCard extends StatelessWidget {
                               );
                             },
                             child: Container(
-                              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 6.w,
+                                vertical: 2.h,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.cardBackground,
                                 borderRadius: BorderRadius.circular(4.r),
-                                border: Border.all(color: AppColors.borderDefault),
+                                border: Border.all(
+                                  color: AppColors.borderDefault,
+                                ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.copy_rounded, size: 11.r, color: AppColors.textMuted),
+                                  Icon(
+                                    Icons.copy_rounded,
+                                    size: 11.r,
+                                    color: AppColors.textMuted,
+                                  ),
                                   SizedBox(width: 4.w),
                                   Text(
                                     'نسخ',
-                                    style: TextStyle(fontSize: 10.sp, color: AppColors.textMuted),
+                                    style: TextStyle(
+                                      fontSize: 10.sp,
+                                      color: AppColors.textMuted,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -189,7 +220,11 @@ class BookingUserInfoCard extends StatelessWidget {
                     SizedBox(height: 4.h),
                     Row(
                       children: [
-                        const Icon(Icons.email_outlined, color: AppColors.textSecondary, size: 14),
+                        const Icon(
+                          Icons.email_outlined,
+                          color: AppColors.textSecondary,
+                          size: 14,
+                        ),
                         SizedBox(width: 6.w),
                         Expanded(
                           child: AppText.body(

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../art_core/app_strings.dart';
-import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_text.dart';
 
 class LiveFeedSectionHeader extends StatelessWidget {
@@ -24,11 +22,13 @@ class LiveFeedSectionHeader extends StatelessWidget {
       children: [
         Icon(icon, size: 16.r, color: color),
         SizedBox(width: 6.w),
-        AppText.subHeading(
-          title,
-          fontSize: 14.sp,
-          color: color,
-          fontWeight: FontWeight.bold,
+        Flexible(
+          child: AppText.subHeading(
+            title,
+            fontSize: 14.sp,
+            color: color,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         SizedBox(width: 8.w),
         Container(
@@ -47,34 +47,6 @@ class LiveFeedSectionHeader extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class EmptyActiveSessionsState extends StatelessWidget {
-  const EmptyActiveSessionsState({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 24.h),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(
-              Icons.sports_esports_outlined,
-              size: 40.r,
-              color: AppColors.textMuted,
-            ),
-            SizedBox(height: 8.h),
-            AppText.body(
-              AppStrings.noActiveSessions,
-              color: AppColors.textSecondary,
-              fontSize: 13.sp,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

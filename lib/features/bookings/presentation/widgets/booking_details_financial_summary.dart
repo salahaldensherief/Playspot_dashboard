@@ -12,8 +12,12 @@ class BookingDetailsFinancialSummary extends StatelessWidget {
 
   const BookingDetailsFinancialSummary({super.key, required this.booking});
 
-  Widget _buildBillRow(String label, String value,
-      {bool isTotal = false, Color? color}) {
+  Widget _buildBillRow(
+    String label,
+    String value, {
+    bool isTotal = false,
+    Color? color,
+  }) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 4.h),
       child: Row(
@@ -53,8 +57,10 @@ class BookingDetailsFinancialSummary extends StatelessWidget {
         booking.addonsPrice! > 0) {
       extrasTotal = booking.addonsPrice!;
     }
-    final roomBasePrice =
-        (booking.totalPrice - extrasTotal).clamp(0.0, double.infinity);
+    final roomBasePrice = (booking.totalPrice - extrasTotal).clamp(
+      0.0,
+      double.infinity,
+    );
     final hasExtras = extrasTotal > 0 || booking.extras.isNotEmpty;
 
     return Container(
@@ -83,17 +89,20 @@ class BookingDetailsFinancialSummary extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           _buildBillRow(
-              AppStrings.roomBasePrice,
-              '${roomBasePrice.toStringAsFixed(0)} ${AppStrings.egp}'),
+            AppStrings.roomBasePrice,
+            '${roomBasePrice.toStringAsFixed(0)} ${AppStrings.egp}',
+          ),
           _buildBillRow(
-              AppStrings.extrasTotal,
-              '${extrasTotal.toStringAsFixed(0)} ${AppStrings.egp}',
-              color: hasExtras ? AppColors.warning : null),
+            AppStrings.extrasTotal,
+            '${extrasTotal.toStringAsFixed(0)} ${AppStrings.egp}',
+            color: hasExtras ? AppColors.warning : null,
+          ),
           if (booking.discountAmount != null && booking.discountAmount! > 0)
             _buildBillRow(
-                AppStrings.discount,
-                '-${booking.discountAmount!.toStringAsFixed(0)} ${AppStrings.egp}',
-                color: AppColors.danger),
+              AppStrings.discount,
+              '-${booking.discountAmount!.toStringAsFixed(0)} ${AppStrings.egp}',
+              color: AppColors.danger,
+            ),
           const Divider(color: AppColors.borderDefault),
           _buildBillRow(
             AppStrings.finalTotalDue,

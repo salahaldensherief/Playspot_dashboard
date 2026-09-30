@@ -75,7 +75,7 @@ class Lounge extends Equatable {
     this.allowCashPayment = true,
     this.requirePrepaidFirstTime = false,
     this.cashGracePeriodMinutes = 15,
-    this.allowOpenTimeSessions = true,
+    this.allowOpenTimeSessions = false,
     this.isActive = true,
     this.suspensionReason,
   });
@@ -90,7 +90,8 @@ class Lounge extends Equatable {
     const double earthRadiusKm = 6371.0;
     final dLat = _degToRad(lat! - deviceLat);
     final dLng = _degToRad(lng! - deviceLng);
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(_degToRad(deviceLat)) *
             math.cos(_degToRad(lat!)) *
             math.sin(dLng / 2) *
@@ -109,44 +110,44 @@ class Lounge extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        imageUrl,
-        rating,
-        distance,
-        pricePerHour,
-        isOpen,
-        location,
-        city,
-        cityId,
-        totalReviews,
-        availableRooms,
-        descriptionAr,
-        descriptionEn,
-        images,
-        opensAt,
-        closesAt,
-        lat,
-        lng,
-        categoryIcons,
-        categoryId,
-        ownerName,
-        ownerEmail,
-        status,
-        hasDiscount,
-        discountPercentage,
-        discountTitleAr,
-        discountTitleEn,
-        discountExpiresAt,
-        vodafoneCashNumber,
-        instapayAccount,
-        allowCashPayment,
-        requirePrepaidFirstTime,
-        cashGracePeriodMinutes,
-        allowOpenTimeSessions,
-        isActive,
-        suspensionReason,
-      ];
+    id,
+    name,
+    imageUrl,
+    rating,
+    distance,
+    pricePerHour,
+    isOpen,
+    location,
+    city,
+    cityId,
+    totalReviews,
+    availableRooms,
+    descriptionAr,
+    descriptionEn,
+    images,
+    opensAt,
+    closesAt,
+    lat,
+    lng,
+    categoryIcons,
+    categoryId,
+    ownerName,
+    ownerEmail,
+    status,
+    hasDiscount,
+    discountPercentage,
+    discountTitleAr,
+    discountTitleEn,
+    discountExpiresAt,
+    vodafoneCashNumber,
+    instapayAccount,
+    allowCashPayment,
+    requirePrepaidFirstTime,
+    cashGracePeriodMinutes,
+    allowOpenTimeSessions,
+    isActive,
+    suspensionReason,
+  ];
 
   Lounge copyWith({
     String? id,
@@ -220,12 +221,14 @@ class Lounge extends Equatable {
       vodafoneCashNumber: vodafoneCashNumber ?? this.vodafoneCashNumber,
       instapayAccount: instapayAccount ?? this.instapayAccount,
       allowCashPayment: allowCashPayment ?? this.allowCashPayment,
-      requirePrepaidFirstTime: requirePrepaidFirstTime ?? this.requirePrepaidFirstTime,
-      cashGracePeriodMinutes: cashGracePeriodMinutes ?? this.cashGracePeriodMinutes,
-      allowOpenTimeSessions: allowOpenTimeSessions ?? this.allowOpenTimeSessions,
+      requirePrepaidFirstTime:
+          requirePrepaidFirstTime ?? this.requirePrepaidFirstTime,
+      cashGracePeriodMinutes:
+          cashGracePeriodMinutes ?? this.cashGracePeriodMinutes,
+      allowOpenTimeSessions:
+          allowOpenTimeSessions ?? this.allowOpenTimeSessions,
       isActive: isActive ?? this.isActive,
       suspensionReason: suspensionReason ?? this.suspensionReason,
     );
   }
 }
-

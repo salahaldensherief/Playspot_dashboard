@@ -61,13 +61,22 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
             BlocBuilder<RoomCubit, RoomState>(
               builder: (context, state) {
                 final availableRooms = state.rooms
-                    .where((r) => r.status == RoomStatusEnum.available && r.id != widget.currentRoomId)
+                    .where(
+                      (r) =>
+                          r.status == RoomStatusEnum.available &&
+                          r.id != widget.currentRoomId,
+                    )
                     .toList();
 
-                if (state.status == RoomStatus.loading && availableRooms.isEmpty) {
+                if (state.status == RoomStatus.loading &&
+                    availableRooms.isEmpty) {
                   return Padding(
                     padding: EdgeInsets.symmetric(vertical: 16.h),
-                    child: const Center(child: CircularProgressIndicator(color: AppColors.neonBlue)),
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.neonBlue,
+                      ),
+                    ),
                   );
                 }
 
@@ -75,7 +84,10 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
                   return Padding(
                     padding: EdgeInsets.symmetric(vertical: 16.h),
                     child: Center(
-                      child: AppText.body(AppStrings.noAvailableRooms, color: AppColors.danger),
+                      child: AppText.body(
+                        AppStrings.noAvailableRooms,
+                        color: AppColors.danger,
+                      ),
                     ),
                   );
                 }
@@ -88,8 +100,12 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
                       value: _selectedRoomId,
                       items: availableRooms.map((r) => r.id).toList(),
                       itemLabel: (id) {
-                        final found = availableRooms.firstWhere((r) => r.id == id);
-                        return found.nameEn.isNotEmpty ? found.nameEn : found.nameAr;
+                        final found = availableRooms.firstWhere(
+                          (r) => r.id == id,
+                        );
+                        return found.nameEn.isNotEmpty
+                            ? found.nameEn
+                            : found.nameAr;
                       },
                       onChanged: (val) => setState(() => _selectedRoomId = val),
                     ),
@@ -119,11 +135,14 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
                           if (_selectedRoomId != null) {
                             final bookingCubit = context.read<BookingCubit>();
                             final bookings = bookingCubit.state.bookings;
-                            final currentBookingList = bookings.where((b) => b.id == widget.bookingId);
+                            final currentBookingList = bookings.where(
+                              (b) => b.id == widget.bookingId,
+                            );
 
                             if (currentBookingList.isNotEmpty) {
                               final b = currentBookingList.first;
-                              if (b.status != BookingStatus.inProgress && b.checkedInAt == null) {
+                              if (b.status != BookingStatus.inProgress &&
+                                  b.checkedInAt == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: const Text(
@@ -137,10 +156,16 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
                               }
                             }
 
-                            final availableRooms = context.read<RoomCubit>().state.rooms;
-                            final foundRoom = availableRooms.firstWhere((r) => r.id == _selectedRoomId);
-                            final roomName =
-                                foundRoom.nameEn.isNotEmpty ? foundRoom.nameEn : foundRoom.nameAr;
+                            final availableRooms = context
+                                .read<RoomCubit>()
+                                .state
+                                .rooms;
+                            final foundRoom = availableRooms.firstWhere(
+                              (r) => r.id == _selectedRoomId,
+                            );
+                            final roomName = foundRoom.nameEn.isNotEmpty
+                                ? foundRoom.nameEn
+                                : foundRoom.nameAr;
 
                             bookingCubit.swapRoom(
                               widget.bookingId,
@@ -197,11 +222,18 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
             children: [
               Text(
                 '${AppStrings.currentRoom}: ${currentRoom.nameEn.isNotEmpty ? currentRoom.nameEn : currentRoom.nameAr}',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13.sp,
+                ),
               ),
               Text(
                 '${currentRate.toStringAsFixed(2)} ${AppStrings.egp}/hr',
-                style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold, fontSize: 13.sp),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.sp,
+                ),
               ),
             ],
           ),
@@ -211,11 +243,19 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
             children: [
               Text(
                 '${AppStrings.selectNewRoom}: ${targetRoom.nameEn.isNotEmpty ? targetRoom.nameEn : targetRoom.nameAr}',
-                style: TextStyle(color: AppColors.neonBlue, fontSize: 13.sp, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: AppColors.neonBlue,
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
                 '${targetRate.toStringAsFixed(2)} ${AppStrings.egp}/hr',
-                style: TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold, fontSize: 13.sp),
+                style: TextStyle(
+                  color: AppColors.neonBlue,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.sp,
+                ),
               ),
             ],
           ),
@@ -225,14 +265,20 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
             children: [
               Text(
                 AppStrings.recalculatedRateDifference,
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               Text(
                 '${diff >= 0 ? "+" : ""}${diff.toStringAsFixed(2)} ${AppStrings.egp}/hr',
                 style: TextStyle(
                   color: diff > 0
                       ? AppColors.warning
-                      : (diff < 0 ? AppColors.success : AppColors.textSecondary),
+                      : (diff < 0
+                            ? AppColors.success
+                            : AppColors.textSecondary),
                   fontWeight: FontWeight.bold,
                   fontSize: 14.sp,
                 ),

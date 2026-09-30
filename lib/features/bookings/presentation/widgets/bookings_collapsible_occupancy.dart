@@ -16,10 +16,12 @@ class BookingsCollapsibleOccupancy extends StatefulWidget {
   });
 
   @override
-  State<BookingsCollapsibleOccupancy> createState() => _BookingsCollapsibleOccupancyState();
+  State<BookingsCollapsibleOccupancy> createState() =>
+      _BookingsCollapsibleOccupancyState();
 }
 
-class _BookingsCollapsibleOccupancyState extends State<BookingsCollapsibleOccupancy> {
+class _BookingsCollapsibleOccupancyState
+    extends State<BookingsCollapsibleOccupancy> {
   late bool _isExpanded;
 
   @override
@@ -77,7 +79,10 @@ class _BookingsCollapsibleOccupancyState extends State<BookingsCollapsibleOccupa
                   Row(
                     children: [
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 3.h,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.neonBlue.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10.r),

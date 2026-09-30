@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
@@ -15,13 +16,11 @@ import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit
 class StationControlActionsBar extends StatefulWidget {
   final Booking booking;
 
-  const StationControlActionsBar({
-    super.key,
-    required this.booking,
-  });
+  const StationControlActionsBar({super.key, required this.booking});
 
   @override
-  State<StationControlActionsBar> createState() => _StationControlActionsBarState();
+  State<StationControlActionsBar> createState() =>
+      _StationControlActionsBarState();
 }
 
 class _StationControlActionsBarState extends State<StationControlActionsBar> {
@@ -32,9 +31,15 @@ class _StationControlActionsBarState extends State<StationControlActionsBar> {
     return InkWell(
       borderRadius: BorderRadius.circular(10.r),
       onTap: () async {
-        final success = await context.read<DashboardCubit>().extendSession(widget.booking.id, minutes);
+        final success = await context.read<DashboardCubit>().extendSession(
+          widget.booking.id,
+          minutes,
+        );
         if (success && context.mounted) {
-          context.read<BookingCubit>().startWatchingBookings(loungeId: widget.booking.loungeId, forceRefresh: true);
+          context.read<BookingCubit>().startWatchingBookings(
+            loungeId: widget.booking.loungeId,
+            forceRefresh: true,
+          );
         }
       },
       child: Container(
@@ -63,14 +68,27 @@ class _StationControlActionsBarState extends State<StationControlActionsBar> {
     setState(() => _isCompletingOpenTime = true);
 
     try {
+      final confirmed = await AppDialog.confirm(
+        context: context,
+        title: AppStrings.confirmEndSession,
+        message: AppStrings.confirmEndSessionMessage,
+        confirmText: AppStrings.endSession,
+        cancelText: AppStrings.cancel,
+        confirmColor: AppColors.danger,
+      );
+      if (confirmed != true || !context.mounted) return;
       final bookingCubit = context.read<BookingCubit>();
       final roomCubit = context.read<RoomCubit>();
-      final result = await bookingCubit.completeOpenTimeSession(widget.booking.id);
+      final result = await bookingCubit.completeOpenTimeSession(
+        widget.booking.id,
+      );
 
       if (!context.mounted) return;
 
       if (result == null) {
-        final message = bookingCubit.state.errorMessage ?? AppStrings.failedToCompleteOpenTime;
+        final message =
+            bookingCubit.state.errorMessage ??
+            AppStrings.failedToCompleteOpenTime;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: AppColors.danger),
         );
@@ -78,7 +96,10 @@ class _StationControlActionsBarState extends State<StationControlActionsBar> {
       }
 
       roomCubit.watchRooms(widget.booking.loungeId, forceRefresh: true);
-      bookingCubit.startWatchingBookings(loungeId: widget.booking.loungeId, forceRefresh: true);
+      bookingCubit.startWatchingBookings(
+        loungeId: widget.booking.loungeId,
+        forceRefresh: true,
+      );
       final total = result['final_total'];
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -110,14 +131,20 @@ class _StationControlActionsBarState extends State<StationControlActionsBar> {
             decoration: BoxDecoration(
               color: AppColors.neonCyan.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10.r),
-              border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: AppColors.neonCyan.withValues(alpha: 0.3),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.all_inclusive_rounded, color: AppColors.neonCyan, size: 18.r),
+                    Icon(
+                      Icons.all_inclusive_rounded,
+                      color: AppColors.neonCyan,
+                      size: 18.r,
+                    ),
                     SizedBox(width: 8.w),
                     Expanded(
                       child: Text(
@@ -168,7 +195,6 @@ class _StationControlActionsBarState extends State<StationControlActionsBar> {
         ],
         SizedBox(height: 16.h),
 
-
         // Quick Actions Bar (Extras & Swap)
         Row(
           children: [
@@ -189,12 +215,19 @@ class _StationControlActionsBarState extends State<StationControlActionsBar> {
                         totalCost,
                       );
                       if (success) {
-                        bookingCubit.startWatchingBookings(loungeId: booking.loungeId, forceRefresh: true);
+                        bookingCubit.startWatchingBookings(
+                          loungeId: booking.loungeId,
+                          forceRefresh: true,
+                        );
                       }
                     },
                   );
                 },
-                icon: Icon(Icons.fastfood_rounded, size: 16.sp, color: AppColors.neonPurple),
+                icon: Icon(
+                  Icons.fastfood_rounded,
+                  size: 16.sp,
+                  color: AppColors.neonPurple,
+                ),
                 label: Text(
                   AppStrings.addExtrasToSession,
                   style: TextStyle(
@@ -204,9 +237,13 @@ class _StationControlActionsBarState extends State<StationControlActionsBar> {
                   ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: AppColors.neonPurple.withValues(alpha: 0.4)),
+                  side: BorderSide(
+                    color: AppColors.neonPurple.withValues(alpha: 0.4),
+                  ),
                   padding: EdgeInsets.symmetric(vertical: 11.h),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
                 ),
               ),
             ),
@@ -222,7 +259,11 @@ class _StationControlActionsBarState extends State<StationControlActionsBar> {
                     ),
                   );
                 },
-                icon: Icon(Icons.swap_horiz_rounded, size: 16.sp, color: AppColors.textPrimary),
+                icon: Icon(
+                  Icons.swap_horiz_rounded,
+                  size: 16.sp,
+                  color: AppColors.textPrimary,
+                ),
                 label: Text(
                   AppStrings.swapRoom,
                   style: TextStyle(
@@ -234,7 +275,9 @@ class _StationControlActionsBarState extends State<StationControlActionsBar> {
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: AppColors.borderDefault),
                   padding: EdgeInsets.symmetric(vertical: 11.h),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
                 ),
               ),
             ),

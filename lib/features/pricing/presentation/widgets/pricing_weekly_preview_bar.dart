@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/theme/app_colors.dart';
-import '../../domain/entities/pricing_rule_entity.dart';
 
 class PricingWeeklyPreviewBar extends StatelessWidget {
   final List<int> selectedDays;
@@ -17,7 +16,15 @@ class PricingWeeklyPreviewBar extends StatelessWidget {
     required this.ruleType,
   });
 
-  static const List<String> dayNames = ['إث', 'ثلا', 'أرب', 'خم', 'جم', 'سب', 'أح'];
+  static const List<String> dayNames = [
+    'إث',
+    'ثلا',
+    'أرب',
+    'خم',
+    'جم',
+    'سب',
+    'أح',
+  ];
 
   int _parseHour(String timeStr) {
     if (timeStr.isEmpty) return 0;

@@ -24,7 +24,9 @@ class BookingInfoChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6.r),
-        border: bordered ? Border.all(color: color.withValues(alpha: 0.4)) : null,
+        border: bordered
+            ? Border.all(color: color.withValues(alpha: 0.4))
+            : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -12,7 +12,12 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 class RoomDiscountDialog extends StatefulWidget {
   final String roomName;
   final double currentPrice;
-  final Function(double discountAmount, double discountPercentage, String reason) onApplyDiscount;
+  final Function(
+    double discountAmount,
+    double discountPercentage,
+    String reason,
+  )
+  onApplyDiscount;
 
   const RoomDiscountDialog({
     super.key,
@@ -37,11 +42,15 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
     super.dispose();
   }
 
-  double get _inputValue => double.tryParse(_valueController.text.trim()) ?? 0.0;
+  double get _inputValue =>
+      double.tryParse(_valueController.text.trim()) ?? 0.0;
 
   double get _calculatedDiscountAmount {
     if (_isPercentage) {
-      return (widget.currentPrice * _inputValue / 100).clamp(0.0, widget.currentPrice);
+      return (widget.currentPrice * _inputValue / 100).clamp(
+        0.0,
+        widget.currentPrice,
+      );
     }
     return _inputValue.clamp(0.0, widget.currentPrice);
   }
@@ -50,10 +59,13 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
     if (_isPercentage) {
       return _inputValue.clamp(0.0, 100.0);
     }
-    return widget.currentPrice > 0 ? (_inputValue / widget.currentPrice * 100).clamp(0.0, 100.0) : 0.0;
+    return widget.currentPrice > 0
+        ? (_inputValue / widget.currentPrice * 100).clamp(0.0, 100.0)
+        : 0.0;
   }
 
-  double get _finalPrice => (widget.currentPrice - _calculatedDiscountAmount).clamp(0.0, double.infinity);
+  double get _finalPrice => (widget.currentPrice - _calculatedDiscountAmount)
+      .clamp(0.0, double.infinity);
 
   void _handleConfirm() {
     final reason = _reasonController.text.trim();
@@ -109,7 +121,11 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                     color: AppColors.warning.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.local_offer_rounded, color: AppColors.warning, size: 20.r),
+                  child: Icon(
+                    Icons.local_offer_rounded,
+                    color: AppColors.warning,
+                    size: 20.r,
+                  ),
                 ),
                 SizedBox(width: 10.w),
                 Expanded(
@@ -150,14 +166,18 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: 8.h),
                         decoration: BoxDecoration(
-                          color: _isPercentage ? AppColors.neonBlue : Colors.transparent,
+                          color: _isPercentage
+                              ? AppColors.neonBlue
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         alignment: Alignment.center,
                         child: Text(
                           'نسبة مئوية (%)',
                           style: TextStyle(
-                            color: _isPercentage ? Colors.black : AppColors.textSecondary,
+                            color: _isPercentage
+                                ? Colors.black
+                                : AppColors.textSecondary,
                             fontSize: 11.sp,
                             fontWeight: FontWeight.bold,
                           ),
@@ -172,14 +192,18 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: 8.h),
                         decoration: BoxDecoration(
-                          color: !_isPercentage ? AppColors.neonBlue : Colors.transparent,
+                          color: !_isPercentage
+                              ? AppColors.neonBlue
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         alignment: Alignment.center,
                         child: Text(
                           'مبلغ ثابت (ج.م)',
                           style: TextStyle(
-                            color: !_isPercentage ? Colors.black : AppColors.textSecondary,
+                            color: !_isPercentage
+                                ? Colors.black
+                                : AppColors.textSecondary,
                             fontSize: 11.sp,
                             fontWeight: FontWeight.bold,
                           ),
@@ -201,16 +225,26 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
             SizedBox(height: 6.h),
             TextFormField(
               controller: _valueController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*'))],
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+              ],
               style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 hintText: _isPercentage ? 'مثال: 15' : 'مثال: 30',
-                hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
+                hintStyle: TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 12.sp,
+                ),
                 filled: true,
                 fillColor: AppColors.mutedBackground,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12.w,
+                  vertical: 12.h,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.r),
                   borderSide: const BorderSide(color: AppColors.borderDefault),
@@ -236,10 +270,16 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
               style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
               decoration: InputDecoration(
                 hintText: 'مثال: عرض ساعات الصباح / تعويض عميل',
-                hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
+                hintStyle: TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 12.sp,
+                ),
                 filled: true,
                 fillColor: AppColors.mutedBackground,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12.w,
+                  vertical: 12.h,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.r),
                   borderSide: const BorderSide(color: AppColors.borderDefault),
@@ -279,7 +319,11 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      AppText.body('الصافي النهائي:', fontSize: 10.sp, color: AppColors.textMuted),
+                      AppText.body(
+                        'الصافي النهائي:',
+                        fontSize: 10.sp,
+                        color: AppColors.textMuted,
+                      ),
                       AppText.subHeading(
                         '${_finalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
                         fontSize: 15.sp,

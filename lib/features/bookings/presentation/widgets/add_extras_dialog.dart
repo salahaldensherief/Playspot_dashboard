@@ -28,7 +28,8 @@ class AddExtrasDialog extends StatefulWidget {
     BuildContext context, {
     required String bookingId,
     required String loungeId,
-    required Function(List<Map<String, dynamic>> extras, double totalCost) onConfirm,
+    required Function(List<Map<String, dynamic>> extras, double totalCost)
+    onConfirm,
   }) {
     final extrasCubit = context.read<ExtrasCubit?>();
     final bookingCubit = context.read<BookingCubit?>();
@@ -43,10 +44,8 @@ class AddExtrasDialog extends StatefulWidget {
             BlocProvider.value(value: extrasCubit)
           else
             BlocProvider(create: (_) => sl<ExtrasCubit>()),
-          if (bookingCubit != null)
-            BlocProvider.value(value: bookingCubit),
-          if (dashboardCubit != null)
-            BlocProvider.value(value: dashboardCubit),
+          if (bookingCubit != null) BlocProvider.value(value: bookingCubit),
+          if (dashboardCubit != null) BlocProvider.value(value: dashboardCubit),
         ],
         child: AddExtrasDialog(
           bookingId: bookingId,
@@ -86,7 +85,9 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
     return total;
   }
 
-  List<Map<String, dynamic>> _buildExtrasJsonList(List<ExtraEntity> availableExtras) {
+  List<Map<String, dynamic>> _buildExtrasJsonList(
+    List<ExtraEntity> availableExtras,
+  ) {
     final List<Map<String, dynamic>> result = [];
     for (final extra in availableExtras) {
       final qty = _selectedQuantities[extra.id] ?? 0;
@@ -121,7 +122,8 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
         padding: EdgeInsets.all(20.r),
         child: BlocBuilder<ExtrasCubit, ExtrasState>(
           builder: (context, state) {
-            if (state.status == ExtrasStatus.loading || state.status == ExtrasStatus.initial) {
+            if (state.status == ExtrasStatus.loading ||
+                state.status == ExtrasStatus.initial) {
               return const Center(
                 child: Padding(
                   padding: EdgeInsets.all(40),
@@ -139,7 +141,9 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
               );
             }
 
-            final availableExtras = state.extras.where((e) => !e.isOutOfStock).toList();
+            final availableExtras = state.extras
+                .where((e) => !e.isOutOfStock)
+                .toList();
             final totalCost = _calculateTotal(availableExtras);
 
             return Column(
@@ -152,7 +156,11 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.restaurant_menu, color: AppColors.neonBlue, size: 22.r),
+                        Icon(
+                          Icons.restaurant_menu,
+                          color: AppColors.neonBlue,
+                          size: 22.r,
+                        ),
                         SizedBox(width: 8.w),
                         AppText.heading(
                           AppStrings.addExtrasToSession,
@@ -161,7 +169,10 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
                       ],
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                      icon: const Icon(
+                        Icons.close,
+                        color: AppColors.textSecondary,
+                      ),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
@@ -183,7 +194,8 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
                   Expanded(
                     child: ListView.separated(
                       itemCount: availableExtras.length,
-                      separatorBuilder: (_, _) => Divider(color: AppColors.divider, height: 16.h),
+                      separatorBuilder: (_, _) =>
+                          Divider(color: AppColors.divider, height: 16.h),
                       itemBuilder: (context, index) {
                         final extra = availableExtras[index];
                         final qty = _selectedQuantities[extra.id] ?? 0;
@@ -192,8 +204,14 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
                           children: [
                             CircleAvatar(
                               radius: 16.r,
-                              backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
-                              child: Icon(Icons.local_cafe, size: 16.r, color: AppColors.neonBlue),
+                              backgroundColor: AppColors.neonBlue.withValues(
+                                alpha: 0.1,
+                              ),
+                              child: Icon(
+                                Icons.local_cafe,
+                                size: 16.r,
+                                color: AppColors.neonBlue,
+                              ),
                             ),
                             SizedBox(width: 12.w),
                             Expanded(
@@ -201,7 +219,9 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   AppText.subHeading(
-                                    extra.nameAr.isNotEmpty ? extra.nameAr : extra.name,
+                                    extra.nameAr.isNotEmpty
+                                        ? extra.nameAr
+                                        : extra.name,
                                     fontSize: 13.sp,
                                   ),
                                   AppText.body(
@@ -217,18 +237,23 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
                               children: [
                                 IconButton(
                                   icon: const Icon(Icons.remove_circle_outline),
-                                  color: qty > 0 ? AppColors.danger : AppColors.textMuted,
+                                  color: qty > 0
+                                      ? AppColors.danger
+                                      : AppColors.textMuted,
                                   iconSize: 22.r,
                                   onPressed: qty > 0
                                       ? () {
                                           setState(() {
-                                            _selectedQuantities[extra.id] = qty - 1;
+                                            _selectedQuantities[extra.id] =
+                                                qty - 1;
                                           });
                                         }
                                       : null,
                                 ),
                                 Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 8.w),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 8.w,
+                                  ),
                                   child: AppText.subHeading(
                                     '$qty',
                                     fontSize: 14.sp,
@@ -290,7 +315,9 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
                           height: 38.h,
                           onPressed: totalCost > 0
                               ? () {
-                                  final extrasJson = _buildExtrasJsonList(availableExtras);
+                                  final extrasJson = _buildExtrasJsonList(
+                                    availableExtras,
+                                  );
                                   widget.onConfirm(extrasJson, totalCost);
                                   Navigator.of(context).pop();
                                 }

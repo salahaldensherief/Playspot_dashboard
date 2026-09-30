@@ -25,7 +25,10 @@ class BookingsHeader extends StatelessWidget {
             Container(
               width: 8.r,
               height: 8.r,
-              decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: AppColors.success,
+                shape: BoxShape.circle,
+              ),
             ),
             SizedBox(width: 8.w),
             Text(

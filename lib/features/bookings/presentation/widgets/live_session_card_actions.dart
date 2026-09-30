@@ -51,16 +51,16 @@ class _LiveSessionCardActionsState extends State<LiveSessionCardActions> {
 
     if (confirmed == true && context.mounted) {
       final dashboardCubit = context.read<DashboardCubit>();
-      final bookingCubit = context.read<BookingCubit>();
       final success = await dashboardCubit.endSession(widget.booking.id);
-      if (!success && context.mounted) {
-        await bookingCubit.changeBookingStatus(widget.booking.id, BookingStatus.completed);
-      }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppStrings.sessionEndedSuccess),
-            backgroundColor: AppColors.success,
+            content: Text(
+              success
+                  ? AppStrings.sessionEndedSuccess
+                  : AppStrings.actionFailed,
+            ),
+            backgroundColor: success ? AppColors.success : AppColors.danger,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -77,14 +77,25 @@ class _LiveSessionCardActionsState extends State<LiveSessionCardActions> {
       bookingId: widget.booking.id,
       loungeId: widget.booking.loungeId,
       onConfirm: (extras, totalCost) async {
-        final success = await dashboardCubit.addExtrasToSession(widget.booking.id, extras, totalCost);
+        final success = await dashboardCubit.addExtrasToSession(
+          widget.booking.id,
+          extras,
+          totalCost,
+        );
         if (success) {
-          bookingCubit.startWatchingBookings(loungeId: widget.booking.loungeId, forceRefresh: true);
+          bookingCubit.startWatchingBookings(
+            loungeId: widget.booking.loungeId,
+            forceRefresh: true,
+          );
         }
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(success ? AppStrings.extrasAddedSuccess : AppStrings.actionFailed),
+              content: Text(
+                success
+                    ? AppStrings.extrasAddedSuccess
+                    : AppStrings.actionFailed,
+              ),
               backgroundColor: success ? AppColors.success : AppColors.danger,
             ),
           );
@@ -98,14 +109,27 @@ class _LiveSessionCardActionsState extends State<LiveSessionCardActions> {
     setState(() => _isCompleting = true);
 
     try {
+      final confirmed = await AppDialog.confirm(
+        context: context,
+        title: AppStrings.confirmEndSession,
+        message: AppStrings.confirmEndSessionMessage,
+        confirmText: AppStrings.endSession,
+        cancelText: AppStrings.cancel,
+        confirmColor: AppColors.danger,
+      );
+      if (confirmed != true || !context.mounted) return;
       final bookingCubit = context.read<BookingCubit>();
       final roomCubit = context.read<RoomCubit>();
-      final result = await bookingCubit.completeOpenTimeSession(widget.booking.id);
+      final result = await bookingCubit.completeOpenTimeSession(
+        widget.booking.id,
+      );
 
       if (!context.mounted) return;
 
       if (result == null) {
-        final message = bookingCubit.state.errorMessage ?? AppStrings.failedToCompleteOpenTime;
+        final message =
+            bookingCubit.state.errorMessage ??
+            AppStrings.failedToCompleteOpenTime;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: AppColors.danger),
         );
@@ -113,7 +137,10 @@ class _LiveSessionCardActionsState extends State<LiveSessionCardActions> {
       }
 
       roomCubit.watchRooms(widget.booking.loungeId, forceRefresh: true);
-      bookingCubit.startWatchingBookings(loungeId: widget.booking.loungeId, forceRefresh: true);
+      bookingCubit.startWatchingBookings(
+        loungeId: widget.booking.loungeId,
+        forceRefresh: true,
+      );
       final total = result['final_total'];
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -166,7 +193,9 @@ class _LiveSessionCardActionsState extends State<LiveSessionCardActions> {
                   variant: AppButtonVariant.primary,
                   height: h,
                   isLoading: _isCompleting,
-                  onPressed: _isCompleting ? null : () => _handleCompleteOpenTime(context),
+                  onPressed: _isCompleting
+                      ? null
+                      : () => _handleCompleteOpenTime(context),
                 )
               : AppButton(
                   text: AppStrings.extendTime,
@@ -177,7 +206,11 @@ class _LiveSessionCardActionsState extends State<LiveSessionCardActions> {
                     if (widget.onExtendSession != null) {
                       widget.onExtendSession!();
                     } else {
-                      ExtendSessionDialog.show(context, booking, onExtendMinutes: widget.onExtendMinutes);
+                      ExtendSessionDialog.show(
+                        context,
+                        booking,
+                        onExtendMinutes: widget.onExtendMinutes,
+                      );
                     }
                   },
                 ),

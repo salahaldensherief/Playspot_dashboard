@@ -46,7 +46,8 @@ class _StartSessionButtonState extends State<StartSessionButton> {
   @override
   void didUpdateWidget(covariant StartSessionButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.bookingDate != widget.bookingDate || oldWidget.startTime != widget.startTime) {
+    if (oldWidget.bookingDate != widget.bookingDate ||
+        oldWidget.startTime != widget.startTime) {
       _startTimerIfNeeded();
     }
   }
@@ -72,7 +73,9 @@ class _StartSessionButtonState extends State<StartSessionButton> {
   }
 
   DateTime? get _bookingStartTime {
-    if (widget.bookingDate == null || widget.startTime == null || widget.startTime!.trim().isEmpty) {
+    if (widget.bookingDate == null ||
+        widget.startTime == null ||
+        widget.startTime!.trim().isEmpty) {
       return null;
     }
     try {
@@ -89,10 +92,12 @@ class _StartSessionButtonState extends State<StartSessionButton> {
 
   bool get _isStartTimeReached {
     final start = _bookingStartTime;
-    if (start == null) return true; // Default to enabled if no date/time provided
+    if (start == null)
+      return true; // Default to enabled if no date/time provided
     final now = DateTime.now();
     final earlyAllowedStart = start.subtract(const Duration(minutes: 15));
-    return now.isAfter(earlyAllowedStart) || now.isAtSameMomentAs(earlyAllowedStart);
+    return now.isAfter(earlyAllowedStart) ||
+        now.isAtSameMomentAs(earlyAllowedStart);
   }
 
   String _format12Hour(DateTime dt) {
@@ -126,7 +131,8 @@ class _StartSessionButtonState extends State<StartSessionButton> {
           widget.onSuccess!();
         }
       } else {
-        final errorMsg = cubit.state.errorMessage ?? AppStrings.sessionStartFailed;
+        final errorMsg =
+            cubit.state.errorMessage ?? AppStrings.sessionStartFailed;
         messenger.showSnackBar(
           SnackBar(
             content: Text(errorMsg),
@@ -140,7 +146,9 @@ class _StartSessionButtonState extends State<StartSessionButton> {
       }
     } catch (e) {
       if (!mounted) return;
-      final errorMsg = e.toString().isEmpty ? AppStrings.sessionStartFailed : e.toString();
+      final errorMsg = e.toString().isEmpty
+          ? AppStrings.sessionStartFailed
+          : e.toString();
       messenger.showSnackBar(
         SnackBar(
           content: Text(errorMsg),
@@ -168,17 +176,23 @@ class _StartSessionButtonState extends State<StartSessionButton> {
     final String buttonText = isReadyToStart
         ? AppStrings.startSession
         : (startDt != null
-            ? AppStrings.startsAt.replaceFirst('{}', _format12Hour(startDt))
-            : AppStrings.startSession);
+              ? AppStrings.startsAt.replaceFirst('{}', _format12Hour(startDt))
+              : AppStrings.startSession);
 
     return AppButton(
       text: buttonText,
-      icon: isReadyToStart ? Icons.play_arrow_rounded : Icons.access_time_rounded,
+      icon: isReadyToStart
+          ? Icons.play_arrow_rounded
+          : Icons.access_time_rounded,
       isLoading: _isLoading,
       width: widget.width,
       height: widget.height ?? 32.h,
-      backgroundColor: isReadyToStart ? AppColors.success : AppColors.cardBackground,
-      foregroundColor: isReadyToStart ? AppColors.textPrimary : AppColors.textMuted,
+      backgroundColor: isReadyToStart
+          ? AppColors.success
+          : AppColors.cardBackground,
+      foregroundColor: isReadyToStart
+          ? AppColors.textPrimary
+          : AppColors.textMuted,
       disabledBackgroundColor: AppColors.cardBackground,
       disabledForegroundColor: AppColors.textMuted,
       onPressed: (!isReadyToStart || _isLoading)

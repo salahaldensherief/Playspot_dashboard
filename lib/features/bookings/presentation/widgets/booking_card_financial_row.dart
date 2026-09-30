@@ -51,7 +51,8 @@ class BookingCardFinancialRow extends StatelessWidget {
                   if (hasDiscount) ...[
                     SizedBox(width: 6.w),
                     BookingInfoChip(
-                      label: '-${discount.toStringAsFixed(0)} ${AppStrings.egp}',
+                      label:
+                          '-${discount.toStringAsFixed(0)} ${AppStrings.egp}',
                       color: AppColors.warning,
                       bordered: true,
                     ),

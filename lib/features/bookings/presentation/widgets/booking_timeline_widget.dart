@@ -18,11 +18,13 @@ class BookingTimelineWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCancelled = booking.status == BookingStatus.cancelled ||
+    final isCancelled =
+        booking.status == BookingStatus.cancelled ||
         booking.status == BookingStatus.rejected;
     final isCompleted = booking.status == BookingStatus.completed;
     final isInProgress = booking.status == BookingStatus.inProgress;
-    final hasCheckedIn = booking.checkedInAt != null || isInProgress || isCompleted;
+    final hasCheckedIn =
+        booking.checkedInAt != null || isInProgress || isCompleted;
 
     return Container(
       padding: EdgeInsets.all(14.r),
@@ -82,8 +84,14 @@ class BookingTimelineWidget extends StatelessWidget {
                         : (isInProgress ? AppStrings.inProgress : '--:--'),
                     isDone: hasCheckedIn,
                     isActive: isInProgress,
-                    stepColor: isInProgress ? AppColors.neonBlue : (hasCheckedIn ? AppColors.success : AppColors.textSecondary),
-                    icon: isInProgress ? Icons.play_circle_filled_rounded : Icons.check_circle_rounded,
+                    stepColor: isInProgress
+                        ? AppColors.neonBlue
+                        : (hasCheckedIn
+                              ? AppColors.success
+                              : AppColors.textSecondary),
+                    icon: isInProgress
+                        ? Icons.play_circle_filled_rounded
+                        : Icons.check_circle_rounded,
                   ),
                 ),
 
@@ -96,8 +104,12 @@ class BookingTimelineWidget extends StatelessWidget {
                     subtitle: '--:--',
                     isDone: isCompleted,
                     isActive: false,
-                    stepColor: isCompleted ? AppColors.success : AppColors.textSecondary,
-                    icon: isCompleted ? Icons.task_alt_rounded : Icons.radio_button_unchecked_rounded,
+                    stepColor: isCompleted
+                        ? AppColors.success
+                        : AppColors.textSecondary,
+                    icon: isCompleted
+                        ? Icons.task_alt_rounded
+                        : Icons.radio_button_unchecked_rounded,
                   ),
                 ),
               ],
@@ -132,7 +144,9 @@ class BookingTimelineWidget extends StatelessWidget {
         Icon(
           icon,
           size: 20.r,
-          color: isActive ? AppColors.neonBlue : (isDone ? stepColor : AppColors.textSecondary),
+          color: isActive
+              ? AppColors.neonBlue
+              : (isDone ? stepColor : AppColors.textSecondary),
         ),
         SizedBox(height: 6.h),
         Text(
@@ -141,9 +155,13 @@ class BookingTimelineWidget extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: isDone || isActive ? AppColors.textPrimary : AppColors.textSecondary,
+            color: isDone || isActive
+                ? AppColors.textPrimary
+                : AppColors.textSecondary,
             fontSize: 11.sp,
-            fontWeight: isDone || isActive ? FontWeight.bold : FontWeight.normal,
+            fontWeight: isDone || isActive
+                ? FontWeight.bold
+                : FontWeight.normal,
           ),
         ),
         SizedBox(height: 2.h),

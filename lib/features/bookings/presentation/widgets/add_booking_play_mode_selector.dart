@@ -33,12 +33,16 @@ class AddBookingPlayModeSelector extends StatelessWidget {
           segments: [
             ButtonSegment<String>(
               value: 'single',
-              label: Text('${AppStrings.single} (${singleRate.toStringAsFixed(0)} ${AppStrings.egp}/hr)'),
+              label: Text(
+                '${AppStrings.single} (${singleRate.toStringAsFixed(0)} ${AppStrings.egp}/hr)',
+              ),
               icon: const Icon(Icons.person_outline_rounded),
             ),
             ButtonSegment<String>(
               value: 'multi',
-              label: Text('${AppStrings.multi} (${multiRate.toStringAsFixed(0)} ${AppStrings.egp}/hr)'),
+              label: Text(
+                '${AppStrings.multi} (${multiRate.toStringAsFixed(0)} ${AppStrings.egp}/hr)',
+              ),
               icon: const Icon(Icons.people_outline_rounded),
             ),
           ],

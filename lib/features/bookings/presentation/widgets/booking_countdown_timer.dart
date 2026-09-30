@@ -72,7 +72,11 @@ class _BookingCountdownTimerState extends State<BookingCountdownTimer> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.hourglass_top_rounded, color: AppColors.warning, size: 12.r),
+            Icon(
+              Icons.hourglass_top_rounded,
+              color: AppColors.warning,
+              size: 12.r,
+            ),
             SizedBox(width: 4.w),
             Text(
               AppStrings.countdownToStart(timeFormatted),
@@ -104,7 +108,11 @@ class _BookingCountdownTimerState extends State<BookingCountdownTimer> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline_rounded, color: AppColors.danger, size: 12.r),
+              Icon(
+                Icons.error_outline_rounded,
+                color: AppColors.danger,
+                size: 12.r,
+              ),
               SizedBox(width: 4.w),
               Text(
                 AppStrings.gracePeriodExpired(graceLimit.toString()),
@@ -121,7 +129,8 @@ class _BookingCountdownTimerState extends State<BookingCountdownTimer> {
         final remainingGraceSecs = (graceLimit * 60) - elapsed.inSeconds;
         final mins = (remainingGraceSecs / 60).floor();
         final secs = remainingGraceSecs % 60;
-        final formattedGrace = '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+        final formattedGrace =
+            '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
 
         return Container(
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
@@ -133,7 +142,11 @@ class _BookingCountdownTimerState extends State<BookingCountdownTimer> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.timer_off_outlined, color: AppColors.danger, size: 12.r),
+              Icon(
+                Icons.timer_off_outlined,
+                color: AppColors.danger,
+                size: 12.r,
+              ),
               SizedBox(width: 4.w),
               Text(
                 'تأخير $formattedGrace د (من مهلة $graceLimit د)',

@@ -37,7 +37,7 @@ class LoungeModel extends Lounge {
     super.allowCashPayment = true,
     super.requirePrepaidFirstTime = false,
     super.cashGracePeriodMinutes = 15,
-    super.allowOpenTimeSessions = true,
+    super.allowOpenTimeSessions = false,
     super.isActive = true,
     super.suspensionReason,
   });
@@ -62,8 +62,12 @@ class LoungeModel extends Lounge {
     }
 
     // Parse lat and lng
-    double? lat = parseDoubleNullable(json['lat']) ?? parseDoubleNullable(json['latitude']);
-    double? lng = parseDoubleNullable(json['lng']) ?? parseDoubleNullable(json['longitude']);
+    double? lat =
+        parseDoubleNullable(json['lat']) ??
+        parseDoubleNullable(json['latitude']);
+    double? lng =
+        parseDoubleNullable(json['lng']) ??
+        parseDoubleNullable(json['longitude']);
 
     // Parse location_point if lat/lng are missing
     if ((lat == null || lng == null) && json['location_point'] != null) {
@@ -75,8 +79,10 @@ class LoungeModel extends Lounge {
           lat ??= parseDoubleNullable(coords[1]);
         }
       } else if (locPoint is String) {
-        final match = RegExp(r'POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)', caseSensitive: false)
-            .firstMatch(locPoint);
+        final match = RegExp(
+          r'POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)',
+          caseSensitive: false,
+        ).firstMatch(locPoint);
         if (match != null) {
           lng ??= double.tryParse(match.group(1) ?? '');
           lat ??= double.tryParse(match.group(2) ?? '');
@@ -90,13 +96,21 @@ class LoungeModel extends Lounge {
       calculatedDistance = parseDouble(json['dist_meters']) / 1000.0;
     } else {
       // Check if user/device coordinates are passed in json for dynamic calculation
-      final deviceLat = parseDoubleNullable(json['device_lat']) ?? parseDoubleNullable(json['user_lat']);
-      final deviceLng = parseDoubleNullable(json['device_lng']) ?? parseDoubleNullable(json['user_lng']);
-      if (deviceLat != null && deviceLng != null && lat != null && lng != null) {
+      final deviceLat =
+          parseDoubleNullable(json['device_lat']) ??
+          parseDoubleNullable(json['user_lat']);
+      final deviceLng =
+          parseDoubleNullable(json['device_lng']) ??
+          parseDoubleNullable(json['user_lng']);
+      if (deviceLat != null &&
+          deviceLng != null &&
+          lat != null &&
+          lng != null) {
         const double earthRadiusKm = 6371.0;
         final dLat = (lat - deviceLat) * (math.pi / 180.0);
         final dLng = (lng - deviceLng) * (math.pi / 180.0);
-        final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        final a =
+            math.sin(dLat / 2) * math.sin(dLat / 2) +
             math.cos(deviceLat * (math.pi / 180.0)) *
                 math.cos(lat * (math.pi / 180.0)) *
                 math.sin(dLng / 2) *
@@ -112,21 +126,37 @@ class LoungeModel extends Lounge {
       imageUrl: json['image_url']?.toString() ?? '',
       rating: parseDouble(json['rating']),
       distance: calculatedDistance,
-      pricePerHour: parseDouble(json['price_per_hour'] ?? json['price'] ?? json['hourly_rate'] ?? json['hourly_price'] ?? json['base_price']),
+      pricePerHour: parseDouble(
+        json['price_per_hour'] ??
+            json['price'] ??
+            json['hourly_rate'] ??
+            json['hourly_price'] ??
+            json['base_price'],
+      ),
       isOpen: json['is_open'] ?? true,
       location: json['location']?.toString(),
       city: json['city']?.toString(),
       cityId: json['city_id']?.toString(),
       totalReviews: parseInt(json['total_reviews']),
-      availableRooms: parseInt(json['available_rooms'] ?? json['rooms_count'] ?? json['room_count']) ?? 0,
+      availableRooms:
+          parseInt(
+            json['available_rooms'] ??
+                json['rooms_count'] ??
+                json['room_count'],
+          ) ??
+          0,
       descriptionAr: json['description_ar']?.toString(),
       descriptionEn: json['description_en']?.toString(),
-      images: (json['images'] is List) ? (json['images'] as List).map((e) => e.toString()).toList() : null,
+      images: (json['images'] is List)
+          ? (json['images'] as List).map((e) => e.toString()).toList()
+          : null,
       opensAt: json['opening_time']?.toString() ?? '',
       closesAt: json['closing_time']?.toString() ?? '',
       lat: lat,
       lng: lng,
-      categoryIcons: (json['category_icons'] is List) ? (json['category_icons'] as List).map((e) => e.toString()).toList() : [],
+      categoryIcons: (json['category_icons'] is List)
+          ? (json['category_icons'] as List).map((e) => e.toString()).toList()
+          : [],
       categoryId: json['category_id']?.toString(),
       ownerName: json['owner_name']?.toString(),
       ownerEmail: json['owner_email']?.toString(),
@@ -135,13 +165,17 @@ class LoungeModel extends Lounge {
       discountPercentage: parseInt(json['discount_percentage']) ?? 0,
       discountTitleAr: json['discount_title_ar']?.toString(),
       discountTitleEn: json['discount_title_en']?.toString(),
-      discountExpiresAt: json['discount_expires_at'] != null ? DateTime.tryParse(json['discount_expires_at'].toString()) : null,
-      vodafoneCashNumber: (json['vodafone_cash_number'] ?? json['vodafone_cash'])?.toString(),
-      instapayAccount: (json['instapay_account'] ?? json['instapay'])?.toString(),
+      discountExpiresAt: json['discount_expires_at'] != null
+          ? DateTime.tryParse(json['discount_expires_at'].toString())
+          : null,
+      vodafoneCashNumber:
+          (json['vodafone_cash_number'] ?? json['vodafone_cash'])?.toString(),
+      instapayAccount: (json['instapay_account'] ?? json['instapay'])
+          ?.toString(),
       allowCashPayment: json['allow_cash_payment'] ?? true,
       requirePrepaidFirstTime: json['require_prepaid_first_time'] ?? false,
       cashGracePeriodMinutes: parseInt(json['cash_grace_period_minutes']) ?? 15,
-      allowOpenTimeSessions: json['allow_open_time_sessions'] ?? true,
+      allowOpenTimeSessions: json['allow_open_time_sessions'] ?? false,
       isActive: json['is_active'] ?? true,
       suspensionReason: json['suspension_reason']?.toString(),
     );
@@ -174,7 +208,8 @@ class LoungeModel extends Lounge {
       if (categoryId != null) 'category_id': categoryId,
       if (ownerName != null) 'owner_name': ownerName,
       if (ownerEmail != null) 'owner_email': ownerEmail,
-      if (vodafoneCashNumber != null) 'vodafone_cash_number': vodafoneCashNumber,
+      if (vodafoneCashNumber != null)
+        'vodafone_cash_number': vodafoneCashNumber,
       if (instapayAccount != null) 'instapay_account': instapayAccount,
       'allow_cash_payment': allowCashPayment,
       'require_prepaid_first_time': requirePrepaidFirstTime,
@@ -185,4 +220,3 @@ class LoungeModel extends Lounge {
     };
   }
 }
-

@@ -37,8 +37,13 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
   double _calculateExtrasTotal() {
     double total = 0.0;
     for (final item in widget.booking.extras) {
-      final q = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
-      final p = (item['price'] ?? item['unit_price'] ?? item['total_price'] as num?)?.toDouble() ?? 0.0;
+      final q =
+          (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ??
+          1;
+      final p =
+          (item['price'] ?? item['unit_price'] ?? item['total_price'] as num?)
+              ?.toDouble() ??
+          0.0;
       total += q * p;
     }
     if (total == 0.0 && widget.booking.canteenOrders.isNotEmpty) {
@@ -52,18 +57,27 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
         if (rawItems is List) {
           for (final item in rawItems) {
             if (item is Map) {
-              final q = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
-              final p = (item['price'] ?? item['unit_price'] as num?)?.toDouble() ?? 0.0;
+              final q =
+                  (item['quantity'] ?? item['qty'] ?? item['count'] as num?)
+                      ?.toInt() ??
+                  1;
+              final p =
+                  (item['price'] ?? item['unit_price'] as num?)?.toDouble() ??
+                  0.0;
               total += q * p;
             }
           }
         }
         if (total == 0.0) {
-          total += (order['total_price'] ?? order['price'] as num?)?.toDouble() ?? 0.0;
+          total +=
+              (order['total_price'] ?? order['price'] as num?)?.toDouble() ??
+              0.0;
         }
       }
     }
-    if (total == 0.0 && widget.booking.addonsPrice != null && (widget.booking.addonsPrice ?? 0) > 0) {
+    if (total == 0.0 &&
+        widget.booking.addonsPrice != null &&
+        (widget.booking.addonsPrice ?? 0) > 0) {
       return widget.booking.addonsPrice ?? 0.0;
     }
     return total;
@@ -77,16 +91,24 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
   @override
   Widget build(BuildContext context) {
     final extrasTotal = _calculateExtrasTotal();
-    final basePrice = (widget.booking.totalPrice - extrasTotal).clamp(0.0, double.infinity);
+    final basePrice = (widget.booking.totalPrice - extrasTotal).clamp(
+      0.0,
+      double.infinity,
+    );
     final isPaid = widget.booking.paymentStatus == PaymentStatus.paid;
 
     final voucherDiscount = widget.booking.voucherDiscount ?? 0.0;
     final manualDiscount = (_discountValue > 0)
-        ? (widget.isPercentage ? (widget.booking.totalPrice * _discountValue / 100) : _discountValue)
+        ? (widget.isPercentage
+              ? (widget.booking.totalPrice * _discountValue / 100)
+              : _discountValue)
         : (widget.booking.discountAmount ?? 0.0);
 
     final totalDiscount = voucherDiscount + manualDiscount;
-    final finalPrice = (widget.booking.totalPrice - totalDiscount).clamp(0.0, double.infinity);
+    final finalPrice = (widget.booking.totalPrice - totalDiscount).clamp(
+      0.0,
+      double.infinity,
+    );
 
     return Container(
       padding: EdgeInsets.all(16.r),
@@ -103,7 +125,11 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.payments_outlined, color: AppColors.success, size: 20),
+                  const Icon(
+                    Icons.payments_outlined,
+                    color: AppColors.success,
+                    size: 20,
+                  ),
                   SizedBox(width: 8.w),
                   AppText.subHeading(
                     AppStrings.financialsAndExtras,
@@ -127,15 +153,22 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
             ),
             child: Column(
               children: [
-                _buildPriceRow(AppStrings.basePrice, '${basePrice.toStringAsFixed(2)} ${AppStrings.egp}'),
+                _buildPriceRow(
+                  AppStrings.basePrice,
+                  '${basePrice.toStringAsFixed(2)} ${AppStrings.egp}',
+                ),
                 if (extrasTotal > 0) ...[
                   SizedBox(height: 8.h),
-                  _buildPriceRow(AppStrings.additionalItems, '${extrasTotal.toStringAsFixed(2)} ${AppStrings.egp}'),
+                  _buildPriceRow(
+                    AppStrings.additionalItems,
+                    '${extrasTotal.toStringAsFixed(2)} ${AppStrings.egp}',
+                  ),
                 ],
                 if (voucherDiscount > 0) ...[
                   SizedBox(height: 8.h),
                   _buildPriceRow(
-                    (widget.booking.voucherCode != null && widget.booking.voucherCode!.isNotEmpty)
+                    (widget.booking.voucherCode != null &&
+                            widget.booking.voucherCode!.isNotEmpty)
                         ? '${AppStrings.voucherDiscount} (${widget.booking.voucherCode})'
                         : AppStrings.voucherDiscount,
                     '-${voucherDiscount.toStringAsFixed(2)} ${AppStrings.egp}',
@@ -145,7 +178,8 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
                 if (manualDiscount > 0) ...[
                   SizedBox(height: 8.h),
                   _buildPriceRow(
-                    (widget.booking.discountReason != null && widget.booking.discountReason!.isNotEmpty)
+                    (widget.booking.discountReason != null &&
+                            widget.booking.discountReason!.isNotEmpty)
                         ? '${AppStrings.discount} (${widget.booking.discountReason})'
                         : AppStrings.discount,
                     '-${manualDiscount.toStringAsFixed(2)} ${AppStrings.egp}',
@@ -171,10 +205,14 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
           BookingFinancialsExtrasList(extras: widget.booking.extras),
 
           // Detailed Canteen Orders Section
-          BookingFinancialsCanteenOrders(canteenOrders: widget.booking.canteenOrders),
+          BookingFinancialsCanteenOrders(
+            canteenOrders: widget.booking.canteenOrders,
+          ),
 
           // Discount Input Section (if unpaid and controllers provided)
-          if (!isPaid && widget.discountController != null && widget.reasonController != null)
+          if (!isPaid &&
+              widget.discountController != null &&
+              widget.reasonController != null)
             BookingFinancialsDiscountInput(
               discountController: widget.discountController!,
               reasonController: widget.reasonController!,

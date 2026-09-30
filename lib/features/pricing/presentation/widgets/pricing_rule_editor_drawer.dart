@@ -49,9 +49,12 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
   void initState() {
     super.initState();
     final r = widget.existingRule;
-    _nameArController = TextEditingController(text: r?.nameAr ?? 'ساعات الذروة');
-    _nameEnController =
-        TextEditingController(text: r?.nameEn ?? 'Peak Hours Pricing');
+    _nameArController = TextEditingController(
+      text: r?.nameAr ?? 'ساعات الذروة',
+    );
+    _nameEnController = TextEditingController(
+      text: r?.nameEn ?? 'Peak Hours Pricing',
+    );
     _valueController = TextEditingController(
       text: r != null ? r.adjustmentValue.toString() : '1.2',
     );
@@ -125,11 +128,13 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
       createdAt: widget.existingRule?.createdAt ?? DateTime.now(),
     );
 
-    context.read<PricingCubit>().saveRule(rule, loungeId: widget.loungeId).then((success) {
-      if (success && mounted) {
-        widget.onClose();
-      }
-    });
+    context.read<PricingCubit>().saveRule(rule, loungeId: widget.loungeId).then(
+      (success) {
+        if (success && mounted) {
+          widget.onClose();
+        }
+      },
+    );
   }
 
   @override
@@ -229,7 +234,15 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                       children: List.generate(7, (idx) {
                         final dayNum = idx + 1;
                         final isSelected = _selectedDays.contains(dayNum);
-                        const labels = ['إث', 'ثلا', 'أرب', 'خم', 'جم', 'سب', 'أح'];
+                        const labels = [
+                          'إث',
+                          'ثلا',
+                          'أرب',
+                          'خم',
+                          'جم',
+                          'سب',
+                          'أح',
+                        ];
                         return ChoiceChip(
                           label: Text(labels[idx]),
                           selected: isSelected,
@@ -274,12 +287,14 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                             },
                             child: InputDecorator(
                               decoration: InputDecoration(
-                                labelText: AppStrings.startTime,
+                                labelText: AppStrings.startTimeLabel,
                                 border: const OutlineInputBorder(),
                               ),
                               child: Text(
                                 _startTime.format(context),
-                                style: const TextStyle(color: AppColors.textPrimary),
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
                             ),
                           ),
@@ -298,12 +313,14 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                             },
                             child: InputDecorator(
                               decoration: InputDecoration(
-                                labelText: AppStrings.endTime,
+                                labelText: AppStrings.endTimeLabel,
                                 border: const OutlineInputBorder(),
                               ),
                               child: Text(
                                 _endTime.format(context),
-                                style: const TextStyle(color: AppColors.textPrimary),
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
                             ),
                           ),
@@ -323,8 +340,11 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.warning_amber_rounded,
-                                color: AppColors.warning, size: 18.r),
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: AppColors.warning,
+                              size: 18.r,
+                            ),
                             SizedBox(width: 8.w),
                             Expanded(
                               child: Text(
@@ -365,9 +385,13 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                               ),
                               child: Text(
                                 _startDate != null
-                                    ? DateFormat('yyyy-MM-dd').format(_startDate!)
+                                    ? DateFormat(
+                                        'yyyy-MM-dd',
+                                      ).format(_startDate!)
                                     : 'دائم',
-                                style: const TextStyle(color: AppColors.textPrimary),
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
                             ),
                           ),
@@ -378,8 +402,11 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                             onTap: () async {
                               final dt = await showDatePicker(
                                 context: context,
-                                initialDate: _endDate ??
-                                    DateTime.now().add(const Duration(days: 30)),
+                                initialDate:
+                                    _endDate ??
+                                    DateTime.now().add(
+                                      const Duration(days: 30),
+                                    ),
                                 firstDate: DateTime(2025),
                                 lastDate: DateTime(2030),
                               );
@@ -396,7 +423,9 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                                 _endDate != null
                                     ? DateFormat('yyyy-MM-dd').format(_endDate!)
                                     : 'بدون نهاية',
-                                style: const TextStyle(color: AppColors.textPrimary),
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
                             ),
                           ),
@@ -431,10 +460,11 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                       label: _adjustmentType == 'multiplier'
                           ? 'قيمة المضاعِف (مثال: 1.2)'
                           : _adjustmentType == 'percentage'
-                              ? 'النسبة المئوية % (مثال: 15)'
-                              : 'السعر الثابت بالجنية (مثال: 80)',
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
+                          ? 'النسبة المئوية % (مثال: 15)'
+                          : 'السعر الثابت بالجنية (مثال: 80)',
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       validator: (v) => v == null || double.tryParse(v) == null
                           ? AppStrings.fieldRequired
                           : null,
@@ -469,8 +499,11 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.error_outline_rounded,
-                                      color: AppColors.danger, size: 20.r),
+                                  Icon(
+                                    Icons.error_outline_rounded,
+                                    color: AppColors.danger,
+                                    size: 20.r,
+                                  ),
                                   SizedBox(width: 8.w),
                                   Text(
                                     AppStrings.conflictingRules,

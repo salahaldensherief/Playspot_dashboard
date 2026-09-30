@@ -59,7 +59,10 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
                         color: AppColors.danger.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
-                      child: const Icon(Icons.history_toggle_off_rounded, color: AppColors.danger),
+                      child: const Icon(
+                        Icons.history_toggle_off_rounded,
+                        color: AppColors.danger,
+                      ),
                     ),
                     SizedBox(width: 10.w),
                     Column(
@@ -83,7 +86,10 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -96,8 +102,11 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.check_circle_outline_rounded,
-                              size: 48.r, color: AppColors.success),
+                          Icon(
+                            Icons.check_circle_outline_rounded,
+                            size: 48.r,
+                            color: AppColors.success,
+                          ),
                           SizedBox(height: 12.h),
                           Text(
                             AppStrings.noCancellationHistory,
@@ -118,7 +127,9 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
                         return Container(
                           padding: EdgeInsets.all(12.r),
                           decoration: BoxDecoration(
-                            color: AppColors.mutedBackground.withValues(alpha: 0.4),
+                            color: AppColors.mutedBackground.withValues(
+                              alpha: 0.4,
+                            ),
                             borderRadius: BorderRadius.circular(10.r),
                             border: Border.all(color: AppColors.borderDefault),
                           ),
@@ -126,12 +137,16 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
                                     children: [
-                                      Icon(Icons.event_seat_rounded,
-                                          size: 16.r, color: AppColors.neonBlue),
+                                      Icon(
+                                        Icons.event_seat_rounded,
+                                        size: 16.r,
+                                        color: AppColors.neonBlue,
+                                      ),
                                       SizedBox(width: 6.w),
                                       Text(
                                         item.roomName ?? AppStrings.roomLabel,
@@ -145,12 +160,18 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
                                   ),
                                   Container(
                                     padding: EdgeInsets.symmetric(
-                                        horizontal: 8.w, vertical: 2.h),
+                                      horizontal: 8.w,
+                                      vertical: 2.h,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: AppColors.danger.withValues(alpha: 0.15),
+                                      color: AppColors.danger.withValues(
+                                        alpha: 0.15,
+                                      ),
                                       borderRadius: BorderRadius.circular(6.r),
                                       border: Border.all(
-                                        color: AppColors.danger.withValues(alpha: 0.3),
+                                        color: AppColors.danger.withValues(
+                                          alpha: 0.3,
+                                        ),
                                       ),
                                     ),
                                     child: Text(
@@ -167,8 +188,11 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
                               SizedBox(height: 8.h),
                               Row(
                                 children: [
-                                  Icon(Icons.calendar_today_rounded,
-                                      size: 13.r, color: AppColors.textMuted),
+                                  Icon(
+                                    Icons.calendar_today_rounded,
+                                    size: 13.r,
+                                    color: AppColors.textMuted,
+                                  ),
                                   SizedBox(width: 4.w),
                                   Text(
                                     'تاريخ الحجز: ${_formatDate(item.date)} (${item.startTime ?? ''} - ${item.endTime ?? ''})',
@@ -182,8 +206,11 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
                               SizedBox(height: 4.h),
                               Row(
                                 children: [
-                                  Icon(Icons.access_time_filled_rounded,
-                                      size: 13.r, color: AppColors.textMuted),
+                                  Icon(
+                                    Icons.access_time_filled_rounded,
+                                    size: 13.r,
+                                    color: AppColors.textMuted,
+                                  ),
                                   SizedBox(width: 4.w),
                                   Text(
                                     'تاريخ ووقت الإلغاء: ${_formatDateTime(item.cancelledAt)}',
@@ -195,7 +222,9 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
                                 ],
                               ),
                               if (item.cancellationReason != null &&
-                                  item.cancellationReason!.trim().isNotEmpty) ...[
+                                  item.cancellationReason!
+                                      .trim()
+                                      .isNotEmpty) ...[
                                 SizedBox(height: 6.h),
                                 Container(
                                   width: double.infinity,

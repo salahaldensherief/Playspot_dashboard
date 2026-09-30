@@ -56,8 +56,9 @@ class LiveSessionTimerBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formattedTime = _formatDuration(remaining);
-    final String durationHrs =
-        (booking.durationMinutes / 60.0).toStringAsFixed(1).replaceAll('.0', '');
+    final String durationHrs = (booking.durationMinutes / 60.0)
+        .toStringAsFixed(1)
+        .replaceAll('.0', '');
 
     return Column(
       children: [
@@ -88,9 +89,13 @@ class LiveSessionTimerBox extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AppText.body(
-                        isExpired ? AppStrings.timeExpired : AppStrings.remainingTime,
+                        isExpired
+                            ? AppStrings.timeExpired
+                            : AppStrings.remainingTime,
                         fontSize: 11.5.sp,
-                        color: isExpired ? AppColors.danger : AppColors.textSecondary,
+                        color: isExpired
+                            ? AppColors.danger
+                            : AppColors.textSecondary,
                         fontWeight: FontWeight.bold,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

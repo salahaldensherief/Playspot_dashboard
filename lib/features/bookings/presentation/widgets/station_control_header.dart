@@ -23,7 +23,9 @@ class StationControlHeader extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: 0.08),
-        border: const Border(bottom: BorderSide(color: AppColors.borderDefault)),
+        border: const Border(
+          bottom: BorderSide(color: AppColors.borderDefault),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -50,7 +52,9 @@ class StationControlHeader extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        booking.roomName.isNotEmpty ? booking.roomName : AppStrings.roomLabel,
+                        booking.roomName.isNotEmpty
+                            ? booking.roomName
+                            : AppStrings.roomLabel,
                         style: TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 16.sp,
@@ -75,7 +79,11 @@ class StationControlHeader extends StatelessWidget {
           ),
           IconButton(
             onPressed: onClose,
-            icon: Icon(Icons.close, color: AppColors.textSecondary, size: 20.sp),
+            icon: Icon(
+              Icons.close,
+              color: AppColors.textSecondary,
+              size: 20.sp,
+            ),
           ),
         ],
       ),

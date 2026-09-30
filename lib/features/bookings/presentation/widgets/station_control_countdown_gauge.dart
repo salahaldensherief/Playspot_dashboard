@@ -62,18 +62,26 @@ class StationControlCountdownGauge extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  currentExpired ? AppStrings.timeExpired : AppStrings.remainingTime,
+                  currentExpired
+                      ? AppStrings.timeExpired
+                      : AppStrings.remainingTime,
                   style: TextStyle(
-                    color: currentExpired ? AppColors.danger : AppColors.textSecondary,
+                    color: currentExpired
+                        ? AppColors.danger
+                        : AppColors.textSecondary,
                     fontSize: 12.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  booking.isOpenEnded ? 'الوقت مفتوح' : _formatDuration(currentRemaining),
+                  booking.isOpenEnded
+                      ? 'الوقت مفتوح'
+                      : _formatDuration(currentRemaining),
                   style: TextStyle(
-                    color: currentExpired ? AppColors.danger : AppColors.neonBlue,
+                    color: currentExpired
+                        ? AppColors.danger
+                        : AppColors.neonBlue,
                     fontSize: 20.sp,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'SpaceGrotesk',
@@ -82,10 +90,7 @@ class StationControlCountdownGauge extends StatelessWidget {
                 SizedBox(height: 4.h),
                 Text(
                   AppStrings.totalDuration('${booking.durationMinutes} دقيقة'),
-                  style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 11.sp,
-                  ),
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 11.sp),
                 ),
               ],
             ),

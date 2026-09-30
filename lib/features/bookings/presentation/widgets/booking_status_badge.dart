@@ -50,7 +50,9 @@ class BookingStatusBadge extends StatelessWidget {
 
     switch (status) {
       case BookingStatus.pendingVerification:
-        return StatusBadge.warning(AppStrings.pendingVerification.toUpperCase());
+        return StatusBadge.warning(
+          AppStrings.pendingVerification.toUpperCase(),
+        );
       case BookingStatus.pending:
         return StatusBadge.warning(AppStrings.pending.toUpperCase());
       case BookingStatus.upcoming:

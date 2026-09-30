@@ -9,13 +9,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AddBookingVoucherSection extends StatefulWidget {
   final ValueChanged<({String? code, double discount})> onVoucherChanged;
 
-  const AddBookingVoucherSection({
-    super.key,
-    required this.onVoucherChanged,
-  });
+  const AddBookingVoucherSection({super.key, required this.onVoucherChanged});
 
   @override
-  State<AddBookingVoucherSection> createState() => _AddBookingVoucherSectionState();
+  State<AddBookingVoucherSection> createState() =>
+      _AddBookingVoucherSectionState();
 }
 
 class _AddBookingVoucherSectionState extends State<AddBookingVoucherSection> {
@@ -48,14 +46,23 @@ class _AddBookingVoucherSectionState extends State<AddBookingVoucherSection> {
 
       if (validation is Map) {
         final map = Map<String, dynamic>.from(validation);
-        final isValid = map['is_valid'] ?? map['valid'] ?? map['success'] ?? true;
+        final isValid =
+            map['is_valid'] ?? map['valid'] ?? map['success'] ?? true;
         if (isValid == false) {
-          final err = map['error'] ?? map['message'] ?? 'كود القسيمة غير صالح أو منتهي الصلاحية';
+          final err =
+              map['error'] ??
+              map['message'] ??
+              'كود القسيمة غير صالح أو منتهي الصلاحية';
           _setError(err.toString());
           return;
         }
 
-        final discount = (map['discount_amount'] ?? map['discount_value'] ?? map['amount'] as num?)?.toDouble() ?? 0.0;
+        final discount =
+            (map['discount_amount'] ??
+                    map['discount_value'] ??
+                    map['amount'] as num?)
+                ?.toDouble() ??
+            0.0;
         setState(() {
           _appliedCode = code;
           _discount = discount;
@@ -120,15 +127,23 @@ class _AddBookingVoucherSectionState extends State<AddBookingVoucherSection> {
                   fillColor: AppColors.cardBackground,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.r),
-                    borderSide: const BorderSide(color: AppColors.borderDefault),
+                    borderSide: const BorderSide(
+                      color: AppColors.borderDefault,
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.r),
-                    borderSide: const BorderSide(color: AppColors.borderDefault),
+                    borderSide: const BorderSide(
+                      color: AppColors.borderDefault,
+                    ),
                   ),
                   suffixIcon: _appliedCode != null
                       ? IconButton(
-                          icon: const Icon(Icons.clear, size: 18, color: AppColors.textMuted),
+                          icon: const Icon(
+                            Icons.clear,
+                            size: 18,
+                            color: AppColors.textMuted,
+                          ),
                           onPressed: _clearVoucher,
                         )
                       : null,
@@ -165,7 +180,11 @@ class _AddBookingVoucherSectionState extends State<AddBookingVoucherSection> {
           SizedBox(height: 6.h),
           Row(
             children: [
-              const Icon(Icons.check_circle, color: AppColors.success, size: 16),
+              const Icon(
+                Icons.check_circle,
+                color: AppColors.success,
+                size: 16,
+              ),
               SizedBox(width: 4.w),
               Expanded(
                 child: Text(

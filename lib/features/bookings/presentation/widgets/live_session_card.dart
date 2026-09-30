@@ -44,11 +44,7 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
   bool _isHovered = false;
 
   void _openStationControl() {
-    StationControlDrawer.show(
-      context,
-      booking: widget.booking,
-      onEndSession: widget.onEndSession,
-    );
+    StationControlDrawer.show(context, booking: widget.booking);
   }
 
   void _showSwapRoomDialog(BuildContext context) {
@@ -67,15 +63,17 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
       context: context,
       useRootNavigator: false,
       builder: (_) => RoomDiscountDialog(
-        roomName: widget.booking.roomName.isNotEmpty ? widget.booking.roomName : AppStrings.roomLabel,
+        roomName: widget.booking.roomName.isNotEmpty
+            ? widget.booking.roomName
+            : AppStrings.roomLabel,
         currentPrice: widget.booking.totalPrice,
         onApplyDiscount: (amount, percent, reason) {
           context.read<BookingCubit>().confirmCashPayment(
-                widget.booking.id,
-                discountAmount: amount,
-                discountPercentage: percent,
-                discountReason: reason,
-              );
+            widget.booking.id,
+            discountAmount: amount,
+            discountPercentage: percent,
+            discountReason: reason,
+          );
         },
       ),
     );
@@ -88,11 +86,17 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
     }
 
     final dashboardCubit = context.read<DashboardCubit>();
-    final success = await dashboardCubit.extendSession(widget.booking.id, minutes);
+    final success = await dashboardCubit.extendSession(
+      widget.booking.id,
+      minutes,
+    );
     if (!mounted) return;
 
     if (success) {
-      context.read<BookingCubit>().startWatchingBookings(loungeId: widget.booking.loungeId, forceRefresh: true);
+      context.read<BookingCubit>().startWatchingBookings(
+        loungeId: widget.booking.loungeId,
+        forceRefresh: true,
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppStrings.timeExtendedSuccess),
@@ -101,7 +105,8 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
         ),
       );
     } else {
-      final errorMsg = dashboardCubit.state.errorMessage ?? AppStrings.extendFallbackError;
+      final errorMsg =
+          dashboardCubit.state.errorMessage ?? AppStrings.extendFallbackError;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMsg),
@@ -121,13 +126,15 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
 
     final Color accent = isExpired
         ? AppColors.danger
-        : (remaining.inMinutes <= 10 ? AppColors.warning : AppColors.neonBlue);
+        : (!booking.isOpenEnded && remaining.inMinutes <= 10
+              ? AppColors.warning
+              : AppColors.neonBlue);
 
     final Color borderColor = _isHovered
         ? accent.withValues(alpha: 0.9)
         : (isExpired
-            ? AppColors.danger.withValues(alpha: 0.7)
-            : accent.withValues(alpha: 0.3));
+              ? AppColors.danger.withValues(alpha: 0.7)
+              : accent.withValues(alpha: 0.3));
 
     return MouseRegion(
       onEnter: (_) {
@@ -152,7 +159,10 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: borderColor, width: _isHovered || isExpired ? 1.5 : 1.0),
+          border: Border.all(
+            color: borderColor,
+            width: _isHovered || isExpired ? 1.5 : 1.0,
+          ),
           boxShadow: [
             BoxShadow(
               color: isExpired
@@ -199,14 +209,24 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
                               onExtendMinutes: _handleExtendMinutes,
                             ),
                             LiveSessionRequestsBadge(booking: booking),
-                            BookingProductsPreview(booking: booking, maxVisibleItems: 2),
+                            BookingProductsPreview(
+                              booking: booking,
+                              maxVisibleItems: 2,
+                            ),
                             SizedBox(height: 12.h),
-                            Container(height: 1, color: AppColors.borderDefault.withValues(alpha: 0.6)),
+                            Container(
+                              height: 1,
+                              color: AppColors.borderDefault.withValues(
+                                alpha: 0.6,
+                              ),
+                            ),
                             SizedBox(height: 10.h),
                             BookingCardFinancialRow(
                               booking: booking,
-                              isPaid: booking.paymentStatus == PaymentStatus.paid,
-                              onShowDiscount: () => _showDiscountDialog(context),
+                              isPaid:
+                                  booking.paymentStatus == PaymentStatus.paid,
+                              onShowDiscount: () =>
+                                  _showDiscountDialog(context),
                             ),
                             SizedBox(height: 12.h),
                             LiveSessionCardActions(

@@ -45,53 +45,74 @@ class BookingsFinishedDataTable extends StatelessWidget {
         rows: bookings.map((b) {
           return DataRow(
             cells: [
-              DataCell(Text(
-                b.userName ?? AppStrings.anonymous,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
+              DataCell(
+                Text(
+                  b.userName ?? AppStrings.anonymous,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              )),
-              DataCell(Text(
-                b.roomName,
-                style: const TextStyle(
-                  color: AppColors.neonPurple,
-                  fontWeight: FontWeight.w600,
+              ),
+              DataCell(
+                Text(
+                  b.roomName,
+                  style: const TextStyle(
+                    color: AppColors.neonPurple,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              )),
-              DataCell(Text(
-                b.startTime,
-                style: const TextStyle(color: AppColors.textSecondary),
-              )),
-              DataCell(Text(
-                '${b.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
-                style: const TextStyle(
-                  color: AppColors.neonGreen,
-                  fontWeight: FontWeight.bold,
+              ),
+              DataCell(
+                Text(
+                  b.startTime,
+                  style: const TextStyle(color: AppColors.textSecondary),
                 ),
-              )),
-              DataCell(PaymentMethodBadge.fromBookingPaymentMethod(
-                b.paymentMethod,
-                compact: true,
-              )),
+              ),
+              DataCell(
+                Text(
+                  '${b.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
+                  style: const TextStyle(
+                    color: AppColors.neonGreen,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              DataCell(
+                PaymentMethodBadge.fromBookingPaymentMethod(
+                  b.paymentMethod,
+                  compact: true,
+                ),
+              ),
               DataCell(
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (b.status == BookingStatus.pending) ...[
                       IconButton(
-                        icon: const Icon(Icons.check_circle_rounded, color: AppColors.success),
+                        icon: const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppColors.success,
+                        ),
                         tooltip: AppStrings.approve,
-                        onPressed: () => context.read<BookingCubit>().approveBooking(b.id),
+                        onPressed: () =>
+                            context.read<BookingCubit>().approveBooking(b.id),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.cancel_rounded, color: AppColors.danger),
+                        icon: const Icon(
+                          Icons.cancel_rounded,
+                          color: AppColors.danger,
+                        ),
                         tooltip: AppStrings.reject,
-                        onPressed: () => context.read<BookingCubit>().rejectBooking(b.id),
+                        onPressed: () =>
+                            context.read<BookingCubit>().rejectBooking(b.id),
                       ),
                     ],
                     IconButton(
-                      icon: const Icon(Icons.open_in_new_rounded, color: AppColors.neonBlue),
+                      icon: const Icon(
+                        Icons.open_in_new_rounded,
+                        color: AppColors.neonBlue,
+                      ),
                       tooltip: AppStrings.details,
                       onPressed: () => onShowDetails(b),
                     ),

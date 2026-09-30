@@ -1653,29 +1653,40 @@ class AppStrings {
   static String get openTime => 'open_time'.tr();
   static String get startOpenTime => 'start_open_time'.tr();
   static String get completeAndCalculate => 'complete_and_calculate'.tr();
-  static String get completeOpenTimeSession => 'complete_open_time_session'.tr();
-  static String get openTimeDisabledByPolicy => 'open_time_disabled_by_policy'.tr();
+  static String get completeOpenTimeSession =>
+      'complete_open_time_session'.tr();
+  static String get openTimeDisabledByPolicy =>
+      'open_time_disabled_by_policy'.tr();
   static String get openTimeSessionActive => 'open_time_session_active'.tr();
   static String get openTimeStartedSuccess => 'open_time_started_success'.tr();
-  static String get openTimeCompletedSuccess => 'open_time_completed_success'.tr();
+  static String get openTimeCompletedSuccess =>
+      'open_time_completed_success'.tr();
   static String get activeGamingSessions => 'active_gaming_sessions'.tr();
   static String get moreItemsTapToView => 'more_items_tap_to_view'.tr();
   static String get failedToStartOpenTime => 'failed_to_start_open_time'.tr();
-  static String get failedToCompleteOpenTime => 'failed_to_complete_open_time'.tr();
-  static String get openTimePolicySettingsTitle => 'open_time_policy_settings_title'.tr();
-  static String get openTimePolicySettingsDesc => 'open_time_policy_settings_desc'.tr();
-  static String get enableOpenTimeSessionsTitle => 'enable_open_time_sessions_title'.tr();
-  static String get enableOpenTimeSessionsDesc => 'enable_open_time_sessions_desc'.tr();
-  static String get minOpenTimeMinutesLabel => 'min_open_time_minutes_label'.tr();
-  static String get openTimeRoundingMinutesLabel => 'open_time_rounding_minutes_label'.tr();
-  static String get maxOpenTimeMinutesLabel => 'max_open_time_minutes_label'.tr();
+  static String get failedToCompleteOpenTime =>
+      'failed_to_complete_open_time'.tr();
+  static String get openTimePolicySettingsTitle =>
+      'open_time_policy_settings_title'.tr();
+  static String get openTimePolicySettingsDesc =>
+      'open_time_policy_settings_desc'.tr();
+  static String get enableOpenTimeSessionsTitle =>
+      'enable_open_time_sessions_title'.tr();
+  static String get enableOpenTimeSessionsDesc =>
+      'enable_open_time_sessions_desc'.tr();
+  static String get minOpenTimeMinutesLabel =>
+      'min_open_time_minutes_label'.tr();
+  static String get openTimeRoundingMinutesLabel =>
+      'open_time_rounding_minutes_label'.tr();
+  static String get maxOpenTimeMinutesLabel =>
+      'max_open_time_minutes_label'.tr();
   static String get maxOpenTimeMinutesHint => 'max_open_time_minutes_hint'.tr();
-  static String get invalidNumberError => 'invalid_number_error'.tr();
-  static String get numberGreaterThanZeroError => 'number_greater_than_zero_error'.tr();
+  static String get endTimeLabel => 'end_time'.tr();
+  static String get numberGreaterThanZeroError =>
+      'number_greater_than_zero_error'.tr();
   static String get customerNameOptional => 'customer_name_optional'.tr();
   static String get customerPhoneOptional => 'customer_phone_optional'.tr();
   static String get openTimeDialogNotice => 'open_time_dialog_notice'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }
-

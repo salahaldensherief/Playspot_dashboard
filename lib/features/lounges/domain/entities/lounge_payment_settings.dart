@@ -19,25 +19,25 @@ class LoungePaymentSettings extends Equatable {
     this.cashGracePeriodMinutes = 10,
     this.walletNumber,
     this.instapayHandle,
-    this.allowOpenTimeSessions = true,
+    this.allowOpenTimeSessions = false,
     this.openTimeRoundingMinutes = 15,
-    this.openTimeMinMinutes = 30,
-    this.openTimeMaxMinutes,
+    this.openTimeMinMinutes = 60,
+    this.openTimeMaxMinutes = 720,
   });
 
   @override
   List<Object?> get props => [
-        loungeId,
-        allowCashPayment,
-        requirePrepaidFirstTime,
-        cashGracePeriodMinutes,
-        walletNumber,
-        instapayHandle,
-        allowOpenTimeSessions,
-        openTimeRoundingMinutes,
-        openTimeMinMinutes,
-        openTimeMaxMinutes,
-      ];
+    loungeId,
+    allowCashPayment,
+    requirePrepaidFirstTime,
+    cashGracePeriodMinutes,
+    walletNumber,
+    instapayHandle,
+    allowOpenTimeSessions,
+    openTimeRoundingMinutes,
+    openTimeMinMinutes,
+    openTimeMaxMinutes,
+  ];
 
   LoungePaymentSettings copyWith({
     String? loungeId,
@@ -54,12 +54,16 @@ class LoungePaymentSettings extends Equatable {
     return LoungePaymentSettings(
       loungeId: loungeId ?? this.loungeId,
       allowCashPayment: allowCashPayment ?? this.allowCashPayment,
-      requirePrepaidFirstTime: requirePrepaidFirstTime ?? this.requirePrepaidFirstTime,
-      cashGracePeriodMinutes: cashGracePeriodMinutes ?? this.cashGracePeriodMinutes,
+      requirePrepaidFirstTime:
+          requirePrepaidFirstTime ?? this.requirePrepaidFirstTime,
+      cashGracePeriodMinutes:
+          cashGracePeriodMinutes ?? this.cashGracePeriodMinutes,
       walletNumber: walletNumber ?? this.walletNumber,
       instapayHandle: instapayHandle ?? this.instapayHandle,
-      allowOpenTimeSessions: allowOpenTimeSessions ?? this.allowOpenTimeSessions,
-      openTimeRoundingMinutes: openTimeRoundingMinutes ?? this.openTimeRoundingMinutes,
+      allowOpenTimeSessions:
+          allowOpenTimeSessions ?? this.allowOpenTimeSessions,
+      openTimeRoundingMinutes:
+          openTimeRoundingMinutes ?? this.openTimeRoundingMinutes,
       openTimeMinMinutes: openTimeMinMinutes ?? this.openTimeMinMinutes,
       openTimeMaxMinutes: openTimeMaxMinutes ?? this.openTimeMaxMinutes,
     );
