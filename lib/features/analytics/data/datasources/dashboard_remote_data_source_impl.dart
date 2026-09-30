@@ -100,4 +100,26 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
         extraItems: extraItems,
         extraCost: extraCost,
       );
+
+  @override
+  Future<Map<String, dynamic>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  }) async {
+    final response = await supabaseClient.rpc(
+      'start_open_time_session',
+      params: {
+        'p_room_id': roomId,
+        'p_customer_name': customerName,
+        'p_customer_phone': customerPhone,
+        'p_play_mode': playMode,
+      },
+    );
+
+    return response is Map
+        ? Map<String, dynamic>.from(response)
+        : <String, dynamic>{'success': true};
+  }
 }

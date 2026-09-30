@@ -9,7 +9,10 @@ import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_extras_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/swap_room_dialog.dart';
 
-class StationControlActionsBar extends StatelessWidget {
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
+
+class StationControlActionsBar extends StatefulWidget {
   final Booking booking;
 
   const StationControlActionsBar({
@@ -17,14 +20,21 @@ class StationControlActionsBar extends StatelessWidget {
     required this.booking,
   });
 
+  @override
+  State<StationControlActionsBar> createState() => _StationControlActionsBarState();
+}
+
+class _StationControlActionsBarState extends State<StationControlActionsBar> {
+  bool _isCompletingOpenTime = false;
+
   Widget _buildExtensionButton(BuildContext context, int minutes) {
-    final label = '+$minutes دقيقة';
+    final label = '+$minutes ${AppStrings.minutesUnit}';
     return InkWell(
       borderRadius: BorderRadius.circular(10.r),
       onTap: () async {
-        final success = await context.read<DashboardCubit>().extendSession(booking.id, minutes);
+        final success = await context.read<DashboardCubit>().extendSession(widget.booking.id, minutes);
         if (success && context.mounted) {
-          context.read<BookingCubit>().startWatchingBookings(loungeId: booking.loungeId, forceRefresh: true);
+          context.read<BookingCubit>().startWatchingBookings(loungeId: widget.booking.loungeId, forceRefresh: true);
         }
       },
       child: Container(
@@ -48,31 +58,116 @@ class StationControlActionsBar extends StatelessWidget {
     );
   }
 
+  Future<void> _handleCompleteOpenTime(BuildContext context) async {
+    if (_isCompletingOpenTime) return;
+    setState(() => _isCompletingOpenTime = true);
+
+    try {
+      final bookingCubit = context.read<BookingCubit>();
+      final roomCubit = context.read<RoomCubit>();
+      final result = await bookingCubit.completeOpenTimeSession(widget.booking.id);
+
+      if (!context.mounted) return;
+
+      if (result == null) {
+        final message = bookingCubit.state.errorMessage ?? AppStrings.failedToCompleteOpenTime;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: AppColors.danger),
+        );
+        return;
+      }
+
+      roomCubit.watchRooms(widget.booking.loungeId, forceRefresh: true);
+      bookingCubit.startWatchingBookings(loungeId: widget.booking.loungeId, forceRefresh: true);
+      final total = result['final_total'];
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            total == null
+                ? AppStrings.openTimeCompletedSuccess
+                : '${AppStrings.openTimeCompletedSuccess}. ${AppStrings.totalPrice}: $total ${AppStrings.egp}',
+          ),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isCompletingOpenTime = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final booking = widget.booking;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Quick Time Extension Bar (+15m, +30m, +1h)
-        Text(
-          AppStrings.extendTime,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 13.sp,
-            fontWeight: FontWeight.bold,
+        if (booking.isOpenEnded) ...[
+          Container(
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(
+              color: AppColors.neonCyan.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10.r),
+              border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.all_inclusive_rounded, color: AppColors.neonCyan, size: 18.r),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Text(
+                        AppStrings.openTimeSessionActive,
+                        style: TextStyle(
+                          color: AppColors.neonCyan,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.5.sp,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10.h),
+                AppButton(
+                  text: AppStrings.completeOpenTimeSession,
+                  icon: Icons.price_check_rounded,
+                  variant: AppButtonVariant.primary,
+                  height: 38.h,
+                  isLoading: _isCompletingOpenTime,
+                  onPressed: _isCompletingOpenTime
+                      ? null
+                      : () => _handleCompleteOpenTime(context),
+                ),
+              ],
+            ),
           ),
-        ),
-        SizedBox(height: 8.h),
-        Row(
-          children: [
-            Expanded(child: _buildExtensionButton(context, 15)),
-            SizedBox(width: 8.w),
-            Expanded(child: _buildExtensionButton(context, 30)),
-            SizedBox(width: 8.w),
-            Expanded(child: _buildExtensionButton(context, 60)),
-          ],
-        ),
+        ] else ...[
+          // Quick Time Extension Bar (+15m, +30m, +1h)
+          Text(
+            AppStrings.extendTime,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 13.sp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              Expanded(child: _buildExtensionButton(context, 15)),
+              SizedBox(width: 8.w),
+              Expanded(child: _buildExtensionButton(context, 30)),
+              SizedBox(width: 8.w),
+              Expanded(child: _buildExtensionButton(context, 60)),
+            ],
+          ),
+        ],
         SizedBox(height: 16.h),
+
 
         // Quick Actions Bar (Extras & Swap)
         Row(

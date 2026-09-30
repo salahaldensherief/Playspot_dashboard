@@ -26,4 +26,10 @@ abstract class DashboardRepository {
     List<Map<String, dynamic>>? extraItems,
     double? extraCost,
   });
+  Future<Either<Failure, Map<String, dynamic>>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  });
 }

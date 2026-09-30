@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_booking_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/open_time_session_dialog.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
@@ -20,6 +22,10 @@ class RoomOccupancyAvailableSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final allowOpenTimePolicy = context.select<LoginCubit, bool>(
+      (c) => c.state.userLounge?.allowOpenTimeSessions ?? true,
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -63,21 +69,27 @@ class RoomOccupancyAvailableSection extends StatelessWidget {
         ),
         SizedBox(height: 12.h),
         if (room.openTimeEnabled) ...[
-          AppButton(
-            text: 'وقت مفتوح',
-            icon: Icons.all_inclusive_rounded,
-            variant: AppButtonVariant.primary,
-            height: 36.h,
-            onPressed: () {
-              showDialog(
-                context: context,
-                useRootNavigator: false,
-                builder: (_) => OpenTimeSessionDialog(room: room),
-              );
-            },
+          Tooltip(
+            message: allowOpenTimePolicy ? '' : AppStrings.openTimeDisabledByPolicy,
+            child: AppButton(
+              text: AppStrings.openTime,
+              icon: Icons.all_inclusive_rounded,
+              variant: AppButtonVariant.primary,
+              height: 36.h,
+              onPressed: allowOpenTimePolicy
+                  ? () {
+                      showDialog(
+                        context: context,
+                        useRootNavigator: false,
+                        builder: (_) => OpenTimeSessionDialog(room: room),
+                      );
+                    }
+                  : null,
+            ),
           ),
           SizedBox(height: 8.h),
         ],
+
 
         // One-Tap Walk-in Quick Toggle & Quick Booking Dialog
         Row(

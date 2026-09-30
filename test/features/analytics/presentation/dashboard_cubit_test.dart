@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/features/analytics/domain/usecases/end_sessi
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/extend_session_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/handle_client_request_action_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/review_extension_request_usecase.dart';
+import 'package:play_spot_dashboard/features/analytics/domain/usecases/start_open_time_session_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/watch_active_sessions_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_state.dart';
@@ -67,6 +68,17 @@ class FakeDashboardRepository implements DashboardRepository {
   }
 
   @override
+  Future<Either<Failure, Map<String, dynamic>>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  }) async {
+    if (shouldFail) return const Left(ServerFailure('Failed to start open time'));
+    return const Right({'booking_id': 'b_open_1', 'status': 'in_progress'});
+  }
+
+  @override
   Future<Either<Failure, LoungeStatsEntity>> getLoungeStats(String? loungeId) async {
     if (shouldFail) return const Left(ServerFailure('Failed to fetch stats'));
     return const Right(LoungeStatsEntity(
@@ -112,6 +124,7 @@ void main() {
         endSessionUseCase: EndSessionUseCase(repository),
         reviewExtensionRequestUseCase: ReviewExtensionRequestUseCase(repository),
         handleClientRequestActionUseCase: HandleClientRequestActionUseCase(repository),
+        startOpenTimeSessionUseCase: StartOpenTimeSessionUseCase(repository),
       );
     });
 
@@ -154,6 +167,29 @@ void main() {
     test('endSession returns true on success', () async {
       final success = await cubit.endSession('b_200');
       expect(success, isTrue);
+    });
+
+    test('startOpenTimeSession returns data on success', () async {
+      final result = await cubit.startOpenTimeSession(
+        roomId: 'r_100',
+        customerName: 'Ahmed',
+        customerPhone: '01012345678',
+      );
+
+      expect(result, isNotNull);
+      expect(result?['booking_id'], 'b_open_1');
+    });
+
+    test('startOpenTimeSession returns null on failure and updates state error', () async {
+      repository.shouldFail = true;
+
+      final result = await cubit.startOpenTimeSession(
+        roomId: 'r_100',
+      );
+
+      expect(result, isNull);
+      expect(cubit.state.status, FeatureStatus.failure);
+      expect(cubit.state.errorMessage, 'Failed to start open time');
     });
   });
 }

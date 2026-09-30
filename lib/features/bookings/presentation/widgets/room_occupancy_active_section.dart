@@ -14,7 +14,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 
-class RoomOccupancyActiveSection extends StatelessWidget {
+class RoomOccupancyActiveSection extends StatefulWidget {
   final Booking activeBooking;
   final RoomEntity room;
   final Duration remaining;
@@ -31,7 +31,18 @@ class RoomOccupancyActiveSection extends StatelessWidget {
   });
 
   @override
+  State<RoomOccupancyActiveSection> createState() => _RoomOccupancyActiveSectionState();
+}
+
+class _RoomOccupancyActiveSectionState extends State<RoomOccupancyActiveSection> {
+  bool _isCompleting = false;
+
+  @override
   Widget build(BuildContext context) {
+    final activeBooking = widget.activeBooking;
+    final room = widget.room;
+    final isExpired = widget.isExpired;
+    final formattedRemaining = widget.formattedRemaining;
     final phone = activeBooking.userPhone;
     final isOpenTime = activeBooking.isOpenEnded;
 
@@ -137,7 +148,7 @@ class RoomOccupancyActiveSection extends StatelessWidget {
                   SizedBox(width: 6.w),
                   AppText.body(
                     isOpenTime
-                        ? 'المدة الحالية'
+                        ? AppStrings.duration
                         : (isExpired ? AppStrings.timeExpired : AppStrings.remainingTime),
                     fontSize: 11.sp,
                     color: isExpired ? AppColors.danger : AppColors.textSecondary,
@@ -164,7 +175,7 @@ class RoomOccupancyActiveSection extends StatelessWidget {
           children: [
             Expanded(
               child: AppButton(
-                text: 'تفاصيل الحجز والعميل',
+                text: AppStrings.bookingAndClientDetails,
                 icon: Icons.info_outline_rounded,
                 variant: AppButtonVariant.outlined,
                 height: 32.h,
@@ -179,15 +190,18 @@ class RoomOccupancyActiveSection extends StatelessWidget {
             ),
             SizedBox(width: 8.w),
             AppButton(
-              text: isOpenTime ? 'إنهاء وحساب' : 'تمديد',
+              text: isOpenTime ? AppStrings.completeAndCalculate : AppStrings.extendTime,
               icon: isOpenTime
                   ? Icons.price_check_rounded
                   : Icons.add_alarm_rounded,
               variant: AppButtonVariant.primary,
               height: 32.h,
-              onPressed: isOpenTime
-                  ? () => _completeOpenTimeSession(context)
-                  : () => ExtendSessionDialog.show(context, activeBooking),
+              isLoading: isOpenTime && _isCompleting,
+              onPressed: (isOpenTime && _isCompleting)
+                  ? null
+                  : (isOpenTime
+                      ? () => _completeOpenTimeSession(context)
+                      : () => ExtendSessionDialog.show(context, activeBooking)),
             ),
           ],
         ),
@@ -196,30 +210,40 @@ class RoomOccupancyActiveSection extends StatelessWidget {
   }
 
   Future<void> _completeOpenTimeSession(BuildContext context) async {
-    final bookingCubit = context.read<BookingCubit>();
-    final roomCubit = context.read<RoomCubit>();
-    final result = await bookingCubit.completeOpenTimeSession(activeBooking.id);
+    if (_isCompleting) return;
+    setState(() => _isCompleting = true);
 
-    if (!context.mounted) return;
+    try {
+      final bookingCubit = context.read<BookingCubit>();
+      final roomCubit = context.read<RoomCubit>();
+      final result = await bookingCubit.completeOpenTimeSession(widget.activeBooking.id);
 
-    if (result == null) {
-      final message = bookingCubit.state.errorMessage ?? 'تعذر إنهاء الجلسة';
+      if (!context.mounted) return;
+
+      if (result == null) {
+        final message = bookingCubit.state.errorMessage ?? AppStrings.failedToCompleteOpenTime;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: AppColors.danger),
+        );
+        return;
+      }
+
+      roomCubit.watchRooms(widget.activeBooking.loungeId, forceRefresh: true);
+      final total = result['final_total'];
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: AppColors.danger),
-      );
-      return;
-    }
-
-    roomCubit.watchRooms(activeBooking.loungeId, forceRefresh: true);
-    final total = result['final_total'];
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          total == null
-              ? 'تم إنهاء الوقت المفتوح'
-              : 'تم إنهاء الوقت المفتوح. الإجمالي: $total ${AppStrings.egp}',
+        SnackBar(
+          content: Text(
+            total == null
+                ? AppStrings.openTimeCompletedSuccess
+                : '${AppStrings.openTimeCompletedSuccess}. ${AppStrings.totalPrice}: $total ${AppStrings.egp}',
+          ),
+          backgroundColor: AppColors.success,
         ),
-      ),
-    );
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isCompleting = false);
+      }
+    }
   }
 }

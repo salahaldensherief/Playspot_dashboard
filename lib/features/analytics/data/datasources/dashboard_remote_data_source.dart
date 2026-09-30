@@ -24,4 +24,10 @@ abstract class DashboardRemoteDataSource {
     List<Map<String, dynamic>>? extraItems,
     double? extraCost,
   });
+  Future<Map<String, dynamic>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  });
 }

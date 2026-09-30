@@ -36,6 +36,7 @@ class Lounge extends Equatable {
   final bool allowCashPayment;
   final bool requirePrepaidFirstTime;
   final int cashGracePeriodMinutes;
+  final bool allowOpenTimeSessions;
   final bool isActive;
   final String? suspensionReason;
 
@@ -74,6 +75,7 @@ class Lounge extends Equatable {
     this.allowCashPayment = true,
     this.requirePrepaidFirstTime = false,
     this.cashGracePeriodMinutes = 15,
+    this.allowOpenTimeSessions = true,
     this.isActive = true,
     this.suspensionReason,
   });
@@ -141,6 +143,7 @@ class Lounge extends Equatable {
         allowCashPayment,
         requirePrepaidFirstTime,
         cashGracePeriodMinutes,
+        allowOpenTimeSessions,
         isActive,
         suspensionReason,
       ];
@@ -180,6 +183,7 @@ class Lounge extends Equatable {
     bool? allowCashPayment,
     bool? requirePrepaidFirstTime,
     int? cashGracePeriodMinutes,
+    bool? allowOpenTimeSessions,
     bool? isActive,
     String? suspensionReason,
   }) {
@@ -218,6 +222,7 @@ class Lounge extends Equatable {
       allowCashPayment: allowCashPayment ?? this.allowCashPayment,
       requirePrepaidFirstTime: requirePrepaidFirstTime ?? this.requirePrepaidFirstTime,
       cashGracePeriodMinutes: cashGracePeriodMinutes ?? this.cashGracePeriodMinutes,
+      allowOpenTimeSessions: allowOpenTimeSessions ?? this.allowOpenTimeSessions,
       isActive: isActive ?? this.isActive,
       suspensionReason: suspensionReason ?? this.suspensionReason,
     );

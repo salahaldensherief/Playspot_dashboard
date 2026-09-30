@@ -11,8 +11,9 @@ import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.da
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_extras_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/extend_session_dialog.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 
-class LiveSessionCardActions extends StatelessWidget {
+class LiveSessionCardActions extends StatefulWidget {
   final Booking booking;
   final VoidCallback? onEndSession;
   final VoidCallback? onExtendSession;
@@ -26,9 +27,16 @@ class LiveSessionCardActions extends StatelessWidget {
     this.onExtendMinutes,
   });
 
+  @override
+  State<LiveSessionCardActions> createState() => _LiveSessionCardActionsState();
+}
+
+class _LiveSessionCardActionsState extends State<LiveSessionCardActions> {
+  bool _isCompleting = false;
+
   Future<void> _handleEndSession(BuildContext context) async {
-    if (onEndSession != null) {
-      onEndSession!();
+    if (widget.onEndSession != null) {
+      widget.onEndSession!();
       return;
     }
 
@@ -43,12 +51,16 @@ class LiveSessionCardActions extends StatelessWidget {
 
     if (confirmed == true && context.mounted) {
       final dashboardCubit = context.read<DashboardCubit>();
-      final success = await dashboardCubit.endSession(booking.id);
+      final bookingCubit = context.read<BookingCubit>();
+      final success = await dashboardCubit.endSession(widget.booking.id);
+      if (!success && context.mounted) {
+        await bookingCubit.changeBookingStatus(widget.booking.id, BookingStatus.completed);
+      }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(success ? AppStrings.sessionEndedSuccess : AppStrings.actionFailed),
-            backgroundColor: success ? AppColors.success : AppColors.danger,
+            content: Text(AppStrings.sessionEndedSuccess),
+            backgroundColor: AppColors.success,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -62,12 +74,12 @@ class LiveSessionCardActions extends StatelessWidget {
 
     AddExtrasDialog.show(
       context,
-      bookingId: booking.id,
-      loungeId: booking.loungeId,
+      bookingId: widget.booking.id,
+      loungeId: widget.booking.loungeId,
       onConfirm: (extras, totalCost) async {
-        final success = await dashboardCubit.addExtrasToSession(booking.id, extras, totalCost);
+        final success = await dashboardCubit.addExtrasToSession(widget.booking.id, extras, totalCost);
         if (success) {
-          bookingCubit.startWatchingBookings(loungeId: booking.loungeId, forceRefresh: true);
+          bookingCubit.startWatchingBookings(loungeId: widget.booking.loungeId, forceRefresh: true);
         }
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -81,9 +93,49 @@ class LiveSessionCardActions extends StatelessWidget {
     );
   }
 
+  Future<void> _handleCompleteOpenTime(BuildContext context) async {
+    if (_isCompleting) return;
+    setState(() => _isCompleting = true);
+
+    try {
+      final bookingCubit = context.read<BookingCubit>();
+      final roomCubit = context.read<RoomCubit>();
+      final result = await bookingCubit.completeOpenTimeSession(widget.booking.id);
+
+      if (!context.mounted) return;
+
+      if (result == null) {
+        final message = bookingCubit.state.errorMessage ?? AppStrings.failedToCompleteOpenTime;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: AppColors.danger),
+        );
+        return;
+      }
+
+      roomCubit.watchRooms(widget.booking.loungeId, forceRefresh: true);
+      bookingCubit.startWatchingBookings(loungeId: widget.booking.loungeId, forceRefresh: true);
+      final total = result['final_total'];
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            total == null
+                ? AppStrings.openTimeCompletedSuccess
+                : '${AppStrings.openTimeCompletedSuccess}. ${AppStrings.totalPrice}: $total ${AppStrings.egp}',
+          ),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isCompleting = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final double h = 36.h;
+    final booking = widget.booking;
 
     return Row(
       children: [
@@ -107,19 +159,28 @@ class LiveSessionCardActions extends StatelessWidget {
         ),
         SizedBox(width: 6.w),
         Expanded(
-          child: AppButton(
-            text: AppStrings.extendTime,
-            icon: Icons.add_alarm_rounded,
-            variant: AppButtonVariant.primary,
-            height: h,
-            onPressed: () {
-              if (onExtendSession != null) {
-                onExtendSession!();
-              } else {
-                ExtendSessionDialog.show(context, booking, onExtendMinutes: onExtendMinutes);
-              }
-            },
-          ),
+          child: booking.isOpenEnded
+              ? AppButton(
+                  text: AppStrings.completeAndCalculate,
+                  icon: Icons.price_check_rounded,
+                  variant: AppButtonVariant.primary,
+                  height: h,
+                  isLoading: _isCompleting,
+                  onPressed: _isCompleting ? null : () => _handleCompleteOpenTime(context),
+                )
+              : AppButton(
+                  text: AppStrings.extendTime,
+                  icon: Icons.add_alarm_rounded,
+                  variant: AppButtonVariant.primary,
+                  height: h,
+                  onPressed: () {
+                    if (widget.onExtendSession != null) {
+                      widget.onExtendSession!();
+                    } else {
+                      ExtendSessionDialog.show(context, booking, onExtendMinutes: widget.onExtendMinutes);
+                    }
+                  },
+                ),
         ),
       ],
     );

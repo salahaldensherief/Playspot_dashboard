@@ -16,7 +16,7 @@ class LoungePaymentSettingsRepositoryImpl implements LoungePaymentSettingsReposi
     try {
       final response = await client
           .from('lounges')
-          .select('id, allow_cash_payment, require_prepaid_first_time, cash_grace_period_minutes, wallet_number, instapay_handle, vodafone_cash_number, instapay_account')
+          .select('id, allow_cash_payment, require_prepaid_first_time, cash_grace_period_minutes, wallet_number, instapay_handle, vodafone_cash_number, instapay_account, allow_open_time_sessions, open_time_rounding_minutes, open_time_min_minutes, open_time_max_minutes')
           .eq('id', loungeId)
           .maybeSingle();
 
@@ -35,6 +35,18 @@ class LoungePaymentSettingsRepositoryImpl implements LoungePaymentSettingsReposi
   @override
   Future<Either<Failure, void>> updatePaymentSettings(LoungePaymentSettings settings) async {
     try {
+      try {
+        await client.rpc('update_lounge_open_time_policy', params: {
+          'p_lounge_id': settings.loungeId,
+          'p_allow_open_time_sessions': settings.allowOpenTimeSessions,
+          'p_open_time_rounding_minutes': settings.openTimeRoundingMinutes,
+          'p_open_time_min_minutes': settings.openTimeMinMinutes,
+          'p_open_time_max_minutes': settings.openTimeMaxMinutes,
+        });
+      } catch (e) {
+        AppLogger.warning('RPC update_lounge_open_time_policy fallback to table update: $e');
+      }
+
       final updateData = LoungePaymentSettingsModel(
         loungeId: settings.loungeId,
         allowCashPayment: settings.allowCashPayment,
@@ -42,6 +54,10 @@ class LoungePaymentSettingsRepositoryImpl implements LoungePaymentSettingsReposi
         cashGracePeriodMinutes: settings.cashGracePeriodMinutes,
         walletNumber: settings.walletNumber,
         instapayHandle: settings.instapayHandle,
+        allowOpenTimeSessions: settings.allowOpenTimeSessions,
+        openTimeRoundingMinutes: settings.openTimeRoundingMinutes,
+        openTimeMinMinutes: settings.openTimeMinMinutes,
+        openTimeMaxMinutes: settings.openTimeMaxMinutes,
       ).toJson();
 
       await client

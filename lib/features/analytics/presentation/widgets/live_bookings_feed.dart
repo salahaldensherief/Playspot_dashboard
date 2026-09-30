@@ -9,136 +9,225 @@ import '../../../bookings/domain/entities/booking.dart';
 import '../../../bookings/presentation/cubit/booking_cubit.dart';
 import '../../../bookings/presentation/cubit/booking_state.dart';
 import '../../../bookings/presentation/widgets/live_session_card.dart';
+import '../../../bookings/presentation/widgets/session_ticker.dart';
 import '../dashboard_cubit.dart';
 import '../dashboard_state.dart';
+import 'active_sessions_stats_bar.dart';
 import 'live_booking_item.dart';
+import 'live_feed_sections.dart';
 
 /// Refactored, high-performance Live Operations Feed displaying active gaming sessions,
 /// real-time revenue stats, and incoming booking requests.
-class LiveBookingsFeed extends StatelessWidget {
+class LiveBookingsFeed extends StatefulWidget {
   const LiveBookingsFeed({super.key});
 
   @override
+  State<LiveBookingsFeed> createState() => _LiveBookingsFeedState();
+}
+
+class _LiveBookingsFeedState extends State<LiveBookingsFeed> {
+  late final SessionTickerNotifier _tickerNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _tickerNotifier = SessionTickerNotifier();
+  }
+
+  @override
+  void dispose() {
+    _tickerNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<DashboardCubit, DashboardState>(
-      buildWhen: (prev, curr) =>
-          prev.status != curr.status ||
-          prev.activeSessionsList != curr.activeSessionsList ||
-          prev.activeSessionsStats != curr.activeSessionsStats,
-      builder: (context, dashState) {
-        return BlocBuilder<BookingCubit, BookingState>(
-          buildWhen: (prev, curr) =>
-              prev.status != curr.status || prev.bookings != curr.bookings,
-          builder: (context, bookingState) {
-            final List<Booking> activeSessions =
-                dashState.activeSessionsList.isNotEmpty
-                ? dashState.activeSessionsList
-                      .where((b) => b.isBookingActive())
-                      .toList()
-                : bookingState.bookings
-                      .where((b) => b.isBookingActive())
-                      .toList();
+    return SessionTickerScope(
+      ticker: _tickerNotifier,
+      child: AnimatedBuilder(
+        animation: _tickerNotifier,
+        builder: (context, _) {
+          final now = _tickerNotifier.now;
 
-            final stats = dashState.activeSessionsStats;
-            final double activeRevenue =
-                (stats['total_revenue'] as num?)?.toDouble() ??
-                activeSessions.fold(0.0, (sum, item) => sum + item.totalPrice);
-            final int activeExtrasCount =
-                (stats['total_extras_count'] as num?)?.toInt() ??
-                activeSessions.fold(0, (sum, item) => sum + item.extras.length);
+          return BlocBuilder<DashboardCubit, DashboardState>(
+            buildWhen: (prev, curr) =>
+                prev.status != curr.status ||
+                prev.activeSessionsList != curr.activeSessionsList ||
+                prev.activeSessionsStats != curr.activeSessionsStats,
+            builder: (context, dashState) {
+              return BlocBuilder<BookingCubit, BookingState>(
+                buildWhen: (prev, curr) =>
+                    prev.status != curr.status ||
+                    prev.bookings != curr.bookings,
+                builder: (context, bookingState) {
+                  final List<Booking> activeSessions =
+                      dashState.activeSessionsList.isNotEmpty
+                          ? dashState.activeSessionsList
+                              .where((b) => b.isBookingActive())
+                              .toList()
+                          : bookingState.bookings
+                              .where((b) => b.isBookingActive())
+                              .toList();
 
-            return Container(
-              padding: EdgeInsets.all(20.r),
-              decoration: BoxDecoration(
-                color: AppColors.cardBackground,
-                borderRadius: BorderRadius.circular(16.r),
-                border: Border.all(color: AppColors.borderDefault),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _LiveFeedHeader(
-                    activeCount: activeSessions.length,
-                    isLoading:
-                        dashState.status == FeatureStatus.loading &&
-                        activeSessions.isEmpty,
-                  ),
-                  SizedBox(height: 16.h),
+                  final needsAttentionSessions = <Booking>[];
+                  final normalSessions = <Booking>[];
 
-                  if (activeSessions.isNotEmpty) ...[
-                    _ActiveSessionsStatsBar(
-                      activeCount: activeSessions.length,
-                      totalRevenue: activeRevenue,
-                      extrasCount: activeExtrasCount,
-                    ),
-                    SizedBox(height: 20.h),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isMobile = constraints.maxWidth < 600;
-                        final double cardWidth = isMobile
-                            ? double.infinity
-                            : (constraints.maxWidth < 900
-                                  ? ((constraints.maxWidth - 16.r) / 2).clamp(
-                                      280.0,
-                                      420.0,
-                                    )
-                                  : 320.w.clamp(280.0, 360.0));
+                  for (final session in activeSessions) {
+                    final isExpired = session.isSessionExpired(now);
+                    final remaining = session.remainingDuration(now);
+                    final isEndingSoon =
+                        !session.isOpenEnded && remaining.inMinutes <= 10;
 
-                        return Wrap(
-                          spacing: 16.r,
-                          runSpacing: 16.r,
-                          children: activeSessions.map((session) {
-                            return RepaintBoundary(
-                              child: LiveSessionCard(
-                                key: ValueKey('dash_live_${session.id}'),
-                                booking: session,
-                                width: cardWidth,
-                              ),
-                            );
-                          }).toList(),
-                        );
-                      },
-                    ),
-                  ] else if (dashState.status == FeatureStatus.loading) ...[
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12.h),
-                      child: ShimmerLoading.rounded(
-                        width: double.infinity,
-                        height: 120.h,
-                      ),
-                    ),
-                  ] else ...[
-                    const _EmptyActiveSessionsState(),
-                  ],
+                    if (isExpired || isEndingSoon) {
+                      needsAttentionSessions.add(session);
+                    } else {
+                      normalSessions.add(session);
+                    }
+                  }
 
-                  if (bookingState.bookings.isNotEmpty) ...[
-                    SizedBox(height: 24.h),
-                    Divider(color: AppColors.divider),
-                    SizedBox(height: 12.h),
-                    AppText.subHeading(
-                      AppStrings.liveBookingsFeed,
-                      fontSize: 15.sp,
-                      color: AppColors.textSecondary,
+                  final stats = dashState.activeSessionsStats;
+                  final double activeRevenue =
+                      (stats['total_revenue'] as num?)?.toDouble() ??
+                          activeSessions.fold(
+                              0.0, (sum, item) => sum + item.totalPrice);
+                  final int activeExtrasCount =
+                      (stats['total_extras_count'] as num?)?.toInt() ??
+                          activeSessions.fold(
+                              0, (sum, item) => sum + item.extras.length);
+
+                  return Container(
+                    padding: EdgeInsets.all(20.r),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBackground,
+                      borderRadius: BorderRadius.circular(16.r),
+                      border: Border.all(color: AppColors.borderDefault),
                     ),
-                    SizedBox(height: 12.h),
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: bookingState.bookings.take(5).length,
-                      separatorBuilder: (context, index) =>
-                          Divider(color: AppColors.divider, height: 20.h),
-                      itemBuilder: (context, index) {
-                        final booking = bookingState.bookings[index];
-                        return LiveBookingItem(booking: booking);
-                      },
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _LiveFeedHeader(
+                          activeCount: activeSessions.length,
+                          isLoading:
+                              dashState.status == FeatureStatus.loading &&
+                              activeSessions.isEmpty,
+                        ),
+                        SizedBox(height: 16.h),
+
+                        if (activeSessions.isNotEmpty) ...[
+                          ActiveSessionsStatsBar(
+                            activeCount: activeSessions.length,
+                            totalRevenue: activeRevenue,
+                            extrasCount: activeExtrasCount,
+                          ),
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final isMobile = constraints.maxWidth < 600;
+                              final double cardWidth = isMobile
+                                  ? double.infinity
+                                  : (constraints.maxWidth < 900
+                                      ? ((constraints.maxWidth - 16.r) / 2)
+                                          .clamp(280.0, 420.0)
+                                      : 320.w.clamp(280.0, 360.0));
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (needsAttentionSessions.isNotEmpty) ...[
+                                    SizedBox(height: 20.h),
+                                    LiveFeedSectionHeader(
+                                      title: AppStrings.needsAttention,
+                                      count: needsAttentionSessions.length,
+                                      color: AppColors.danger,
+                                      icon: Icons.priority_high_rounded,
+                                    ),
+                                    SizedBox(height: 12.h),
+                                    Wrap(
+                                      spacing: 16.r,
+                                      runSpacing: 16.r,
+                                      children: needsAttentionSessions
+                                          .map((session) {
+                                        return RepaintBoundary(
+                                          child: LiveSessionCard(
+                                            key: ValueKey(
+                                                'dash_live_attn_${session.id}'),
+                                            booking: session,
+                                            width: cardWidth,
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ],
+                                  if (normalSessions.isNotEmpty) ...[
+                                    SizedBox(height: 20.h),
+                                    LiveFeedSectionHeader(
+                                      title: AppStrings.activeGamingSessions,
+                                      count: normalSessions.length,
+                                      color: AppColors.neonBlue,
+                                      icon: Icons.sports_esports_rounded,
+                                    ),
+                                    SizedBox(height: 12.h),
+                                    Wrap(
+                                      spacing: 16.r,
+                                      runSpacing: 16.r,
+                                      children: normalSessions.map((session) {
+                                        return RepaintBoundary(
+                                          child: LiveSessionCard(
+                                            key: ValueKey(
+                                                'dash_live_${session.id}'),
+                                            booking: session,
+                                            width: cardWidth,
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ],
+                                ],
+                              );
+                            },
+                          ),
+                        ] else if (dashState.status == FeatureStatus.loading) ...[
+                          Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                            child: ShimmerLoading.rounded(
+                              width: double.infinity,
+                              height: 120.h,
+                            ),
+                          ),
+                        ] else ...[
+                          const EmptyActiveSessionsState(),
+                        ],
+
+                        if (bookingState.bookings.isNotEmpty) ...[
+                          SizedBox(height: 24.h),
+                          Divider(color: AppColors.divider),
+                          SizedBox(height: 12.h),
+                          AppText.subHeading(
+                            AppStrings.liveBookingsFeed,
+                            fontSize: 15.sp,
+                            color: AppColors.textSecondary,
+                          ),
+                          SizedBox(height: 12.h),
+                          ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: bookingState.bookings.take(5).length,
+                            separatorBuilder: (context, index) =>
+                                Divider(color: AppColors.divider, height: 20.h),
+                            itemBuilder: (context, index) {
+                              final booking = bookingState.bookings[index];
+                              return LiveBookingItem(booking: booking);
+                            },
+                          ),
+                        ],
+                      ],
                     ),
-                  ],
-                ],
-              ),
-            );
-          },
-        );
-      },
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
@@ -189,125 +278,6 @@ class _LiveFeedHeader extends StatelessWidget {
             child: const CircularProgressIndicator(strokeWidth: 2),
           ),
       ],
-    );
-  }
-}
-
-class _ActiveSessionsStatsBar extends StatelessWidget {
-  final int activeCount;
-  final double totalRevenue;
-  final int extrasCount;
-
-  const _ActiveSessionsStatsBar({
-    required this.activeCount,
-    required this.totalRevenue,
-    required this.extrasCount,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(12.r),
-      decoration: BoxDecoration(
-        color: AppColors.mutedBackground.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.borderDefault),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _MiniStatTile(
-              title: AppStrings.activeSessions,
-              value: '$activeCount',
-              icon: Icons.sports_esports,
-              color: AppColors.neonBlue,
-            ),
-          ),
-          Container(width: 1.w, height: 28.h, color: AppColors.divider),
-          Expanded(
-            child: _MiniStatTile(
-              title: AppStrings.activeSessionRevenue,
-              value: '${totalRevenue.toStringAsFixed(0)} ${AppStrings.egp}',
-              icon: Icons.account_balance_wallet,
-              color: AppColors.neonGreen,
-            ),
-          ),
-          Container(width: 1.w, height: 28.h, color: AppColors.divider),
-          Expanded(
-            child: _MiniStatTile(
-              title: AppStrings.totalActiveExtras,
-              value: '$extrasCount',
-              icon: Icons.restaurant,
-              color: AppColors.neonCyan,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MiniStatTile extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _MiniStatTile({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, size: 18.r, color: color),
-        SizedBox(width: 8.w),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppText.body(title, fontSize: 10.sp, color: AppColors.textMuted),
-            AppText.subHeading(
-              value,
-              fontSize: 13.sp,
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.bold,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _EmptyActiveSessionsState extends StatelessWidget {
-  const _EmptyActiveSessionsState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 24.h),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(
-              Icons.sports_esports_outlined,
-              size: 40.r,
-              color: AppColors.textMuted,
-            ),
-            SizedBox(height: 8.h),
-            AppText.body(
-              AppStrings.noActiveSessions,
-              color: AppColors.textSecondary,
-              fontSize: 13.sp,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

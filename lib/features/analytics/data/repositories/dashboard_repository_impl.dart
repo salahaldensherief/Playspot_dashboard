@@ -105,4 +105,24 @@ class DashboardRepositoryImpl implements DashboardRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  }) async {
+    try {
+      final result = await remoteDataSource.startOpenTimeSession(
+        roomId: roomId,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        playMode: playMode,
+      );
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
 }

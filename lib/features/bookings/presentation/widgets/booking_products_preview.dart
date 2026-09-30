@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
@@ -211,7 +212,7 @@ class BookingProductsPreview extends StatelessWidget {
           if (overflowCount > 0) ...[
             SizedBox(height: 2.h),
             Text(
-              '+ $overflowCount أصناف أخرى (اضغط لمعاينة الكل)',
+              '+ $overflowCount ${AppStrings.moreItemsTapToView}',
               style: TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 8.5.sp,

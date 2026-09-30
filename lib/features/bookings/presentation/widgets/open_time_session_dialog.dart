@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
@@ -31,7 +32,17 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
   }
 
   Future<void> _start() async {
+
     if (_isSubmitting) return;
+
+    final allowOpenTime = context.read<LoginCubit>().state.userLounge?.allowOpenTimeSessions ?? true;
+    if (!allowOpenTime) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppStrings.openTimeDisabledByPolicy), backgroundColor: AppColors.danger),
+      );
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     final bookingCubit = context.read<BookingCubit>();
@@ -47,7 +58,7 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
     setState(() => _isSubmitting = false);
 
     if (result == null) {
-      final message = bookingCubit.state.errorMessage ?? 'تعذر بدء الوقت المفتوح';
+      final message = bookingCubit.state.errorMessage ?? AppStrings.failedToStartOpenTime;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message), backgroundColor: AppColors.danger),
       );
@@ -57,9 +68,10 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
     roomCubit.watchRooms(widget.room.loungeId, forceRefresh: true);
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('تم بدء الوقت المفتوح')),
+      SnackBar(content: Text(AppStrings.openTimeStartedSuccess)),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +93,7 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
                 children: [
                   Expanded(
                     child: Text(
-                      'بدء وقت مفتوح - ${room.nameAr.isNotEmpty ? room.nameAr : room.nameEn}',
+                      '${AppStrings.startOpenTime} - ${room.nameAr.isNotEmpty ? room.nameAr : room.nameEn}',
                       style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 18.sp,
@@ -99,8 +111,8 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
               TextField(
                 controller: _nameController,
                 style: const TextStyle(color: AppColors.textPrimary),
-                decoration: const InputDecoration(
-                  labelText: 'اسم العميل اختياري',
+                decoration: InputDecoration(
+                  labelText: AppStrings.customerNameOptional,
                   filled: true,
                   fillColor: AppColors.mutedBackground,
                 ),
@@ -110,8 +122,8 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 style: const TextStyle(color: AppColors.textPrimary),
-                decoration: const InputDecoration(
-                  labelText: 'رقم الهاتف اختياري',
+                decoration: InputDecoration(
+                  labelText: AppStrings.customerPhoneOptional,
                   filled: true,
                   fillColor: AppColors.mutedBackground,
                 ),
@@ -129,7 +141,7 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
               ),
               SizedBox(height: 12.h),
               Text(
-                'الحساب سيتم عند إنهاء الجلسة حسب إعدادات الغرفة. الحجوزات المؤكدة القادمة تظل لها الأولوية.',
+                AppStrings.openTimeDialogNotice,
                 style: TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 12.sp,
@@ -146,7 +158,7 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
                   ),
                   SizedBox(width: 12.w),
                   AppButton(
-                    text: 'بدء الوقت المفتوح',
+                    text: AppStrings.startOpenTime,
                     icon: Icons.play_arrow_rounded,
                     isLoading: _isSubmitting,
                     onPressed: _start,

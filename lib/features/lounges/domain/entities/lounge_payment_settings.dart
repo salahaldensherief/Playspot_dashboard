@@ -7,6 +7,10 @@ class LoungePaymentSettings extends Equatable {
   final int cashGracePeriodMinutes;
   final String? walletNumber;
   final String? instapayHandle;
+  final bool allowOpenTimeSessions;
+  final int openTimeRoundingMinutes;
+  final int openTimeMinMinutes;
+  final int? openTimeMaxMinutes;
 
   const LoungePaymentSettings({
     required this.loungeId,
@@ -15,6 +19,10 @@ class LoungePaymentSettings extends Equatable {
     this.cashGracePeriodMinutes = 10,
     this.walletNumber,
     this.instapayHandle,
+    this.allowOpenTimeSessions = true,
+    this.openTimeRoundingMinutes = 15,
+    this.openTimeMinMinutes = 30,
+    this.openTimeMaxMinutes,
   });
 
   @override
@@ -25,6 +33,10 @@ class LoungePaymentSettings extends Equatable {
         cashGracePeriodMinutes,
         walletNumber,
         instapayHandle,
+        allowOpenTimeSessions,
+        openTimeRoundingMinutes,
+        openTimeMinMinutes,
+        openTimeMaxMinutes,
       ];
 
   LoungePaymentSettings copyWith({
@@ -34,6 +46,10 @@ class LoungePaymentSettings extends Equatable {
     int? cashGracePeriodMinutes,
     String? walletNumber,
     String? instapayHandle,
+    bool? allowOpenTimeSessions,
+    int? openTimeRoundingMinutes,
+    int? openTimeMinMinutes,
+    int? openTimeMaxMinutes,
   }) {
     return LoungePaymentSettings(
       loungeId: loungeId ?? this.loungeId,
@@ -42,6 +58,10 @@ class LoungePaymentSettings extends Equatable {
       cashGracePeriodMinutes: cashGracePeriodMinutes ?? this.cashGracePeriodMinutes,
       walletNumber: walletNumber ?? this.walletNumber,
       instapayHandle: instapayHandle ?? this.instapayHandle,
+      allowOpenTimeSessions: allowOpenTimeSessions ?? this.allowOpenTimeSessions,
+      openTimeRoundingMinutes: openTimeRoundingMinutes ?? this.openTimeRoundingMinutes,
+      openTimeMinMinutes: openTimeMinMinutes ?? this.openTimeMinMinutes,
+      openTimeMaxMinutes: openTimeMaxMinutes ?? this.openTimeMaxMinutes,
     );
   }
 }

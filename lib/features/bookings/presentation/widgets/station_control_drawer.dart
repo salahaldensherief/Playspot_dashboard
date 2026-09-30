@@ -260,17 +260,38 @@ class StationControlDrawer extends StatelessWidget {
       ),
       child: AppButton(
         onPressed: () async {
+          if (onEndSession != null) {
+            onEndSession!();
+            return;
+          }
+
           final confirmed = await AppDialog.confirm(
             context: context,
-            title: AppStrings.confirmEndSession,
+            title: targetBooking.isOpenEnded ? AppStrings.completeOpenTimeSession : AppStrings.confirmEndSession,
             message: AppStrings.confirmEndSessionMessage,
-            confirmText: AppStrings.endSession,
+            confirmText: targetBooking.isOpenEnded ? AppStrings.completeAndCalculate : AppStrings.endSession,
             cancelText: AppStrings.cancel,
             confirmColor: AppColors.danger,
           );
+
           if (confirmed == true && context.mounted) {
-            if (onEndSession != null) {
-              onEndSession!();
+            if (targetBooking.isOpenEnded) {
+              final result = await context.read<BookingCubit>().completeOpenTimeSession(targetBooking.id);
+              if (context.mounted) {
+                context.read<RoomCubit>().watchRooms(targetBooking.loungeId, forceRefresh: true);
+                final total = result?['final_total'];
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      total == null
+                          ? AppStrings.openTimeCompletedSuccess
+                          : '${AppStrings.openTimeCompletedSuccess}. ${AppStrings.totalPrice}: $total ${AppStrings.egp}',
+                    ),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+                onClose();
+              }
             } else {
               final success = await context.read<DashboardCubit>().endSession(targetBooking.id);
               if (context.mounted) {
@@ -285,7 +306,9 @@ class StationControlDrawer extends StatelessWidget {
             }
           }
         },
-        text: '${AppStrings.endSession} (${totalBalance.toStringAsFixed(2)} ${AppStrings.egp})',
+        text: targetBooking.isOpenEnded
+            ? '${AppStrings.completeOpenTimeSession} (${totalBalance.toStringAsFixed(2)} ${AppStrings.egp})'
+            : '${AppStrings.endSession} (${totalBalance.toStringAsFixed(2)} ${AppStrings.egp})',
         backgroundColor: AppColors.danger,
         height: 42.h,
       ),

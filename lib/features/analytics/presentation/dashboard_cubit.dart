@@ -9,6 +9,7 @@ import 'package:play_spot_dashboard/features/analytics/domain/usecases/add_extra
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/end_session_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/review_extension_request_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/handle_client_request_action_usecase.dart';
+import 'package:play_spot_dashboard/features/analytics/domain/usecases/start_open_time_session_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_state.dart';
 
 class DashboardCubit extends Cubit<DashboardState> {
@@ -19,6 +20,7 @@ class DashboardCubit extends Cubit<DashboardState> {
   final EndSessionUseCase endSessionUseCase;
   final ReviewExtensionRequestUseCase reviewExtensionRequestUseCase;
   final HandleClientRequestActionUseCase handleClientRequestActionUseCase;
+  final StartOpenTimeSessionUseCase startOpenTimeSessionUseCase;
 
   StreamSubscription<List<Booking>>? _activeSessionsSubscription;
   String? _watchedLoungeId;
@@ -31,6 +33,7 @@ class DashboardCubit extends Cubit<DashboardState> {
     required this.endSessionUseCase,
     required this.reviewExtensionRequestUseCase,
     required this.handleClientRequestActionUseCase,
+    required this.startOpenTimeSessionUseCase,
   }) : super(DashboardState.init());
 
   void startWatchingActiveSessions({String? loungeId, bool forceRefresh = false}) {
@@ -218,6 +221,41 @@ class DashboardCubit extends Cubit<DashboardState> {
       (_) {
         AppLogger.info('[DASHBOARD_CUBIT] handleClientRequestAction Succeeded');
         return true;
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>?> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  }) async {
+    emit(state.copyWith(status: FeatureStatus.loading));
+    final result = await startOpenTimeSessionUseCase(
+      roomId: roomId,
+      customerName: customerName,
+      customerPhone: customerPhone,
+      playMode: playMode,
+    );
+
+    if (isClosed) return null;
+
+    return result.fold(
+      (failure) {
+        AppLogger.error('[DASHBOARD_CUBIT] startOpenTimeSession Failed: ${failure.message}');
+        emit(state.copyWith(
+          status: FeatureStatus.failure,
+          errorMessage: failure.message,
+        ));
+        return null;
+      },
+      (data) {
+        AppLogger.info('[DASHBOARD_CUBIT] startOpenTimeSession Succeeded');
+        if (_watchedLoungeId != null) {
+          startWatchingActiveSessions(loungeId: _watchedLoungeId, forceRefresh: true);
+        }
+        return data;
       },
     );
   }

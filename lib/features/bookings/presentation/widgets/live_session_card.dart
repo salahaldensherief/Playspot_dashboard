@@ -199,7 +199,7 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
                               onExtendMinutes: _handleExtendMinutes,
                             ),
                             LiveSessionRequestsBadge(booking: booking),
-                            BookingProductsPreview(booking: booking),
+                            BookingProductsPreview(booking: booking, maxVisibleItems: 2),
                             SizedBox(height: 12.h),
                             Container(height: 1, color: AppColors.borderDefault.withValues(alpha: 0.6)),
                             SizedBox(height: 10.h),

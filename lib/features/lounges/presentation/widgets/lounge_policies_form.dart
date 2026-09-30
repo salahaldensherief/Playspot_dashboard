@@ -10,6 +10,7 @@ import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_p
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_payment_settings_state.dart';
 import 'lounge_cash_policy_section.dart';
 import 'lounge_electronic_payment_section.dart';
+import 'lounge_open_time_policy_section.dart';
 
 class LoungePoliciesForm extends StatefulWidget {
   const LoungePoliciesForm({super.key});
@@ -27,6 +28,11 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
   late TextEditingController _walletNumberController;
   late TextEditingController _instapayHandleController;
 
+  late bool _allowOpenTimeSessions;
+  late TextEditingController _openTimeRoundingController;
+  late TextEditingController _openTimeMinMinutesController;
+  late TextEditingController _openTimeMaxMinutesController;
+
   bool _isInitialized = false;
 
   @override
@@ -37,6 +43,11 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
     _gracePeriodController = TextEditingController(text: '10');
     _walletNumberController = TextEditingController();
     _instapayHandleController = TextEditingController();
+
+    _allowOpenTimeSessions = true;
+    _openTimeRoundingController = TextEditingController(text: '15');
+    _openTimeMinMinutesController = TextEditingController(text: '30');
+    _openTimeMaxMinutesController = TextEditingController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = context.read<LoginCubit>().state.user;
@@ -54,6 +65,12 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
       _gracePeriodController.text = settings.cashGracePeriodMinutes.toString();
       _walletNumberController.text = settings.walletNumber ?? '';
       _instapayHandleController.text = settings.instapayHandle ?? '';
+
+      _allowOpenTimeSessions = settings.allowOpenTimeSessions;
+      _openTimeRoundingController.text = settings.openTimeRoundingMinutes.toString();
+      _openTimeMinMinutesController.text = settings.openTimeMinMinutes.toString();
+      _openTimeMaxMinutesController.text = settings.openTimeMaxMinutes?.toString() ?? '';
+
       _isInitialized = true;
     });
   }
@@ -63,6 +80,9 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
     _gracePeriodController.dispose();
     _walletNumberController.dispose();
     _instapayHandleController.dispose();
+    _openTimeRoundingController.dispose();
+    _openTimeMinMinutesController.dispose();
+    _openTimeMaxMinutesController.dispose();
     super.dispose();
   }
 
@@ -93,6 +113,12 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
         int.tryParse(_gracePeriodController.text.trim()) ?? 10;
     final wallet = _walletNumberController.text.trim();
     final instapay = _instapayHandleController.text.trim();
+    final rounding =
+        int.tryParse(_openTimeRoundingController.text.trim()) ?? 15;
+    final minMins =
+        int.tryParse(_openTimeMinMinutesController.text.trim()) ?? 30;
+    final maxMinsText = _openTimeMaxMinutesController.text.trim();
+    final maxMins = maxMinsText.isNotEmpty ? int.tryParse(maxMinsText) : null;
 
     final settings = LoungePaymentSettings(
       loungeId: loungeId,
@@ -101,6 +127,10 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
       cashGracePeriodMinutes: parsedGracePeriod,
       walletNumber: wallet.isNotEmpty ? wallet : null,
       instapayHandle: instapay.isNotEmpty ? instapay : null,
+      allowOpenTimeSessions: _allowOpenTimeSessions,
+      openTimeRoundingMinutes: rounding,
+      openTimeMinMinutes: minMins,
+      openTimeMaxMinutes: maxMins,
     );
 
     final success =
@@ -202,6 +232,16 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
                       setState(() => _allowCashPayment = val),
                   onRequirePrepaidChanged: (val) =>
                       setState(() => _requirePrepaidFirstTime = val),
+                ),
+                SizedBox(height: 20.h),
+                LoungeOpenTimePolicySection(
+                  allowOpenTimeSessions: _allowOpenTimeSessions,
+                  roundingController: _openTimeRoundingController,
+                  minMinutesController: _openTimeMinMinutesController,
+                  maxMinutesController: _openTimeMaxMinutesController,
+                  canEdit: canEdit,
+                  onAllowOpenTimeChanged: (val) =>
+                      setState(() => _allowOpenTimeSessions = val),
                 ),
                 SizedBox(height: 20.h),
                 LoungeElectronicPaymentSection(
