@@ -16,6 +16,7 @@ import '../dashboard_state.dart';
 import 'active_sessions_stats_bar.dart';
 import 'live_booking_item.dart';
 import 'live_feed_sections.dart';
+import 'empty_active_sessions_state.dart';
 import '../../../../core/responsive/app_breakpoints.dart';
 
 /// Refactored, high-performance Live Operations Feed displaying active gaming sessions,
