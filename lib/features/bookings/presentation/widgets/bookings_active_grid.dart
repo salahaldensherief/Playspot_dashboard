@@ -54,8 +54,6 @@ class BookingsActiveGrid extends StatelessWidget {
       return LiveSessionsOperationsBoard(
         bookings: bookings,
         onShowDetails: onShowDetails,
-        onApprove: onApprove,
-        onReject: onReject,
       );
     }
 

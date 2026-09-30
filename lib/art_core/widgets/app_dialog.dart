@@ -42,27 +42,25 @@ class AppDialog extends StatelessWidget {
                       color: AppColors.textPrimary,
                       fontSize: 24.sp,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'Orbitron',
+                      fontFamily: 'Tajawal',
                     ),
                   ),
                 ),
                 if (showCloseIcon)
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
               ],
             ),
             SizedBox(height: 32.h),
-            Flexible(
-              child: SingleChildScrollView(child: child),
-            ),
+            Flexible(child: SingleChildScrollView(child: child)),
             if (actions != null && actions!.isNotEmpty) ...[
               SizedBox(height: 40.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: actions!,
-              ),
+              Row(mainAxisAlignment: MainAxisAlignment.end, children: actions!),
             ],
           ],
         ),
@@ -79,12 +77,8 @@ class AppDialog extends StatelessWidget {
   }) {
     return showDialog<T>(
       context: context,
-      builder: (context) => AppDialog(
-        title: title,
-        width: width,
-        actions: actions,
-        child: child,
-      ),
+      builder: (context) =>
+          AppDialog(title: title, width: width, actions: actions, child: child),
     );
   }
 
@@ -101,14 +95,16 @@ class AppDialog extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
         title: Text(
           title,
           style: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
-            fontFamily: 'Orbitron',
+            fontFamily: 'Tajawal',
           ),
         ),
         content: Text(
