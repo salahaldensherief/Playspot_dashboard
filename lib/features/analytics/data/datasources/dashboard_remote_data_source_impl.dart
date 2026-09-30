@@ -118,8 +118,9 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       },
     );
 
-    return response is Map
-        ? Map<String, dynamic>.from(response)
-        : <String, dynamic>{'success': true};
+    if (response is! Map || response['success'] != true) {
+      throw const FormatException('Invalid open-time start response');
+    }
+    return Map<String, dynamic>.from(response);
   }
 }

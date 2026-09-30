@@ -75,7 +75,7 @@ class Lounge extends Equatable {
     this.allowCashPayment = true,
     this.requirePrepaidFirstTime = false,
     this.cashGracePeriodMinutes = 15,
-    this.allowOpenTimeSessions = true,
+    this.allowOpenTimeSessions = false,
     this.isActive = true,
     this.suspensionReason,
   });
@@ -228,4 +228,3 @@ class Lounge extends Equatable {
     );
   }
 }
-

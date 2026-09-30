@@ -35,7 +35,7 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
 
     if (_isSubmitting) return;
 
-    final allowOpenTime = context.read<LoginCubit>().state.userLounge?.allowOpenTimeSessions ?? true;
+    final allowOpenTime = context.read<LoginCubit>().state.userLounge?.allowOpenTimeSessions ?? false;
     if (!allowOpenTime) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppStrings.openTimeDisabledByPolicy), backgroundColor: AppColors.danger),
@@ -130,9 +130,9 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
               ),
               SizedBox(height: 14.h),
               SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'single', label: Text('Single')),
-                  ButtonSegment(value: 'multi', label: Text('Multi')),
+                segments: [
+                  ButtonSegment(value: 'single', label: Text(AppStrings.single)),
+                  ButtonSegment(value: 'multi', label: Text(AppStrings.multi)),
                 ],
                 selected: {_playMode},
                 onSelectionChanged: (values) {

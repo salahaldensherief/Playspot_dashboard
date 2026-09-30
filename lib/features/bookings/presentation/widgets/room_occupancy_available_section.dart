@@ -23,7 +23,7 @@ class RoomOccupancyAvailableSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final allowOpenTimePolicy = context.select<LoginCubit, bool>(
-      (c) => c.state.userLounge?.allowOpenTimeSessions ?? true,
+      (c) => c.state.userLounge?.allowOpenTimeSessions ?? false,
     );
 
     return Column(

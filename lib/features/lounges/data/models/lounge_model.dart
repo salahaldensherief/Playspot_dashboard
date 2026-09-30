@@ -37,7 +37,7 @@ class LoungeModel extends Lounge {
     super.allowCashPayment = true,
     super.requirePrepaidFirstTime = false,
     super.cashGracePeriodMinutes = 15,
-    super.allowOpenTimeSessions = true,
+    super.allowOpenTimeSessions = false,
     super.isActive = true,
     super.suspensionReason,
   });
@@ -141,7 +141,7 @@ class LoungeModel extends Lounge {
       allowCashPayment: json['allow_cash_payment'] ?? true,
       requirePrepaidFirstTime: json['require_prepaid_first_time'] ?? false,
       cashGracePeriodMinutes: parseInt(json['cash_grace_period_minutes']) ?? 15,
-      allowOpenTimeSessions: json['allow_open_time_sessions'] ?? true,
+      allowOpenTimeSessions: json['allow_open_time_sessions'] ?? false,
       isActive: json['is_active'] ?? true,
       suspensionReason: json['suspension_reason']?.toString(),
     );
@@ -185,4 +185,3 @@ class LoungeModel extends Lounge {
     };
   }
 }
-

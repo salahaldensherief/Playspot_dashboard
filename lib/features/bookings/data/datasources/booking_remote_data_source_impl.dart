@@ -355,10 +355,20 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   @override
   Future<void> startBookingSession(String bookingId) async {
-    await client.rpc(
-      'start_booking_session',
+    final booking = await client
+        .from('bookings')
+        .select('is_open_time')
+        .eq('id', bookingId)
+        .single();
+    final response = await client.rpc(
+      booking['is_open_time'] == true
+          ? 'start_open_time_booking_session'
+          : 'start_booking_session',
       params: {'p_booking_id': bookingId},
     );
+    if (response is! Map || response['success'] != true) {
+      throw const FormatException('Invalid session start response');
+    }
   }
 
   @override
@@ -378,9 +388,10 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       },
     );
 
-    return response is Map
-        ? Map<String, dynamic>.from(response)
-        : <String, dynamic>{'success': true};
+    if (response is! Map || response['success'] != true) {
+      throw const FormatException('Invalid open-time start response');
+    }
+    return Map<String, dynamic>.from(response);
   }
 
   @override

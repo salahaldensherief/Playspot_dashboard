@@ -214,8 +214,8 @@ class BookingModel extends Booking {
       openTimeStartedAt: json['open_time_started_at'] != null
           ? DateTime.tryParse(json['open_time_started_at'].toString())
           : null,
-      openTimeEndedAt: json['open_time_ended_at'] != null
-          ? DateTime.tryParse(json['open_time_ended_at'].toString())
+      openTimeEndedAt: json['open_time_closed_at'] != null
+          ? DateTime.tryParse(json['open_time_closed_at'].toString())
           : null,
       openTimePricingSnapshot: json['open_time_pricing_snapshot'] is Map
           ? Map<String, dynamic>.from(json['open_time_pricing_snapshot'] as Map)
@@ -266,7 +266,7 @@ class BookingModel extends Booking {
       if (openTimeStartedAt != null)
         'open_time_started_at': openTimeStartedAt!.toIso8601String(),
       if (openTimeEndedAt != null)
-        'open_time_ended_at': openTimeEndedAt!.toIso8601String(),
+        'open_time_closed_at': openTimeEndedAt!.toIso8601String(),
       if (openTimePricingSnapshot.isNotEmpty)
         'open_time_pricing_snapshot': openTimePricingSnapshot,
     };
