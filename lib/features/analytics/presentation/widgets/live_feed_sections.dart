@@ -24,12 +24,12 @@ class LiveFeedSectionHeader extends StatelessWidget {
       children: [
         Icon(icon, size: 16.r, color: color),
         SizedBox(width: 6.w),
-        AppText.subHeading(
+        Flexible(child: AppText.subHeading(
           title,
           fontSize: 14.sp,
           color: color,
           fontWeight: FontWeight.bold,
-        ),
+        )),
         SizedBox(width: 8.w),
         Container(
           padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),

@@ -121,7 +121,9 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
 
     final Color accent = isExpired
         ? AppColors.danger
-        : (remaining.inMinutes <= 10 ? AppColors.warning : AppColors.neonBlue);
+        : (!booking.isOpenEnded && remaining.inMinutes <= 10
+            ? AppColors.warning
+            : AppColors.neonBlue);
 
     final Color borderColor = _isHovered
         ? accent.withValues(alpha: 0.9)

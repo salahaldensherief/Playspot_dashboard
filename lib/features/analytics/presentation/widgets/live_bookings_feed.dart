@@ -15,6 +15,7 @@ import '../dashboard_state.dart';
 import 'active_sessions_stats_bar.dart';
 import 'live_booking_item.dart';
 import 'live_feed_sections.dart';
+import '../../../../core/responsive/app_breakpoints.dart';
 
 /// Refactored, high-performance Live Operations Feed displaying active gaming sessions,
 /// real-time revenue stats, and incoming booking requests.
@@ -121,13 +122,15 @@ class _LiveBookingsFeedState extends State<LiveBookingsFeed> {
                           ),
                           LayoutBuilder(
                             builder: (context, constraints) {
-                              final isMobile = constraints.maxWidth < 600;
-                              final double cardWidth = isMobile
-                                  ? double.infinity
-                                  : (constraints.maxWidth < 900
-                                      ? ((constraints.maxWidth - 16.r) / 2)
-                                          .clamp(280.0, 420.0)
-                                      : 320.w.clamp(280.0, 360.0));
+                              const spacing = 16.0;
+                              final availableWidth = constraints.maxWidth;
+                              final columns = AppBreakpoints.isMobileWidth(availableWidth)
+                                  ? 1
+                                  : AppBreakpoints.isTabletWidth(availableWidth)
+                                      ? 2
+                                      : (availableWidth / 340).floor().clamp(3, 6);
+                              final cardWidth =
+                                  (availableWidth - spacing * (columns - 1)) / columns;
 
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,8 +145,8 @@ class _LiveBookingsFeedState extends State<LiveBookingsFeed> {
                                     ),
                                     SizedBox(height: 12.h),
                                     Wrap(
-                                      spacing: 16.r,
-                                      runSpacing: 16.r,
+                                      spacing: spacing,
+                                      runSpacing: spacing,
                                       children: needsAttentionSessions
                                           .map((session) {
                                         return RepaintBoundary(
@@ -167,8 +170,8 @@ class _LiveBookingsFeedState extends State<LiveBookingsFeed> {
                                     ),
                                     SizedBox(height: 12.h),
                                     Wrap(
-                                      spacing: 16.r,
-                                      runSpacing: 16.r,
+                                      spacing: spacing,
+                                      runSpacing: spacing,
                                       children: normalSessions.map((session) {
                                         return RepaintBoundary(
                                           child: LiveSessionCard(
@@ -243,7 +246,7 @@ class _LiveFeedHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
+        Expanded(child: Row(
           children: [
             Container(
               width: 12.r,
@@ -254,7 +257,7 @@ class _LiveFeedHeader extends StatelessWidget {
               ),
             ),
             SizedBox(width: 12.w),
-            AppText.heading(AppStrings.activeSessions, fontSize: 18.sp),
+            Flexible(child: AppText.heading(AppStrings.activeSessions, fontSize: 18.sp)),
             SizedBox(width: 8.w),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
@@ -270,7 +273,7 @@ class _LiveFeedHeader extends StatelessWidget {
               ),
             ),
           ],
-        ),
+        )),
         if (isLoading)
           SizedBox(
             width: 16.r,
