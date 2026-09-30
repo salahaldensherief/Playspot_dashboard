@@ -35,17 +35,13 @@ class LoungePaymentSettingsRepositoryImpl implements LoungePaymentSettingsReposi
   @override
   Future<Either<Failure, void>> updatePaymentSettings(LoungePaymentSettings settings) async {
     try {
-      try {
-        await client.rpc('update_lounge_open_time_policy', params: {
-          'p_lounge_id': settings.loungeId,
-          'p_allow_open_time_sessions': settings.allowOpenTimeSessions,
-          'p_open_time_rounding_minutes': settings.openTimeRoundingMinutes,
-          'p_open_time_min_minutes': settings.openTimeMinMinutes,
-          'p_open_time_max_minutes': settings.openTimeMaxMinutes,
-        });
-      } catch (e) {
-        AppLogger.warning('RPC update_lounge_open_time_policy fallback to table update: $e');
-      }
+      await client.rpc('update_lounge_open_time_policy', params: {
+        'p_lounge_id': settings.loungeId,
+        'p_allow_open_time_sessions': settings.allowOpenTimeSessions,
+        'p_open_time_rounding_minutes': settings.openTimeRoundingMinutes,
+        'p_open_time_min_minutes': settings.openTimeMinMinutes,
+        'p_open_time_max_minutes': settings.openTimeMaxMinutes,
+      });
 
       final updateData = LoungePaymentSettingsModel(
         loungeId: settings.loungeId,
@@ -59,6 +55,14 @@ class LoungePaymentSettingsRepositoryImpl implements LoungePaymentSettingsReposi
         openTimeMinMinutes: settings.openTimeMinMinutes,
         openTimeMaxMinutes: settings.openTimeMaxMinutes,
       ).toJson();
+
+      // Open-time policy is security-sensitive and is written exclusively by
+      // update_lounge_open_time_policy. Keep the existing payment-settings
+      // update scoped to payment fields only.
+      updateData.remove('allow_open_time_sessions');
+      updateData.remove('open_time_rounding_minutes');
+      updateData.remove('open_time_min_minutes');
+      updateData.remove('open_time_max_minutes');
 
       await client
           .from('lounges')
