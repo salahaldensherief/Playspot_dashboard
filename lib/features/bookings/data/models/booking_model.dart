@@ -267,8 +267,6 @@ class BookingModel extends Booking {
         'open_time_started_at': openTimeStartedAt!.toIso8601String(),
       if (openTimeEndedAt != null)
         'open_time_closed_at': openTimeEndedAt!.toIso8601String(),
-      if (openTimePricingSnapshot.isNotEmpty)
-        'open_time_pricing_snapshot': openTimePricingSnapshot,
     };
 
     return map;
