@@ -31,6 +31,18 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Enforce canonical Supabase migration repository
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          sql_files=$(git diff --name-only "${{ github.event.pull_request.base.sha }}"...HEAD -- 'supabase/*.sql')
+          if [ -n "$sql_files" ]; then
+            echo "Dashboard SQL files are legacy reference only."
+            echo "Create production migrations in the playspot_V2 repository under supabase/migrations/."
+            echo "$sql_files"
+            exit 1
+          fi
+
       - name: Check formatting of changed Dart files
         if: github.event_name == 'pull_request' && github.base_ref != 'main'
         shell: bash
