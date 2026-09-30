@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:play_spot_dashboard/features/canteen/data/models/canteen_combo_component_model.dart';
 import 'package:play_spot_dashboard/features/canteen/data/models/canteen_combo_model.dart';
 import 'package:play_spot_dashboard/features/canteen/data/models/low_stock_alert_model.dart';
 import 'package:play_spot_dashboard/features/canteen/data/models/upsell_conversion_model.dart';

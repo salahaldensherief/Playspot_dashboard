@@ -51,16 +51,12 @@ class _LiveSessionCardActionsState extends State<LiveSessionCardActions> {
 
     if (confirmed == true && context.mounted) {
       final dashboardCubit = context.read<DashboardCubit>();
-      final bookingCubit = context.read<BookingCubit>();
       final success = await dashboardCubit.endSession(widget.booking.id);
-      if (!success && context.mounted) {
-        await bookingCubit.changeBookingStatus(widget.booking.id, BookingStatus.completed);
-      }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppStrings.sessionEndedSuccess),
-            backgroundColor: AppColors.success,
+            content: Text(success ? AppStrings.sessionEndedSuccess : AppStrings.actionFailed),
+            backgroundColor: success ? AppColors.success : AppColors.danger,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -98,6 +94,15 @@ class _LiveSessionCardActionsState extends State<LiveSessionCardActions> {
     setState(() => _isCompleting = true);
 
     try {
+      final confirmed = await AppDialog.confirm(
+        context: context,
+        title: AppStrings.confirmEndSession,
+        message: AppStrings.confirmEndSessionMessage,
+        confirmText: AppStrings.endSession,
+        cancelText: AppStrings.cancel,
+        confirmColor: AppColors.danger,
+      );
+      if (confirmed != true || !context.mounted) return;
       final bookingCubit = context.read<BookingCubit>();
       final roomCubit = context.read<RoomCubit>();
       final result = await bookingCubit.completeOpenTimeSession(widget.booking.id);

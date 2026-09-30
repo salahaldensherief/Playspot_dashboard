@@ -1670,7 +1670,7 @@ class AppStrings {
   static String get openTimeRoundingMinutesLabel => 'open_time_rounding_minutes_label'.tr();
   static String get maxOpenTimeMinutesLabel => 'max_open_time_minutes_label'.tr();
   static String get maxOpenTimeMinutesHint => 'max_open_time_minutes_hint'.tr();
-  static String get invalidNumberError => 'invalid_number_error'.tr();
+  static String get endTimeLabel => 'end_time'.tr();
   static String get numberGreaterThanZeroError => 'number_greater_than_zero_error'.tr();
   static String get customerNameOptional => 'customer_name_optional'.tr();
   static String get customerPhoneOptional => 'customer_phone_optional'.tr();
@@ -1678,4 +1678,3 @@ class AppStrings {
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }
-

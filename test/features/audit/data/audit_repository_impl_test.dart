@@ -4,7 +4,6 @@ import 'package:play_spot_dashboard/core/error/failures.dart';
 import 'package:play_spot_dashboard/features/audit/data/datasources/audit_remote_datasource.dart';
 import 'package:play_spot_dashboard/features/audit/data/models/audit_log_model.dart';
 import 'package:play_spot_dashboard/features/audit/data/repositories/audit_repository_impl.dart';
-import 'package:play_spot_dashboard/features/audit/domain/entities/audit_log_entity.dart';
 import 'package:play_spot_dashboard/features/audit/domain/usecases/get_audit_logs_usecase.dart';
 
 class MockAuditRemoteDataSource extends Mock implements AuditRemoteDataSource {}

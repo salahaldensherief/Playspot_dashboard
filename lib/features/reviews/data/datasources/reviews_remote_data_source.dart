@@ -87,7 +87,7 @@ class ReviewsRemoteDataSourceImpl implements ReviewsRemoteDataSource {
       final rawList = (response as List)
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
-      return _resolveReviewProfiles(rawList);
+      return await _resolveReviewProfiles(rawList);
     } catch (e) {
       debugPrint('🔴 [REVIEWS_DATA_SOURCE] Fetching reviews failed: $e');
       rethrow;

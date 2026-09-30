@@ -274,7 +274,7 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                             },
                             child: InputDecorator(
                               decoration: InputDecoration(
-                                labelText: AppStrings.startTime,
+                                labelText: AppStrings.startTimeLabel,
                                 border: const OutlineInputBorder(),
                               ),
                               child: Text(
@@ -298,7 +298,7 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                             },
                             child: InputDecorator(
                               decoration: InputDecoration(
-                                labelText: AppStrings.endTime,
+                                labelText: AppStrings.endTimeLabel,
                                 border: const OutlineInputBorder(),
                               ),
                               child: Text(

@@ -121,7 +121,7 @@ class _PricingScreenContentState extends State<_PricingScreenContent> {
                   subtitle: AppStrings.pricingRulesDesc,
                   icon: Icons.style_rounded,
                   iconColor: AppColors.neonBlue,
-                  action: AppButton(
+                  trailing: AppButton(
                     text: AppStrings.addPricingRule,
                     icon: Icons.add_rounded,
                     backgroundColor: AppColors.neonBlue,

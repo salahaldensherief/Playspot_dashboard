@@ -344,6 +344,7 @@
   "no_active_shift": "No Active Shift",
   "cashier": "Cashier",
   "start_time": "Start Time",
+  "end_time": "End Time",
   "close_shift": "Close Shift",
   "open_new_shift": "Open New Shift",
   "starting_cash": "Starting Cash (EGP)",
@@ -1400,4 +1401,3 @@
   "customer_phone_optional": "Phone Number (optional)",
   "open_time_dialog_notice": "Billing is calculated at checkout based on room rates. Upcoming confirmed reservations retain priority."
 }
-

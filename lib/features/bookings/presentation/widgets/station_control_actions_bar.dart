@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
@@ -63,6 +64,15 @@ class _StationControlActionsBarState extends State<StationControlActionsBar> {
     setState(() => _isCompletingOpenTime = true);
 
     try {
+      final confirmed = await AppDialog.confirm(
+        context: context,
+        title: AppStrings.confirmEndSession,
+        message: AppStrings.confirmEndSessionMessage,
+        confirmText: AppStrings.endSession,
+        cancelText: AppStrings.cancel,
+        confirmColor: AppColors.danger,
+      );
+      if (confirmed != true || !context.mounted) return;
       final bookingCubit = context.read<BookingCubit>();
       final roomCubit = context.read<RoomCubit>();
       final result = await bookingCubit.completeOpenTimeSession(widget.booking.id);

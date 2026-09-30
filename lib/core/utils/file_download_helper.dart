@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'file_download_mobile.dart'
     if (dart.library.js_interop) 'file_download_web.dart';
 
