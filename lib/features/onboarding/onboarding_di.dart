@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'data/datasources/onboarding_remote_data_source.dart';
+import 'data/datasources/onboarding_remote_data_source_impl.dart';
 import 'data/repositories/onboarding_repository_impl.dart';
 import 'domain/repositories/onboarding_repository.dart';
 import 'domain/usecases/setup_lounge_usecase.dart';

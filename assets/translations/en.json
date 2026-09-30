@@ -1432,5 +1432,34 @@
   "number_greater_than_zero_error": "Please enter a number greater than zero",
   "customer_name_optional": "Customer Name (optional)",
   "customer_phone_optional": "Phone Number (optional)",
-  "open_time_dialog_notice": "Billing is calculated at checkout based on room rates. Upcoming confirmed reservations retain priority."
+  "open_time_dialog_notice": "Billing is calculated at checkout based on room rates. Upcoming confirmed reservations retain priority.",
+  "onboarding_validation": {
+    "details_required": "Complete the lounge name, description, city and address.",
+    "phone_required": "Enter a valid lounge contact phone number.",
+    "hours_required": "Enter different opening and closing times in HH:mm format.",
+    "rooms_required": "Add at least one room with its capacity and rates.",
+    "image_required": "Select a main lounge image.",
+    "identity_required": "Select an identity document before submitting.",
+    "session_required": "Sign in with the lounge owner account before submitting."
+  },
+  "onboarding_review": {
+    "title": "Review before submitting",
+    "notice": "Review your information and attachments. Operational access stays closed until approval.",
+    "owner": "Owner: {} — {}",
+    "lounge": "Lounge: {}",
+    "contact": "Contact phone: {}",
+    "address": "Address: {} — {}",
+    "hours": "Opening hours: {} — {}",
+    "rooms": "Rooms and rates",
+    "room": "{} — capacity {} — single {} / multi {} per hour",
+    "products": "Optional products: {}",
+    "attachments": "Main photo: {} • Identity: {} • Business document: {}",
+    "selected": "Selected",
+    "missing": "Missing",
+    "optional": "Optional — not selected",
+    "consent": "I confirm these details are accurate and authorize review of the supplied documents.",
+    "submit": "Submit for review",
+    "confirm_required": "Confirm the details and document review consent before submitting.",
+    "kyc_notice": "Identity proof is required. Business proof is optional. Your lounge stays closed for operations until the review is approved."
+  }
 }

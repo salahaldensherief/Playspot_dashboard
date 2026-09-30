@@ -10,6 +10,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_multi_image_picker.dart
 class BasicInfoStep extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController descriptionController;
+  final TextEditingController contactPhoneController;
   final Function(Uint8List? bytes, String? name) onMainImageSelected;
   final Function(List<SelectedImage> images) onGallerySelected;
 
@@ -17,6 +18,7 @@ class BasicInfoStep extends StatelessWidget {
     super.key,
     required this.nameController,
     required this.descriptionController,
+    required this.contactPhoneController,
     required this.onMainImageSelected,
     required this.onGallerySelected,
   });
@@ -40,6 +42,12 @@ class BasicInfoStep extends StatelessWidget {
           label: AppStrings.description,
           hintText: AppStrings.descriptionHint,
           controller: descriptionController,
+        ),
+        SizedBox(height: 20.h),
+        AppTextField(
+          label: AppStrings.phoneNumber,
+          controller: contactPhoneController,
+          keyboardType: TextInputType.phone,
         ),
         SizedBox(height: 24.h),
         AppMultiImagePicker(
