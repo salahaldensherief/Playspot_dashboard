@@ -97,14 +97,14 @@ class LoungeOpenTimePolicySection extends StatelessWidget {
                   child: AppTextField(
                     controller: minMinutesController,
                     label: AppStrings.minOpenTimeMinutesLabel,
-                    hintText: '30',
+                    hintText: '60',
                     keyboardType: TextInputType.number,
                     enabled: canEdit,
                     prefixIcon: Icons.hourglass_bottom_rounded,
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty) return null;
+                      if (value == null || value.trim().isEmpty) return AppStrings.invalidNumberError;
                       final parsed = int.tryParse(value.trim());
-                      if (parsed == null || parsed < 0) {
+                      if (parsed == null || parsed < 15 || parsed > 240) {
                         return AppStrings.invalidNumberError;
                       }
                       return null;
@@ -121,10 +121,10 @@ class LoungeOpenTimePolicySection extends StatelessWidget {
                     enabled: canEdit,
                     prefixIcon: Icons.update_rounded,
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty) return null;
+                      if (value == null || value.trim().isEmpty) return AppStrings.invalidNumberError;
                       final parsed = int.tryParse(value.trim());
-                      if (parsed == null || parsed <= 0) {
-                        return AppStrings.numberGreaterThanZeroError;
+                      if (![5, 10, 15, 30, 60].contains(parsed)) {
+                        return AppStrings.invalidNumberError;
                       }
                       return null;
                     },
@@ -141,9 +141,11 @@ class LoungeOpenTimePolicySection extends StatelessWidget {
               enabled: canEdit,
               prefixIcon: Icons.timer_off_outlined,
               validator: (value) {
-                if (value == null || value.trim().isEmpty) return null;
+                if (value == null || value.trim().isEmpty) return AppStrings.invalidNumberError;
                 final parsed = int.tryParse(value.trim());
-                if (parsed == null || parsed < 0) {
+                final minimum = int.tryParse(minMinutesController.text.trim());
+                if (parsed == null || parsed < 60 || parsed > 1440 ||
+                    (minimum != null && parsed < minimum)) {
                   return AppStrings.invalidNumberError;
                 }
                 return null;

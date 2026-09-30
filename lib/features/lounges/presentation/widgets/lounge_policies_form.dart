@@ -44,10 +44,10 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
     _walletNumberController = TextEditingController();
     _instapayHandleController = TextEditingController();
 
-    _allowOpenTimeSessions = true;
+    _allowOpenTimeSessions = false;
     _openTimeRoundingController = TextEditingController(text: '15');
-    _openTimeMinMinutesController = TextEditingController(text: '30');
-    _openTimeMaxMinutesController = TextEditingController();
+    _openTimeMinMinutesController = TextEditingController(text: '60');
+    _openTimeMaxMinutesController = TextEditingController(text: '720');
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = context.read<LoginCubit>().state.user;
@@ -116,9 +116,9 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
     final rounding =
         int.tryParse(_openTimeRoundingController.text.trim()) ?? 15;
     final minMins =
-        int.tryParse(_openTimeMinMinutesController.text.trim()) ?? 30;
+        int.tryParse(_openTimeMinMinutesController.text.trim()) ?? 60;
     final maxMinsText = _openTimeMaxMinutesController.text.trim();
-    final maxMins = maxMinsText.isNotEmpty ? int.tryParse(maxMinsText) : null;
+    final maxMins = int.tryParse(maxMinsText) ?? 720;
 
     final settings = LoungePaymentSettings(
       loungeId: loungeId,

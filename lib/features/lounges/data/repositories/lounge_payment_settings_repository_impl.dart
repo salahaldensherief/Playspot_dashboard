@@ -16,7 +16,7 @@ class LoungePaymentSettingsRepositoryImpl implements LoungePaymentSettingsReposi
     try {
       final response = await client
           .from('lounges')
-          .select('id, allow_cash_payment, require_prepaid_first_time, cash_grace_period_minutes, wallet_number, instapay_handle, vodafone_cash_number, instapay_account, allow_open_time_sessions, open_time_rounding_minutes, open_time_min_minutes, open_time_max_minutes')
+          .select('id, allow_cash_payment, require_prepaid_first_time, cash_grace_period_minutes, wallet_number, instapay_handle, vodafone_cash_number, instapay_account, allow_open_time_sessions, open_time_rounding_minutes, open_time_minimum_minutes, open_time_max_minutes')
           .eq('id', loungeId)
           .maybeSingle();
 
@@ -37,10 +37,10 @@ class LoungePaymentSettingsRepositoryImpl implements LoungePaymentSettingsReposi
     try {
       await client.rpc('update_lounge_open_time_policy', params: {
         'p_lounge_id': settings.loungeId,
-        'p_allow_open_time_sessions': settings.allowOpenTimeSessions,
-        'p_open_time_rounding_minutes': settings.openTimeRoundingMinutes,
-        'p_open_time_min_minutes': settings.openTimeMinMinutes,
-        'p_open_time_max_minutes': settings.openTimeMaxMinutes,
+        'p_enabled': settings.allowOpenTimeSessions,
+        'p_rounding_minutes': settings.openTimeRoundingMinutes,
+        'p_minimum_minutes': settings.openTimeMinMinutes,
+        'p_max_minutes': settings.openTimeMaxMinutes ?? 720,
       });
 
       final updateData = LoungePaymentSettingsModel(
@@ -61,7 +61,7 @@ class LoungePaymentSettingsRepositoryImpl implements LoungePaymentSettingsReposi
       // update scoped to payment fields only.
       updateData.remove('allow_open_time_sessions');
       updateData.remove('open_time_rounding_minutes');
-      updateData.remove('open_time_min_minutes');
+      updateData.remove('open_time_minimum_minutes');
       updateData.remove('open_time_max_minutes');
 
       await client

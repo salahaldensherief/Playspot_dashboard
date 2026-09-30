@@ -19,10 +19,10 @@ class LoungePaymentSettings extends Equatable {
     this.cashGracePeriodMinutes = 10,
     this.walletNumber,
     this.instapayHandle,
-    this.allowOpenTimeSessions = true,
+    this.allowOpenTimeSessions = false,
     this.openTimeRoundingMinutes = 15,
-    this.openTimeMinMinutes = 30,
-    this.openTimeMaxMinutes,
+    this.openTimeMinMinutes = 60,
+    this.openTimeMaxMinutes = 720,
   });
 
   @override

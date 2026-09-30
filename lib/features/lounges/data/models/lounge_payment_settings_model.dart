@@ -8,10 +8,10 @@ class LoungePaymentSettingsModel extends LoungePaymentSettings {
     super.cashGracePeriodMinutes = 10,
     super.walletNumber,
     super.instapayHandle,
-    super.allowOpenTimeSessions = true,
+    super.allowOpenTimeSessions = false,
     super.openTimeRoundingMinutes = 15,
-    super.openTimeMinMinutes = 30,
-    super.openTimeMaxMinutes,
+    super.openTimeMinMinutes = 60,
+    super.openTimeMaxMinutes = 720,
   });
 
   factory LoungePaymentSettingsModel.fromJson(Map<String, dynamic> json) {
@@ -42,9 +42,9 @@ class LoungePaymentSettingsModel extends LoungePaymentSettings {
       cashGracePeriodMinutes: parseGracePeriod(json['cash_grace_period_minutes']),
       walletNumber: (json['wallet_number'] ?? json['vodafone_cash_number'] ?? json['vodafone_cash'])?.toString(),
       instapayHandle: (json['instapay_handle'] ?? json['instapay_account'] ?? json['instapay'])?.toString(),
-      allowOpenTimeSessions: json['allow_open_time_sessions'] ?? true,
+      allowOpenTimeSessions: json['allow_open_time_sessions'] ?? false,
       openTimeRoundingMinutes: parseIntField(json['open_time_rounding_minutes'], 15),
-      openTimeMinMinutes: parseIntField(json['open_time_min_minutes'], 30),
+      openTimeMinMinutes: parseIntField(json['open_time_minimum_minutes'], 60),
       openTimeMaxMinutes: parseNullableInt(json['open_time_max_minutes']),
     );
   }
@@ -58,7 +58,7 @@ class LoungePaymentSettingsModel extends LoungePaymentSettings {
       if (instapayHandle != null) 'instapay_handle': instapayHandle,
       'allow_open_time_sessions': allowOpenTimeSessions,
       'open_time_rounding_minutes': openTimeRoundingMinutes,
-      'open_time_min_minutes': openTimeMinMinutes,
+      'open_time_minimum_minutes': openTimeMinMinutes,
       'open_time_max_minutes': openTimeMaxMinutes,
     };
   }
