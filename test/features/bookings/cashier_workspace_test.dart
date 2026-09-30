@@ -164,6 +164,11 @@ void main() {
           await mount(tester, width, locale, scale);
           expect(tester.takeException(), isNull);
           expect(find.text(a.roomName), findsWidgets);
+          expect(find.text('starts_in'), findsNothing);
+          expect(
+            find.text(locale == 'ar' ? 'يبدأ خلال' : 'Starts in'),
+            findsWidgets,
+          );
           if (width >= 768)
             expect(find.byType(CashierSessionDetails), findsOneWidget);
           await screenshot(tester, 'cashier-${width.toInt()}-$locale-$scale');
