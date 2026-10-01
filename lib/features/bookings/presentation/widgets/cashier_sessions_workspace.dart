@@ -8,6 +8,7 @@ import '../../domain/entities/booking.dart';
 import '../../../requests/domain/entities/client_request_entity.dart';
 import 'cashier_session_details.dart';
 import 'session_clock_host.dart';
+import 'session_ticker.dart';
 import 'cashier_session_tile.dart';
 import 'session_operations_summary.dart';
 import '../../domain/entities/live_sessions_operations_groups.dart';

@@ -68,6 +68,7 @@ class _CashierSessionsWorkspaceState extends State<CashierSessionsWorkspace> {
       isScrollControlled: true,
       useSafeArea: true,
       builder: (sheetContext) => SessionClockHost(
+        clock: SessionTickerScope.clockOf(context),
         child: SizedBox(
           height: MediaQuery.sizeOf(sheetContext).height,
           child: Column(

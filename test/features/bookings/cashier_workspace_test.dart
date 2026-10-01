@@ -14,12 +14,13 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/cashi
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/cashier_session_details.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_operations_summary.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_clock_host.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_ticker.dart';
 import 'package:play_spot_dashboard/features/requests/domain/entities/client_request_entity.dart';
 import '../../support/local_translations_loader.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  final now = DateTime.now();
+  final now = DateTime(2026, 10, 1, 15);
   final a = Booking(
     id: 'a',
     userId: 'u',
@@ -79,6 +80,7 @@ void main() {
     double scale, {
     List<Booking>? bookings,
   }) async {
+    final testStart = tester.binding.clock.now();
     tester.view.physicalSize = Size(width, 1000);
     tester.view.devicePixelRatio = 1;
     await tester.pumpWidget(
@@ -119,6 +121,9 @@ void main() {
                 child: Scaffold(
                   body: SizedBox(
                     child: SessionClockHost(
+                      clock: () => now.add(
+                        tester.binding.clock.now().difference(testStart),
+                      ),
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(16),
                         child: CashierSessionsWorkspace(
@@ -169,8 +174,15 @@ void main() {
             find.text(locale == 'ar' ? 'يبدأ خلال' : 'Starts in'),
             findsWidgets,
           );
-          if (width >= 768)
+          if (width >= 768) {
             expect(find.byType(CashierSessionDetails), findsOneWidget);
+            expect(
+              SessionTickerScope.nowOf(
+                tester.element(find.byType(CashierSessionDetails)),
+              ).hour,
+              now.hour,
+            );
+          }
           await screenshot(tester, 'cashier-${width.toInt()}-$locale-$scale');
           if (width <= 600) {
             await tester.tap(find.text(a.roomName).first);
@@ -222,9 +234,7 @@ void main() {
     expect(builds['SessionLiveClock'] ?? 0, greaterThan(0));
     final directory = Platform.environment['PLAYSPOT_SCREENSHOT_DIR'];
     if (directory != null) {
-      File(
-        '$directory/../dashboard-rebuild-measurement.json',
-      ).writeAsStringSync(
+      File('$directory/dashboard-rebuild-measurement.json').writeAsStringSync(
         jsonEncode({
           'mode':
               'Flutter widget test, debug, Windows host; not device frame timings',
