@@ -22,7 +22,7 @@ class RouterGuards {
 
     final bool isAuthenticated =
         authState.status == LoginStatus.authenticated ||
-            authState.status == LoginStatus.success;
+        authState.status == LoginStatus.success;
 
     if (!isAuthenticated) {
       return isLoggingIn ? null : RouterKeys.login;
@@ -46,7 +46,8 @@ class RouterGuards {
         state.matchedLocation == RouterKeys.kycPending;
 
     final lounge = authState.userLounge;
-    final bool isLoungePending = lounge != null && lounge.status != 'active';
+    final bool isLoungePending =
+        lounge == null || lounge.status != 'active' || !lounge.isActive;
 
     // 1. Only Lounge Owners who haven't completed setup need Onboarding
     if (!isSuperAdmin && isLoungeOwner && !user.isSetupCompleted) {
@@ -55,10 +56,7 @@ class RouterGuards {
     }
 
     // 2. Lounge Owners whose lounge/KYC is still pending approval go to KYC Pending Screen
-    if (!isSuperAdmin &&
-        isLoungeOwner &&
-        user.isSetupCompleted &&
-        isLoungePending) {
+    if (!isSuperAdmin && isStaffUser && isLoungePending) {
       if (!isKycPendingPath) return RouterKeys.kycPending;
       return null;
     }
@@ -84,14 +82,13 @@ class RouterGuards {
       return RouterKeys.loungeAdminDashboard;
     }
 
-    final bool isStaffManagementRoute =
-        location == RouterKeys.loungeAdminStaff;
+    final bool isStaffManagementRoute = location == RouterKeys.loungeAdminStaff;
     final bool isFinancialRoute =
         location.contains('/payouts') || location.contains('/reports');
-    final bool isShiftHistoryRoute =
-        location == RouterKeys.loungeAdminShifts;
+    final bool isShiftHistoryRoute = location == RouterKeys.loungeAdminShifts;
     final bool isMarketingRoute = location == RouterKeys.loungeAdminMarketing;
-    final bool isSetupRoute = location == RouterKeys.loungeAdminRooms ||
+    final bool isSetupRoute =
+        location == RouterKeys.loungeAdminRooms ||
         location == RouterKeys.loungeAdminExtras;
     final bool isReviewsRoute = location == RouterKeys.loungeAdminReviews;
 

@@ -21,6 +21,7 @@ UserEntity _user(UserRole role, {bool setupCompleted = true}) {
     email: 'test@playspot.gg',
     name: 'Tester',
     role: role,
+    loungeId: 'l1',
     isSetupCompleted: setupCompleted,
   );
 }
@@ -43,37 +44,147 @@ void main() {
   String? guard({
     required LoginStatus status,
     UserEntity? user,
-    Lounge? lounge,
+    Lounge? lounge = const Lounge(
+      id: 'l1',
+      name: 'Approved lounge',
+      imageUrl: '',
+      opensAt: '10:00',
+      closesAt: '23:00',
+      status: 'active',
+    ),
     String location = RouterKeys.root,
   }) {
     when(() => state.matchedLocation).thenReturn(location);
-    when(() => authCubit.state).thenReturn(LoginState(
-      status: status,
-      user: user,
-      userLounge: lounge,
-    ));
+    when(
+      () => authCubit.state,
+    ).thenReturn(LoginState(status: status, user: user, userLounge: lounge));
     return RouterGuards.redirect(context, state, authCubit);
   }
 
   group('RouterGuards.redirect', () {
+    test('missing lounge data cannot grant dashboard access', () {
+      for (final role in [
+        UserRole.owner,
+        UserRole.manager,
+        UserRole.cashier,
+        UserRole.staff,
+      ]) {
+        expect(
+          guard(
+            status: LoginStatus.authenticated,
+            user: _user(role),
+            lounge: null,
+            location: RouterKeys.loungeAdminDashboard,
+          ),
+          RouterKeys.kycPending,
+        );
+      }
+    });
+    test('pending venue gates all staff, not only its owner', () {
+      const pending = Lounge(
+        id: 'l1',
+        name: 'Pending',
+        imageUrl: '',
+        opensAt: '10:00',
+        closesAt: '23:00',
+        status: 'pending',
+        isActive: false,
+      );
+      for (final role in [UserRole.manager, UserRole.cashier, UserRole.staff]) {
+        expect(
+          guard(
+            status: LoginStatus.authenticated,
+            user: _user(role),
+            lounge: pending,
+            location: RouterKeys.loungeAdminDashboard,
+          ),
+          RouterKeys.kycPending,
+        );
+      }
+    });
+    test('disabled active-status venue cannot grant dashboard access', () {
+      const disabled = Lounge(
+        id: 'l1',
+        name: 'Disabled',
+        imageUrl: '',
+        opensAt: '10:00',
+        closesAt: '23:00',
+        status: 'active',
+        isActive: false,
+      );
+      expect(
+        guard(
+          status: LoginStatus.authenticated,
+          user: _user(UserRole.cashier),
+          lounge: disabled,
+          location: RouterKeys.loungeAdminDashboard,
+        ),
+        RouterKeys.kycPending,
+      );
+    });
+    test(
+      'approved venue remains usable by local cashier when closed to online bookings',
+      () {
+        const offline = Lounge(
+          id: 'l1',
+          name: 'Offline venue',
+          imageUrl: '',
+          opensAt: '10:00',
+          closesAt: '23:00',
+          status: 'active',
+          isActive: true,
+          isOpen: false,
+        );
+        expect(
+          guard(
+            status: LoginStatus.authenticated,
+            user: _user(UserRole.cashier),
+            lounge: offline,
+            location: RouterKeys.loungeAdminDashboard,
+          ),
+          isNull,
+        );
+      },
+    );
     test('inactive staff cannot enter dashboard routes', () {
-      expect(guard(status: LoginStatus.authenticated,
-        user: _user(UserRole.owner).copyWith(isActive: false),
-        location: RouterKeys.loungeAdminDashboard), RouterKeys.login);
+      expect(
+        guard(
+          status: LoginStatus.authenticated,
+          user: _user(UserRole.owner).copyWith(isActive: false),
+          location: RouterKeys.loungeAdminDashboard,
+        ),
+        RouterKeys.login,
+      );
     });
 
     test('banned staff cannot enter dashboard routes', () {
-      expect(guard(status: LoginStatus.authenticated,
-        user: _user(UserRole.owner).copyWith(isBanned: true),
-        location: RouterKeys.loungeAdminDashboard), RouterKeys.login);
+      expect(
+        guard(
+          status: LoginStatus.authenticated,
+          user: _user(UserRole.owner).copyWith(isBanned: true),
+          location: RouterKeys.loungeAdminDashboard,
+        ),
+        RouterKeys.login,
+      );
     });
 
     test('denied accounts can stay on login without a redirect loop', () {
-      expect(guard(status: LoginStatus.authenticated,
-        user: _user(UserRole.user), location: RouterKeys.login), isNull);
-      expect(guard(status: LoginStatus.authenticated,
-        user: _user(UserRole.owner).copyWith(isBanned: true),
-        location: RouterKeys.login), isNull);
+      expect(
+        guard(
+          status: LoginStatus.authenticated,
+          user: _user(UserRole.user),
+          location: RouterKeys.login,
+        ),
+        isNull,
+      );
+      expect(
+        guard(
+          status: LoginStatus.authenticated,
+          user: _user(UserRole.owner).copyWith(isBanned: true),
+          location: RouterKeys.login,
+        ),
+        isNull,
+      );
     });
 
     test('allows navigation while auth status is initial', () {
