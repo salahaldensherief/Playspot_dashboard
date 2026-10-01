@@ -4,11 +4,25 @@ class _CashierSessionsWorkspaceState extends State<CashierSessionsWorkspace> {
   String? _selectedId;
   final _revision = ValueNotifier<int>(0);
   late final Timer _classificationTimer;
+  late final DateTime Function() _clock;
   List<Booking> _ordered = const [];
+  ModalRoute<void>? _sheetRoute;
+  Future<void>? _sheetOpening;
 
   void _classify() {
-    final groups = LiveSessionsOperationsGroups.fromBookings(widget.bookings);
-    _ordered = [
+    _ordered = _computeOrder();
+    if (_ordered.isNotEmpty &&
+        !_ordered.any((booking) => booking.id == _selectedId)) {
+      _selectedId = _ordered.first.id;
+    }
+  }
+
+  List<Booking> _computeOrder() {
+    final groups = LiveSessionsOperationsGroups.fromBookings(
+      widget.bookings,
+      now: _clock(),
+    );
+    return [
       ...groups.needsAttention,
       ...groups.openTime,
       ...groups.running,
@@ -16,13 +30,21 @@ class _CashierSessionsWorkspaceState extends State<CashierSessionsWorkspace> {
     ];
   }
 
+  void _refreshClassification() {
+    if (!mounted) return;
+    final ordered = _computeOrder();
+    if (!listEquals(_ordered, ordered)) setState(() => _ordered = ordered);
+  }
+
   @override
   void initState() {
     super.initState();
+    _clock = SessionTickerScope.clockOf(context);
     _classify();
-    _classificationTimer = Timer.periodic(const Duration(seconds: 15), (_) {
-      if (mounted) setState(_classify);
-    });
+    _classificationTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _refreshClassification(),
+    );
   }
 
   @override
@@ -39,6 +61,7 @@ class _CashierSessionsWorkspaceState extends State<CashierSessionsWorkspace> {
 
   @override
   void dispose() {
+    _closeOwnedSheet();
     _classificationTimer.cancel();
     _revision.dispose();
     super.dispose();
@@ -47,6 +70,7 @@ class _CashierSessionsWorkspaceState extends State<CashierSessionsWorkspace> {
   List<ClientRequestEntity> _requestsFor(Booking booking) => widget.requests
       .where(
         (request) =>
+            request.loungeId == booking.loungeId &&
             !request.isAttended &&
             (request.bookingId == booking.id ||
                 (request.bookingId == null &&
@@ -62,46 +86,55 @@ class _CashierSessionsWorkspaceState extends State<CashierSessionsWorkspace> {
 
   void _select(Booking booking, bool mobile) {
     setState(() => _selectedId = booking.id);
-    if (!mobile) return;
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (sheetContext) => SessionClockHost(
-        clock: SessionTickerScope.clockOf(context),
-        child: SizedBox(
-          height: MediaQuery.sizeOf(sheetContext).height,
-          child: Column(
-            children: [
-              AppButton(
-                text: 'cashier.back'.tr(),
-                height: 48,
-                variant: AppButtonVariant.text,
-                onPressed: () => Navigator.of(sheetContext).pop(),
-              ),
-              Expanded(
-                child: ValueListenableBuilder<int>(
-                  valueListenable: _revision,
-                  builder: (_, revision, child) {
-                    final current = widget.bookings.where(
-                      (item) =>
-                          item.id == booking.id &&
-                          (item.status == BookingStatus.inProgress ||
-                              item.status == BookingStatus.upcoming),
-                    );
-                    return SingleChildScrollView(
-                      child: current.isEmpty
-                          ? Text('cashier.empty'.tr())
-                          : _details(current.first),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
+    if (!mobile || _sheetOpening != null) return;
+    _sheetOpening =
+        showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          builder: (sheetContext) => _sheetContents(sheetContext, booking),
+        ).whenComplete(() {
+          _sheetRoute = null;
+          _sheetOpening = null;
+        });
+  }
+
+  Widget _sheetContents(BuildContext sheetContext, Booking booking) {
+    _sheetRoute = ModalRoute.of(sheetContext);
+    if (!mounted) {
+      _closeOwnedSheet();
+      return const SizedBox.shrink();
+    }
+    return SessionClockHost(
+      clock: _clock,
+      child: CashierSessionSheet(
+        revision: _revision,
+        details: () => _currentSheetDetails(booking),
       ),
     );
+  }
+
+  Widget _currentSheetDetails(Booking booking) {
+    if (!mounted) return const SizedBox.shrink();
+    final current = widget.bookings.where(
+      (item) =>
+          item.id == booking.id &&
+          item.loungeId == booking.loungeId &&
+          (item.status == BookingStatus.inProgress ||
+              item.status == BookingStatus.upcoming),
+    );
+    return current.isEmpty
+        ? Text('cashier.empty'.tr())
+        : _details(current.first);
+  }
+
+  void _closeOwnedSheet() {
+    final route = _sheetRoute;
+    final navigator = route?.navigator;
+    if (route == null || navigator == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (navigator.mounted && route.isActive) navigator.removeRoute(route);
+    });
   }
 
   @override
@@ -117,39 +150,17 @@ class _CashierSessionsWorkspaceState extends State<CashierSessionsWorkspace> {
             : MediaQuery.sizeOf(context).width;
         final mobile = AppBreakpoints.isMobileWidth(width);
         if (width <= 0) return const SizedBox.shrink();
-        final rail = ListView.separated(
-          shrinkWrap: mobile,
-          physics: mobile ? const NeverScrollableScrollPhysics() : null,
-          itemCount: active.length,
-          separatorBuilder: (_, index) => const Divider(height: 1),
-          itemBuilder: (_, index) => CashierSessionTile(
-            key: ValueKey(active[index].id),
-            booking: active[index],
-            selected: selected.id == active[index].id,
-            onSelect: () => _select(active[index], mobile),
-          ),
+        final rail = CashierSessionRail(
+          bookings: active,
+          selectedId: selected.id,
+          isCompact: mobile,
+          onSelect: (booking) => _select(booking, mobile),
         );
         if (mobile) return rail;
-        final railWidth = AppBreakpoints.isDesktopWidth(width)
-            ? OperationsTokens.railWidth
-            : width * 0.4;
-        return SizedBox(
-          height: OperationsTokens.panelHeight,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(width: railWidth, child: rail),
-              const SizedBox(width: OperationsTokens.gap),
-              Expanded(
-                child: RepaintBoundary(
-                  child: SingleChildScrollView(
-                    key: ValueKey(selected.id),
-                    child: _details(selected),
-                  ),
-                ),
-              ),
-            ],
-          ),
+        return CashierSessionsSplitView(
+          rail: rail,
+          sessionId: selected.id,
+          details: _details(selected),
         );
       },
     );

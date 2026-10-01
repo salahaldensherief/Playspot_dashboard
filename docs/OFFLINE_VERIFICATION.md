@@ -40,3 +40,28 @@ zero workspace/details rebuilds, 70 clock-leaf rebuilds, 207066 host microsecond
 These are synthetic widget renders and host work, not real device frame timings
 or production cashier end-to-end screenshots. Visual details-layout improvements
 and real offline read/action integration remain separate work.
+
+Responsive details verification on 2026-10-02: 455 offline tests passed, including
+246 offline-cashier foundation cases. The two live tests remain skipped. Analyze
+has 21 existing informational findings and no warnings/errors after fixing the
+new guard's braces. No generated plugin files or test_cache_box.bak were changed.
+
+The session workspace uses separate rail, split view, sheet, header, customer,
+financial and activity components. Manage is reachable before scrolling at all
+five widths with Arabic text scale 1.6. Facts use directional responsive columns.
+Open-time elapsed duration no longer increases deadline urgency. Upcoming bookings
+and requests are scoped to the current lounge/resource. Removing the owning
+workspace closes its exact details route, without popping unrelated routes.
+
+The layout/group/grid suites cover 46 cases. Twenty Arabic/English width and
+text-scale combinations plus eight mobile sheets produce 28 PNGs under the task
+outputs/cashier-details-20261002 directory. RTL/Tajawal and enlarged text were
+visually inspected in final desktop and mobile captures.
+
+The latest debug Windows widget measurement loads 100 sessions for 45 simulated
+seconds, crossing three classification deadlines: zero workspace/details builds,
+360 SessionLiveClock builds and 1,072,227 host microseconds. This is synthetic
+widget work, not browser/device frame performance. Confirmed collected/due values
+remain unavailable until the canonical backend read adapter is connected; the UI
+does not invent them. Full offline UI operation and hosted integration remain
+unfinished and the feature PR stays draft.

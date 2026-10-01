@@ -66,4 +66,49 @@ void main() {
     ].map((item) => item.id);
     expect(allIds.toSet(), hasLength(allIds.length));
   });
+  test('elapsed open time cannot outrank an unpaid session ending soon', () {
+    final ending = booking(
+      id: 'ending',
+      status: BookingStatus.inProgress,
+      paymentStatus: PaymentStatus.unpaid,
+      startTime: '17:05',
+    );
+    final open = booking(
+      id: 'open',
+      status: BookingStatus.inProgress,
+      paymentStatus: PaymentStatus.unpaid,
+      startTime: '17:58',
+      durationMinutes: 0,
+    );
+    final groups = LiveSessionsOperationsGroups.fromBookings([
+      open,
+      ending,
+    ], now: now);
+    expect(groups.needsAttention.map((item) => item.id), ['ending', 'open']);
+  });
+  test(
+    'equal priorities retain a deterministic order across input reorder',
+    () {
+      final first = booking(
+        id: 'first',
+        status: BookingStatus.inProgress,
+        paymentStatus: PaymentStatus.unpaid,
+      );
+      final second = booking(
+        id: 'second',
+        status: BookingStatus.inProgress,
+        paymentStatus: PaymentStatus.unpaid,
+      );
+      final a = LiveSessionsOperationsGroups.fromBookings([
+        first,
+        second,
+      ], now: now);
+      final b = LiveSessionsOperationsGroups.fromBookings([
+        second,
+        first,
+      ], now: now);
+      expect(a.needsAttention.map((item) => item.id), ['first', 'second']);
+      expect(a.needsAttention, b.needsAttention);
+    },
+  );
 }

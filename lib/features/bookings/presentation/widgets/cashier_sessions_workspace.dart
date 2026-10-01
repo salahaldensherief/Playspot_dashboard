@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/responsive/app_breakpoints.dart';
-import '../../../../art_core/theme/operations_tokens.dart';
-import '../../../../art_core/widgets/app_button.dart';
 import '../../domain/entities/booking.dart';
 import '../../../requests/domain/entities/client_request_entity.dart';
 import 'cashier_session_details.dart';
 import 'session_clock_host.dart';
 import 'session_ticker.dart';
-import 'cashier_session_tile.dart';
+import 'cashier_session_rail.dart';
+import 'cashier_sessions_split_view.dart';
+import 'cashier_session_sheet.dart';
 import 'session_operations_summary.dart';
 import '../../domain/entities/live_sessions_operations_groups.dart';
 

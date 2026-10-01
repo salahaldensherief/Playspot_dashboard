@@ -26,10 +26,7 @@ class LiveSessionsOperationsGroups extends Equatable {
         .toList();
     final needsAttention =
         inProgress.where((booking) => _needsAttention(booking, clock)).toList()
-          ..sort(
-            (a, b) =>
-                _urgencyScore(b, clock).compareTo(_urgencyScore(a, clock)),
-          );
+          ..sort((a, b) => _compareAttention(a, b, clock));
     final attentionIds = needsAttention.map((booking) => booking.id).toSet();
     final openTime = inProgress
         .where(
@@ -75,6 +72,7 @@ class LiveSessionsOperationsGroups extends Equatable {
 
   static int _urgencyScore(Booking booking, DateTime now) {
     var score = booking.paymentStatus != PaymentStatus.paid ? 1000 : 0;
+    if (booking.isOpenEnded) return score;
     final remaining = booking.remainingDuration(now);
     if (remaining.isNegative) {
       score += 500 + remaining.inMinutes.abs();
@@ -82,5 +80,17 @@ class LiveSessionsOperationsGroups extends Equatable {
       score += 200 - remaining.inMinutes;
     }
     return score;
+  }
+
+  static int _compareAttention(Booking first, Booking second, DateTime now) {
+    final urgency = _urgencyScore(
+      second,
+      now,
+    ).compareTo(_urgencyScore(first, now));
+    if (urgency != 0) return urgency;
+    final start = (first.startDateTime ?? first.date).compareTo(
+      second.startDateTime ?? second.date,
+    );
+    return start != 0 ? start : first.id.compareTo(second.id);
   }
 }
