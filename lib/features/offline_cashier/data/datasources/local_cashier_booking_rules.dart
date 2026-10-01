@@ -1,50 +1,17 @@
 import '../../domain/entities/local_cashier_command.dart';
+import 'local_fixed_booking_price.dart';
 
 class LocalCashierBookingRules {
   static void reserve(Map<String, dynamic> state, LocalCashierCommand command) {
     final bookings = state['bookings'] as Map;
     final payload = command.payload;
     final roomId = payload['room_id'];
-    final room = (state['rooms'] as Map? ?? const {})[roomId] as Map?;
-    final start = payload['start_ms'];
-    final end = payload['end_ms'];
-    if (bookings.containsKey(command.bookingId) ||
-        room == null ||
-        room['is_active'] != true ||
-        room['status'] == 'maintenance' ||
-        start is! int ||
-        end is! int ||
-        end <= start ||
-        end - start > const Duration(days: 1).inMilliseconds) {
+    final room = _eligibleRoom(state, roomId);
+    if (bookings.containsKey(command.bookingId)) {
       throw StateError('offline_cashier.invalid_booking');
     }
-    final rate = payload['play_mode'] == 'multi'
-        ? room['multi_hour_minor']
-        : room['single_hour_minor'];
-    final quantum = room['billing_quantum_minutes'];
-    if (rate is! int ||
-        rate < 0 ||
-        quantum is! int ||
-        quantum < 1 ||
-        quantum > 60 ||
-        !['single', 'multi'].contains(payload['play_mode'])) {
-      throw StateError('offline_cashier.invalid_pricing_snapshot');
-    }
-    final quantumMs = quantum * 60000;
-    final chargedMs = ((end - start + quantumMs - 1) ~/ quantumMs) * quantumMs;
-    final total = (rate * chargedMs + 3599999) ~/ 3600000;
-    if (payload['total_minor'] != null && payload['total_minor'] != total) {
-      throw StateError('offline_cashier.price_mismatch');
-    }
-    for (final value in bookings.values) {
-      final booking = value as Map;
-      if (booking['room_id'] == roomId &&
-          !['cancelled', 'completed', 'rejected'].contains(booking['status']) &&
-          (booking['start_ms'] as int) < end &&
-          (booking['end_ms'] as int) > start) {
-        throw StateError('offline_cashier.room_conflict');
-      }
-    }
+    final total = LocalFixedBookingPrice.quote(room, command);
+    _assertCapacity(bookings, payload);
     bookings[command.bookingId] = {
       ...payload,
       'total_minor': total,
@@ -59,6 +26,32 @@ class LocalCashierBookingRules {
     };
   }
 
+  static Map _eligibleRoom(Map state, Object? roomId) {
+    final room = (state['rooms'] as Map? ?? const {})[roomId] as Map?;
+    if (room == null ||
+        room['is_active'] != true ||
+        !['available', 'occupied'].contains(room['status']) ||
+        (room['is_available'] != true && room['status'] != 'occupied')) {
+      throw StateError('offline_cashier.invalid_booking');
+    }
+    return room;
+  }
+
+  static void _assertCapacity(Map bookings, Map payload) {
+    final start = payload['start_ms'] as int;
+    final end = payload['end_ms'] as int;
+    for (final value in bookings.values) {
+      final booking = value as Map;
+      if (booking['room_id'] == payload['room_id'] &&
+          !['cancelled', 'rejected'].contains(booking['status']) &&
+          (booking['start_ms'] as int) < end &&
+          ((booking['capacity_end_ms'] as int?) ?? (booking['end_ms'] as int)) >
+              start) {
+        throw StateError('offline_cashier.room_conflict');
+      }
+    }
+  }
+
   static Map booking(Map<String, dynamic> state, LocalCashierCommand command) {
     final booking = (state['bookings'] as Map)[command.bookingId] as Map?;
     if (booking == null || booking['lounge_id'] != command.loungeId) {
@@ -69,16 +62,13 @@ class LocalCashierBookingRules {
 
   static void start(Map<String, dynamic> state, LocalCashierCommand command) {
     final current = booking(state, command);
-    if (current['status'] != 'upcoming') {
+    final occurred = command.occurredAt.millisecondsSinceEpoch;
+    if (current['status'] != 'upcoming' ||
+        occurred < (current['start_ms'] as int) ||
+        occurred >= (current['end_ms'] as int)) {
       throw StateError('offline_cashier.invalid_transition');
     }
-    final room =
-        (state['rooms'] as Map? ?? const {})[current['room_id']] as Map?;
-    if (room == null ||
-        room['is_active'] != true ||
-        room['status'] == 'maintenance') {
-      throw StateError('offline_cashier.invalid_booking');
-    }
+    _eligibleRoom(state, current['room_id']);
     // A session running past its scheduled end still physically occupies the room.
     for (final other in (state['bookings'] as Map).values) {
       if (other['id'] != current['id'] &&
@@ -89,15 +79,24 @@ class LocalCashierBookingRules {
     }
     current['status'] = 'in_progress';
     current['checked_in_at'] = command.occurredAt.toUtc().toIso8601String();
+    current['started_ms'] = occurred;
   }
 
   static void close(Map<String, dynamic> state, LocalCashierCommand command) {
     final current = booking(state, command);
-    if (current['status'] != 'in_progress') {
+    final occurred = command.occurredAt.millisecondsSinceEpoch;
+    final started = current['started_ms'];
+    if (current['status'] != 'in_progress' ||
+        started is! int ||
+        occurred < started) {
       throw StateError('offline_cashier.invalid_transition');
     }
     current['status'] = 'completed';
     current['closed_at'] = command.occurredAt.toUtc().toIso8601String();
+    current['capacity_end_ms'] = occurred.clamp(
+      current['start_ms'] as int,
+      current['end_ms'] as int,
+    );
     // Closing never invents a payment: the outstanding amount remains visible.
   }
 }

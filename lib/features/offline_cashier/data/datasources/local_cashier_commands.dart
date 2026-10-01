@@ -21,6 +21,7 @@ class LocalCashierCommands {
         final existing = Map<String, dynamic>.from(old)
           ..remove('sequence')
           ..remove('quoted_items')
+          ..remove('quoted_session')
           ..remove('quoted_total_minor');
         if (CashierCommandCodec.canonical(existing) !=
             CashierCommandCodec.canonical(receipt)) {
@@ -60,10 +61,21 @@ class LocalCashierCommands {
     LocalCashierCommand command,
     Map<String, dynamic> receipt,
   ) {
-    if (command.kind != LocalCashierCommandKind.addItems) return;
+    if (command.kind == LocalCashierCommandKind.collectCash) return;
     final booking = LocalCashierBookingRules.booking(state, command);
-    final order = (booking['items'] as List).last as Map;
-    receipt['quoted_items'] = order['items'];
+    if (command.kind == LocalCashierCommandKind.addItems) {
+      final order = (booking['items'] as List).last as Map;
+      receipt['quoted_items'] = order['items'];
+    } else {
+      receipt['quoted_session'] = {
+        'room_id': booking['room_id'],
+        'timezone': booking['timezone'],
+        'start_ms': booking['start_ms'],
+        'end_ms': booking['end_ms'],
+        'started_ms': booking['started_ms'],
+        'paid_minor': booking['paid_minor'],
+      };
+    }
     receipt['quoted_total_minor'] = booking['total_minor'];
   }
 

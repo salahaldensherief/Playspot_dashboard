@@ -54,6 +54,7 @@ void main() {
     'start_ms': now.millisecondsSinceEpoch,
     'end_ms': now.add(const Duration(minutes: 60)).millisecondsSinceEpoch,
     'play_mode': 'single',
+    'timezone': 'Africa/Cairo',
     'customer_name': 'Offline guest',
   };
   Future<Map> current() async =>
@@ -99,6 +100,7 @@ void main() {
         'room-1': {
           'is_active': true,
           'status': 'available',
+          'is_available': true,
           'single_hour_minor': 10000,
           'multi_hour_minor': 15000,
           'billing_quantum_minutes': 15,

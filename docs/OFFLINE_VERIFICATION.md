@@ -15,3 +15,11 @@ backend integration or implementation of offline writes/synchronization.
 Environment-generated plugin registrants, test_cache_box.bak and unused offline
 package additions are excluded from this UI integration. Original worktree files
 are preserved. Offline persistence dependencies require a separate working feature.
+
+Offline-cashier branch verification after fixed-session reconciliation on
+2026-10-01: 343 offline tests passed, including 157 offline-cashier tests. The same
+two live tests remained skipped. Analyze returned 22 pre-existing infos, no errors
+or warnings (exit 1 because informational lints remain). Formatter passed on all
+changed Dart files. No new generated plugin or test_cache_box.bak changes were
+included. This validates the persistence/parser/command foundation and synthetic
+native RPC contracts; the real cashier UI still uses online repositories.

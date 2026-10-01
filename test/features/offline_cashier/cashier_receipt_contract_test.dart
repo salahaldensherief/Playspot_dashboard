@@ -132,10 +132,10 @@ void main() {
     'wrong sequence': (r) => r['sequence'] = 2,
   };
   test(
-    'unsupported reservation success never clears a locally saved reservation',
+    'unsupported extension success never clears a locally saved operation',
     () async {
       final fixture = await seed('cash');
-      await journal.mutate((state) => state['outbox'][0]['kind'] = 'reserve');
+      await journal.mutate((state) => state['outbox'][0]['kind'] = 'extend');
       final before = await journal.read();
       await expectLater(
         CashierOutboxSynchronizer(

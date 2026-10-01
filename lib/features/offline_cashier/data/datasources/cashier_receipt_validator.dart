@@ -1,4 +1,5 @@
 import 'cashier_command_codec.dart';
+import 'cashier_session_receipt_validator.dart';
 
 class CashierReceiptValidator {
   static const _invalid = FormatException(
@@ -35,6 +36,10 @@ class CashierReceiptValidator {
         _validateCash(operation, receipt);
       case 'addItems':
         _validateOrder(operation, receipt);
+      case 'reserve':
+      case 'start':
+      case 'close':
+        CashierSessionReceiptValidator.validate(operation, receipt);
       default:
         throw _invalid;
     }
@@ -44,6 +49,7 @@ class CashierReceiptValidator {
     final key = switch (operation['kind']) {
       'collectCash' => 'financial_receipt',
       'addItems' => 'order_receipt',
+      'reserve' || 'start' || 'close' => 'session_receipt',
       _ => throw _invalid,
     };
     final receipt = response[key];
@@ -152,6 +158,8 @@ class CashierReceiptValidator {
       'paid_minor': paid,
       'due_minor': due,
       'payment_status': receipt['payment_status'],
+      if (response['session_receipt'] is Map)
+        ...CashierSessionReceiptValidator.projection(receipt),
     };
   }
 }

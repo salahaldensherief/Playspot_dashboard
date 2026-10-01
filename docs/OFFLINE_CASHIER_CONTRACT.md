@@ -13,7 +13,8 @@ The current cashier screens still use their existing online repositories.
   device ID, language and theme. It never stores keys, tokens or financial data.
 - The local engine reserves a fixed-duration room, starts its session, records
   product orders, collects partial cash and closes without inventing payment.
-  Prices use cached integer minor units and a billing quantum. These are snapshot
+  Fixed prices use cached integer minor units, actual minutes and exact cent rounding.
+  Whole-minute UTC intervals are limited to 24 hours. These are snapshot
   prices, not proof that every advanced server pricing rule has been integrated.
 - Projection, inventory deduction, receipt and outbox update in the same write.
   Duplicate IDs replay once; altered payloads fail. Room overlap, stock, amount,
@@ -24,23 +25,26 @@ The current cashier screens still use their existing online repositories.
   explicit retries use the same ID. Conflicts block dependent operations and remain
   on the device. Late responses after leaving the scope cannot clear local work.
 
-Verification: 82 feature tests and 268 total offline Flutter tests passed; two live
+Verification: 157 feature tests and 343 total offline Flutter tests passed; two live
 tests remained skipped. Analyze had 22 existing informational findings and no
 errors/warnings. Tests use real temporary encrypted Hive files and fake secure-key
 and network adapters. Native credential storage/browser key security and hosted
 reconciliation have not been exercised end to end.
 
-Successful cash/order acknowledgements now require the matching canonical receipt:
+Successful cash/order/session acknowledgements require the matching canonical receipt:
 booking/venue/shift, collected cash, paid/due/status and exact quoted item prices,
 quantities and totals. Invalid, missing, fractional, non-finite or unsupported
 success receipts retain the entire outbox. A verified receipt and its canonical
-`server_bookings` financial projection persist atomically with the acknowledgement
+`server_bookings` financial/operational projection persist atomically with the acknowledgement
 and queue removal. This projection does not overwrite optimistic local bookings
 that may include later pending changes; read adapters still need reconciliation.
 
-The cash/order JSON files under `test/fixtures` were exported from the actual
+The cash/order/fixed-session JSON files under `test/fixtures` were exported from the actual
 native PostgreSQL fixture RPC responses, using optional
-`PLAYSPOT_CASH_CONTRACT_EXPORT` / `PLAYSPOT_ORDER_CONTRACT_EXPORT` in backend tests.
+`PLAYSPOT_CASH_CONTRACT_EXPORT` / `PLAYSPOT_ORDER_CONTRACT_EXPORT` /
+`PLAYSPOT_FIXED_CONTRACT_EXPORT` in backend tests. The latter includes the complete
+five-command flow. Tests compare actual local envelopes to the exported native
+envelopes before synchronizing them through a real encrypted Hive journal.
 They contain only synthetic identities and prove the Dart parser accepts those
 server wire contracts. They do not prove real hosted authorization/UI integration.
 
@@ -59,8 +63,20 @@ must be reviewed; they must not be silently reassigned or deleted. The backend
 review branch now has tested cash and fixed-session item-order reconciliation
 slices. New item orders persist their cached quoted prices and total atomically;
 retry preserves the original quote after cache changes. Missing stock policy is
-rejected. Reserve/start/close server handlers and production RPC deployment are
-still missing; existing experimental orders without quotes require explicit review.
+rejected. Reserve/start/close server handlers are locally tested review sources in
+backend PR #41; production RPC deployment is still missing. Existing experimental
+orders without quotes require explicit review.
+
+Reserve/start/close capture immutable `quoted_session` facts (room, timezone,
+planned UTC times, original started milliseconds and paid cents), plus the total.
+Client and server independently validate status, exact shift/scope, planned times,
+actual event times, paid/due totals and released capacity. Rescheduled or separately
+collected server bookings become retained conflicts. Start rechecks room eligibility
+and refuses early/late starts and physical occupancy. Close cannot precede start;
+it releases only remaining capacity and preserves planned price and unpaid debt.
+Completed rows without trusted capacity facts remain conservatively occupied.
+Whole-minute pricing uses BigInt intermediates to avoid losing cents on Web.
+Timestamp strings can retain microseconds; capacity milliseconds remain integers.
 
 1. Implement and verify server-issued device-bound offline permits, canonical
    resource/inventory/booking snapshots, and apply_offline_cashier_operation.
