@@ -24,11 +24,25 @@ The current cashier screens still use their existing online repositories.
   explicit retries use the same ID. Conflicts block dependent operations and remain
   on the device. Late responses after leaving the scope cannot clear local work.
 
-Verification: 54 feature tests and 240 total offline Flutter tests passed; two live
+Verification: 82 feature tests and 268 total offline Flutter tests passed; two live
 tests remained skipped. Analyze had 22 existing informational findings and no
 errors/warnings. Tests use real temporary encrypted Hive files and fake secure-key
 and network adapters. Native credential storage/browser key security and hosted
 reconciliation have not been exercised end to end.
+
+Successful cash/order acknowledgements now require the matching canonical receipt:
+booking/venue/shift, collected cash, paid/due/status and exact quoted item prices,
+quantities and totals. Invalid, missing, fractional, non-finite or unsupported
+success receipts retain the entire outbox. A verified receipt and its canonical
+`server_bookings` financial projection persist atomically with the acknowledgement
+and queue removal. This projection does not overwrite optimistic local bookings
+that may include later pending changes; read adapters still need reconciliation.
+
+The cash/order JSON files under `test/fixtures` were exported from the actual
+native PostgreSQL fixture RPC responses, using optional
+`PLAYSPOT_CASH_CONTRACT_EXPORT` / `PLAYSPOT_ORDER_CONTRACT_EXPORT` in backend tests.
+They contain only synthetic identities and prove the Dart parser accepts those
+server wire contracts. They do not prove real hosted authorization/UI integration.
 
 Orders respect explicit product availability and stock tracking: untracked stock
 is preserved, while missing/negative tracked quantities fail closed. Limits are

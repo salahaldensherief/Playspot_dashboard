@@ -38,6 +38,10 @@ void main() {
     'sequence': sequence,
     'lounge_id': lounge,
     'actor_id': actor,
+    'kind': 'collectCash',
+    'booking_id': '20000000-0000-0000-0000-000000000001',
+    'shift_id': '60000000-0000-0000-0000-000000000001',
+    'payload': {'amount_minor': 100},
   };
   Map<String, dynamic> ack(
     Map<String, dynamic> operation, {
@@ -47,6 +51,17 @@ void main() {
     'sequence': operation['sequence'],
     'lounge_id': lounge,
     'status': status,
+    if (status != 'conflict')
+      'financial_receipt': {
+        'booking_id': operation['booking_id'],
+        'lounge_id': lounge,
+        'shift_id': operation['shift_id'],
+        'shift_payment_id': '70000000-0000-0000-0000-000000000001',
+        'collected_minor': 100,
+        'paid_minor': (operation['sequence'] as int) * 100,
+        'due_minor': 10000 - (operation['sequence'] as int) * 100,
+        'payment_status': 'partial',
+      },
   };
   setUp(() async {
     directory = await Directory.systemTemp.createTemp('playspot-sync-test-');
@@ -83,6 +98,19 @@ void main() {
       expect(result.pendingCount, 0);
       expect(transport.calls.map((operation) => operation['sequence']), [1, 2]);
       expect((await journal.read())['acknowledgements'], hasLength(2));
+      expect(
+        (await journal
+            .read())['server_bookings']['20000000-0000-0000-0000-000000000001'],
+        {
+          'booking_id': '20000000-0000-0000-0000-000000000001',
+          'lounge_id': lounge,
+          'last_sequence': 2,
+          'total_minor': 10000,
+          'paid_minor': 200,
+          'due_minor': 9800,
+          'payment_status': 'partial',
+        },
+      );
     },
   );
   test(
