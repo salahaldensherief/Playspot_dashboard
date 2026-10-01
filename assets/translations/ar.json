@@ -1,4 +1,8 @@
 {
+  "auth": {
+    "secure_storage_unverified": "تعذر التأكد من حفظ تسجيل الدخول بأمان. حاول مرة أخرى.",
+    "invalid_storage_scope": "إعدادات تسجيل الدخول غير صحيحة. تواصل مع الدعم."
+  },
   "starts_in": "يبدأ خلال",
   "not_specified": "غير محدد",
   "update_my_location": "تحديث موقعي",

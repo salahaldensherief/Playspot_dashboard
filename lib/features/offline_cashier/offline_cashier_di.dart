@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../core/services/play_spot_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:hive/hive.dart';
@@ -17,7 +17,7 @@ Future<void> initOfflineCashierDI(GetIt sl) async {
   }
   await GetStorage.init('playspot_device_preferences');
   sl.registerLazySingleton<OfflineKeyVault>(
-    () => const SecureOfflineKeyVault(FlutterSecureStorage()),
+    () => const SecureOfflineKeyVault(PlaySpotSecureStorage.instance),
   );
   sl.registerLazySingleton<CashierDevicePreferences>(
     () => CashierDevicePreferences(GetStorage('playspot_device_preferences')),
