@@ -9,6 +9,7 @@ class LocalCashierCommand extends Equatable {
   final String loungeId;
   final String deviceId;
   final String permitId;
+  final String shiftId;
   final DateTime occurredAt;
   final LocalCashierCommandKind kind;
   final Map<String, dynamic> payload;
@@ -20,6 +21,7 @@ class LocalCashierCommand extends Equatable {
     required this.loungeId,
     required this.deviceId,
     required this.permitId,
+    required this.shiftId,
     required this.occurredAt,
     required this.kind,
     required Map<String, dynamic> payload,
@@ -33,6 +35,7 @@ class LocalCashierCommand extends Equatable {
     loungeId,
     deviceId,
     permitId,
+    shiftId,
     occurredAt,
     kind,
     payload,

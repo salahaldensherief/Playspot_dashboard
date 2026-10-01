@@ -19,6 +19,7 @@ void main() {
     loungeId: 'lounge',
     deviceId: 'device',
     permitId: 'permit',
+    shiftId: 'shift',
     occurredAt: DateTime.utc(2026),
     kind: LocalCashierCommandKind.collectCash,
     payload: {'amount_minor': 100},

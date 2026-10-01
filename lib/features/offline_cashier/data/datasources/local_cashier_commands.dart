@@ -54,6 +54,7 @@ class LocalCashierCommands {
     'lounge_id': command.loungeId,
     'device_id': command.deviceId,
     'permit_id': command.permitId,
+    'shift_id': command.shiftId,
     'occurred_at': command.occurredAt.toUtc().toIso8601String(),
     'kind': command.kind.name,
     'payload': command.payload,
@@ -66,6 +67,8 @@ class LocalCashierCommands {
     );
     if (!uuid.hasMatch(command.id) ||
         !uuid.hasMatch(command.bookingId) ||
+        !uuid.hasMatch(command.deviceId) ||
+        !uuid.hasMatch(command.shiftId) ||
         !uuid.hasMatch(command.permitId)) {
       throw StateError('offline_cashier.invalid_command');
     }
@@ -105,6 +108,8 @@ class LocalCashierCommands {
     }
     final shift = state['shift'] as Map?;
     if (shift == null ||
+        shift['id'] != command.shiftId ||
+        shift['lounge_id'] != command.loungeId ||
         shift['actor_id'] != command.actorId ||
         shift['status'] != 'open') {
       throw StateError('offline_cashier.shift_required');

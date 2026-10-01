@@ -20,6 +20,8 @@ void main() {
   const actor = '00000000-0000-0000-0000-000000000001';
   const lounge = '10000000-0000-0000-0000-000000000001';
   const booking = '20000000-0000-0000-0000-000000000001';
+  const device = '50000000-0000-0000-0000-000000000001';
+  const shift = '60000000-0000-0000-0000-000000000001';
   final now = DateTime.utc(2026, 10, 1, 10);
   late Directory directory;
   late EncryptedCashierJournal journal;
@@ -31,6 +33,8 @@ void main() {
     String? id,
     String bookingId = booking,
     String actorId = actor,
+    String shiftId = shift,
+    String deviceId = device,
   }) => LocalCashierCommand(
     id:
         id ??
@@ -38,8 +42,9 @@ void main() {
     bookingId: bookingId,
     actorId: actorId,
     loungeId: lounge,
-    deviceId: 'device-1',
+    deviceId: deviceId,
     permitId: '40000000-0000-0000-0000-000000000001',
+    shiftId: shiftId,
     occurredAt: now,
     kind: kind,
     payload: payload,
@@ -67,7 +72,7 @@ void main() {
       state['authority'] = {
         'actor_id': actor,
         'lounge_id': lounge,
-        'device_id': 'device-1',
+        'device_id': device,
         'permit_id': '40000000-0000-0000-0000-000000000001',
         'profile_active': true,
         'profile_banned': false,
@@ -84,7 +89,12 @@ void main() {
           'billing_checkout': true,
         },
       };
-      state['shift'] = {'id': 'shift-1', 'actor_id': actor, 'status': 'open'};
+      state['shift'] = {
+        'id': shift,
+        'lounge_id': lounge,
+        'actor_id': actor,
+        'status': 'open',
+      };
       state['rooms'] = {
         'room-1': {
           'is_active': true,
@@ -416,6 +426,54 @@ void main() {
       commands.execute(command(LocalCashierCommandKind.reserve, reservation())),
       throwsStateError,
     );
+  });
+  test('command is durably bound to the exact shift', () async {
+    final receipt = await commands.execute(
+      command(LocalCashierCommandKind.reserve, reservation()),
+    );
+    expect(receipt['shift_id'], shift);
+    expect((await journal.read())['outbox'][0]['shift_id'], shift);
+  });
+  test('another open shift cannot receive this command', () async {
+    final before = await journal.read();
+    await expectLater(
+      commands.execute(
+        command(
+          LocalCashierCommandKind.reserve,
+          reservation(),
+          shiftId: '60000000-0000-0000-0000-000000000002',
+        ),
+      ),
+      throwsStateError,
+    );
+    expect(await journal.read(), before);
+  });
+  test('shift of another venue cannot receive this command', () async {
+    await journal.mutate(
+      (state) =>
+          state['shift']['lounge_id'] = '10000000-0000-0000-0000-000000000002',
+    );
+    final before = await journal.read();
+    await expectLater(
+      commands.execute(command(LocalCashierCommandKind.reserve, reservation())),
+      throwsStateError,
+    );
+    expect(await journal.read(), before);
+  });
+  test('non UUID device identity cannot enter a server-bound queue', () async {
+    await journal.mutate((state) => state['authority']['device_id'] = 'device');
+    final before = await journal.read();
+    await expectLater(
+      commands.execute(
+        command(
+          LocalCashierCommandKind.reserve,
+          reservation(),
+          deviceId: 'device',
+        ),
+      ),
+      throwsStateError,
+    );
+    expect(await journal.read(), before);
   });
   test('closed shift cannot write', () async {
     await journal.mutate(
