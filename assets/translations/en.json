@@ -1441,7 +1441,10 @@
     "rooms_required": "Add at least one room with its capacity and rates.",
     "image_required": "Select a main lounge image.",
     "identity_required": "Select an identity document before submitting.",
-    "session_required": "Sign in with the lounge owner account before submitting."
+    "session_required": "Sign in with the lounge owner account before submitting.",
+    "coordinates_required": "Select valid lounge coordinates on the map",
+    "payment_required": "Add a mobile wallet or Instapay payment destination",
+    "wallet_invalid": "Enter a valid mobile wallet number"
   },
   "onboarding_review": {
     "title": "Review before submitting",
@@ -1462,5 +1465,48 @@
     "submit": "Submit for review",
     "confirm_required": "Confirm the details and document review consent before submitting.",
     "kyc_notice": "Identity proof is required. Business proof is optional. Your lounge stays closed for operations until the review is approved."
+  },
+  "onboarding_payment": {
+    "title": "Payment destinations",
+    "description": "Add a lounge mobile wallet or Instapay account. These details are reviewed before bookings are enabled.",
+    "wallet": "Mobile wallet number",
+    "instapay": "Instapay account"
+  },
+  "kyc_snapshot": {
+    "title": "Lounge data revision {}",
+    "owner": "Owner",
+    "name": "Lounge name",
+    "city": "City",
+    "address": "Address",
+    "contact_phone": "Contact phone",
+    "opening_time": "Opening time",
+    "closing_time": "Closing time",
+    "location_point": "Map location",
+    "vodafone_cash_number": "Mobile wallet destination",
+    "instapay_account": "Instapay account",
+    "description_ar": "Arabic description",
+    "description_en": "English description",
+    "product": "Product",
+    "open_pdf": "Open PDF document",
+    "open_failed": "Could not open the document; reload the review request"
+  },
+  "kyc_pending": {
+    "refresh": "Check status again",
+    "pending": {
+      "title": "Lounge data is under review",
+      "description": "PlaySpot will review the submitted lounge details and documents. Operations remain unavailable until approval. Approval does not automatically open online bookings."
+    },
+    "rejected": {
+      "title": "Lounge details need changes",
+      "description": "The owner needs to review the rejection reason, correct the details and submit a new request. Check status after resubmission."
+    },
+    "disabled": {
+      "title": "Operations are unavailable for this lounge",
+      "description": "The current lounge status does not permit access to operations. Contact PlaySpot administration to review its status."
+    },
+    "unavailable": {
+      "title": "Could not verify lounge status",
+      "description": "Approved lounge data could not be loaded. Check again when connected; operations require a verified lounge status."
+    }
   }
 }

@@ -61,16 +61,19 @@ class _LocationStepState extends State<LocationStep> {
         }
 
         setState(() {
-          _statusMessage = 'تم الكشف عن المدينة والموقع الجغرافي تلقائياً بنجاح';
+          _statusMessage =
+              'تم الكشف عن المدينة والموقع الجغرافي تلقائياً بنجاح';
         });
       } else {
         setState(() {
-          _statusMessage = 'تعذر الوصول للموقع تلقائياً. يمكنك كتابة المدينة والعنوان يدوياً.';
+          _statusMessage =
+              'تعذر الوصول للموقع تلقائياً. يمكنك كتابة المدينة والعنوان يدوياً.';
         });
       }
     } catch (e) {
       setState(() {
-        _statusMessage = 'تعذر الوصول للموقع تلقائياً. يمكنك كتابة المدينة والعنوان يدوياً.';
+        _statusMessage =
+            'تعذر الوصول للموقع تلقائياً. يمكنك كتابة المدينة والعنوان يدوياً.';
       });
     } finally {
       if (mounted) {
@@ -87,12 +90,14 @@ class _LocationStepState extends State<LocationStep> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppTextField(
+          fontSize: 16,
           label: AppStrings.city,
           hintText: AppStrings.cityHint,
           controller: widget.cityController,
         ),
         SizedBox(height: 20.h),
         AppTextField(
+          fontSize: 16,
           label: AppStrings.address,
           hintText: AppStrings.addressHint,
           controller: widget.addressController,
@@ -108,26 +113,22 @@ class _LocationStepState extends State<LocationStep> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                spacing: 16,
+                runSpacing: 12,
                 children: [
-                  Row(
-                    children: [
-                      Icon(Icons.my_location_rounded, color: AppColors.neonBlue, size: 20.r),
-                      SizedBox(width: 8.w),
-                      Text(
-                        _lat != null && _lng != null
-                            ? 'الإحداثيات: ${_lat!.toStringAsFixed(4)}, ${_lng!.toStringAsFixed(4)}'
-                            : 'تحديد موقع الصالة الجغرافي (GPS)',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    _lat != null && _lng != null
+                        ? 'الإحداثيات: ${_lat!.toStringAsFixed(4)}, ${_lng!.toStringAsFixed(4)}'
+                        : 'تحديد موقع الصالة الجغرافي (GPS)',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   AppButton(
+                    fontSize: 16,
                     text: 'تحديد تلقائي',
                     icon: Icons.gps_fixed_rounded,
                     variant: AppButtonVariant.primary,
@@ -141,8 +142,10 @@ class _LocationStepState extends State<LocationStep> {
                 Text(
                   _statusMessage!,
                   style: TextStyle(
-                    color: _statusMessage!.contains('بنجاح') ? AppColors.success : AppColors.warning,
-                    fontSize: 12.sp,
+                    color: _statusMessage!.contains('بنجاح')
+                        ? AppColors.success
+                        : AppColors.warning,
+                    fontSize: 12,
                   ),
                 ),
               ],

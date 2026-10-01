@@ -6,6 +6,8 @@ class LoungeDraftParams extends Equatable {
   final String description;
   final String city;
   final String address;
+  final String walletPhone;
+  final String instapayAccount;
   final String contactPhone;
   final String opensAt;
   final String closesAt;
@@ -22,6 +24,8 @@ class LoungeDraftParams extends Equatable {
     this.description = '',
     this.city = '',
     this.address = '',
+    this.walletPhone = '',
+    this.instapayAccount = '',
     this.contactPhone = '',
     this.opensAt = '',
     this.closesAt = '',
@@ -39,6 +43,8 @@ class LoungeDraftParams extends Equatable {
     String? description,
     String? city,
     String? address,
+    String? walletPhone,
+    String? instapayAccount,
     String? contactPhone,
     String? opensAt,
     String? closesAt,
@@ -55,6 +61,8 @@ class LoungeDraftParams extends Equatable {
       description: description ?? this.description,
       city: city ?? this.city,
       address: address ?? this.address,
+      walletPhone: walletPhone ?? this.walletPhone,
+      instapayAccount: instapayAccount ?? this.instapayAccount,
       contactPhone: contactPhone ?? this.contactPhone,
       opensAt: opensAt ?? this.opensAt,
       closesAt: closesAt ?? this.closesAt,
@@ -73,6 +81,8 @@ class LoungeDraftParams extends Equatable {
     'description': description,
     'city': city,
     'address': address,
+    'walletPhone': walletPhone,
+    'instapayAccount': instapayAccount,
     'contactPhone': contactPhone,
     'opensAt': opensAt,
     'closesAt': closesAt,
@@ -91,6 +101,8 @@ class LoungeDraftParams extends Equatable {
       description: json['description']?.toString() ?? '',
       city: json['city']?.toString() ?? '',
       address: json['address']?.toString() ?? '',
+      walletPhone: json['walletPhone']?.toString() ?? '',
+      instapayAccount: json['instapayAccount']?.toString() ?? '',
       contactPhone: json['contactPhone']?.toString() ?? '',
       opensAt: json['opensAt']?.toString() ?? '',
       closesAt: json['closesAt']?.toString() ?? '',
@@ -110,6 +122,8 @@ class LoungeDraftParams extends Equatable {
     description,
     city,
     address,
+    walletPhone,
+    instapayAccount,
     contactPhone,
     opensAt,
     closesAt,

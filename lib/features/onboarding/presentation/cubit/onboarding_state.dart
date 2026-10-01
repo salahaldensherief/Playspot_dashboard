@@ -4,9 +4,18 @@ import '../../../lounges/domain/entities/lounge.dart';
 import '../../../rooms/domain/entities/room_entity.dart';
 import '../../domain/entities/lounge_draft_params.dart';
 
-enum OnboardingStatus { initial, loading, success, completed, failure }
+enum OnboardingStatus {
+  initial,
+  loading,
+  restored,
+  success,
+  saved,
+  completed,
+  failure,
+}
 
 class OnboardingState extends Equatable {
+  final String? reviewNotes;
   final OnboardingStatus status;
   final List<RoomEntity> rooms;
   final List<ExtraEntity> extras;
@@ -17,6 +26,7 @@ class OnboardingState extends Equatable {
   int get currentStep => draft.step;
 
   const OnboardingState({
+    this.reviewNotes,
     this.status = OnboardingStatus.initial,
     this.rooms = const [],
     this.extras = const [],
@@ -26,6 +36,7 @@ class OnboardingState extends Equatable {
   });
 
   OnboardingState copyWith({
+    String? reviewNotes,
     OnboardingStatus? status,
     List<RoomEntity>? rooms,
     List<ExtraEntity>? extras,
@@ -34,6 +45,7 @@ class OnboardingState extends Equatable {
     LoungeDraftParams? draft,
   }) {
     return OnboardingState(
+      reviewNotes: reviewNotes ?? this.reviewNotes,
       status: status ?? this.status,
       rooms: rooms ?? this.rooms,
       extras: extras ?? this.extras,
@@ -45,11 +57,12 @@ class OnboardingState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        rooms,
-        extras,
-        lounge,
-        errorMessage,
-        draft,
-      ];
+    status,
+    reviewNotes,
+    rooms,
+    extras,
+    lounge,
+    errorMessage,
+    draft,
+  ];
 }

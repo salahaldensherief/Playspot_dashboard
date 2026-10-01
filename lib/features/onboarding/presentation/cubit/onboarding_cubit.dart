@@ -1,3 +1,5 @@
+import '../../domain/entities/onboarding_venue_payload.dart';
+import '../../domain/entities/onboarding_extra_payload.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,34 +15,42 @@ import '../../domain/entities/lounge_draft_params.dart';
 import '../../domain/entities/onboarding_room_payload.dart';
 import '../../domain/usecases/add_extra_usecase.dart';
 import '../../domain/usecases/add_room_usecase.dart';
-import '../../domain/usecases/setup_lounge_usecase.dart';
 import '../../domain/usecases/batch_complete_onboarding_usecase.dart';
 import 'onboarding_state.dart';
+import '../../domain/usecases/get_saved_onboarding_draft_usecase.dart';
 
 class OnboardingCubit extends Cubit<OnboardingState> {
+  final GetSavedOnboardingDraftUseCase getSavedDraftUseCase;
   final AddRoomUseCase addRoomUseCase;
   final AddExtraUseCase addExtraUseCase;
-  final SetupLoungeUseCase setupLoungeUseCase;
   final BatchCompleteOnboardingUseCase batchCompleteOnboardingUseCase;
   final LocationService locationService;
   final LocalCacheService localCacheService;
 
-  static const String _draftKey = 'cache_onboarding_lounge_draft_v1';
+  String? _draftKey;
+  String? _draftLoungeId;
+  int _restoreGeneration = 0;
 
   OnboardingCubit({
     required this.addRoomUseCase,
+    required this.getSavedDraftUseCase,
     required this.addExtraUseCase,
-    required this.setupLoungeUseCase,
     required this.batchCompleteOnboardingUseCase,
     required this.locationService,
     required this.localCacheService,
-  }) : super(const OnboardingState()) {
-    restoreDraft();
-  }
+  }) : super(const OnboardingState());
 
-  void restoreDraft() {
+  void restoreDraft({required String ownerId, required String loungeId}) {
+    if (isClosed || ownerId.isEmpty || loungeId.isEmpty) return;
+    final key = 'cache_onboarding_v2_${ownerId}_$loungeId';
+    if (_draftKey != key) {
+      ++_restoreGeneration;
+      emit(const OnboardingState());
+    }
+    _draftKey = key;
+    _draftLoungeId = loungeId;
     try {
-      final json = localCacheService.getJson(_draftKey);
+      final json = localCacheService.getJson(_draftKey!);
       if (json is Map) {
         final draftParams = LoungeDraftParams.fromJson(
           Map<String, dynamic>.from(json),
@@ -50,21 +60,58 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     } catch (_) {}
   }
 
+  Future<void> restoreSavedDraft(String loungeId) async {
+    if (isClosed || state.status == OnboardingStatus.loading) return;
+    if (_draftLoungeId != null && _draftLoungeId != loungeId) return;
+    final generation = ++_restoreGeneration;
+    emit(state.copyWith(status: OnboardingStatus.loading));
+    final result = await getSavedDraftUseCase(loungeId);
+    if (isClosed || generation != _restoreGeneration) return;
+    result.fold(
+      (failure) => emit(
+        state.copyWith(
+          status: OnboardingStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (saved) => emit(
+        state.copyWith(
+          status: OnboardingStatus.restored,
+          draft: state.draft.name.trim().isNotEmpty
+              ? state.draft
+              : saved.fields,
+          lounge: saved.lounge,
+          reviewNotes: saved.reviewNotes,
+          rooms: state.rooms.isNotEmpty ? state.rooms : saved.rooms,
+          extras: state.extras.isNotEmpty ? state.extras : saved.extras,
+        ),
+      ),
+    );
+  }
+
   void saveDraft(LoungeDraftParams draft) {
     try {
-      emit(state.copyWith(draft: draft));
-      localCacheService.setJson(_draftKey, draft.toJson());
+      emit(
+        state.copyWith(
+          draft: draft,
+          status: state.status == OnboardingStatus.saved && draft != state.draft
+              ? OnboardingStatus.initial
+              : state.status,
+        ),
+      );
+      final key = _draftKey;
+      if (key != null) localCacheService.setJson(key, draft.toJson());
     } catch (_) {}
   }
 
   void setStep(int step) {
-    if (step >= 0 && step <= 7) {
+    if (step >= 0 && step <= 8) {
       saveDraft(state.draft.copyWith(step: step));
     }
   }
 
   void nextStep() {
-    if (state.currentStep < 7) {
+    if (state.currentStep < 8) {
       setStep(state.currentStep + 1);
     }
   }
@@ -78,8 +125,15 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   void clearDraft() {
     try {
       emit(state.copyWith(draft: const LoungeDraftParams()));
-      localCacheService.remove(_draftKey);
+      final key = _draftKey;
+      if (key != null) localCacheService.remove(key);
     } catch (_) {}
+  }
+
+  void markReviewSubmitted() {
+    if (isClosed || state.status != OnboardingStatus.saved) return;
+    clearDraft();
+    emit(state.copyWith(status: OnboardingStatus.completed));
   }
 
   Future<void> addNewRoom(RoomEntity room) async {
@@ -140,10 +194,13 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     BuildContext? context,
   }) async {
     if (isClosed || state.status == OnboardingStatus.loading) return;
+    final submittedDraft = state.draft;
+    final submittedRooms = List<RoomEntity>.of(state.rooms);
+    final submittedExtras = List<ExtraEntity>.of(state.extras);
     emit(state.copyWith(status: OnboardingStatus.loading));
 
     try {
-      String mainImageUrl = '';
+      String mainImageUrl = lounge.imageUrl;
       if (mainImageBytes != null && mainImageName != null) {
         mainImageUrl = await sl<StorageService>().uploadLoungeImage(
           mainImageBytes,
@@ -152,62 +209,29 @@ class OnboardingCubit extends Cubit<OnboardingState> {
         );
       }
 
-      List<String> galleryUrls = [];
+      List<String> galleryUrls = List.of(lounge.images ?? const <String>[]);
       if (galleryImages != null && galleryImages.isNotEmpty) {
-        galleryUrls = await sl<StorageService>().uploadLoungeImages(
+        final uploadedUrls = await sl<StorageService>().uploadLoungeImages(
           galleryImages.map((e) => e.bytes).toList(),
           galleryImages.map((e) => e.name).toList(),
           loungeId,
         );
+        galleryUrls = {...galleryUrls, ...uploadedUrls}.toList();
       }
 
-      final cleanOpensAt = lounge.opensAt.isNotEmpty ? lounge.opensAt : '10:00';
-      final cleanClosesAt = lounge.closesAt.isNotEmpty
-          ? lounge.closesAt
-          : '02:00';
+      final loungeData = OnboardingVenuePayload.fromDraft(
+        lounge: lounge,
+        draft: submittedDraft,
+        imageUrl: mainImageUrl,
+        galleryUrls: galleryUrls,
+      );
 
-      final loungeData = <String, dynamic>{
-        'name': lounge.name,
-        'name_ar': lounge.name,
-        'name_en': lounge.name,
-        if (state.draft.brandName.isNotEmpty)
-          'brand_name': state.draft.brandName,
-        if (state.draft.branchName.isNotEmpty)
-          'branch_name': state.draft.branchName,
-        'contact_phone': state.draft.contactPhone,
-        'city': lounge.city ?? '',
-        'location': lounge.location ?? '',
-        'opening_time': cleanOpensAt,
-        'closing_time': cleanClosesAt,
-        'image_url': mainImageUrl,
-        'images': galleryUrls,
-        'description_ar': lounge.descriptionAr ?? lounge.descriptionEn ?? '',
-        'description_en': lounge.descriptionEn ?? lounge.descriptionAr ?? '',
-        'address': lounge.location ?? '',
-        if (lounge.lat != null) 'lat': lounge.lat,
-        if (lounge.lng != null) 'lng': lounge.lng,
-      };
-
-      final roomsData = state.rooms
+      final roomsData = submittedRooms
           .map(OnboardingRoomPayload.fromRoom)
           .toList();
 
-      final extrasData = state.extras
-          .map(
-            (e) => {
-              'name': e.nameEn.isNotEmpty ? e.nameEn : e.nameAr,
-              'name_ar': e.nameAr.isNotEmpty ? e.nameAr : e.nameEn,
-              'price': e.price,
-              'category': e.category,
-              'is_available': e.isAvailable,
-              'is_active': true,
-              'stock_quantity': e.stockQuantity,
-              'track_stock': e.trackStock,
-              'min_stock_alert': e.minStockAlert,
-              'image_url': e.imageUrl,
-              'icon_key': e.iconKey,
-            },
-          )
+      final extrasData = submittedExtras
+          .map(OnboardingExtraPayload.fromExtra)
           .toList();
 
       final result = await batchCompleteOnboardingUseCase(
@@ -227,12 +251,8 @@ class OnboardingCubit extends Cubit<OnboardingState> {
           ),
         ),
         (newLounge) {
-          clearDraft();
           emit(
-            state.copyWith(
-              status: OnboardingStatus.completed,
-              lounge: newLounge,
-            ),
+            state.copyWith(status: OnboardingStatus.saved, lounge: newLounge),
           );
         },
       );

@@ -51,7 +51,7 @@ void main() {
     expect(data['features_ar'], ['ميزة']);
     expect(data['description_en'], 'Description');
     expect(data['status'], 'available');
-    expect(data.containsKey('id'), isFalse);
+    expect(data['id'], room.id);
     expect(data.containsKey('lounge_id'), isFalse);
   });
 }

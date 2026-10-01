@@ -11,6 +11,7 @@ class BasicInfoStep extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController descriptionController;
   final TextEditingController contactPhoneController;
+  final String? initialMainImageUrl;
   final Function(Uint8List? bytes, String? name) onMainImageSelected;
   final Function(List<SelectedImage> images) onGallerySelected;
 
@@ -19,6 +20,7 @@ class BasicInfoStep extends StatelessWidget {
     required this.nameController,
     required this.descriptionController,
     required this.contactPhoneController,
+    this.initialMainImageUrl,
     required this.onMainImageSelected,
     required this.onGallerySelected,
   });
@@ -28,23 +30,29 @@ class BasicInfoStep extends StatelessWidget {
     return Column(
       children: [
         AppImagePicker(
+          fontSize: 16,
+          height: 180,
+          initialImageUrl: initialMainImageUrl,
           label: AppStrings.mainImage,
           onImageSelected: onMainImageSelected,
         ),
         SizedBox(height: 20.h),
         AppTextField(
+          fontSize: 16,
           label: AppStrings.loungeName,
           hintText: AppStrings.loungeNameHint,
           controller: nameController,
         ),
         SizedBox(height: 20.h),
         AppTextField(
+          fontSize: 16,
           label: AppStrings.description,
           hintText: AppStrings.descriptionHint,
           controller: descriptionController,
         ),
         SizedBox(height: 20.h),
         AppTextField(
+          fontSize: 16,
           label: AppStrings.phoneNumber,
           controller: contactPhoneController,
           keyboardType: TextInputType.phone,

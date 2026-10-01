@@ -1,79 +1,46 @@
-# Lounge onboarding and verification review
+# Onboarding and venue review — coordinated release source
 
-Reviewed 2026-09-30. Live inspection used SELECT on function definitions only.
-No document uploads, review RPC calls, migrations or live writes were performed.
+Updated 2026-10-01. This document describes the versioned client and SQL repair source.
+It does not claim these RPCs have been deployed to the hosted database.
 
-## Intended business flow
+The owner completes nine steps: venue type, basic identity/contact/photos, city/address/GPS,
+operating hours, rooms/resources/pricing, products/inventory, payment destination,
+identity/business documents, then a consent and review summary.
+Required fields include valid GPS coordinates, a main venue photo, at least one room,
+identity evidence and at least one transfer destination. Business evidence is currently optional;
+jurisdiction-specific document requirements still need a product policy.
 
-Owner authenticates, enters lounge identity/contact/address/location, operating
-hours, images, and rooms with rates/capacity/specifications. Canteen products are
-optional. A branch selection must reference a brand owned by the authenticated
-owner; typing a brand name or a branch count cannot create a real chain implicitly.
-Owner supplies identity proof and optionally business proof, reviews a summary,
-then explicitly submits one complete version for verification.
+Venue details are saved atomically before final review submission. Stable room and product IDs
+make retries update the same resources. Removed resources are deactivated only when there are
+no conflicting future/active bookings. The client retains existing photos when adding uploads.
+Saving details alone never completes setup or activates the venue. Only a valid server acknowledgement
+from submit_lounge_review moves the owner to pending review. Immutable content-addressed uploads
+are safe to retry after a lost acknowledgement. Scoped drafts separate each owner and venue.
+Server draft restoration preserves pending local field edits and exposes the latest rejection notes.
 
-Review is a distinct lifecycle: draft -> submitted -> under review -> approved
-or rejected. A rejection records a reason and allows a new version after edits.
-Pending or rejected lounges cannot enter operational dashboard routes or accept
-online bookings. Owner can still inspect status or edit an eligible draft.
-Administrative suspension/bans must never be bypassed by an onboarding exception.
-Approval unlocks operational access only. Online admission additionally requires
-an open shift, current connectivity lease and reconciled reservations.
+Super admins review the exact immutable request ID and revision, rather than all venues of an owner.
+The dialog shows the venue snapshot, room prices/capacity, payment destination and signed evidence.
+Approval/rejection awaits server confirmation; failures keep the dialog open. Approval activates the
+selected venue but leaves online availability closed. Rejection preserves the owner's login and
+returns that venue to correction. The client guards late responses and duplicate review mutations.
 
-Reviewer sees owner identity/contact, complete lounge information, location,
-images, opening hours, rooms/rates/capacity, optional inventory, protected document
-previews, version/submission timestamp and previous rejection notes. Decisions
-must await server acknowledgment, retain failures visibly and avoid double submit.
-PDF documents require a document viewer rather than an image-only renderer.
+Release dependency: backend repair migrations 20261001110000 through 20261001170000, plus
+the active_super_admin_boundary.sql review source, must be reviewed and deployed in a coordinated
+release before merging this feature client to dev. No SQL is auto-applied by the client or tests.
+Wallet/session repairs are separate contracts and require their own release review.
+Legacy KYC submission/review endpoints must be retired or redirected before cutover; otherwise
+older clients can bypass the versioned workflow. The hosted bucket's private access policies also
+require final deployment verification. Ordinary staff routes already require an active verified venue.
 
-## Frontend repairs in this phase
+Remaining blockers: owner registration must use Supabase Auth Admin rather than direct auth.users
+insertion; chains need an owned brand ID instead of typed brand labels; saved identity evidence
+reuse and gallery removal controls need completion. Admin snapshots still need complete equipment/
+stock/photo/map presentation. Offline cashier writes and server online-availability leases are separate
+unfinished work and must not be advertised as complete. No production migration, auth mutation or
+live database test has been run for this source release.
 
-- batch_complete_onboarding returns void. Successful RPC is followed by an exact
-  lounge-ID read. Removed the fallback that could duplicate rooms/products and
-  silently mark a profile complete after partial failures.
-- onboard_lounge returns success/lounge_id/status metadata, not a Lounge entity.
-  Fetch the actual lounge by the returned ID; reject malformed acknowledgments.
-- Room additions in the onboarding repository are staged, not inserted immediately
-  and then inserted again by final batch submission.
-- Preserve room images/features/descriptions/capacity/controllers/screen/type and
-  decimal rates in the final payload. Serialize enum status to its database name.
-- Add persisted contact phone input and send verified contact_phone field.
-- Validate core identity/address/contact/hours, one room, main photo and ID document.
-  Flush the debounce before submit. Stop after failed KYC upload and guard duplicate
-  submit. Split the legacy setup view into state/content/submission parts.
-- Add an eighth review step with owner/lounge/contact/address/hours/rates/attachment
-  summary and explicit unchecked consent before submission. Remove invented KYC ETA.
-
-## Remaining backend contract gaps — release blockers
-
-1. submit_kyc_documents immediately publishes status=pending separately from lounge
-   completion. A reviewer can act before lounge data is committed. Need a reviewed,
-   atomic submit-for-review contract with immutable version and stable operation ID.
-2. batch_complete_onboarding marks profile setup complete independently of KYC,
-   appends rooms/extras, and has no deduplication key. An ambiguous timeout or failed
-   follow-up read must not be automatically replayed. Need an authoritative status
-   read/reconciliation contract before a retry can safely repeat the mutation.
-3. get_pending_kyc_reviews returns only user_id, owner_name/email, lounge_name and
-   document references. It omits lounge ID, phone, full fields, rooms, timestamps,
-   rejection history and review version. Supply a scoped full review detail contract.
-4. review_kyc currently accepts user ID and updates every lounge owned by that user.
-   Need exact lounge/submission/version identity and pending-only decision checks.
-5. review_kyc approval currently sets lounges.is_open=true immediately. Separate
-   approval from shift/presence/online eligibility; an accepted lounge can be offline.
-6. onboard_lounge sets profiles.is_active=false, while RouterGuards rejects inactive
-   accounts before onboarding/pending routing. Distinguish pending verification from
-   administrative suspension server-side; do not weaken the suspension guard.
-
-## Remaining frontend work
-
-Account/lounge-scoped durable drafts including rooms/products, attachment retention
-policy, complete per-step validation, location selection
-without mandatory GPS, real city/brand IDs, localized rejection/resubmission status,
-full reviewer detail view with awaited decisions/retry and PDF previews, and offline
-end-to-end flow tests and responsive captures. Current tests do not certify the full
-business flow or live integration. No private identity documents should be persisted
-in plain SharedPreferences/GetStorage.
-
-The transfer handoff states: "A separate agent owns Supabase implementation. Do not
-implement/apply SQL or change live RLS, grants, Storage or cron." This phase changes
-Flutter only. The backend gaps above remain untouched for the backend owner.
+Verification includes offline Flutter transport/cubit/router/restoration/validation tests and real-widget
+layout captures. Synthetic PostgreSQL 17 tests cover revision checks, submission freeze, decision
+retries, resource retries, rejection re-entry and privilege boundaries. Synthetic schemas and mocked
+uploads do not prove hosted Storage/RLS/Auth integration. Screenshot fixtures do not replace
+an end-to-end signed-in session or physical-device performance measurement.

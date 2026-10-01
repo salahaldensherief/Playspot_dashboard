@@ -6,6 +6,7 @@ import 'dart:typed_data';
 abstract class KycRepository {
   Future<Either<Failure, void>> submitKyc({
     required String userId,
+    required String loungeId,
     required Uint8List idCardBytes,
     required String idCardName,
     Uint8List? businessDocBytes,
@@ -15,7 +16,8 @@ abstract class KycRepository {
   Future<Either<Failure, List<KycRequest>>> getPendingReviews();
 
   Future<Either<Failure, void>> reviewKyc({
-    required String userId,
+    required String requestId,
+    required int revision,
     required bool approve,
     String? notes,
   });

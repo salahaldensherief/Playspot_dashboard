@@ -1,5 +1,6 @@
-import 'package:get_it/get_it.dart';
 import 'data/datasources/kyc_remote_data_source.dart';
+import 'package:get_it/get_it.dart';
+import 'data/datasources/kyc_remote_data_source_impl.dart';
 import 'data/repositories/kyc_repository_impl.dart';
 import 'domain/repositories/kyc_repository.dart';
 import 'domain/usecases/kyc_usecases.dart';
@@ -12,9 +13,7 @@ void initKycDI(GetIt sl) {
   );
 
   // Repositories
-  sl.registerLazySingleton<KycRepository>(
-    () => KycRepositoryImpl(sl()),
-  );
+  sl.registerLazySingleton<KycRepository>(() => KycRepositoryImpl(sl()));
 
   // Use Cases
   sl.registerLazySingleton(() => SubmitKycUseCase(sl()));

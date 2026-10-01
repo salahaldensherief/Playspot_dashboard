@@ -10,8 +10,10 @@ extension _LoungeSetupContent on _LoungeSetupViewState {
             listenWhen: (previous, current) =>
                 previous.status != current.status,
             listener: (context, state) async {
+              if (state.status == OnboardingStatus.restored) {
+                _restoreFields(state);
+              }
               if (state.status == OnboardingStatus.completed) {
-                await Future.delayed(const Duration(milliseconds: 500));
                 if (context.mounted) {
                   context.read<LoginCubit>().checkInitialAuth();
                 }
@@ -46,39 +48,68 @@ extension _LoungeSetupContent on _LoungeSetupViewState {
             },
           ),
         ],
-        child: Center(
-          child: Container(
-            width: 800.w,
-            height: 850.h,
-            margin: EdgeInsets.symmetric(vertical: 24.h),
-            padding: EdgeInsets.all(40.r),
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(24.r),
-              border: Border.all(color: AppColors.borderDefault),
-            ),
-            child: BlocBuilder<OnboardingCubit, OnboardingState>(
-              buildWhen: (previous, current) =>
-                  previous.currentStep != current.currentStep,
-              builder: (context, state) {
-                final currentStep = state.currentStep;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(),
-                    SizedBox(height: 20.h),
-                    _buildProgressIndicator(currentStep),
-                    SizedBox(height: 32.h),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: _buildStepContent(currentStep),
+        child: SafeArea(
+          child: Center(
+            child: Container(
+              width: math.min(800, MediaQuery.sizeOf(context).width - 32),
+              height: math.max(
+                0,
+                MediaQuery.sizeOf(context).height -
+                    MediaQuery.viewInsetsOf(context).bottom -
+                    MediaQuery.paddingOf(context).top -
+                    MediaQuery.paddingOf(context).bottom -
+                    32,
+              ),
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(24.r),
+                border: Border.all(color: AppColors.borderDefault),
+              ),
+              child: BlocBuilder<OnboardingCubit, OnboardingState>(
+                buildWhen: (previous, current) =>
+                    previous.currentStep != current.currentStep ||
+                    previous.status != current.status,
+                builder: (context, state) {
+                  final currentStep = state.currentStep;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: AbsorbPointer(
+                            absorbing:
+                                _isSubmitting ||
+                                state.status == OnboardingStatus.loading,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildHeader(),
+                                if (state.reviewNotes?.isNotEmpty == true)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 16),
+                                    child: AppText.body(
+                                      state.reviewNotes ?? '',
+                                      fontSize: 16,
+                                      color: AppColors.warning,
+                                    ),
+                                  ),
+                                const SizedBox(height: 20),
+                                _buildProgressIndicator(currentStep),
+                                const SizedBox(height: 32),
+                                _buildStepContent(currentStep),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 32.h),
-                    _buildActions(currentStep),
-                  ],
-                );
-              },
+                      SizedBox(height: 32.h),
+                      _buildActions(currentStep),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),

@@ -2,6 +2,7 @@ import '../../../rooms/domain/entities/room_entity.dart';
 
 class OnboardingRoomPayload {
   static Map<String, dynamic> fromRoom(RoomEntity room) => {
+    'id': room.id,
     'name': room.nameEn.isNotEmpty ? room.nameEn : room.nameAr,
     'name_ar': room.nameAr.isNotEmpty ? room.nameAr : room.nameEn,
     'name_en': room.nameEn.isNotEmpty ? room.nameEn : room.nameAr,
