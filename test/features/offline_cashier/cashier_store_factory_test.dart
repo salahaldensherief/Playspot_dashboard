@@ -186,6 +186,36 @@ void main() {
     expect(identical(repository, await open()), true);
     expect((await repository.snapshot()).isRight(), true);
   });
+  test(
+    'same actor sign-in invalidates previous repository without sign-out',
+    () async {
+      await harness.seedPending();
+      final repository = await open();
+      final before = await harness.journal.read();
+      respond = (request) async => http.Response(
+        jsonEncode({
+          'access_token': 'new-synthetic-access-token',
+          'refresh_token': 'new-synthetic-refresh-token',
+          'token_type': 'bearer',
+          'user': client.auth.currentUser?.toJson(),
+        }),
+        200,
+        request: request,
+      );
+      await client.auth.signInWithPassword(
+        email: 'fixture@example.invalid',
+        password: 'synthetic-password',
+      );
+      final reopened = await open();
+      expect(identical(repository, reopened), false);
+      expect((await repository.snapshot()).isLeft(), true);
+      (await reopened.snapshot()).fold(
+        (failure) => fail(failure.message),
+        (state) => expect(state, before),
+      );
+      await harness.reopen();
+    },
+  );
   for (final transition in ['logout', 'closeAll']) {
     test('late renewal after $transition cannot replace saved state', () async {
       await harness.seedPending();

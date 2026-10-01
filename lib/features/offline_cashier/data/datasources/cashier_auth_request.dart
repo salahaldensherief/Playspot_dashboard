@@ -11,6 +11,7 @@ class CashierAuthRequest {
     final subscription = client.auth.onAuthStateChange.listen(
       (state) {
         if (state.event == AuthChangeEvent.signedOut ||
+            state.event == AuthChangeEvent.signedIn ||
             (state.session != null && state.session?.user.id != actorId)) {
           sessionEnded = true;
         }

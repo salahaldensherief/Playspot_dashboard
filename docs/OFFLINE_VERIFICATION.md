@@ -65,3 +65,16 @@ widget work, not browser/device frame performance. Confirmed collected/due value
 remain unavailable until the canonical backend read adapter is connected; the UI
 does not invent them. Full offline UI operation and hosted integration remain
 unfinished and the feature PR stays draft.
+
+Auth storage/lifecycle verification on 2026-10-02: the full dashboard suite now
+has 480 passing offline tests, including 248 offline-cashier cases and 23 new
+secure-auth storage cases. Two live tests remain skipped; analyze has 21 existing
+infos and no warnings/errors. Mobile's corresponding storage phase has 206
+passing tests and 109 existing infos, with no errors/warnings.
+
+Same-account SIGNED_IN now invalidates old HTTP requests and journal references,
+while TOKEN_REFRESHED preserves the active identity. A regression exposed opening
+a journal after awaiting an outdated closing future; opening now drains the
+current closing chain before allocation. Saved records survive this transition.
+Two real Android plugin probe processes passed; details/limits are documented in
+SECURE_AUTH_STORAGE.md. No hosted SQL, live tests or dev/main merge was performed.

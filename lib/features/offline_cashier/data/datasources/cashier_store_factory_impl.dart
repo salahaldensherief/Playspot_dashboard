@@ -36,7 +36,9 @@ class CashierStoreFactoryImpl implements CashierStoreFactory {
 
   void _onAuthChanged(AuthState state) {
     final actorId = state.session?.user.id;
-    if (state.event == AuthChangeEvent.signedOut || actorId != _actorId) {
+    if (state.event == AuthChangeEvent.signedOut ||
+        state.event == AuthChangeEvent.signedIn ||
+        actorId != _actorId) {
       _actorId = actorId;
       unawaited(closeAll());
     }
@@ -65,7 +67,11 @@ class CashierStoreFactoryImpl implements CashierStoreFactory {
     required String actorId,
     required String loungeId,
   }) async {
-    await _closing;
+    Future<void> closing;
+    do {
+      closing = _closing;
+      await closing;
+    } while (!identical(closing, _closing));
     if (_disposed) throw StateError('offline_cashier.journal_closed');
     if (client.auth.currentUser?.id != actorId) {
       throw StateError('offline_cashier.permission_denied');
