@@ -78,3 +78,11 @@ a journal after awaiting an outdated closing future; opening now drains the
 current closing chain before allocation. Saved records survive this transition.
 Two real Android plugin probe processes passed; details/limits are documented in
 SECURE_AUTH_STORAGE.md. No hosted SQL, live tests or dev/main merge was performed.
+
+Scoped cache cleanup on 2026-10-02: 491 offline tests pass, including eleven new
+cleanup/logout cases. The two live tests remain skipped. Analyze has the same 21
+existing infos and no warnings/errors (exit 1). LocalCacheService no longer
+clears all SharedPreferences or arbitrary keys; queued writes drain before clear.
+Logout attempts cleanup once and returns localized cleanup failure. This does
+not encrypt existing caches or establish their account ownership; concrete
+findings and migration requirements are in LOCAL_CACHE_AUDIT.md.

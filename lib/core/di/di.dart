@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/core/constants/app_constants.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:play_spot_dashboard/core/services/location_service.dart';
 import 'package:play_spot_dashboard/core/services/local_cache_service.dart';
+import '../services/local_cache_service_impl.dart';
 import 'package:play_spot_dashboard/core/services/hardware_bridge_service.dart';
 
 import 'package:play_spot_dashboard/features/auth/auth_di.dart';
