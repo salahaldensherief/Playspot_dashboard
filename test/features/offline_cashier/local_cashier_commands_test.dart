@@ -434,6 +434,80 @@ void main() {
     expect(receipt['shift_id'], shift);
     expect((await journal.read())['outbox'][0]['shift_id'], shift);
   });
+  test(
+    'order quote survives cached price changes and replay after acknowledgement',
+    () async {
+      await commands.execute(
+        command(LocalCashierCommandKind.reserve, reservation()),
+      );
+      await commands.execute(command(LocalCashierCommandKind.start, {}));
+      final order = command(LocalCashierCommandKind.addItems, {
+        'items': [
+          {'product_id': 'water', 'quantity': 2},
+        ],
+      });
+      final receipt = await commands.execute(order);
+      expect(receipt['quoted_total_minor'], 13000);
+      expect(receipt['quoted_items'], [
+        {'product_id': 'water', 'quantity': 2, 'unit_price_minor': 1500},
+      ]);
+      await journal.mutate((state) {
+        state['products']['water']['unit_price_minor'] = 2000;
+        (state['outbox'] as List).clear();
+      });
+      final before = await journal.read();
+      expect(await commands.execute(order), receipt);
+      expect(await journal.read(), before);
+    },
+  );
+  test(
+    'altering item quantity under a quoted operation id still fails',
+    () async {
+      await commands.execute(
+        command(LocalCashierCommandKind.reserve, reservation()),
+      );
+      await commands.execute(command(LocalCashierCommandKind.start, {}));
+      final order = command(LocalCashierCommandKind.addItems, {
+        'items': [
+          {'product_id': 'water', 'quantity': 2},
+        ],
+      });
+      await commands.execute(order);
+      final before = await journal.read();
+      await expectLater(
+        commands.execute(
+          command(LocalCashierCommandKind.addItems, {
+            'items': [
+              {'product_id': 'water', 'quantity': 1},
+            ],
+          }, id: order.id),
+        ),
+        throwsStateError,
+      );
+      expect(await journal.read(), before);
+    },
+  );
+  test('missing stock policy cannot invent untracked inventory', () async {
+    await commands.execute(
+      command(LocalCashierCommandKind.reserve, reservation()),
+    );
+    await commands.execute(command(LocalCashierCommandKind.start, {}));
+    await journal.mutate(
+      (state) => (state['products']['water'] as Map).remove('track_stock'),
+    );
+    final before = await journal.read();
+    await expectLater(
+      commands.execute(
+        command(LocalCashierCommandKind.addItems, {
+          'items': [
+            {'product_id': 'water', 'quantity': 1},
+          ],
+        }),
+      ),
+      throwsStateError,
+    );
+    expect(await journal.read(), before);
+  });
   test('another open shift cannot receive this command', () async {
     final before = await journal.read();
     await expectLater(

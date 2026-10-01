@@ -45,6 +45,7 @@ class LocalCashierSaleRules {
       if (product == null ||
           product['is_active'] != true ||
           product['is_available'] != true ||
+          product['track_stock'] is! bool ||
           quantity is! int ||
           quantity <= 0 ||
           quantity > 100 ||

@@ -18,7 +18,10 @@ class LocalCashierCommands {
           state.putIfAbsent('receipts', () => <String, dynamic>{}) as Map;
       final old = receipts[command.id] as Map?;
       if (old != null) {
-        final existing = Map<String, dynamic>.from(old)..remove('sequence');
+        final existing = Map<String, dynamic>.from(old)
+          ..remove('sequence')
+          ..remove('quoted_items')
+          ..remove('quoted_total_minor');
         if (CashierCommandCodec.canonical(existing) !=
             CashierCommandCodec.canonical(receipt)) {
           throw StateError('offline_cashier.idempotency_conflict');
@@ -26,25 +29,42 @@ class LocalCashierCommands {
         return Map<String, dynamic>.from(old);
       }
       _authorize(state, command);
-      switch (command.kind) {
-        case LocalCashierCommandKind.reserve:
-          LocalCashierBookingRules.reserve(state, command);
-        case LocalCashierCommandKind.start:
-          LocalCashierBookingRules.start(state, command);
-        case LocalCashierCommandKind.addItems:
-          LocalCashierSaleRules.addItems(state, command);
-        case LocalCashierCommandKind.collectCash:
-          LocalCashierSaleRules.collectCash(state, command);
-        case LocalCashierCommandKind.close:
-          LocalCashierBookingRules.close(state, command);
-      }
+      _applyCommand(state, command);
       final sequence = (state['next_sequence'] as int?) ?? 1;
+      _captureQuote(state, command, receipt);
       receipt['sequence'] = sequence;
       state['next_sequence'] = sequence + 1;
       receipts[command.id] = receipt;
       outbox.add(receipt);
       return receipt;
     });
+  }
+
+  void _applyCommand(Map<String, dynamic> state, LocalCashierCommand command) {
+    switch (command.kind) {
+      case LocalCashierCommandKind.reserve:
+        LocalCashierBookingRules.reserve(state, command);
+      case LocalCashierCommandKind.start:
+        LocalCashierBookingRules.start(state, command);
+      case LocalCashierCommandKind.addItems:
+        LocalCashierSaleRules.addItems(state, command);
+      case LocalCashierCommandKind.collectCash:
+        LocalCashierSaleRules.collectCash(state, command);
+      case LocalCashierCommandKind.close:
+        LocalCashierBookingRules.close(state, command);
+    }
+  }
+
+  void _captureQuote(
+    Map<String, dynamic> state,
+    LocalCashierCommand command,
+    Map<String, dynamic> receipt,
+  ) {
+    if (command.kind != LocalCashierCommandKind.addItems) return;
+    final booking = LocalCashierBookingRules.booking(state, command);
+    final order = (booking['items'] as List).last as Map;
+    receipt['quoted_items'] = order['items'];
+    receipt['quoted_total_minor'] = booking['total_minor'];
   }
 
   Map<String, dynamic> _serialize(LocalCashierCommand command) => {
