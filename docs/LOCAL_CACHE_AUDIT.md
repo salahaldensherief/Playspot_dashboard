@@ -37,11 +37,19 @@ Account switches must invalidate pending reads/writes before opening a new scope
 clearing a queue alone cannot identify responses started by a different account.
 Financial journal/outbox files must never be deleted as profile cache cleanup.
 
-Mobile signOut currently performs notification/social cleanup before Supabase
-logout, and AuthRepository clears profile data only after remote signOut succeeds.
-A failure in an earlier provider step can prevent local logout. A complete fix
-needs independent local session/cache invalidation, bounded provider cleanup and
-regression tests. This audit does not claim that flow is fixed.
+Mobile AuthRepository now attempts profile cleanup once even if remote signOut
+returns a failure, preserving the remote failure or a localized CacheFailure.
+Four repository cases plus Arabic/English error visibility and successful route
+navigation pass; the complete mobile suite has 213 passes and 109 existing infos
+(no warnings/errors, analyzer exit 1).
+
+Mobile remote signOut still waits for notification/social cleanup before Supabase
+logout. Those provider implementations swallow many exceptions, but an unbounded
+wait can delay local logout. A complete fix needs independent local session
+invalidation and bounded provider lifecycle without letting late cleanup affect
+a subsequent login. Dashboard LoginCubit also currently discards logout's result;
+the repository cleanup failure is not yet surfaced by that UI. These flows remain
+release checks; cleanup tests alone do not establish complete offline logout.
 
 ## Offline integration still pending
 
