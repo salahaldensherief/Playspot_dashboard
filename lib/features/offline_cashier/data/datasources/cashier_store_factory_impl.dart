@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/repositories/offline_cashier_repository.dart';
 import '../repositories/offline_cashier_repository_impl.dart';
@@ -7,30 +8,82 @@ import 'encrypted_cashier_journal.dart';
 import 'local_cashier_commands.dart';
 import 'cashier_outbox_synchronizer.dart';
 import 'supabase_cashier_sync_transport.dart';
+import 'supabase_cashier_authority_transport.dart';
+import 'cashier_authority_refresher.dart';
+import 'cashier_authority_store.dart';
 
 class CashierStoreFactoryImpl implements CashierStoreFactory {
   final OfflineKeyVault keys;
   final SupabaseClient client;
+  final DateTime Function() _clock;
   final Map<String, Future<OfflineCashierRepository>> _repositories = {};
-  CashierStoreFactoryImpl({required this.keys, required this.client});
+  late final StreamSubscription<AuthState> _authSubscription;
+  Future<void> _closing = Future.value();
+  int _epoch = 0;
+  String? _actorId;
+  bool _disposed = false;
+  CashierStoreFactoryImpl({
+    required this.keys,
+    required this.client,
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now {
+    _actorId = client.auth.currentUser?.id;
+    _authSubscription = client.auth.onAuthStateChange.listen(
+      _onAuthChanged,
+      onError: (Object error) => _checkCurrentIdentity(),
+    );
+  }
+
+  void _onAuthChanged(AuthState state) {
+    final actorId = state.session?.user.id;
+    if (state.event == AuthChangeEvent.signedOut || actorId != _actorId) {
+      _actorId = actorId;
+      unawaited(closeAll());
+    }
+  }
+
+  void _checkCurrentIdentity() {
+    final actorId = client.auth.currentUser?.id;
+    if (actorId != _actorId) {
+      _actorId = actorId;
+      unawaited(closeAll());
+    }
+  }
+
+  void _ensureScope(int epoch, String actorId) {
+    _checkCurrentIdentity();
+    if (_disposed || epoch != _epoch) {
+      throw StateError('offline_cashier.journal_closed');
+    }
+    if (client.auth.currentUser?.id != actorId) {
+      throw StateError('offline_cashier.permission_denied');
+    }
+  }
 
   @override
   Future<OfflineCashierRepository> open({
     required String actorId,
     required String loungeId,
   }) async {
+    await _closing;
+    if (_disposed) throw StateError('offline_cashier.journal_closed');
     if (client.auth.currentUser?.id != actorId) {
       throw StateError('offline_cashier.permission_denied');
     }
     final key = '$actorId/$loungeId';
+    final epoch = _epoch;
     final opening = _repositories.putIfAbsent(
       key,
-      () => _open(actorId, loungeId),
+      () => _open(actorId, loungeId, epoch),
     );
     try {
-      return await opening;
+      final repository = await opening;
+      _ensureScope(epoch, actorId);
+      return repository;
     } catch (_) {
-      _repositories.remove(key);
+      if (identical(_repositories[key], opening)) {
+        _repositories.remove(key);
+      }
       rethrow;
     }
   }
@@ -38,6 +91,7 @@ class CashierStoreFactoryImpl implements CashierStoreFactory {
   Future<OfflineCashierRepository> _open(
     String actorId,
     String loungeId,
+    int epoch,
   ) async {
     final journal = await EncryptedCashierJournal.open(
       ownerId: actorId,
@@ -45,23 +99,51 @@ class CashierStoreFactoryImpl implements CashierStoreFactory {
       keys: keys,
     );
     return OfflineCashierRepositoryImpl(
+      ensureActive: () => _ensureScope(epoch, actorId),
       journal: journal,
-      commands: LocalCashierCommands(journal),
+      commands: LocalCashierCommands(
+        journal,
+        clock: _clock,
+        ensureActive: () => _ensureScope(epoch, actorId),
+      ),
+      authorityRefresher: CashierAuthorityRefresher(
+        transport: SupabaseCashierAuthorityTransport(client, actorId),
+        store: CashierAuthorityStore(
+          journal,
+          clock: _clock,
+          ensureActive: () => _ensureScope(epoch, actorId),
+        ),
+      ),
       synchronizer: CashierOutboxSynchronizer(
         journal: journal,
         transport: SupabaseCashierSyncTransport(client),
+        ensureActive: () => _ensureScope(epoch, actorId),
       ),
     );
   }
 
   @override
-  Future<void> closeAll() async {
+  Future<void> closeAll() {
+    _epoch++;
     final opening = List.of(_repositories.values);
     _repositories.clear();
+    return _closing = _closing.then((_) => _closeRepositories(opening));
+  }
+
+  Future<void> _closeRepositories(
+    List<Future<OfflineCashierRepository>> opening,
+  ) async {
     for (final repository in opening) {
       try {
         await (await repository).close();
       } catch (_) {}
     }
+  }
+
+  @override
+  Future<void> dispose() async {
+    _disposed = true;
+    await _authSubscription.cancel();
+    await closeAll();
   }
 }

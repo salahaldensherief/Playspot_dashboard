@@ -25,8 +25,8 @@ The current cashier screens still use their existing online repositories.
   explicit retries use the same ID. Conflicts block dependent operations and remain
   on the device. Late responses after leaving the scope cannot clear local work.
 
-Verification: 157 feature tests and 343 total offline Flutter tests passed; two live
-tests remained skipped. Analyze had 22 existing informational findings and no
+Verification: 246 feature tests and 432 total offline Flutter tests passed; two live
+tests remained skipped. Analyze had 21 existing informational findings and no
 errors/warnings. Tests use real temporary encrypted Hive files and fake secure-key
 and network adapters. Native credential storage/browser key security and hosted
 reconciliation have not been exercised end to end.
@@ -78,14 +78,36 @@ Completed rows without trusted capacity facts remain conservatively occupied.
 Whole-minute pricing uses BigInt intermediates to avoid losing cents on Web.
 Timestamp strings can retain microseconds; capacity milliseconds remain integers.
 
-1. Implement and verify server-issued device-bound offline permits, canonical
-   resource/inventory/booking snapshots, and apply_offline_cashier_operation.
+Protocol version 2 authority renewal is now wired through the scoped repository
+and a dedicated usecase. The factory listens to Auth logout/account changes and
+invalidates old references immediately, then drains/closes encrypted storage.
+Opening races and late responses cannot disclose or replace the old account's
+records. Normal token refresh for the same session preserves the store. DI disposal
+cancels its Auth subscription. This contract is tested with offline HTTP mocks;
+the existing real cashier routes still do not consume this repository.
+
+The installer validates scope, eligibility, effective booleans, original 24-hour
+window, server/device clock skew, requested connection mode and heartbeat. Same
+permit facts cannot change. Renewal preserves bookings, receipts, inventory,
+acknowledgements and the old outbox across Hive close/reopen. Sequence continues
+across grants; server counters cannot reset or skip local pending work. Unknown or
+invalid original-grant events stay saved and block new commands for review.
+New commands require version 2 history and occurrence inside the original window.
+Clock drift, expired grants, missing sequences and lost encryption keys fail closed.
+
+`offline_permit_contract.json` contains synthetic identities. Its current authority
+is an actual native PostgreSQL fixture RPC response. The previous cached response
+is constructed from the fixture's immutable historical grant; the old queued event
+is synthetic. It is not a capture from a production cashier. No SQL was deployed.
+
+1. Implement and verify canonical resource/inventory/booking snapshots and their
+   installation alongside the existing source-only permit/reconciliation RPCs.
    Client JSON is never an authority for server prices, permissions or payment.
 2. Implement a server availability lease: internet loss cannot instantly notify a
    remote server. Online bookings must stop when the heartbeat expires, and this
    bounded detection interval must be covered by resource conflict protection.
-3. Bind the owner/employee's cached identity, venue, rooms, shift and effective
-   permissions to a single cashier store. Add cached read adapters and local command
+3. Bind canonical venue resources and shift data to the authenticated cashier store.
+   Add cached read adapters and local command
    paths to real cashier actions, including open-time/extension and shift operations.
 4. Display offline/pending/conflict states, provide explicit reconciliation review,
    and preserve pending financial records on logout. Do not silently discard conflicts

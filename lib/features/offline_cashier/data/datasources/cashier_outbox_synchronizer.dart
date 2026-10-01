@@ -8,7 +8,12 @@ class CashierOutboxSynchronizer {
   final CashierSyncTransport transport;
   Future<CashierSyncResult>? _running;
   bool _stopped = false;
-  CashierOutboxSynchronizer({required this.journal, required this.transport});
+  final void Function()? _ensureActive;
+  CashierOutboxSynchronizer({
+    required this.journal,
+    required this.transport,
+    void Function()? ensureActive,
+  }) : _ensureActive = ensureActive;
 
   Future<CashierSyncResult> synchronize() =>
       _running ??= _run().whenComplete(() => _running = null);
@@ -50,6 +55,7 @@ class CashierOutboxSynchronizer {
   Future<void> _persistConflict(Map operation, Map response) => journal.mutate((
     state,
   ) {
+    _checkActive();
     final conflicts =
         state.putIfAbsent('sync_conflicts', () => <String, dynamic>{}) as Map;
     conflicts[operation['id']] = {'code': response['code']};
@@ -58,6 +64,7 @@ class CashierOutboxSynchronizer {
   Future<void> _acknowledge(Map operation, Map response) => journal.mutate((
     state,
   ) {
+    _checkActive();
     final pending = state['outbox'] as List;
     if (pending.isEmpty || (pending.first as Map)['id'] != operation['id']) {
       throw StateError('offline_cashier.outbox_changed');
@@ -76,5 +83,6 @@ class CashierOutboxSynchronizer {
 
   void _checkActive() {
     if (_stopped) throw StateError('offline_cashier.journal_closed');
+    _ensureActive?.call();
   }
 }

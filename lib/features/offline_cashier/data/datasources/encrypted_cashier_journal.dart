@@ -6,9 +6,11 @@ import 'offline_key_vault.dart';
 class EncryptedCashierJournal {
   static final Map<String, Future<EncryptedCashierJournal>> _opening = {};
   final Box<String> _box;
+  final String actorId;
+  final String loungeId;
   Future<void> _tail = Future.value();
   Future<void>? _closing;
-  EncryptedCashierJournal._(this._box);
+  EncryptedCashierJournal._(this._box, this.actorId, this.loungeId);
 
   static Future<EncryptedCashierJournal> open({
     required String ownerId,
@@ -23,7 +25,10 @@ class EncryptedCashierJournal {
     }
     final name =
         'cashier_v1_${ownerId.toLowerCase()}_${loungeId.toLowerCase()}';
-    final pending = _opening.putIfAbsent(name, () => _openBox(name, keys));
+    final pending = _opening.putIfAbsent(
+      name,
+      () => _openBox(name, keys, ownerId.toLowerCase(), loungeId.toLowerCase()),
+    );
     try {
       final journal = await pending;
       final closing = journal._closing;
@@ -41,6 +46,8 @@ class EncryptedCashierJournal {
   static Future<EncryptedCashierJournal> _openBox(
     String name,
     OfflineKeyVault keys,
+    String actorId,
+    String loungeId,
   ) async {
     final keyName = 'hive_key_$name';
     final stored = await keys.read(keyName);
@@ -59,7 +66,7 @@ class EncryptedCashierJournal {
       name,
       encryptionCipher: HiveAesCipher(key),
     );
-    return EncryptedCashierJournal._(box);
+    return EncryptedCashierJournal._(box, actorId, loungeId);
   }
 
   Map<String, dynamic> _snapshot() {

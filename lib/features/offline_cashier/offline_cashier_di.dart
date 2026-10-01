@@ -24,5 +24,6 @@ Future<void> initOfflineCashierDI(GetIt sl) async {
   );
   sl.registerLazySingleton<CashierStoreFactory>(
     () => CashierStoreFactoryImpl(keys: sl(), client: sl()),
+    dispose: (factory) => factory.dispose(),
   );
 }

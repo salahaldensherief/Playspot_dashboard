@@ -4,6 +4,7 @@ import 'package:hive/hive.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/data/datasources/encrypted_cashier_journal.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/data/datasources/offline_key_vault.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/data/datasources/local_cashier_commands.dart';
+import 'package:play_spot_dashboard/features/offline_cashier/data/datasources/cashier_authority_validator.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/domain/entities/local_cashier_command.dart';
 
 class _Keys implements OfflineKeyVault {
@@ -35,6 +36,7 @@ void main() {
     String actorId = actor,
     String shiftId = shift,
     String deviceId = device,
+    DateTime? occurredAt,
   }) => LocalCashierCommand(
     id:
         id ??
@@ -45,7 +47,7 @@ void main() {
     deviceId: deviceId,
     permitId: '40000000-0000-0000-0000-000000000001',
     shiftId: shiftId,
-    occurredAt: now,
+    occurredAt: occurredAt ?? now,
     kind: kind,
     payload: payload,
   );
@@ -70,7 +72,9 @@ void main() {
     );
     commands = LocalCashierCommands(journal, clock: () => now);
     await journal.mutate((state) {
+      state['next_sequence'] = 1;
       state['authority'] = {
+        'protocol_version': 2,
         'actor_id': actor,
         'lounge_id': lounge,
         'device_id': device,
@@ -83,12 +87,16 @@ void main() {
         'issued_ms': now
             .subtract(const Duration(hours: 1))
             .millisecondsSinceEpoch,
-        'expires_ms': now.add(const Duration(days: 1)).millisecondsSinceEpoch,
+        'expires_ms': now.add(const Duration(hours: 23)).millisecondsSinceEpoch,
         'permissions': {
           'bookings.manage': true,
           'sessions_control': true,
           'billing_checkout': true,
         },
+      };
+      state['authority_history'] = {
+        '40000000-0000-0000-0000-000000000001':
+            CashierAuthorityValidator.immutableFacts(state['authority'] as Map),
       };
       state['shift'] = {
         'id': shift,
@@ -583,5 +591,70 @@ void main() {
       commands.execute(command(LocalCashierCommandKind.reserve, reservation())),
       throwsStateError,
     );
+  });
+  test(
+    'event at permit expiry is rejected even within allowed clock skew',
+    () async {
+      final expires = now.add(const Duration(minutes: 1));
+      await journal.mutate((state) {
+        state['authority']['expires_ms'] = expires.millisecondsSinceEpoch;
+        state['authority_history'][state['authority']['permit_id']] =
+            CashierAuthorityValidator.immutableFacts(state['authority'] as Map);
+      });
+      final before = await journal.read();
+      await expectLater(
+        commands.execute(
+          command(
+            LocalCashierCommandKind.reserve,
+            reservation(),
+            occurredAt: expires,
+          ),
+        ),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'key',
+            'offline_cashier.authority_expired',
+          ),
+        ),
+      );
+      expect(await journal.read(), before);
+    },
+  );
+  test('unlimited cached permit cannot authorize new operations', () async {
+    await journal.mutate((state) {
+      state['authority']['expires_ms'] = now
+          .add(const Duration(hours: 24))
+          .millisecondsSinceEpoch;
+      state['authority_history'][state['authority']['permit_id']] =
+          CashierAuthorityValidator.immutableFacts(state['authority'] as Map);
+    });
+    final before = await journal.read();
+    await expectLater(
+      commands.execute(command(LocalCashierCommandKind.reserve, reservation())),
+      throwsA(
+        isA<StateError>().having(
+          (error) => error.message,
+          'key',
+          'offline_cashier.authority_expired',
+        ),
+      ),
+    );
+    expect(await journal.read(), before);
+  });
+  test('missing sequence cannot restart a financial queue', () async {
+    await journal.mutate((state) => state.remove('next_sequence'));
+    final before = await journal.read();
+    await expectLater(
+      commands.execute(command(LocalCashierCommandKind.reserve, reservation())),
+      throwsA(
+        isA<StateError>().having(
+          (error) => error.message,
+          'key',
+          'offline_cashier.sequence_mismatch',
+        ),
+      ),
+    );
+    expect(await journal.read(), before);
   });
 }

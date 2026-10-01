@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:hive/hive.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/data/datasources/encrypted_cashier_journal.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/data/datasources/local_cashier_commands.dart';
+import 'package:play_spot_dashboard/features/offline_cashier/data/datasources/cashier_authority_validator.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/data/datasources/offline_key_vault.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/domain/entities/local_cashier_command.dart';
 
@@ -41,8 +42,10 @@ class FixedSessionHarness implements OfflineKeyVault {
   }
 
   void _bootstrap(Map<String, dynamic> state) {
+    state['next_sequence'] = 1;
     final op = operation('reserve');
     state['authority'] = {
+      'protocol_version': 2,
       for (final key in ['actor_id', 'lounge_id', 'device_id', 'permit_id'])
         key: op[key],
       'profile_active': true,
@@ -53,12 +56,17 @@ class FixedSessionHarness implements OfflineKeyVault {
       'issued_ms': now
           .subtract(const Duration(hours: 1))
           .millisecondsSinceEpoch,
-      'expires_ms': now.add(const Duration(days: 1)).millisecondsSinceEpoch,
+      'expires_ms': now.add(const Duration(hours: 23)).millisecondsSinceEpoch,
       'permissions': {
         'bookings.manage': true,
         'sessions_control': true,
         'billing_checkout': true,
       },
+    };
+    state['authority_history'] = {
+      op['permit_id']: CashierAuthorityValidator.immutableFacts(
+        state['authority'] as Map,
+      ),
     };
     state['shift'] = {
       'id': op['shift_id'],
