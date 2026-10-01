@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import '../../features/offline_cashier/offline_cashier_di.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/core/audio/audio_service.dart';
@@ -46,6 +47,7 @@ Future<void> setupInjection() async {
 
   // Register Supabase Client
   sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
+  await initOfflineCashierDI(sl);
 
   // Core Services
   final prefs = await SharedPreferences.getInstance();
