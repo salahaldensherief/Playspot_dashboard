@@ -53,6 +53,7 @@ class LocalCashierCommands {
     'actor_id': command.actorId,
     'lounge_id': command.loungeId,
     'device_id': command.deviceId,
+    'permit_id': command.permitId,
     'occurred_at': command.occurredAt.toUtc().toIso8601String(),
     'kind': command.kind.name,
     'payload': command.payload,
@@ -63,13 +64,16 @@ class LocalCashierCommands {
     final uuid = RegExp(
       r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
     );
-    if (!uuid.hasMatch(command.id) || !uuid.hasMatch(command.bookingId)) {
+    if (!uuid.hasMatch(command.id) ||
+        !uuid.hasMatch(command.bookingId) ||
+        !uuid.hasMatch(command.permitId)) {
       throw StateError('offline_cashier.invalid_command');
     }
     if (authority == null ||
         authority['actor_id'] != command.actorId ||
         authority['lounge_id'] != command.loungeId ||
         authority['device_id'] != command.deviceId ||
+        authority['permit_id'] != command.permitId ||
         authority['profile_active'] != true ||
         authority['profile_banned'] != false ||
         authority['lounge_status'] != 'active' ||

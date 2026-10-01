@@ -18,6 +18,7 @@ void main() {
     actorId: 'actor',
     loungeId: 'lounge',
     deviceId: 'device',
+    permitId: 'permit',
     occurredAt: DateTime.utc(2026),
     kind: LocalCashierCommandKind.collectCash,
     payload: {'amount_minor': 100},
