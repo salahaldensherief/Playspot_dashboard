@@ -24,11 +24,17 @@ The current cashier screens still use their existing online repositories.
   explicit retries use the same ID. Conflicts block dependent operations and remain
   on the device. Late responses after leaving the scope cannot clear local work.
 
-Verification: 33 feature tests and 219 total offline Flutter tests passed; two live
+Verification: 47 feature tests and 233 total offline Flutter tests passed; two live
 tests remained skipped. Analyze had 22 existing informational findings and no
 errors/warnings. Tests use real temporary encrypted Hive files and fake secure-key
 and network adapters. Native credential storage/browser key security and hosted
 reconciliation have not been exercised end to end.
+
+Orders respect explicit product availability and stock tracking: untracked stock
+is preserved, while missing/negative tracked quantities fail closed. Limits are
+50 order lines and 1–100 integer units per line. Adding an order recalculates the
+payment status without changing collected cash. Starting a session rechecks room
+eligibility and refuses another running session even past its scheduled end.
 
 ## Required before enabling cashier writes in the app
 

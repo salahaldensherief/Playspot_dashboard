@@ -52,6 +52,7 @@ class LocalCashierBookingRules {
       'lounge_id': command.loungeId,
       'status': 'upcoming',
       'paid_minor': 0,
+      'payment_status': total == 0 ? 'paid' : 'unpaid',
       'items': <dynamic>[],
       'shift_id': (state['shift'] as Map)['id'],
       'sync_status': 'pending',
@@ -70,6 +71,21 @@ class LocalCashierBookingRules {
     final current = booking(state, command);
     if (current['status'] != 'upcoming') {
       throw StateError('offline_cashier.invalid_transition');
+    }
+    final room =
+        (state['rooms'] as Map? ?? const {})[current['room_id']] as Map?;
+    if (room == null ||
+        room['is_active'] != true ||
+        room['status'] == 'maintenance') {
+      throw StateError('offline_cashier.invalid_booking');
+    }
+    // A session running past its scheduled end still physically occupies the room.
+    for (final other in (state['bookings'] as Map).values) {
+      if (other['id'] != current['id'] &&
+          other['room_id'] == current['room_id'] &&
+          other['status'] == 'in_progress') {
+        throw StateError('offline_cashier.room_conflict');
+      }
     }
     current['status'] = 'in_progress';
     current['checked_in_at'] = command.occurredAt.toUtc().toIso8601String();

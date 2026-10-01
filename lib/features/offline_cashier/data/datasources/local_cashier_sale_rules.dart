@@ -32,7 +32,7 @@ class LocalCashierSaleRules {
       throw StateError('offline_cashier.invalid_transition');
     }
     final items = command.payload['items'];
-    if (items is! List || items.isEmpty) {
+    if (items is! List || items.isEmpty || items.length > 50) {
       throw StateError('offline_cashier.invalid_order');
     }
     final products = state['products'] as Map? ?? const {};
@@ -44,15 +44,17 @@ class LocalCashierSaleRules {
       final quantity = item['quantity'];
       if (product == null ||
           product['is_active'] != true ||
+          product['is_available'] != true ||
           quantity is! int ||
           quantity <= 0 ||
+          quantity > 100 ||
           product['unit_price_minor'] is! int ||
           (product['unit_price_minor'] as int) < 0) {
         throw StateError('offline_cashier.invalid_order');
       }
       final stock = product['stock_quantity'];
-      if (stock is int) {
-        if (stock < quantity) {
+      if (product['track_stock'] == true) {
+        if (stock is! int || stock < quantity) {
           throw StateError('offline_cashier.insufficient_stock');
         }
         product['stock_quantity'] = stock - quantity;
@@ -71,5 +73,11 @@ class LocalCashierSaleRules {
       'total_minor': total,
     });
     current['total_minor'] = (current['total_minor'] as int) + total;
+    final paid = current['paid_minor'] as int;
+    current['payment_status'] = paid == current['total_minor']
+        ? 'paid'
+        : paid > 0
+        ? 'partial'
+        : 'unpaid';
   }
 }

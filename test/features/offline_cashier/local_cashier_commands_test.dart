@@ -97,6 +97,8 @@ void main() {
       state['products'] = {
         'water': {
           'is_active': true,
+          'is_available': true,
+          'track_stock': true,
           'unit_price_minor': 1500,
           'stock_quantity': 4,
         },
@@ -227,6 +229,167 @@ void main() {
     );
     expect((await journal.read())['products']['water']['stock_quantity'], 4);
     expect((await current())['items'], isEmpty);
+  });
+  test(
+    'an overdue running session prevents a second session from starting',
+    () async {
+      await commands.execute(
+        command(LocalCashierCommandKind.reserve, reservation()),
+      );
+      await journal.mutate((state) {
+        state['bookings']['overdue'] = {
+          'id': 'overdue',
+          'room_id': 'room-1',
+          'status': 'in_progress',
+          'start_ms': now
+              .subtract(const Duration(hours: 2))
+              .millisecondsSinceEpoch,
+          'end_ms': now
+              .subtract(const Duration(hours: 1))
+              .millisecondsSinceEpoch,
+        };
+      });
+      final before = await journal.read();
+      await expectLater(
+        commands.execute(command(LocalCashierCommandKind.start, {})),
+        throwsStateError,
+      );
+      expect(await journal.read(), before);
+    },
+  );
+  for (final invalidRoom in [
+    {'status': 'maintenance'},
+    {'is_active': false},
+  ]) {
+    test('room changed after reservation $invalidRoom cannot start', () async {
+      await commands.execute(
+        command(LocalCashierCommandKind.reserve, reservation()),
+      );
+      await journal.mutate(
+        (state) => (state['rooms']['room-1'] as Map).addAll(invalidRoom),
+      );
+      final before = await journal.read();
+      await expectLater(
+        commands.execute(command(LocalCashierCommandKind.start, {})),
+        throwsStateError,
+      );
+      expect(await journal.read(), before);
+    });
+  }
+  test('untracked product preserves stock even when it is zero', () async {
+    await commands.execute(
+      command(LocalCashierCommandKind.reserve, reservation()),
+    );
+    await commands.execute(command(LocalCashierCommandKind.start, {}));
+    await journal.mutate((state) {
+      state['products']['water']['track_stock'] = false;
+      state['products']['water']['stock_quantity'] = 0;
+    });
+    await commands.execute(
+      command(LocalCashierCommandKind.addItems, {
+        'items': [
+          {'product_id': 'water', 'quantity': 2},
+        ],
+      }),
+    );
+    expect((await journal.read())['products']['water']['stock_quantity'], 0);
+    expect((await current())['total_minor'], 13000);
+  });
+  test(
+    'adding items to a paid session makes the new balance partial',
+    () async {
+      await commands.execute(
+        command(LocalCashierCommandKind.reserve, reservation()),
+      );
+      await commands.execute(command(LocalCashierCommandKind.start, {}));
+      await commands.execute(
+        command(LocalCashierCommandKind.collectCash, {'amount_minor': 10000}),
+      );
+      expect((await current())['payment_status'], 'paid');
+      await commands.execute(
+        command(LocalCashierCommandKind.addItems, {
+          'items': [
+            {'product_id': 'water', 'quantity': 1},
+          ],
+        }),
+      );
+      expect((await current())['payment_status'], 'partial');
+      expect((await current())['paid_minor'], 10000);
+      expect((await current())['total_minor'], 11500);
+    },
+  );
+  for (final invalid in [
+    {'is_available': false},
+    {'is_available': null},
+    {'stock_quantity': null},
+    {'stock_quantity': -1},
+  ]) {
+    test(
+      'unavailable or invalid tracked stock $invalid rolls back order',
+      () async {
+        await commands.execute(
+          command(LocalCashierCommandKind.reserve, reservation()),
+        );
+        await commands.execute(command(LocalCashierCommandKind.start, {}));
+        await journal.mutate(
+          (state) => (state['products']['water'] as Map).addAll(invalid),
+        );
+        final before = await journal.read();
+        await expectLater(
+          commands.execute(
+            command(LocalCashierCommandKind.addItems, {
+              'items': [
+                {'product_id': 'water', 'quantity': 1},
+              ],
+            }),
+          ),
+          throwsStateError,
+        );
+        expect(await journal.read(), before);
+      },
+    );
+  }
+  for (final quantity in [0, -1, 101, 1.5]) {
+    test(
+      'invalid order quantity $quantity preserves projection and outbox',
+      () async {
+        await commands.execute(
+          command(LocalCashierCommandKind.reserve, reservation()),
+        );
+        await commands.execute(command(LocalCashierCommandKind.start, {}));
+        final before = await journal.read();
+        await expectLater(
+          commands.execute(
+            command(LocalCashierCommandKind.addItems, {
+              'items': [
+                {'product_id': 'water', 'quantity': quantity},
+              ],
+            }),
+          ),
+          throwsStateError,
+        );
+        expect(await journal.read(), before);
+      },
+    );
+  }
+  test('more than fifty lines rejected atomically', () async {
+    await commands.execute(
+      command(LocalCashierCommandKind.reserve, reservation()),
+    );
+    await commands.execute(command(LocalCashierCommandKind.start, {}));
+    final before = await journal.read();
+    await expectLater(
+      commands.execute(
+        command(LocalCashierCommandKind.addItems, {
+          'items': List.generate(
+            51,
+            (_) => {'product_id': 'water', 'quantity': 1},
+          ),
+        }),
+      ),
+      throwsStateError,
+    );
+    expect(await journal.read(), before);
   });
   for (final amount in [-1, 0, 10001, 1.5]) {
     test('invalid or excess cash $amount rejected without receipt', () async {
