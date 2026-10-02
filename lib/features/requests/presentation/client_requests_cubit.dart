@@ -8,7 +8,8 @@ import '../domain/usecases/mark_request_as_attended_usecase.dart';
 import '../domain/usecases/watch_client_requests_usecase.dart';
 import 'client_requests_state.dart';
 
-class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatcherMixin<ClientRequestsState> {
+class ClientRequestsCubit extends Cubit<ClientRequestsState>
+    with RealtimeWatcherMixin<ClientRequestsState> {
   final WatchClientRequestsUseCase _watchClientRequestsUseCase;
   final MarkRequestAsAttendedUseCase _markRequestAsAttendedUseCase;
   final GetActiveLoungeRequestsPageUseCase _getActiveLoungeRequestsPageUseCase;
@@ -16,29 +17,38 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
 
   final Set<String> _knownRequestIds = {};
   bool _isFirstLoad = true;
+  int _requestGeneration = 0;
+  int _scopeGeneration = 0;
+  String? _loungeId;
 
   ClientRequestsCubit({
     required WatchClientRequestsUseCase watchClientRequestsUseCase,
     required MarkRequestAsAttendedUseCase markRequestAsAttendedUseCase,
-    required GetActiveLoungeRequestsPageUseCase getActiveLoungeRequestsPageUseCase,
+    required GetActiveLoungeRequestsPageUseCase
+    getActiveLoungeRequestsPageUseCase,
     required this.audioService,
-  })  : _watchClientRequestsUseCase = watchClientRequestsUseCase,
-        _markRequestAsAttendedUseCase = markRequestAsAttendedUseCase,
-        _getActiveLoungeRequestsPageUseCase = getActiveLoungeRequestsPageUseCase,
-        super(const ClientRequestsState());
+  }) : _watchClientRequestsUseCase = watchClientRequestsUseCase,
+       _markRequestAsAttendedUseCase = markRequestAsAttendedUseCase,
+       _getActiveLoungeRequestsPageUseCase = getActiveLoungeRequestsPageUseCase,
+       super(const ClientRequestsState());
 
   void startWatchingRequests({String? loungeId, bool forceRefresh = false}) {
-    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
-    if (cleanLoungeId == null) return;
+    if (isClosed) return;
+    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty)
+        ? loungeId.trim()
+        : null;
+    if (cleanLoungeId == null) {
+      stopWatchingRequests();
+      return;
+    }
 
     if (isAlreadyWatching(cleanLoungeId, forceRefresh: forceRefresh)) {
       return;
     }
 
-    _isFirstLoad = true;
-    _knownRequestIds.clear();
-
-    emit(state.copyWith(status: ClientRequestsStatus.loading));
+    stopWatchingRequests();
+    _loungeId = cleanLoungeId;
+    emit(const ClientRequestsState(status: ClientRequestsStatus.loading));
 
     startWatch<List<dynamic>>(
       entityId: cleanLoungeId,
@@ -57,13 +67,15 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
           final newIds = currentUnattendedIds.difference(_knownRequestIds);
           if (newIds.isNotEmpty) {
             _knownRequestIds.addAll(newIds);
-            
+
             // Determine highest priority request type in this batch to play a single sound alert
             bool hasStaffCall = false;
             bool hasCanteenOrder = false;
 
             for (final id in newIds) {
-              final newReqList = requests.where((r) => (r as ClientRequestEntity).id == id);
+              final newReqList = requests.where(
+                (r) => (r as ClientRequestEntity).id == id,
+              );
               if (newReqList.isNotEmpty) {
                 final newReq = newReqList.first as ClientRequestEntity;
                 if (newReq.type == ClientRequestType.callStaff ||
@@ -93,18 +105,34 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
           audioService.stopUrgentAlertSound();
         }
 
-        emit(state.copyWith(
-          status: ClientRequestsStatus.success,
-          requests: requests.cast(),
-        ));
+        emit(
+          state.copyWith(
+            status: ClientRequestsStatus.success,
+            requests: requests.cast(),
+          ),
+        );
       },
       onError: (error) {
-        emit(state.copyWith(
-          status: ClientRequestsStatus.failure,
-          errorMessage: error.toString(),
-        ));
+        emit(
+          state.copyWith(
+            status: ClientRequestsStatus.failure,
+            errorMessage: error.toString(),
+          ),
+        );
       },
     );
+  }
+
+  /// End the lounge scope before logout, account changes or leaving the shell.
+  void stopWatchingRequests() {
+    _requestGeneration++;
+    _scopeGeneration++;
+    _loungeId = null;
+    cancelRealtimeSubscription();
+    _isFirstLoad = true;
+    _knownRequestIds.clear();
+    audioService.stopUrgentAlertSound();
+    if (!isClosed) emit(const ClientRequestsState());
   }
 
   void setFilter(RequestFilter filter) {
@@ -116,7 +144,12 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
     int page = 1,
     int pageSize = 20,
   }) async {
-    if (loungeId.isEmpty) return;
+    if (isClosed || loungeId.trim().isEmpty) return;
+    if (_loungeId != loungeId) {
+      stopWatchingRequests();
+      _loungeId = loungeId;
+    }
+    final generation = ++_requestGeneration;
     emit(state.copyWith(status: ClientRequestsStatus.loading));
 
     final result = await _getActiveLoungeRequestsPageUseCase(
@@ -127,26 +160,37 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
       ),
     );
 
-    if (isClosed) return;
+    if (isClosed || generation != _requestGeneration) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: ClientRequestsStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (paginated) => emit(state.copyWith(
-        status: ClientRequestsStatus.success,
-        requests: paginated.items,
-        page: paginated.page,
-        pageSize: paginated.pageSize,
-        totalCount: paginated.totalCount,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: ClientRequestsStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (paginated) => emit(
+        state.copyWith(
+          status: ClientRequestsStatus.success,
+          requests: paginated.items,
+          page: paginated.page,
+          pageSize: paginated.pageSize,
+          totalCount: paginated.totalCount,
+        ),
+      ),
     );
   }
 
-  Future<void> markAsAttended(String requestId, {bool isCanteenOrder = false}) async {
+  Future<void> markAsAttended(
+    String requestId, {
+    bool isCanteenOrder = false,
+  }) async {
+    if (isClosed) return;
+    final scope = _scopeGeneration;
     if (requestId.isEmpty || requestId.startsWith('notif_')) {
-      AppLogger.debug('⚠️ [CUBIT] Skipped backend call for invalid/mock request ID: $requestId');
+      AppLogger.debug(
+        '⚠️ [CUBIT] Skipped backend call for invalid/mock request ID: $requestId',
+      );
 
       final updatedList = state.requests.map((r) {
         if (r.id == requestId) {
@@ -185,18 +229,30 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState> with RealtimeWatche
       ),
     );
 
-    if (isClosed) return;
+    if (isClosed || scope != _scopeGeneration) return;
 
     result.fold(
       (failure) {
-        AppLogger.warning('🔴 [CUBIT] Mark Attended Failed: ${failure.message}');
-        emit(state.copyWith(
-          status: ClientRequestsStatus.failure,
-          errorMessage: failure.message,
-          requests: originalList,
-        ));
+        AppLogger.warning(
+          '🔴 [CUBIT] Mark Attended Failed: ${failure.message}',
+        );
+        emit(
+          state.copyWith(
+            status: ClientRequestsStatus.failure,
+            errorMessage: failure.message,
+            requests: originalList,
+          ),
+        );
       },
-      (_) => AppLogger.info('🟢 [CUBIT] Request $requestId marked as attended in DB'),
+      (_) => AppLogger.info(
+        '🟢 [CUBIT] Request $requestId marked as attended in DB',
+      ),
     );
+  }
+
+  @override
+  Future<void> close() {
+    stopWatchingRequests();
+    return super.close();
   }
 }

@@ -31,19 +31,23 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     Timer? backupSyncTimer;
     Timer? debounceTimer;
     bool isFetching = false;
+    bool isCancelled = false;
 
     void fetchAndEmit() {
+      if (isCancelled) return;
       debounceTimer?.cancel();
       debounceTimer = Timer(const Duration(milliseconds: 300), () async {
-        if (isFetching) return;
+        if (isCancelled || isFetching) return;
         isFetching = true;
         try {
           final requests = await getClientRequests(loungeId: cleanLoungeId);
-          if (!controller.isClosed) {
+          if (!isCancelled && !controller.isClosed) {
             controller.add(requests);
           }
         } catch (e, stack) {
-          if (!controller.isClosed) controller.addError(e, stack);
+          if (!isCancelled && !controller.isClosed) {
+            controller.addError(e, stack);
+          }
           debugPrint('⚠️ [REQUESTS_DATA_SOURCE] fetchAndEmit Error: $e');
         } finally {
           isFetching = false;
@@ -116,7 +120,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
                 }
               });
         } catch (e) {
-          if (!controller.isClosed) controller.addError(e);
+          if (!isCancelled && !controller.isClosed) controller.addError(e);
           debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Realtime setup failed: $e');
         }
 
@@ -125,6 +129,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         });
       },
       onCancel: () {
+        isCancelled = true;
         debounceTimer?.cancel();
         backupSyncTimer?.cancel();
         if (realtimeChannel != null) {

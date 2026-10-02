@@ -46,19 +46,22 @@ class DashboardShellContent extends StatefulWidget {
 }
 
 class _DashboardShellContentState extends State<DashboardShellContent> {
+  late final ClientRequestsCubit _requestsCubit;
   @override
   void initState() {
     super.initState();
+    _requestsCubit = context.read<ClientRequestsCubit>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       _checkUnauthorizedNotice();
       _initializePermissionsAndLounges();
       final loungeId = widget.user?.loungeId;
       if (loungeId != null && loungeId.isNotEmpty) {
-        context.read<ShiftCubit>().checkActiveShift(loungeId);
+        if (!widget.isSuperAdmin) {
+          context.read<ShiftCubit>().checkActiveShift(loungeId);
+        }
         context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
-        context.read<ClientRequestsCubit>().startWatchingRequests(
-          loungeId: loungeId,
-        );
+        _requestsCubit.startWatchingRequests(loungeId: loungeId);
       } else if (widget.isSuperAdmin) {
         context.read<BookingCubit>().startWatchingBookings();
       }
@@ -84,6 +87,12 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
   }
 
   @override
+  void dispose() {
+    _requestsCubit.stopWatchingRequests();
+    super.dispose();
+  }
+
+  @override
   void didUpdateWidget(covariant DashboardShellContent oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.location != oldWidget.location) {
@@ -94,13 +103,13 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
         widget.user?.loungeId != oldWidget.user?.loungeId) {
       _initializePermissionsAndLounges();
     }
-    if (widget.user?.loungeId != oldWidget.user?.loungeId) {
+    if (widget.user?.id != oldWidget.user?.id ||
+        widget.user?.loungeId != oldWidget.user?.loungeId) {
+      _requestsCubit.stopWatchingRequests();
       final loungeId = widget.user?.loungeId;
       if (loungeId != null && loungeId.isNotEmpty) {
         context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
-        context.read<ClientRequestsCubit>().startWatchingRequests(
-          loungeId: loungeId,
-        );
+        _requestsCubit.startWatchingRequests(loungeId: loungeId);
       } else if (widget.isSuperAdmin) {
         context.read<BookingCubit>().startWatchingBookings();
       }
@@ -215,13 +224,13 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
           listener: (context, state) {
             final activeId = state.selectedLoungeId;
             if (activeId != null && activeId.isNotEmpty) {
-              context.read<ShiftCubit>().checkActiveShift(activeId);
+              if (!widget.isSuperAdmin) {
+                context.read<ShiftCubit>().checkActiveShift(activeId);
+              }
               context.read<BookingCubit>().startWatchingBookings(
                 loungeId: activeId,
               );
-              context.read<ClientRequestsCubit>().startWatchingRequests(
-                loungeId: activeId,
-              );
+              _requestsCubit.startWatchingRequests(loungeId: activeId);
               final roleStr =
                   widget.user?.rawRole ?? widget.user?.role.name ?? 'staff';
               context.read<PermissionsCubit>().loadUserPermissions(
