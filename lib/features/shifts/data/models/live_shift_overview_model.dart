@@ -11,15 +11,18 @@ class LiveShiftOverviewModel extends LiveShiftOverviewEntity {
     super.startingCash,
     super.cashInDrawer,
     super.digitalPayments,
-    super.activeSessions = 0,
-    super.closedBookings = 0,
+    super.activeSessions,
+    super.closedBookings,
   });
 
   factory LiveShiftOverviewModel.fromJson(Map<String, dynamic> json) {
     final rawAvatar = json['cashier_avatar']?.toString();
-    final avatar = (rawAvatar != null && rawAvatar.trim().isNotEmpty) ? rawAvatar.trim() : null;
+    final avatar = (rawAvatar != null && rawAvatar.trim().isNotEmpty)
+        ? rawAvatar.trim()
+        : null;
 
-    final rawName = json['cashier_name']?.toString() ??
+    final rawName =
+        json['cashier_name']?.toString() ??
         json['cashier_full_name']?.toString() ??
         json['cashier']?.toString() ??
         json['staff_name']?.toString();
@@ -27,15 +30,24 @@ class LiveShiftOverviewModel extends LiveShiftOverviewEntity {
     return LiveShiftOverviewModel(
       hasActiveShift: json['has_active_shift'] ?? false,
       shiftId: json['shift_id']?.toString(),
-      cashierName: (rawName != null && rawName.trim().isNotEmpty) ? rawName.trim() : 'N/A',
+      cashierName: (rawName != null && rawName.trim().isNotEmpty)
+          ? rawName.trim()
+          : 'N/A',
       cashierAvatar: avatar,
       cashierPhone: json['cashier_phone']?.toString(),
-      startTime: json['start_time'] != null ? DateTime.tryParse(json['start_time'].toString()) : null,
-      startingCash: (json['starting_cash'] ?? json['opening_cash'] ?? 0).toDouble(),
-      cashInDrawer: (json['actual_cash_counted'] ?? json['cash_in_drawer'] ?? 0).toDouble(),
-      digitalPayments: (json['digital_payments'] ?? 0).toDouble(),
-      activeSessions: json['active_sessions'] ?? 0,
-      closedBookings: json['closed_bookings'] ?? 0,
+      startTime: DateTime.tryParse(
+        (json['opened_at'] ?? json['start_time'] ?? '').toString(),
+      ),
+      startingCash: (json['starting_cash'] ?? json['opening_cash'])?.toDouble(),
+      cashInDrawer:
+          (json['expected_cash'] ??
+                  json['cash_in_drawer'] ??
+                  json['actual_cash_counted'])
+              ?.toDouble(),
+      digitalPayments: (json['digital_sales'] ?? json['digital_payments'])
+          ?.toDouble(),
+      activeSessions: (json['active_sessions'] as num?)?.toInt(),
+      closedBookings: (json['closed_bookings'] as num?)?.toInt(),
     );
   }
 }

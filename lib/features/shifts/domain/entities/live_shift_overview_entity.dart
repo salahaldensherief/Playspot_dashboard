@@ -10,8 +10,8 @@ class LiveShiftOverviewEntity extends Equatable {
   final double? startingCash;
   final double? cashInDrawer;
   final double? digitalPayments;
-  final int activeSessions;
-  final int closedBookings;
+  final int? activeSessions;
+  final int? closedBookings;
 
   const LiveShiftOverviewEntity({
     required this.hasActiveShift,
@@ -23,22 +23,22 @@ class LiveShiftOverviewEntity extends Equatable {
     this.startingCash,
     this.cashInDrawer,
     this.digitalPayments,
-    this.activeSessions = 0,
-    this.closedBookings = 0,
+    this.activeSessions,
+    this.closedBookings,
   });
 
   @override
   List<Object?> get props => [
-        hasActiveShift,
-        shiftId,
-        cashierName,
-        cashierAvatar,
-        cashierPhone,
-        startTime,
-        startingCash,
-        cashInDrawer,
-        digitalPayments,
-        activeSessions,
-        closedBookings,
-      ];
+    hasActiveShift,
+    shiftId,
+    cashierName,
+    cashierAvatar,
+    cashierPhone,
+    startTime,
+    startingCash,
+    cashInDrawer,
+    digitalPayments,
+    activeSessions,
+    closedBookings,
+  ];
 }

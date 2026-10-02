@@ -1,14 +1,14 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
-import '../../../../../art_core/widgets/app_cached_image.dart';
+import '../../../../../art_core/widgets/app_avatar.dart';
 import '../shift_cubit.dart';
 import '../shift_state.dart';
 import '../../../domain/entities/live_shift_overview_entity.dart';
@@ -19,7 +19,8 @@ class AdminShiftMonitoringBar extends StatefulWidget {
   const AdminShiftMonitoringBar({super.key});
 
   @override
-  State<AdminShiftMonitoringBar> createState() => _AdminShiftMonitoringBarState();
+  State<AdminShiftMonitoringBar> createState() =>
+      _AdminShiftMonitoringBarState();
 }
 
 class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
@@ -62,12 +63,26 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ShiftCubit, ShiftState>(
-      buildWhen: (previous, current) => previous.status != current.status || previous.liveOverview != current.liveOverview,
+      buildWhen: (previous, current) =>
+          previous.status != current.status ||
+          previous.liveOverview != current.liveOverview,
       builder: (context, state) {
         if (state.status == ShiftStatus.loading && state.liveOverview == null) {
-          return const LinearProgressIndicator(color: AppColors.neonBlue, backgroundColor: Colors.transparent);
+          return const LinearProgressIndicator(
+            color: AppColors.neonBlue,
+            backgroundColor: Colors.transparent,
+          );
         }
 
+        if (state.status == ShiftStatus.error) {
+          return Padding(
+            padding: const EdgeInsets.all(12),
+            child: Text(
+              'shift_overview_unavailable'.tr(),
+              style: const TextStyle(color: AppColors.warning),
+            ),
+          );
+        }
         final overview = state.liveOverview;
         if (overview == null || !overview.hasActiveShift) {
           return _buildNoActiveShiftWarning();
@@ -84,11 +99,17 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: AppColors.danger.withValues(alpha: 0.1),
-        border: Border(bottom: BorderSide(color: AppColors.danger.withValues(alpha: 0.2))),
+        border: Border(
+          bottom: BorderSide(color: AppColors.danger.withValues(alpha: 0.2)),
+        ),
       ),
       child: Row(
         children: [
-          Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 20.r),
+          Icon(
+            Icons.warning_amber_rounded,
+            color: AppColors.danger,
+            size: 20.r,
+          ),
           SizedBox(width: 12.w),
           AppText.body(
             "No Active Shift Running | لا توجد وردية مفتوحة",
@@ -104,14 +125,20 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
             onPressed: () async {
               final user = context.read<LoginCubit>().state.user;
               if (user?.loungeId != null) {
-                final success = await context.read<ShiftCubit>().quickOpenShift(user!.loungeId!, 0.0);
+                final success = await context.read<ShiftCubit>().quickOpenShift(
+                  user!.loungeId!,
+                  0.0,
+                );
                 if (mounted && success) {
                   _refreshOverview();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Row(
                         children: [
-                          const Icon(Icons.check_circle_outline, color: AppColors.textPrimary),
+                          const Icon(
+                            Icons.check_circle_outline,
+                            color: AppColors.textPrimary,
+                          ),
                           const SizedBox(width: 8),
                           Text(AppStrings.shiftOpenedSuccess),
                         ],
@@ -133,14 +160,24 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
     );
   }
 
-  Widget _buildMonitoringBanner(BuildContext context, LiveShiftOverviewEntity overview) {
+  Widget _buildMonitoringBanner(
+    BuildContext context,
+    LiveShiftOverviewEntity overview,
+  ) {
     final startTime = overview.startTime;
-    final startTimeStr = startTime != null ? DateFormat.jm().format(startTime) : '--:--';
+    final startTimeStr = startTime != null
+        ? DateFormat.jm().format(startTime)
+        : '--:--';
     final elapsed = _getElapsedTime(startTime);
     final bool isMobile = MediaQuery.sizeOf(context).width < 850;
 
     if (isMobile) {
-      return _buildMobileMonitoringBanner(context, overview, startTimeStr, elapsed);
+      return _buildMobileMonitoringBanner(
+        context,
+        overview,
+        startTimeStr,
+        elapsed,
+      );
     }
 
     return Container(
@@ -150,7 +187,11 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
         color: AppColors.cardBackground,
         border: Border(bottom: BorderSide(color: AppColors.borderDefault)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Row(
@@ -158,14 +199,15 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
           // Cashier Profile
           Builder(
             builder: (context) {
-              final bool hasAvatar = overview.cashierAvatar != null && overview.cashierAvatar!.trim().isNotEmpty;
-              return CircleAvatar(
+              return AppAvatar(
                 radius: 24.r,
+                imageUrl: overview.cashierAvatar,
                 backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
-                backgroundImage: hasAvatar ? AppCachedImage.provider(overview.cashierAvatar) : null,
-                child: !hasAvatar 
-                  ? Icon(Icons.person, color: AppColors.neonBlue, size: 24.r) 
-                  : null,
+                fallback: Icon(
+                  Icons.person,
+                  color: AppColors.neonBlue,
+                  size: 24.r,
+                ),
               );
             },
           ),
@@ -173,23 +215,42 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText.body(overview.cashierName ?? 'Cashier', fontWeight: FontWeight.bold),
-              AppText.body(overview.cashierPhone ?? '', color: AppColors.textSecondary, fontSize: 12.sp),
+              AppText.body(
+                overview.cashierName ?? 'Cashier',
+                fontWeight: FontWeight.bold,
+              ),
+              AppText.body(
+                overview.cashierPhone ?? '',
+                color: AppColors.textSecondary,
+                fontSize: 12.sp,
+              ),
             ],
           ),
-          
+
           VerticalDivider(width: 40.w, color: AppColors.borderDefault),
 
           // Time Info
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText.body("Started at $startTimeStr", color: AppColors.textSecondary, fontSize: 12.sp),
+              AppText.body(
+                "Started at $startTimeStr",
+                color: AppColors.textSecondary,
+                fontSize: 12.sp,
+              ),
               Row(
                 children: [
-                  Icon(Icons.timer_outlined, color: AppColors.neonBlue, size: 14.r),
+                  Icon(
+                    Icons.timer_outlined,
+                    color: AppColors.neonBlue,
+                    size: 14.r,
+                  ),
                   SizedBox(width: 4.w),
-                  AppText.body(elapsed, fontWeight: FontWeight.bold, color: AppColors.neonBlue),
+                  AppText.body(
+                    elapsed,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.neonBlue,
+                  ),
                 ],
               ),
             ],
@@ -198,12 +259,22 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
           const Spacer(),
 
           // Stats
-          _buildStatItem("Cash", "${(overview.cashInDrawer ?? 0.0).toStringAsFixed(0)} ${AppStrings.egp}"),
+          _buildStatItem(
+            "Cash",
+            "${overview.cashInDrawer?.toStringAsFixed(0) ?? '—'} ${AppStrings.egp}",
+          ),
           SizedBox(width: 24.w),
-          _buildStatItem("Digital", "${(overview.digitalPayments ?? 0.0).toStringAsFixed(0)} ${AppStrings.egp}"),
+          _buildStatItem(
+            "Digital",
+            "${overview.digitalPayments?.toStringAsFixed(0) ?? '—'} ${AppStrings.egp}",
+          ),
           SizedBox(width: 24.w),
-          _buildStatItem("Sessions", overview.activeSessions.toString(), icon: Icons.videogame_asset_outlined),
-          
+          _buildStatItem(
+            "Sessions",
+            overview.activeSessions?.toString() ?? '—',
+            icon: Icons.videogame_asset_outlined,
+          ),
+
           SizedBox(width: 40.w),
 
           // Action
@@ -218,7 +289,12 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
     );
   }
 
-  Widget _buildMobileMonitoringBanner(BuildContext context, LiveShiftOverviewEntity overview, String startTime, String elapsed) {
+  Widget _buildMobileMonitoringBanner(
+    BuildContext context,
+    LiveShiftOverviewEntity overview,
+    String startTime,
+    String elapsed,
+  ) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(16.r),
@@ -232,11 +308,10 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
             children: [
               Builder(
                 builder: (context) {
-                  final bool hasAvatar = overview.cashierAvatar != null && overview.cashierAvatar!.trim().isNotEmpty;
-                  return CircleAvatar(
+                  return AppAvatar(
                     radius: 20.r,
-                    backgroundImage: hasAvatar ? AppCachedImage.provider(overview.cashierAvatar) : null,
-                    child: !hasAvatar ? Icon(Icons.person, size: 20.r) : null,
+                    imageUrl: overview.cashierAvatar,
+                    fallback: Icon(Icons.person, size: 20.r),
                   );
                 },
               ),
@@ -245,8 +320,16 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AppText.body(overview.cashierName ?? 'Staff', fontWeight: FontWeight.bold, fontSize: 14.sp),
-                    AppText.body("Since $startTime ($elapsed)", color: AppColors.textSecondary, fontSize: 11.sp),
+                    AppText.body(
+                      overview.cashierName ?? 'Staff',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.sp,
+                    ),
+                    AppText.body(
+                      "Since $startTime ($elapsed)",
+                      color: AppColors.textSecondary,
+                      fontSize: 11.sp,
+                    ),
                   ],
                 ),
               ),
@@ -262,9 +345,19 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStatItem("Cash", (overview.cashInDrawer ?? 0.0).toStringAsFixed(0)),
-              _buildStatItem("Digital", (overview.digitalPayments ?? 0.0).toStringAsFixed(0)),
-              _buildStatItem("Active", overview.activeSessions.toString(), icon: Icons.videogame_asset_outlined),
+              _buildStatItem(
+                "Cash",
+                overview.cashInDrawer?.toStringAsFixed(0) ?? '—',
+              ),
+              _buildStatItem(
+                "Digital",
+                overview.digitalPayments?.toStringAsFixed(0) ?? '—',
+              ),
+              _buildStatItem(
+                "Active",
+                overview.activeSessions?.toString() ?? '—',
+                icon: Icons.videogame_asset_outlined,
+              ),
             ],
           ),
         ],
@@ -290,13 +383,21 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
     );
   }
 
-  void _confirmForceClose(BuildContext context, LiveShiftOverviewEntity overview) {
+  void _confirmForceClose(
+    BuildContext context,
+    LiveShiftOverviewEntity overview,
+  ) {
     showDialog(
       context: context,
       builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        title: Text(AppStrings.forceCloseShift, style: const TextStyle(color: AppColors.textPrimary)),
-        content: Text(AppStrings.confirmForceCloseMsg(overview.cashierName ?? '')),
+        title: Text(
+          AppStrings.forceCloseShift,
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
+        content: Text(
+          AppStrings.confirmForceCloseMsg(overview.cashierName ?? ''),
+        ),
         actions: [
           AppButton(
             text: AppStrings.cancel,
@@ -316,11 +417,14 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
     );
   }
 
-  void _showCloseDialog(BuildContext context, LiveShiftOverviewEntity overview) {
+  void _showCloseDialog(
+    BuildContext context,
+    LiveShiftOverviewEntity overview,
+  ) {
     final shiftCubit = context.read<ShiftCubit>();
     final loginCubit = context.read<LoginCubit>();
     final user = loginCubit.state.user;
-    
+
     showDialog(
       context: context,
       useRootNavigator: false,
@@ -329,12 +433,19 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
           final shiftId = overview.shiftId;
           if (shiftId != null) {
             Navigator.pop(diagContext);
-            await shiftCubit.closeShift(shiftId, actualCash, notes, user?.loungeId ?? '');
+            await shiftCubit.closeShift(
+              shiftId,
+              actualCash,
+              notes,
+              user?.loungeId ?? '',
+            );
             _refreshOverview();
             if (context.mounted && shiftCubit.state.lastClosedShift != null) {
               showDialog(
                 context: context,
-                builder: (_) => ShiftHandoverSummaryDialog(shift: shiftCubit.state.lastClosedShift!),
+                builder: (_) => ShiftHandoverSummaryDialog(
+                  shift: shiftCubit.state.lastClosedShift!,
+                ),
               );
             }
           }

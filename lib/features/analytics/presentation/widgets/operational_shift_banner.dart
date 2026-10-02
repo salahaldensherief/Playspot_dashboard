@@ -1,7 +1,7 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
@@ -34,25 +34,40 @@ class OperationalShiftBanner extends StatelessWidget {
               prev.status != curr.status ||
               prev.activeShift != curr.activeShift,
           builder: (context, shiftState) {
+            if (shiftState.status == ShiftStatus.error) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Text(
+                  'shift_overview_unavailable'.tr(),
+                  style: const TextStyle(color: AppColors.warning),
+                ),
+              );
+            }
             final isClosed =
                 shiftState.status == ShiftStatus.initial &&
                 shiftState.activeShift == null;
 
             if (isClosed) {
-              return _buildClosedBanner(
-                context,
-                loungeId,
-                isCashier: user.isCashier,
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _buildClosedBanner(
+                  context,
+                  loungeId,
+                  isCashier: user.isCashier,
+                ),
               );
             }
 
             final activeShift = shiftState.activeShift;
             if (activeShift != null) {
-              return _buildActiveBanner(
-                context,
-                activeShift,
-                loungeId,
-                userId: user.id,
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _buildActiveBanner(
+                  context,
+                  activeShift,
+                  loungeId,
+                  userId: user.id,
+                ),
               );
             }
 

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -31,18 +32,27 @@ class NeedsAttentionPanel extends StatelessWidget {
     final isCashier = user?.role == UserRole.cashier;
 
     return BlocBuilder<BookingCubit, BookingState>(
-      buildWhen: (prev, curr) => prev.bookings != curr.bookings,
+      buildWhen: (prev, curr) =>
+          prev.bookings != curr.bookings || prev.status != curr.status,
       builder: (context, bookingState) {
         return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
-          buildWhen: (prev, curr) => prev.requests != curr.requests,
+          buildWhen: (prev, curr) =>
+              prev.requests != curr.requests || prev.status != curr.status,
           builder: (context, reqState) {
             return BlocBuilder<LoungeStatsCubit, LoungeStatsState>(
               buildWhen: (prev, curr) =>
-                  prev.stats?.lowStockItems != curr.stats?.lowStockItems,
+                  prev.stats?.lowStockItems != curr.stats?.lowStockItems ||
+                  prev.status != curr.status,
               builder: (context, statsState) {
                 return BlocBuilder<ShiftCubit, ShiftState>(
                   buildWhen: (prev, curr) => prev.status != curr.status,
                   builder: (context, shiftState) {
+                    final dataVerified =
+                        bookingState.status == BookingStatusState.success &&
+                        reqState.status == ClientRequestsStatus.success &&
+                        statsState.status == LoungeStatsStatus.success &&
+                        shiftState.status != ShiftStatus.error &&
+                        shiftState.status != ShiftStatus.loading;
                     final bookings = bookingState.bookings;
 
                     // 1. Pending payment proofs
@@ -98,7 +108,14 @@ class NeedsAttentionPanel extends StatelessWidget {
                         children: [
                           _buildHeader(totalAlerts),
                           SizedBox(height: 16.h),
-                          if (totalAlerts == 0)
+                          if (!dataVerified) ...[
+                            Text(
+                              'dashboard_data_unavailable'.tr(),
+                              style: const TextStyle(color: AppColors.warning),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                          if (totalAlerts == 0 && dataVerified)
                             const _AllClearState()
                           else ...[
                             if (hasNoActiveShift)

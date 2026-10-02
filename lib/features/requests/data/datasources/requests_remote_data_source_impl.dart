@@ -1,3 +1,4 @@
+import 'package:play_spot_dashboard/core/error/backend_access_error.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
@@ -41,7 +42,8 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
           if (!controller.isClosed) {
             controller.add(requests);
           }
-        } catch (e) {
+        } catch (e, stack) {
+          if (!controller.isClosed) controller.addError(e, stack);
           debugPrint('⚠️ [REQUESTS_DATA_SOURCE] fetchAndEmit Error: $e');
         } finally {
           isFetching = false;
@@ -114,6 +116,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
                 }
               });
         } catch (e) {
+          if (!controller.isClosed) controller.addError(e);
           debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Realtime setup failed: $e');
         }
 
@@ -170,6 +173,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         );
         requestsList.addAll(paginated.items);
       } catch (e) {
+        if (isBackendAccessDenied(e)) rethrow;
         debugPrint(
           '⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests_page Error: $e',
         );
@@ -205,6 +209,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         pageSize: pageSize,
       );
     } catch (e) {
+      if (isBackendAccessDenied(e)) rethrow;
       debugPrint(
         '⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests_page Error: $e',
       );
@@ -245,6 +250,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         );
         requestsList.addAll(paginated.items);
       } catch (e) {
+        if (isBackendAccessDenied(e)) rethrow;
         debugPrint(
           '⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests Error: $e',
         );
@@ -274,6 +280,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
       list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return list;
     } catch (e) {
+      if (isBackendAccessDenied(e)) rethrow;
       debugPrint(
         '⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests Error: $e',
       );
