@@ -1,20 +1,14 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:play_spot_dashboard/core/constants/app_constants.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<UserModel> login({
-    required String email,
-    required String password,
-  });
-  
+  Future<UserModel> login({required String email, required String password});
+
   Future<void> logout();
-  
+
   Future<UserModel?> getCurrentUser({String? userId});
-  
+
   Future<bool> checkSetupStatus(String loungeId);
 
   Future<UserModel> updateUserLocation({
@@ -37,14 +31,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       email: email,
       password: password,
     );
-    
+
     if (response.user == null) {
       throw Exception('User not found');
     }
-    
+
     final profile = await getCurrentUser(userId: response.user!.id);
     if (profile == null) {
-       throw Exception('Profile not found');
+      throw Exception('Profile not found');
     }
     return profile;
   }
@@ -62,7 +56,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         debugPrint('AuthRemoteDataSource: No authenticated user ID found');
         return null;
       }
-      
+
       debugPrint('AuthRemoteDataSource: Fetching profile for ID: $finalUserId');
 
       // Check platform_super_admins table as single source of truth for Super Admin privilege
@@ -75,10 +69,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
             .maybeSingle();
         if (superAdminCheck != null) {
           isPlatformSuperAdmin = true;
-          debugPrint('AuthRemoteDataSource: User $finalUserId confirmed as Platform Super Admin!');
+          debugPrint(
+            'AuthRemoteDataSource: User $finalUserId confirmed as Platform Super Admin!',
+          );
         }
       } catch (e) {
-        debugPrint('AuthRemoteDataSource: platform_super_admins query check error: $e');
+        debugPrint(
+          'AuthRemoteDataSource: platform_super_admins query check error: $e',
+        );
       }
 
       // 1. Try RPC first
@@ -88,12 +86,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         if (isPlatformSuperAdmin) {
           map['role'] = 'super_admin';
         }
-        debugPrint('AuthRemoteDataSource: Profile found via RPC (isPlatformSuperAdmin: $isPlatformSuperAdmin)');
+        debugPrint(
+          'AuthRemoteDataSource: Profile found via RPC (isPlatformSuperAdmin: $isPlatformSuperAdmin)',
+        );
         return UserModel.fromJson(map);
       }
 
       // 2. Fallback: Direct table select if RPC returns null
-      debugPrint('AuthRemoteDataSource: RPC returned null, trying direct select...');
+      debugPrint(
+        'AuthRemoteDataSource: RPC returned null, trying direct select...',
+      );
       final tableResponse = await supabaseClient
           .from('profiles')
           .select('*, cities:city_id(id, name_ar, name_en)')
@@ -108,8 +110,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         debugPrint('AuthRemoteDataSource: Profile found via direct select');
         return UserModel.fromJson(map);
       }
-      
-      debugPrint('AuthRemoteDataSource: Profile record totally missing in profiles table');
+
+      debugPrint(
+        'AuthRemoteDataSource: Profile record totally missing in profiles table',
+      );
     } catch (e) {
       debugPrint('AuthRemoteDataSource: Error in getCurrentUser: $e');
     }
@@ -118,13 +122,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<bool> checkSetupStatus(String loungeId) async {
-     // Brief says is_setup_completed is in profile, but kept this for compatibility
+    // Brief says is_setup_completed is in profile, but kept this for compatibility
     final response = await supabaseClient
         .from('lounges')
         .select('is_setup_completed')
         .eq('id', loungeId)
         .maybeSingle();
-    
+
     return response?['is_setup_completed'] == true;
   }
 
@@ -133,55 +137,67 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required double latitude,
     required double longitude,
   }) async {
+    if (!latitude.isFinite ||
+        !longitude.isFinite ||
+        latitude < -90 ||
+        latitude > 90 ||
+        longitude < -180 ||
+        longitude > 180) {
+      throw ArgumentError('Invalid coordinates');
+    }
     final session = supabaseClient.auth.currentSession;
     if (session == null || session.accessToken.isEmpty) {
-      throw Exception('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى (401)');
+      throw const AuthException('Authentication required (401)');
     }
-
-    try {
-      final url = Uri.parse('$supabaseUrl/functions/v1/update-user-location');
-      final response = await http.post(
-        url,
-        headers: {
-          'Authorization': 'Bearer ${session.accessToken}',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'latitude': latitude,
-          'longitude': longitude,
-        }),
-      );
-
-      if (response.statusCode == 422) {
-        throw Exception('عذراً، المدينة غير مضافة حالياً للنظام (422)');
-      } else if (response.statusCode == 401) {
-        throw Exception('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى (401)');
-      } else if (response.statusCode == 200) {
-        final updated = await getCurrentUser();
-        if (updated != null) return updated;
-      } else {
-        debugPrint('⚠️ [AUTH_REMOTE] Edge function returned status ${response.statusCode}, attempting direct DB fallback');
+    void requireSameActor() {
+      if (supabaseClient.auth.currentSession?.user.id != session.user.id) {
+        throw const AuthException('Authentication changed (401)');
       }
-    } catch (e) {
-      if (e is Exception && e.toString().contains('422')) rethrow;
-      if (e is Exception && e.toString().contains('401')) rethrow;
-      debugPrint('⚠️ [AUTH_REMOTE] Edge function call error ($e), attempting direct DB fallback');
     }
 
-    // Direct DB Fallback if Edge function returned 502/server error
+    bool locationSaved = false;
     try {
-      await supabaseClient.from('profiles').update({
-        'latitude': latitude,
-        'longitude': longitude,
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', session.user.id);
-    } catch (dbErr) {
-      debugPrint('⚠️ [AUTH_REMOTE] Direct DB location update failed: $dbErr');
+      // The configured client supplies both the API key and current access token.
+      final response = await supabaseClient.functions.invoke(
+        'update-user-location',
+        body: {'latitude': latitude, 'longitude': longitude},
+      );
+      requireSameActor();
+      if (response.status != 200 ||
+          response.data is! Map ||
+          response.data['success'] != true) {
+        throw const FormatException(
+          'Location service did not confirm the update',
+        );
+      }
+      locationSaved = true;
+    } on FunctionException catch (error) {
+      requireSameActor();
+      // Never replace validation or authorization failures with a direct write.
+      if (error.status < 500) rethrow;
+      debugPrint('Location city lookup unavailable: ${error.status}');
     }
 
-    final updated = await getCurrentUser();
-    if (updated == null) {
-      throw Exception('تعذر جلب ملف المستخدم بعد تحديث الموقع');
+    if (!locationSaved) {
+      requireSameActor();
+      // Retain coordinates during a city-service outage without inventing a city.
+      // RLS still authorizes this update; an empty/denied update is an error.
+      await supabaseClient
+          .from('profiles')
+          .update({
+            'latitude': latitude,
+            'longitude': longitude,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', session.user.id)
+          .select('id')
+          .single();
+      requireSameActor();
+    }
+    final updated = await getCurrentUser(userId: session.user.id);
+    requireSameActor();
+    if (updated == null || updated.id != session.user.id) {
+      throw const FormatException('Could not refresh the updated user profile');
     }
     return updated;
   }
