@@ -2,9 +2,18 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../../lounges/domain/entities/lounge.dart';
 
-enum LoginStatus { initial, checking, loading, success, failure, authenticated, unauthenticated }
+enum LoginStatus {
+  initial,
+  checking,
+  loading,
+  success,
+  failure,
+  authenticated,
+  unauthenticated,
+}
 
 class LoginState extends Equatable {
+  static const _unchanged = Object();
   final LoginStatus status;
   final UserEntity? user;
   final Lounge? userLounge;
@@ -35,7 +44,7 @@ class LoginState extends Equatable {
     bool? isSetupCompleted,
     bool? locationCaptured,
     bool? isLoadingLocation,
-    String? locationErrorMessage,
+    Object? locationErrorMessage = _unchanged,
   }) {
     return LoginState(
       status: status ?? this.status,
@@ -45,19 +54,21 @@ class LoginState extends Equatable {
       isSetupCompleted: isSetupCompleted ?? this.isSetupCompleted,
       locationCaptured: locationCaptured ?? this.locationCaptured,
       isLoadingLocation: isLoadingLocation ?? this.isLoadingLocation,
-      locationErrorMessage: locationErrorMessage ?? this.locationErrorMessage,
+      locationErrorMessage: identical(locationErrorMessage, _unchanged)
+          ? this.locationErrorMessage
+          : locationErrorMessage as String?,
     );
   }
 
   @override
   List<Object?> get props => [
-        status,
-        user,
-        userLounge,
-        errorMessage,
-        isSetupCompleted,
-        locationCaptured,
-        isLoadingLocation,
-        locationErrorMessage,
-      ];
+    status,
+    user,
+    userLounge,
+    errorMessage,
+    isSetupCompleted,
+    locationCaptured,
+    isLoadingLocation,
+    locationErrorMessage,
+  ];
 }
