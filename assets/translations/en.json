@@ -344,6 +344,11 @@
   "shift_active": "Active Shift",
   "no_active_shift": "No Active Shift",
   "cashier": {
+    "manage": "Manage session",
+    "playMode": "Play mode",
+    "sessionSection": "Session details",
+    "paymentSection": "Bill and payment",
+    "activitySection": "Requests and next booking",
     "customer": "Customer",
     "resource": "Resource / play mode",
     "start": "Started at",
@@ -351,12 +356,12 @@
     "remaining": "Remaining time",
     "overtime": "Overtime",
     "payment": "Payment status",
-    "serverTotal": "Server booking total",
+    "serverTotal": "Booking total",
     "collected": "Collected",
     "due": "Amount due",
-    "unavailable": "Not supplied by the server",
-    "awaitingFinal": "Calculated by the server when the session closes",
-    "financeNotice": "Starting play is not payment. Collection requires a confirmed server result.",
+    "unavailable": "Not confirmed",
+    "awaitingFinal": "Finalized when the session closes",
+    "financeNotice": "Starting play is not collection. Review the confirmed amount before recording another payment.",
     "next": "Next booking on this resource",
     "noneLoaded": "None in the loaded records",
     "conflict": "Check the next booking before extending this session.",
@@ -1508,6 +1513,13 @@
       "title": "Could not verify lounge status",
       "description": "Approved lounge data could not be loaded. Check again when connected; operations require a verified lounge status."
     }
+  },
+  "cache": {
+    "remove_failed": "Saved account data could not be cleared. Please retry."
+  },
+  "auth": {
+    "secure_storage_unverified": "Could not verify secure sign-in storage. Please try again.",
+    "invalid_storage_scope": "Sign-in configuration is invalid. Please contact support."
   },
   "offline_cashier": {
     "invalid_scope": "The account or venue could not be identified.",
