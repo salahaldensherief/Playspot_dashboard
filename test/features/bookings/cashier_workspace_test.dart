@@ -14,12 +14,14 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/cashi
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/cashier_session_details.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_operations_summary.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_clock_host.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_ticker.dart';
 import 'package:play_spot_dashboard/features/requests/domain/entities/client_request_entity.dart';
 import '../../support/local_translations_loader.dart';
+import '../../support/cashier_workspace_interaction_tests.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  final now = DateTime.now();
+  final now = DateTime(2026, 10, 1, 15);
   final a = Booking(
     id: 'a',
     userId: 'u',
@@ -78,9 +80,18 @@ void main() {
     String locale,
     double scale, {
     List<Booking>? bookings,
+    ValueChanged<Booking>? onManage,
+    ValueNotifier<bool>? workspaceVisibility,
+    List<ClientRequestEntity>? clientRequests,
   }) async {
+    final testStart = tester.binding.clock.now();
     tester.view.physicalSize = Size(width, 1000);
     tester.view.devicePixelRatio = 1;
+    final workspace = CashierSessionsWorkspace(
+      bookings: bookings ?? [a, b, next],
+      requests: clientRequests ?? [request],
+      onManage: onManage ?? (_) {},
+    );
     await tester.pumpWidget(
       EasyLocalization(
         key: ValueKey('$width-$locale-$scale'),
@@ -119,13 +130,19 @@ void main() {
                 child: Scaffold(
                   body: SizedBox(
                     child: SessionClockHost(
+                      clock: () => now.add(
+                        tester.binding.clock.now().difference(testStart),
+                      ),
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(16),
-                        child: CashierSessionsWorkspace(
-                          bookings: bookings ?? [a, b, next],
-                          requests: [request],
-                          onManage: (_) {},
-                        ),
+                        child: workspaceVisibility == null
+                            ? workspace
+                            : ValueListenableBuilder<bool>(
+                                valueListenable: workspaceVisibility,
+                                builder: (_, visible, child) => visible
+                                    ? workspace
+                                    : const SizedBox.shrink(),
+                              ),
                       ),
                     ),
                   ),
@@ -169,14 +186,27 @@ void main() {
             find.text(locale == 'ar' ? 'يبدأ خلال' : 'Starts in'),
             findsWidgets,
           );
-          if (width >= 768)
+          if (width >= 768) {
             expect(find.byType(CashierSessionDetails), findsOneWidget);
+            expect(
+              SessionTickerScope.nowOf(
+                tester.element(find.byType(CashierSessionDetails)),
+              ).hour,
+              now.hour,
+            );
+          }
           await screenshot(tester, 'cashier-${width.toInt()}-$locale-$scale');
           if (width <= 600) {
             await tester.tap(find.text(a.roomName).first);
             await tester.pumpAndSettle();
             expect(find.byType(CashierSessionDetails), findsOneWidget);
             expect(tester.takeException(), isNull);
+            expect(
+              SessionTickerScope.nowOf(
+                tester.element(find.byType(CashierSessionDetails)),
+              ).hour,
+              now.hour,
+            );
             await screenshot(
               tester,
               'cashier-${width.toInt()}-$locale-$scale-details',
@@ -191,6 +221,8 @@ void main() {
       }
     }
   }
+
+  CashierWorkspaceInteractionTests.register(mount, a, request);
 
   testWidgets('clock ticks rebuild leaves, not the cashier workspace', (
     tester,
@@ -210,7 +242,7 @@ void main() {
     };
     final elapsed = Stopwatch()..start();
     try {
-      for (var i = 0; i < 10; i++) {
+      for (var i = 0; i < 45; i++) {
         await tester.pump(const Duration(seconds: 1));
       }
     } finally {
@@ -222,14 +254,12 @@ void main() {
     expect(builds['SessionLiveClock'] ?? 0, greaterThan(0));
     final directory = Platform.environment['PLAYSPOT_SCREENSHOT_DIR'];
     if (directory != null) {
-      File(
-        '$directory/../dashboard-rebuild-measurement.json',
-      ).writeAsStringSync(
+      File('$directory/dashboard-rebuild-measurement.json').writeAsStringSync(
         jsonEncode({
           'mode':
               'Flutter widget test, debug, Windows host; not device frame timings',
           'inputBookings': 100,
-          'simulatedSeconds': 10,
+          'simulatedSeconds': 45,
           'hostElapsedMicroseconds': elapsed.elapsedMicroseconds,
           'builds': builds,
         }),
@@ -246,6 +276,25 @@ void main() {
     );
     expect(
       SessionOperationsSummary.fromBookings(b, [a, next]).nextBooking,
+      isNull,
+    );
+  });
+  test(
+    'next booking cannot expose another venue even with the same resource ID',
+    () {
+      expect(
+        SessionOperationsSummary.fromBookings(a, [
+          next.copyWith(loungeId: 'other'),
+        ]).nextBooking,
+        isNull,
+      );
+    },
+  );
+  test('missing resource cannot associate unrelated unassigned bookings', () {
+    expect(
+      SessionOperationsSummary.fromBookings(a.copyWith(roomId: ''), [
+        next.copyWith(roomId: ''),
+      ]).nextBooking,
       isNull,
     );
   });

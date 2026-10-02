@@ -1,11 +1,14 @@
 import 'package:get_it/get_it.dart';
+import '../../features/offline_cashier/offline_cashier_di.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/secure_supabase_auth_options.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/core/audio/audio_service.dart';
 import 'package:play_spot_dashboard/core/constants/app_constants.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:play_spot_dashboard/core/services/location_service.dart';
 import 'package:play_spot_dashboard/core/services/local_cache_service.dart';
+import '../services/local_cache_service_impl.dart';
 import 'package:play_spot_dashboard/core/services/hardware_bridge_service.dart';
 
 import 'package:play_spot_dashboard/features/auth/auth_di.dart';
@@ -42,10 +45,15 @@ Future<void> setupInjection() async {
     );
   }
 
-  await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
+  await Supabase.initialize(
+    url: supabaseUrl,
+    publishableKey: supabaseAnonKey,
+    authOptions: SecureSupabaseAuthOptions.forUrl(supabaseUrl),
+  );
 
   // Register Supabase Client
   sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
+  await initOfflineCashierDI(sl);
 
   // Core Services
   final prefs = await SharedPreferences.getInstance();

@@ -5,7 +5,7 @@ class _SessionClockHostState extends State<SessionClockHost> {
   @override
   void initState() {
     super.initState();
-    _ticker = SessionTickerNotifier();
+    _ticker = SessionTickerNotifier(clock: widget.clock);
   }
 
   @override

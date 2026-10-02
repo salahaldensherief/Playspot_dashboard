@@ -1508,5 +1508,35 @@
       "title": "Could not verify lounge status",
       "description": "Approved lounge data could not be loaded. Check again when connected; operations require a verified lounge status."
     }
+  },
+  "offline_cashier": {
+    "invalid_scope": "The account or venue could not be identified.",
+    "missing_encryption_key": "Saved operations could not be opened because the encryption key is unavailable. Data has been preserved.",
+    "invalid_encryption_key": "The current encryption key could not open the data.",
+    "journal_closed": "Reopen the venue session to continue.",
+    "invalid_preference": "The device setting could not be saved.",
+    "idempotency_conflict": "This operation ID belongs to a different operation. Review pending operations.",
+    "invalid_command": "The operation details are incomplete.",
+    "permission_denied": "You do not have permission to perform this operation.",
+    "authority_expired": "Offline authorization has expired. Reconnect to renew it; your operations are saved.",
+    "invalid_authority": "The device authorization could not be verified. Saved operations have been preserved.",
+    "authority_review_required": "Some operations need authorization review. Saved operations have been preserved.",
+    "sequence_mismatch": "Operation order differs from the server. Reconcile saved operations before continuing.",
+    "authority_unavailable": "Device authorization could not be refreshed. Reconnect and try again.",
+    "shift_required": "Open your shift before recording the operation.",
+    "invalid_booking": "Check the room and booking time.",
+    "invalid_pricing_snapshot": "Room prices need refreshing before an offline booking.",
+    "price_mismatch": "The booking price differs from the saved room price.",
+    "room_conflict": "The room already has a booking at this time.",
+    "booking_not_found": "The booking is not available in this venue data.",
+    "invalid_transition": "The current session status does not allow this operation.",
+    "invalid_payment": "Check the collection amount; it must not exceed the balance due.",
+    "invalid_order": "Check the requested items and quantities.",
+    "insufficient_stock": "The requested quantity exceeds saved stock.",
+    "invalid_sync_response": "Synchronization could not be confirmed. Operations remain saved on this device.",
+    "outbox_changed": "Pending operations changed during synchronization. Review their status.",
+    "operation_failed": "The local operation could not be recorded. Try again.",
+    "storage_failed": "Saved operations could not be read.",
+    "sync_failed": "Synchronization could not be completed. Operations are saved; you can retry."
   }
 }

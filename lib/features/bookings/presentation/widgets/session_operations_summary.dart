@@ -10,11 +10,15 @@ class SessionOperationsSummary extends Equatable {
     Booking booking,
     List<Booking> all,
   ) {
+    if (booking.roomId.trim().isEmpty) {
+      return SessionOperationsSummary(booking, null);
+    }
     final next =
         all
             .where(
               (item) =>
                   item.id != booking.id &&
+                  item.loungeId == booking.loungeId &&
                   item.roomId == booking.roomId &&
                   item.status == BookingStatus.upcoming &&
                   item.startDateTime != null,

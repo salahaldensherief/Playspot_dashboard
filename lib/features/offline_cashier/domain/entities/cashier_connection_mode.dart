@@ -1,0 +1,1 @@
+enum CashierConnectionMode { online, offline }
