@@ -34,7 +34,7 @@ class EncryptedCashierJournal {
       final closing = journal._closing;
       if (closing != null) {
         await closing;
-        return open(ownerId: ownerId, loungeId: loungeId, keys: keys);
+        return await open(ownerId: ownerId, loungeId: loungeId, keys: keys);
       }
       return journal;
     } catch (_) {

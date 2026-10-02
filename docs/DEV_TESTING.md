@@ -69,3 +69,12 @@ Live database tests remain excluded from the offline suite. During integration,
 duplicate legacy open-time session methods were removed in favor of the strict
 canonical response/RPC contract, and locale trees were merged to preserve both
 versioned onboarding and cashier/auth/offline translations.
+
+The skipped live suites are test/features/marketing/query_promotions_test.dart
+and test/features/marketing/live_realtime_rls_security_test.dart. They remain
+opt-in, not replaced with passing stubs.
+
+GitHub's newer stable Dart analyzer caught unawaited_return_in_try_block in
+EncryptedCashierJournal.open. The recursive reopen now awaits inside the try so
+its asynchronous failure reaches the existing cleanup/error handler. All 627
+offline tests were rerun successfully after this correction.
