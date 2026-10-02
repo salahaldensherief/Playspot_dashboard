@@ -36,7 +36,7 @@ Shared dependency injection, routing, services, error handling, responsive helpe
 
 The dashboard is an operations client, not the security boundary. Privileged actions must be authorized by Postgres/RLS/RPC logic. UI permission checks are for presentation only and must not replace server-side authorization.
 
-Project-specific engineering rules are documented in `AGENT_RULES.md`.
+Agent engineering rules start in `AGENTS.md`; `AGENT_RULES.md` contains additional conventions.
 
 ## Configuration
 
