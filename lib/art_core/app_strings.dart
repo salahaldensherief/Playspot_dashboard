@@ -554,7 +554,7 @@ class AppStrings {
   static String get shiftActive => 'shift_active'.tr();
   static String get noActiveShift => 'no_active_shift'.tr();
   static String get shiftRevenue => 'shift_revenue'.tr();
-  static String get cashier => 'cashier'.tr();
+  static String get cashier => 'cashier.label'.tr();
   static String get startTimeLabel => 'start_time'.tr();
   static String get closeShift => 'close_shift'.tr();
   static String get openNewShift => 'open_new_shift'.tr();
