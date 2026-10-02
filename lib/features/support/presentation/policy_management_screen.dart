@@ -19,6 +19,7 @@ class PolicyManagementScreen extends StatefulWidget {
 
 class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
   String _selectedPolicyType = 'terms_of_service';
+  List<AppPolicyEntity>? _loadedPolicies;
 
   final _titleArController = TextEditingController();
   final _titleEnController = TextEditingController();
@@ -40,18 +41,23 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
     super.dispose();
   }
 
-  void _loadPolicyToForm(List<AppPolicyEntity> policies) {
-    final policy = policies.firstWhere(
-      (p) => p.policyType == _selectedPolicyType,
-      orElse: () => AppPolicyEntity(
-        id: '',
-        policyType: _selectedPolicyType,
-        titleAr: _getDefaultTitleAr(_selectedPolicyType),
-        titleEn: _getDefaultTitleEn(_selectedPolicyType),
-        contentAr: '',
-        contentEn: '',
-      ),
+  AppPolicyEntity _policyFor(Iterable<AppPolicyEntity> policies) {
+    for (final policy in policies) {
+      if (policy.policyType == _selectedPolicyType) return policy;
+    }
+    return AppPolicyEntity(
+      id: '',
+      policyType: _selectedPolicyType,
+      titleAr: _getDefaultTitleAr(_selectedPolicyType),
+      titleEn: _getDefaultTitleEn(_selectedPolicyType),
+      contentAr: '',
+      contentEn: '',
     );
+  }
+
+  void _loadPolicyToForm(List<AppPolicyEntity> policies) {
+    final policy = _policyFor(policies);
+    _loadedPolicies = policies;
 
     _titleArController.text = policy.titleAr;
     _titleEnController.text = policy.titleEn;
@@ -95,17 +101,20 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
           prev.successMessage != curr.successMessage ||
           prev.errorMessage != curr.errorMessage,
       listener: (context, state) {
-        if (state.policies.isNotEmpty) {
+        if (state.status == SupportStatus.success &&
+            !identical(_loadedPolicies, state.policies)) {
           _loadPolicyToForm(state.policies);
         }
-        if (state.actionStatus == SupportStatus.success && state.successMessage != null) {
+        if (state.actionStatus == SupportStatus.success &&
+            state.successMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.successMessage!),
               backgroundColor: AppColors.success,
             ),
           );
-        } else if (state.actionStatus == SupportStatus.failure && state.errorMessage != null) {
+        } else if (state.actionStatus == SupportStatus.failure &&
+            state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage!),
@@ -115,17 +124,7 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
         }
       },
       builder: (context, state) {
-        final currentPolicy = state.policies.firstWhere(
-          (p) => p.policyType == _selectedPolicyType,
-          orElse: () => AppPolicyEntity(
-            id: '',
-            policyType: _selectedPolicyType,
-            titleAr: _getDefaultTitleAr(_selectedPolicyType),
-            titleEn: _getDefaultTitleEn(_selectedPolicyType),
-            contentAr: '',
-            contentEn: '',
-          ),
-        );
+        final currentPolicy = _policyFor(state.policies);
 
         return Scaffold(
           backgroundColor: AppColors.scaffoldBackground,
@@ -159,17 +158,32 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildTabButton('terms_of_service', AppStrings.termsOfService, Icons.assignment_outlined),
+                      _buildTabButton(
+                        'terms_of_service',
+                        AppStrings.termsOfService,
+                        Icons.assignment_outlined,
+                      ),
                       SizedBox(width: 12.w),
-                      _buildTabButton('privacy_policy', AppStrings.privacyPolicy, Icons.privacy_tip_outlined),
+                      _buildTabButton(
+                        'privacy_policy',
+                        AppStrings.privacyPolicy,
+                        Icons.privacy_tip_outlined,
+                      ),
                       SizedBox(width: 12.w),
-                      _buildTabButton('refund_policy', AppStrings.refundPolicy, Icons.event_busy_outlined),
+                      _buildTabButton(
+                        'refund_policy',
+                        AppStrings.refundPolicy,
+                        Icons.event_busy_outlined,
+                      ),
                     ],
                   ),
                 ),
                 SizedBox(height: 24.h),
-                if (state.status == SupportStatus.loading && state.policies.isEmpty)
-                  const Center(child: CircularProgressIndicator(color: AppColors.neonBlue))
+                if (state.status == SupportStatus.loading &&
+                    state.policies.isEmpty)
+                  const Center(
+                    child: CircularProgressIndicator(color: AppColors.neonBlue),
+                  )
                 else
                   SectionContainer(
                     title: _getDefaultTitleAr(_selectedPolicyType),
@@ -201,7 +215,8 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
                           text: AppStrings.savePolicy,
                           variant: AppButtonVariant.gradient,
                           icon: Icons.publish_outlined,
-                          isLoading: state.actionStatus == SupportStatus.loading,
+                          isLoading:
+                              state.actionStatus == SupportStatus.loading,
                           onPressed: () {
                             final policyToSave = AppPolicyEntity(
                               id: currentPolicy.id,
@@ -212,7 +227,9 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
                               contentEn: _contentEnController.text.trim(),
                               isPublished: true,
                             );
-                            context.read<SupportCubit>().savePolicy(policyToSave);
+                            context.read<SupportCubit>().savePolicy(
+                              policyToSave,
+                            );
                           },
                         ),
                       ),
@@ -239,7 +256,9 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.neonBlue.withValues(alpha: 0.15) : AppColors.cardBackground,
+          color: isSelected
+              ? AppColors.neonBlue.withValues(alpha: 0.15)
+              : AppColors.cardBackground,
           borderRadius: BorderRadius.circular(10.r),
           border: Border.all(
             color: isSelected ? AppColors.neonBlue : AppColors.borderDefault,
@@ -306,7 +325,9 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
           decoration: InputDecoration(
             filled: true,
             fillColor: AppColors.scaffoldBackground,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+            ),
           ),
         ),
         SizedBox(height: 16.h),
@@ -320,11 +341,15 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
           maxLines: 12,
           style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
           decoration: InputDecoration(
-            hintText: isArabic ? AppStrings.policyContentArHint : AppStrings.policyContentEnHint,
+            hintText: isArabic
+                ? AppStrings.policyContentArHint
+                : AppStrings.policyContentEnHint,
             hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 13.sp),
             filled: true,
             fillColor: AppColors.scaffoldBackground,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+            ),
           ),
         ),
       ],
