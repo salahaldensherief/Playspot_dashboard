@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_cached_image.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_avatar.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
 
@@ -10,14 +10,11 @@ class TopBarUserProfile extends StatelessWidget {
   const TopBarUserProfile({super.key});
 
   Widget _buildAvatar(String? url) {
-    final bool hasAvatar = url != null && url.trim().isNotEmpty;
-    return CircleAvatar(
+    return AppAvatar(
       radius: 18,
+      imageUrl: url,
       backgroundColor: AppColors.neonPurple.withValues(alpha: 0.2),
-      backgroundImage: hasAvatar ? AppCachedImage.provider(url) : null,
-      child: !hasAvatar
-          ? const Icon(Icons.person, color: AppColors.neonPurple, size: 20)
-          : null,
+      fallback: const Icon(Icons.person, color: AppColors.neonPurple, size: 20),
     );
   }
 
@@ -64,10 +61,10 @@ class TopBarUserProfile extends StatelessWidget {
                     user.isSuperAdmin
                         ? AppStrings.superAdmin
                         : (user.isLoungeOwner
-                            ? AppStrings.loungeOwnerLabel
-                            : (user.isCashier
-                                ? AppStrings.cashierLabel
-                                : AppStrings.loungeManager)),
+                              ? AppStrings.loungeOwnerLabel
+                              : (user.isCashier
+                                    ? AppStrings.cashierLabel
+                                    : AppStrings.loungeManager)),
                     style: const TextStyle(
                       color: AppColors.neonPurple,
                       fontSize: 11,

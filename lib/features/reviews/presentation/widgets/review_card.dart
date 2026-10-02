@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_cached_image.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_avatar.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import '../../domain/entities/lounge_review_entity.dart';
 import 'star_rating_bar.dart';
@@ -15,14 +15,16 @@ class ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String dateFormatted =
-        DateFormat('yyyy-MM-dd • hh:mm a').format(review.createdAt);
+    final String dateFormatted = DateFormat(
+      'yyyy-MM-dd • hh:mm a',
+    ).format(review.createdAt);
     final String displayName =
         (review.userName != null && review.userName?.trim().isNotEmpty == true)
-            ? review.userName?.trim() ?? AppStrings.anonymous
-            : AppStrings.anonymous;
-    final String initial =
-        displayName.isNotEmpty ? displayName[0].toUpperCase() : 'A';
+        ? review.userName?.trim() ?? AppStrings.anonymous
+        : AppStrings.anonymous;
+    final String initial = displayName.isNotEmpty
+        ? displayName[0].toUpperCase()
+        : 'A';
     final String? avatarUrl = review.userAvatarUrl;
 
     return Container(
@@ -37,23 +39,18 @@ class ReviewCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
+              AppAvatar(
                 radius: 18.r,
+                imageUrl: avatarUrl,
                 backgroundColor: AppColors.neonBlue.withValues(alpha: 0.15),
-                backgroundImage:
-                    (avatarUrl != null && avatarUrl.trim().isNotEmpty)
-                        ? AppCachedImage.provider(avatarUrl)
-                        : null,
-                child: (avatarUrl == null || avatarUrl.trim().isEmpty)
-                    ? Text(
-                        initial,
-                        style: TextStyle(
-                          color: AppColors.neonBlue,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                    : null,
+                fallback: Text(
+                  initial,
+                  style: TextStyle(
+                    color: AppColors.neonBlue,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               SizedBox(width: 10.w),
               Expanded(

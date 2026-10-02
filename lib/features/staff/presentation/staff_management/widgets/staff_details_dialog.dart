@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/staff/domain/entities/staff_entity.dart';
 
+import '../../../../../art_core/widgets/app_avatar.dart';
 import '../../../../../art_core/widgets/app_cached_image.dart';
 
 class StaffDetailsDialog extends StatelessWidget {
@@ -24,12 +25,15 @@ class StaffDetailsDialog extends StatelessWidget {
         children: [
           Builder(
             builder: (context) {
-              final bool hasAvatar = staff.avatarUrl != null && staff.avatarUrl!.trim().isNotEmpty;
-              return CircleAvatar(
+              return AppAvatar(
                 radius: 20.r,
+                imageUrl: staff.avatarUrl,
                 backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
-                backgroundImage: hasAvatar ? AppCachedImage.provider(staff.avatarUrl) : null,
-                child: !hasAvatar ? Icon(Icons.person, color: AppColors.neonBlue, size: 20.r) : null,
+                fallback: Icon(
+                  Icons.person,
+                  color: AppColors.neonBlue,
+                  size: 20.r,
+                ),
               );
             },
           ),
@@ -46,34 +50,70 @@ class StaffDetailsDialog extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionTitle(Icons.contact_mail_outlined, AppStrings.contactLabel),
+              _buildSectionTitle(
+                Icons.contact_mail_outlined,
+                AppStrings.contactLabel,
+              ),
               SizedBox(height: 12.h),
-              _buildInfoRow(Icons.email_outlined, AppStrings.email, staff.email),
-              _buildInfoRow(Icons.phone_android_outlined, AppStrings.staffPhone, staff.phone ?? 'N/A'),
-              
+              _buildInfoRow(
+                Icons.email_outlined,
+                AppStrings.email,
+                staff.email,
+              ),
+              _buildInfoRow(
+                Icons.phone_android_outlined,
+                AppStrings.staffPhone,
+                staff.phone ?? 'N/A',
+              ),
+
               const Divider(color: AppColors.borderDefault),
               SizedBox(height: 8.h),
-              
-              _buildSectionTitle(Icons.badge_outlined, "National Identity Details"),
+
+              _buildSectionTitle(
+                Icons.badge_outlined,
+                "National Identity Details",
+              ),
               SizedBox(height: 12.h),
-              _buildInfoRow(Icons.numbers_outlined, "National ID Number", staff.nationalIdNumber ?? 'N/A'),
-              
+              _buildInfoRow(
+                Icons.numbers_outlined,
+                "National ID Number",
+                staff.nationalIdNumber ?? 'N/A',
+              ),
+
               SizedBox(height: 16.h),
               Row(
                 children: [
-                  Expanded(child: _buildIdCardPreview(context, "ID Front", staff.idFrontUrl)),
+                  Expanded(
+                    child: _buildIdCardPreview(
+                      context,
+                      "ID Front",
+                      staff.idFrontUrl,
+                    ),
+                  ),
                   SizedBox(width: 16.w),
-                  Expanded(child: _buildIdCardPreview(context, "ID Back", staff.idBackUrl)),
+                  Expanded(
+                    child: _buildIdCardPreview(
+                      context,
+                      "ID Back",
+                      staff.idBackUrl,
+                    ),
+                  ),
                 ],
               ),
-              
+
               SizedBox(height: 24.h),
               const Divider(color: AppColors.borderDefault),
               SizedBox(height: 8.h),
-              
-              _buildSectionTitle(Icons.history_outlined, AppStrings.shiftHistory),
+
+              _buildSectionTitle(
+                Icons.history_outlined,
+                AppStrings.shiftHistory,
+              ),
               SizedBox(height: 8.h),
-              AppText.body("Member since ${DateFormat('MMM yyyy').format(staff.createdAt)}", color: AppColors.textSecondary),
+              AppText.body(
+                "Member since ${DateFormat('MMM yyyy').format(staff.createdAt)}",
+                color: AppColors.textSecondary,
+              ),
             ],
           ),
         ),
@@ -93,7 +133,11 @@ class StaffDetailsDialog extends StatelessWidget {
       children: [
         Icon(icon, size: 18.r, color: AppColors.neonBlue),
         SizedBox(width: 8.w),
-        AppText.subHeading(title, fontSize: 14.sp, color: AppColors.textPrimary),
+        AppText.subHeading(
+          title,
+          fontSize: 14.sp,
+          color: AppColors.textPrimary,
+        ),
       ],
     );
   }
@@ -106,7 +150,11 @@ class StaffDetailsDialog extends StatelessWidget {
           Icon(icon, size: 14.r, color: AppColors.textSecondary),
           SizedBox(width: 8.w),
           AppText.body("$label: ", color: AppColors.textSecondary),
-          AppText.body(value, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+          AppText.body(
+            value,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
         ],
       ),
     );
@@ -129,12 +177,14 @@ class StaffDetailsDialog extends StatelessWidget {
               border: Border.all(color: AppColors.borderDefault),
             ),
             clipBehavior: Clip.antiAlias,
-            child: url != null 
-              ? AppCachedImage(
-                  imageUrl: url, 
-                  fit: BoxFit.cover,
-                )
-              : const Center(child: Icon(Icons.image_not_supported_outlined, color: AppColors.textSecondary)),
+            child: url != null
+                ? AppCachedImage(imageUrl: url, fit: BoxFit.cover)
+                : const Center(
+                    child: Icon(
+                      Icons.image_not_supported_outlined,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
           ),
         ),
       ],
@@ -150,14 +200,16 @@ class StaffDetailsDialog extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            InteractiveViewer(
-              child: AppCachedImage(imageUrl: url),
-            ),
+            InteractiveViewer(child: AppCachedImage(imageUrl: url)),
             Positioned(
               top: 0,
               right: 0,
               child: IconButton(
-                icon: const Icon(Icons.close, color: AppColors.textPrimary, size: 30),
+                icon: const Icon(
+                  Icons.close,
+                  color: AppColors.textPrimary,
+                  size: 30,
+                ),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
@@ -169,7 +221,9 @@ class StaffDetailsDialog extends StatelessWidget {
 
   Widget _buildRoleBadge(String role) {
     final cleanRole = role.toLowerCase().trim();
-    if (cleanRole == 'owner' || cleanRole == 'lounge_owner' || cleanRole == 'lounge_admin') {
+    if (cleanRole == 'owner' ||
+        cleanRole == 'lounge_owner' ||
+        cleanRole == 'lounge_admin') {
       return StatusBadge.secondary(AppStrings.loungeOwnerLabel);
     }
     if (cleanRole == 'manager') {
