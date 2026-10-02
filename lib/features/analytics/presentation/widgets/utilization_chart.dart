@@ -19,12 +19,15 @@ class UtilizationChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<RoomCubit, RoomState>(
-      buildWhen: (prev, curr) => prev.status != curr.status || prev.rooms != curr.rooms,
+      buildWhen: (prev, curr) =>
+          prev.status != curr.status || prev.rooms != curr.rooms,
       builder: (context, roomState) {
         return BlocBuilder<DashboardCubit, DashboardState>(
-          buildWhen: (prev, curr) => prev.activeSessionsList != curr.activeSessionsList,
+          buildWhen: (prev, curr) =>
+              prev.activeSessionsList != curr.activeSessionsList,
           builder: (context, dashboardState) {
-            if (roomState.status == RoomStatus.loading && roomState.rooms.isEmpty) {
+            if (roomState.status == RoomStatus.loading &&
+                roomState.rooms.isEmpty) {
               return Padding(
                 padding: EdgeInsets.symmetric(vertical: 20.h),
                 child: ShimmerLoading.rounded(
@@ -43,7 +46,11 @@ class UtilizationChart extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.pie_chart_outline, size: 36.r, color: AppColors.textMuted),
+                      Icon(
+                        Icons.pie_chart_outline,
+                        size: 36.r,
+                        color: AppColors.textMuted,
+                      ),
                       SizedBox(height: 6.h),
                       AppText.body(
                         AppStrings.noRoomsAdded,
@@ -56,9 +63,16 @@ class UtilizationChart extends StatelessWidget {
                         variant: AppButtonVariant.outlined,
                         height: 28.h,
                         onPressed: () {
-                          final loungeId = context.read<LoginCubit>().state.user?.loungeId;
+                          final loungeId = context
+                              .read<LoginCubit>()
+                              .state
+                              .user
+                              ?.loungeId;
                           if (loungeId != null) {
-                            context.read<RoomCubit>().watchRooms(loungeId, forceRefresh: true);
+                            context.read<RoomCubit>().watchRooms(
+                              loungeId,
+                              forceRefresh: true,
+                            );
                           }
                         },
                       ),
@@ -113,7 +127,10 @@ class UtilizationChart extends StatelessWidget {
                               padding: EdgeInsets.only(top: 8.h),
                               child: Text(
                                 roomNames[index],
-                                style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp),
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 10.sp,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -129,12 +146,19 @@ class UtilizationChart extends StatelessWidget {
                         reservedSize: 30.w,
                         getTitlesWidget: (value, meta) => Text(
                           '${value.toInt()}%',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp),
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 10.sp,
+                          ),
                         ),
                       ),
                     ),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                   ),
                   gridData: FlGridData(show: false),
                   borderData: FlBorderData(show: false),
@@ -158,7 +182,7 @@ class UtilizationChart extends StatelessWidget {
           width: 16.w,
           borderRadius: BorderRadius.circular(4.r),
           backDrawRodData: BackgroundBarChartRodData(
-            show: true,
+            show: false,
             toY: 100,
             color: color.withValues(alpha: 0.05),
           ),

@@ -1,3 +1,4 @@
+import 'dashboard_kpi_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -60,28 +61,7 @@ class _SuperAdminKpiGrid extends StatelessWidget {
           );
         }
 
-        final crossAxisCount = context.responsive<int>(
-          mobile: 2,
-          tablet: 3,
-          desktop: 6,
-        );
-
-        final extent = context.responsive<double>(
-          mobile: 116.h,
-          tablet: 124.h,
-          desktop: 130.h,
-        );
-
-        return GridView(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          addSemanticIndexes: false,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 14.w,
-            mainAxisSpacing: 14.h,
-            mainAxisExtent: extent,
-          ),
+        return DashboardKpiLayout(
           children: [
             StatCard(
               title: AppStrings.globalOverview,
@@ -176,12 +156,14 @@ class _LoungeOwnerKpiGrid extends StatelessWidget {
                 final user = context.watch<LoginCubit>().state.user;
                 final isCashier = user?.isCashier ?? false;
                 final reqState = context.watch<ClientRequestsCubit>().state;
-                final int unattendedRequestsCount =
-                    reqState.requests.where((r) => !r.isAttended).length;
+                final int unattendedRequestsCount = reqState.requests
+                    .where((r) => !r.isAttended)
+                    .length;
 
                 final now = DateTime.now();
                 final int endingSoonCount = bookings.where((b) {
-                  if (b.status != BookingStatus.inProgress || b.isOpenEnded) return false;
+                  if (b.status != BookingStatus.inProgress || b.isOpenEnded)
+                    return false;
                   final remaining = b.remainingDuration(now);
                   return remaining > Duration.zero &&
                       remaining <= const Duration(minutes: 15);
@@ -201,7 +183,9 @@ class _LoungeOwnerKpiGrid extends StatelessWidget {
                     ? dashState.activeSessionsList
                           .where((b) => b.status == BookingStatus.inProgress)
                           .length
-                    : bookings.where((b) => b.status == BookingStatus.inProgress).length;
+                    : bookings
+                          .where((b) => b.status == BookingStatus.inProgress)
+                          .length;
 
                 // Pending payment proofs count
                 final int pendingProofsCount = bookings.where((b) {
@@ -219,28 +203,7 @@ class _LoungeOwnerKpiGrid extends StatelessWidget {
                           b.status == BookingStatus.rejected);
                 }).length;
 
-                final crossAxisCount = context.responsive<int>(
-                  mobile: 2,
-                  tablet: 3,
-                  desktop: 6,
-                );
-
-                final extent = context.responsive<double>(
-                  mobile: 116.h,
-                  tablet: 124.h,
-                  desktop: 130.h,
-                );
-
-                return GridView(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  addSemanticIndexes: false,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: 14.w,
-                    mainAxisSpacing: 14.h,
-                    mainAxisExtent: extent,
-                  ),
+                return DashboardKpiLayout(
                   children: isCashier
                       ? [
                           // 1. Active Bookings / Sessions

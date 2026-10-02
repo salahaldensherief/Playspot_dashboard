@@ -8,6 +8,7 @@ class ChartCard extends StatelessWidget {
   final Widget chart;
   final IconData actionIcon;
   final Color actionIconColor;
+  final bool expandChart;
 
   const ChartCard({
     super.key,
@@ -16,6 +17,7 @@ class ChartCard extends StatelessWidget {
     required this.chart,
     required this.actionIcon,
     required this.actionIconColor,
+    this.expandChart = true,
   });
 
   @override
@@ -33,32 +35,42 @@ class ChartCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13.sp,
+                    SizedBox(height: 4.h),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13.sp,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Icon(actionIcon, color: actionIconColor, size: 20.r),
             ],
           ),
-          SizedBox(height: 32.h),
-          Expanded(child: chart),
+          const SizedBox(height: 16),
+          if (expandChart)
+            Expanded(child: chart)
+          else
+            SizedBox(
+              height:
+                  160 * MediaQuery.textScalerOf(context).scale(1).clamp(1, 1.6),
+              child: chart,
+            ),
         ],
       ),
     );

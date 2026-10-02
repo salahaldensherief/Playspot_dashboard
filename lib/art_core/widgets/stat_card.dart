@@ -24,7 +24,8 @@ class StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isPositive = trendValue >= 0;
-    final String trendText = '${isPositive ? '+' : ''}${trendValue.toStringAsFixed(1)}%';
+    final String trendText =
+        '${isPositive ? '+' : ''}${trendValue.toStringAsFixed(1)}%';
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
@@ -37,72 +38,75 @@ class StatCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: AlignmentDirectional.centerStart,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 22.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                if (subtitle != null) ...[
                   Text(
-                    title,
-                    maxLines: 1,
+                    subtitle!,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w500,
+                      color: AppColors.textMuted,
+                      fontSize: 11.sp,
                     ),
                   ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    value,
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 22.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
+                ] else ...[
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isPositive ? Icons.trending_up : Icons.trending_down,
+                        color: isPositive
+                            ? AppColors.success
+                            : AppColors.danger,
+                        size: 13.r,
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        trendText,
+                        style: TextStyle(
+                          color: isPositive
+                              ? AppColors.success
+                              : AppColors.danger,
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        AppStrings.vsLastMonth,
+                        style: TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 10.sp,
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 2.h),
-                  if (subtitle != null) ...[
-                    Text(
-                      subtitle!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: AppColors.textMuted, fontSize: 11.sp),
-                    ),
-                  ] else ...[
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isPositive ? Icons.trending_up : Icons.trending_down,
-                          color: isPositive ? AppColors.success : AppColors.danger,
-                          size: 13.r,
-                        ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          trendText,
-                          style: TextStyle(
-                            color: isPositive ? AppColors.success : AppColors.danger,
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          AppStrings.vsLastMonth,
-                          style: TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 10.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
                 ],
-              ),
+              ],
             ),
           ),
           SizedBox(width: 8.w),
