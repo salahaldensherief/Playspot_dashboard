@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -24,7 +25,8 @@ class LoyaltyPage extends StatefulWidget {
   State<LoyaltyPage> createState() => _LoyaltyPageState();
 }
 
-class _LoyaltyPageState extends State<LoyaltyPage> with SingleTickerProviderStateMixin {
+class _LoyaltyPageState extends State<LoyaltyPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -46,7 +48,11 @@ class _LoyaltyPageState extends State<LoyaltyPage> with SingleTickerProviderStat
     super.dispose();
   }
 
-  void _showOptionDialog(BuildContext context, LoyaltyCubit cubit, {RedemptionOptionEntity? option}) {
+  void _showOptionDialog(
+    BuildContext context,
+    LoyaltyCubit cubit, {
+    RedemptionOptionEntity? option,
+  }) {
     showDialog(
       context: context,
       builder: (diagContext) => RedemptionOptionDialog(
@@ -69,6 +75,23 @@ class _LoyaltyPageState extends State<LoyaltyPage> with SingleTickerProviderStat
       ),
     );
   }
+
+  Widget _sectionUnavailable(LoyaltyCubit cubit) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('dashboard_data_unavailable'.tr(), textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          AppButton(
+            text: AppStrings.retry,
+            onPressed: () => cubit.loadLoyaltyData(),
+          ),
+        ],
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -111,13 +134,31 @@ class _LoyaltyPageState extends State<LoyaltyPage> with SingleTickerProviderStat
               indicatorColor: AppColors.neonBlue,
               labelColor: AppColors.neonBlue,
               unselectedLabelColor: AppColors.textSecondary,
-              labelStyle: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold),
+              labelStyle: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.bold,
+              ),
               tabs: [
-                Tab(text: AppStrings.loyaltyStatsTab, icon: const Icon(Icons.insights_rounded)),
-                Tab(text: AppStrings.referralsTab, icon: const Icon(Icons.people_alt_outlined)),
-                Tab(text: AppStrings.tasksTab, icon: const Icon(Icons.assignment_turned_in_outlined)),
-                Tab(text: AppStrings.levelsTab, icon: const Icon(Icons.workspace_premium_outlined)),
-                Tab(text: AppStrings.redemptionsTab, icon: const Icon(Icons.card_giftcard_outlined)),
+                Tab(
+                  text: AppStrings.loyaltyStatsTab,
+                  icon: const Icon(Icons.insights_rounded),
+                ),
+                Tab(
+                  text: AppStrings.referralsTab,
+                  icon: const Icon(Icons.people_alt_outlined),
+                ),
+                Tab(
+                  text: AppStrings.tasksTab,
+                  icon: const Icon(Icons.assignment_turned_in_outlined),
+                ),
+                Tab(
+                  text: AppStrings.levelsTab,
+                  icon: const Icon(Icons.workspace_premium_outlined),
+                ),
+                Tab(
+                  text: AppStrings.redemptionsTab,
+                  icon: const Icon(Icons.card_giftcard_outlined),
+                ),
               ],
             ),
           ),
@@ -127,8 +168,11 @@ class _LoyaltyPageState extends State<LoyaltyPage> with SingleTickerProviderStat
           Expanded(
             child: BlocBuilder<LoyaltyCubit, LoyaltyState>(
               builder: (context, state) {
-                if (state.status == LoyaltyStatus.loading && state.stats == null) {
-                  return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
+                if (state.status == LoyaltyStatus.loading &&
+                    state.stats == null) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: AppColors.neonBlue),
+                  );
                 }
 
                 if (state.status == LoyaltyStatus.failure) {
@@ -136,7 +180,11 @@ class _LoyaltyPageState extends State<LoyaltyPage> with SingleTickerProviderStat
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        AppText.body(state.errorMessage ?? AppStrings.error, color: AppColors.danger, fontSize: 16.sp),
+                        AppText.body(
+                          state.errorMessage ?? AppStrings.error,
+                          color: AppColors.danger,
+                          fontSize: 16.sp,
+                        ),
                         SizedBox(height: 16.h),
                         AppButton(
                           text: AppStrings.retry,
@@ -151,25 +199,39 @@ class _LoyaltyPageState extends State<LoyaltyPage> with SingleTickerProviderStat
                   controller: _tabController,
                   children: [
                     // Tab 0: Stats
-                    state.stats != null
+                    state.sectionErrors.containsKey('stats')
+                        ? _sectionUnavailable(loyaltyCubit)
+                        : state.stats != null
                         ? LoyaltyStatsTab(stats: state.stats!)
-                        : const SizedBox.shrink(),
+                        : _sectionUnavailable(loyaltyCubit),
 
                     // Tab 1: Referrals
-                    ReferralsTab(referrals: state.referrals),
+                    state.sectionErrors.containsKey('referrals')
+                        ? _sectionUnavailable(loyaltyCubit)
+                        : ReferralsTab(referrals: state.referrals),
 
                     // Tab 2: Tasks
-                    TasksTab(tasks: state.tasks, cubit: loyaltyCubit),
+                    state.sectionErrors.containsKey('tasks')
+                        ? _sectionUnavailable(loyaltyCubit)
+                        : TasksTab(tasks: state.tasks, cubit: loyaltyCubit),
 
                     // Tab 3: Levels
-                    LevelsTab(levels: state.levels, cubit: loyaltyCubit),
+                    state.sectionErrors.containsKey('levels')
+                        ? _sectionUnavailable(loyaltyCubit)
+                        : LevelsTab(levels: state.levels, cubit: loyaltyCubit),
 
                     // Tab 4: Redemption Options
-                    LoyaltyDataTable(
-                      options: state.options,
-                      cubit: loyaltyCubit,
-                      onEdit: (opt) => _showOptionDialog(context, loyaltyCubit, option: opt),
-                    ),
+                    state.sectionErrors.containsKey('options')
+                        ? _sectionUnavailable(loyaltyCubit)
+                        : LoyaltyDataTable(
+                            options: state.options,
+                            cubit: loyaltyCubit,
+                            onEdit: (opt) => _showOptionDialog(
+                              context,
+                              loyaltyCubit,
+                              option: opt,
+                            ),
+                          ),
                   ],
                 );
               },

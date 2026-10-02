@@ -11,8 +11,8 @@ class ReferralEntity extends Equatable {
   final DateTime? createdAt;
   final String status;
   final bool rewardIssued;
-  final int inviterPoints;
-  final int inviteePoints;
+  final int? inviterPoints;
+  final int? inviteePoints;
 
   const ReferralEntity({
     required this.id,
@@ -31,17 +31,17 @@ class ReferralEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        inviterId,
-        inviterName,
-        inviterEmail,
-        inviteeId,
-        inviteeName,
-        inviteeEmail,
-        createdAt,
-        status,
-        rewardIssued,
-        inviterPoints,
-        inviteePoints,
-      ];
+    id,
+    inviterId,
+    inviterName,
+    inviterEmail,
+    inviteeId,
+    inviteeName,
+    inviteeEmail,
+    createdAt,
+    status,
+    rewardIssued,
+    inviterPoints,
+    inviteePoints,
+  ];
 }

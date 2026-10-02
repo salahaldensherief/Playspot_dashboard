@@ -51,7 +51,7 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
   @override
   Future<List<LoyaltyTaskModel>> getTasks() async {
     final response = await client
-        .from('loyalty_tasks')
+        .from('loyalty_missions')
         .select()
         .order('created_at', ascending: false);
 
@@ -62,7 +62,33 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
 
   @override
   Future<void> updateTask(String id, Map<String, dynamic> data) async {
-    await client.from('loyalty_tasks').update(data).eq('id', id);
+    const editable = {
+      'title_ar',
+      'title_en',
+      'description_ar',
+      'description_en',
+      'points_reward',
+      'is_active',
+    };
+    if (data.keys.any((key) => !editable.contains(key))) {
+      throw ArgumentError('Unsupported loyalty mission field');
+    }
+    final payload = {
+      for (final entry in data.entries)
+        (entry.key == 'points_reward' ? 'reward_points' : entry.key):
+            entry.value,
+    };
+    final updated = await client
+        .from('loyalty_missions')
+        .update(payload)
+        .eq('id', id)
+        .select('id')
+        .maybeSingle();
+    if (updated == null)
+      throw const PostgrestException(
+        message: 'Mission was not updated',
+        code: 'P0002',
+      );
   }
 
   @override

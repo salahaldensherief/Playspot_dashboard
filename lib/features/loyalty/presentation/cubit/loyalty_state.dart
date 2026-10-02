@@ -26,6 +26,7 @@ class LoyaltyState extends Equatable {
   final String? selectedReferralStatus;
   final String? selectedUserId;
   final String? errorMessage;
+  final Map<String, String> sectionErrors;
 
   const LoyaltyState({
     this.status = LoyaltyStatus.initial,
@@ -45,15 +46,19 @@ class LoyaltyState extends Equatable {
     this.selectedReferralStatus = 'all',
     this.selectedUserId,
     this.errorMessage,
+    this.sectionErrors = const {},
   });
 
   bool get hasNextPointsPage => pointsPage * pointsPageSize < totalPointsCount;
   bool get hasPreviousPointsPage => pointsPage > 1;
-  int get totalPointsPages => pointsPageSize > 0 ? (totalPointsCount / pointsPageSize).ceil() : 0;
+  int get totalPointsPages =>
+      pointsPageSize > 0 ? (totalPointsCount / pointsPageSize).ceil() : 0;
 
   LoyaltyState copyWith({
     LoyaltyStatus? status,
     LoyaltyStatsModel? stats,
+    bool clearStats = false,
+    Map<String, String>? sectionErrors,
     List<ReferralEntity>? referrals,
     List<LoyaltyTaskEntity>? tasks,
     List<LoyaltyLevelEntity>? levels,
@@ -72,7 +77,8 @@ class LoyaltyState extends Equatable {
   }) {
     return LoyaltyState(
       status: status ?? this.status,
-      stats: stats ?? this.stats,
+      stats: clearStats ? null : (stats ?? this.stats),
+      sectionErrors: sectionErrors ?? this.sectionErrors,
       referrals: referrals ?? this.referrals,
       tasks: tasks ?? this.tasks,
       levels: levels ?? this.levels,
@@ -85,7 +91,8 @@ class LoyaltyState extends Equatable {
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       selectedLevelId: selectedLevelId ?? this.selectedLevelId,
-      selectedReferralStatus: selectedReferralStatus ?? this.selectedReferralStatus,
+      selectedReferralStatus:
+          selectedReferralStatus ?? this.selectedReferralStatus,
       selectedUserId: selectedUserId ?? this.selectedUserId,
       errorMessage: errorMessage ?? this.errorMessage,
     );
@@ -93,22 +100,23 @@ class LoyaltyState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        stats,
-        referrals,
-        tasks,
-        levels,
-        options,
-        pointsTransactions,
-        pointsPage,
-        pointsPageSize,
-        totalPointsCount,
-        activeTab,
-        startDate,
-        endDate,
-        selectedLevelId,
-        selectedReferralStatus,
-        selectedUserId,
-        errorMessage,
-      ];
+    status,
+    stats,
+    referrals,
+    tasks,
+    levels,
+    options,
+    pointsTransactions,
+    pointsPage,
+    pointsPageSize,
+    totalPointsCount,
+    activeTab,
+    startDate,
+    endDate,
+    selectedLevelId,
+    selectedReferralStatus,
+    selectedUserId,
+    errorMessage,
+    sectionErrors,
+  ];
 }

@@ -110,7 +110,7 @@ class TasksTab extends StatelessWidget {
               ),
               DataCell(
                 AppText.body(
-                  '${task.completedCount}',
+                  task.completedCount?.toString() ?? '—',
                   fontWeight: FontWeight.bold,
                 ),
               ),

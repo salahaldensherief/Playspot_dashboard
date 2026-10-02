@@ -87,14 +87,18 @@ class ReferralsTab extends StatelessWidget {
               ),
               DataCell(
                 AppText.body(
-                  '+${ref.inviterPoints} ${AppStrings.pointsUnit}',
+                  ref.inviterPoints == null
+                      ? '—'
+                      : '+${ref.inviterPoints} ${AppStrings.pointsUnit}',
                   color: AppColors.success,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               DataCell(
                 AppText.body(
-                  '+${ref.inviteePoints} ${AppStrings.pointsUnit}',
+                  ref.inviteePoints == null
+                      ? '—'
+                      : '+${ref.inviteePoints} ${AppStrings.pointsUnit}',
                   color: AppColors.neonBlue,
                   fontWeight: FontWeight.bold,
                 ),
