@@ -45,10 +45,17 @@ class _KycReviewsPageState extends State<KycReviewsPage> {
               bloc: kycCubit,
               builder: (context, state) {
                 if (state.status == KycStatus.loading) {
-                  return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
+                  return const Center(
+                    child: CircularProgressIndicator(color: AppColors.neonBlue),
+                  );
                 }
                 if (state.status == KycStatus.failure) {
-                  return Center(child: AppText.body(state.errorMessage ?? AppStrings.error, color: AppColors.danger));
+                  return Center(
+                    child: AppText.body(
+                      state.errorMessage ?? AppStrings.error,
+                      color: AppColors.danger,
+                    ),
+                  );
                 }
                 if (state.requests.isEmpty) {
                   return _buildEmptyState();
@@ -78,7 +85,11 @@ class _KycReviewsPageState extends State<KycReviewsPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.verified_user_outlined, color: AppColors.textSecondary, size: 64.r),
+          Icon(
+            Icons.verified_user_outlined,
+            color: AppColors.textSecondary,
+            size: 64.r,
+          ),
           SizedBox(height: 16.h),
           AppText.body(AppStrings.noKycPending, fontSize: 18.sp),
         ],
@@ -102,55 +113,75 @@ class _KycDataTable extends StatelessWidget {
         AppStrings.businessDoc,
         AppStrings.actions,
       ],
-      rows: requests.map((req) => DataRow(
-        cells: [
-          DataCell(
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AppText.body(req.ownerName, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-                AppText.body(req.ownerEmail, color: AppColors.textSecondary, fontSize: 11.sp),
-                if (req.ownerPhone.isNotEmpty)
-                  AppText.body(req.ownerPhone, color: AppColors.neonBlue, fontSize: 11.sp),
+      rows: requests
+          .map(
+            (req) => DataRow(
+              cells: [
+                DataCell(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AppText.body(
+                        req.ownerName,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      AppText.body(
+                        req.ownerEmail,
+                        color: AppColors.textSecondary,
+                        fontSize: 11.sp,
+                      ),
+                      if (req.ownerPhone.isNotEmpty)
+                        AppText.body(
+                          req.ownerPhone,
+                          color: AppColors.neonBlue,
+                          fontSize: 11.sp,
+                        ),
+                    ],
+                  ),
+                ),
+                DataCell(AppText.body(req.loungeName)),
+                DataCell(
+                  AppButton(
+                    text: AppStrings.viewDocument,
+                    icon: Icons.visibility_outlined,
+                    variant: AppButtonVariant.text,
+                    onPressed: () => _showInspection(context, req, cubit),
+                  ),
+                ),
+                DataCell(
+                  req.businessDocumentUrl != null
+                      ? AppButton(
+                          text: AppStrings.viewDocument,
+                          icon: Icons.visibility_outlined,
+                          variant: AppButtonVariant.text,
+                          onPressed: () => _showInspection(context, req, cubit),
+                        )
+                      : const Text('-'),
+                ),
+                DataCell(
+                  AppButton(
+                    text: AppStrings.kycInspection,
+                    onPressed: () => _showInspection(context, req, cubit),
+                    variant: AppButtonVariant.primary,
+                    width: 160.w,
+                    height: 36.h,
+                    icon: Icons.fact_check_outlined,
+                  ),
+                ),
               ],
             ),
-          ),
-          DataCell(AppText.body(req.loungeName)),
-          DataCell(
-            AppButton(
-              text: AppStrings.viewDocument,
-              icon: Icons.visibility_outlined,
-              variant: AppButtonVariant.text,
-              onPressed: () => _showInspection(context, req, cubit),
-            ),
-          ),
-          DataCell(
-            req.businessDocumentUrl != null
-              ? AppButton(
-                  text: AppStrings.viewDocument,
-                  icon: Icons.visibility_outlined,
-                  variant: AppButtonVariant.text,
-                  onPressed: () => _showInspection(context, req, cubit),
-                )
-              : const Text('-'),
-          ),
-          DataCell(
-            AppButton(
-              text: AppStrings.kycInspection,
-              onPressed: () => _showInspection(context, req, cubit),
-              variant: AppButtonVariant.primary,
-              width: 160.w,
-              height: 36.h,
-              icon: Icons.fact_check_outlined,
-            ),
-          ),
-        ],
-      )).toList(),
+          )
+          .toList(),
     );
   }
 
-  void _showInspection(BuildContext context, KycRequest request, KycCubit cubit) {
+  void _showInspection(
+    BuildContext context,
+    KycRequest request,
+    KycCubit cubit,
+  ) {
     showDialog(
       context: context,
       builder: (context) => KycInspectionDialog(request: request, cubit: cubit),

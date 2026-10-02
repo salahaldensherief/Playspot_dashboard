@@ -11,6 +11,9 @@ void main() {
     contactPhone: '+201001234567',
     opensAt: '10:00',
     closesAt: '02:00',
+    lat: 30.0444,
+    lng: 31.2357,
+    instapayAccount: 'synthetic@instapay',
   );
   String? validate(
     LoungeDraftParams value, {
@@ -67,5 +70,27 @@ void main() {
   test('contact details survive draft serialization', () {
     expect(LoungeDraftParams.fromJson(draft.toJson()), draft);
     expect(LoungeDraftParams.fromJson({'name': 'legacy'}).contactPhone, '');
+  });
+  test('requires valid map coordinates and a payment destination', () {
+    expect(
+      validate(draft.copyWith(lat: double.nan)),
+      'onboarding_validation.coordinates_required',
+    );
+    expect(
+      validate(draft.copyWith(lng: 181)),
+      'onboarding_validation.coordinates_required',
+    );
+    expect(
+      validate(draft.copyWith(instapayAccount: ' ')),
+      'onboarding_validation.payment_required',
+    );
+    expect(
+      validate(draft.copyWith(walletPhone: 'not-a-number')),
+      'onboarding_validation.wallet_invalid',
+    );
+    expect(
+      validate(draft.copyWith(instapayAccount: '', walletPhone: '01000000000')),
+      isNull,
+    );
   });
 }

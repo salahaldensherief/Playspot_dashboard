@@ -19,7 +19,7 @@ class MarketplaceStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppText.subHeading(AppStrings.marketplace, fontSize: 18.sp),
+        AppText.subHeading(AppStrings.marketplace, fontSize: 18),
         SizedBox(height: 8.h),
         AppText.body(AppStrings.marketplaceSubtitle),
         SizedBox(height: 24.h),
@@ -58,14 +58,21 @@ class MarketplaceStep extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBackground.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.borderDefault, style: BorderStyle.solid),
+        border: Border.all(
+          color: AppColors.borderDefault,
+          style: BorderStyle.solid,
+        ),
       ),
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.restaurant_menu, color: AppColors.textSecondary, size: 48.r),
+            Icon(
+              Icons.restaurant_menu,
+              color: AppColors.textSecondary,
+              size: 48.r,
+            ),
             SizedBox(height: 16.h),
-            AppText.body(AppStrings.noItemsAdded, fontSize: 16.sp),
+            AppText.body(AppStrings.noItemsAdded, fontSize: 16),
           ],
         ),
       ),
@@ -97,7 +104,10 @@ class MarketplaceStep extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppText.subHeading(extra.name),
-                AppText.body('${extra.category} • ${extra.price} ${AppStrings.priceEgp}', fontSize: 12.sp),
+                AppText.body(
+                  '${extra.category} • ${extra.price} ${AppStrings.priceEgp}',
+                  fontSize: 12,
+                ),
               ],
             ),
           ),

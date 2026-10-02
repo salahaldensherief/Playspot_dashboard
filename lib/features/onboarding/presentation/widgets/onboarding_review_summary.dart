@@ -69,6 +69,16 @@ class OnboardingReviewSummary extends StatelessWidget {
           fontSize: OperationsTokens.label.fontSize,
         ),
         const Divider(color: AppColors.borderDefault),
+        if (draft.walletPhone.isNotEmpty)
+          AppText.body(
+            '${'onboarding_payment.wallet'.tr()}: ${draft.walletPhone}',
+            fontSize: OperationsTokens.label.fontSize,
+          ),
+        if (draft.instapayAccount.isNotEmpty)
+          AppText.body(
+            '${'onboarding_payment.instapay'.tr()}: ${draft.instapayAccount}',
+            fontSize: OperationsTokens.label.fontSize,
+          ),
         AppText.subHeading(
           'onboarding_review.rooms'.tr(),
           fontSize: OperationsTokens.value.fontSize,
@@ -117,16 +127,19 @@ class OnboardingReviewSummary extends StatelessWidget {
           fontSize: OperationsTokens.label.fontSize,
         ),
         const SizedBox(height: OperationsTokens.padding),
-        CheckboxListTile(
-          key: const ValueKey('onboarding-review-consent'),
-          contentPadding: EdgeInsets.zero,
-          value: confirmed,
-          title: AppText.body(
-            'onboarding_review.consent'.tr(),
-            fontSize: OperationsTokens.label.fontSize,
+        Material(
+          color: Colors.transparent,
+          child: CheckboxListTile(
+            key: const ValueKey('onboarding-review-consent'),
+            contentPadding: EdgeInsets.zero,
+            value: confirmed,
+            title: AppText.body(
+              'onboarding_review.consent'.tr(),
+              fontSize: OperationsTokens.label.fontSize,
+            ),
+            controlAffinity: ListTileControlAffinity.leading,
+            onChanged: (value) => onConfirmed(value == true),
           ),
-          controlAffinity: ListTileControlAffinity.leading,
-          onChanged: (value) => onConfirmed(value == true),
         ),
       ],
     );

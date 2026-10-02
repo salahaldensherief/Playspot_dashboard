@@ -7,16 +7,25 @@ extension _LoungeSetupSubmission on _LoungeSetupViewState {
     final userId = user?.id;
     final loungeId = user?.loungeId;
     if (userId == null || loungeId == null) return;
-    _isSubmitting = true;
+    _setSubmitting(true);
     try {
-      await _uploadKyc(userId);
+      if (context.read<OnboardingCubit>().state.status !=
+          OnboardingStatus.saved) {
+        await _submitLoungeDetails(loungeId);
+      }
+      if (!mounted ||
+          context.read<OnboardingCubit>().state.status !=
+              OnboardingStatus.saved) {
+        return;
+      }
+      await _uploadKyc(userId, loungeId);
       if (!mounted ||
           context.read<KycCubit>().state.status != KycStatus.success) {
         return;
       }
-      await _submitLoungeDetails(loungeId);
+      context.read<OnboardingCubit>().markReviewSubmitted();
     } finally {
-      _isSubmitting = false;
+      if (mounted) _setSubmitting(false);
     }
   }
 
@@ -28,7 +37,8 @@ extension _LoungeSetupSubmission on _LoungeSetupViewState {
       cubit.state.draft,
       roomCount: cubit.state.rooms.length,
       hasMainImage:
-          _mainImageBytes?.isNotEmpty == true && _mainImageName != null,
+          (_mainImageBytes?.isNotEmpty == true && _mainImageName != null) ||
+          cubit.state.lounge?.imageUrl.isNotEmpty == true,
       hasIdentityDocument:
           _idCardBytes?.isNotEmpty == true && _idCardName != null,
     );
@@ -45,12 +55,13 @@ extension _LoungeSetupSubmission on _LoungeSetupViewState {
     return false;
   }
 
-  Future<void> _uploadKyc(String userId) async {
+  Future<void> _uploadKyc(String userId, String loungeId) async {
     final bytes = _idCardBytes;
     final name = _idCardName;
     if (bytes == null || name == null) return;
     await context.read<KycCubit>().submitKyc(
       userId: userId,
+      loungeId: loungeId,
       idCardBytes: bytes,
       idCardName: name,
       businessDocBytes: _businessDocBytes,
@@ -70,7 +81,8 @@ extension _LoungeSetupSubmission on _LoungeSetupViewState {
         location: draft.address,
         opensAt: draft.opensAt,
         closesAt: draft.closesAt,
-        imageUrl: '',
+        imageUrl: cubit.state.lounge?.imageUrl ?? '',
+        images: cubit.state.lounge?.images ?? const [],
         lat: draft.lat,
         lng: draft.lng,
       ),

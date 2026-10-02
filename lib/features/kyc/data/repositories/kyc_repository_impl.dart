@@ -13,6 +13,7 @@ class KycRepositoryImpl implements KycRepository {
   @override
   Future<Either<Failure, void>> submitKyc({
     required String userId,
+    required String loungeId,
     required Uint8List idCardBytes,
     required String idCardName,
     Uint8List? businessDocBytes,
@@ -21,6 +22,7 @@ class KycRepositoryImpl implements KycRepository {
     try {
       await _remoteDataSource.submitKyc(
         userId: userId,
+        loungeId: loungeId,
         idCardBytes: idCardBytes,
         idCardName: idCardName,
         businessDocBytes: businessDocBytes,
@@ -44,13 +46,15 @@ class KycRepositoryImpl implements KycRepository {
 
   @override
   Future<Either<Failure, void>> reviewKyc({
-    required String userId,
+    required String requestId,
+    required int revision,
     required bool approve,
     String? notes,
   }) async {
     try {
       await _remoteDataSource.reviewKyc(
-        userId: userId,
+        requestId: requestId,
+        revision: revision,
         approve: approve,
         notes: notes,
       );

@@ -5,11 +5,23 @@ import 'package:play_spot_dashboard/features/lounges/domain/entities/extra_entit
 import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
 import '../../domain/repositories/onboarding_repository.dart';
 import '../datasources/onboarding_remote_data_source.dart';
+import '../../domain/entities/saved_onboarding_draft.dart';
 
 class OnboardingRepositoryImpl implements OnboardingRepository {
   final OnboardingRemoteDataSource remoteDataSource;
 
   OnboardingRepositoryImpl(this.remoteDataSource);
+
+  @override
+  Future<Either<Failure, SavedOnboardingDraft>> getSavedDraft(
+    String loungeId,
+  ) async {
+    try {
+      return Right(await remoteDataSource.getSavedDraft(loungeId));
+    } catch (error) {
+      return Left(ServerFailure(error.toString()));
+    }
+  }
 
   @override
   Future<Either<Failure, Lounge>> setupLounge(Lounge lounge) async {
@@ -92,16 +104,6 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
     try {
       // Logic for adding extra
       return Right(extra);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> completeOnboarding(String loungeId) async {
-    try {
-      await remoteDataSource.updateLoungeData(loungeId, {'status': 'active'});
-      return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

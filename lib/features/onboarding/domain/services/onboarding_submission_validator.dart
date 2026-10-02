@@ -25,6 +25,22 @@ class OnboardingSubmissionValidator {
       return 'onboarding_validation.hours_required';
     }
     if (roomCount < 1) return 'onboarding_validation.rooms_required';
+    if (draft.lat == null ||
+        draft.lng == null ||
+        !draft.lat!.isFinite ||
+        !draft.lng!.isFinite ||
+        draft.lat!.abs() > 90 ||
+        draft.lng!.abs() > 180) {
+      return 'onboarding_validation.coordinates_required';
+    }
+    if (draft.walletPhone.trim().isEmpty &&
+        draft.instapayAccount.trim().isEmpty) {
+      return 'onboarding_validation.payment_required';
+    }
+    if (draft.walletPhone.trim().isNotEmpty &&
+        !RegExp(r'^\+?[0-9]{8,15}$').hasMatch(draft.walletPhone.trim())) {
+      return 'onboarding_validation.wallet_invalid';
+    }
     if (!hasMainImage) return 'onboarding_validation.image_required';
     if (!hasIdentityDocument) return 'onboarding_validation.identity_required';
     return null;

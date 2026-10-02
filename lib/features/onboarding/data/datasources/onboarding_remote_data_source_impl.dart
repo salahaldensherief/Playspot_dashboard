@@ -3,11 +3,26 @@ import '../../../lounges/data/models/lounge_model.dart';
 import '../../../lounges/domain/entities/lounge.dart';
 import '../../../rooms/data/models/room_model.dart';
 import 'onboarding_remote_data_source.dart';
+import '../models/saved_onboarding_draft_model.dart';
 
 class OnboardingRemoteDataSourceImpl implements OnboardingRemoteDataSource {
   final SupabaseClient _supabase;
 
   OnboardingRemoteDataSourceImpl(this._supabase);
+
+  @override
+  Future<SavedOnboardingDraftModel> getSavedDraft(String loungeId) async {
+    final response = await _supabase.rpc(
+      'get_my_onboarding_draft',
+      params: {'p_lounge_id': loungeId},
+    );
+    if (response is! Map || (response['lounge'] as Map?)?['id'] != loungeId) {
+      throw const FormatException('invalid_saved_onboarding_draft');
+    }
+    return SavedOnboardingDraftModel.fromJson(
+      Map<String, dynamic>.from(response),
+    );
+  }
 
   String _sanitizeTimeFormat(String? timeStr) {
     if (timeStr == null || timeStr.trim().isEmpty) return '00:00:00';

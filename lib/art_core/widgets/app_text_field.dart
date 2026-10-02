@@ -5,6 +5,7 @@ import '../theme/app_colors.dart';
 
 class AppTextField extends StatelessWidget {
   final String label;
+  final double? fontSize;
   final String? hintText;
   final String? initialValue;
   final TextEditingController? controller;
@@ -23,6 +24,7 @@ class AppTextField extends StatelessWidget {
   const AppTextField({
     super.key,
     this.label = '',
+    this.fontSize,
     this.hintText,
     this.initialValue,
     this.controller,
@@ -49,7 +51,7 @@ class AppTextField extends StatelessWidget {
             label,
             style: TextStyle(
               color: enabled ? AppColors.textPrimary : AppColors.textSecondary,
-              fontSize: 14.sp,
+              fontSize: fontSize ?? 14.sp,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -69,15 +71,22 @@ class AppTextField extends StatelessWidget {
           maxLines: maxLines,
           style: TextStyle(
             color: enabled ? AppColors.textPrimary : AppColors.textSecondary,
-            fontSize: 14.sp,
+            fontSize: fontSize ?? 14.sp,
           ),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
-            prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppColors.textSecondary, size: 20.r) : null,
+            hintStyle: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: fontSize ?? 14.sp,
+            ),
+            prefixIcon: prefixIcon != null
+                ? Icon(prefixIcon, color: AppColors.textSecondary, size: 20.r)
+                : null,
             suffixIcon: suffix,
             filled: true,
-            fillColor: enabled ? AppColors.mutedBackground : AppColors.cardBackground.withAlpha(128),
+            fillColor: enabled
+                ? AppColors.mutedBackground
+                : AppColors.cardBackground.withAlpha(128),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),
               borderSide: const BorderSide(color: AppColors.borderDefault),
@@ -88,13 +97,18 @@ class AppTextField extends StatelessWidget {
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),
-              borderSide: BorderSide(color: AppColors.borderDefault.withAlpha(128)),
+              borderSide: BorderSide(
+                color: AppColors.borderDefault.withAlpha(128),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),
               borderSide: const BorderSide(color: AppColors.neonBlue),
             ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 14.h,
+            ),
           ),
         ),
       ],

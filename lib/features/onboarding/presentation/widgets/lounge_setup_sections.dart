@@ -5,9 +5,9 @@ extension _LoungeSetupSections on _LoungeSetupViewState {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppText.heading(AppStrings.loungeSetupWelcome, fontSize: 32.sp),
+        AppText.heading(AppStrings.loungeSetupWelcome, fontSize: 28),
         SizedBox(height: 8.h),
-        AppText.body(AppStrings.loungeSetupSubtitle, fontSize: 16.sp),
+        AppText.body(AppStrings.loungeSetupSubtitle, fontSize: 16),
       ],
     );
   }
@@ -53,6 +53,7 @@ extension _LoungeSetupSections on _LoungeSetupViewState {
           nameController: _nameController,
           descriptionController: _descriptionController,
           contactPhoneController: _contactPhoneController,
+          initialMainImageUrl: cubit.state.lounge?.imageUrl,
           onMainImageSelected: (bytes, name) {
             _mainImageBytes = bytes;
             _mainImageName = name;
@@ -79,6 +80,11 @@ extension _LoungeSetupSections on _LoungeSetupViewState {
       case 5:
         return MarketplaceStep(loungeId: loungeId);
       case 6:
+        return PaymentDestinationStep(
+          walletPhoneController: _walletPhoneController,
+          instapayAccountController: _instapayAccountController,
+        );
+      case 7:
         return KycStep(
           onIdCardSelected: (bytes, name) {
             _idCardBytes = bytes;
@@ -89,12 +95,14 @@ extension _LoungeSetupSections on _LoungeSetupViewState {
             _businessDocName = name;
           },
         );
-      case 7:
+      case 8:
         return OnboardingReviewSummary(
           state: cubit.state,
           ownerName: admin?.name ?? '',
           ownerEmail: admin?.email ?? '',
-          hasMainImage: _mainImageBytes?.isNotEmpty == true,
+          hasMainImage:
+              _mainImageBytes?.isNotEmpty == true ||
+              cubit.state.lounge?.imageUrl.isNotEmpty == true,
           hasIdentity: _idCardBytes?.isNotEmpty == true,
           hasBusinessDocument: _businessDocBytes?.isNotEmpty == true,
           confirmed: _reviewConfirmed,
@@ -121,13 +129,22 @@ extension _LoungeSetupSections on _LoungeSetupViewState {
                 onboardingState.status == OnboardingStatus.loading ||
                 kycState.status == KycStatus.loading;
 
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            return Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              spacing: 12,
+              runSpacing: 12,
               children: [
+                if (kycState.status == KycStatus.failure)
+                  TextButton(
+                    onPressed: () =>
+                        context.read<LoginCubit>().checkInitialAuth(),
+                    child: Text('kyc_pending.refresh'.tr()),
+                  ),
                 if (currentStep > 0)
                   AppButton(
                     text: AppStrings.back,
                     variant: AppButtonVariant.outlined,
+                    fontSize: 16,
                     onPressed: _onPrevious,
                   )
                 else
@@ -137,6 +154,7 @@ extension _LoungeSetupSections on _LoungeSetupViewState {
                       ? 'onboarding_review.submit'.tr()
                       : AppStrings.next,
                   isLoading: isLoading,
+                  fontSize: 16,
                   onPressed: () => _onNext(currentStep),
                 ),
               ],
