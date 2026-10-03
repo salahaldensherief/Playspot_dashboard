@@ -10,7 +10,11 @@ class ShiftSummaryModal extends StatelessWidget {
   final ShiftEntity shift;
   final VoidCallback onFinish;
 
-  const ShiftSummaryModal({super.key, required this.shift, required this.onFinish});
+  const ShiftSummaryModal({
+    super.key,
+    required this.shift,
+    required this.onFinish,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +24,13 @@ class ShiftSummaryModal extends StatelessWidget {
       title: Center(
         child: Text(
           AppStrings.zReport,
-          style: TextStyle(color: AppColors.neonBlue, fontSize: 24.sp, fontWeight: FontWeight.bold, fontFamily: 'Orbitron'),
+          style: TextStyle(
+            color: AppColors.neonBlue,
+            fontSize: 24.sp,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Orbitron',
+            fontFamilyFallback: const ['Tajawal'],
+          ),
         ),
       ),
       content: SizedBox(
@@ -29,14 +39,35 @@ class ShiftSummaryModal extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildRow(AppStrings.cashier, shift.cashierName ?? 'N/A'),
-            _buildRow(AppStrings.startTimeLabel, DateFormat('yyyy-MM-dd hh:mm a').format(shift.startTime)),
+            _buildRow(
+              AppStrings.startTimeLabel,
+              DateFormat('yyyy-MM-dd hh:mm a').format(shift.startTime),
+            ),
             const Divider(color: AppColors.borderDefault),
-            _buildRow(AppStrings.startingCash, '${shift.startingCash.toStringAsFixed(2)} ${AppStrings.egp}'),
-            _buildRow(AppStrings.cashRevenue, '${shift.cashRevenue?.toStringAsFixed(2)} ${AppStrings.egp}'),
-            _buildRow(AppStrings.digitalRevenue, '${shift.digitalRevenue?.toStringAsFixed(2)} ${AppStrings.egp}', isInfo: true),
+            _buildRow(
+              AppStrings.startingCash,
+              '${shift.startingCash.toStringAsFixed(2)} ${AppStrings.egp}',
+            ),
+            _buildRow(
+              AppStrings.cashRevenue,
+              '${shift.cashRevenue?.toStringAsFixed(2)} ${AppStrings.egp}',
+            ),
+            _buildRow(
+              AppStrings.digitalRevenue,
+              '${shift.digitalRevenue?.toStringAsFixed(2)} ${AppStrings.egp}',
+              isInfo: true,
+            ),
             const Divider(color: AppColors.borderDefault),
-            _buildRow(AppStrings.expectedCash, '${shift.expectedCash?.toStringAsFixed(2)} ${AppStrings.egp}', isBold: true),
-            _buildRow(AppStrings.actualCash, '${shift.actualCash?.toStringAsFixed(2)} ${AppStrings.egp}', isBold: true),
+            _buildRow(
+              AppStrings.expectedCash,
+              '${shift.expectedCash?.toStringAsFixed(2)} ${AppStrings.egp}',
+              isBold: true,
+            ),
+            _buildRow(
+              AppStrings.actualCash,
+              '${shift.actualCash?.toStringAsFixed(2)} ${AppStrings.egp}',
+              isBold: true,
+            ),
             const Divider(color: AppColors.borderDefault),
             _buildDiscrepancyRow(shift.discrepancy ?? 0),
           ],
@@ -54,13 +85,21 @@ class ShiftSummaryModal extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(String label, String value, {bool isBold = false, bool isInfo = false}) {
+  Widget _buildRow(
+    String label,
+    String value, {
+    bool isBold = false,
+    bool isInfo = false,
+  }) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp)),
+          Text(
+            label,
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+          ),
           Text(
             value,
             style: TextStyle(
@@ -75,8 +114,12 @@ class ShiftSummaryModal extends StatelessWidget {
   }
 
   Widget _buildDiscrepancyRow(double val) {
-    final color = val == 0 ? AppColors.success : (val < 0 ? AppColors.danger : AppColors.warning);
-    final statusText = val == 0 ? 'matched'.tr() : (val < 0 ? 'deficit'.tr() : 'surplus'.tr());
+    final color = val == 0
+        ? AppColors.success
+        : (val < 0 ? AppColors.danger : AppColors.warning);
+    final statusText = val == 0
+        ? 'matched'.tr()
+        : (val < 0 ? 'deficit'.tr() : 'surplus'.tr());
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -93,13 +136,23 @@ class ShiftSummaryModal extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(AppStrings.discrepancy, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-                Text(statusText, style: TextStyle(color: color, fontSize: 12.sp)),
+                Text(
+                  AppStrings.discrepancy,
+                  style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  statusText,
+                  style: TextStyle(color: color, fontSize: 12.sp),
+                ),
               ],
             ),
             Text(
               '${val.toStringAsFixed(2)} ${AppStrings.egp}',
-              style: TextStyle(color: color, fontSize: 18.sp, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: color,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),

@@ -22,6 +22,10 @@ class CustomDropdown<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 14,
+    );
     final effectiveItems = items.toSet().toList();
     if (value != null && !effectiveItems.contains(value)) {
       effectiveItems.add(value as T);
@@ -30,24 +34,20 @@ class CustomDropdown<T> extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        Text(label, style: textStyle?.copyWith(fontWeight: FontWeight.w500)),
         SizedBox(height: 8.h),
         DropdownButtonFormField<T>(
           initialValue: value,
           isExpanded: true,
           dropdownColor: AppColors.cardBackground,
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
+          style: textStyle,
           decoration: InputDecoration(
             filled: true,
             fillColor: AppColors.mutedBackground,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 12.h,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),
               borderSide: const BorderSide(color: AppColors.borderDefault),
@@ -61,13 +61,18 @@ class CustomDropdown<T> extends StatelessWidget {
               borderSide: const BorderSide(color: AppColors.neonBlue),
             ),
           ),
-          items: effectiveItems.map((e) => DropdownMenuItem<T>(
-            value: e,
-            child: Text(itemLabel(e)),
-          )).toList(),
+          items: effectiveItems
+              .map(
+                (e) => DropdownMenuItem<T>(value: e, child: Text(itemLabel(e))),
+              )
+              .toList(),
           onChanged: onChanged,
           validator: validator,
-          icon: Icon(Icons.arrow_drop_down, color: AppColors.textSecondary, size: 24.r),
+          icon: Icon(
+            Icons.arrow_drop_down,
+            color: AppColors.textSecondary,
+            size: 24.r,
+          ),
         ),
       ],
     );

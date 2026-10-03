@@ -52,3 +52,9 @@
 - Three regression cases (owner, manager, cashier) cover delayed grant arrival, revocation, and another actor's grants while the authentication Cubit stays unchanged. Permission and platform-scope suites: 73 passed; changed-scope analysis had no issues. Release Web build succeeded in 75.2 seconds.
 - Actual owner screenshot dashboard-owner-status-reactive-settled.png shows the control arriving after permissions load, one active-shift banner, and seven available rooms. The control was not toggled; no venue availability or financial operation was changed by the test.
 - GitHub CI for the typography commit 0e8b08b completed successfully.
+
+## Dropdown Arabic rendering
+
+- Runtime booking-filter labels rendered as missing-glyph boxes. DropdownButtonFormField was given an isolated TextStyle that discarded the theme font. CustomDropdown now derives its style from the theme body text, preserving Tajawal and a 14px size for both the selection and popup.
+- Two regressions verify the inherited Arabic font and readable size at text scales 1.0/1.6, including opening the popup. Widget/shift/platform suites: 106 passed; changed-scope analysis had no issues. Release Web build succeeded in 76.4 seconds.
+- Actual screenshot dashboard-booking-filters-ar-font-fixed.png shows Arabic room/status/date labels rendered correctly. Shift-summary Orbitron headings now include the same explicit Tajawal fallback as other headings.
