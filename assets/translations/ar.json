@@ -1233,7 +1233,7 @@
   "view_canteen": "الكانتين",
   "view_tournaments": "البطولات",
   "failed_to_load_stats": "تعذر تحميل إحصائيات العمليات",
-  "occupied_rooms_subtitle": "{} / {} غرف مشغولة",
+  "occupied_rooms_subtitle": "{} غرف مشغولة من أصل {}",
   "open_sessions_count": "{} جلسات نشطة",
   "operational_state_closed": "الحالة التشغيلية: مغلق (لا يوجد شيفت نشط)",
   "operational_state_closed_desc": "تسجيل الحجوزات النقدية ومبيعات الكانتين وتأكيد الحضور تتطلب فتح شيفت نشط للحفاظ على العهدة المالية.",

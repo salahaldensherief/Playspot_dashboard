@@ -1233,7 +1233,7 @@
   "view_canteen": "Canteen",
   "view_tournaments": "Tournaments",
   "failed_to_load_stats": "Failed to load operational statistics",
-  "occupied_rooms_subtitle": "{} / {} Rooms Occupied",
+  "occupied_rooms_subtitle": "{} of {} rooms occupied",
   "open_sessions_count": "{} Active Sessions",
   "operational_state_closed": "Operational State: Closed (No Active Shift)",
   "operational_state_closed_desc": "Cash receipts, booking check-ins, and canteen sales require an active shift to maintain financial accountability.",
