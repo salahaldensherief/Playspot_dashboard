@@ -20,17 +20,39 @@ class AuditLogModel extends AuditLogEntity {
     required super.createdAt,
   });
 
+  factory AuditLogModel.fromRoomStatusJson(Map<String, dynamic> json) {
+    return AuditLogModel.fromJson({
+      'id': json['id'],
+      'lounge_id': json['lounge_id'],
+      'entity_type': 'room',
+      'entity_id': json['room_id'],
+      'action': json['operation'] ?? 'room_status_changed',
+      'actor_user_id': json['changed_by'],
+      'created_at': json['changed_at'],
+      'old_data': {
+        'status': json['old_status'],
+        'is_available': json['old_is_available'],
+      },
+      'new_data': {
+        'status': json['new_status'],
+        'is_available': json['new_is_available'],
+      },
+    });
+  }
+
   factory AuditLogModel.fromJson(Map<String, dynamic> json) {
     String? actorName;
     String? actorRole;
 
     if (json['profiles'] is Map) {
       final profile = json['profiles'] as Map<String, dynamic>;
-      actorName = profile['full_name']?.toString() ?? profile['name']?.toString();
+      actorName =
+          profile['full_name']?.toString() ?? profile['name']?.toString();
       actorRole = profile['role']?.toString();
     }
 
-    actorName ??= json['actor_name']?.toString() ??
+    actorName ??=
+        json['actor_name']?.toString() ??
         json['user_name']?.toString() ??
         json['performed_by_name']?.toString() ??
         json['full_name']?.toString();
@@ -59,17 +81,20 @@ class AuditLogModel extends AuditLogEntity {
     final rawTitleAr = json['title_ar']?.toString();
     final rawTitleEn = json['title_en']?.toString();
 
-    final rawSeverity = json['severity']?.toString() ??
+    final rawSeverity =
+        json['severity']?.toString() ??
         json['level']?.toString() ??
         json['priority']?.toString();
 
-    final rawAction = json['event_code']?.toString() ??
+    final rawAction =
+        json['event_code']?.toString() ??
         json['action']?.toString() ??
         json['action_type']?.toString() ??
         json['event_type']?.toString() ??
         'update';
 
-    final rawEntityType = json['entity_type']?.toString() ??
+    final rawEntityType =
+        json['entity_type']?.toString() ??
         json['type']?.toString() ??
         'booking';
 
@@ -83,7 +108,8 @@ class AuditLogModel extends AuditLogEntity {
       id: (json['id'] ?? json['event_id'] ?? '').toString(),
       loungeId: json['lounge_id']?.toString(),
       entityType: rawEntityType,
-      entityId: json['entity_id']?.toString() ??
+      entityId:
+          json['entity_id']?.toString() ??
           json['booking_id']?.toString() ??
           json['shift_id']?.toString() ??
           json['room_id']?.toString(),
@@ -91,7 +117,8 @@ class AuditLogModel extends AuditLogEntity {
       eventCode: rawEventCode,
       titleAr: rawTitleAr,
       titleEn: rawTitleEn,
-      actorUserId: json['actor_user_id']?.toString() ??
+      actorUserId:
+          json['actor_user_id']?.toString() ??
           json['performed_by']?.toString() ??
           json['user_id']?.toString(),
       actorName: actorName,

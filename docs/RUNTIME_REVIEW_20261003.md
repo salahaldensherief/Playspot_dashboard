@@ -95,3 +95,11 @@
 - Room feature tests: 19 passed. Full offline suite: 853 passed, 2 live tests skipped. Scoped analysis: no issues. Release Web build succeeded in 78.7 seconds.
 - Actual dashboard-owner-room-edit-scope-fixed.png confirms the existing standard-room selection, rates and Arabic available status. Browser error history includes the original pre-fix exception and is cumulative; do not present that buffer as a clean new session. Screenshot capture intermittently timed out.
 - Audit request history also contains a GET /rest/v1/audit_logs returning 404. Its fallback/schema contract still needs investigation; a successful widget fixture is not proof of live audit integration. Permission-loading deep-link redirection remains a separate known issue.
+
+## Room status-audit backend contract
+
+- Live catalog verification found no public get_audit_logs RPC, audit_logs table, or booking timeline RPC. Room-status events exist in public.room_status_audit with SELECT RLS for authorized lounge staff and super administrators.
+- Room timelines now read the actual status-audit table with explicit lounge_id and room_id filters, descending changed_at order and bounded requested count. Missing scope fails before sending a request; permission or schema failures propagate to the repository instead of appearing as an empty timeline. Existing general-audit and booking paths still require a separate coordinated contract review.
+- The data adapter preserves event identity, real changed_at time, actor, and old/new status and availability. Three HTTP regressions cover query scope/order/limit/mapping, authorization failure without fallback, and rejection of unscoped reads. Combined audit/room suites: 32 passed; changed data/test scope analysis: no issues. Release Web build succeeded in 129.4 seconds.
+- A real owner-authenticated scoped request returned HTTP 200 and 17 events without changing any data. The browser served the rebuilt main.dart.js containing room_status_audit, but UI interaction/capture remained inconsistent and the command error history retained old errors. Rendering the timeline's events is not yet accepted as visually verified.
+- Previous editor fix 7bbfde6 passed GitHub CI run 37156403312.
