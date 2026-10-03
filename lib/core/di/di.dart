@@ -1,7 +1,9 @@
 import 'package:get_it/get_it.dart';
+import 'package:http/http.dart' as http;
 import '../../features/offline_cashier/offline_cashier_di.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/secure_supabase_auth_options.dart';
+import '../services/request_diagnostics_client.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/core/audio/audio_service.dart';
 import 'package:play_spot_dashboard/core/constants/app_constants.dart';
@@ -45,9 +47,15 @@ Future<void> setupInjection() async {
     );
   }
 
+  final httpClient = RequestDiagnosticsClient();
+  sl.registerSingleton<http.Client>(
+    httpClient,
+    dispose: (client) => client.close(),
+  );
   await Supabase.initialize(
     url: supabaseUrl,
     publishableKey: supabaseAnonKey,
+    httpClient: httpClient,
     authOptions: SecureSupabaseAuthOptions.forUrl(supabaseUrl),
   );
 
@@ -64,9 +72,11 @@ Future<void> setupInjection() async {
 
   sl.registerLazySingleton<AudioService>(() => AudioServiceImpl());
   sl.registerLazySingleton<StorageService>(() => StorageServiceImpl(sl()));
-  sl.registerLazySingleton<LocationService>(() => LocationServiceImpl());
+  sl.registerLazySingleton<LocationService>(
+    () => LocationServiceImpl(client: sl()),
+  );
   sl.registerLazySingleton<HardwareBridgeService>(
-    () => HardwareBridgeService(),
+    () => HardwareBridgeService(client: sl()),
   );
 
   // Initialize Feature DI Modules

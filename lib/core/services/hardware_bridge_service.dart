@@ -1,8 +1,13 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'request_diagnostics_client.dart';
 
 class HardwareBridgeService {
+  HardwareBridgeService({http.Client? client})
+    : _client = client ?? RequestDiagnosticsClient();
+
+  final http.Client _client;
   static const String primaryBridgeUrl = 'http://127.0.0.1:8443';
   static const String secondaryBridgeUrl = 'http://local.playspot.me:8443';
   static const Duration defaultTimeout = Duration(seconds: 2);
@@ -15,7 +20,9 @@ class HardwareBridgeService {
     bool isManualRoom = false,
   }) async {
     if (isManualRoom) {
-      debugPrint('ℹ️ [HARDWARE_BRIDGE] Room $roomId is manual mode; bypassing bridge agent.');
+      debugPrint(
+        'ℹ️ [HARDWARE_BRIDGE] Room $roomId is manual mode; bypassing bridge agent.',
+      );
       return true;
     }
 
@@ -27,17 +34,23 @@ class HardwareBridgeService {
 
     for (final endpoint in endpoints) {
       try {
-        debugPrint('🔵 [HARDWARE_BRIDGE] Pinging $endpoint for room $roomId...');
-        final uri = Uri.parse(endpoint).replace(queryParameters: {
-          'roomId': roomId.trim(),
-        });
-        final response = await http.get(uri).timeout(defaultTimeout);
+        debugPrint(
+          '🔵 [HARDWARE_BRIDGE] Pinging $endpoint for room $roomId...',
+        );
+        final uri = Uri.parse(
+          endpoint,
+        ).replace(queryParameters: {'roomId': roomId.trim()});
+        final response = await _client.get(uri).timeout(defaultTimeout);
         if (response.statusCode >= 200 && response.statusCode < 300) {
-          debugPrint('🟢 [HARDWARE_BRIDGE] Agent responded successfully at $endpoint');
+          debugPrint(
+            '🟢 [HARDWARE_BRIDGE] Agent responded successfully at $endpoint',
+          );
           return true;
         }
       } catch (e) {
-        debugPrint('⚠️ [HARDWARE_BRIDGE] Bridge ping failed at $endpoint: $e');
+        debugPrint(
+          '⚠️ [HARDWARE_BRIDGE] Bridge ping failed at $endpoint: ${e.runtimeType}',
+        );
       }
     }
 
