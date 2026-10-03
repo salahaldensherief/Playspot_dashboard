@@ -37,6 +37,7 @@ void main() {
         loungeName: 'Venue',
         address: 'Address',
         phone: '01234567890',
+        ownerPhone: '01987654321',
       );
 
   test(
@@ -48,6 +49,8 @@ void main() {
       expect(requests.single.method, 'POST');
       final data = jsonDecode(requests.single.body) as Map;
       expect(data['address'], 'Address');
+      expect(data['phone'], '01234567890');
+      expect(data['owner_phone'], '01987654321');
       expect(data.containsKey('role'), isFalse);
     },
   );

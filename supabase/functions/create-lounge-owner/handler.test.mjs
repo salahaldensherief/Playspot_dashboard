@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createOwnerHandler } from './handler.js';
 
-const body={email:'OWNER@example.invalid',password:'fixture-only-password',owner_name:'Owner',lounge_name:'Venue',address:'Address',phone:'01234567890'};
+const body={email:'OWNER@example.invalid',password:'fixture-only-password',owner_name:'Owner',lounge_name:'Venue',address:'Address',phone:'01234567890',owner_phone:'01987654321'};
 const request=(payload=body,token='Bearer fixture')=>new Request('https://fixture.invalid',{method:'POST',headers:{Authorization:token,'Content-Type':'application/json'},body:JSON.stringify(payload)});
 function fixture(overrides={}) {
   const calls=[];
@@ -20,6 +20,8 @@ test('active authenticated super admin creates pending venue through Auth Admin'
   assert.equal(calls[0][1].email,'owner@example.invalid');
   assert.equal(calls[1][1].p_actor_id,'admin');assert.equal(calls[1][1].p_address,'Address');
   assert.equal('password' in calls[1][1],false);
+  assert.equal(calls[1][1].p_phone,'01234567890');
+  assert.equal(calls[1][1].p_owner_phone,'01987654321');
 });
 for (const [name,overrides,status] of [
   ['expired session',{authenticate:async()=>null},401],
@@ -50,4 +52,11 @@ test('network exceptions during finalization remain an unconfirmed operation',as
 test('preflight and unsupported methods do not create accounts',async()=>{
   const {handler,calls}=fixture();assert.equal((await handler(new Request('https://fixture.invalid',{method:'OPTIONS'}))).status,200);
   assert.equal((await handler(new Request('https://fixture.invalid'))).status,405);assert.deepEqual(calls,[]);
+});
+
+test('omitted owner phone never copies the venue contact into the owner profile',async()=>{
+ const {handler,calls}=fixture(); const {owner_phone,...legacy}=body;
+ assert.equal((await handler(request(legacy))).status,201);
+ assert.equal(calls[1][1].p_owner_phone,null);
+ assert.equal(calls[1][1].p_phone,'01234567890');
 });

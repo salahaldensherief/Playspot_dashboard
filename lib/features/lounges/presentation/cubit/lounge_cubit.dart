@@ -163,6 +163,7 @@ class LoungeCubit extends Cubit<LoungeState> {
       city: city,
       address: address,
       phone: phone,
+      ownerPhone: ownerPhone,
     );
 
     if (isClosed) return false;

@@ -140,6 +140,7 @@ class LoungeQueryRemoteHelper {
     String? city,
     String? address,
     String? phone,
+    String? ownerPhone,
   }) async {
     return LoungeOwnerProvisioner(client).create(
       email: email,
@@ -149,6 +150,7 @@ class LoungeQueryRemoteHelper {
       city: city,
       address: address,
       phone: phone,
+      ownerPhone: ownerPhone,
     );
   }
 

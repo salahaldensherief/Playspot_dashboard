@@ -21,6 +21,7 @@ class LoungeOwnerProvisioner {
     String? city,
     String? address,
     String? phone,
+    String? ownerPhone,
   }) async {
     try {
       final response = await client.functions.invoke(
@@ -33,6 +34,7 @@ class LoungeOwnerProvisioner {
           'city': city,
           'address': address,
           'phone': phone,
+          'owner_phone': ownerPhone,
         },
       );
       final data = response.data;

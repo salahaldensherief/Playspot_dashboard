@@ -31,7 +31,7 @@
 
 - Remaining role-action flows and onboarding creation/approval against isolated records.
 - Old-runtime location 502 and booking-read 400 causes fixed above. Session-transition 401 requests still require lifecycle review.
-- Owner phone and lounge phone are separate form inputs but provisioning contract still conflates them; requires coordinated API/server follow-up.
+- Owner contact separation is verified below; isolated live creation/approval still remains.
 - Full widget-by-widget localization and responsive visual review still ongoing.
 - Mobile navigation/runtime review intentionally paused while Dashboard is running; mobile and dashboard are not run together.
 - Offline cashier foundations are not proof of complete offline operations/synchronization. No production-readiness certification from these tests.
@@ -58,3 +58,11 @@
 - Runtime booking-filter labels rendered as missing-glyph boxes. DropdownButtonFormField was given an isolated TextStyle that discarded the theme font. CustomDropdown now derives its style from the theme body text, preserving Tajawal and a 14px size for both the selection and popup.
 - Two regressions verify the inherited Arabic font and readable size at text scales 1.0/1.6, including opening the popup. Widget/shift/platform suites: 106 passed; changed-scope analysis had no issues. Release Web build succeeded in 76.4 seconds.
 - Actual screenshot dashboard-booking-filters-ar-font-fixed.png shows Arabic room/status/date labels rendered correctly. Shift-summary Orbitron headings now include the same explicit Tajawal fallback as other headings.
+
+## Owner and venue contacts
+
+- The form's ownerPhone previously stopped at the Cubit, while the server stored the venue phone on the owner profile. The application contract now forwards distinct owner_phone and phone values. The versioned service-only finalizer stores owner phone on profiles.phone, venue phone on lounges.contact_phone, and the venue address on lounges.address plus the existing location field.
+- Native PostgreSQL 17.11 fixture: 18 new-version checks and 14 existing-version checks passed, including disabled/banned administrator denial, no staff reassignment, service-only execution, idempotent retries, and old-caller replay compatibility. No existing application rows are rewritten.
+- Edge handler: 11 tests passed; Flutter request-contract and Cubit forwarding: 6 passed. Scoped feature analysis reported five existing informational brace lints and no errors/warnings.
+- Applied only 20261003185714_owner_lounge_contact_fields_v2.sql to the live project, then deployed create-lounge-owner version 2 with verify_jwt=true. Live catalog confirms empty search_path, client/anonymous EXECUTE denied, and service_role EXECUTE granted. An authenticated cashier request was denied HTTP 403/42501; the Edge create endpoint rejected the cashier HTTP 403 before account creation. No live owner account was created by these probes.
+- Dashboard CI at 5eca80b succeeded. Actual cashier login retained cashier role; direct platform URL navigation redirected to the lounge dashboard. Existing owner shift was not closed and venue availability was not toggled.

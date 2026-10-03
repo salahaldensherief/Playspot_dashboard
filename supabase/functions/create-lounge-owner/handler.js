@@ -37,6 +37,7 @@ export function createOwnerHandler(dependencies) {
       p_actor_id: actor.id, p_owner_id: created.id, p_owner_name: ownerName,
       p_lounge_name: loungeName, p_city: optionalText('city'),
       p_address: optionalText('address'), p_phone: optionalText('phone'),
+      p_owner_phone: optionalText('owner_phone'),
     };
     // Idempotent server finalization handles a lost response without a second lounge.
     for (let attempt = 0; attempt < 2; attempt++) {

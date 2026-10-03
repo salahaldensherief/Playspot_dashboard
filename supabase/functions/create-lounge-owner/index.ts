@@ -23,7 +23,7 @@ Deno.serve(createOwnerHandler({
     return { id: data.user?.id, duplicate: /already|registered|exists/i.test(error?.message ?? '') };
   },
   finalize: async (parameters: Record<string, unknown>) => {
-    const { data, error } = await service.rpc('finalize_owner_lounge_provisioning', parameters);
+    const { data, error } = await service.rpc('finalize_owner_lounge_provisioning_v2', parameters);
     return error ? null : data;
   },
   reportUnconfirmed: (ownerId: string) => console.error('Owner provisioning requires recovery', ownerId),

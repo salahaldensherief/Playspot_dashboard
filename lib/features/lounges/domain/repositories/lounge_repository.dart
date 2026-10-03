@@ -66,6 +66,7 @@ abstract class LoungeRepository {
     String? city,
     String? address,
     String? phone,
+    String? ownerPhone,
   });
   Future<Either<Failure, Map<String, dynamic>>> getDashboardStats(
     String? loungeId,

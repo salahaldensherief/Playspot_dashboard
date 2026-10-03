@@ -252,6 +252,7 @@ class LoungeRepositoryImpl implements LoungeRepository {
     String? city,
     String? address,
     String? phone,
+    String? ownerPhone,
   }) async {
     try {
       final res = await remoteDataSource.createLoungeWithOwner(
@@ -262,6 +263,7 @@ class LoungeRepositoryImpl implements LoungeRepository {
         city: city,
         address: address,
         phone: phone,
+        ownerPhone: ownerPhone,
       );
       final loungeId = res['lounge_id']?.toString() ?? '';
       await _cacheHelper.invalidateLounge(loungeId);

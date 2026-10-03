@@ -56,6 +56,7 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     String? city,
     String? address,
     String? phone,
+    String? ownerPhone,
   }) => _queryHelper.createLoungeWithOwner(
     email: email,
     password: password,
@@ -64,6 +65,7 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     city: city,
     address: address,
     phone: phone,
+    ownerPhone: ownerPhone,
   );
 
   @override

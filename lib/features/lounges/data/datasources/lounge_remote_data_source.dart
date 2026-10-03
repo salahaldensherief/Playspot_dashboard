@@ -20,6 +20,7 @@ abstract class LoungeRemoteDataSource {
     String? city,
     String? address,
     String? phone,
+    String? ownerPhone,
   });
   Future<void> updateLounge(String id, Map<String, dynamic> data);
   Future<void> updateLoungeDiscount(
