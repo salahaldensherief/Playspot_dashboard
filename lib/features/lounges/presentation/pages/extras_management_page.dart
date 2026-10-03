@@ -44,7 +44,8 @@ class _ExtrasManagementPageState extends State<ExtrasManagementPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final loginState = context.read<LoginCubit>().state;
-      final loungeId = loginState.user?.loungeId ?? loginState.userLounge?.id ?? '';
+      final loungeId =
+          loginState.user?.loungeId ?? loginState.userLounge?.id ?? '';
       _checkAndLoadData(context, loungeId);
     });
   }
@@ -56,7 +57,8 @@ class _ExtrasManagementPageState extends State<ExtrasManagementPage> {
           prev.user?.loungeId != curr.user?.loungeId ||
           prev.userLounge?.id != curr.userLounge?.id,
       listener: (context, loginState) {
-        final loungeId = loginState.user?.loungeId ?? loginState.userLounge?.id ?? '';
+        final loungeId =
+            loginState.user?.loungeId ?? loginState.userLounge?.id ?? '';
         _checkAndLoadData(context, loungeId);
       },
       child: BlocBuilder<LoginCubit, LoginState>(
@@ -97,10 +99,15 @@ class _ExtrasManagementPageState extends State<ExtrasManagementPage> {
         borderRadius: BorderRadius.circular(10.r),
         border: Border.all(color: AppColors.borderDefault),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Wrap(
+        spacing: 4,
+        runSpacing: 4,
         children: [
-          _buildTabItem(0, AppStrings.singleItemsTab, Icons.restaurant_menu_rounded),
+          _buildTabItem(
+            0,
+            AppStrings.singleItemsTab,
+            Icons.restaurant_menu_rounded,
+          ),
           _buildTabItem(1, AppStrings.combosTab, Icons.fastfood_rounded),
           _buildTabItem(2, AppStrings.upsellTab, Icons.bolt_rounded),
         ],
@@ -131,6 +138,7 @@ class _ExtrasManagementPageState extends State<ExtrasManagementPage> {
               : null,
         ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
@@ -141,7 +149,9 @@ class _ExtrasManagementPageState extends State<ExtrasManagementPage> {
             AppText.body(
               title,
               fontSize: 13.sp,
-              color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+              color: isSelected
+                  ? AppColors.textPrimary
+                  : AppColors.textSecondary,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             ),
           ],
@@ -196,7 +206,11 @@ class _ExtrasManagementPageState extends State<ExtrasManagementPage> {
     );
   }
 
-  void _openAddDialog(BuildContext context, String loungeId, ExtrasCubit cubit) {
+  void _openAddDialog(
+    BuildContext context,
+    String loungeId,
+    ExtrasCubit cubit,
+  ) {
     final loginCubit = context.read<LoginCubit>();
     final permissionsCubit = context.read<PermissionsCubit>();
 
