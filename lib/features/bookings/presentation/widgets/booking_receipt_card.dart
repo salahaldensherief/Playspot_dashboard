@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -248,7 +249,7 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
                                 ),
                                 SizedBox(width: 4.w),
                                 Text(
-                                  'تكبير',
+                                  'zoom'.tr(),
                                   style: TextStyle(
                                     color: AppColors.textPrimary,
                                     fontSize: 11.sp,

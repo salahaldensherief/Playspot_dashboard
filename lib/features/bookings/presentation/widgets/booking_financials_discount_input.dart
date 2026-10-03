@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -49,7 +50,7 @@ class BookingFinancialsDiscountInput extends StatelessWidget {
                           vertical: 4.h,
                         ),
                         child: Text(
-                          'EGP',
+                          'currency_egp'.tr(),
                           style: TextStyle(
                             color: !isPercentage
                                 ? AppColors.neonBlue
@@ -88,7 +89,7 @@ class BookingFinancialsDiscountInput extends StatelessWidget {
               child: AppTextField(
                 label: AppStrings.discountReason,
                 controller: reasonController,
-                hintText: 'Reason for audit...',
+                hintText: 'discount_audit_reason_hint'.tr(),
               ),
             ),
           ],

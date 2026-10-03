@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -286,7 +287,7 @@ class PromoFormSection extends StatelessWidget {
           children: [
             Expanded(
               child: CustomDropdown<String>(
-                label: 'نوع الخصم',
+                label: 'promotion_discount_type'.tr(),
                 value: discountType,
                 items: const ['percentage', 'fixed'],
                 itemLabel: (value) => value == 'percentage'

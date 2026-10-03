@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
@@ -13,7 +14,11 @@ class TournamentPlacementCard extends StatelessWidget {
   final bool canDeletePlacement;
   final VoidCallback onAddReward;
   final VoidCallback onRemovePlacement;
-  final void Function(int rewardIndex, TournamentPrizeRewardEntity updatedReward) onUpdateReward;
+  final void Function(
+    int rewardIndex,
+    TournamentPrizeRewardEntity updatedReward,
+  )
+  onUpdateReward;
   final void Function(int rewardIndex) onRemoveReward;
 
   const TournamentPlacementCard({
@@ -73,13 +78,20 @@ class TournamentPlacementCard extends StatelessWidget {
                     icon: Icons.add,
                     variant: AppButtonVariant.outlined,
                     fontSize: 11.sp,
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 4.h,
+                    ),
                     onPressed: onAddReward,
                   ),
                   if (canDeletePlacement) ...[
                     SizedBox(width: 8.w),
                     IconButton(
-                      icon: const Icon(Icons.delete_outline, color: AppColors.danger, size: 20),
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: AppColors.danger,
+                        size: 20,
+                      ),
                       tooltip: AppStrings.cancel,
                       onPressed: onRemovePlacement,
                     ),
@@ -93,8 +105,11 @@ class TournamentPlacementCard extends StatelessWidget {
             Padding(
               padding: EdgeInsets.symmetric(vertical: 8.h),
               child: Text(
-                'لا يوجد جوائز محددة لهذا المركز',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                'tournament_placement_no_prizes'.tr(),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12.sp,
+                ),
               ),
             )
           else

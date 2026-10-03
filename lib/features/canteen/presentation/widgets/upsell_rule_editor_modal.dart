@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -64,7 +65,8 @@ class _UpsellRuleEditorModalState extends State<UpsellRuleEditorModal> {
     TriggerTemplateItem(
       key: 'time_of_day',
       title: AppStrings.triggerTimeOfDay,
-      description: 'اقتراح مخصص خلال ساعات محددة من اليوم (مثل وقت العشاء أو الذروة)',
+      description:
+          'اقتراح مخصص خلال ساعات محددة من اليوم (مثل وقت العشاء أو الذروة)',
     ),
   ];
 
@@ -104,7 +106,9 @@ class _UpsellRuleEditorModalState extends State<UpsellRuleEditorModal> {
       text: params['end_time']?.toString() ?? '23:00',
     );
     _discountController = TextEditingController(
-      text: r?.discountPercent != null ? r!.discountPercent!.toStringAsFixed(0) : '',
+      text: r?.discountPercent != null
+          ? r!.discountPercent!.toStringAsFixed(0)
+          : '',
     );
     _maxImpressionsController = TextEditingController(
       text: r != null ? r.maxImpressionsPerBooking.toString() : '2',
@@ -144,13 +148,9 @@ class _UpsellRuleEditorModalState extends State<UpsellRuleEditorModal> {
   Map<String, dynamic> _buildTriggerParams() {
     switch (_selectedTrigger) {
       case 'session_minutes_elapsed':
-        return {
-          'minutes': int.tryParse(_minutesController.text.trim()) ?? 45,
-        };
+        return {'minutes': int.tryParse(_minutesController.text.trim()) ?? 45};
       case 'cart_contains_category':
-        return {
-          'category': _categoryController.text.trim().toLowerCase(),
-        };
+        return {'category': _categoryController.text.trim().toLowerCase()};
       case 'time_of_day':
         return {
           'start_time': _startTimeController.text.trim(),
@@ -165,7 +165,8 @@ class _UpsellRuleEditorModalState extends State<UpsellRuleEditorModal> {
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    if (!_isSuggestingCombo && (_selectedExtraId == null || _selectedExtraId!.isEmpty)) {
+    if (!_isSuggestingCombo &&
+        (_selectedExtraId == null || _selectedExtraId!.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppStrings.selectExtra),
@@ -175,7 +176,8 @@ class _UpsellRuleEditorModalState extends State<UpsellRuleEditorModal> {
       return;
     }
 
-    if (_isSuggestingCombo && (_selectedComboId == null || _selectedComboId!.isEmpty)) {
+    if (_isSuggestingCombo &&
+        (_selectedComboId == null || _selectedComboId!.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppStrings.noCombosFound),
@@ -218,7 +220,9 @@ class _UpsellRuleEditorModalState extends State<UpsellRuleEditorModal> {
   @override
   Widget build(BuildContext context) {
     return AppDialog(
-      title: widget.initialRule != null ? AppStrings.editUpsellRule : AppStrings.addUpsellRule,
+      title: widget.initialRule != null
+          ? AppStrings.editUpsellRule
+          : AppStrings.addUpsellRule,
       width: 680.w,
       actions: [
         AppButton(
@@ -251,7 +255,10 @@ class _UpsellRuleEditorModalState extends State<UpsellRuleEditorModal> {
               dropdownColor: AppColors.cardBackground,
               style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
               decoration: InputDecoration(
-                contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 14.w,
+                  vertical: 12.h,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10.r),
                   borderSide: BorderSide(color: AppColors.borderDefault),
@@ -274,19 +281,21 @@ class _UpsellRuleEditorModalState extends State<UpsellRuleEditorModal> {
             // Dynamic Parameters by Selected Template
             if (_selectedTrigger == 'session_minutes_elapsed') ...[
               AppTextField(
-                label: 'عدد الدقائق المنقضية من الجلسة',
+                label: 'upsell_elapsed_minutes'.tr(),
                 controller: _minutesController,
                 keyboardType: TextInputType.number,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? AppStrings.required : null,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? AppStrings.required
+                    : null,
               ),
               SizedBox(height: 16.h),
             ] else if (_selectedTrigger == 'cart_contains_category') ...[
               AppTextField(
-                label: 'التصنيف المطلوب في السلة (مثل: snacks, drinks)',
+                label: 'upsell_cart_category_hint'.tr(),
                 controller: _categoryController,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? AppStrings.required : null,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? AppStrings.required
+                    : null,
               ),
               SizedBox(height: 16.h),
             ] else if (_selectedTrigger == 'time_of_day') ...[
@@ -294,14 +303,14 @@ class _UpsellRuleEditorModalState extends State<UpsellRuleEditorModal> {
                 children: [
                   Expanded(
                     child: AppTextField(
-                      label: 'من الساعة (مثلاً 18:00)',
+                      label: 'upsell_start_time_hint'.tr(),
                       controller: _startTimeController,
                     ),
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
                     child: AppTextField(
-                      label: 'إلى الساعة (مثلاً 23:00)',
+                      label: 'upsell_end_time_hint'.tr(),
                       controller: _endTimeController,
                     ),
                   ),
@@ -344,14 +353,20 @@ class _UpsellRuleEditorModalState extends State<UpsellRuleEditorModal> {
             // Dropdown to pick specific Item or Combo
             if (!_isSuggestingCombo) ...[
               DropdownButtonFormField<String>(
-                initialValue: _selectedExtraId != null &&
-                        widget.availableExtras.any((e) => e.id == _selectedExtraId)
+                initialValue:
+                    _selectedExtraId != null &&
+                        widget.availableExtras.any(
+                          (e) => e.id == _selectedExtraId,
+                        )
                     ? _selectedExtraId
                     : null,
                 dropdownColor: AppColors.cardBackground,
                 style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
                 decoration: InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 14.w,
+                    vertical: 12.h,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.r),
                     borderSide: BorderSide(color: AppColors.borderDefault),
@@ -369,14 +384,20 @@ class _UpsellRuleEditorModalState extends State<UpsellRuleEditorModal> {
               ),
             ] else ...[
               DropdownButtonFormField<String>(
-                initialValue: _selectedComboId != null &&
-                        widget.availableCombos.any((c) => c.id == _selectedComboId)
+                initialValue:
+                    _selectedComboId != null &&
+                        widget.availableCombos.any(
+                          (c) => c.id == _selectedComboId,
+                        )
                     ? _selectedComboId
                     : null,
                 dropdownColor: AppColors.cardBackground,
                 style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
                 decoration: InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 14.w,
+                    vertical: 12.h,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.r),
                     borderSide: BorderSide(color: AppColors.borderDefault),

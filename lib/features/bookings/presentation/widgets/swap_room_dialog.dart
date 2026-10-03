@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -145,8 +146,8 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
                                   b.checkedInAt == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: const Text(
-                                      'يجب بدء الجلسة أولاً قبل تبديل الغرفة (تطلب وقت البدء الفعلي).',
+                                    content: Text(
+                                      'swap_room_requires_started_session'.tr(),
                                     ),
                                     backgroundColor: AppColors.danger,
                                     duration: const Duration(seconds: 4),

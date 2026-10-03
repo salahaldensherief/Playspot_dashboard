@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -71,8 +72,8 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
     final reason = _reasonController.text.trim();
     if (_inputValue <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('يرجى أدخال نسبة أو مبلغ خصم صحيح'),
+        SnackBar(
+          content: Text('invalid_room_discount'.tr()),
           backgroundColor: AppColors.danger,
         ),
       );
@@ -173,7 +174,7 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          'نسبة مئوية (%)',
+                          'discount_percentage_label'.tr(),
                           style: TextStyle(
                             color: _isPercentage
                                 ? Colors.black
@@ -199,7 +200,7 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          'مبلغ ثابت (ج.م)',
+                          'discount_fixed_egp_label'.tr(),
                           style: TextStyle(
                             color: !_isPercentage
                                 ? Colors.black
@@ -269,7 +270,7 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
               controller: _reasonController,
               style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
               decoration: InputDecoration(
-                hintText: 'مثال: عرض ساعات الصباح / تعويض عميل',
+                hintText: 'room_discount_reason_hint'.tr(),
                 hintStyle: TextStyle(
                   color: AppColors.textMuted,
                   fontSize: 12.sp,

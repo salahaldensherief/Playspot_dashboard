@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -100,7 +101,7 @@ class RoomOccupancyRequestsBadge extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4.r),
                           ),
                           child: Text(
-                            'تم التنفيذ',
+                            'request_fulfilled'.tr(),
                             style: TextStyle(
                               color: Colors.black,
                               fontSize: 9.sp,

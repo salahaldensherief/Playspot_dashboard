@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -49,7 +50,8 @@ class UpsellRuleCard extends StatelessWidget {
     final conversionRate = conversion?.conversionRatePercent ?? 0.0;
     final revenue = conversion?.revenueGenerated ?? 0.0;
 
-    final targetName = rule.suggestedNameAr ?? rule.suggestedNameEn ?? AppStrings.item;
+    final targetName =
+        rule.suggestedNameAr ?? rule.suggestedNameEn ?? AppStrings.item;
 
     return Container(
       decoration: BoxDecoration(
@@ -84,7 +86,11 @@ class UpsellRuleCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.bolt_rounded, size: 14.r, color: AppColors.secondary),
+                    Icon(
+                      Icons.bolt_rounded,
+                      size: 14.r,
+                      color: AppColors.secondary,
+                    ),
                     SizedBox(width: 4.w),
                     AppText.body(
                       _formatTriggerDescription(),
@@ -117,7 +123,9 @@ class UpsellRuleCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4.r),
                 ),
                 child: AppText.body(
-                  rule.isCombo ? AppStrings.combosTab : AppStrings.singleItemsTab,
+                  rule.isCombo
+                      ? AppStrings.combosTab
+                      : AppStrings.singleItemsTab,
                   fontSize: 11.sp,
                   color: rule.isCombo ? AppColors.primary : AppColors.accent,
                   fontWeight: FontWeight.bold,
@@ -132,7 +140,8 @@ class UpsellRuleCard extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              if (rule.discountPercent != null && (rule.discountPercent ?? 0) > 0)
+              if (rule.discountPercent != null &&
+                  (rule.discountPercent ?? 0) > 0)
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                   decoration: BoxDecoration(
@@ -166,19 +175,31 @@ class UpsellRuleCard extends StatelessWidget {
                   '$impressions',
                   AppColors.textSecondary,
                 ),
-                Container(width: 1.w, height: 28.h, color: AppColors.borderDefault),
+                Container(
+                  width: 1.w,
+                  height: 28.h,
+                  color: AppColors.borderDefault,
+                ),
                 _buildMetricColumn(
                   AppStrings.conversionsCount,
                   '$conversionsCount',
                   AppColors.success,
                 ),
-                Container(width: 1.w, height: 28.h, color: AppColors.borderDefault),
+                Container(
+                  width: 1.w,
+                  height: 28.h,
+                  color: AppColors.borderDefault,
+                ),
                 _buildMetricColumn(
                   AppStrings.conversionRate,
                   '${conversionRate.toStringAsFixed(1)}%',
                   AppColors.primary,
                 ),
-                Container(width: 1.w, height: 28.h, color: AppColors.borderDefault),
+                Container(
+                  width: 1.w,
+                  height: 28.h,
+                  color: AppColors.borderDefault,
+                ),
                 _buildMetricColumn(
                   AppStrings.revenueGenerated,
                   '${revenue.toStringAsFixed(0)} ${AppStrings.egp}',
@@ -204,18 +225,24 @@ class UpsellRuleCard extends StatelessWidget {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.edit_outlined, color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      color: AppColors.textSecondary,
+                    ),
                     tooltip: AppStrings.edit,
                     onPressed: onEdit,
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: AppColors.error,
+                    ),
                     tooltip: AppStrings.delete,
                     onPressed: () async {
                       final confirmed = await AppDialog.confirm(
                         context: context,
                         title: AppStrings.delete,
-                        message: 'هل أنت متأكد من رغبتك في حذف قاعدة الاقتراح هذه؟',
+                        message: 'delete_upsell_rule_confirmation'.tr(),
                         confirmColor: AppColors.error,
                       );
                       if (confirmed == true) {
@@ -235,11 +262,7 @@ class UpsellRuleCard extends StatelessWidget {
   Widget _buildMetricColumn(String label, String value, Color valueColor) {
     return Column(
       children: [
-        AppText.body(
-          label,
-          fontSize: 10.sp,
-          color: AppColors.textMuted,
-        ),
+        AppText.body(label, fontSize: 10.sp, color: AppColors.textMuted),
         SizedBox(height: 2.h),
         AppText.body(
           value,

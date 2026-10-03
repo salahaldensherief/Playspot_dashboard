@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -136,8 +137,8 @@ class _BookingDetailsCustomerCardState
             onPressed: () {
               Navigator.pop(diagContext);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('تم تسجيل وإرسال التحذير للعميل بنجاح'),
+                SnackBar(
+                  content: Text('customer_warning_sent'.tr()),
                   backgroundColor: AppColors.warning,
                 ),
               );
@@ -356,7 +357,7 @@ class _BookingDetailsCustomerCardState
                         ),
                         SizedBox(width: 8.w),
                         Text(
-                          'جاري تحميل سجل الإلغاءات...',
+                          'loading_cancellation_history'.tr(),
                           style: TextStyle(
                             fontSize: 11.sp,
                             color: AppColors.textMuted,

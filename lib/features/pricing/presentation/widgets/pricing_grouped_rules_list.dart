@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
@@ -85,11 +86,14 @@ class PricingGroupedRulesList extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.style_outlined,
-                  size: 48.r, color: AppColors.textSecondary),
+              Icon(
+                Icons.style_outlined,
+                size: 48.r,
+                color: AppColors.textSecondary,
+              ),
               SizedBox(height: 12.h),
               Text(
-                'لا توجد قواعد تسعير مضافة بعد',
+                'pricing_rules_empty'.tr(),
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 16.sp,
@@ -122,8 +126,11 @@ class PricingGroupedRulesList extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 8.h),
               child: Row(
                 children: [
-                  Icon(Icons.folder_open_rounded,
-                      size: 18.r, color: AppColors.neonBlue),
+                  Icon(
+                    Icons.folder_open_rounded,
+                    size: 18.r,
+                    color: AppColors.neonBlue,
+                  ),
                   SizedBox(width: 8.w),
                   Text(
                     groupKey,
@@ -182,13 +189,19 @@ class PricingGroupedRulesList extends StatelessWidget {
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.edit_outlined,
-                            size: 18.r, color: AppColors.neonBlue),
+                        icon: Icon(
+                          Icons.edit_outlined,
+                          size: 18.r,
+                          color: AppColors.neonBlue,
+                        ),
                         onPressed: () => onEdit(rule),
                       ),
                       IconButton(
-                        icon: Icon(Icons.delete_outline_rounded,
-                            size: 18.r, color: AppColors.danger),
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          size: 18.r,
+                          color: AppColors.danger,
+                        ),
                         onPressed: () => onDelete(rule),
                       ),
                     ],

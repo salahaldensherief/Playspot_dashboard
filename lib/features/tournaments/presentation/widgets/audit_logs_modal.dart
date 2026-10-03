@@ -52,7 +52,13 @@ String formatAuditActionType(String raw) {
     case 'tournament_completed':
       return 'إكمال البطولة وتوزيع الجوائز';
     default:
-      return raw.replaceAll('_', ' ').split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
+      return raw
+          .replaceAll('_', ' ')
+          .split(' ')
+          .map(
+            (w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '',
+          )
+          .join(' ');
   }
 }
 
@@ -82,11 +88,18 @@ class AuditLogsModal extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.history_toggle_off_rounded, color: AppColors.textSecondary, size: 40),
+                    const Icon(
+                      Icons.history_toggle_off_rounded,
+                      color: AppColors.textSecondary,
+                      size: 40,
+                    ),
                     SizedBox(height: 12.h),
                     Text(
-                      'لا توجد سجلات تتبع لهذه البطولة حتى الآن',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+                      'tournament_audit_empty'.tr(),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14.sp,
+                      ),
                     ),
                   ],
                 ),
@@ -101,20 +114,34 @@ class AuditLogsModal extends StatelessWidget {
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: logs.length,
-                separatorBuilder: (ctx, i) => const Divider(color: AppColors.borderDefault, height: 1),
+                separatorBuilder: (ctx, i) =>
+                    const Divider(color: AppColors.borderDefault, height: 1),
                 itemBuilder: (ctx, index) {
                   final log = logs[index];
-                  final performer = log.performedByName ?? (log.performedBy.isNotEmpty ? log.performedBy : 'النظام');
+                  final performer =
+                      log.performedByName ??
+                      (log.performedBy.isNotEmpty ? log.performedBy : 'النظام');
 
                   return ListTile(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 8.h,
+                    ),
                     leading: CircleAvatar(
                       backgroundColor: AppColors.neonBlue.withAlpha(30),
-                      child: const Icon(Icons.history, color: AppColors.neonBlue, size: 20),
+                      child: const Icon(
+                        Icons.history,
+                        color: AppColors.neonBlue,
+                        size: 20,
+                      ),
                     ),
                     title: Text(
                       formatAuditActionType(log.actionType),
-                      style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp),
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.sp,
+                      ),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,13 +149,19 @@ class AuditLogsModal extends StatelessWidget {
                         SizedBox(height: 4.h),
                         Text(
                           'بواسطة: $performer',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12.sp,
+                          ),
                         ),
                         if (log.details != null && log.details!.isNotEmpty) ...[
                           SizedBox(height: 2.h),
                           Text(
                             'التفاصيل: ${log.details}',
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp),
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 11.sp,
+                            ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -137,7 +170,10 @@ class AuditLogsModal extends StatelessWidget {
                     ),
                     trailing: Text(
                       dateFormat.format(log.createdAt.toLocal()),
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 11.sp,
+                      ),
                     ),
                   );
                 },

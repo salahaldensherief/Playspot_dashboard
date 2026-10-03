@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/theme/app_colors.dart';
@@ -79,7 +80,7 @@ class PricingWeeklyPreviewBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'معاينة الساعات الأسبوعية (24 ساعة × 7 أيام)',
+                'pricing_weekly_preview_title'.tr(),
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 12.sp,

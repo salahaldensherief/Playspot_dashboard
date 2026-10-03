@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -42,7 +43,8 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
   List<String> _getSuggestions() {
     final List<String> suggestions = [];
     String firstActivityName = '';
-    if (widget.selectedActivityIds.isNotEmpty && widget.activitiesList.isNotEmpty) {
+    if (widget.selectedActivityIds.isNotEmpty &&
+        widget.activitiesList.isNotEmpty) {
       final String targetId = widget.selectedActivityIds.first;
       ActivityTypeEntity? foundActivity;
       for (int i = 0; i < widget.activitiesList.length; i++) {
@@ -56,13 +58,37 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
     }
 
     if (firstActivityName.contains('simulator')) {
-      suggestions.addAll(['Force Feedback', 'Direct Drive', 'Load Cell Pedals', 'Bucket Seat', 'Triple Monitor']);
+      suggestions.addAll([
+        'Force Feedback',
+        'Direct Drive',
+        'Load Cell Pedals',
+        'Bucket Seat',
+        'Triple Monitor',
+      ]);
     } else if (firstActivityName.contains('vr')) {
-      suggestions.addAll(['Meta Quest 3', 'Valve Index', 'Wireless', 'Pro Controllers', 'Pico 4']);
+      suggestions.addAll([
+        'Meta Quest 3',
+        'Valve Index',
+        'Wireless',
+        'Pro Controllers',
+        'Pico 4',
+      ]);
     } else if (firstActivityName.contains('pc')) {
-      suggestions.addAll(['RTX 4080', 'RTX 4090', 'Mechanical Keyboard', 'Gaming Mouse', '240Hz Monitor']);
+      suggestions.addAll([
+        'RTX 4080',
+        'RTX 4090',
+        'Mechanical Keyboard',
+        'Gaming Mouse',
+        '240Hz Monitor',
+      ]);
     } else {
-      suggestions.addAll(['PS5', 'PS4 Pro', 'DualSense Edge', '4K TV', 'Home Theater']);
+      suggestions.addAll([
+        'PS5',
+        'PS4 Pro',
+        'DualSense Edge',
+        '4K TV',
+        'Home Theater',
+      ]);
     }
     return suggestions;
   }
@@ -85,7 +111,7 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
         SizedBox(height: 12.h),
         if (suggestions.isNotEmpty) ...[
           Text(
-            'Suggested Tags:',
+            'room_suggested_tags'.tr(),
             style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp),
           ),
           SizedBox(height: 8.h),
@@ -99,7 +125,9 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
                   s,
                   style: TextStyle(
                     fontSize: 10.sp,
-                    color: isAdded ? AppColors.textPrimary : AppColors.textSecondary,
+                    color: isAdded
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
                   ),
                 ),
                 backgroundColor: isAdded
@@ -149,8 +177,12 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
             SizedBox(width: 12.w),
             IconButton(
               onPressed: () {
-                if (_featureArController.text.isNotEmpty && _featureEnController.text.isNotEmpty) {
-                  widget.onAddFeature(_featureEnController.text, _featureArController.text);
+                if (_featureArController.text.isNotEmpty &&
+                    _featureEnController.text.isNotEmpty) {
+                  widget.onAddFeature(
+                    _featureEnController.text,
+                    _featureArController.text,
+                  );
                   _featureArController.clear();
                   _featureEnController.clear();
                 }
@@ -170,7 +202,11 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
                 style: TextStyle(fontSize: 11.sp),
               ),
               backgroundColor: AppColors.mutedBackground,
-              deleteIcon: Icon(Icons.close, size: 14.r, color: AppColors.danger),
+              deleteIcon: Icon(
+                Icons.close,
+                size: 14.r,
+                color: AppColors.danger,
+              ),
               onDeleted: () => widget.onRemoveFeature(index),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(4.r),

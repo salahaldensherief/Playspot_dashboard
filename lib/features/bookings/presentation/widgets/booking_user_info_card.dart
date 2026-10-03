@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -145,7 +146,7 @@ class BookingUserInfoCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4.r),
                           ),
                           child: Text(
-                            'عميل محجوز',
+                            'restricted_customer'.tr(),
                             style: TextStyle(
                               color: AppColors.neonBlue,
                               fontSize: 10.sp,
@@ -204,7 +205,7 @@ class BookingUserInfoCard extends StatelessWidget {
                                   ),
                                   SizedBox(width: 4.w),
                                   Text(
-                                    'نسخ',
+                                    'copy'.tr(),
                                     style: TextStyle(
                                       fontSize: 10.sp,
                                       color: AppColors.textMuted,

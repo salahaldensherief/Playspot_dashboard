@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -50,7 +51,9 @@ class ComboCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(10.r),
-                child: combo.imageUrl != null && (combo.imageUrl?.isNotEmpty ?? false)
+                child:
+                    combo.imageUrl != null &&
+                        (combo.imageUrl?.isNotEmpty ?? false)
                     ? AppCachedImage(
                         imageUrl: combo.imageUrl ?? '',
                         width: 60.w,
@@ -91,7 +94,8 @@ class ComboCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    if (combo.nameEn != null && (combo.nameEn?.isNotEmpty ?? false)) ...[
+                    if (combo.nameEn != null &&
+                        (combo.nameEn?.isNotEmpty ?? false)) ...[
                       SizedBox(height: 2.h),
                       AppText.body(
                         combo.nameEn ?? '',
@@ -99,7 +103,8 @@ class ComboCard extends StatelessWidget {
                         color: AppColors.textSecondary,
                       ),
                     ],
-                    if (combo.descriptionAr != null && (combo.descriptionAr?.isNotEmpty ?? false)) ...[
+                    if (combo.descriptionAr != null &&
+                        (combo.descriptionAr?.isNotEmpty ?? false)) ...[
                       SizedBox(height: 4.h),
                       AppText.body(
                         combo.descriptionAr ?? '',
@@ -173,7 +178,8 @@ class ComboCard extends StatelessWidget {
             spacing: 6.w,
             runSpacing: 6.h,
             children: combo.items.map((item) {
-              final itemName = item.extraNameAr ?? item.extraNameEn ?? AppStrings.item;
+              final itemName =
+                  item.extraNameAr ?? item.extraNameEn ?? AppStrings.item;
               return Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                 decoration: BoxDecoration(
@@ -200,7 +206,10 @@ class ComboCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               IconButton(
-                icon: const Icon(Icons.edit_outlined, color: AppColors.textSecondary),
+                icon: const Icon(
+                  Icons.edit_outlined,
+                  color: AppColors.textSecondary,
+                ),
                 tooltip: AppStrings.edit,
                 onPressed: onEdit,
               ),
@@ -211,7 +220,7 @@ class ComboCard extends StatelessWidget {
                   final confirmed = await AppDialog.confirm(
                     context: context,
                     title: AppStrings.delete,
-                    message: 'هل أنت متأكد من رغبتك في حذف هذا الكومبو؟',
+                    message: 'delete_combo_confirmation'.tr(),
                     confirmColor: AppColors.error,
                   );
                   if (confirmed == true) {

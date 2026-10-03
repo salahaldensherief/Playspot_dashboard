@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -42,10 +43,14 @@ class CanteenUpsellTab extends StatelessWidget {
           prev.conversions != curr.conversions ||
           prev.isSaving != curr.isSaving,
       builder: (context, state) {
-        if (state.status == CanteenStatus.loading && state.upsellRules.isEmpty) {
+        if (state.status == CanteenStatus.loading &&
+            state.upsellRules.isEmpty) {
           return Padding(
             padding: EdgeInsets.symmetric(vertical: 24.h),
-            child: ShimmerLoading.rectangular(width: double.infinity, height: 200.h),
+            child: ShimmerLoading.rectangular(
+              width: double.infinity,
+              height: 200.h,
+            ),
           );
         }
 
@@ -81,19 +86,31 @@ class CanteenUpsellTab extends StatelessWidget {
                     '$totalImpressions',
                     AppColors.textSecondary,
                   ),
-                  Container(width: 1.w, height: 36.h, color: AppColors.borderDefault),
+                  Container(
+                    width: 1.w,
+                    height: 36.h,
+                    color: AppColors.borderDefault,
+                  ),
                   _buildSummaryItem(
                     AppStrings.conversionsCount,
                     '$totalConversions',
                     AppColors.success,
                   ),
-                  Container(width: 1.w, height: 36.h, color: AppColors.borderDefault),
+                  Container(
+                    width: 1.w,
+                    height: 36.h,
+                    color: AppColors.borderDefault,
+                  ),
                   _buildSummaryItem(
                     AppStrings.conversionRate,
                     '${avgRate.toStringAsFixed(1)}%',
                     AppColors.primary,
                   ),
-                  Container(width: 1.w, height: 36.h, color: AppColors.borderDefault),
+                  Container(
+                    width: 1.w,
+                    height: 36.h,
+                    color: AppColors.borderDefault,
+                  ),
                   _buildSummaryItem(
                     AppStrings.revenueGenerated,
                     '${totalRevenue.toStringAsFixed(0)} ${AppStrings.egp}',
@@ -127,8 +144,8 @@ class CanteenUpsellTab extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 40.h),
                 child: AppEmptyStateWidget(
-                  title: 'لا توجد قواعد اقتراح نشطة حالياً',
-                  subtitle: 'قم بإضافة قاعدة اقتراح ذكية تقترح أصناف أو عروض تلقائياً أثناء جلسات اللعب',
+                  title: 'upsell_rules_empty_title'.tr(),
+                  subtitle: 'upsell_rules_empty_description'.tr(),
                   icon: Icons.lightbulb_outline,
                   actionText: AppStrings.addUpsellRule,
                   onActionTextPressed: () => _openAddModal(context),
@@ -159,7 +176,8 @@ class CanteenUpsellTab extends StatelessWidget {
                       return UpsellRuleCard(
                         rule: rule,
                         conversion: conv,
-                        onToggleActive: (_) => canteenCubit.toggleUpsellRuleActive(rule),
+                        onToggleActive: (_) =>
+                            canteenCubit.toggleUpsellRuleActive(rule),
                         onDelete: () => canteenCubit.deleteUpsellRule(rule.id),
                         onEdit: () {
                           showDialog(
@@ -169,7 +187,8 @@ class CanteenUpsellTab extends StatelessWidget {
                               initialRule: rule,
                               availableExtras: extrasCubit.state.extras,
                               availableCombos: canteenCubit.state.combos,
-                              onSave: (updated) => canteenCubit.saveUpsellRule(updated),
+                              onSave: (updated) =>
+                                  canteenCubit.saveUpsellRule(updated),
                             ),
                           );
                         },
@@ -187,11 +206,7 @@ class CanteenUpsellTab extends StatelessWidget {
   Widget _buildSummaryItem(String title, String val, Color valColor) {
     return Column(
       children: [
-        AppText.body(
-          title,
-          fontSize: 11.sp,
-          color: AppColors.textMuted,
-        ),
+        AppText.body(title, fontSize: 11.sp, color: AppColors.textMuted),
         SizedBox(height: 4.h),
         AppText.subHeading(
           val,

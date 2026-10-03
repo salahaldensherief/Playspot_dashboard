@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -249,7 +250,7 @@ class _BookingReceiptDialogState extends State<BookingReceiptDialog> {
                         ),
                         SizedBox(height: 8.h),
                         Text(
-                          'لم يتم إرفاق إيصال دفع من العميل بعد',
+                          'customer_receipt_not_attached'.tr(),
                           style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 14.sp,

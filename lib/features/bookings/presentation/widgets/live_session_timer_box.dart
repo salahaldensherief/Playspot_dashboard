@@ -1,6 +1,6 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
@@ -131,11 +131,26 @@ class LiveSessionTimerBox extends StatelessWidget {
         SizedBox(height: 8.h),
         Row(
           children: [
-            Expanded(child: _buildExtendChip(label: '+15m', minutes: 15)),
+            Expanded(
+              child: _buildExtendChip(
+                label: 'extend_15_minutes_short'.tr(),
+                minutes: 15,
+              ),
+            ),
             SizedBox(width: 6.w),
-            Expanded(child: _buildExtendChip(label: '+30m', minutes: 30)),
+            Expanded(
+              child: _buildExtendChip(
+                label: 'extend_30_minutes_short'.tr(),
+                minutes: 30,
+              ),
+            ),
             SizedBox(width: 6.w),
-            Expanded(child: _buildExtendChip(label: '+1h', minutes: 60)),
+            Expanded(
+              child: _buildExtendChip(
+                label: 'extend_1_hour_short'.tr(),
+                minutes: 60,
+              ),
+            ),
           ],
         ),
       ],

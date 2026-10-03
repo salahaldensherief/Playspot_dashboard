@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -43,7 +44,10 @@ class CanteenCombosTab extends StatelessWidget {
         if (state.status == CanteenStatus.loading && state.combos.isEmpty) {
           return Padding(
             padding: EdgeInsets.symmetric(vertical: 24.h),
-            child: ShimmerLoading.rectangular(width: double.infinity, height: 200.h),
+            child: ShimmerLoading.rectangular(
+              width: double.infinity,
+              height: 200.h,
+            ),
           );
         }
 
@@ -74,7 +78,7 @@ class CanteenCombosTab extends StatelessWidget {
                 padding: EdgeInsets.symmetric(vertical: 40.h),
                 child: AppEmptyStateWidget(
                   title: AppStrings.noCombosFound,
-                  subtitle: 'ابدأ بإنشاء عروض وجبات ومشروبات متكاملة لزيادة مبيعات الكانتين',
+                  subtitle: 'canteen_combos_empty_description'.tr(),
                   icon: Icons.fastfood_outlined,
                   actionText: AppStrings.addCombo,
                   onActionTextPressed: () => _openAddModal(context),
@@ -103,7 +107,8 @@ class CanteenCombosTab extends StatelessWidget {
 
                       return ComboCard(
                         combo: combo,
-                        onToggleActive: (_) => canteenCubit.toggleComboActive(combo),
+                        onToggleActive: (_) =>
+                            canteenCubit.toggleComboActive(combo),
                         onDelete: () => canteenCubit.deleteCombo(combo.id),
                         onEdit: () {
                           showDialog(
@@ -112,7 +117,8 @@ class CanteenCombosTab extends StatelessWidget {
                               loungeId: loungeId,
                               initialCombo: combo,
                               availableExtras: extrasCubit.state.extras,
-                              onSave: (updated) => canteenCubit.saveCombo(updated),
+                              onSave: (updated) =>
+                                  canteenCubit.saveCombo(updated),
                             ),
                           );
                         },
