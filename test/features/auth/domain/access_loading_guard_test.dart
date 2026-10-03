@@ -240,4 +240,39 @@ void main() {
       await request;
     },
   );
+
+  test(
+    'multiple shell initializers share pending and completed access requests',
+    () async {
+      final pending = Completer<Either<Failure, List<PermissionItemEntity>>>();
+      when(
+        () => repository.getUserPermissions(loungeId: 'venue'),
+      ).thenAnswer((_) => pending.future);
+      final first = permissions.ensureUserPermissions(
+        'cashier',
+        loungeId: 'venue',
+        userId: 'operator',
+      );
+      await permissions.ensureUserPermissions(
+        'cashier',
+        loungeId: 'venue',
+        userId: 'operator',
+      );
+      verify(() => repository.getUserPermissions(loungeId: 'venue')).called(1);
+      pending.complete(const Right([roomGrant]));
+      await first;
+      await permissions.ensureUserPermissions(
+        'cashier',
+        loungeId: 'venue',
+        userId: 'operator',
+      );
+      verifyNever(() => repository.getUserPermissions(loungeId: 'venue'));
+      expect(redirect(RouterKeys.loungeAdminRooms), isNull);
+      await load([]);
+      expect(
+        redirect(RouterKeys.loungeAdminRooms),
+        contains('unauthorized=true'),
+      );
+    },
+  );
 }
