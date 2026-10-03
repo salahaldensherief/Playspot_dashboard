@@ -1627,5 +1627,18 @@
   "promotion_invalid_details": "Check the promotion details, discount value and selected room.",
   "promotion_operation_failed": "Could not complete the promotion operation. Check your connection and retry.",
   "promo_deleted_success": "Promotion deleted.",
-  "priced_per_room": "Priced per room"
+  "priced_per_room": "Priced per room",
+  "room_enable_open_time": "Enable open-ended sessions",
+  "room_open_time_description": "Allow the cashier to start a session without a fixed end time and bill it when closed.",
+  "room_open_time_pricing_mode": "Open-ended session pricing",
+  "room_custom_hourly_mode": "Custom hourly rate",
+  "room_hourly_markup_mode": "Hourly rate plus percentage",
+  "room_same_hourly_mode": "Same hourly rate",
+  "room_custom_hourly_rate": "Custom hourly rate",
+  "room_hourly_markup_percentage": "Hourly rate markup (%)",
+  "room_minimum_billed_duration": "Minimum billed duration",
+  "room_billing_rounding_step": "Billing rounding step",
+  "room_optional_maximum_duration": "Maximum duration (optional)",
+  "room_next_booking_buffer": "Buffer before the next booking",
+  "room_duration_minutes": "minutes"
 }

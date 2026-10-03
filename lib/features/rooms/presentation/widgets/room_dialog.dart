@@ -359,7 +359,11 @@ class _RoomDialogState extends State<RoomDialog> {
                 ),
                 if (widget.room != null) ...[
                   SizedBox(height: 24.h),
-                  AuditTimeline(entityType: 'room', entityId: widget.room!.id),
+                  AuditTimeline(
+                    entityType: 'room',
+                    entityId: widget.room!.id,
+                    loungeId: widget.loungeId,
+                  ),
                 ],
                 SizedBox(height: 32.h),
                 _buildActions(),
@@ -423,23 +427,26 @@ class _RoomDialogState extends State<RoomDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SwitchListTile(
-            value: _openTimeEnabled,
-            contentPadding: EdgeInsets.zero,
-            activeThumbColor: AppColors.neonBlue,
-            title: const Text(
-              'تفعيل الوقت المفتوح',
-              style: TextStyle(color: AppColors.textPrimary),
+          Material(
+            color: Colors.transparent,
+            child: SwitchListTile(
+              value: _openTimeEnabled,
+              contentPadding: EdgeInsets.zero,
+              activeThumbColor: AppColors.neonBlue,
+              title: Text(
+                'room_enable_open_time'.tr(),
+                style: TextStyle(color: AppColors.textPrimary),
+              ),
+              subtitle: Text(
+                'room_open_time_description'.tr(),
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              onChanged: (value) => setState(() => _openTimeEnabled = value),
             ),
-            subtitle: const Text(
-              'يسمح للكاشير ببدء جلسة بدون وقت نهاية ثابت وحسابها عند الإغلاق.',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            onChanged: (value) => setState(() => _openTimeEnabled = value),
           ),
           SizedBox(height: 12.h),
           CustomDropdown<String>(
-            label: 'طريقة تسعير الوقت المفتوح',
+            label: 'room_open_time_pricing_mode'.tr(),
             value: _openTimePricingMode,
             items: const [
               'same_hourly',
@@ -447,9 +454,9 @@ class _RoomDialogState extends State<RoomDialog> {
               'hourly_plus_percentage',
             ],
             itemLabel: (value) => switch (value) {
-              'custom_hourly' => 'سعر ساعة مخصص',
-              'hourly_plus_percentage' => 'سعر الساعة + نسبة',
-              _ => 'نفس سعر الساعة',
+              'custom_hourly' => 'room_custom_hourly_mode'.tr(),
+              'hourly_plus_percentage' => 'room_hourly_markup_mode'.tr(),
+              _ => 'room_same_hourly_mode'.tr(),
             },
             onChanged: (value) {
               if (value != null) {
@@ -461,13 +468,13 @@ class _RoomDialogState extends State<RoomDialog> {
           if (_openTimePricingMode == 'custom_hourly')
             numberField(
               controller: _openTimeCustomRateController,
-              label: 'سعر الساعة المخصص',
+              label: 'room_custom_hourly_rate'.tr(),
               suffix: AppStrings.egp,
             ),
           if (_openTimePricingMode == 'hourly_plus_percentage')
             numberField(
               controller: _openTimeMarkupPercentController,
-              label: 'نسبة الزيادة على سعر الساعة',
+              label: 'room_hourly_markup_percentage'.tr(),
               suffix: '%',
             ),
           SizedBox(height: 12.h),
@@ -476,16 +483,16 @@ class _RoomDialogState extends State<RoomDialog> {
               Expanded(
                 child: numberField(
                   controller: _openTimeMinimumMinutesController,
-                  label: 'أقل مدة تتحاسب',
-                  suffix: 'دقيقة',
+                  label: 'room_minimum_billed_duration'.tr(),
+                  suffix: 'room_duration_minutes'.tr(),
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
                 child: numberField(
                   controller: _openTimeRoundingMinutesController,
-                  label: 'التقريب كل',
-                  suffix: 'دقيقة',
+                  label: 'room_billing_rounding_step'.tr(),
+                  suffix: 'room_duration_minutes'.tr(),
                 ),
               ),
             ],
@@ -496,16 +503,16 @@ class _RoomDialogState extends State<RoomDialog> {
               Expanded(
                 child: numberField(
                   controller: _openTimeMaxMinutesController,
-                  label: 'حد أقصى اختياري',
-                  suffix: 'دقيقة',
+                  label: 'room_optional_maximum_duration'.tr(),
+                  suffix: 'room_duration_minutes'.tr(),
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
                 child: numberField(
                   controller: _openTimeBufferMinutesController,
-                  label: 'فاصل قبل الحجز القادم',
-                  suffix: 'دقيقة',
+                  label: 'room_next_booking_buffer'.tr(),
+                  suffix: 'room_duration_minutes'.tr(),
                 ),
               ),
             ],

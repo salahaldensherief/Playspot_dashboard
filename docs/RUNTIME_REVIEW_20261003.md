@@ -86,3 +86,12 @@
 - Six model/read/cache/lifecycle regressions and two Arabic/English selector regressions passed. The selection tests verify translated labels, unchanged initial UUID and the actual UUID returned by choosing another type.
 - Full Flutter suite: 853 passed, 2 live tests skipped. Room feature and tests analysis: no issues. Authenticated live catalog and joined-room probes both returned HTTP 200; those probes did not mutate application data.
 - Release Web build succeeded in 74.6 seconds. Actual screenshot dashboard-room-types-final-settled.png shows translated room-type badges with their colors and no management controls for the cashier. Rendering requires waiting for auth/permission/data initialization; early screenshots and URLs can reflect a transitional state.
+
+## Owner room-editor runtime regression (October 4)
+
+- Actual owner interaction exposed a missing LoginCubit provider in the root edit dialog. The dialog now reuses its existing authentication, permissions, categories and rooms Cubits; AuditTimeline receives the explicit room-editor lounge scope.
+- The access/layout regression now opens the real editor under the root navigator in Arabic and English, verifies the reused providers and exact room/lounge audit parameters, and checks that Arabic status labels are translated. It also exposed a ListTile material-ancestor warning in the open-time settings, corrected without suppressing Flutter errors.
+- Room status and all open-time settings labels now follow Arabic/English translations. No room was saved or removed during browser verification.
+- Room feature tests: 19 passed. Full offline suite: 853 passed, 2 live tests skipped. Scoped analysis: no issues. Release Web build succeeded in 78.7 seconds.
+- Actual dashboard-owner-room-edit-scope-fixed.png confirms the existing standard-room selection, rates and Arabic available status. Browser error history includes the original pre-fix exception and is cumulative; do not present that buffer as a clean new session. Screenshot capture intermittently timed out.
+- Audit request history also contains a GET /rest/v1/audit_logs returning 404. Its fallback/schema contract still needs investigation; a successful widget fixture is not proof of live audit integration. Permission-loading deep-link redirection remains a separate known issue.

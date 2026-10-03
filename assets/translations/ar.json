@@ -1627,5 +1627,18 @@
   "promotion_invalid_details": "راجع بيانات العرض وقيمة الخصم والغرفة المختارة.",
   "promotion_operation_failed": "تعذر إتمام عملية العرض. تحقق من الاتصال وحاول مجددًا.",
   "promo_deleted_success": "تم حذف العرض.",
-  "priced_per_room": "السعر حسب الغرفة"
+  "priced_per_room": "السعر حسب الغرفة",
+  "room_enable_open_time": "تفعيل الوقت المفتوح",
+  "room_open_time_description": "يسمح للكاشير ببدء جلسة بدون وقت نهاية ثابت وحسابها عند الإغلاق.",
+  "room_open_time_pricing_mode": "طريقة تسعير الوقت المفتوح",
+  "room_custom_hourly_mode": "سعر ساعة مخصص",
+  "room_hourly_markup_mode": "سعر الساعة + نسبة",
+  "room_same_hourly_mode": "نفس سعر الساعة",
+  "room_custom_hourly_rate": "سعر الساعة المخصص",
+  "room_hourly_markup_percentage": "نسبة الزيادة على سعر الساعة",
+  "room_minimum_billed_duration": "أقل مدة تتحاسب",
+  "room_billing_rounding_step": "التقريب كل",
+  "room_optional_maximum_duration": "حد أقصى اختياري",
+  "room_next_booking_buffer": "فاصل قبل الحجز القادم",
+  "room_duration_minutes": "دقيقة"
 }

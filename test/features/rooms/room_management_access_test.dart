@@ -19,6 +19,15 @@ import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.d
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/widgets/room_management_header.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/widgets/rooms_data_table.dart';
+import 'package:play_spot_dashboard/core/di/di.dart';
+import 'package:play_spot_dashboard/features/audit/domain/entities/audit_log_entity.dart';
+import 'package:play_spot_dashboard/features/audit/domain/usecases/get_timeline_logs_usecase.dart';
+import 'package:play_spot_dashboard/features/audit/presentation/widgets/audit_timeline.dart';
+import 'package:play_spot_dashboard/features/categories/presentation/categories/category_state.dart';
+import 'package:play_spot_dashboard/features/rooms/domain/entities/room_space_type.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/widgets/room_dialog.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import '../../support/local_translations_loader.dart';
 import '../../support/mock_permissions_repository.dart';
 
@@ -27,6 +36,8 @@ class _Login extends Mock implements LoginCubit {}
 class _Rooms extends Mock implements RoomCubit {}
 
 class _Categories extends Mock implements CategoryCubit {}
+
+class _Timeline extends Mock implements GetTimelineLogsUsecase {}
 
 void main() {
   setUpAll(() async {
@@ -87,8 +98,32 @@ void main() {
           );
           when(() => login.stream).thenAnswer((_) => const Stream.empty());
           final rooms = _Rooms();
+          when(() => rooms.state).thenReturn(
+            const RoomState(
+              spaceTypesStatus: RoomStatus.success,
+              spaceTypes: [
+                RoomSpaceType(
+                  id: 'type',
+                  name: 'standard_room',
+                  label: 'Standard',
+                ),
+              ],
+            ),
+          );
           when(() => rooms.stream).thenAnswer((_) => const Stream.empty());
           final categories = _Categories();
+          when(() => categories.state).thenReturn(CategoryState.init());
+          final timeline = _Timeline();
+          const timelineParams = GetTimelineLogsParams(
+            loungeId: 'venue',
+            entityType: 'room',
+            entityId: 'room',
+          );
+          when(
+            () => timeline(timelineParams),
+          ).thenAnswer((_) async => const Right(<AuditLogEntity>[]));
+          sl.registerSingleton<GetTimelineLogsUsecase>(timeline);
+          addTearDown(() => sl.unregister<GetTimelineLogsUsecase>());
           when(() => categories.stream).thenAnswer((_) => const Stream.empty());
           await tester.pumpWidget(
             EasyLocalization(
@@ -124,6 +159,8 @@ void main() {
                                 rooms: [
                                   RoomEntity(
                                     id: 'room',
+                                    spaceTypeId: 'type',
+                                    spaceType: 'standard_room',
                                     loungeId: 'venue',
                                     nameAr: 'غرفة الألعاب',
                                     nameEn: 'Gaming room',
@@ -180,6 +217,25 @@ void main() {
             () => rooms.toggleWalkInStatus('room', RoomStatusEnum.occupied),
           );
           expect(tester.takeException(), isNull);
+          if (manage && width == 1440) {
+            await tester.ensureVisible(find.byIcon(Icons.edit_outlined));
+            await tester.pumpAndSettle();
+            await tester.tap(find.byIcon(Icons.edit_outlined));
+            await tester.pumpAndSettle();
+            final dialogContext = tester.element(find.byType(RoomDialog));
+            expect(dialogContext.read<LoginCubit>(), same(login));
+            expect(dialogContext.read<PermissionsCubit>(), same(permissions));
+            expect(dialogContext.read<RoomCubit>(), same(rooms));
+            expect(dialogContext.read<CategoryCubit>(), same(categories));
+            expect(
+              tester.widget<AuditTimeline>(find.byType(AuditTimeline)).loungeId,
+              'venue',
+            );
+            verify(() => timeline(timelineParams)).called(1);
+            expect(find.text(AppStrings.occupiedStatus), findsWidgets);
+            if (language == 'ar') expect(find.text('OCCUPIED'), findsNothing);
+            expect(tester.takeException(), isNull);
+          }
         });
       }
     }

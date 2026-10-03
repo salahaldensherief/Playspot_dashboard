@@ -46,7 +46,11 @@ class RoomSpecsForm extends StatelessWidget {
                 label: AppStrings.status,
                 value: status,
                 items: RoomStatusEnum.values,
-                itemLabel: (s) => s.name.toUpperCase(),
+                itemLabel: (s) => switch (s) {
+                  RoomStatusEnum.available => AppStrings.availableStatus,
+                  RoomStatusEnum.occupied => AppStrings.occupiedStatus,
+                  RoomStatusEnum.maintenance => AppStrings.maintenanceStatus,
+                },
                 onChanged: onStatusChanged!,
               ),
             ),
@@ -67,7 +71,9 @@ class RoomSpecsForm extends StatelessWidget {
           children: [
             Expanded(
               child: AppTextField(
-                label: isOpenArea ? AppStrings.capacity : AppStrings.roomCapacityLabel,
+                label: isOpenArea
+                    ? AppStrings.capacity
+                    : AppStrings.roomCapacityLabel,
                 hintText: AppStrings.capacityHint,
                 controller: capacityController,
                 keyboardType: TextInputType.number,
@@ -113,7 +119,10 @@ class RoomSpecsForm extends StatelessWidget {
             spacing: 24.w,
             runSpacing: 12.h,
             children: [
-              _buildFeatureCheckbox(AppStrings.airConditioning, 'Air Conditioning'),
+              _buildFeatureCheckbox(
+                AppStrings.airConditioning,
+                'Air Conditioning',
+              ),
               _buildFeatureCheckbox(AppStrings.soundproof, 'Soundproof'),
               _buildFeatureCheckbox(AppStrings.soundSystem, 'Sound System'),
               _buildFeatureCheckbox(AppStrings.screen4k, '4K Screen'),

@@ -346,10 +346,17 @@ class RoomsDataTable extends StatelessWidget {
     String loungeId,
     RoomEntity room,
   ) {
+    final loginCubit = context.read<LoginCubit>();
+    final permissionsCubit = context.read<PermissionsCubit>();
     showDialog(
       context: context,
-      builder: (_) => BlocProvider<RoomCubit>.value(
-        value: cubit,
+      builder: (_) => MultiBlocProvider(
+        providers: [
+          BlocProvider<RoomCubit>.value(value: cubit),
+          BlocProvider<CategoryCubit>.value(value: categoryCubit),
+          BlocProvider<LoginCubit>.value(value: loginCubit),
+          BlocProvider<PermissionsCubit>.value(value: permissionsCubit),
+        ],
         child: RoomDialog(
           loungeId: loungeId,
           room: room,
