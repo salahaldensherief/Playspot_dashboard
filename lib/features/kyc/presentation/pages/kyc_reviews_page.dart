@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -51,9 +52,39 @@ class _KycReviewsPageState extends State<KycReviewsPage> {
                 }
                 if (state.status == KycStatus.failure) {
                   return Center(
-                    child: AppText.body(
-                      state.errorMessage ?? AppStrings.error,
-                      color: AppColors.danger,
+                    child: SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 560),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.cloud_off_outlined,
+                              size: 40,
+                              color: AppColors.warning,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              (state.errorMessage ==
+                                          'kyc_review_service_unavailable'
+                                      ? 'kyc_review_service_unavailable'
+                                      : 'kyc_review_load_failed')
+                                  .tr(),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            AppButton(
+                              text: AppStrings.refresh,
+                              icon: Icons.refresh,
+                              onPressed: kycCubit.loadPendingReviews,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   );
                 }

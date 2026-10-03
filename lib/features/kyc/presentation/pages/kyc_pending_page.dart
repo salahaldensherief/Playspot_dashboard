@@ -97,6 +97,12 @@ class KycPendingPage extends StatelessWidget {
   }
 
   String _status(LoginState state) {
+    if (state.user != null &&
+        !state.user!.isOwner &&
+        state.user!.isStaff &&
+        state.user!.loungeId == null) {
+      return 'unassigned';
+    }
     final lounge = state.userLounge;
     if (lounge == null) return 'unavailable';
     if (lounge.status == 'pending') return 'pending';
