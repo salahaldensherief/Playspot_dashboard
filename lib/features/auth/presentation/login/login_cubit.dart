@@ -56,6 +56,9 @@ class LoginCubit extends Cubit<LoginState> {
             state.copyWith(
               status: LoginStatus.authenticated,
               user: user,
+              clearUserLounge: true,
+              loungeLoadError: null,
+              isLoadingLounge: user.isStaff && user.loungeId != null,
               isSetupCompleted: user.isSetupCompleted,
             ),
           );
@@ -101,6 +104,9 @@ class LoginCubit extends Cubit<LoginState> {
           state.copyWith(
             status: LoginStatus.authenticated,
             user: user,
+            clearUserLounge: true,
+            loungeLoadError: null,
+            isLoadingLounge: user.isStaff && user.loungeId != null,
             isSetupCompleted: user.isSetupCompleted,
           ),
         );
@@ -128,11 +134,35 @@ class LoginCubit extends Cubit<LoginState> {
         state.user?.id != user.id) {
       return;
     }
-    loungeResult.fold((_) => null, (lounge) async {
-      emit(state.copyWith(userLounge: lounge));
-      // We removed the location capture from here to avoid redundancy and potential loops.
-      // It's now handled by the GeolocationHandler in the UI Shell.
-    });
+    loungeResult.fold(
+      (_) {
+        emit(
+          state.copyWith(
+            isLoadingLounge: false,
+            loungeLoadError: 'venue_access_load_failed',
+          ),
+        );
+      },
+      (lounge) async {
+        emit(
+          state.copyWith(
+            userLounge: lounge,
+            isLoadingLounge: false,
+            loungeLoadError: null,
+          ),
+        );
+        // We removed the location capture from here to avoid redundancy and potential loops.
+        // It's now handled by the GeolocationHandler in the UI Shell.
+      },
+    );
+  }
+
+  Future<void> reloadLoungeAccess() async {
+    final user = state.user;
+    if (isClosed || user == null || !user.isStaff || state.isLoadingLounge)
+      return;
+    emit(state.copyWith(isLoadingLounge: true, loungeLoadError: null));
+    await _handleLoungeAdminAuth(user);
   }
 
   /// Reloads profile to refresh isSetupCompleted status

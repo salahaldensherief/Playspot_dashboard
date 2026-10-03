@@ -17,6 +17,8 @@ class LoginState extends Equatable {
   final LoginStatus status;
   final UserEntity? user;
   final Lounge? userLounge;
+  final bool isLoadingLounge;
+  final String? loungeLoadError;
   final String? errorMessage;
   final bool isSetupCompleted;
   final bool locationCaptured;
@@ -27,6 +29,8 @@ class LoginState extends Equatable {
     this.status = LoginStatus.initial,
     this.user,
     this.userLounge,
+    this.isLoadingLounge = false,
+    this.loungeLoadError,
     this.errorMessage,
     this.isSetupCompleted = false,
     this.locationCaptured = false,
@@ -40,6 +44,9 @@ class LoginState extends Equatable {
     LoginStatus? status,
     UserEntity? user,
     Lounge? userLounge,
+    bool clearUserLounge = false,
+    bool? isLoadingLounge,
+    Object? loungeLoadError = _unchanged,
     String? errorMessage,
     bool? isSetupCompleted,
     bool? locationCaptured,
@@ -49,7 +56,11 @@ class LoginState extends Equatable {
     return LoginState(
       status: status ?? this.status,
       user: user ?? this.user,
-      userLounge: userLounge ?? this.userLounge,
+      userLounge: clearUserLounge ? null : userLounge ?? this.userLounge,
+      isLoadingLounge: isLoadingLounge ?? this.isLoadingLounge,
+      loungeLoadError: identical(loungeLoadError, _unchanged)
+          ? this.loungeLoadError
+          : loungeLoadError as String?,
       errorMessage: errorMessage ?? this.errorMessage,
       isSetupCompleted: isSetupCompleted ?? this.isSetupCompleted,
       locationCaptured: locationCaptured ?? this.locationCaptured,
@@ -65,6 +76,8 @@ class LoginState extends Equatable {
     status,
     user,
     userLounge,
+    isLoadingLounge,
+    loungeLoadError,
     errorMessage,
     isSetupCompleted,
     locationCaptured,

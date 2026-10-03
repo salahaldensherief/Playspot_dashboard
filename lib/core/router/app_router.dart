@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'access_loading_page.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:js_interop';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -58,9 +59,16 @@ class AppRouter {
 
   late final router = GoRouter(
     initialLocation: RouterKeys.root,
-    refreshListenable: GoRouterRefreshStream(authCubit.stream),
-    redirect: (context, state) =>
-        RouterGuards.redirect(context, state, authCubit),
+    refreshListenable: GoRouterRefreshStream(
+      authCubit.stream,
+      additionalStreams: [sl<PermissionsCubit>().stream],
+    ),
+    redirect: (context, state) => RouterGuards.redirect(
+      context,
+      state,
+      authCubit,
+      permissionCubit: sl<PermissionsCubit>(),
+    ),
     routes: [
       ShellRoute(
         builder: (BuildContext context, GoRouterState state, Widget child) {
@@ -82,6 +90,20 @@ class AppRouter {
           );
         },
         routes: [
+          GoRoute(
+            path: RouterKeys.accessLoading,
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: MultiBlocProvider(
+                providers: [
+                  BlocProvider<LoginCubit>.value(value: authCubit),
+                  BlocProvider<PermissionsCubit>.value(
+                    value: sl<PermissionsCubit>(),
+                  ),
+                ],
+                child: const AccessLoadingPage(),
+              ),
+            ),
+          ),
           GoRoute(
             path: RouterKeys.login,
             pageBuilder: (context, state) =>
@@ -155,7 +177,10 @@ class AppRouter {
           children: [
             Text(
               AppStrings.pageNotFound,
-              style: const TextStyle(color: AppColors.textPrimary, fontSize: 24),
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 24,
+              ),
             ),
             const SizedBox(height: 16),
             AppButton(

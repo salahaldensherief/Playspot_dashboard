@@ -64,7 +64,13 @@ class _DashboardShellState extends State<DashboardShell> {
     if (_loadedPermissionIdentity == identity) return;
     _loadedPermissionIdentity = identity;
 
-    await permissionsCubit.loadUserPermissions(
+    if (permissionsCubit.hasLoadedAccess(
+      _permissionRole(user),
+      user.id,
+      loungeId,
+    ))
+      return;
+    await permissionsCubit.ensureUserPermissions(
       _permissionRole(user),
       loungeId: loungeId,
       userId: user.id,

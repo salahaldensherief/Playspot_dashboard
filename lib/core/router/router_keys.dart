@@ -1,7 +1,8 @@
 class RouterKeys {
   static const String login = '/login';
   static const String root = '/';
-  
+  static const String accessLoading = '/access-loading';
+
   // Super Admin
   static const String superAdminDashboard = '/super-admin/dashboard';
   static const String superAdminLounges = '/super-admin/lounges';
@@ -12,7 +13,8 @@ class RouterKeys {
   static const String superAdminKyc = '/super-admin/kyc';
   static const String superAdminLoyalty = '/super-admin/loyalty';
   static const String superAdminTournaments = '/super-admin/tournaments';
-  static const String superAdminSupportSettings = '/super-admin/support-settings';
+  static const String superAdminSupportSettings =
+      '/super-admin/support-settings';
   static const String superAdminPolicies = '/super-admin/policies';
   static const String superAdminFaqs = '/super-admin/faqs';
   static const String superAdminTickets = '/super-admin/tickets';

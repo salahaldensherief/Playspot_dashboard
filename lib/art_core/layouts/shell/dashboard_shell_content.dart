@@ -73,7 +73,7 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
     final user = loginState.user;
     final loungeId = user?.loungeId ?? loginState.userLounge?.id;
     final roleStr = user?.rawRole ?? user?.role.name ?? 'staff';
-    context.read<PermissionsCubit>().loadUserPermissions(
+    context.read<PermissionsCubit>().ensureUserPermissions(
       roleStr,
       loungeId: loungeId,
       userId: user?.id,
@@ -234,7 +234,7 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
               _requestsCubit.startWatchingRequests(loungeId: activeId);
               final roleStr =
                   widget.user?.rawRole ?? widget.user?.role.name ?? 'staff';
-              context.read<PermissionsCubit>().loadUserPermissions(
+              context.read<PermissionsCubit>().ensureUserPermissions(
                 roleStr,
                 loungeId: activeId,
                 userId: widget.user?.id,

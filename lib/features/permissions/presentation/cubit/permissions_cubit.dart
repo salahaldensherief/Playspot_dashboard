@@ -33,7 +33,25 @@ class PermissionsCubit extends Cubit<PermissionsState> {
     if (next == _activeLoungeId) return;
     _activeLoungeId = next;
     _userRequest++;
-    if (!isClosed) emit(state.copyWith(userPermissions: const {}));
+    if (!isClosed)
+      emit(
+        state.copyWith(
+          userPermissions: const {},
+          accessStatus: PermissionsStatus.initial,
+        ),
+      );
+  }
+
+  Future<void> ensureUserPermissions(
+    String role, {
+    String? loungeId,
+    String? userId,
+  }) async {
+    if (hasAccessIdentity(role, userId ?? '', loungeId) &&
+        (state.accessStatus == PermissionsStatus.loading ||
+            state.accessStatus == PermissionsStatus.success))
+      return;
+    await loadUserPermissions(role, loungeId: loungeId, userId: userId);
   }
 
   Future<void> loadUserPermissions(
@@ -48,6 +66,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
       state.copyWith(
         userRole: _normalizeRole(role),
         userId: userId,
+        accessStatus: PermissionsStatus.loading,
         userPermissions: const {},
       ),
     );
@@ -58,6 +77,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
         state.copyWith(
           userPermissions: const {},
           status: PermissionsStatus.failure,
+          accessStatus: PermissionsStatus.failure,
           errorMessage: failure.message,
         ),
       ),
@@ -65,6 +85,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
         state.copyWith(
           userPermissions: _canonicalGrants(permissions),
           status: PermissionsStatus.success,
+          accessStatus: PermissionsStatus.success,
         ),
       ),
     );
@@ -210,6 +231,15 @@ class PermissionsCubit extends Cubit<PermissionsState> {
         return '';
     }
   }
+
+  bool hasAccessIdentity(String role, String userId, String? loungeId) =>
+      state.userRole == _normalizeRole(role) &&
+      state.userId == userId &&
+      _activeLoungeId == loungeId?.trim();
+
+  bool hasLoadedAccess(String role, String userId, String? loungeId) =>
+      hasAccessIdentity(role, userId, loungeId) &&
+      state.accessStatus == PermissionsStatus.success;
 
   bool hasPermission(String key, {String? userRole, String? userId}) {
     final role = _normalizeRole(userRole ?? state.userRole ?? '');

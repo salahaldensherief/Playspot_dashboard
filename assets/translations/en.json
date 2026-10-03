@@ -1640,5 +1640,7 @@
   "room_billing_rounding_step": "Billing rounding step",
   "room_optional_maximum_duration": "Maximum duration (optional)",
   "room_next_booking_buffer": "Buffer before the next booking",
-  "room_duration_minutes": "minutes"
+  "room_duration_minutes": "minutes",
+  "venue_access_load_failed": "Could not load venue details or account permissions. Please retry.",
+  "loading_venue_access": "Loading venue details and checking permissions…"
 }

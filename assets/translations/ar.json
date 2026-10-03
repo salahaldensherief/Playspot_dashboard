@@ -1640,5 +1640,7 @@
   "room_billing_rounding_step": "التقريب كل",
   "room_optional_maximum_duration": "حد أقصى اختياري",
   "room_next_booking_buffer": "فاصل قبل الحجز القادم",
-  "room_duration_minutes": "دقيقة"
+  "room_duration_minutes": "دقيقة",
+  "venue_access_load_failed": "تعذر تحميل بيانات الصالة أو صلاحيات الحساب. أعد المحاولة.",
+  "loading_venue_access": "جارٍ تحميل بيانات الصالة والتحقق من الصلاحيات…"
 }

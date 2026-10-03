@@ -13,6 +13,7 @@ import 'package:play_spot_dashboard/features/auth/domain/usecases/logout_usecase
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/repositories/lounge_repository.dart';
+import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
 
 class _Auth extends Mock implements AuthRepository {}
 
@@ -36,6 +37,7 @@ void main() {
   late _Auth auth;
   late _Location location;
   late LoginCubit cubit;
+  late _Lounge lounges;
   setUp(() {
     auth = _Auth();
     location = _Location();
@@ -55,17 +57,78 @@ void main() {
       ),
     );
     when(() => auth.logout()).thenAnswer((_) async => const Right(null));
+    lounges = _Lounge();
     cubit = LoginCubit(
       loginUseCase: LoginUseCase(auth),
       logoutUseCase: LogoutUseCase(auth),
       getCurrentUserUseCase: GetCurrentUserUseCase(auth),
-      loungeRepository: _Lounge(),
+      loungeRepository: lounges,
       locationService: location,
       authRepository: auth,
     );
     cubit.updateUser(oldUser);
   });
   tearDown(() => cubit.close());
+  const scopedUser = UserEntity(
+    id: 'operator',
+    email: '',
+    name: '',
+    role: UserRole.cashier,
+    loungeId: 'venue',
+  );
+  const approvedVenue = Lounge(
+    id: 'venue',
+    name: '',
+    imageUrl: '',
+    opensAt: '10:00',
+    closesAt: '23:00',
+    status: 'active',
+  );
+  test(
+    'initial access waits for real venue reply and ends its loading state',
+    () async {
+      final reply = Completer<Either<Failure, Lounge>>();
+      when(
+        () => auth.getCurrentUser(),
+      ).thenAnswer((_) async => const Right(scopedUser));
+      when(() => location.checkPermissions()).thenAnswer((_) async => false);
+      when(
+        () => lounges.getLoungeById('venue'),
+      ).thenAnswer((_) => reply.future);
+      await cubit.checkInitialAuth();
+      expect(cubit.state.isLoadingLounge, isTrue);
+      expect(cubit.state.userLounge, isNull);
+      reply.complete(const Right(approvedVenue));
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.isLoadingLounge, isFalse);
+      expect(cubit.state.userLounge, approvedVenue);
+    },
+  );
+  test(
+    'venue load failure offers retry and late retry cannot survive logout',
+    () async {
+      cubit.updateUser(scopedUser);
+      when(
+        () => lounges.getLoungeById('venue'),
+      ).thenAnswer((_) async => const Left(ServerFailure('offline')));
+      await cubit.reloadLoungeAccess();
+      expect(cubit.state.loungeLoadError, 'venue_access_load_failed');
+      expect(cubit.state.isLoadingLounge, isFalse);
+      final reply = Completer<Either<Failure, Lounge>>();
+      when(
+        () => lounges.getLoungeById('venue'),
+      ).thenAnswer((_) => reply.future);
+      final retry = cubit.reloadLoungeAccess();
+      expect(cubit.state.isLoadingLounge, isTrue);
+      expect(cubit.state.loungeLoadError, isNull);
+      await cubit.logout();
+      reply.complete(const Right(approvedVenue));
+      await retry;
+      expect(cubit.state.user, isNull);
+      expect(cubit.state.userLounge, isNull);
+      expect(cubit.state.isLoadingLounge, isFalse);
+    },
+  );
   for (final fail in [false, true]) {
     test(
       'late location ${fail ? 'failure' : 'success'} cannot alter a newer account',
