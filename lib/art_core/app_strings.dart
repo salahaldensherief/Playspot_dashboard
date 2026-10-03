@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 
 class AppStrings {
+  static String get playMode => 'play_mode'.tr();
+  static String get noBookingExtras => 'no_booking_extras'.tr();
   static String get appName => 'app_name'.tr();
   static String get login => 'login'.tr();
   static String get welcomeBack => 'welcome_back'.tr();
@@ -1209,6 +1211,9 @@ class AppStrings {
   static String get invalidDiscountValue => 'invalid_discount_value'.tr();
   static String get discountReasonHint => 'discount_reason_hint'.tr();
   static String get reasonForAuditHint => 'reason_for_audit_hint'.tr();
+  static String get voucherCode => 'voucher_code'.tr();
+  static String get bookingExtrasTotal => 'booking_extras_total'.tr();
+  static String get bookingVoucherDiscount => 'booking_voucher_discount'.tr();
   static String get enterVoucherCodeHint => 'enter_voucher_code_hint'.tr();
   static String get reportCustomerTooltip => 'report_customer_tooltip'.tr();
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 
@@ -48,19 +49,21 @@ class AppButton extends StatelessWidget {
     final bool isOutlined = variant == AppButtonVariant.outlined;
     final bool isText = variant == AppButtonVariant.text;
 
-    final Color effectiveBg = backgroundColor ??
+    final Color effectiveBg =
+        backgroundColor ??
         (isPrimary
             ? AppColors.neonBlue
             : isDanger
-                ? AppColors.danger
-                : Colors.transparent);
+            ? AppColors.danger
+            : Colors.transparent);
 
-    final Color effectiveFg = foregroundColor ??
+    final Color effectiveFg =
+        foregroundColor ??
         (isPrimary || isDanger || isGradient
             ? AppColors.textPrimary
             : isText
-                ? AppColors.neonBlue
-                : AppColors.textPrimary);
+            ? AppColors.neonBlue
+            : AppColors.textPrimary);
 
     final double effectiveRadius = borderRadius ?? 8.r;
 
@@ -68,7 +71,10 @@ class AppButton extends StatelessWidget {
         ? SizedBox(
             height: 18.r,
             width: 18.r,
-            child: CircularProgressIndicator(strokeWidth: 2, color: effectiveFg),
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: effectiveFg,
+            ),
           )
         : Row(
             mainAxisSize: MainAxisSize.min,
@@ -80,31 +86,26 @@ class AppButton extends StatelessWidget {
                 SizedBox(width: 6.w),
               ],
               Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.center,
-                  child: Text(
-                    text,
-                    maxLines: 1,
-                    style: TextStyle(
-                      color: effectiveFg,
-                      fontWeight: FontWeight.bold,
-                      fontSize: fontSize ?? 13.sp,
-                    ),
+                child: Text(
+                  text,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: effectiveFg,
+                    fontWeight: FontWeight.bold,
+                    fontSize: math.max(fontSize ?? 15, 14),
+                    height: 1.4,
                   ),
                 ),
               ),
             ],
           );
 
-    final EdgeInsetsGeometry defaultPadding = padding ??
-        EdgeInsets.symmetric(
-          horizontal: 14.w,
-          vertical: height != null ? 4.h : 10.h,
-        );
+    final EdgeInsetsGeometry defaultPadding =
+        padding ?? EdgeInsets.symmetric(horizontal: 14, vertical: 10);
 
     if (isGradient) {
-      final Gradient effectiveGradient = gradient ??
+      final Gradient effectiveGradient =
+          gradient ??
           const LinearGradient(
             colors: [AppColors.neonBlue, AppColors.neonPurple],
             begin: AlignmentDirectional.centerStart,
@@ -115,7 +116,7 @@ class AppButton extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 4.h),
         child: Container(
           width: width,
-          height: height ?? 44.h,
+          constraints: BoxConstraints(minHeight: math.max(height ?? 48, 48)),
           decoration: BoxDecoration(
             gradient: onPressed == null || isLoading ? null : effectiveGradient,
             color: onPressed == null || isLoading
@@ -129,7 +130,7 @@ class AppButton extends StatelessWidget {
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
               padding: defaultPadding,
-              minimumSize: Size(width ?? 0, height ?? 44.h),
+              minimumSize: Size(width ?? 0, math.max(height ?? 48, 48)),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(effectiveRadius),
               ),
@@ -147,10 +148,12 @@ class AppButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: effectiveBg,
           foregroundColor: effectiveFg,
-          disabledBackgroundColor: disabledBackgroundColor ?? AppColors.cardBackground,
-          disabledForegroundColor: disabledForegroundColor ?? AppColors.textMuted,
+          disabledBackgroundColor:
+              disabledBackgroundColor ?? AppColors.cardBackground,
+          disabledForegroundColor:
+              disabledForegroundColor ?? AppColors.textMuted,
           padding: defaultPadding,
-          minimumSize: Size(width ?? 0, height ?? 44.h),
+          minimumSize: Size(width ?? 0, math.max(height ?? 48, 48)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(effectiveRadius),
             side: isOutlined

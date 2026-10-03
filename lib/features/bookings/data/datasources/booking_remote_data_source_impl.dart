@@ -288,7 +288,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
           resultMap['is_valid'] ??
           resultMap['valid'] ??
           resultMap['success'] ??
-          true;
+          false;
       if (isValid == false) {
         final errorMsg =
             resultMap['error'] ??
@@ -299,7 +299,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       }
       return resultMap;
     }
-    return {'is_valid': true};
+    throw const FormatException('invalid_voucher_response');
   }
 
   @override

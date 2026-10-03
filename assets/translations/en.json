@@ -1497,6 +1497,7 @@
     "open_failed": "Could not open the document; reload the review request"
   },
   "kyc_pending": {
+    "unassigned": {"title": "Account not assigned to a lounge", "description": "Ask the lounge owner to assign your account to the lounge and set your permissions. Bookings and shifts remain unavailable until assignment is complete."},
     "refresh": "Check status again",
     "pending": {
       "title": "Lounge data is under review",
@@ -1580,5 +1581,26 @@
   "dashboard_metric_unavailable": "Insufficient data",
   "dashboard_data_unavailable": "Some operational data could not be loaded. Check your connection and account permissions, then retry.",
   "shift_overview_unavailable": "Could not verify shift information",
-  "room_operational_status": "Lounge room status"
+  "room_operational_status": "Lounge room status",
+  "play_mode": "Play mode",
+  "no_booking_extras": "No drinks or food have been added to this booking yet",
+  "kyc_review_service_unavailable": "Lounge review service is currently unavailable on the server. The review service must be set up before requests can be displayed or decided.",
+  "kyc_review_load_failed": "Could not load lounge review requests. Retry, and contact the system administrator if the problem continues.",
+  "booking_ends_at": "Ends at {time} ({hours} hours total)",
+  "live": "Live",
+  "revenue_chart_grouping": "Collected revenue grouped by period",
+  "platform_lounges_count": "Total lounges",
+  "platform_users_count": "Total users",
+  "non_cancelled_booking_value": "Non-cancelled booking value",
+  "booking_value_not_collected_cash": "Booking value, not collected cash",
+  "completed_payment_count": "Completed payments",
+  "voucher_code": "Voucher code",
+  "booking_extras_total": "Extras total",
+  "booking_voucher_discount": "Voucher discount",
+  "booking_voucher_invalid": "Voucher is invalid for this account or has expired",
+  "booking_voucher_unavailable": "Unable to verify the voucher. Try again.",
+  "booking_voucher_checking": "Checking…",
+  "booking_voucher_apply": "Apply",
+  "booking_voucher_applied": "Voucher {code} verified · estimated discount {discount} {currency}",
+  "platform_top_lounges_description": "Ranked by completed payments across all periods"
 }

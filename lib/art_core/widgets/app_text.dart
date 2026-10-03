@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'dart:math' as math;
 import '../theme/app_colors.dart';
 
 class AppText extends StatelessWidget {
@@ -65,7 +65,8 @@ class AppText extends StatelessWidget {
       overflow: overflow,
       maxLines: maxLines,
       style: TextStyle(
-        fontSize: fontSize ?? 14.sp,
+        fontSize: math.max(fontSize ?? 15, 14),
+        height: 1.4,
         fontWeight: fontWeight,
         color: color ?? AppColors.textPrimary,
         fontFamily: fontFamily,

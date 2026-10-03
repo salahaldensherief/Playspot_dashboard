@@ -51,25 +51,34 @@ class AddBookingCustomerFields extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildTextField(
-            controller: nameController,
-            label: AppStrings.customerName,
-            hint: AppStrings.fullName,
-          ),
-        ),
-        SizedBox(width: 16.w),
-        Expanded(
-          child: _buildTextField(
-            controller: phoneController,
-            label: AppStrings.phoneNumber,
-            hint: "01xxxxxxxxx",
-            keyboardType: TextInputType.phone,
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final name = _buildTextField(
+          controller: nameController,
+          label: AppStrings.customerName,
+          hint: AppStrings.fullName,
+        );
+        final phone = _buildTextField(
+          controller: phoneController,
+          label: AppStrings.phoneNumber,
+          hint: "01xxxxxxxxx",
+          keyboardType: TextInputType.phone,
+        );
+        if (constraints.maxWidth <
+            480 * MediaQuery.textScalerOf(context).scale(1)) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [name, const SizedBox(height: 16), phone],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: name),
+            const SizedBox(width: 16),
+            Expanded(child: phone),
+          ],
+        );
+      },
     );
   }
 }

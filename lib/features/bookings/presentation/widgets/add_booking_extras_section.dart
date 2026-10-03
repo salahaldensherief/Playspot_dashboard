@@ -39,10 +39,13 @@ class AddBookingExtrasSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   Icons.restaurant_menu_rounded,
@@ -50,7 +53,12 @@ class AddBookingExtrasSection extends StatelessWidget {
                   color: AppColors.neonBlue,
                 ),
                 SizedBox(width: 6.w),
-                AppText.body(AppStrings.extras, fontWeight: FontWeight.bold),
+                Flexible(
+                  child: AppText.body(
+                    AppStrings.extras,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             InkWell(
@@ -59,6 +67,7 @@ class AddBookingExtrasSection extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.add_circle_outline,
@@ -66,11 +75,13 @@ class AddBookingExtrasSection extends StatelessWidget {
                       color: AppColors.neonBlue,
                     ),
                     SizedBox(width: 4.w),
-                    AppText.body(
-                      AppStrings.addExtrasToSession,
-                      fontSize: 12.sp,
-                      color: AppColors.neonBlue,
-                      fontWeight: FontWeight.bold,
+                    Flexible(
+                      child: AppText.body(
+                        AppStrings.addExtrasToSession,
+                        fontSize: 12.sp,
+                        color: AppColors.neonBlue,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -97,7 +108,7 @@ class AddBookingExtrasSection extends StatelessWidget {
                 SizedBox(width: 8.w),
                 Expanded(
                   child: AppText.body(
-                    'لم يتم إضافة مشروبات أو مأكولات مع الحجز حتى الآن',
+                    AppStrings.noBookingExtras,
                     fontSize: 12.sp,
                     color: AppColors.textMuted,
                   ),

@@ -93,7 +93,7 @@ class AddBookingRoomSelector extends StatelessWidget {
 
               final selectedRoomInList = rooms.cast<RoomEntity?>().firstWhere(
                 (r) => r?.id == selectedRoom?.id,
-                orElse: () => rooms.isNotEmpty ? rooms.first : null,
+                orElse: () => null,
               );
 
               return Container(

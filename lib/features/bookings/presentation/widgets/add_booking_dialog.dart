@@ -222,11 +222,11 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: 500.r,
+          maxWidth: 560,
           maxHeight: MediaQuery.sizeOf(context).height * 0.9,
         ),
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(24.r),
+          padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: Column(
@@ -236,11 +236,13 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    AppText.heading(
-                      widget.quickMode
-                          ? AppStrings.walkInBooking
-                          : AppStrings.detailedBooking,
-                      fontSize: 24.sp,
+                    Expanded(
+                      child: AppText.heading(
+                        widget.quickMode
+                            ? AppStrings.walkInBooking
+                            : AppStrings.detailedBooking,
+                        fontSize: 24,
+                      ),
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(context),
@@ -330,21 +332,22 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                 SizedBox(height: 24.h),
 
                 // Action Buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 12,
+                  runSpacing: 12,
                   children: [
                     AppButton(
                       text: AppStrings.cancel,
                       variant: AppButtonVariant.text,
                       onPressed: () => Navigator.pop(context),
                     ),
-                    SizedBox(width: 16.w),
                     AppButton(
                       text: widget.quickMode
                           ? AppStrings.walkInBooking
                           : AppStrings.newBooking,
                       variant: AppButtonVariant.primary,
-                      onPressed: _submit,
+                      onPressed: _selectedRoom == null ? null : _submit,
                     ),
                   ],
                 ),

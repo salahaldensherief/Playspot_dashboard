@@ -4,7 +4,9 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
+import '../cubit/booking_cubit.dart';
 
 class AddBookingVoucherSection extends StatefulWidget {
   final ValueChanged<({String? code, double discount})> onVoucherChanged;
@@ -39,20 +41,18 @@ class _AddBookingVoucherSectionState extends State<AddBookingVoucherSection> {
     });
 
     try {
-      final validation = await Supabase.instance.client.rpc(
-        'validate_voucher_by_code',
-        params: {'p_code': code},
+      final validation = await context.read<BookingCubit>().validateVoucherCode(
+        code,
       );
+      if (!mounted) return;
 
-      if (validation is Map) {
+      if (validation != null) {
         final map = Map<String, dynamic>.from(validation);
         final isValid =
-            map['is_valid'] ?? map['valid'] ?? map['success'] ?? true;
+            map['is_valid'] ?? map['valid'] ?? map['success'] ?? false;
         if (isValid == false) {
           final err =
-              map['error'] ??
-              map['message'] ??
-              'كود القسيمة غير صالح أو منتهي الصلاحية';
+              map['error'] ?? map['message'] ?? 'booking_voucher_invalid'.tr();
           _setError(err.toString());
           return;
         }
@@ -70,16 +70,10 @@ class _AddBookingVoucherSectionState extends State<AddBookingVoucherSection> {
         });
         widget.onVoucherChanged((code: code, discount: discount));
       } else {
-        setState(() {
-          _appliedCode = code;
-          _discount = 0.0;
-          _errorMessage = null;
-        });
-        widget.onVoucherChanged((code: code, discount: 0.0));
+        _setError('booking_voucher_invalid'.tr());
       }
     } catch (e) {
-      final cleanMsg = e.toString().replaceFirst('Exception: ', '');
-      _setError(cleanMsg);
+      if (mounted) _setError('booking_voucher_unavailable'.tr());
     } finally {
       if (mounted) {
         setState(() => _isValidating = false);
@@ -111,7 +105,7 @@ class _AddBookingVoucherSectionState extends State<AddBookingVoucherSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppText.body('كود القسيمة / Voucher Code', fontWeight: FontWeight.bold),
+        AppText.body(AppStrings.voucherCode, fontWeight: FontWeight.bold),
         SizedBox(height: 8.h),
         Row(
           children: [
@@ -121,7 +115,7 @@ class _AddBookingVoucherSectionState extends State<AddBookingVoucherSection> {
                 textCapitalization: TextCapitalization.characters,
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'أدخل الكود (مثال: 9326D324)',
+                  hintText: AppStrings.enterVoucherCodeHint,
                   hintStyle: const TextStyle(color: AppColors.textSecondary),
                   filled: true,
                   fillColor: AppColors.cardBackground,
@@ -162,7 +156,9 @@ class _AddBookingVoucherSectionState extends State<AddBookingVoucherSection> {
             ),
             SizedBox(width: 8.w),
             AppButton(
-              text: _isValidating ? 'جاري التحقق...' : 'تطبيق',
+              text: _isValidating
+                  ? 'booking_voucher_checking'.tr()
+                  : 'booking_voucher_apply'.tr(),
               variant: AppButtonVariant.primary,
               isLoading: _isValidating,
               onPressed: _isValidating ? null : _validateVoucher,
@@ -188,7 +184,13 @@ class _AddBookingVoucherSectionState extends State<AddBookingVoucherSection> {
               SizedBox(width: 4.w),
               Expanded(
                 child: Text(
-                  'تم تطبيق الخصم بنجاح لكود $_appliedCode (${_discount.toStringAsFixed(2)} ${AppStrings.egp})',
+                  'booking_voucher_applied'.tr(
+                    namedArgs: {
+                      'code': _appliedCode!,
+                      'discount': _discount.toStringAsFixed(2),
+                      'currency': AppStrings.egp,
+                    },
+                  ),
                   style: TextStyle(
                     color: AppColors.success,
                     fontSize: 12.sp,

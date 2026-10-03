@@ -1497,6 +1497,7 @@
     "open_failed": "تعذر فتح المستند، أعد تحميل طلب المراجعة"
   },
   "kyc_pending": {
+    "unassigned": {"title": "الحساب غير مرتبط بصالة", "description": "اطلب من صاحب الصالة ربط حسابك بالصالة وتحديد صلاحياتك. لا يمكنك تشغيل الحجوزات أو فتح شفت قبل اكتمال التعيين."},
     "refresh": "إعادة فحص الحالة",
     "pending": {
       "title": "بيانات الصالة قيد المراجعة",
@@ -1580,5 +1581,26 @@
   "dashboard_metric_unavailable": "لا توجد بيانات كافية",
   "dashboard_data_unavailable": "تعذر تحميل بعض بيانات التشغيل. راجع الاتصال وصلاحيات الحساب ثم أعد المحاولة.",
   "shift_overview_unavailable": "تعذر التحقق من بيانات الشيفت",
-  "room_operational_status": "حالة غرف الصالة"
+  "room_operational_status": "حالة غرف الصالة",
+  "play_mode": "طريقة اللعب",
+  "no_booking_extras": "لم تُضف مشروبات أو مأكولات إلى الحجز بعد",
+  "kyc_review_service_unavailable": "خدمة مراجعة الصالات غير متاحة على السيرفر حاليًا. يلزم تجهيز خدمة المراجعة قبل عرض الطلبات أو اتخاذ قرار بشأنها.",
+  "kyc_review_load_failed": "تعذّر تحميل طلبات مراجعة الصالات. أعد المحاولة، وإذا استمر الخطأ راجع مسؤول النظام.",
+  "booking_ends_at": "ينتهي عند {time} (إجمالي {hours} ساعة)",
+  "live": "مباشر",
+  "revenue_chart_grouping": "تجميع الإيرادات المحصّلة حسب الفترة",
+  "platform_lounges_count": "إجمالي الصالات",
+  "platform_users_count": "إجمالي المستخدمين",
+  "non_cancelled_booking_value": "قيمة الحجوزات غير الملغاة",
+  "booking_value_not_collected_cash": "قيمة حجوزات، وليست تحصيلًا نقديًا",
+  "completed_payment_count": "دفعات مكتملة",
+  "voucher_code": "كود القسيمة",
+  "booking_extras_total": "مجموع الإضافات",
+  "booking_voucher_discount": "خصم القسيمة",
+  "booking_voucher_invalid": "القسيمة غير صالحة لهذا الحساب أو انتهت صلاحيتها",
+  "booking_voucher_unavailable": "تعذر التحقق من القسيمة. حاول مرة أخرى.",
+  "booking_voucher_checking": "جاري التحقق…",
+  "booking_voucher_apply": "تطبيق",
+  "booking_voucher_applied": "تم التحقق من القسيمة {code} · خصم تقديري {discount} {currency}",
+  "platform_top_lounges_description": "مرتبة حسب المدفوعات المكتملة لجميع الفترات"
 }
