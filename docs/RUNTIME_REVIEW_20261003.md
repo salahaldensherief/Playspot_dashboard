@@ -20,10 +20,17 @@
 - Screenshots and sanitized request metadata are in the task workspace outputs directory; originals were not modified.
 - Existing browser renderer stopped responding after its original dev server stopped. New worktree server uses the same port; new tab is used for post-fix checks. Successful old screenshots do not by themselves prove new UI verification.
 
+## Post-fix runtime checks
+
+- Release Web build succeeded in 153.1 seconds. Same-port local preview recovered browser verification without running Mobile.
+- Cashier reached lounge-admin/dashboard automatically with personal setup=false, approved venue and current shift displayed once. Direct super-admin/lounges navigation redirected back to lounge-admin/dashboard.
+- Active-session read HTTP 400 reproduced as PGRST200 (no bookings→profiles relationship). Corrected select also removes nonexistent canteen_order_items.price and extras.unit_price, uses batched RLS-scoped profile enrichment, and preserves authorization errors instead of emitting a degraded fallback list. Four new contract tests passed; corrected authenticated live select returned HTTP 200. Full suite before these four additions: 805 passed, 2 skipped; changed-scope analysis passed.
+- Dashboard CI at d1844f1 and Mobile CI at f37c286 completed successfully.
+
 ## Remaining review
 
-- Verify corrected cashier route and management rendering in the new runtime; complete remaining role-action flows.
-- Recorded old runtime had update-user-location 502 (fixed above), two bookings read 400s and session-transition 401s; trace remaining requests rather than suppress them.
+- Complete management visual verification and remaining role-action flows.
+- Old-runtime location 502 and booking-read 400 causes fixed above. Session-transition 401 requests still require lifecycle review.
 - Owner phone and lounge phone are separate form inputs but provisioning contract still conflates them; requires coordinated API/server follow-up.
 - Full widget-by-widget localization and responsive visual review still ongoing.
 - Mobile navigation/runtime review intentionally paused while Dashboard is running; mobile and dashboard are not run together.
