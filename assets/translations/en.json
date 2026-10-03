@@ -1,4 +1,9 @@
 {
+  "room_space_types_unavailable": "Room types could not be loaded. Retry and choose a room type before saving.",
+  "room_space_type_party": "Party room",
+  "room_space_type_vr": "Virtual reality room",
+  "room_space_type_console": "Console room",
+  "room_space_type_station": "Gaming station",
   "starts_in": "Starts in",
   "not_specified": "Not Specified",
   "update_my_location": "Update My Location",

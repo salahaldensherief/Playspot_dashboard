@@ -23,6 +23,7 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
     if (loungeId.isNotEmpty && _loadedLoungeId != loungeId) {
       _loadedLoungeId = loungeId;
       context.read<RoomCubit>().watchRooms(loungeId);
+      context.read<RoomCubit>().loadSpaceTypes();
     }
   }
 
@@ -31,7 +32,8 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final loginState = context.read<LoginCubit>().state;
-      final loungeId = loginState.user?.loungeId ?? loginState.userLounge?.id ?? '';
+      final loungeId =
+          loginState.user?.loungeId ?? loginState.userLounge?.id ?? '';
       _checkAndLoadRooms(context, loungeId);
     });
   }
@@ -43,7 +45,8 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
           prev.user?.loungeId != curr.user?.loungeId ||
           prev.userLounge?.id != curr.userLounge?.id,
       listener: (context, loginState) {
-        final loungeId = loginState.user?.loungeId ?? loginState.userLounge?.id ?? '';
+        final loungeId =
+            loginState.user?.loungeId ?? loginState.userLounge?.id ?? '';
         _checkAndLoadRooms(context, loungeId);
       },
       child: BlocBuilder<LoginCubit, LoginState>(

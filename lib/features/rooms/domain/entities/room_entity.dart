@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'room_space_type.dart';
 
 enum RoomStatusEnum { available, maintenance, occupied }
 
@@ -43,7 +44,8 @@ class RoomEntity extends Equatable {
   double get pricePerHourMulti => hourlyRateMulti;
   double get pricePerHour => hourlyRateSingle;
   bool get isActive => isAvailable;
-  bool get isOpenArea => spaceTypeId == 'open_area';
+  bool get isOpenArea =>
+      roomSpaceTypeKey(spaceType ?? spaceTypeId) == 'open_area';
 
   const RoomEntity({
     required this.id,
@@ -83,44 +85,45 @@ class RoomEntity extends Equatable {
     this.openTimeRoundingMinutes = 15,
     this.openTimeMaxMinutes,
     this.openTimeBufferBeforeBookingMinutes = 15,
-  })  : maxCapacity = maxCapacity ?? capacity ?? 4,
-        hourlyRateSingle = hourlyRateSingle ?? pricePerHourSingle ?? pricePerHour,
-        hourlyRateMulti = hourlyRateMulti ?? pricePerHourMulti ?? pricePerHour;
+  }) : maxCapacity = maxCapacity ?? capacity ?? 4,
+       hourlyRateSingle =
+           hourlyRateSingle ?? pricePerHourSingle ?? pricePerHour,
+       hourlyRateMulti = hourlyRateMulti ?? pricePerHourMulti ?? pricePerHour;
 
   @override
   List<Object?> get props => [
-        id,
-        loungeId,
-        nameAr,
-        nameEn,
-        descriptionAr,
-        descriptionEn,
-        activityNames,
-        activityIds,
-        spaceType,
-        spaceTypeId,
-        maxCapacity,
-        hourlyRateSingle,
-        hourlyRateMulti,
-        extraControllerPrice,
-        isAvailable,
-        images,
-        featuresAr,
-        featuresEn,
-        controllersCount,
-        screenSize,
-        status,
-        hasOffer,
-        offerTitle,
-        offerTag,
-        activePromotionId,
-        openTimeEnabled,
-        openTimePricingMode,
-        openTimeCustomHourlyRate,
-        openTimePriceMultiplier,
-        openTimeMinimumMinutes,
-        openTimeRoundingMinutes,
-        openTimeMaxMinutes,
-        openTimeBufferBeforeBookingMinutes,
-      ];
+    id,
+    loungeId,
+    nameAr,
+    nameEn,
+    descriptionAr,
+    descriptionEn,
+    activityNames,
+    activityIds,
+    spaceType,
+    spaceTypeId,
+    maxCapacity,
+    hourlyRateSingle,
+    hourlyRateMulti,
+    extraControllerPrice,
+    isAvailable,
+    images,
+    featuresAr,
+    featuresEn,
+    controllersCount,
+    screenSize,
+    status,
+    hasOffer,
+    offerTitle,
+    offerTag,
+    activePromotionId,
+    openTimeEnabled,
+    openTimePricingMode,
+    openTimeCustomHourlyRate,
+    openTimePriceMultiplier,
+    openTimeMinimumMinutes,
+    openTimeRoundingMinutes,
+    openTimeMaxMinutes,
+    openTimeBufferBeforeBookingMinutes,
+  ];
 }

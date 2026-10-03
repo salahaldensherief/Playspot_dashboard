@@ -115,7 +115,7 @@ class RoomModel extends RoomEntity {
                 ? List<String>.from(json['activity_ids'])
                 : []),
       spaceType:
-          json['space_types']?['label'] ?? json['space_type_name']?.toString(),
+          json['space_types']?['name'] ?? json['space_type_name']?.toString(),
       spaceTypeId: json['space_type_id']?.toString() ?? '',
       maxCapacity: parseInt(json['max_capacity'] ?? json['capacity'], 4),
       hourlyRateSingle: singleRate,
@@ -140,17 +140,24 @@ class RoomModel extends RoomEntity {
           : parseDouble(json['open_time_custom_hourly_rate']),
       openTimePriceMultiplier:
           parseDouble(json['open_time_price_multiplier']) <= 0
-              ? 1.0
-              : parseDouble(json['open_time_price_multiplier']),
+          ? 1.0
+          : parseDouble(json['open_time_price_multiplier']),
       openTimeMinimumMinutes: parseInt(json['open_time_minimum_minutes'], 30),
       openTimeRoundingMinutes: parseInt(json['open_time_rounding_minutes'], 15),
       openTimeMaxMinutes: json['open_time_max_minutes'] == null
           ? null
           : parseInt(json['open_time_max_minutes'], 0),
-      openTimeBufferBeforeBookingMinutes:
-          parseInt(json['open_time_buffer_before_booking_minutes'], 15),
+      openTimeBufferBeforeBookingMinutes: parseInt(
+        json['open_time_buffer_before_booking_minutes'],
+        15,
+      ),
     );
   }
+
+  Map<String, dynamic> toCacheJson() => {
+    ...toJson(),
+    'space_type_name': spaceType,
+  };
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {

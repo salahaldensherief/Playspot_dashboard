@@ -1,4 +1,9 @@
 {
+  "room_space_types_unavailable": "تعذر تحميل أنواع الغرف. أعد المحاولة واختر نوع الغرفة قبل الحفظ.",
+  "room_space_type_party": "غرفة للمجموعات والمناسبات",
+  "room_space_type_vr": "غرفة الواقع الافتراضي",
+  "room_space_type_console": "غرفة أجهزة الألعاب",
+  "room_space_type_station": "محطة ألعاب",
   "starts_in": "يبدأ خلال",
   "not_specified": "غير محدد",
   "update_my_location": "تحديث موقعي",

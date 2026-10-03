@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
+import '../../domain/entities/room_space_type.dart';
+import '../cubit/room_cubit.dart';
+import '../cubit/room_state.dart';
+import 'room_space_type_selector.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -111,12 +117,12 @@ class _RoomDialogState extends State<RoomDialog> {
       text: (r?.openTimeBufferBeforeBookingMinutes ?? 15).toString(),
     );
 
-    const validSpaceTypes = ['open_area', 'standard_room', 'vip_room'];
-    if (r != null && validSpaceTypes.contains(r.spaceTypeId)) {
-      _selectedSpaceTypeId = r.spaceTypeId;
-    } else {
-      _selectedSpaceTypeId = 'open_area';
-    }
+    _selectedSpaceTypeId = r?.spaceTypeId;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && context.read<RoomCubit>().state.spaceTypes.isEmpty) {
+        context.read<RoomCubit>().loadSpaceTypes();
+      }
+    });
 
     _selectedStatus = r?.status ?? RoomStatusEnum.available;
     if (r != null) {
@@ -149,6 +155,13 @@ class _RoomDialogState extends State<RoomDialog> {
 
   Future<void> _submit() async {
     if (_isUploading) return;
+    final selectedType = _selectedType;
+    if (selectedType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('room_space_types_unavailable'.tr())),
+      );
+      return;
+    }
     final form = _formKey.currentState;
     if (form != null && form.validate()) {
       if (_roomImages.isEmpty && (widget.room?.images.isEmpty ?? true)) {
@@ -175,8 +188,8 @@ class _RoomDialogState extends State<RoomDialog> {
         }
 
         if (mounted) {
-          final spaceTypeId = _selectedSpaceTypeId ?? 'open_area';
-          final isOpenArea = spaceTypeId == 'open_area';
+          final spaceTypeId = selectedType.id;
+          final isOpenArea = selectedType.categoryKey == 'open_area';
           final singleRate =
               double.tryParse(_hourlyRateSingleController.text) ?? 0.0;
           final multiRate =
@@ -191,9 +204,7 @@ class _RoomDialogState extends State<RoomDialog> {
             nameEn: _nameEnController.text,
             descriptionAr: _descriptionArController.text,
             descriptionEn: _descriptionEnController.text,
-            spaceType: isOpenArea
-                ? 'Open Area'
-                : (spaceTypeId == 'vip_room' ? 'VIP Room' : 'Standard Room'),
+            spaceType: selectedType.name,
             spaceTypeId: spaceTypeId,
             hourlyRateSingle: singleRate,
             hourlyRateMulti: multiRate,
@@ -252,6 +263,8 @@ class _RoomDialogState extends State<RoomDialog> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<RoomCubit>();
+    context.locale;
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
@@ -267,25 +280,7 @@ class _RoomDialogState extends State<RoomDialog> {
               children: [
                 _buildHeader(),
                 SizedBox(height: 32.h),
-                CustomDropdown<String>(
-                  label: AppStrings.spaceType,
-                  value:
-                      [
-                        'open_area',
-                        'standard_room',
-                        'vip_room',
-                      ].contains(_selectedSpaceTypeId)
-                      ? (_selectedSpaceTypeId ?? 'open_area')
-                      : 'open_area',
-                  items: const ['open_area', 'standard_room', 'vip_room'],
-                  itemLabel: (id) {
-                    if (id == 'open_area') return AppStrings.openArea;
-                    if (id == 'standard_room') return AppStrings.standardRoom;
-                    if (id == 'vip_room') return AppStrings.vipRoom;
-                    return id;
-                  },
-                  onChanged: (v) => setState(() => _selectedSpaceTypeId = v),
-                ),
+                _buildSpaceTypeSelector(),
                 SizedBox(height: 24.h),
                 AppMultiImagePicker(
                   label: AppStrings.roomStationImage,
@@ -302,7 +297,7 @@ class _RoomDialogState extends State<RoomDialog> {
                   descriptionEnController: _descriptionEnController,
                   hourlyRateSingleController: _hourlyRateSingleController,
                   hourlyRateMultiController: _hourlyRateMultiController,
-                  isOpenArea: _selectedSpaceTypeId == 'open_area',
+                  isOpenArea: _selectedType?.categoryKey == 'open_area',
                 ),
                 SizedBox(height: 20.h),
                 RoomSpecsForm(
@@ -310,7 +305,7 @@ class _RoomDialogState extends State<RoomDialog> {
                   controllersController: _controllersController,
                   screenSizeController: _screenSizeController,
                   extraPriceController: _extraPriceController,
-                  selectedSpaceTypeId: _selectedSpaceTypeId,
+                  selectedSpaceTypeId: _selectedType?.categoryKey,
                   status: _selectedStatus,
                   onStatusChanged: (v) {
                     if (v != null) {
@@ -517,6 +512,37 @@ class _RoomDialogState extends State<RoomDialog> {
           ),
         ],
       ),
+    );
+  }
+
+  RoomSpaceType? get _selectedType {
+    for (final type in context.read<RoomCubit>().state.spaceTypes) {
+      if (type.id == _selectedSpaceTypeId) return type;
+    }
+    return null;
+  }
+
+  Widget _buildSpaceTypeSelector() {
+    final state = context.read<RoomCubit>().state;
+    if (state.spaceTypesStatus == RoomStatus.loading &&
+        state.spaceTypes.isEmpty) {
+      return const LinearProgressIndicator();
+    }
+    if (state.spaceTypes.isEmpty) {
+      return Column(
+        children: [
+          Text('room_space_types_unavailable'.tr()),
+          TextButton(
+            onPressed: () => context.read<RoomCubit>().loadSpaceTypes(),
+            child: Text(AppStrings.retry),
+          ),
+        ],
+      );
+    }
+    return RoomSpaceTypeSelector(
+      types: state.spaceTypes,
+      selectedId: _selectedSpaceTypeId,
+      onChanged: (value) => setState(() => _selectedSpaceTypeId = value),
     );
   }
 

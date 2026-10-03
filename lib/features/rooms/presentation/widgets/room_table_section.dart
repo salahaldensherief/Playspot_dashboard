@@ -7,6 +7,7 @@ import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import '../cubit/room_cubit.dart';
 import '../cubit/room_state.dart';
 import 'rooms_data_table.dart';
+import '../../domain/entities/room_space_type.dart';
 
 class RoomTableSection extends StatefulWidget {
   const RoomTableSection({super.key});
@@ -34,12 +35,23 @@ class _RoomTableSectionState extends State<RoomTableSection> {
             if (state.status == RoomStatus.success) {
               final filteredRooms = _selectedFilter == 'all'
                   ? state.rooms
-                  : state.rooms.where((r) => r.spaceTypeId == _selectedFilter).toList();
+                  : state.rooms
+                        .where(
+                          (r) =>
+                              roomSpaceTypeKey(r.spaceType ?? r.spaceTypeId) ==
+                              _selectedFilter,
+                        )
+                        .toList();
               return RoomsDataTable(rooms: filteredRooms);
             }
 
             if (state.status == RoomStatus.failure) {
-              return Center(child: Text(state.errorMessage ?? AppStrings.error, style: const TextStyle(color: AppColors.danger)));
+              return Center(
+                child: Text(
+                  state.errorMessage ?? AppStrings.error,
+                  style: const TextStyle(color: AppColors.danger),
+                ),
+              );
             }
 
             return const SizedBox.shrink();

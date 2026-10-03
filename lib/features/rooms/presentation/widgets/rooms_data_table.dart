@@ -16,6 +16,7 @@ import 'package:play_spot_dashboard/features/categories/presentation/categories/
 import 'package:play_spot_dashboard/features/rooms/presentation/widgets/room_dialog.dart';
 import '../../domain/entities/room_entity.dart';
 import '../cubit/room_cubit.dart';
+import 'room_space_type_label.dart';
 
 class RoomsDataTable extends StatelessWidget {
   final List<RoomEntity> rooms;
@@ -347,11 +348,14 @@ class RoomsDataTable extends StatelessWidget {
   ) {
     showDialog(
       context: context,
-      builder: (_) => RoomDialog(
-        loungeId: loungeId,
-        room: room,
-        categoryCubit: categoryCubit,
-        onSave: (updatedRoom) => cubit.updateRoom(updatedRoom),
+      builder: (_) => BlocProvider<RoomCubit>.value(
+        value: cubit,
+        child: RoomDialog(
+          loungeId: loungeId,
+          room: room,
+          categoryCubit: categoryCubit,
+          onSave: (updatedRoom) => cubit.updateRoom(updatedRoom),
+        ),
       ),
     );
   }
@@ -409,7 +413,7 @@ class RoomsDataTable extends StatelessWidget {
         typeLower == 'standard_room') {
       return StatusBadge.secondary(AppStrings.standardRoom);
     } else {
-      return StatusBadge.neutral(type ?? AppStrings.notAvailable);
+      return StatusBadge.neutral(roomSpaceTypeLabel(type));
     }
   }
 }

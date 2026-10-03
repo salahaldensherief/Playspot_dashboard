@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/room_model.dart';
+import '../models/room_space_type_model.dart';
 
 abstract class RoomRemoteDataSource {
+  Future<List<RoomSpaceTypeModel>> getSpaceTypes();
   Future<List<RoomModel>> getRooms(String loungeId);
   Stream<List<RoomModel>> watchRooms(String loungeId);
   Future<void> updateRoomStatus(String roomId, String status);
@@ -17,12 +19,24 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
   RoomRemoteDataSourceImpl(this._supabase);
 
   @override
+  Future<List<RoomSpaceTypeModel>> getSpaceTypes() async {
+    final rows = await _supabase
+        .from('space_types')
+        .select('id,name,label')
+        .order('sort_order')
+        .order('name');
+    return rows.map((row) => RoomSpaceTypeModel.fromJson(row)).toList();
+  }
+
+  @override
   Future<List<RoomModel>> getRooms(String loungeId) async {
     // Query rooms table directly with room_activities relation
     try {
       final response = await _supabase
           .from('rooms')
-          .select('*, room_activities(*, activity_types(*))')
+          .select(
+            '*, space_types(name,label), room_activities(*, activity_types(*))',
+          )
           .eq('lounge_id', loungeId)
           .neq('status', 'deleted')
           .order('created_at', ascending: true);

@@ -9,6 +9,19 @@ class RoomCubit extends Cubit<RoomState> with RealtimeWatcherMixin<RoomState> {
 
   RoomCubit(this._repository) : super(const RoomState());
 
+  Future<void> loadSpaceTypes() async {
+    if (state.spaceTypesStatus == RoomStatus.loading) return;
+    emit(state.copyWith(spaceTypesStatus: RoomStatus.loading));
+    final result = await _repository.getSpaceTypes();
+    if (isClosed) return;
+    result.fold(
+      (_) => emit(state.copyWith(spaceTypesStatus: RoomStatus.failure)),
+      (types) => emit(
+        state.copyWith(spaceTypes: types, spaceTypesStatus: RoomStatus.success),
+      ),
+    );
+  }
+
   void watchRooms(String? loungeId, {bool forceRefresh = false}) {
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty)
         ? loungeId.trim()
