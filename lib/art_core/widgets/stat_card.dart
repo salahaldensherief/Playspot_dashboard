@@ -10,6 +10,7 @@ class StatCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final String? subtitle;
+  final TextDirection? valueTextDirection;
 
   const StatCard({
     super.key,
@@ -19,6 +20,7 @@ class StatCard extends StatelessWidget {
     required this.icon,
     required this.iconColor,
     this.subtitle,
+    this.valueTextDirection,
   });
 
   @override
@@ -54,6 +56,7 @@ class StatCard extends StatelessWidget {
                 SizedBox(height: 2.h),
                 Text(
                   value,
+                  textDirection: valueTextDirection,
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 22,

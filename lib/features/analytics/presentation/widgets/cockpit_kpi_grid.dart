@@ -1,6 +1,6 @@
 import 'dashboard_kpi_layout.dart';
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -218,6 +218,7 @@ class _LoungeOwnerKpiGrid extends StatelessWidget {
                             value: totalRooms > 0
                                 ? '$occupiedRooms / $totalRooms'
                                 : '0',
+                            valueTextDirection: TextDirection.ltr,
                             subtitle: totalRooms > 0
                                 ? AppStrings.occupiedRoomsSubtitle(
                                     occupiedRooms,
