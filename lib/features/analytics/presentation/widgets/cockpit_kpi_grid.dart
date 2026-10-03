@@ -1,5 +1,6 @@
 import 'dashboard_kpi_layout.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -47,6 +48,8 @@ class _SuperAdminKpiGrid extends StatelessWidget {
           prev.activeSessions != curr.activeSessions ||
           prev.occupancyRate != curr.occupancyRate ||
           prev.totalLounges != curr.totalLounges ||
+          prev.totalUsers != curr.totalUsers ||
+          prev.totalBookings != curr.totalBookings ||
           prev.bookingsToday != curr.bookingsToday ||
           prev.cancelledBookings != curr.cancelledBookings,
       builder: (context, state) {
@@ -56,7 +59,7 @@ class _SuperAdminKpiGrid extends StatelessWidget {
 
         if (state.status == FeatureStatus.failure) {
           return _KpiErrorCard(
-            message: state.errorMessage ?? AppStrings.failedToLoadStats,
+            message: AppStrings.failedToLoadStats,
             onRetry: onRetry,
           );
         }
@@ -64,51 +67,30 @@ class _SuperAdminKpiGrid extends StatelessWidget {
         return DashboardKpiLayout(
           children: [
             StatCard(
-              title: AppStrings.globalOverview,
-              value: '\$${state.totalRevenue.toStringAsFixed(0)}',
-              trendValue: state.revenueTrend,
-              icon: Icons.payments_outlined,
-              iconColor: AppColors.neonGreen,
-            ),
-            StatCard(
-              title: AppStrings.loungeOccupancy,
-              value: '${(state.occupancyRate * 100).toStringAsFixed(0)}%',
-              trendValue: state.occupancyTrend,
-              icon: Icons.meeting_room_outlined,
+              title: 'platform_lounges_count'.tr(),
+              value: '${state.totalLounges}',
+              icon: Icons.storefront_outlined,
               iconColor: AppColors.neonPurple,
             ),
             StatCard(
-              title: AppStrings.activeSessions,
-              value: '${state.activeSessions}',
-              trendValue: state.bookingsTrend,
-              icon: Icons.sports_esports_outlined,
+              title: 'platform_users_count'.tr(),
+              value: '${state.totalUsers}',
+              icon: Icons.people_outline,
               iconColor: AppColors.neonBlue,
             ),
             StatCard(
               title: AppStrings.bookingsLabel,
               value: '${state.totalBookings}',
-              subtitle: '${state.bookingsToday} ${AppStrings.today}',
-              trendValue: state.bookingsTrend,
               icon: Icons.confirmation_number_outlined,
               iconColor: AppColors.neonCyan,
             ),
             StatCard(
-              title: AppStrings.noShowsAndCancellations,
-              value: '${state.cancelledBookings}',
-              subtitle: AppStrings.systemHealth,
-              trendValue: 0.0,
-              icon: Icons.event_busy_outlined,
-              iconColor: state.cancelledBookings > 0
-                  ? AppColors.danger
-                  : AppColors.textMuted,
-            ),
-            StatCard(
-              title: AppStrings.payouts,
-              value: '\$${state.totalPlatformCommission.toStringAsFixed(0)}',
-              subtitle: AppStrings.payouts,
-              trendValue: 0.0,
-              icon: Icons.account_balance_wallet_outlined,
-              iconColor: Colors.orangeAccent,
+              title: 'non_cancelled_booking_value'.tr(),
+              value:
+                  '${state.totalRevenue.toStringAsFixed(0)} ${AppStrings.egp}',
+              subtitle: 'booking_value_not_collected_cash'.tr(),
+              icon: Icons.receipt_long_outlined,
+              iconColor: AppColors.neonGreen,
             ),
           ],
         );

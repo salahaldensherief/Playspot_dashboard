@@ -43,7 +43,7 @@ class ChartCard extends StatelessWidget {
                       title,
                       style: TextStyle(
                         color: AppColors.textPrimary,
-                        fontSize: 18.sp,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -52,7 +52,7 @@ class ChartCard extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         color: AppColors.textSecondary,
-                        fontSize: 13.sp,
+                        fontSize: 14,
                       ),
                     ),
                   ],

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
-import 'package:play_spot_dashboard/core/responsive/responsive.dart';
+import 'dashboard_flow_layout.dart';
 import '../dashboard_cubit.dart';
 import 'chart_card.dart';
 import 'cockpit_kpi_grid.dart';
@@ -36,40 +37,41 @@ class SuperAdminDashboardView extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverToBoxAdapter(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: DashboardHeader(
-                    isSuperAdmin: true,
-                    onRefresh: () async {
-                      await context.read<DashboardCubit>().loadDashboardData();
-                    },
-                  ),
+                DashboardHeader(
+                  isSuperAdmin: true,
+                  onRefresh: () =>
+                      context.read<DashboardCubit>().loadDashboardData(),
                 ),
-                SizedBox(width: 12.w),
-                DashboardTimeRangeSelector(
-                  selectedRange: timeRange,
-                  onRangeChanged: onTimeRangeChanged,
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      'revenue_chart_grouping'.tr(),
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                      ),
+                    ),
+                    DashboardTimeRangeSelector(
+                      selectedRange: timeRange,
+                      onRangeChanged: onTimeRangeChanged,
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
           SliverToBoxAdapter(child: SizedBox(height: 16.h)),
           SliverToBoxAdapter(
-            child: Responsive(
-              mobile: _MobileSuperAdminContent(
-                onRefresh: () =>
-                    context.read<DashboardCubit>().loadDashboardData(),
-              ),
-              tablet: _TabletSuperAdminContent(
-                onRefresh: () =>
-                    context.read<DashboardCubit>().loadDashboardData(),
-              ),
-              desktop: _DesktopSuperAdminContent(
-                onRefresh: () =>
-                    context.read<DashboardCubit>().loadDashboardData(),
-              ),
+            child: _SuperAdminContent(
+              onRefresh: () =>
+                  context.read<DashboardCubit>().loadDashboardData(),
             ),
           ),
           SliverToBoxAdapter(child: SizedBox(height: 32.h)),
@@ -79,141 +81,39 @@ class SuperAdminDashboardView extends StatelessWidget {
   }
 }
 
-class _DesktopSuperAdminContent extends StatelessWidget {
+class _SuperAdminContent extends StatelessWidget {
+  const _SuperAdminContent({required this.onRefresh});
   final VoidCallback onRefresh;
 
-  const _DesktopSuperAdminContent({required this.onRefresh});
-
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        RepaintBoundary(
-          child: CockpitKpiGrid(isSuperAdmin: true, onRetry: onRefresh),
-        ),
-        SizedBox(height: 16.h),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Expanded(
-              flex: 7,
-              child: RepaintBoundary(child: TopLoungesCard()),
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      RepaintBoundary(
+        child: CockpitKpiGrid(isSuperAdmin: true, onRetry: onRefresh),
+      ),
+      const SizedBox(height: 16),
+      DashboardFlowLayout(
+        main: [
+          const RepaintBoundary(child: TopLoungesCard()),
+          SizedBox(
+            height:
+                320 *
+                (MediaQuery.textScalerOf(context).scale(16) / 16).clamp(1, 1.6),
+            child: ChartCard(
+              title: AppStrings.revenueAnalytics,
+              subtitle: 'revenue_chart_grouping'.tr(),
+              actionIcon: Icons.trending_up,
+              actionIconColor: AppColors.success,
+              chart: const RepaintBoundary(child: RevenueChart()),
             ),
-            SizedBox(width: 16.w),
-            const Expanded(
-              flex: 5,
-              child: QuickActionsCard(isSuperAdmin: true),
-            ),
-          ],
-        ),
-        SizedBox(height: 16.h),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 7,
-              child: SizedBox(
-                height: 240.h,
-                child: ChartCard(
-                  title: AppStrings.revenueAnalytics,
-                  subtitle: AppStrings.weeklyPerformance,
-                  actionIcon: Icons.trending_up,
-                  actionIconColor: AppColors.success,
-                  chart: const RepaintBoundary(child: RevenueChart()),
-                ),
-              ),
-            ),
-            SizedBox(width: 16.w),
-            const Expanded(
-              flex: 5,
-              child: RepaintBoundary(child: RecentActivityCard()),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _TabletSuperAdminContent extends StatelessWidget {
-  final VoidCallback onRefresh;
-
-  const _TabletSuperAdminContent({required this.onRefresh});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        RepaintBoundary(
-          child: CockpitKpiGrid(isSuperAdmin: true, onRetry: onRefresh),
-        ),
-        SizedBox(height: 14.h),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Expanded(child: RepaintBoundary(child: TopLoungesCard())),
-            SizedBox(width: 14.w),
-            const Expanded(child: QuickActionsCard(isSuperAdmin: true)),
-          ],
-        ),
-        SizedBox(height: 14.h),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: SizedBox(
-                height: 230.h,
-                child: ChartCard(
-                  title: AppStrings.revenueAnalytics,
-                  subtitle: AppStrings.weeklyPerformance,
-                  actionIcon: Icons.trending_up,
-                  actionIconColor: AppColors.success,
-                  chart: const RepaintBoundary(child: RevenueChart()),
-                ),
-              ),
-            ),
-            SizedBox(width: 14.w),
-            const Expanded(child: RepaintBoundary(child: RecentActivityCard())),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _MobileSuperAdminContent extends StatelessWidget {
-  final VoidCallback onRefresh;
-
-  const _MobileSuperAdminContent({required this.onRefresh});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        RepaintBoundary(
-          child: CockpitKpiGrid(isSuperAdmin: true, onRetry: onRefresh),
-        ),
-        SizedBox(height: 12.h),
-        const QuickActionsCard(isSuperAdmin: true),
-        SizedBox(height: 12.h),
-        const RepaintBoundary(child: TopLoungesCard()),
-        SizedBox(height: 12.h),
-        SizedBox(
-          height: 220.h,
-          child: ChartCard(
-            title: AppStrings.revenueAnalytics,
-            subtitle: AppStrings.weeklyPerformance,
-            actionIcon: Icons.trending_up,
-            actionIconColor: AppColors.success,
-            chart: const RepaintBoundary(child: RevenueChart()),
           ),
-        ),
-        SizedBox(height: 12.h),
-        const RepaintBoundary(child: RecentActivityCard()),
-      ],
-    );
-  }
+        ],
+        aside: const [
+          QuickActionsCard(isSuperAdmin: true),
+          RepaintBoundary(child: RecentActivityCard(isSuperAdmin: true)),
+        ],
+      ),
+    ],
+  );
 }

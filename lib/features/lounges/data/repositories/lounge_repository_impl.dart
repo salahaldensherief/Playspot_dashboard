@@ -22,12 +22,17 @@ class LoungeRepositoryImpl implements LoungeRepository {
 
   LoungeRepositoryImpl(this.remoteDataSource, this.localCacheService) {
     _cacheHelper = LoungeCacheHelper(localCacheService, remoteDataSource);
-    _extrasHelper = LoungeExtrasRepositoryHelper(remoteDataSource, localCacheService);
+    _extrasHelper = LoungeExtrasRepositoryHelper(
+      remoteDataSource,
+      localCacheService,
+    );
     _analyticsHelper = LoungeAnalyticsRepositoryHelper(remoteDataSource);
   }
 
   @override
-  Future<Either<Failure, List<Lounge>>> getLounges({bool forceRefresh = false}) async {
+  Future<Either<Failure, List<Lounge>>> getLounges({
+    bool forceRefresh = false,
+  }) async {
     try {
       if (!forceRefresh) {
         final cached = _cacheHelper.getCachedLounges();
@@ -53,7 +58,10 @@ class LoungeRepositoryImpl implements LoungeRepository {
   }
 
   @override
-  Future<Either<Failure, List<Lounge>>> getOwnerBranches(String ownerId, {bool forceRefresh = false}) async {
+  Future<Either<Failure, List<Lounge>>> getOwnerBranches(
+    String ownerId, {
+    bool forceRefresh = false,
+  }) async {
     try {
       final branches = await remoteDataSource.getOwnerBranches(ownerId);
       return Right(branches.map((e) => e as Lounge).toList());
@@ -63,7 +71,9 @@ class LoungeRepositoryImpl implements LoungeRepository {
   }
 
   @override
-  Future<Either<Failure, String>> addLoungeBranch(Map<String, dynamic> branchData) async {
+  Future<Either<Failure, String>> addLoungeBranch(
+    Map<String, dynamic> branchData,
+  ) async {
     try {
       final res = await remoteDataSource.addLoungeBranch(branchData);
       final newId = res['id']?.toString() ?? res['lounge_id']?.toString() ?? '';
@@ -92,7 +102,10 @@ class LoungeRepositoryImpl implements LoungeRepository {
   }
 
   @override
-  Future<Either<Failure, Lounge?>> getLoungeById(String id, {bool forceRefresh = false}) async {
+  Future<Either<Failure, Lounge?>> getLoungeById(
+    String id, {
+    bool forceRefresh = false,
+  }) async {
     try {
       if (!forceRefresh) {
         final cached = _cacheHelper.getCachedLoungeById(id);
@@ -201,7 +214,8 @@ class LoungeRepositoryImpl implements LoungeRepository {
         'allow_cash_payment': allowCashPayment,
         'require_prepaid_first_time': requirePrepaidFirstTime,
         'cash_grace_period_minutes': cashGracePeriodMinutes,
-        if (vodafoneCashNumber != null) 'vodafone_cash_number': vodafoneCashNumber.trim(),
+        if (vodafoneCashNumber != null)
+          'vodafone_cash_number': vodafoneCashNumber.trim(),
         if (instapayAccount != null) 'instapay_account': instapayAccount.trim(),
       };
       await remoteDataSource.updateLounge(loungeId, updateData);
@@ -213,7 +227,11 @@ class LoungeRepositoryImpl implements LoungeRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateLoungeLocation(String loungeId, double lat, double lng) async {
+  Future<Either<Failure, void>> updateLoungeLocation(
+    String loungeId,
+    double lat,
+    double lng,
+  ) async {
     try {
       await remoteDataSource.updateLounge(loungeId, {
         'location_point': 'POINT($lng $lat)',
@@ -254,24 +272,29 @@ class LoungeRepositoryImpl implements LoungeRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> getDashboardStats(String? loungeId) =>
-      _analyticsHelper.getDashboardStats(loungeId);
+  Future<Either<Failure, Map<String, dynamic>>> getDashboardStats(
+    String? loungeId,
+  ) => _analyticsHelper.getDashboardStats(loungeId);
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> getDashboardOverview() =>
       _analyticsHelper.getDashboardOverview();
 
   @override
-  Future<Either<Failure, List<Map<String, dynamic>>>> getRevenueOverTime(int daysBack) =>
-      _analyticsHelper.getRevenueOverTime(daysBack);
+  Future<Either<Failure, List<Map<String, dynamic>>>> getRevenueOverTime(
+    String period,
+  ) => _analyticsHelper.getRevenueOverTime(period);
 
   @override
-  Future<Either<Failure, List<Map<String, dynamic>>>> getTopLoungesByRevenue(int limitCount) =>
-      _analyticsHelper.getTopLoungesByRevenue(limitCount);
+  Future<Either<Failure, List<Map<String, dynamic>>>> getTopLoungesByRevenue(
+    int limitCount,
+  ) => _analyticsHelper.getTopLoungesByRevenue(limitCount);
 
   @override
-  Future<Either<Failure, List<ExtraEntity>>> getExtras(String loungeId, {bool forceRefresh = false}) =>
-      _extrasHelper.getExtras(loungeId, forceRefresh: forceRefresh);
+  Future<Either<Failure, List<ExtraEntity>>> getExtras(
+    String loungeId, {
+    bool forceRefresh = false,
+  }) => _extrasHelper.getExtras(loungeId, forceRefresh: forceRefresh);
 
   @override
   Future<Either<Failure, void>> addExtra(ExtraEntity extra) =>
@@ -286,11 +309,16 @@ class LoungeRepositoryImpl implements LoungeRepository {
       _extrasHelper.deleteExtra(extraId);
 
   @override
-  Future<Either<Failure, void>> toggleExtraStock(String extraId, bool isOutOfStock) =>
-      _extrasHelper.toggleExtraStock(extraId, isOutOfStock);
+  Future<Either<Failure, void>> toggleExtraStock(
+    String extraId,
+    bool isOutOfStock,
+  ) => _extrasHelper.toggleExtraStock(extraId, isOutOfStock);
 
   @override
-  Future<Either<Failure, void>> toggleLoungeOpenStatus(String loungeId, bool isOpen) async {
+  Future<Either<Failure, void>> toggleLoungeOpenStatus(
+    String loungeId,
+    bool isOpen,
+  ) async {
     try {
       await remoteDataSource.toggleLoungeOpenStatus(loungeId, isOpen);
       await _cacheHelper.invalidateLounge(loungeId);
@@ -310,7 +338,9 @@ class LoungeRepositoryImpl implements LoungeRepository {
           id: json['id']?.toString() ?? '',
           roomId: json['room_id']?.toString() ?? '',
           name: type?['label'] ?? type?['name_en'] ?? type?['name'] ?? '',
-          pricePerHour: (json['price_override'] ?? type?['default_price'] ?? 0.0).toDouble(),
+          pricePerHour:
+              (json['price_override'] ?? type?['default_price'] ?? 0.0)
+                  .toDouble(),
           type: type?['category'] ?? '',
         );
       }).toList();
@@ -323,13 +353,19 @@ class LoungeRepositoryImpl implements LoungeRepository {
   @override
   Future<Either<Failure, List<Room>>> getRooms(String loungeId) async {
     try {
-      final List<RoomModel> roomModels = await remoteDataSource.getRooms(loungeId);
-      final rooms = roomModels.map((m) => Room(
-        id: m.id,
-        loungeId: m.loungeId,
-        name: m.nameEn.isEmpty ? m.nameAr : m.nameEn,
-        type: m.spaceType ?? '',
-      )).toList();
+      final List<RoomModel> roomModels = await remoteDataSource.getRooms(
+        loungeId,
+      );
+      final rooms = roomModels
+          .map(
+            (m) => Room(
+              id: m.id,
+              loungeId: m.loungeId,
+              name: m.nameEn.isEmpty ? m.nameAr : m.nameEn,
+              type: m.spaceType ?? '',
+            ),
+          )
+          .toList();
       return Right(rooms);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

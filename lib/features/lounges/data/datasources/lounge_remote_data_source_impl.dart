@@ -164,8 +164,8 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
       _analyticsHelper.getDashboardOverview();
 
   @override
-  Future<List<Map<String, dynamic>>> getRevenueOverTime(int daysBack) =>
-      _analyticsHelper.getRevenueOverTime(daysBack);
+  Future<List<Map<String, dynamic>>> getRevenueOverTime(String period) =>
+      _analyticsHelper.getRevenueOverTime(period);
 
   @override
   Future<List<Map<String, dynamic>>> getTopLoungesByRevenue(int limitCount) =>

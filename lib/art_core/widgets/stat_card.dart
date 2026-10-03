@@ -6,7 +6,7 @@ import '../theme/app_colors.dart';
 class StatCard extends StatelessWidget {
   final String title;
   final String value;
-  final double trendValue;
+  final double? trendValue;
   final IconData icon;
   final Color iconColor;
   final String? subtitle;
@@ -15,7 +15,7 @@ class StatCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.value,
-    required this.trendValue,
+    this.trendValue,
     required this.icon,
     required this.iconColor,
     this.subtitle,
@@ -23,9 +23,9 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isPositive = trendValue >= 0;
+    final bool isPositive = (trendValue ?? 0) >= 0;
     final String trendText =
-        '${isPositive ? '+' : ''}${trendValue.toStringAsFixed(1)}%';
+        '${isPositive ? '+' : ''}${trendValue?.toStringAsFixed(1)}%';
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
@@ -45,11 +45,9 @@ class StatCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: AppColors.textSecondary,
-                    fontSize: 13.sp,
+                    fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -58,7 +56,7 @@ class StatCard extends StatelessWidget {
                   value,
                   style: TextStyle(
                     color: AppColors.textPrimary,
-                    fontSize: 22.sp,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -66,14 +64,9 @@ class StatCard extends StatelessWidget {
                 if (subtitle != null) ...[
                   Text(
                     subtitle!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 11.sp,
-                    ),
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 14),
                   ),
-                ] else ...[
+                ] else if (trendValue != null) ...[
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -91,7 +84,7 @@ class StatCard extends StatelessWidget {
                           color: isPositive
                               ? AppColors.success
                               : AppColors.danger,
-                          fontSize: 11.sp,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -100,7 +93,7 @@ class StatCard extends StatelessWidget {
                         AppStrings.vsLastMonth,
                         style: TextStyle(
                           color: AppColors.textMuted,
-                          fontSize: 10.sp,
+                          fontSize: 14,
                         ),
                       ),
                     ],

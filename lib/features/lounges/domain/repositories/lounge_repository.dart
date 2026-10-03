@@ -8,14 +8,22 @@ import '../entities/extra_entity.dart';
 
 abstract class LoungeRepository {
   Future<Either<Failure, List<Lounge>>> getLounges({bool forceRefresh = false});
-  Future<Either<Failure, List<Lounge>>> getOwnerBranches(String ownerId, {bool forceRefresh = false});
-  Future<Either<Failure, String>> addLoungeBranch(Map<String, dynamic> branchData);
+  Future<Either<Failure, List<Lounge>>> getOwnerBranches(
+    String ownerId, {
+    bool forceRefresh = false,
+  });
+  Future<Either<Failure, String>> addLoungeBranch(
+    Map<String, dynamic> branchData,
+  );
   Future<Either<Failure, Map<String, dynamic>>> getMultiBranchOverview({
     required String ownerId,
     required DateTime startDate,
     required DateTime endDate,
   });
-  Future<Either<Failure, Lounge?>> getLoungeById(String id, {bool forceRefresh = false});
+  Future<Either<Failure, Lounge?>> getLoungeById(
+    String id, {
+    bool forceRefresh = false,
+  });
   Future<Either<Failure, List<Room>>> getRooms(String loungeId);
   Future<Either<Failure, List<Activity>>> getActivities(String roomId);
   Future<Either<Failure, String>> createLounge(Lounge lounge);
@@ -44,7 +52,11 @@ abstract class LoungeRepository {
     String? vodafoneCashNumber,
     String? instapayAccount,
   });
-  Future<Either<Failure, void>> updateLoungeLocation(String loungeId, double lat, double lng);
+  Future<Either<Failure, void>> updateLoungeLocation(
+    String loungeId,
+    double lat,
+    double lng,
+  );
   Future<Either<Failure, void>> deleteLounge(String id);
   Future<Either<Failure, String>> createLoungeWithOwner({
     required String email,
@@ -55,16 +67,31 @@ abstract class LoungeRepository {
     String? address,
     String? phone,
   });
-  Future<Either<Failure, Map<String, dynamic>>> getDashboardStats(String? loungeId);
+  Future<Either<Failure, Map<String, dynamic>>> getDashboardStats(
+    String? loungeId,
+  );
   Future<Either<Failure, Map<String, dynamic>>> getDashboardOverview();
-  Future<Either<Failure, List<Map<String, dynamic>>>> getRevenueOverTime(int daysBack);
-  Future<Either<Failure, List<Map<String, dynamic>>>> getTopLoungesByRevenue(int limitCount);
-  
+  Future<Either<Failure, List<Map<String, dynamic>>>> getRevenueOverTime(
+    String period,
+  );
+  Future<Either<Failure, List<Map<String, dynamic>>>> getTopLoungesByRevenue(
+    int limitCount,
+  );
+
   // Extras
-  Future<Either<Failure, List<ExtraEntity>>> getExtras(String loungeId, {bool forceRefresh = false});
+  Future<Either<Failure, List<ExtraEntity>>> getExtras(
+    String loungeId, {
+    bool forceRefresh = false,
+  });
   Future<Either<Failure, void>> addExtra(ExtraEntity extra);
   Future<Either<Failure, void>> updateExtra(ExtraEntity extra);
   Future<Either<Failure, void>> deleteExtra(String extraId);
-  Future<Either<Failure, void>> toggleExtraStock(String extraId, bool isOutOfStock);
-  Future<Either<Failure, void>> toggleLoungeOpenStatus(String loungeId, bool isOpen);
+  Future<Either<Failure, void>> toggleExtraStock(
+    String extraId,
+    bool isOutOfStock,
+  );
+  Future<Either<Failure, void>> toggleLoungeOpenStatus(
+    String loungeId,
+    bool isOpen,
+  );
 }

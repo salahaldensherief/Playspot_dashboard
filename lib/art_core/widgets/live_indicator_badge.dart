@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 
 class LiveIndicatorBadge extends StatefulWidget {
-  final String label;
+  final String? label;
 
-  const LiveIndicatorBadge({
-    super.key,
-    this.label = 'مباشر',
-  });
+  const LiveIndicatorBadge({super.key, this.label});
 
   @override
   State<LiveIndicatorBadge> createState() => _LiveIndicatorBadgeState();
 }
 
-class _LiveIndicatorBadgeState extends State<LiveIndicatorBadge> with SingleTickerProviderStateMixin {
+class _LiveIndicatorBadgeState extends State<LiveIndicatorBadge>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
@@ -57,7 +56,7 @@ class _LiveIndicatorBadgeState extends State<LiveIndicatorBadge> with SingleTick
           ),
           SizedBox(width: 6.w),
           Text(
-            widget.label,
+            widget.label ?? 'live'.tr(),
             style: TextStyle(
               color: AppColors.success,
               fontSize: 12.sp,

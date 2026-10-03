@@ -10,18 +10,21 @@ class DashboardKpiLayout extends StatelessWidget {
       final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
       final columns = ((constraints.maxWidth + 12) / (176 * scale + 12))
           .floor()
-          .clamp(1, 6);
-      return GridView(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        addSemanticIndexes: false,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: columns,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          mainAxisExtent: 128 * scale,
-        ),
-        children: children,
+          .clamp(1, children.isEmpty ? 1 : children.length.clamp(1, 6));
+      final width = (constraints.maxWidth - 12 * (columns - 1)) / columns;
+      return Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: [
+          for (final child in children)
+            SizedBox(
+              width: width,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: 128 * scale),
+                child: child,
+              ),
+            ),
+        ],
       );
     },
   );

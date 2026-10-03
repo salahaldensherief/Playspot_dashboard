@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -19,7 +20,8 @@ class RevenueChart extends StatelessWidget {
       buildWhen: (prev, curr) =>
           prev.status != curr.status || prev.revenueChart != curr.revenueChart,
       builder: (context, state) {
-        if (state.status == FeatureStatus.loading && state.revenueChart.isEmpty) {
+        if (state.status == FeatureStatus.loading &&
+            state.revenueChart.isEmpty) {
           return Padding(
             padding: EdgeInsets.symmetric(vertical: 20.h),
             child: ShimmerLoading.rounded(
@@ -36,7 +38,11 @@ class RevenueChart extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.show_chart_rounded, size: 28.r, color: AppColors.textMuted),
+                  Icon(
+                    Icons.show_chart_rounded,
+                    size: 28.r,
+                    color: AppColors.textMuted,
+                  ),
                   SizedBox(height: 6.h),
                   AppText.body(
                     AppStrings.noResultsMatching.replaceFirst("\"{}\"", ""),
@@ -62,7 +68,8 @@ class RevenueChart extends StatelessWidget {
         double maxY = 1000;
 
         for (int i = 0; i < state.revenueChart.length; i++) {
-          final val = (state.revenueChart[i]['revenue'] as num?)?.toDouble() ?? 0.0;
+          final val =
+              (state.revenueChart[i]['revenue'] as num?)?.toDouble() ?? 0.0;
           spots.add(FlSpot(i.toDouble(), val));
           if (val > maxY) maxY = val;
         }
@@ -81,20 +88,39 @@ class RevenueChart extends StatelessWidget {
               ),
               titlesData: FlTitlesData(
                 show: true,
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
+                    interval: state.revenueChart.length > 5
+                        ? (state.revenueChart.length / 5).ceilToDouble()
+                        : 1,
                     getTitlesWidget: (value, meta) {
+                      if (value != value.roundToDouble())
+                        return const SizedBox.shrink();
                       final index = value.toInt();
-                      if (index >= 0 && index < state.revenueChart.length && index % 5 == 0) {
-                        final day = state.revenueChart[index]['day']?.toString() ?? '';
+                      if (index >= 0 &&
+                          index < state.revenueChart.length &&
+                          true) {
+                        final day =
+                            state.revenueChart[index]['day']?.toString() ?? '';
                         return Padding(
                           padding: EdgeInsets.only(top: 10.h),
                           child: Text(
-                            day.length > 5 ? day.substring(5) : day,
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp),
+                            DateTime.tryParse(day) == null
+                                ? day
+                                : DateFormat.MMMd(
+                                    context.locale.languageCode,
+                                  ).format(DateTime.parse(day)),
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 10.sp,
+                            ),
                           ),
                         );
                       }
@@ -109,7 +135,10 @@ class RevenueChart extends StatelessWidget {
                     getTitlesWidget: (value, meta) {
                       return Text(
                         '${value.toInt()}',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 9.sp),
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 9.sp,
+                        ),
                       );
                     },
                     reservedSize: 40.w,
@@ -125,7 +154,9 @@ class RevenueChart extends StatelessWidget {
                 LineChartBarData(
                   spots: spots,
                   isCurved: true,
-                  gradient: const LinearGradient(colors: [AppColors.neonBlue, AppColors.neonCyan]),
+                  gradient: const LinearGradient(
+                    colors: [AppColors.neonBlue, AppColors.neonCyan],
+                  ),
                   barWidth: 3.w,
                   isStrokeCapRound: true,
                   dotData: const FlDotData(show: false),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -12,9 +13,11 @@ import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_state.dart';
 import 'activity_item.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 
 class RecentActivityCard extends StatelessWidget {
-  const RecentActivityCard({super.key});
+  const RecentActivityCard({super.key, this.isSuperAdmin = false});
+  final bool isSuperAdmin;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +27,9 @@ class RecentActivityCard extends StatelessWidget {
         return BlocBuilder<BookingCubit, BookingState>(
           buildWhen: (prev, curr) => prev.bookings != curr.bookings,
           builder: (context, bookingState) {
-            final requests = requestsState.requests;
+            final requests = isSuperAdmin
+                ? requestsState.requests.take(0)
+                : requestsState.requests;
             final bookings = bookingState.bookings;
 
             final activityWidgets = <Widget>[];
@@ -33,11 +38,23 @@ class RecentActivityCard extends StatelessWidget {
             for (final req in requests.take(3)) {
               activityWidgets.add(
                 ActivityItem(
-                  user: (req.userName != null && req.userName!.isNotEmpty) ? req.userName! : AppStrings.userLabel,
-                  action: req.titleEn.isNotEmpty ? req.titleEn : req.type.name,
-                  target: (req.roomName != null && req.roomName!.isNotEmpty) ? req.roomName! : AppStrings.rooms,
-                  time: 'Active',
-                  icon: req.isCanteenOrder ? Icons.fastfood_outlined : Icons.notifications_active_outlined,
+                  user: (req.userName != null && req.userName!.isNotEmpty)
+                      ? req.userName!
+                      : AppStrings.userLabel,
+                  action:
+                      context.locale.languageCode == 'ar' &&
+                          req.titleAr.isNotEmpty
+                      ? req.titleAr
+                      : req.titleEn.isNotEmpty
+                      ? req.titleEn
+                      : AppStrings.userLabel,
+                  target: (req.roomName != null && req.roomName!.isNotEmpty)
+                      ? req.roomName!
+                      : AppStrings.rooms,
+                  time: AppStrings.active,
+                  icon: req.isCanteenOrder
+                      ? Icons.fastfood_outlined
+                      : Icons.notifications_active_outlined,
                   iconColor: AppColors.warning,
                 ),
               );
@@ -47,10 +64,14 @@ class RecentActivityCard extends StatelessWidget {
             for (final b in bookings.take(3)) {
               activityWidgets.add(
                 ActivityItem(
-                  user: (b.userName != null && b.userName!.isNotEmpty) ? b.userName! : AppStrings.userLabel,
+                  user: (b.userName != null && b.userName!.isNotEmpty)
+                      ? b.userName!
+                      : AppStrings.userLabel,
                   action: AppStrings.bookingDetails,
                   target: b.roomName.isNotEmpty ? b.roomName : AppStrings.rooms,
-                  time: b.status.name,
+                  time: b.status == BookingStatus.rejected
+                      ? AppStrings.requestRejected
+                      : b.status.toDbString().tr(),
                   icon: Icons.event_available_outlined,
                   iconColor: AppColors.neonBlue,
                 ),
@@ -77,11 +98,13 @@ class RecentActivityCard extends StatelessWidget {
                           maxLines: 1,
                         ),
                       ),
-                      AppButton(
-                        text: AppStrings.viewAll,
-                        variant: AppButtonVariant.text,
-                        onPressed: () => context.push(RouterKeys.loungeAdminLiveOps),
-                      ),
+                      if (!isSuperAdmin)
+                        AppButton(
+                          text: AppStrings.viewAll,
+                          variant: AppButtonVariant.text,
+                          onPressed: () =>
+                              context.push(RouterKeys.loungeAdminLiveOps),
+                        ),
                     ],
                   ),
                   SizedBox(height: 16.h),
@@ -100,7 +123,10 @@ class RecentActivityCard extends StatelessWidget {
                           ),
                           SizedBox(height: 12.h),
                           AppText.body(
-                            AppStrings.noResultsMatching.replaceFirst("\"{}\"", ""),
+                            AppStrings.noResultsMatching.replaceFirst(
+                              "\"{}\"",
+                              "",
+                            ),
                             color: AppColors.textSecondary,
                             fontSize: 13.sp,
                           ),

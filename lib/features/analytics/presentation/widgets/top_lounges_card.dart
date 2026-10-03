@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -76,7 +77,7 @@ class TopLoungesCard extends StatelessWidget {
               AppText.heading(AppStrings.topPerformingLounges, fontSize: 18.sp),
               SizedBox(height: 4.h),
               AppText.body(
-                AppStrings.topPerformingLoungesSubtitle,
+                'platform_top_lounges_description'.tr(),
                 fontSize: 13.sp,
               ),
               SizedBox(height: 24.h),
@@ -95,8 +96,9 @@ class TopLoungesCard extends StatelessWidget {
                         lounge['lounge_name']?.toString() ??
                         AppStrings.anonymous,
                     bookings: (lounge['bookings_count'] as num?)?.toInt() ?? 0,
+                    countLabel: 'completed_payment_count'.tr(),
                     revenue:
-                        '${(lounge['total_revenue'] as num?)?.toDouble().toStringAsFixed(0) ?? '0'} ${AppStrings.priceEgp}',
+                        '${(lounge['total_revenue'] as num?)?.toDouble().toStringAsFixed(0) ?? '0'} ${AppStrings.egp}',
                     trend: '',
                   );
                 },

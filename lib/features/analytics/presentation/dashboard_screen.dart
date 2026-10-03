@@ -79,8 +79,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: isSuperAdmin
             ? SuperAdminDashboardView(
                 timeRange: _selectedTimeRange,
-                onTimeRangeChanged: (range) =>
-                    setState(() => _selectedTimeRange = range),
+                onTimeRangeChanged: (range) {
+                  setState(() => _selectedTimeRange = range);
+                  context.read<DashboardCubit>().loadDashboardData(
+                    revenuePeriod: range.name,
+                  );
+                },
               )
             : LoungeOwnerDashboardView(
                 timeRange: _selectedTimeRange,

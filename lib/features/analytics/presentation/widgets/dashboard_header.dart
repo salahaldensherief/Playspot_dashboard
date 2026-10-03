@@ -33,26 +33,25 @@ class DashboardHeader extends StatelessWidget {
                 runSpacing: 8.h,
                 children: [
                   Text(
-                    isSuperAdmin ? AppStrings.globalOverview : AppStrings.loungePerformance,
+                    isSuperAdmin
+                        ? AppStrings.globalOverview
+                        : AppStrings.loungePerformance,
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 32.sp,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'Orbitron',
+                      fontFamily: 'Tajawal',
                     ),
                   ),
-                  const LiveIndicatorBadge(),
+                  if (!isSuperAdmin) const LiveIndicatorBadge(),
                 ],
               ),
               SizedBox(height: 8.h),
               Text(
-                isSuperAdmin 
-                  ? AppStrings.globalPerformanceDesc
-                  : AppStrings.loungeOperationsDesc,
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14.sp,
-                ),
+                isSuperAdmin
+                    ? AppStrings.globalPerformanceDesc
+                    : AppStrings.loungeOperationsDesc,
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
               ),
             ],
           ),
@@ -64,7 +63,9 @@ class DashboardHeader extends StatelessWidget {
             final bool isLoading = status == FeatureStatus.loading;
 
             return MouseRegion(
-              cursor: isLoading ? SystemMouseCursors.basic : SystemMouseCursors.click,
+              cursor: isLoading
+                  ? SystemMouseCursors.basic
+                  : SystemMouseCursors.click,
               child: InkWell(
                 onTap: isLoading
                     ? null

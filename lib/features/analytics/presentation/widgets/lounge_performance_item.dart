@@ -9,6 +9,7 @@ class LoungePerformanceItem extends StatelessWidget {
   final int bookings;
   final String revenue;
   final String trend;
+  final String? countLabel;
 
   const LoungePerformanceItem({
     super.key,
@@ -16,6 +17,7 @@ class LoungePerformanceItem extends StatelessWidget {
     required this.bookings,
     required this.revenue,
     required this.trend,
+    this.countLabel,
   });
 
   @override
@@ -32,19 +34,17 @@ class LoungePerformanceItem extends StatelessWidget {
           child: Icon(Icons.business, color: AppColors.neonBlue, size: 20.r),
         ),
         SizedBox(width: 16.w),
-        Expanded(
-          flex: 3,
-          child: AppText.subHeading(
-            name,
-            fontSize: 14.sp,
-          ),
-        ),
+        Expanded(flex: 3, child: AppText.subHeading(name, fontSize: 14.sp)),
         Expanded(
           flex: 2,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText.body(AppStrings.bookingsLabel, fontSize: 11.sp, color: AppColors.textMuted),
+              AppText.body(
+                countLabel ?? AppStrings.bookingsLabel,
+                fontSize: 11.sp,
+                color: AppColors.textMuted,
+              ),
               AppText.body('$bookings', fontSize: 13.sp),
             ],
           ),
@@ -54,17 +54,17 @@ class LoungePerformanceItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText.body(AppStrings.revenue, fontSize: 11.sp, color: AppColors.textMuted),
+              AppText.body(
+                AppStrings.revenue,
+                fontSize: 11.sp,
+                color: AppColors.textMuted,
+              ),
               AppText.body(revenue, fontSize: 13.sp),
             ],
           ),
         ),
         if (trend.isNotEmpty)
-          AppText.subHeading(
-            trend,
-            color: AppColors.success,
-            fontSize: 13.sp,
-          ),
+          AppText.subHeading(trend, color: AppColors.success, fontSize: 13.sp),
       ],
     );
   }

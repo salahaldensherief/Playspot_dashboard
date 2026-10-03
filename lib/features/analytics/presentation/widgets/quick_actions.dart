@@ -13,10 +13,7 @@ import 'action_button.dart';
 class QuickActionsCard extends StatelessWidget {
   final bool isSuperAdmin;
 
-  const QuickActionsCard({
-    super.key,
-    this.isSuperAdmin = false,
-  });
+  const QuickActionsCard({super.key, this.isSuperAdmin = false});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +31,7 @@ class QuickActionsCard extends StatelessWidget {
             AppStrings.quickActions,
             style: TextStyle(
               color: AppColors.textPrimary,
-              fontSize: 18.sp,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -42,7 +39,9 @@ class QuickActionsCard extends StatelessWidget {
           Wrap(
             spacing: 12.w,
             runSpacing: 12.h,
-            children: isSuperAdmin ? _buildSuperAdminActions(context) : _buildLoungeOwnerActions(context),
+            children: isSuperAdmin
+                ? _buildSuperAdminActions(context)
+                : _buildLoungeOwnerActions(context),
           ),
         ],
       ),
