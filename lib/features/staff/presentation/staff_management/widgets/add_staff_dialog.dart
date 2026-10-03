@@ -102,6 +102,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                     fontSize: 20.sp,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Orbitron',
+                    fontFamilyFallback: const ['Tajawal'],
                   ),
                 ),
                 SizedBox(height: 24.h),

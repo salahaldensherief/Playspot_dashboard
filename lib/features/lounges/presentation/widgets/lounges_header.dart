@@ -1,7 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/owner_provisioning_message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
@@ -14,34 +15,17 @@ class LoungesHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              AppStrings.lounges,
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 32.sp,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Orbitron',
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              AppStrings.loungesHeaderSubtitle,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
-            ),
-          ],
-        ),
-        AppButton(
-          text: AppStrings.createLoungeAndOwner,
-          icon: Icons.add,
-          onPressed: () => _showAddLoungeDialog(context),
-        ),
-      ],
+    // Static AppStrings getters need an inherited locale dependency so a
+    // language change refreshes the labels even without a Cubit emission.
+    context.locale;
+    return AppAdaptivePageHeader(
+      title: AppStrings.lounges,
+      subtitle: AppStrings.loungesHeaderSubtitle,
+      primaryAction: AppButton(
+        text: AppStrings.createLoungeAndOwner,
+        icon: Icons.add,
+        onPressed: () => _showAddLoungeDialog(context),
+      ),
     );
   }
 

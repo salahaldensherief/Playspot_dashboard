@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -13,6 +14,7 @@ class TopBarLoungeStatusToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // Localized labels also change without a Cubit emission.
     return BlocBuilder<LoginCubit, LoginState>(
       buildWhen: (prev, curr) =>
           prev.user != curr.user || prev.userLounge != curr.userLounge,
@@ -32,13 +34,15 @@ class TopBarLoungeStatusToggle extends StatelessWidget {
           builder: (context, loungeState) {
             Lounge? currentLounge;
             if (loungeState.lounges.isNotEmpty) {
-              final found =
-                  loungeState.lounges.where((l) => l.id == loungeId).toList();
+              final found = loungeState.lounges
+                  .where((l) => l.id == loungeId)
+                  .toList();
               if (found.isNotEmpty) currentLounge = found.first;
             }
 
             final isOpen =
-                currentLounge?.isOpen ?? (loginState.userLounge?.isOpen ?? true);
+                currentLounge?.isOpen ??
+                (loginState.userLounge?.isOpen ?? true);
             final bool isMobile = MediaQuery.sizeOf(context).width < 600;
             final color = isOpen ? AppColors.success : AppColors.danger;
 
@@ -50,9 +54,7 @@ class TopBarLoungeStatusToggle extends StatelessWidget {
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: color.withValues(alpha: 0.3),
-                ),
+                border: Border.all(color: color.withValues(alpha: 0.3)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -68,7 +70,9 @@ class TopBarLoungeStatusToggle extends StatelessWidget {
                   if (!isMobile) const SizedBox(width: 8),
                   if (!isMobile)
                     Text(
-                      isOpen ? AppStrings.loungeIsOpen : AppStrings.loungeIsClosed,
+                      isOpen
+                          ? AppStrings.loungeIsOpen
+                          : AppStrings.loungeIsClosed,
                       style: TextStyle(
                         color: color,
                         fontSize: 12,
@@ -80,14 +84,23 @@ class TopBarLoungeStatusToggle extends StatelessWidget {
                     scale: 0.75,
                     child: Switch(
                       value: isOpen,
-                      activeTrackColor: AppColors.success.withValues(alpha: 0.5),
+                      activeTrackColor: AppColors.success.withValues(
+                        alpha: 0.5,
+                      ),
                       activeThumbColor: AppColors.success,
                       inactiveThumbColor: AppColors.danger,
-                      inactiveTrackColor: AppColors.danger.withValues(alpha: 0.3),
+                      inactiveTrackColor: AppColors.danger.withValues(
+                        alpha: 0.3,
+                      ),
                       onChanged: (val) async {
-                        await context.read<LoungeCubit>().toggleLoungeStatus(loungeId, val);
+                        await context.read<LoungeCubit>().toggleLoungeStatus(
+                          loungeId,
+                          val,
+                        );
                         if (context.mounted) {
-                          context.read<LoginCubit>().refreshUserLounge(loungeId);
+                          context.read<LoginCubit>().refreshUserLounge(
+                            loungeId,
+                          );
                         }
                       },
                     ),

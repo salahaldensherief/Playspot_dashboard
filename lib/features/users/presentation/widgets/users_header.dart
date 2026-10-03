@@ -27,6 +27,7 @@ class UsersHeader extends StatelessWidget {
                 fontSize: 32.sp,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Orbitron',
+                fontFamilyFallback: const ['Tajawal'],
               ),
             ),
             const SizedBox(height: 8),

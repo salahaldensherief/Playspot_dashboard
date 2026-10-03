@@ -72,17 +72,22 @@ class _RoomDialogState extends State<RoomDialog> {
     _nameEnController = TextEditingController(text: r?.nameEn);
     _descriptionArController = TextEditingController(text: r?.descriptionAr);
     _descriptionEnController = TextEditingController(text: r?.descriptionEn);
-    _hourlyRateSingleController =
-        TextEditingController(text: r?.hourlyRateSingle.toString() ?? '0.0');
-    _hourlyRateMultiController =
-        TextEditingController(text: r?.hourlyRateMulti.toString() ?? '0.0');
+    _hourlyRateSingleController = TextEditingController(
+      text: r?.hourlyRateSingle.toString() ?? '0.0',
+    );
+    _hourlyRateMultiController = TextEditingController(
+      text: r?.hourlyRateMulti.toString() ?? '0.0',
+    );
     _maxCapacityController = TextEditingController(
       text: r?.maxCapacity.toString() ?? (r?.isOpenArea == true ? '2' : '4'),
     );
-    _controllersController = TextEditingController(text: r?.controllersCount.toString() ?? '2');
+    _controllersController = TextEditingController(
+      text: r?.controllersCount.toString() ?? '2',
+    );
     _screenSizeController = TextEditingController(text: r?.screenSize ?? '43"');
-    _extraPriceController =
-        TextEditingController(text: r?.extraControllerPrice.toString() ?? '0.0');
+    _extraPriceController = TextEditingController(
+      text: r?.extraControllerPrice.toString() ?? '0.0',
+    );
     _openTimeEnabled = r?.openTimeEnabled ?? false;
     _openTimePricingMode = r?.openTimePricingMode ?? 'same_hourly';
     _openTimeCustomRateController = TextEditingController(
@@ -148,7 +153,10 @@ class _RoomDialogState extends State<RoomDialog> {
     if (form != null && form.validate()) {
       if (_roomImages.isEmpty && (widget.room?.images.isEmpty ?? true)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.minImagesError), backgroundColor: AppColors.danger),
+          SnackBar(
+            content: Text(AppStrings.minImagesError),
+            backgroundColor: AppColors.danger,
+          ),
         );
         return;
       }
@@ -169,8 +177,10 @@ class _RoomDialogState extends State<RoomDialog> {
         if (mounted) {
           final spaceTypeId = _selectedSpaceTypeId ?? 'open_area';
           final isOpenArea = spaceTypeId == 'open_area';
-          final singleRate = double.tryParse(_hourlyRateSingleController.text) ?? 0.0;
-          final multiRate = double.tryParse(_hourlyRateMultiController.text) ?? 0.0;
+          final singleRate =
+              double.tryParse(_hourlyRateSingleController.text) ?? 0.0;
+          final multiRate =
+              double.tryParse(_hourlyRateMultiController.text) ?? 0.0;
           final markupPercent =
               double.tryParse(_openTimeMarkupPercentController.text) ?? 0;
 
@@ -187,9 +197,14 @@ class _RoomDialogState extends State<RoomDialog> {
             spaceTypeId: spaceTypeId,
             hourlyRateSingle: singleRate,
             hourlyRateMulti: multiRate,
-            extraControllerPrice: double.tryParse(_extraPriceController.text) ?? 0,
-            maxCapacity: int.tryParse(_maxCapacityController.text) ?? (isOpenArea ? 2 : 4),
-            controllersCount: isOpenArea ? (int.tryParse(_controllersController.text) ?? 2) : 2,
+            extraControllerPrice:
+                double.tryParse(_extraPriceController.text) ?? 0,
+            maxCapacity:
+                int.tryParse(_maxCapacityController.text) ??
+                (isOpenArea ? 2 : 4),
+            controllersCount: isOpenArea
+                ? (int.tryParse(_controllersController.text) ?? 2)
+                : 2,
             screenSize: isOpenArea ? _screenSizeController.text : '',
             activityIds: _selectedActivityIds,
             featuresAr: _featuresAr,
@@ -199,15 +214,17 @@ class _RoomDialogState extends State<RoomDialog> {
             status: _selectedStatus,
             openTimeEnabled: _openTimeEnabled,
             openTimePricingMode: _openTimePricingMode,
-            openTimeCustomHourlyRate:
-                double.tryParse(_openTimeCustomRateController.text),
+            openTimeCustomHourlyRate: double.tryParse(
+              _openTimeCustomRateController.text,
+            ),
             openTimePriceMultiplier: 1 + (markupPercent / 100),
             openTimeMinimumMinutes:
                 int.tryParse(_openTimeMinimumMinutesController.text) ?? 30,
             openTimeRoundingMinutes:
                 int.tryParse(_openTimeRoundingMinutesController.text) ?? 15,
-            openTimeMaxMinutes:
-                int.tryParse(_openTimeMaxMinutesController.text),
+            openTimeMaxMinutes: int.tryParse(
+              _openTimeMaxMinutesController.text,
+            ),
             openTimeBufferBeforeBookingMinutes:
                 int.tryParse(_openTimeBufferMinutesController.text) ?? 15,
           );
@@ -221,7 +238,10 @@ class _RoomDialogState extends State<RoomDialog> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${AppStrings.error}: $e'), backgroundColor: AppColors.danger),
+            SnackBar(
+              content: Text('${AppStrings.error}: $e'),
+              backgroundColor: AppColors.danger,
+            ),
           );
         }
       } finally {
@@ -249,7 +269,12 @@ class _RoomDialogState extends State<RoomDialog> {
                 SizedBox(height: 32.h),
                 CustomDropdown<String>(
                   label: AppStrings.spaceType,
-                  value: ['open_area', 'standard_room', 'vip_room'].contains(_selectedSpaceTypeId)
+                  value:
+                      [
+                        'open_area',
+                        'standard_room',
+                        'vip_room',
+                      ].contains(_selectedSpaceTypeId)
                       ? (_selectedSpaceTypeId ?? 'open_area')
                       : 'open_area',
                   items: const ['open_area', 'standard_room', 'vip_room'],
@@ -339,10 +364,7 @@ class _RoomDialogState extends State<RoomDialog> {
                 ),
                 if (widget.room != null) ...[
                   SizedBox(height: 24.h),
-                  AuditTimeline(
-                    entityType: 'room',
-                    entityId: widget.room!.id,
-                  ),
+                  AuditTimeline(entityType: 'room', entityId: widget.room!.id),
                 ],
                 SizedBox(height: 32.h),
                 _buildActions(),
@@ -365,6 +387,7 @@ class _RoomDialogState extends State<RoomDialog> {
             fontSize: 24.sp,
             fontWeight: FontWeight.bold,
             fontFamily: 'Orbitron',
+            fontFamilyFallback: const ['Tajawal'],
           ),
         ),
         IconButton(
@@ -508,7 +531,9 @@ class _RoomDialogState extends State<RoomDialog> {
         ),
         SizedBox(width: 16.w),
         AppButton(
-          text: widget.room == null ? AppStrings.createStation : AppStrings.updateStation,
+          text: widget.room == null
+              ? AppStrings.createStation
+              : AppStrings.updateStation,
           isLoading: _isUploading,
           onPressed: _submit,
         ),

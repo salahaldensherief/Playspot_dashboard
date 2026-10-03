@@ -29,7 +29,11 @@ class AppAdaptivePageHeader extends StatelessWidget {
           AppText.heading(title, fontSize: 20.sp),
           if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
             SizedBox(height: 4.h),
-            AppText.body(subtitle!, fontSize: 13.sp, color: AppColors.textSecondary),
+            AppText.body(
+              subtitle!,
+              fontSize: 13.sp,
+              color: AppColors.textSecondary,
+            ),
           ],
           if (primaryAction != null || secondaryAction != null) ...[
             SizedBox(height: 12.h),
@@ -62,6 +66,7 @@ class AppAdaptivePageHeader extends StatelessWidget {
                   fontSize: 26.sp,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Orbitron',
+                  fontFamilyFallback: const ['Tajawal'],
                 ),
               ),
               if (subtitle != null && subtitle!.trim().isNotEmpty) ...[

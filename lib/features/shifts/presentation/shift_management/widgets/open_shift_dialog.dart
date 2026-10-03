@@ -64,6 +64,7 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
                   fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Orbitron',
+                  fontFamilyFallback: const ['Tajawal'],
                 ),
               ),
             ),

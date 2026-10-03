@@ -6,18 +6,20 @@ class StatusBadge extends StatelessWidget {
   final String text;
   final Color color;
 
-  const StatusBadge({
-    super.key,
-    required this.text,
-    required this.color,
-  });
+  const StatusBadge({super.key, required this.text, required this.color});
 
-  factory StatusBadge.success(String text) => StatusBadge(text: text, color: AppColors.success);
-  factory StatusBadge.warning(String text) => StatusBadge(text: text, color: AppColors.warning);
-  factory StatusBadge.danger(String text) => StatusBadge(text: text, color: AppColors.danger);
-  factory StatusBadge.info(String text) => StatusBadge(text: text, color: AppColors.neonBlue);
-  factory StatusBadge.neutral(String text) => StatusBadge(text: text, color: AppColors.textSecondary);
-  factory StatusBadge.secondary(String text) => StatusBadge(text: text, color: AppColors.neonPurple);
+  factory StatusBadge.success(String text) =>
+      StatusBadge(text: text, color: AppColors.success);
+  factory StatusBadge.warning(String text) =>
+      StatusBadge(text: text, color: AppColors.warning);
+  factory StatusBadge.danger(String text) =>
+      StatusBadge(text: text, color: AppColors.danger);
+  factory StatusBadge.info(String text) =>
+      StatusBadge(text: text, color: AppColors.neonBlue);
+  factory StatusBadge.neutral(String text) =>
+      StatusBadge(text: text, color: AppColors.textSecondary);
+  factory StatusBadge.secondary(String text) =>
+      StatusBadge(text: text, color: AppColors.neonPurple);
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +36,7 @@ class StatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: color,
-          fontSize: 10.sp,
+          fontSize: 14,
           fontWeight: FontWeight.bold,
           letterSpacing: 0.5,
         ),

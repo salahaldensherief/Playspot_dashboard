@@ -26,14 +26,16 @@ class SidebarItem extends StatelessWidget {
           borderRadius: BorderRadius.circular(12.r),
           border: isActive
               ? Border.all(
-                  color: AppColors.sidebarActiveBorder.withValues(alpha: 0.5))
+                  color: AppColors.sidebarActiveBorder.withValues(alpha: 0.5),
+                )
               : null,
         ),
         child: Material(
           color: Colors.transparent,
           clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r)),
+            borderRadius: BorderRadius.circular(12.r),
+          ),
           child: ListTile(
             leading: Icon(
               icon,
@@ -43,9 +45,10 @@ class SidebarItem extends StatelessWidget {
             title: Text(
               label,
               style: TextStyle(
-                color:
-                    isActive ? AppColors.textPrimary : AppColors.textSecondary,
-                fontSize: 14.sp,
+                color: isActive
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
+                fontSize: 14,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
               ),
             ),

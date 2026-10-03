@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -18,6 +19,7 @@ class LoungesDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // Rebuild localized labels when the locale changes.
     return BlocConsumer<LoungeCubit, LoungeState>(
       listenWhen: (previous, current) =>
           previous.status != current.status &&
@@ -104,7 +106,7 @@ class LoungesDataTable extends StatelessWidget {
                             '${lounge.availableRooms ?? '—'} ${AppStrings.rooms}',
                             style: TextStyle(
                               color: AppColors.textSecondary,
-                              fontSize: 11.sp,
+                              fontSize: 14,
                             ),
                           ),
                         ],
@@ -125,7 +127,7 @@ class LoungesDataTable extends StatelessWidget {
                             lounge.ownerEmail ?? '-',
                             style: TextStyle(
                               color: AppColors.textSecondary,
-                              fontSize: 11.sp,
+                              fontSize: 14,
                             ),
                           ),
                         ],
@@ -198,26 +200,29 @@ class LoungesDataTable extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    lounge.name,
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lounge.name,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  Text(
-                    '${lounge.availableRooms ?? '—'} ${AppStrings.rooms}',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12.sp,
+                    Text(
+                      '${lounge.availableRooms ?? '—'} ${AppStrings.rooms}',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 12),
               lounge.status == 'pending'
                   ? StatusBadge.warning(AppStrings.pending)
                   : lounge.isActive && lounge.status == 'active'
@@ -280,19 +285,24 @@ class LoungesDataTable extends StatelessWidget {
       children: [
         Icon(icon, size: 16.r, color: AppColors.textSecondary),
         SizedBox(width: 8.w),
-        Text(
-          '$label:',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
-        ),
-        SizedBox(width: 4.w),
         Expanded(
-          child: Text(
-            value,
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w500,
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '$label: ',
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+                TextSpan(
+                  text: value,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
+            style: const TextStyle(fontSize: 14, height: 1.4),
           ),
         ),
       ],

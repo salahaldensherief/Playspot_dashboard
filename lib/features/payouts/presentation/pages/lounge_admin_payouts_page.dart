@@ -52,7 +52,10 @@ class _LoungeAdminPayoutsPageState extends State<LoungeAdminPayoutsPage> {
       case 'needs_review':
         return StatusBadge(text: 'NEEDS REVIEW', color: Colors.redAccent);
       default:
-        return StatusBadge(text: status.toUpperCase(), color: AppColors.textPrimary);
+        return StatusBadge(
+          text: status.toUpperCase(),
+          color: AppColors.textPrimary,
+        );
     }
   }
 
@@ -60,16 +63,21 @@ class _LoungeAdminPayoutsPageState extends State<LoungeAdminPayoutsPage> {
   Widget build(BuildContext context) {
     return BlocConsumer<PayoutCubit, PayoutState>(
       listener: (context, state) {
-        if (state.status == PayoutCubitStatus.failure && state.errorMessage != null) {
+        if (state.status == PayoutCubitStatus.failure &&
+            state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage!), backgroundColor: AppColors.danger),
+            SnackBar(
+              content: Text(state.errorMessage!),
+              backgroundColor: AppColors.danger,
+            ),
           );
         }
       },
       builder: (context, state) {
         final payouts = state.loungePayouts;
         final hasNeedsReview = payouts.any((p) => p.status == 'needs_review');
-        final isLoading = state.status == PayoutCubitStatus.loading && payouts.isEmpty;
+        final isLoading =
+            state.status == PayoutCubitStatus.loading && payouts.isEmpty;
         final loungeId = context.read<LoginCubit>().state.user?.loungeId;
 
         return Padding(
@@ -84,6 +92,7 @@ class _LoungeAdminPayoutsPageState extends State<LoungeAdminPayoutsPage> {
                   fontSize: 28.sp,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Orbitron',
+                  fontFamilyFallback: const ['Tajawal'],
                 ),
               ),
               if (hasNeedsReview) ...[
@@ -102,7 +111,10 @@ class _LoungeAdminPayoutsPageState extends State<LoungeAdminPayoutsPage> {
                       Expanded(
                         child: Text(
                           AppStrings.payoutReconciliationWarning,
-                          style: const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            color: Colors.orangeAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
@@ -113,101 +125,161 @@ class _LoungeAdminPayoutsPageState extends State<LoungeAdminPayoutsPage> {
               Expanded(
                 child: isLoading
                     ? const TableShimmer(columns: 5)
-                    : state.status == PayoutCubitStatus.failure && payouts.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.error_outline_rounded, size: 48.r, color: AppColors.danger),
-                                SizedBox(height: 12.h),
-                                Text(
-                                  state.errorMessage ?? AppStrings.actionFailed,
-                                  style: const TextStyle(color: AppColors.textSecondary),
-                                  textAlign: TextAlign.center,
-                                ),
-                                SizedBox(height: 16.h),
-                                AppButton(
-                                  text: AppStrings.retry,
-                                  icon: Icons.refresh_rounded,
-                                  onPressed: _fetchPayouts,
-                                ),
-                              ],
+                    : state.status == PayoutCubitStatus.failure &&
+                          payouts.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline_rounded,
+                              size: 48.r,
+                              color: AppColors.danger,
                             ),
-                          )
-                        : payouts.isEmpty
-                            ? Center(
-                                child: Text(
-                                  AppStrings.noPayoutHistoryFound,
-                                  style: const TextStyle(color: AppColors.textSecondary),
-                                ),
-                              )
-                            : SingleChildScrollView(
-                                child: Column(
-                                  children: [
-                                    SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: DataTableWidget(
-                                        columns: [
-                                          AppStrings.period,
-                                          AppStrings.totalAmount,
-                                          AppStrings.paymentsCount,
-                                          AppStrings.status,
-                                          AppStrings.transferMethod,
-                                          AppStrings.transferReference,
-                                          AppStrings.date,
-                                          AppStrings.paidAt,
-                                          AppStrings.notes,
-                                        ],
-                                        rows: payouts
-                                            .map((p) => DataRow(
-                                                  cells: [
-                                                    DataCell(Text('${p.periodStart} ${AppStrings.to} ${p.periodEnd}',
-                                                        style: const TextStyle(color: AppColors.textSecondary))),
-                                                    DataCell(
-                                                      Text(
-                                                        '\$${p.amount.toStringAsFixed(2)}',
-                                                        style: const TextStyle(
-                                                          color: AppColors.neonGreen,
-                                                          fontWeight: FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    DataCell(Text((p.paymentCount ?? '-').toString(),
-                                                        style: const TextStyle(color: AppColors.textSecondary))),
-                                                    DataCell(_buildStatusBadge(p.status)),
-                                                    DataCell(Text(p.transferMethod ?? '-',
-                                                        style: const TextStyle(color: AppColors.textSecondary))),
-                                                    DataCell(Text(p.transferReference ?? '-',
-                                                        style: const TextStyle(color: AppColors.textSecondary))),
-                                                    DataCell(Text(
-                                                        DateFormat('yyyy-MM-dd').format(p.createdAt),
-                                                        style: const TextStyle(color: AppColors.textSecondary))),
-                                                    DataCell(Text(
-                                                        p.paidAt != null
-                                                            ? DateFormat('yyyy-MM-dd hh:mm a').format(p.paidAt!)
-                                                            : '-',
-                                                        style: const TextStyle(color: AppColors.textSecondary))),
-                                                    DataCell(
-                                                        Text(p.notes ?? '-', style: const TextStyle(color: AppColors.textMuted))),
-                                                  ],
-                                                ))
-                                            .toList(),
-                                      ),
-                                    ),
-                                    if (state.loungePayoutsHasMore) ...[
-                                      SizedBox(height: 12.h),
-                                      AppButton(
-                                        text: AppStrings.loadMore,
-                                        variant: AppButtonVariant.outlined,
-                                        isLoading: state.loungePayoutsLoadingMore,
-                                        onPressed: state.loungePayoutsLoadingMore || loungeId == null
-                                            ? null
-                                            : () => context.read<PayoutCubit>().loadMoreLoungePayouts(loungeId),
-                                      ),
-                                    ],
-                                  ],
-                                ),
+                            SizedBox(height: 12.h),
+                            Text(
+                              state.errorMessage ?? AppStrings.actionFailed,
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
                               ),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 16.h),
+                            AppButton(
+                              text: AppStrings.retry,
+                              icon: Icons.refresh_rounded,
+                              onPressed: _fetchPayouts,
+                            ),
+                          ],
+                        ),
+                      )
+                    : payouts.isEmpty
+                    ? Center(
+                        child: Text(
+                          AppStrings.noPayoutHistoryFound,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      )
+                    : SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: DataTableWidget(
+                                columns: [
+                                  AppStrings.period,
+                                  AppStrings.totalAmount,
+                                  AppStrings.paymentsCount,
+                                  AppStrings.status,
+                                  AppStrings.transferMethod,
+                                  AppStrings.transferReference,
+                                  AppStrings.date,
+                                  AppStrings.paidAt,
+                                  AppStrings.notes,
+                                ],
+                                rows: payouts
+                                    .map(
+                                      (p) => DataRow(
+                                        cells: [
+                                          DataCell(
+                                            Text(
+                                              '${p.periodStart} ${AppStrings.to} ${p.periodEnd}',
+                                              style: const TextStyle(
+                                                color: AppColors.textSecondary,
+                                              ),
+                                            ),
+                                          ),
+                                          DataCell(
+                                            Text(
+                                              '\$${p.amount.toStringAsFixed(2)}',
+                                              style: const TextStyle(
+                                                color: AppColors.neonGreen,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          DataCell(
+                                            Text(
+                                              (p.paymentCount ?? '-')
+                                                  .toString(),
+                                              style: const TextStyle(
+                                                color: AppColors.textSecondary,
+                                              ),
+                                            ),
+                                          ),
+                                          DataCell(_buildStatusBadge(p.status)),
+                                          DataCell(
+                                            Text(
+                                              p.transferMethod ?? '-',
+                                              style: const TextStyle(
+                                                color: AppColors.textSecondary,
+                                              ),
+                                            ),
+                                          ),
+                                          DataCell(
+                                            Text(
+                                              p.transferReference ?? '-',
+                                              style: const TextStyle(
+                                                color: AppColors.textSecondary,
+                                              ),
+                                            ),
+                                          ),
+                                          DataCell(
+                                            Text(
+                                              DateFormat(
+                                                'yyyy-MM-dd',
+                                              ).format(p.createdAt),
+                                              style: const TextStyle(
+                                                color: AppColors.textSecondary,
+                                              ),
+                                            ),
+                                          ),
+                                          DataCell(
+                                            Text(
+                                              p.paidAt != null
+                                                  ? DateFormat(
+                                                      'yyyy-MM-dd hh:mm a',
+                                                    ).format(p.paidAt!)
+                                                  : '-',
+                                              style: const TextStyle(
+                                                color: AppColors.textSecondary,
+                                              ),
+                                            ),
+                                          ),
+                                          DataCell(
+                                            Text(
+                                              p.notes ?? '-',
+                                              style: const TextStyle(
+                                                color: AppColors.textMuted,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ),
+                            if (state.loungePayoutsHasMore) ...[
+                              SizedBox(height: 12.h),
+                              AppButton(
+                                text: AppStrings.loadMore,
+                                variant: AppButtonVariant.outlined,
+                                isLoading: state.loungePayoutsLoadingMore,
+                                onPressed:
+                                    state.loungePayoutsLoadingMore ||
+                                        loungeId == null
+                                    ? null
+                                    : () => context
+                                          .read<PayoutCubit>()
+                                          .loadMoreLoungePayouts(loungeId),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
               ),
             ],
           ),

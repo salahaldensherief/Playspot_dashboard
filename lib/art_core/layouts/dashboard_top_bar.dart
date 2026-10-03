@@ -63,6 +63,7 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
                       fontFamily: 'Orbitron',
+                      fontFamilyFallback: ['Tajawal'],
                     ),
                   ),
                 ),

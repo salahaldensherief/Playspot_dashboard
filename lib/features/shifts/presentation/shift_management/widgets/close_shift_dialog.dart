@@ -50,6 +50,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
               fontSize: 20.sp,
               fontWeight: FontWeight.bold,
               fontFamily: 'Orbitron',
+              fontFamilyFallback: const ['Tajawal'],
             ),
           ),
         ],
@@ -64,17 +65,24 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
             children: [
               Text(
                 'confirm_cash_instruction'.tr(),
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14.sp,
+                ),
               ),
               SizedBox(height: 24.h),
               AppTextField(
                 controller: _cashController,
                 label: AppStrings.actualCash,
                 hintText: AppStrings.hintAmount,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) return AppStrings.fieldRequired;
-                  if (double.tryParse(val.trim()) == null) return AppStrings.invalidNumber;
+                  if (val == null || val.trim().isEmpty)
+                    return AppStrings.fieldRequired;
+                  if (double.tryParse(val.trim()) == null)
+                    return AppStrings.invalidNumber;
                   return null;
                 },
               ),
@@ -102,8 +110,11 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
           variant: AppButtonVariant.danger,
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              final countedCash = double.tryParse(_cashController.text.trim()) ?? 0.0;
-              final notes = _notesController.text.trim().isEmpty ? null : _notesController.text.trim();
+              final countedCash =
+                  double.tryParse(_cashController.text.trim()) ?? 0.0;
+              final notes = _notesController.text.trim().isEmpty
+                  ? null
+                  : _notesController.text.trim();
               widget.onConfirm(countedCash, notes);
             }
           },

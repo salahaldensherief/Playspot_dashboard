@@ -53,9 +53,6 @@ class _MyAppState extends State<MyApp> {
         }
 
         return ScreenUtilInit(
-          key: ValueKey(
-            '${designSize.width.toInt()}x${designSize.height.toInt()}',
-          ),
           designSize: designSize,
           minTextAdapt: true,
           splitScreenMode: true,

@@ -60,7 +60,9 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
     payoutsRes.fold(
       (failure) {
         AppLogger.error('Failed to load more payouts: ${failure.message}');
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
         setState(() {
           _allPayoutsLoadingMore = false;
           _allPayoutsHasMore = false;
@@ -106,26 +108,34 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
 
     overviewRes.fold(
       (failure) {
-        AppLogger.error('Failed to load pending payouts overview: ${failure.message}');
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message)));
+        AppLogger.error(
+          'Failed to load pending payouts overview: ${failure.message}',
+        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
         setState(() => _isLoading = false);
       },
       (overview) {
         payoutsRes.fold(
           (failure) {
             AppLogger.error('Failed to load all payouts: ${failure.message}');
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message)));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(failure.message)));
             setState(() => _isLoading = false);
           },
           (payouts) {
             setState(() {
               _pendingOverview = overview
-                  .map((o) => {
-                        'lounge_id': o.loungeId,
-                        'lounge_name': o.loungeName,
-                        'pending_amount': o.pendingAmount,
-                        'pending_payments_count': o.pendingPaymentsCount,
-                      })
+                  .map(
+                    (o) => {
+                      'lounge_id': o.loungeId,
+                      'lounge_name': o.loungeName,
+                      'pending_amount': o.pendingAmount,
+                      'pending_payments_count': o.pendingPaymentsCount,
+                    },
+                  )
                   .toList();
               _allPayouts = payouts.map(_payoutToMap).toList();
               _allPayoutsNextPage = 2;
@@ -154,10 +164,8 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => CompletePayoutDialog(
-        payoutId: payoutId,
-        onSuccess: _fetchData,
-      ),
+      builder: (_) =>
+          CompletePayoutDialog(payoutId: payoutId, onSuccess: _fetchData),
     );
   }
 
@@ -178,19 +186,21 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => ResolvePayoutReviewDialog(
-        payoutId: payoutId,
-        onSuccess: _fetchData,
-      ),
+      builder: (_) =>
+          ResolvePayoutReviewDialog(payoutId: payoutId, onSuccess: _fetchData),
     );
   }
 
   Future<void> _viewDetails(String payoutId) async {
-    final detailsRes = await sl<PayoutRepository>().getPayoutDetails(payoutId: payoutId);
+    final detailsRes = await sl<PayoutRepository>().getPayoutDetails(
+      payoutId: payoutId,
+    );
     if (!mounted) return;
 
     detailsRes.fold(
-      (failure) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message))),
+      (failure) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(failure.message))),
       (details) => showDialog(
         context: context,
         builder: (_) => PayoutDetailsDialog(details: details),
@@ -202,16 +212,20 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
     final messenger = ScaffoldMessenger.of(context);
     final res = await sl<PayoutRepository>().approvePayout(payoutId: payoutId);
     res.fold(
-      (failure) => messenger.showSnackBar(SnackBar(content: Text(failure.message))),
+      (failure) =>
+          messenger.showSnackBar(SnackBar(content: Text(failure.message))),
       (_) => _fetchData(),
     );
   }
 
   Future<void> _processPayout(String payoutId) async {
     final messenger = ScaffoldMessenger.of(context);
-    final res = await sl<PayoutRepository>().startPayoutProcessing(payoutId: payoutId);
+    final res = await sl<PayoutRepository>().startPayoutProcessing(
+      payoutId: payoutId,
+    );
     res.fold(
-      (failure) => messenger.showSnackBar(SnackBar(content: Text(failure.message))),
+      (failure) =>
+          messenger.showSnackBar(SnackBar(content: Text(failure.message))),
       (_) => _fetchData(),
     );
   }
@@ -233,6 +247,7 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
                   fontSize: 28.sp,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Orbitron',
+                  fontFamilyFallback: const ['Tajawal'],
                 ),
               ),
               IconButton(
@@ -268,10 +283,18 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
                         isLoadingMore: _allPayoutsLoadingMore,
                         onLoadMore: _loadMorePayouts,
                         onApprove: _approvePayout,
-                        onCancel: (id) => _showActionWithReason(AppStrings.cancelPayout, 'cancel_payout', id),
+                        onCancel: (id) => _showActionWithReason(
+                          AppStrings.cancelPayout,
+                          'cancel_payout',
+                          id,
+                        ),
                         onProcess: _processPayout,
                         onPay: _showCompletePayout,
-                        onFail: (id) => _showActionWithReason('Mark Failed', 'fail_payout', id),
+                        onFail: (id) => _showActionWithReason(
+                          'Mark Failed',
+                          'fail_payout',
+                          id,
+                        ),
                         onResolve: _showResolveReview,
                         onViewDetails: _viewDetails,
                       ),

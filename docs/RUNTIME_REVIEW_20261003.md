@@ -29,9 +29,19 @@
 
 ## Remaining review
 
-- Complete management visual verification and remaining role-action flows.
+- Remaining role-action flows and onboarding creation/approval against isolated records.
 - Old-runtime location 502 and booking-read 400 causes fixed above. Session-transition 401 requests still require lifecycle review.
 - Owner phone and lounge phone are separate form inputs but provisioning contract still conflates them; requires coordinated API/server follow-up.
 - Full widget-by-widget localization and responsive visual review still ongoing.
 - Mobile navigation/runtime review intentionally paused while Dashboard is running; mobile and dashboard are not run together.
 - Offline cashier foundations are not proof of complete offline operations/synchronization. No production-readiness certification from these tests.
+
+## Responsive typography and locale review
+
+- Actual management screenshots exposed a 360px title/action overflow, Arabic glyphs missing in explicit Orbitron headings, and labels remaining in the previous language until navigation. Adaptive page headers, explicit Tajawal fallback, and inherited locale dependencies address those causes without requiring a Cubit emission.
+- Room counts, owner email and mobile management details no longer shrink below 14px. Status badges use 14px; the mobile card title wraps within its available space and details wrap together. Sidebar navigation and role labels retain readable sizes across breakpoints.
+- Removed the breakpoint-dependent ScreenUtilInit key: changing width must not remount the router subtree. Actual resize checks retained the authenticated management route across 360, 600, 768, 1024 and 1440px.
+- Twenty Arabic/English management layout cases passed at those five widths and text scales 1.0/1.6. A separate locale-switch regression verifies header, table pricing and top-bar role labels change immediately with no Cubit emission. Existing platform-scope regression remains enforced; locale observation does not require a localization provider for the super-admin empty branch switcher.
+- Final full suite: 830 passed, 2 live tests skipped. Final analyze: no errors or warnings, 44 informational lints. Release Web build succeeded in 73.8 seconds; changed-file formatting and git diff checks passed.
+- Actual browser screenshots: dashboard-management-final-ar-{360,600,768,1024,1440}.png and dashboard-role-locale-switch-ar.png in the task outputs directory. A live language toggle updated the page, table and role label without navigation. Text scaling was verified by widget tests, not by an OS accessibility-setting test.
+- This verification covers management and shared typography/locale fixes; it does not certify every feature translation, offline cashier synchronization, or production readiness. No real account, booking or financial transaction was created during these browser checks.

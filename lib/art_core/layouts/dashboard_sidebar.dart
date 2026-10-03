@@ -156,10 +156,11 @@ class DashboardSidebar extends StatelessWidget {
                     maxLines: 1,
                     style: TextStyle(
                       color: AppColors.textPrimary,
-                      fontSize: 18.sp,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
                       fontFamily: 'Orbitron',
+                      fontFamilyFallback: const ['Tajawal'],
                     ),
                   ),
                   Text(
@@ -168,7 +169,7 @@ class DashboardSidebar extends StatelessWidget {
                     maxLines: 1,
                     style: TextStyle(
                       color: AppColors.textSecondary,
-                      fontSize: 12.sp,
+                      fontSize: 14,
                     ),
                   ),
                 ],

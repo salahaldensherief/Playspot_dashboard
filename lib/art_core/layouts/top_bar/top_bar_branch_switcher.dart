@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -17,6 +18,9 @@ class TopBarBranchSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(
+      context,
+    ); // Observe locale without requiring a provider for the platform empty state.
     return BlocBuilder<LoginCubit, LoginState>(
       buildWhen: (previous, current) => previous.user != current.user,
       builder: (context, login) {

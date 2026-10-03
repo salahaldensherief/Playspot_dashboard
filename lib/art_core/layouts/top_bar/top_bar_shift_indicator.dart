@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -11,6 +12,7 @@ class TopBarShiftIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // Localized labels also change without a Cubit emission.
     final user = context.read<LoginCubit>().state.user;
     if (user == null || user.isSuperAdmin) {
       return const SizedBox.shrink();
@@ -50,7 +52,9 @@ class TopBarShiftIndicator extends StatelessWidget {
                 if (!isMobile) const SizedBox(width: 8),
                 if (!isMobile)
                   Text(
-                    isActive ? AppStrings.shiftActive : AppStrings.noActiveShift,
+                    isActive
+                        ? AppStrings.shiftActive
+                        : AppStrings.noActiveShift,
                     style: TextStyle(
                       color: color,
                       fontSize: 12,

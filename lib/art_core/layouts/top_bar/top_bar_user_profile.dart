@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -28,6 +29,7 @@ class TopBarUserProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // Localized labels also change without a Cubit emission.
     return BlocBuilder<LoginCubit, LoginState>(
       buildWhen: (prev, curr) => prev.user != curr.user,
       builder: (context, state) {
@@ -67,7 +69,7 @@ class TopBarUserProfile extends StatelessWidget {
                                     : AppStrings.loungeManager)),
                     style: const TextStyle(
                       color: AppColors.neonPurple,
-                      fontSize: 11,
+                      fontSize: 14,
                     ),
                   ),
                 ],

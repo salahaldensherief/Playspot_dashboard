@@ -52,21 +52,32 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     final lounge = context.read<LoginCubit>().state.userLounge;
 
     _nameController = TextEditingController(text: lounge?.name ?? '');
-    _descArController = TextEditingController(text: lounge?.descriptionAr ?? '');
-    _descEnController = TextEditingController(text: lounge?.descriptionEn ?? '');
+    _descArController = TextEditingController(
+      text: lounge?.descriptionAr ?? '',
+    );
+    _descEnController = TextEditingController(
+      text: lounge?.descriptionEn ?? '',
+    );
     _cityController = TextEditingController(text: lounge?.city ?? '');
     _addressController = TextEditingController(text: lounge?.location ?? '');
     _opensAtController = TextEditingController(text: lounge?.opensAt ?? '');
     _closesAtController = TextEditingController(text: lounge?.closesAt ?? '');
-    _vodafoneCashController = TextEditingController(text: lounge?.vodafoneCashNumber ?? '');
-    _instapayController = TextEditingController(text: lounge?.instapayAccount ?? '');
+    _vodafoneCashController = TextEditingController(
+      text: lounge?.vodafoneCashNumber ?? '',
+    );
+    _instapayController = TextEditingController(
+      text: lounge?.instapayAccount ?? '',
+    );
 
     _lat = lounge?.lat;
     _lng = lounge?.lng;
 
     final loungeId = user?.loungeId;
     if (loungeId != null && loungeId.isNotEmpty) {
-      context.read<LoginCubit>().refreshUserLounge(loungeId, forceRefresh: true);
+      context.read<LoginCubit>().refreshUserLounge(
+        loungeId,
+        forceRefresh: true,
+      );
     }
   }
 
@@ -100,7 +111,8 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
   }
 
   Future<void> _saveProfile() async {
-    if (_vodafoneCashController.text.trim().isEmpty && _instapayController.text.trim().isEmpty) {
+    if (_vodafoneCashController.text.trim().isEmpty &&
+        _instapayController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppStrings.paymentMethodsRequiredError),
@@ -152,7 +164,9 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
             instapayAccount: _instapayController.text.trim(),
           );
 
-          final saved = await context.read<LoungeCubit>().updateLounge(updatedLounge);
+          final saved = await context.read<LoungeCubit>().updateLounge(
+            updatedLounge,
+          );
           if (!saved) throw StateError('Lounge profile could not be saved');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -161,13 +175,19 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
                 backgroundColor: AppColors.success,
               ),
             );
-            await context.read<LoginCubit>().refreshUserLounge(lounge.id, forceRefresh: true);
+            await context.read<LoginCubit>().refreshUserLounge(
+              lounge.id,
+              forceRefresh: true,
+            );
           }
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppStrings.operationError(e.toString())), backgroundColor: AppColors.danger),
+            SnackBar(
+              content: Text(AppStrings.operationError(e.toString())),
+              backgroundColor: AppColors.danger,
+            ),
           );
         }
       } finally {
@@ -203,6 +223,7 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
                       fontSize: 28.sp,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Orbitron',
+                      fontFamilyFallback: const ['Tajawal'],
                     ),
                   ),
                   SizedBox(height: 32.h),
@@ -233,8 +254,10 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
                   WorkingHoursSection(
                     opensAtController: _opensAtController,
                     closesAtController: _closesAtController,
-                    onOpensAtTap: () => _selectTime(context, _opensAtController),
-                    onClosesAtTap: () => _selectTime(context, _closesAtController),
+                    onOpensAtTap: () =>
+                        _selectTime(context, _opensAtController),
+                    onClosesAtTap: () =>
+                        _selectTime(context, _closesAtController),
                   ),
                   SizedBox(height: 32.h),
                   LoungePaymentMethodsSection(
@@ -264,13 +287,22 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     );
   }
 
-  Future<void> _selectTime(BuildContext context, TextEditingController controller) async {
+  Future<void> _selectTime(
+    BuildContext context,
+    TextEditingController controller,
+  ) async {
     final parts = controller.text.split(':');
     final hour = parts.isNotEmpty ? int.tryParse(parts[0]) : null;
     final minute = parts.length > 1 ? int.tryParse(parts[1]) : null;
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: hour != null && minute != null && hour >= 0 && hour < 24 && minute >= 0 && minute < 60
+      initialTime:
+          hour != null &&
+              minute != null &&
+              hour >= 0 &&
+              hour < 24 &&
+              minute >= 0 &&
+              minute < 60
           ? TimeOfDay(hour: hour, minute: minute)
           : TimeOfDay.now(),
       builder: (pickerContext, child) {
@@ -288,7 +320,8 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
       },
     );
     if (picked != null && context.mounted) {
-      final formatted = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}:00';
+      final formatted =
+          '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}:00';
       controller.text = formatted;
     }
   }

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
@@ -72,6 +73,7 @@ class _DashboardShellState extends State<DashboardShell> {
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // Rebuild localized labels when the locale changes.
     return BlocListener<LoginCubit, LoginState>(
       listenWhen: (previous, current) => previous.user != current.user,
       listener: (context, state) {
