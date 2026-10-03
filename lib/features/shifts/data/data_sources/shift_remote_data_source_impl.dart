@@ -89,7 +89,8 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
       var query = _supabase
           .from('shifts')
           .select('*, profiles:cashier_id(full_name)')
-          .or('status.eq.open,closed_at.is.null');
+          .eq('status', 'open')
+          .isFilter('closed_at', null);
 
       if (loungeId.isNotEmpty) {
         query = query.eq('lounge_id', loungeId);

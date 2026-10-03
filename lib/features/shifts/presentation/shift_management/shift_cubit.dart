@@ -21,6 +21,10 @@ class ShiftCubit extends Cubit<ShiftState> {
   final ShiftRepository repository;
   final ShiftRealtimeSubscriptionManager _realtimeManager;
   final ShiftDetailsFetcher _detailsFetcher;
+  int _scopeGeneration = 0;
+  int _shiftGeneration = 0;
+  int _overviewGeneration = 0;
+  String? _loungeScope;
 
   ShiftCubit({
     required this.getActiveShiftUseCase,
@@ -29,9 +33,9 @@ class ShiftCubit extends Cubit<ShiftState> {
     required this.closeShiftUseCase,
     required this.repository,
     SupabaseClient? supabaseClient,
-  })  : _realtimeManager = ShiftRealtimeSubscriptionManager(supabaseClient),
-        _detailsFetcher = ShiftDetailsFetcher(repository),
-        super(ShiftState.initial());
+  }) : _realtimeManager = ShiftRealtimeSubscriptionManager(supabaseClient),
+       _detailsFetcher = ShiftDetailsFetcher(repository),
+       super(ShiftState.initial());
 
   void setupRealtimeSubscription(String loungeId) {
     _realtimeManager.subscribe(
@@ -53,24 +57,52 @@ class ShiftCubit extends Cubit<ShiftState> {
       return;
     }
     if (isClosed) return;
-    emit(state.copyWith(status: ShiftStatus.loading));
+    final scope = _loungeScope;
+    if (scope != null && scope != loungeId) return;
+    final generation = ++_overviewGeneration;
 
     final result = await getLoungeLiveShiftOverviewUseCase(loungeId);
-    if (isClosed) return;
+    if (isClosed ||
+        generation != _overviewGeneration ||
+        (_loungeScope != null && _loungeScope != loungeId))
+      return;
 
     result.fold(
-      (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
-      (overview) => emit(state.copyWith(status: ShiftStatus.active, liveOverview: overview)),
+      (failure) => emit(
+        state.copyWith(
+          status: ShiftStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
+      (overview) => emit(
+        state.copyWith(
+          status: overview.hasActiveShift
+              ? ShiftStatus.active
+              : ShiftStatus.initial,
+          liveOverview: overview,
+          clearActiveShift: !overview.hasActiveShift,
+        ),
+      ),
     );
   }
 
   Future<void> checkActiveShift(String loungeId) async {
+    if (isClosed) return;
+    final generation = ++_shiftGeneration;
+    ++_overviewGeneration;
+    if (_loungeScope != loungeId) {
+      ++_scopeGeneration;
+      _loungeScope = loungeId;
+      emit(const ShiftState(status: ShiftStatus.loading));
+    }
     if (loungeId.isEmpty) {
-      emit(state.copyWith(
-        status: ShiftStatus.initial,
-        activeShift: null,
-        clearActiveShift: true,
-      ));
+      emit(
+        state.copyWith(
+          status: ShiftStatus.initial,
+          activeShift: null,
+          clearActiveShift: true,
+        ),
+      );
       return;
     }
     if (isClosed) return;
@@ -78,31 +110,46 @@ class ShiftCubit extends Cubit<ShiftState> {
 
     try {
       final result = await getActiveShiftUseCase(loungeId);
-      if (isClosed) return;
+      if (isClosed || generation != _shiftGeneration) return;
 
       result.fold(
-        (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
+        (failure) => emit(
+          state.copyWith(
+            status: ShiftStatus.error,
+            errorMessage: failure.message,
+          ),
+        ),
         (shift) {
-          emit(state.copyWith(
-            status: shift != null ? ShiftStatus.active : ShiftStatus.initial,
-            activeShift: shift,
-            clearActiveShift: shift == null,
-          ));
+          emit(
+            state.copyWith(
+              status: shift != null ? ShiftStatus.active : ShiftStatus.initial,
+              activeShift: shift,
+              clearActiveShift: shift == null,
+            ),
+          );
           getLiveShiftOverview(loungeId);
         },
       );
     } catch (e) {
-      emit(state.copyWith(status: ShiftStatus.error, errorMessage: e.toString()));
+      if (isClosed || generation != _shiftGeneration) return;
+      emit(
+        state.copyWith(status: ShiftStatus.error, errorMessage: e.toString()),
+      );
     }
   }
 
-  Future<bool> _verifyAndSyncShift(String loungeId) async {
+  Future<bool> _verifyAndSyncShift(String loungeId, int scopeGeneration) async {
     final verifyResult = await getActiveShiftUseCase(loungeId);
-    if (isClosed) return false;
+    if (isClosed || scopeGeneration != _scopeGeneration) return false;
 
     return verifyResult.fold(
       (failure) {
-        emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message));
+        emit(
+          state.copyWith(
+            status: ShiftStatus.error,
+            errorMessage: failure.message,
+          ),
+        );
         return false;
       },
       (shift) {
@@ -113,10 +160,12 @@ class ShiftCubit extends Cubit<ShiftState> {
           return true;
         } else {
           debugPrint('🔴 [ShiftCubit] Shift created but verify returned null.');
-          emit(state.copyWith(
-            status: ShiftStatus.error,
-            errorMessage: 'Shift created but failed to sync from database.',
-          ));
+          emit(
+            state.copyWith(
+              status: ShiftStatus.error,
+              errorMessage: 'Shift created but failed to sync from database.',
+            ),
+          );
           return false;
         }
       },
@@ -126,102 +175,156 @@ class ShiftCubit extends Cubit<ShiftState> {
   Future<void> openShift(String loungeId, double startingCash) async {
     if (isClosed) return;
     if (loungeId.isEmpty || loungeId == 'null') {
-      emit(state.copyWith(
-        status: ShiftStatus.error,
-        errorMessage: 'Cannot open shift: No Lounge ID assigned to this account.',
-      ));
+      emit(
+        state.copyWith(
+          status: ShiftStatus.error,
+          errorMessage:
+              'Cannot open shift: No Lounge ID assigned to this account.',
+        ),
+      );
       return;
     }
 
+    final scopeGeneration = _scopeGeneration;
     emit(state.copyWith(status: ShiftStatus.loading));
     try {
       final openResult = await openShiftUseCase(loungeId, startingCash);
-      if (isClosed) return;
+      if (isClosed || scopeGeneration != _scopeGeneration) return;
 
-      await openResult.fold(
-        (failure) async {
-          if (failure.message.contains('مفتوح') || failure.message.contains('already') || failure.message.contains('إغلاق')) {
-            await checkActiveShift(loungeId);
-            if (state.activeShift != null) {
-              return;
-            }
+      await openResult.fold((failure) async {
+        if (failure.message.contains('مفتوح') ||
+            failure.message.contains('already') ||
+            failure.message.contains('إغلاق')) {
+          await checkActiveShift(loungeId);
+          if (isClosed || scopeGeneration != _scopeGeneration) return;
+          if (state.activeShift != null) {
+            return;
           }
-          emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message));
-        },
-        (_) => _verifyAndSyncShift(loungeId),
-      );
+        }
+        emit(
+          state.copyWith(
+            status: ShiftStatus.error,
+            errorMessage: failure.message,
+          ),
+        );
+      }, (_) => _verifyAndSyncShift(loungeId, scopeGeneration));
     } catch (e) {
-      if (e.toString().contains('مفتوح') || e.toString().contains('already') || e.toString().contains('إغلاق')) {
+      if (isClosed || scopeGeneration != _scopeGeneration) return;
+      if (e.toString().contains('مفتوح') ||
+          e.toString().contains('already') ||
+          e.toString().contains('إغلاق')) {
         await checkActiveShift(loungeId);
         if (state.activeShift != null) {
           return;
         }
       }
-      emit(state.copyWith(status: ShiftStatus.error, errorMessage: e.toString()));
+      emit(
+        state.copyWith(status: ShiftStatus.error, errorMessage: e.toString()),
+      );
     }
   }
 
-  Future<bool> quickOpenShift(String loungeId, [double startingCash = 0.0]) async {
+  Future<bool> quickOpenShift(
+    String loungeId, [
+    double startingCash = 0.0,
+  ]) async {
     if (isClosed) return false;
     if (loungeId.isEmpty || loungeId == 'null') {
-      emit(state.copyWith(
-        status: ShiftStatus.error,
-        errorMessage: 'Cannot open shift: No Lounge ID assigned.',
-      ));
+      emit(
+        state.copyWith(
+          status: ShiftStatus.error,
+          errorMessage: 'Cannot open shift: No Lounge ID assigned.',
+        ),
+      );
       return false;
     }
 
+    final scopeGeneration = _scopeGeneration;
     emit(state.copyWith(status: ShiftStatus.loading));
     try {
-      final openResult = await repository.quickOpenShift(loungeId, startingCash);
-      if (isClosed) return false;
-
-      return await openResult.fold(
-        (failure) async {
-          if (failure.message.contains('مفتوح') || failure.message.contains('already') || failure.message.contains('إغلاق')) {
-            await checkActiveShift(loungeId);
-            if (state.activeShift != null) {
-              return true;
-            }
-          }
-          emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message));
-          return false;
-        },
-        (_) => _verifyAndSyncShift(loungeId),
+      final openResult = await repository.quickOpenShift(
+        loungeId,
+        startingCash,
       );
+      if (isClosed || scopeGeneration != _scopeGeneration) return false;
+
+      return await openResult.fold((failure) async {
+        if (failure.message.contains('مفتوح') ||
+            failure.message.contains('already') ||
+            failure.message.contains('إغلاق')) {
+          await checkActiveShift(loungeId);
+          if (isClosed || scopeGeneration != _scopeGeneration) return false;
+          if (state.activeShift != null) {
+            return true;
+          }
+        }
+        emit(
+          state.copyWith(
+            status: ShiftStatus.error,
+            errorMessage: failure.message,
+          ),
+        );
+        return false;
+      }, (_) => _verifyAndSyncShift(loungeId, scopeGeneration));
     } catch (e) {
-      if (e.toString().contains('مفتوح') || e.toString().contains('already') || e.toString().contains('إغلاق')) {
+      if (isClosed || scopeGeneration != _scopeGeneration) return false;
+      if (e.toString().contains('مفتوح') ||
+          e.toString().contains('already') ||
+          e.toString().contains('إغلاق')) {
         await checkActiveShift(loungeId);
         if (state.activeShift != null) {
           return true;
         }
       }
-      emit(state.copyWith(status: ShiftStatus.error, errorMessage: e.toString()));
+      emit(
+        state.copyWith(status: ShiftStatus.error, errorMessage: e.toString()),
+      );
       return false;
     }
   }
 
-  Future<void> closeShift(String shiftId, double actualCash, String? notes, String loungeId) async {
+  Future<void> closeShift(
+    String shiftId,
+    double actualCash,
+    String? notes,
+    String loungeId,
+  ) async {
     if (isClosed) return;
+    final scopeGeneration = _scopeGeneration;
     emit(state.copyWith(status: ShiftStatus.loading));
 
     try {
-      final result = await closeShiftUseCase(shiftId, actualCash, notes, loungeId: loungeId);
-      if (isClosed) return;
+      final result = await closeShiftUseCase(
+        shiftId,
+        actualCash,
+        notes,
+        loungeId: loungeId,
+      );
+      if (isClosed || scopeGeneration != _scopeGeneration) return;
 
       result.fold(
-        (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
+        (failure) => emit(
+          state.copyWith(
+            status: ShiftStatus.error,
+            errorMessage: failure.message,
+          ),
+        ),
         (closedShift) {
-          emit(state.copyWith(
-            status: ShiftStatus.closed,
-            lastClosedShift: closedShift,
-            activeShift: null,
-          ));
+          emit(
+            state.copyWith(
+              status: ShiftStatus.closed,
+              lastClosedShift: closedShift,
+              activeShift: null,
+            ),
+          );
           getLiveShiftOverview(loungeId);
         },
       );
     } catch (e) {
-      emit(state.copyWith(status: ShiftStatus.error, errorMessage: e.toString()));
+      if (isClosed || scopeGeneration != _scopeGeneration) return;
+      emit(
+        state.copyWith(status: ShiftStatus.error, errorMessage: e.toString()),
+      );
     }
   }
 
@@ -232,8 +335,14 @@ class ShiftCubit extends Cubit<ShiftState> {
 
     if (isClosed) return;
     result.fold(
-      (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
-      (shifts) => emit(state.copyWith(status: ShiftStatus.active, shifts: shifts)),
+      (failure) => emit(
+        state.copyWith(
+          status: ShiftStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
+      (shifts) =>
+          emit(state.copyWith(status: ShiftStatus.active, shifts: shifts)),
     );
   }
 
@@ -254,8 +363,14 @@ class ShiftCubit extends Cubit<ShiftState> {
 
     if (isClosed) return;
     result.fold(
-      (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
-      (shifts) => emit(state.copyWith(status: ShiftStatus.active, shifts: shifts)),
+      (failure) => emit(
+        state.copyWith(
+          status: ShiftStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
+      (shifts) =>
+          emit(state.copyWith(status: ShiftStatus.active, shifts: shifts)),
     );
   }
 
@@ -273,7 +388,9 @@ class ShiftCubit extends Cubit<ShiftState> {
 
     if (isClosed) return;
     result.fold(
-      (failure) => debugPrint('🔴 [ShiftCubit] Cashier performance failed: ${failure.message}'),
+      (failure) => debugPrint(
+        '🔴 [ShiftCubit] Cashier performance failed: ${failure.message}',
+      ),
       (list) => emit(state.copyWith(cashierPerformances: list)),
     );
   }
@@ -290,7 +407,9 @@ class ShiftCubit extends Cubit<ShiftState> {
 
     if (isClosed) return;
     result.fold(
-      (failure) => debugPrint('🔴 [ShiftCubit] Lounge comparison failed: ${failure.message}'),
+      (failure) => debugPrint(
+        '🔴 [ShiftCubit] Lounge comparison failed: ${failure.message}',
+      ),
       (list) => emit(state.copyWith(loungeComparisons: list)),
     );
   }
@@ -312,7 +431,9 @@ class ShiftCubit extends Cubit<ShiftState> {
     if (isClosed) return;
 
     result.fold(
-      (failure) => debugPrint('🔴 [ShiftCubit] Fetch Expenses Failed: ${failure.message}'),
+      (failure) => debugPrint(
+        '🔴 [ShiftCubit] Fetch Expenses Failed: ${failure.message}',
+      ),
       (expenses) => emit(state.copyWith(expenses: expenses)),
     );
   }
@@ -342,7 +463,12 @@ class ShiftCubit extends Cubit<ShiftState> {
     return result.fold(
       (failure) {
         debugPrint('🔴 [ShiftCubit] Add Expense Failed: ${failure.message}');
-        emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message));
+        emit(
+          state.copyWith(
+            status: ShiftStatus.error,
+            errorMessage: failure.message,
+          ),
+        );
         return false;
       },
       (_) async {
@@ -354,7 +480,12 @@ class ShiftCubit extends Cubit<ShiftState> {
     );
   }
 
-  Future<void> approveShift(String shiftId, String managerId, String? notes, {String? loungeId}) async {
+  Future<void> approveShift(
+    String shiftId,
+    String managerId,
+    String? notes, {
+    String? loungeId,
+  }) async {
     if (isClosed) return;
     emit(state.copyWith(status: ShiftStatus.loading));
 
@@ -362,7 +493,12 @@ class ShiftCubit extends Cubit<ShiftState> {
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(status: ShiftStatus.error, errorMessage: failure.message)),
+      (failure) => emit(
+        state.copyWith(
+          status: ShiftStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) {
         fetchShiftHistory(loungeId: loungeId);
         if (loungeId != null) getLiveShiftOverview(loungeId);
@@ -371,6 +507,10 @@ class ShiftCubit extends Cubit<ShiftState> {
   }
 
   void resetToInitial() {
+    ++_scopeGeneration;
+    ++_shiftGeneration;
+    ++_overviewGeneration;
+    _loungeScope = null;
     if (!isClosed) emit(ShiftState.initial());
   }
 }

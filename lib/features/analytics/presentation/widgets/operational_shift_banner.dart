@@ -396,9 +396,12 @@ class OperationalShiftBanner extends StatelessWidget {
         ],
         child: OpenShiftDialog(
           isDismissible: isDismissible,
-          onConfirm: (startingCash) {
-            shiftCubit.openShift(loungeId, startingCash);
-            Navigator.pop(diagContext);
+          onConfirm: (startingCash) async {
+            await shiftCubit.openShift(loungeId, startingCash);
+            if (diagContext.mounted &&
+                shiftCubit.state.activeShift != null &&
+                shiftCubit.state.status != ShiftStatus.error)
+              Navigator.pop(diagContext);
           },
         ),
       ),

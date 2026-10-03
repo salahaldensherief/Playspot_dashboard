@@ -203,9 +203,12 @@ class NeedsAttentionPanel extends StatelessWidget {
       useRootNavigator: false,
       builder: (diagContext) => OpenShiftDialog(
         isDismissible: true,
-        onConfirm: (startingCash) {
-          shiftCubit.openShift(loungeId, startingCash);
-          Navigator.pop(diagContext);
+        onConfirm: (startingCash) async {
+          await shiftCubit.openShift(loungeId, startingCash);
+          if (diagContext.mounted &&
+              shiftCubit.state.activeShift != null &&
+              shiftCubit.state.status != ShiftStatus.error)
+            Navigator.pop(diagContext);
         },
       ),
     );

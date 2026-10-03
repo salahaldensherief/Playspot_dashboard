@@ -56,7 +56,7 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
       _checkUnauthorizedNotice();
       _initializePermissionsAndLounges();
       final loungeId = widget.user?.loungeId;
-      if (loungeId != null && loungeId.isNotEmpty) {
+      if (!widget.isSuperAdmin && loungeId != null && loungeId.isNotEmpty) {
         if (!widget.isSuperAdmin) {
           context.read<ShiftCubit>().checkActiveShift(loungeId);
         }
@@ -107,7 +107,7 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
         widget.user?.loungeId != oldWidget.user?.loungeId) {
       _requestsCubit.stopWatchingRequests();
       final loungeId = widget.user?.loungeId;
-      if (loungeId != null && loungeId.isNotEmpty) {
+      if (!widget.isSuperAdmin && loungeId != null && loungeId.isNotEmpty) {
         context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
         _requestsCubit.startWatchingRequests(loungeId: loungeId);
       } else if (widget.isSuperAdmin) {
@@ -222,6 +222,7 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
               curr.selectedLoungeId != null &&
               prev.selectedLoungeId != curr.selectedLoungeId,
           listener: (context, state) {
+            if (widget.isSuperAdmin) return;
             final activeId = state.selectedLoungeId;
             if (activeId != null && activeId.isNotEmpty) {
               if (!widget.isSuperAdmin) {
@@ -321,9 +322,12 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
       barrierDismissible: isDismissible,
       builder: (diagContext) => OpenShiftDialog(
         isDismissible: isDismissible,
-        onConfirm: (startingCash) {
-          shiftCubit.openShift(loungeId, startingCash);
-          Navigator.pop(diagContext);
+        onConfirm: (startingCash) async {
+          await shiftCubit.openShift(loungeId, startingCash);
+          if (diagContext.mounted &&
+              shiftCubit.state.activeShift != null &&
+              shiftCubit.state.status != ShiftStatus.error)
+            Navigator.pop(diagContext);
         },
       ),
     );
