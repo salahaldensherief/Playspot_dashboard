@@ -1497,7 +1497,10 @@
     "open_failed": "Could not open the document; reload the review request"
   },
   "kyc_pending": {
-    "unassigned": {"title": "Account not assigned to a lounge", "description": "Ask the lounge owner to assign your account to the lounge and set your permissions. Bookings and shifts remain unavailable until assignment is complete."},
+    "unassigned": {
+      "title": "Account not assigned to a lounge",
+      "description": "Ask the lounge owner to assign your account to the lounge and set your permissions. Bookings and shifts remain unavailable until assignment is complete."
+    },
     "refresh": "Check status again",
     "pending": {
       "title": "Lounge data is under review",
@@ -1606,5 +1609,17 @@
   "booking_cash_confirmation_title": "Confirm cash received",
   "booking_cash_confirmation_description": "This records cash collection and starts the session. Confirm only after receiving the amount in the booking summary. To book without collecting, cancel and turn off immediate session start.",
   "booking_cash_confirmation_action": "Cash received — start session",
-  "booking_cash_confirmation_quick_description": "Walk-in booking records cash collection and starts the session. Confirm only after receiving the amount in the summary. To book without collecting, cancel and use Detailed Booking with immediate start turned off."
+  "booking_cash_confirmation_quick_description": "Walk-in booking records cash collection and starts the session. Confirm only after receiving the amount in the summary. To book without collecting, cancel and use Detailed Booking with immediate start turned off.",
+  "owner_session_expired": "Your session expired. Sign in again.",
+  "owner_permission_denied": "An active super administrator account is required.",
+  "owner_invalid_details": "Check the owner and lounge details and use a password of at least 8 characters.",
+  "owner_email_exists": "This email is already registered. Use a new email; existing accounts will not be reassigned.",
+  "owner_account_create_failed": "Could not create the lounge and owner account. Check your connection and retry.",
+  "owner_provisioning_unconfirmed": "Creation could not be confirmed. Refresh the lounge list and check before retrying.",
+  "promotion_not_found": "This promotion no longer exists. The list has been refreshed.",
+  "promotion_permission_denied": "You do not have permission to manage this promotion.",
+  "promotion_session_expired": "Your session expired. Sign in again.",
+  "promotion_invalid_details": "Check the promotion details, discount value and selected room.",
+  "promotion_operation_failed": "Could not complete the promotion operation. Check your connection and retry.",
+  "promo_deleted_success": "Promotion deleted."
 }

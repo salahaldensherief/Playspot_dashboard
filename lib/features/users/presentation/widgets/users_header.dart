@@ -1,3 +1,4 @@
+import 'package:play_spot_dashboard/features/lounges/presentation/owner_provisioning_message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -36,7 +37,7 @@ class UsersHeader extends StatelessWidget {
           ],
         ),
         AppButton(
-          text: "Create Lounge & Owner",
+          text: AppStrings.createLoungeAndOwner,
           icon: Icons.add,
           onPressed: () => _showAddLoungeAndOwnerDialog(context),
         ),
@@ -53,32 +54,36 @@ class UsersHeader extends StatelessWidget {
         listener: (context, state) {
           if (state.status == LoungeStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage ?? 'Error'), backgroundColor: AppColors.danger),
+              SnackBar(
+                content: Text(ownerProvisioningMessage(state.errorMessage)),
+                backgroundColor: AppColors.danger,
+              ),
             );
           }
         },
         builder: (context, state) {
           return AddLoungeDialog(
             isLoading: state.status == LoungeStatus.loading,
-            onSave: ({
-              required String loungeName,
-              String? address,
-              String? phone,
-              required String ownerName,
-              required String ownerEmail,
-              String? ownerPhone,
-              String? ownerPassword,
-            }) async {
-              await cubit.createLoungeWithOwner(
-                loungeName: loungeName,
-                address: address,
-                phone: phone,
-                ownerName: ownerName,
-                ownerEmail: ownerEmail,
-                ownerPhone: ownerPhone,
-                ownerPassword: ownerPassword,
-              );
-            },
+            onSave:
+                ({
+                  required String loungeName,
+                  String? address,
+                  String? phone,
+                  required String ownerName,
+                  required String ownerEmail,
+                  String? ownerPhone,
+                  String? ownerPassword,
+                }) async {
+                  return cubit.createLoungeWithOwner(
+                    loungeName: loungeName,
+                    address: address,
+                    phone: phone,
+                    ownerName: ownerName,
+                    ownerEmail: ownerEmail,
+                    ownerPhone: ownerPhone,
+                    ownerPassword: ownerPassword,
+                  );
+                },
           );
         },
       ),

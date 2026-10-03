@@ -10,7 +10,7 @@ import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 
 class AddLoungeDialog extends StatefulWidget {
   final bool isLoading;
-  final Future<void> Function({
+  final Future<bool> Function({
     required String loungeName,
     String? address,
     String? phone,
@@ -18,13 +18,10 @@ class AddLoungeDialog extends StatefulWidget {
     required String ownerEmail,
     String? ownerPhone,
     String? ownerPassword,
-  })? onSave;
+  })?
+  onSave;
 
-  const AddLoungeDialog({
-    super.key, 
-    this.isLoading = false,
-    this.onSave,
-  });
+  const AddLoungeDialog({super.key, this.isLoading = false, this.onSave});
 
   @override
   State<AddLoungeDialog> createState() => _AddLoungeDialogState();
@@ -32,7 +29,7 @@ class AddLoungeDialog extends StatefulWidget {
 
 class _AddLoungeDialogState extends State<AddLoungeDialog> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Lounge Details Controllers
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
@@ -59,27 +56,38 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
   }
 
   Future<void> _submit() async {
+    if (_isLocalUploading || widget.isLoading || widget.onSave == null) return;
     if (_formKey.currentState!.validate()) {
       setState(() => _isLocalUploading = true);
-      
+
       try {
         if (widget.onSave != null) {
-          await widget.onSave!(
+          final saved = await widget.onSave!(
             loungeName: _nameController.text.trim(),
-            address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
-            phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+            address: _addressController.text.trim().isEmpty
+                ? null
+                : _addressController.text.trim(),
+            phone: _phoneController.text.trim().isEmpty
+                ? null
+                : _phoneController.text.trim(),
             ownerName: _ownerNameController.text.trim(),
             ownerEmail: _emailController.text.trim(),
-            ownerPhone: _ownerPhoneController.text.trim().isEmpty ? null : _ownerPhoneController.text.trim(),
-            ownerPassword: _passwordController.text.trim().isEmpty ? null : _passwordController.text.trim(),
+            ownerPhone: _ownerPhoneController.text.trim().isEmpty
+                ? null
+                : _ownerPhoneController.text.trim(),
+            ownerPassword: _passwordController.text,
           );
+          if (!saved) return;
         }
-        
+
         if (mounted) Navigator.pop(context);
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppStrings.operationError(e.toString())), backgroundColor: AppColors.danger),
+            SnackBar(
+              content: Text(AppStrings.operationError(e.toString())),
+              backgroundColor: AppColors.danger,
+            ),
           );
         }
       } finally {
@@ -113,7 +121,11 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // --- Section 1: Lounge Details ---
-              AppText.subHeading("1. ${AppStrings.loungeDetails}", fontSize: 16.sp, color: AppColors.neonPurple),
+              AppText.subHeading(
+                "1. ${AppStrings.loungeDetails}",
+                fontSize: 16.sp,
+                color: AppColors.neonPurple,
+              ),
               SizedBox(height: 16.h),
               Row(
                 children: [
@@ -142,7 +154,11 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
               SizedBox(height: 20.h),
 
               // --- Section 2: Owner Details ---
-              AppText.subHeading("2. ${AppStrings.ownerDetails}", fontSize: 16.sp, color: AppColors.neonBlue),
+              AppText.subHeading(
+                "2. ${AppStrings.ownerDetails}",
+                fontSize: 16.sp,
+                color: AppColors.neonBlue,
+              ),
               SizedBox(height: 16.h),
               Row(
                 children: [
@@ -184,6 +200,8 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
                       hintText: AppStrings.passwordHint,
                       controller: _passwordController,
                       isPassword: true,
+                      validator: (value) =>
+                          AppValidator.validatePassword(value, minLength: 8),
                     ),
                   ),
                 ],

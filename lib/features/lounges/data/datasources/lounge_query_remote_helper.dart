@@ -1,3 +1,4 @@
+import 'package:play_spot_dashboard/core/services/lounge_owner_provisioner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import '../models/lounge_model.dart';
@@ -19,28 +20,43 @@ class LoungeQueryRemoteHelper {
 
       rawList = (response as List)
           .map((e) => Map<String, dynamic>.from(e as Map))
-          .where((json) => json['status'] != 'deleted' && json['is_active'] != false)
+          .where(
+            (json) => json['status'] != 'deleted' && json['is_active'] != false,
+          )
           .toList();
     } catch (e, stackTrace) {
-      AppLogger.warning('Direct lounges select query failed ($e), attempting RPC fallbacks...', e, stackTrace);
+      AppLogger.warning(
+        'Direct lounges select query failed ($e), attempting RPC fallbacks...',
+        e,
+        stackTrace,
+      );
 
       try {
         final fallbackResponse = await client.rpc('get_all_lounges');
         if (fallbackResponse is List && fallbackResponse.isNotEmpty) {
           rawList = fallbackResponse
               .map((e) => Map<String, dynamic>.from(e as Map))
-              .where((json) => json['status'] != 'deleted' && json['is_active'] != false)
+              .where(
+                (json) =>
+                    json['status'] != 'deleted' && json['is_active'] != false,
+              )
               .toList();
         }
       } catch (_) {}
 
       if (rawList.isEmpty) {
         try {
-          final fallbackResponse = await client.rpc('get_top_lounges_by_revenue', params: {'limit_count': 100});
+          final fallbackResponse = await client.rpc(
+            'get_top_lounges_by_revenue',
+            params: {'limit_count': 100},
+          );
           if (fallbackResponse is List && fallbackResponse.isNotEmpty) {
             rawList = fallbackResponse
                 .map((e) => Map<String, dynamic>.from(e as Map))
-                .where((json) => json['status'] != 'deleted' && json['is_active'] != false)
+                .where(
+                  (json) =>
+                      json['status'] != 'deleted' && json['is_active'] != false,
+                )
                 .toList();
           }
         } catch (_) {}
@@ -76,7 +92,9 @@ class LoungeQueryRemoteHelper {
           }
         }
       } catch (profileErr) {
-        AppLogger.warning('Failed to batch fetch owner profiles for lounges: $profileErr');
+        AppLogger.warning(
+          'Failed to batch fetch owner profiles for lounges: $profileErr',
+        );
       }
     }
 
@@ -93,9 +111,10 @@ class LoungeQueryRemoteHelper {
 
   Future<LoungeModel?> getLoungeById(String id) async {
     try {
-      final rpcResponse = await client.rpc('get_lounge_details', params: {
-        'p_lounge_id': id,
-      });
+      final rpcResponse = await client.rpc(
+        'get_lounge_details',
+        params: {'p_lounge_id': id},
+      );
 
       if (rpcResponse != null) {
         Map<String, dynamic> json = {};
@@ -115,10 +134,16 @@ class LoungeQueryRemoteHelper {
         }
       }
     } catch (e) {
-      AppLogger.warning('get_lounge_details RPC failed ($e), falling back to direct table query');
+      AppLogger.warning(
+        'get_lounge_details RPC failed ($e), falling back to direct table query',
+      );
     }
 
-    final response = await client.from('lounges').select().eq('id', id).maybeSingle();
+    final response = await client
+        .from('lounges')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
     if (response == null) return null;
     return LoungeModel.fromJson(Map<String, dynamic>.from(response));
   }
@@ -132,53 +157,15 @@ class LoungeQueryRemoteHelper {
     String? address,
     String? phone,
   }) async {
-    Map<String, dynamic> resMap;
-    try {
-      final response = await client.rpc('create_lounge_with_owner', params: {
-        'p_owner_email': email,
-        'p_owner_password': password,
-        'p_owner_name': ownerName,
-        'p_lounge_name': loungeName,
-        'p_city': city,
-        'p_address': address,
-        'p_phone': phone,
-      });
-      resMap = Map<String, dynamic>.from(response);
-    } catch (e) {
-      if (e is PostgrestException && (e.code == '42501' || e.message.contains('permission denied'))) {
-        throw Exception('عفواً، لا تملك الصلاحية الكافية لإنشاء الصالة على الخادم.');
-      }
-      try {
-        final response = await client.rpc('super_admin_create_lounge_with_owner', params: {
-          'p_owner_email': email,
-          'p_owner_password': password,
-          'p_owner_name': ownerName,
-          'p_lounge_name': loungeName,
-          'p_city': city,
-        });
-        resMap = Map<String, dynamic>.from(response);
-      } on PostgrestException catch (pe) {
-        if (pe.code == '42501' || pe.message.contains('permission denied')) {
-          throw Exception('عفواً، تم رفض الإذن بإنشاء الصالة من قبل الخادم.');
-        }
-        throw Exception(pe.message);
-      } catch (e2) {
-        throw Exception(e2.toString());
-      }
-    }
-
-    final ownerUserId = resMap['owner_user_id']?.toString() ?? resMap['owner_id']?.toString();
-
-    if (ownerUserId != null && ownerUserId.isNotEmpty) {
-      try {
-        await client.from('profiles').update({
-          'role': 'owner',
-          'is_setup_completed': false,
-        }).eq('id', ownerUserId);
-      } catch (_) {}
-    }
-
-    return resMap;
+    return LoungeOwnerProvisioner(client).create(
+      email: email,
+      password: password,
+      ownerName: ownerName,
+      loungeName: loungeName,
+      city: city,
+      address: address,
+      phone: phone,
+    );
   }
 
   Future<void> deleteLounge(String id) async {
@@ -187,38 +174,56 @@ class LoungeQueryRemoteHelper {
       AppLogger.info('deleteLounge soft delete succeeded for id: $id');
       return;
     } catch (e) {
-      AppLogger.warning('deleteLounge soft delete direct update failed ($e), attempting RPC delete...');
+      AppLogger.warning(
+        'deleteLounge soft delete direct update failed ($e), attempting RPC delete...',
+      );
     }
 
     try {
       await client.rpc('delete_lounge_admin', params: {'p_lounge_id': id});
-      AppLogger.info('deleteLounge delete_lounge_admin RPC succeeded for id: $id');
+      AppLogger.info(
+        'deleteLounge delete_lounge_admin RPC succeeded for id: $id',
+      );
       return;
     } catch (_) {}
 
     try {
-      await client.rpc('super_admin_delete_lounge', params: {'p_lounge_id': id});
-      AppLogger.info('deleteLounge super_admin_delete_lounge RPC succeeded for id: $id');
+      await client.rpc(
+        'super_admin_delete_lounge',
+        params: {'p_lounge_id': id},
+      );
+      AppLogger.info(
+        'deleteLounge super_admin_delete_lounge RPC succeeded for id: $id',
+      );
       return;
     } catch (e) {
       AppLogger.error('deleteLounge soft delete failed: $e');
-      throw Exception('فشل تعليق الصالة: لا تملك الصلاحيات الكافية لتعديل حالة الصالة.');
+      throw Exception(
+        'فشل تعليق الصالة: لا تملك الصلاحيات الكافية لتعديل حالة الصالة.',
+      );
     }
   }
 
   Future<List<LoungeModel>> getOwnerBranches(String ownerId) async {
     try {
-      final response = await client.rpc('get_owner_branches', params: {
-        'p_owner_id': ownerId,
-      });
+      final response = await client.rpc(
+        'get_owner_branches',
+        params: {'p_owner_id': ownerId},
+      );
 
       if (response is List) {
         return response
-            .map((e) => LoungeModel.fromJson(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) => LoungeModel.fromJson(Map<String, dynamic>.from(e as Map)),
+            )
             .toList();
       }
     } catch (e, stackTrace) {
-      AppLogger.warning('get_owner_branches RPC failed ($e), falling back to select query...', e, stackTrace);
+      AppLogger.warning(
+        'get_owner_branches RPC failed ($e), falling back to select query...',
+        e,
+        stackTrace,
+      );
     }
 
     try {
@@ -238,10 +243,13 @@ class LoungeQueryRemoteHelper {
     }
   }
 
-  Future<Map<String, dynamic>> addLoungeBranch(Map<String, dynamic> branchData) async {
-    final response = await client.rpc('add_lounge_branch', params: {
-      'p_branch_data': branchData,
-    });
+  Future<Map<String, dynamic>> addLoungeBranch(
+    Map<String, dynamic> branchData,
+  ) async {
+    final response = await client.rpc(
+      'add_lounge_branch',
+      params: {'p_branch_data': branchData},
+    );
     if (response is Map) {
       return Map<String, dynamic>.from(response);
     }
@@ -253,11 +261,14 @@ class LoungeQueryRemoteHelper {
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    final response = await client.rpc('get_multi_branch_overview', params: {
-      'p_owner_id': ownerId,
-      'p_start_date': startDate.toUtc().toIso8601String(),
-      'p_end_date': endDate.toUtc().toIso8601String(),
-    });
+    final response = await client.rpc(
+      'get_multi_branch_overview',
+      params: {
+        'p_owner_id': ownerId,
+        'p_start_date': startDate.toUtc().toIso8601String(),
+        'p_end_date': endDate.toUtc().toIso8601String(),
+      },
+    );
     if (response is Map) {
       return Map<String, dynamic>.from(response);
     }

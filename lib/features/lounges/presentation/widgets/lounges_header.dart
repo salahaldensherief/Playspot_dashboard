@@ -1,3 +1,4 @@
+import 'package:play_spot_dashboard/features/lounges/presentation/owner_provisioning_message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -31,15 +32,12 @@ class LoungesHeader extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               AppStrings.loungesHeaderSubtitle,
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14.sp,
-              ),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
             ),
           ],
         ),
         AppButton(
-          text: "Create Lounge & Owner",
+          text: AppStrings.createLoungeAndOwner,
           icon: Icons.add,
           onPressed: () => _showAddLoungeDialog(context),
         ),
@@ -54,39 +52,44 @@ class LoungesHeader extends StatelessWidget {
       builder: (diagContext) => BlocConsumer<LoungeCubit, LoungeState>(
         bloc: cubit,
         listener: (context, state) {
-          if (state.status == LoungeStatus.success && state.errorMessage == null) {
-            // We only want to show success if it was an "add" action, 
+          if (state.status == LoungeStatus.success &&
+              state.errorMessage == null) {
+            // We only want to show success if it was an "add" action,
             // but for simplicity we can just check if state is success.
             // However, fetchLounges also sets success.
           }
           if (state.status == LoungeStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage ?? 'Error'), backgroundColor: AppColors.danger),
+              SnackBar(
+                content: Text(ownerProvisioningMessage(state.errorMessage)),
+                backgroundColor: AppColors.danger,
+              ),
             );
           }
         },
         builder: (context, state) {
           return AddLoungeDialog(
             isLoading: state.status == LoungeStatus.loading,
-            onSave: ({
-              required String loungeName,
-              String? address,
-              String? phone,
-              required String ownerName,
-              required String ownerEmail,
-              String? ownerPhone,
-              String? ownerPassword,
-            }) async {
-              await cubit.createLoungeWithOwner(
-                loungeName: loungeName,
-                address: address,
-                phone: phone,
-                ownerName: ownerName,
-                ownerEmail: ownerEmail,
-                ownerPhone: ownerPhone,
-                ownerPassword: ownerPassword,
-              );
-            },
+            onSave:
+                ({
+                  required String loungeName,
+                  String? address,
+                  String? phone,
+                  required String ownerName,
+                  required String ownerEmail,
+                  String? ownerPhone,
+                  String? ownerPassword,
+                }) async {
+                  return cubit.createLoungeWithOwner(
+                    loungeName: loungeName,
+                    address: address,
+                    phone: phone,
+                    ownerName: ownerName,
+                    ownerEmail: ownerEmail,
+                    ownerPhone: ownerPhone,
+                    ownerPassword: ownerPassword,
+                  );
+                },
           );
         },
       ),

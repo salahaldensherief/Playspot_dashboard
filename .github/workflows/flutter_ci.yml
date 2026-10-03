@@ -62,5 +62,12 @@ jobs:
       - name: Run tests
         run: flutter test
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Verify owner Auth provisioning boundary
+        run: node --test supabase/functions/create-lounge-owner/handler.test.mjs
+
       - name: Verify release build
         run: flutter build web --release
