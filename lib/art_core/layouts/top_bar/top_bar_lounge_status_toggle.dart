@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/features/auth/presentation/login/login_state
 import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_state.dart';
+import 'package:play_spot_dashboard/features/permissions/presentation/cubit/permissions_cubit.dart';
 
 class TopBarLoungeStatusToggle extends StatelessWidget {
   const TopBarLoungeStatusToggle({super.key});
@@ -23,9 +24,19 @@ class TopBarLoungeStatusToggle extends StatelessWidget {
         final loungeId = user?.loungeId;
         if (user == null ||
             user.isSuperAdmin ||
-            !user.canToggleLoungeStatus ||
             loungeId == null ||
             loungeId.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        // Grants arrive independently of authentication and can be revoked.
+        // Observe the provider rather than a one-time entity/GetIt lookup.
+        final permissions = context.watch<PermissionsCubit>();
+        if (!permissions.hasPermission(
+          'lounge_toggle_status',
+          userRole: user.role.name,
+          userId: user.id,
+        )) {
           return const SizedBox.shrink();
         }
 

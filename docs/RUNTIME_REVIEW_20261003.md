@@ -45,3 +45,10 @@
 - Final full suite: 830 passed, 2 live tests skipped. Final analyze: no errors or warnings, 44 informational lints. Release Web build succeeded in 73.8 seconds; changed-file formatting and git diff checks passed.
 - Actual browser screenshots: dashboard-management-final-ar-{360,600,768,1024,1440}.png and dashboard-role-locale-switch-ar.png in the task outputs directory. A live language toggle updated the page, table and role label without navigation. Text scaling was verified by widget tests, not by an OS accessibility-setting test.
 - This verification covers management and shared typography/locale fixes; it does not certify every feature translation, offline cashier synchronization, or production readiness. No real account, booking or financial transaction was created during these browser checks.
+
+## Reactive lounge control
+
+- Owner login exposed another lifecycle defect: the open/closed control checked a GetIt-backed entity permission before grants arrived and never observed their later arrival. The control now watches the provided PermissionsCubit and checks role and authenticated user ID against its current authoritative grant.
+- Three regression cases (owner, manager, cashier) cover delayed grant arrival, revocation, and another actor's grants while the authentication Cubit stays unchanged. Permission and platform-scope suites: 73 passed; changed-scope analysis had no issues. Release Web build succeeded in 75.2 seconds.
+- Actual owner screenshot dashboard-owner-status-reactive-settled.png shows the control arriving after permissions load, one active-shift banner, and seven available rooms. The control was not toggled; no venue availability or financial operation was changed by the test.
+- GitHub CI for the typography commit 0e8b08b completed successfully.
