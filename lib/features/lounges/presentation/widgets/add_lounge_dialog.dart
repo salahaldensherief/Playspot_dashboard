@@ -149,6 +149,12 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
                 ],
               ),
 
+              SizedBox(height: 16.h),
+              AppTextField(
+                label: AppStrings.address,
+                hintText: AppStrings.addressHint,
+                controller: _addressController,
+              ),
               SizedBox(height: 28.h),
               const Divider(color: AppColors.divider),
               SizedBox(height: 20.h),

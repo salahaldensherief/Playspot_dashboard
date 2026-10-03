@@ -20,7 +20,8 @@ class LoungesDataTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<LoungeCubit, LoungeState>(
       listenWhen: (previous, current) =>
-          previous.status != current.status && current.status == LoungeStatus.failure,
+          previous.status != current.status &&
+          current.status == LoungeStatus.failure,
       listener: (context, state) {
         if (state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -32,7 +33,8 @@ class LoungesDataTable extends StatelessWidget {
         }
       },
       buildWhen: (previous, current) =>
-          previous.status != current.status || previous.lounges != current.lounges,
+          previous.status != current.status ||
+          previous.lounges != current.lounges,
       builder: (context, state) {
         if (state.status == LoungeStatus.loading && state.lounges.isEmpty) {
           return const TableShimmer(columns: 6);
@@ -45,9 +47,16 @@ class LoungesDataTable extends StatelessWidget {
             child: Column(
               children: [
                 SizedBox(height: 100.h),
-                Icon(Icons.business_outlined, size: 64.r, color: AppColors.textMuted),
+                Icon(
+                  Icons.business_outlined,
+                  size: 64.r,
+                  color: AppColors.textMuted,
+                ),
                 SizedBox(height: 16.h),
-                Text(AppStrings.noLoungesFound, style: const TextStyle(color: AppColors.textSecondary)),
+                Text(
+                  AppStrings.noLoungesFound,
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
               ],
             ),
           );
@@ -55,10 +64,14 @@ class LoungesDataTable extends StatelessWidget {
 
         if (Responsive.isMobile(context)) {
           return Column(
-            children: lounges.map((lounge) => Padding(
-              padding: EdgeInsets.only(bottom: 16.h),
-              child: _buildLoungeCard(context, lounge),
-            )).toList(),
+            children: lounges
+                .map(
+                  (lounge) => Padding(
+                    padding: EdgeInsets.only(bottom: 16.h),
+                    child: _buildLoungeCard(context, lounge),
+                  ),
+                )
+                .toList(),
           );
         }
 
@@ -69,55 +82,103 @@ class LoungesDataTable extends StatelessWidget {
             AppStrings.location,
             AppStrings.pricePerHour,
             AppStrings.status,
-            AppStrings.actions
+            AppStrings.actions,
           ],
-          rows: lounges.map((lounge) => DataRow(
-            cells: [
-              DataCell(
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(lounge.name, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-                    Text('${lounge.availableRooms ?? 0} ${AppStrings.rooms}', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
-                  ],
-                ),
-              ),
-              DataCell(
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(lounge.ownerName ?? AppStrings.notAssigned, style: const TextStyle(color: AppColors.textPrimary)),
-                    Text(lounge.ownerEmail ?? '-', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
-                  ],
-                ),
-              ),
-              DataCell(Text(lounge.city ?? lounge.location ?? 'N/A', style: const TextStyle(color: AppColors.textSecondary))),
-              DataCell(Text('\$${lounge.pricePerHour.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary))),
-              DataCell(
-                lounge.status == 'pending' 
-                  ? StatusBadge.warning(AppStrings.pending) 
-                  : lounge.isOpen 
-                    ? StatusBadge.success(AppStrings.active) 
-                    : StatusBadge.danger(AppStrings.inactive)
-              ),
-              DataCell(
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20.r),
-                      onPressed: () => _showEditDialog(context, lounge),
+          rows: lounges
+              .map(
+                (lounge) => DataRow(
+                  cells: [
+                    DataCell(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            lounge.name,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '${lounge.availableRooms ?? '—'} ${AppStrings.rooms}',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 11.sp,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    IconButton(
-                      icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
-                      onPressed: () => _confirmDelete(context, lounge.id, lounge.name),
+                    DataCell(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            lounge.ownerName ?? AppStrings.notAssigned,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            lounge.ownerEmail ?? '-',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 11.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        lounge.city ??
+                            lounge.location ??
+                            AppStrings.notAvailable,
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        _priceLabel(lounge),
+                        style: const TextStyle(color: AppColors.textPrimary),
+                      ),
+                    ),
+                    DataCell(
+                      lounge.status == 'pending'
+                          ? StatusBadge.warning(AppStrings.pending)
+                          : lounge.isActive && lounge.status == 'active'
+                          ? StatusBadge.success(AppStrings.active)
+                          : StatusBadge.danger(AppStrings.inactive),
+                    ),
+                    DataCell(
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              Icons.edit_outlined,
+                              color: AppColors.textSecondary,
+                              size: 20.r,
+                            ),
+                            onPressed: () => _showEditDialog(context, lounge),
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: AppColors.danger,
+                              size: 20.r,
+                            ),
+                            onPressed: () =>
+                                _confirmDelete(context, lounge.id, lounge.name),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          )).toList(),
+              )
+              .toList(),
         );
       },
     );
@@ -140,34 +201,68 @@ class LoungesDataTable extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(lounge.name, style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp, fontWeight: FontWeight.bold)),
-                  Text('${lounge.availableRooms ?? 0} ${AppStrings.rooms}', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                  Text(
+                    lounge.name,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    '${lounge.availableRooms ?? '—'} ${AppStrings.rooms}',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12.sp,
+                    ),
+                  ),
                 ],
               ),
-              lounge.status == 'pending' 
-                ? StatusBadge.warning(AppStrings.pending) 
-                : lounge.isOpen 
-                  ? StatusBadge.success(AppStrings.active) 
+              lounge.status == 'pending'
+                  ? StatusBadge.warning(AppStrings.pending)
+                  : lounge.isActive && lounge.status == 'active'
+                  ? StatusBadge.success(AppStrings.active)
                   : StatusBadge.danger(AppStrings.inactive),
             ],
           ),
           const Divider(height: 24, color: AppColors.divider),
-          _buildInfoRow(Icons.person_outline, AppStrings.loungeOwnerAdmin, lounge.ownerName ?? AppStrings.notAssigned),
+          _buildInfoRow(
+            Icons.person_outline,
+            AppStrings.loungeOwnerAdmin,
+            lounge.ownerName ?? AppStrings.notAssigned,
+          ),
           SizedBox(height: 8.h),
-          _buildInfoRow(Icons.location_on_outlined, AppStrings.location, lounge.city ?? lounge.location ?? 'N/A'),
+          _buildInfoRow(
+            Icons.location_on_outlined,
+            AppStrings.location,
+            lounge.city ?? lounge.location ?? AppStrings.notAvailable,
+          ),
           SizedBox(height: 8.h),
-          _buildInfoRow(Icons.payments_outlined, AppStrings.pricePerHour, '\$${lounge.pricePerHour.toStringAsFixed(2)}'),
+          _buildInfoRow(
+            Icons.payments_outlined,
+            AppStrings.pricePerHour,
+            _priceLabel(lounge),
+          ),
           const Divider(height: 24, color: AppColors.divider),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               IconButton(
-                icon: Icon(Icons.edit_outlined, color: AppColors.neonBlue, size: 22.r),
+                icon: Icon(
+                  Icons.edit_outlined,
+                  color: AppColors.neonBlue,
+                  size: 22.r,
+                ),
                 onPressed: () => _showEditDialog(context, lounge),
               ),
               IconButton(
-                icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 22.r),
-                onPressed: () => _confirmDelete(context, lounge.id, lounge.name),
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: AppColors.danger,
+                  size: 22.r,
+                ),
+                onPressed: () =>
+                    _confirmDelete(context, lounge.id, lounge.name),
               ),
             ],
           ),
@@ -176,14 +271,30 @@ class LoungesDataTable extends StatelessWidget {
     );
   }
 
+  String _priceLabel(Lounge lounge) => lounge.pricePerHour > 0
+      ? '${lounge.pricePerHour.toStringAsFixed(2)} ${AppStrings.egp}'
+      : AppStrings.pricedPerRoom;
+
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       children: [
         Icon(icon, size: 16.r, color: AppColors.textSecondary),
         SizedBox(width: 8.w),
-        Text('$label:', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+        Text(
+          '$label:',
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+        ),
         SizedBox(width: 4.w),
-        Text(value, style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp, fontWeight: FontWeight.w500)),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -197,7 +308,10 @@ class LoungesDataTable extends StatelessWidget {
         listener: (context, state) {
           if (state.status == LoungeStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage ?? 'Error'), backgroundColor: AppColors.danger),
+              SnackBar(
+                content: Text(state.errorMessage ?? AppStrings.error),
+                backgroundColor: AppColors.danger,
+              ),
             );
           }
         },
@@ -214,7 +328,11 @@ class LoungesDataTable extends StatelessWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, String loungeId, String name) async {
+  void _confirmDelete(
+    BuildContext context,
+    String loungeId,
+    String name,
+  ) async {
     final cubit = context.read<LoungeCubit>();
     final confirmed = await AppDialog.confirm(
       context: context,

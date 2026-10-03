@@ -1621,5 +1621,6 @@
   "promotion_session_expired": "انتهت جلستك. سجّل الدخول مجددًا.",
   "promotion_invalid_details": "راجع بيانات العرض وقيمة الخصم والغرفة المختارة.",
   "promotion_operation_failed": "تعذر إتمام عملية العرض. تحقق من الاتصال وحاول مجددًا.",
-  "promo_deleted_success": "تم حذف العرض."
+  "promo_deleted_success": "تم حذف العرض.",
+  "priced_per_room": "السعر حسب الغرفة"
 }

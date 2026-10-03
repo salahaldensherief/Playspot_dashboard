@@ -61,10 +61,14 @@ class RouterGuards {
       return null;
     }
 
-    // Leave onboarding or kyc-pending if status is active or user is non-owner
-    if ((isOnboardingPath || isKycPendingPath) &&
-        (user.isSetupCompleted && !isLoungePending)) {
-      return RouterKeys.loungeAdminDashboard;
+    // Staff do not own venue setup. An approved lounge loaded after sign-in
+    // must release them from the temporary pending screen even when their
+    // personal setup flag is false. Keep pending/disabled venues gated above.
+    if (isOnboardingPath || isKycPendingPath) {
+      if (isSuperAdmin) return RouterKeys.superAdminDashboard;
+      if (!isLoungePending && (!isLoungeOwner || user.isSetupCompleted)) {
+        return RouterKeys.loungeAdminDashboard;
+      }
     }
 
     if (isOnboardingPath && !isLoungeOwner) {

@@ -146,6 +146,74 @@ void main() {
         );
       },
     );
+    test('approved lounge releases staff without owner setup from pending', () {
+      for (final role in [UserRole.manager, UserRole.cashier, UserRole.staff]) {
+        expect(
+          guard(
+            status: LoginStatus.authenticated,
+            user: _user(role, setupCompleted: false),
+            location: RouterKeys.kycPending,
+          ),
+          RouterKeys.loungeAdminDashboard,
+        );
+      }
+    });
+    test('late lounge response keeps staff gated until approval is known', () {
+      final cashier = _user(UserRole.cashier, setupCompleted: false);
+      expect(
+        guard(
+          status: LoginStatus.authenticated,
+          user: cashier,
+          lounge: null,
+          location: RouterKeys.login,
+        ),
+        RouterKeys.kycPending,
+      );
+      expect(
+        guard(
+          status: LoginStatus.authenticated,
+          user: cashier,
+          location: RouterKeys.kycPending,
+        ),
+        RouterKeys.loungeAdminDashboard,
+      );
+    });
+    test('pending staff without owner setup remain on pending screen', () {
+      expect(
+        guard(
+          status: LoginStatus.authenticated,
+          user: _user(UserRole.cashier, setupCompleted: false),
+          lounge: const Lounge(
+            id: 'l1',
+            name: 'Pending',
+            imageUrl: '',
+            opensAt: '',
+            closesAt: '',
+            status: 'pending',
+            isActive: false,
+          ),
+          location: RouterKeys.kycPending,
+        ),
+        isNull,
+      );
+    });
+    test('super admin cannot become trapped in owner setup routes', () {
+      for (final route in [
+        RouterKeys.kycPending,
+        RouterKeys.loungeOnboarding,
+      ]) {
+        expect(
+          guard(
+            status: LoginStatus.authenticated,
+            user: _user(UserRole.superAdmin, setupCompleted: false),
+            lounge: null,
+            location: route,
+          ),
+          RouterKeys.superAdminDashboard,
+        );
+      }
+    });
+
     test('inactive staff cannot enter dashboard routes', () {
       expect(
         guard(

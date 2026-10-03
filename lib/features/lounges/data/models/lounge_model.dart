@@ -138,13 +138,9 @@ class LoungeModel extends Lounge {
       city: json['city']?.toString(),
       cityId: json['city_id']?.toString(),
       totalReviews: parseInt(json['total_reviews']),
-      availableRooms:
-          parseInt(
-            json['available_rooms'] ??
-                json['rooms_count'] ??
-                json['room_count'],
-          ) ??
-          0,
+      availableRooms: parseInt(
+        json['available_rooms'] ?? json['rooms_count'] ?? json['room_count'],
+      ),
       descriptionAr: json['description_ar']?.toString(),
       descriptionEn: json['description_en']?.toString(),
       images: (json['images'] is List)

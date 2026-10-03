@@ -145,6 +145,7 @@ class AppStrings {
   static String get roomNameLabelEn => 'room_name_label_en'.tr();
   static String get specs => 'specs'.tr();
   static String get capacity => 'capacity'.tr();
+  static String get pricedPerRoom => 'priced_per_room'.tr();
   static String get pricePerHour => 'price_per_hour'.tr();
   static String get singlePrice => 'single_price'.tr();
   static String get multiPrice => 'multi_price'.tr();

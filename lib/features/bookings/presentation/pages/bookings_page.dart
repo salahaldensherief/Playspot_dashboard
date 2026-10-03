@@ -28,7 +28,6 @@ import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit
 import 'package:play_spot_dashboard/features/shifts/domain/entities/shift_entity.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_state.dart';
-import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/shift_header_banner.dart';
 
 /// Redesigned Modern & Immersive Web Bookings & Live Sessions Page
 class BookingsPage extends StatefulWidget {
@@ -247,7 +246,6 @@ class _BookingsPageState extends State<BookingsPage>
                         SliverToBoxAdapter(
                           child: LoungeDiscountBanner(lounge: userLounge),
                         ),
-                        const SliverToBoxAdapter(child: ShiftHeaderBanner()),
                         SliverToBoxAdapter(child: SizedBox(height: 12.h)),
                         SliverToBoxAdapter(
                           child: BookingsCockpitStatsBar(

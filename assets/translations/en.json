@@ -1621,5 +1621,6 @@
   "promotion_session_expired": "Your session expired. Sign in again.",
   "promotion_invalid_details": "Check the promotion details, discount value and selected room.",
   "promotion_operation_failed": "Could not complete the promotion operation. Check your connection and retry.",
-  "promo_deleted_success": "Promotion deleted."
+  "promo_deleted_success": "Promotion deleted.",
+  "priced_per_room": "Priced per room"
 }

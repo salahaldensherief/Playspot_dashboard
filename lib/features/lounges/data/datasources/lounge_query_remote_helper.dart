@@ -9,62 +9,46 @@ class LoungeQueryRemoteHelper {
   LoungeQueryRemoteHelper(this.client);
 
   Future<List<LoungeModel>> getLounges() async {
-    List<Map<String, dynamic>> rawList = [];
-
-    try {
-      final response = await client
-          .from('lounges')
-          .select()
-          .neq('status', 'deleted')
-          .order('created_at', ascending: false);
-
-      rawList = (response as List)
-          .map((e) => Map<String, dynamic>.from(e as Map))
-          .where(
-            (json) => json['status'] != 'deleted' && json['is_active'] != false,
-          )
-          .toList();
-    } catch (e, stackTrace) {
-      AppLogger.warning(
-        'Direct lounges select query failed ($e), attempting RPC fallbacks...',
-        e,
-        stackTrace,
-      );
-
-      try {
-        final fallbackResponse = await client.rpc('get_all_lounges');
-        if (fallbackResponse is List && fallbackResponse.isNotEmpty) {
-          rawList = fallbackResponse
-              .map((e) => Map<String, dynamic>.from(e as Map))
-              .where(
-                (json) =>
-                    json['status'] != 'deleted' && json['is_active'] != false,
-              )
-              .toList();
-        }
-      } catch (_) {}
-
-      if (rawList.isEmpty) {
-        try {
-          final fallbackResponse = await client.rpc(
-            'get_top_lounges_by_revenue',
-            params: {'limit_count': 100},
-          );
-          if (fallbackResponse is List && fallbackResponse.isNotEmpty) {
-            rawList = fallbackResponse
-                .map((e) => Map<String, dynamic>.from(e as Map))
-                .where(
-                  (json) =>
-                      json['status'] != 'deleted' && json['is_active'] != false,
-                )
-                .toList();
-          }
-        } catch (_) {}
-      }
-    }
+    // Management includes pending and suspended venues. Discovery and revenue
+    // rankings have different scopes and cannot substitute for a failed read.
+    final response = await client
+        .from('lounges')
+        .select()
+        .neq('status', 'deleted')
+        .order('created_at', ascending: false);
+    final rawList = response
+        .map((row) => Map<String, dynamic>.from(row))
+        .where((row) => row['status'] != 'deleted')
+        .toList();
 
     if (rawList.isEmpty) {
       return [];
+    }
+
+    // A count failure must remain an error rather than presenting a false zero.
+    // Include rooms under maintenance, but not soft-deleted rooms.
+    final loungeIds = rawList.map((row) => row['id'].toString()).toList();
+    final roomCounts = {for (final id in loungeIds) id: 0};
+    const pageSize = 1000;
+    for (var offset = 0; ; offset += pageSize) {
+      final rooms = await client
+          .from('rooms')
+          .select('id,lounge_id,status')
+          .inFilter('lounge_id', loungeIds)
+          .order('id')
+          .range(offset, offset + pageSize - 1);
+      for (final room in rooms) {
+        final id = room['lounge_id']?.toString();
+        if (id != null &&
+            room['status'] != 'deleted' &&
+            roomCounts.containsKey(id)) {
+          roomCounts[id] = (roomCounts[id] ?? 0) + 1;
+        }
+      }
+      if (rooms.length < pageSize) break;
+    }
+    for (final row in rawList) {
+      row['available_rooms'] = roomCounts[row['id'].toString()];
     }
 
     final ownerIds = rawList
@@ -79,7 +63,7 @@ class LoungeQueryRemoteHelper {
         final profilesRes = await client
             .from('profiles')
             .select('id, full_name, email')
-            .filter('id', 'in', ownerIds);
+            .inFilter('id', ownerIds.whereType<String>().toList());
 
         for (final p in profilesRes as List) {
           final pMap = Map<String, dynamic>.from(p as Map);
