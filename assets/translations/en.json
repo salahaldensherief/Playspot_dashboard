@@ -1602,5 +1602,9 @@
   "booking_voucher_checking": "Checking…",
   "booking_voucher_apply": "Apply",
   "booking_voucher_applied": "Voucher {code} verified · estimated discount {discount} {currency}",
-  "platform_top_lounges_description": "Ranked by completed payments across all periods"
+  "platform_top_lounges_description": "Ranked by completed payments across all periods",
+  "booking_cash_confirmation_title": "Confirm cash received",
+  "booking_cash_confirmation_description": "This records cash collection and starts the session. Confirm only after receiving the amount in the booking summary. To book without collecting, cancel and turn off immediate session start.",
+  "booking_cash_confirmation_action": "Cash received — start session",
+  "booking_cash_confirmation_quick_description": "Walk-in booking records cash collection and starts the session. Confirm only after receiving the amount in the summary. To book without collecting, cancel and use Detailed Booking with immediate start turned off."
 }
