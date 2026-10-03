@@ -1,3 +1,4 @@
+import '../marketing_failure_mapper.dart';
 import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
@@ -26,7 +27,7 @@ class MarketingRepositoryImpl implements MarketingRepository {
       );
       return Right(promos);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(marketingFailure(e));
     }
   }
 
@@ -56,7 +57,7 @@ class MarketingRepositoryImpl implements MarketingRepository {
       );
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(marketingFailure(e));
     }
   }
 
@@ -86,7 +87,7 @@ class MarketingRepositoryImpl implements MarketingRepository {
       );
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(marketingFailure(e));
     }
   }
 
@@ -96,7 +97,7 @@ class MarketingRepositoryImpl implements MarketingRepository {
       await remoteDataSource.deletePromotion(id);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(marketingFailure(e));
     }
   }
 

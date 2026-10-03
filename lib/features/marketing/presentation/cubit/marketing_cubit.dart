@@ -8,6 +8,7 @@ import '../../domain/usecases/marketing_usecases.dart';
 import 'marketing_state.dart';
 
 class MarketingCubit extends Cubit<MarketingState> {
+  final Set<String> _deleting = {};
   final GetPromotionsUseCase _getPromotionsUseCase;
   final CreatePromotionUseCase _createPromotionUseCase;
   final UpdatePromotionUseCase _updatePromotionUseCase;
@@ -61,23 +62,35 @@ class MarketingCubit extends Cubit<MarketingState> {
   }
 
   Future<void> deletePromotion(String id, {String? loungeId}) async {
-    final result = await _deletePromotionUseCase(id);
-    if (isClosed) return;
-    result.fold(
-      (failure) {
-        AppLogger.error('Delete promotion error: ${failure.message}');
-        emit(
-          state.copyWith(
-            status: MarketingStatus.failure,
-            errorMessage: failure.message,
-          ),
-        );
-      },
-      (_) {
-        emit(state.copyWith(status: MarketingStatus.actionSuccess));
-        loadPromotions(loungeId: loungeId);
-      },
-    );
+    if (!_deleting.add(id)) return;
+    try {
+      final result = await _deletePromotionUseCase(id);
+      if (isClosed) return;
+      await result.fold<Future<void>>(
+        (failure) async {
+          emit(
+            state.copyWith(
+              status: MarketingStatus.failure,
+              errorMessage: failure.message,
+            ),
+          );
+          if (failure.message == 'promotion_not_found') {
+            await loadPromotions(loungeId: loungeId);
+          }
+        },
+        (_) async {
+          emit(
+            state.copyWith(
+              status: MarketingStatus.actionSuccess,
+              actionMessageKey: 'promo_deleted_success',
+            ),
+          );
+          await loadPromotions(loungeId: loungeId);
+        },
+      );
+    } finally {
+      _deleting.remove(id);
+    }
   }
 
   Future<bool> createPromotion(PromoEntity promo) async {
@@ -98,7 +111,12 @@ class MarketingCubit extends Cubit<MarketingState> {
         return false;
       },
       (_) {
-        emit(state.copyWith(status: MarketingStatus.actionSuccess));
+        emit(
+          state.copyWith(
+            status: MarketingStatus.actionSuccess,
+            actionMessageKey: 'promo_published_success',
+          ),
+        );
         loadPromotions(loungeId: promo.loungeId);
         return true;
       },

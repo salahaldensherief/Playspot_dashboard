@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import '../../domain/entities/promo_entity.dart';
@@ -11,12 +11,7 @@ class PromoCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
-  const PromoCard({
-    super.key,
-    required this.promo,
-    this.onEdit,
-    this.onDelete,
-  });
+  const PromoCard({super.key, required this.promo, this.onEdit, this.onDelete});
 
   bool get isExpired {
     if (promo.expiresAt == null) return false;
@@ -25,15 +20,22 @@ class PromoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn;
-    final tag = promo.tagAr.isNotEmpty ? promo.tagAr : promo.tagEn;
+    final arabic = context.locale.languageCode == 'ar';
+    final title = arabic
+        ? (promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn)
+        : (promo.titleEn.isNotEmpty ? promo.titleEn : promo.titleAr);
+    final tag = arabic
+        ? (promo.tagAr.isNotEmpty ? promo.tagAr : promo.tagEn)
+        : (promo.tagEn.isNotEmpty ? promo.tagEn : promo.tagAr);
 
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: isExpired ? AppColors.danger.withAlpha(128) : AppColors.neonBlue.withAlpha(77),
+          color: isExpired
+              ? AppColors.danger.withAlpha(128)
+              : AppColors.neonBlue.withAlpha(77),
         ),
         image: (promo.imageUrl != null && promo.imageUrl!.trim().isNotEmpty)
             ? DecorationImage(
@@ -57,20 +59,27 @@ class PromoCard extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.w,
+                        vertical: 4.h,
+                      ),
                       decoration: BoxDecoration(
                         color: isExpired
                             ? AppColors.danger.withAlpha(51)
                             : AppColors.success.withAlpha(51),
                         borderRadius: BorderRadius.circular(4.r),
                         border: Border.all(
-                          color: isExpired ? AppColors.danger : AppColors.success,
+                          color: isExpired
+                              ? AppColors.danger
+                              : AppColors.success,
                         ),
                       ),
                       child: Text(
                         isExpired ? AppStrings.timeExpired : AppStrings.active,
                         style: TextStyle(
-                          color: isExpired ? AppColors.danger : AppColors.success,
+                          color: isExpired
+                              ? AppColors.danger
+                              : AppColors.success,
                           fontSize: 11.sp,
                           fontWeight: FontWeight.bold,
                         ),
@@ -79,11 +88,16 @@ class PromoCard extends StatelessWidget {
                     if (tag.isNotEmpty) ...[
                       SizedBox(width: 8.w),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 4.h,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.neonBlue.withAlpha(51),
                           borderRadius: BorderRadius.circular(4.r),
-                          border: Border.all(color: AppColors.neonBlue.withAlpha(128)),
+                          border: Border.all(
+                            color: AppColors.neonBlue.withAlpha(128),
+                          ),
                         ),
                         child: Text(
                           tag.toUpperCase(),
@@ -111,7 +125,7 @@ class PromoCard extends StatelessWidget {
                 SizedBox(height: 4.h),
                 if (promo.expiresAt != null)
                   Text(
-                    '${AppStrings.expirationDate}: ${DateFormat('yyyy-MM-dd').format(promo.expiresAt!.toLocal())}',
+                    '${AppStrings.expirationDate}: ${DateFormat.yMMMd(context.locale.languageCode).format(promo.expiresAt!.toLocal())}',
                     style: TextStyle(
                       color: isExpired ? Colors.redAccent : Colors.white70,
                       fontSize: 11.sp,
@@ -120,10 +134,7 @@ class PromoCard extends StatelessWidget {
                 else
                   Text(
                     promo.deepLink ?? AppStrings.promotionsTab,
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12.sp,
-                    ),
+                    style: TextStyle(color: Colors.white70, fontSize: 12.sp),
                   ),
               ],
             ),
