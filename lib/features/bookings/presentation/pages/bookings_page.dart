@@ -1,3 +1,6 @@
+import 'package:go_router/go_router.dart';
+import '../../../../core/router/router_keys.dart';
+import '../../../../art_core/widgets/app_button.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -245,6 +248,21 @@ class _BookingsPageState extends State<BookingsPage>
                       controller: _mainScrollController,
                       physics: const AlwaysScrollableScrollPhysics(),
                       slivers: [
+                        SliverToBoxAdapter(
+                          child: Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: AppButton(
+                              text: 'offline_workspace.title'.tr(),
+                              icon: Icons.cloud_off,
+                              onPressed: loungeId.isEmpty
+                                  ? null
+                                  : () => context.push(
+                                      RouterKeys.loungeAdminOffline,
+                                    ),
+                            ),
+                          ),
+                        ),
+
                         SliverToBoxAdapter(
                           child: LoungeDiscountBanner(lounge: userLounge),
                         ),

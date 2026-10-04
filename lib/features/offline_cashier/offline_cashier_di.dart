@@ -1,3 +1,6 @@
+import 'domain/repositories/cashier_workspace_store.dart';
+import 'data/datasources/cashier_workspace_store_impl.dart';
+import 'presentation/offline_workspace_cubit.dart';
 import 'package:flutter/foundation.dart';
 import '../../core/services/play_spot_secure_storage.dart';
 import 'package:get_it/get_it.dart';
@@ -21,6 +24,10 @@ Future<void> initOfflineCashierDI(GetIt sl) async {
   );
   sl.registerLazySingleton<CashierDevicePreferences>(
     () => CashierDevicePreferences(GetStorage('playspot_device_preferences')),
+  );
+  sl.registerFactory<OfflineWorkspaceCubit>(() => OfflineWorkspaceCubit(sl()));
+  sl.registerLazySingleton<CashierWorkspaceStore>(
+    () => CashierWorkspaceStoreImpl(sl(), sl()),
   );
   sl.registerLazySingleton<CashierStoreFactory>(
     () => CashierStoreFactoryImpl(keys: sl(), client: sl()),

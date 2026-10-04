@@ -1,3 +1,4 @@
+import 'cashier_writer_heartbeat.dart';
 import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/repositories/offline_cashier_repository.dart';
@@ -28,6 +29,7 @@ class CashierStoreFactoryImpl implements CashierStoreFactory {
   int _epoch = 0;
   String? _actorId;
   bool _disposed = false;
+  late final Future<void> _authReady;
   CashierStoreFactoryImpl({
     required this.keys,
     required this.client,
@@ -38,6 +40,7 @@ class CashierStoreFactoryImpl implements CashierStoreFactory {
       _onAuthChanged,
       onError: (Object error) => _checkCurrentIdentity(),
     );
+    _authReady = Future<void>.delayed(Duration.zero);
   }
 
   void _onAuthChanged(AuthState state) {
@@ -73,6 +76,8 @@ class CashierStoreFactoryImpl implements CashierStoreFactory {
     required String actorId,
     required String loungeId,
   }) async {
+    // Let GoTrue's replayed history finish before opening a scoped journal.
+    await _authReady;
     Future<void> closing;
     do {
       closing = _closing;
@@ -116,7 +121,15 @@ class CashierStoreFactoryImpl implements CashierStoreFactory {
       ensureActive: () => _ensureScope(epoch, actorId),
     );
     final lifecycle = CashierLifecycleGate();
+    final authorityRefresher = CashierAuthorityRefresher(
+      lifecycle: lifecycle,
+      transport: SupabaseCashierAuthorityTransport(client, actorId),
+      store: authorityStore,
+    );
+    final heartbeat = CashierWriterHeartbeat(journal, authorityRefresher)
+      ..start();
     return OfflineCashierRepositoryImpl(
+      heartbeat: heartbeat,
       ensureActive: () => _ensureScope(epoch, actorId),
       journal: journal,
       commands: LocalCashierCommands(
@@ -125,11 +138,7 @@ class CashierStoreFactoryImpl implements CashierStoreFactory {
         ensureActive: () => _ensureScope(epoch, actorId),
         requireBootstrap: true,
       ),
-      authorityRefresher: CashierAuthorityRefresher(
-        lifecycle: lifecycle,
-        transport: SupabaseCashierAuthorityTransport(client, actorId),
-        store: authorityStore,
-      ),
+      authorityRefresher: authorityRefresher,
       bootstrapRefresher: CashierBootstrapRefresher(
         lifecycle: lifecycle,
         transport: SupabaseCashierBootstrapTransport(client, actorId),

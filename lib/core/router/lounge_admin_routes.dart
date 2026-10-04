@@ -1,3 +1,5 @@
+import '../../features/offline_cashier/presentation/offline_workspace_page.dart';
+import '../../features/offline_cashier/presentation/offline_workspace_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:play_spot_dashboard/art_core/di/provider_scope.dart';
@@ -64,6 +66,15 @@ List<RouteBase> getLoungeAdminRoutes(LoginCubit authCubit) {
           const NoTransitionPage(child: bookings.BookingsPage()),
     ),
     GoRoute(
+      path: RouterKeys.loungeAdminOffline,
+      pageBuilder: (context, state) => NoTransitionPage(
+        child: BlocProvider(
+          create: (_) => sl<OfflineWorkspaceCubit>(),
+          child: const OfflineWorkspacePage(),
+        ),
+      ),
+    ),
+    GoRoute(
       path: RouterKeys.loungeAdminRooms,
       pageBuilder: (context, state) => NoTransitionPage(
         child: BlocProvider(
@@ -74,15 +85,13 @@ List<RouteBase> getLoungeAdminRoutes(LoginCubit authCubit) {
     ),
     GoRoute(
       path: RouterKeys.loungeAdminExtras,
-      pageBuilder: (context, state) => const NoTransitionPage(
-        child: extras.ExtrasManagementPage(),
-      ),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: extras.ExtrasManagementPage()),
     ),
     GoRoute(
       path: RouterKeys.loungeAdminReviews,
-      pageBuilder: (context, state) => const NoTransitionPage(
-        child: reviews_page.ReviewsScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: reviews_page.ReviewsScreen()),
     ),
     GoRoute(
       path: RouterKeys.loungeAdminTournaments,
@@ -90,9 +99,7 @@ List<RouteBase> getLoungeAdminRoutes(LoginCubit authCubit) {
         child: MultiBlocProviderScope(
           providers: [
             BlocProvider(create: (_) => sl<TournamentCubit>()),
-            BlocProvider(
-              create: (_) => sl<TournamentParticipantsCubit>(),
-            ),
+            BlocProvider(create: (_) => sl<TournamentParticipantsCubit>()),
             BlocProvider(create: (_) => sl<TournamentMatchesCubit>()),
           ],
           child: const tournaments.TournamentsScreen(),
@@ -148,9 +155,8 @@ List<RouteBase> getLoungeAdminRoutes(LoginCubit authCubit) {
     ),
     GoRoute(
       path: RouterKeys.loungeAdminProfile,
-      pageBuilder: (context, state) => const NoTransitionPage(
-        child: lounge_profile.LoungeProfilePage(),
-      ),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: lounge_profile.LoungeProfilePage()),
     ),
     GoRoute(
       path: RouterKeys.loungeAdminSupport,

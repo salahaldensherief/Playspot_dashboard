@@ -1,3 +1,4 @@
+import '../datasources/cashier_writer_heartbeat.dart';
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/local_cashier_command.dart';
@@ -18,6 +19,7 @@ class OfflineCashierRepositoryImpl implements OfflineCashierRepository {
   final CashierAuthorityRefresher? authorityRefresher;
   final CashierBootstrapRefresher? bootstrapRefresher;
   final CashierWriterReleaser? writerReleaser;
+  final CashierWriterHeartbeat? heartbeat;
   final void Function()? _ensureActive;
   const OfflineCashierRepositoryImpl({
     required this.journal,
@@ -26,6 +28,7 @@ class OfflineCashierRepositoryImpl implements OfflineCashierRepository {
     this.authorityRefresher,
     this.bootstrapRefresher,
     this.writerReleaser,
+    this.heartbeat,
     void Function()? ensureActive,
   }) : _ensureActive = ensureActive;
 
@@ -58,6 +61,7 @@ class OfflineCashierRepositoryImpl implements OfflineCashierRepository {
 
   @override
   Future<void> close() async {
+    heartbeat?.stop();
     writerReleaser?.stop();
     bootstrapRefresher?.stop();
     authorityRefresher?.stop();
