@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:async';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
@@ -135,7 +136,7 @@ class BookingCubit extends Cubit<BookingState>
       (failure) => emit(
         state.copyWith(
           status: BookingStatusState.failure,
-          errorMessage: failure.message,
+          errorMessage: failure.message.tr(),
         ),
       ),
       (paginated) => emit(
@@ -160,7 +161,7 @@ class BookingCubit extends Cubit<BookingState>
         emit(
           state.copyWith(
             status: BookingStatusState.failure,
-            errorMessage: failure.message,
+            errorMessage: failure.message.tr(),
           ),
         );
         return false;
@@ -199,7 +200,7 @@ class BookingCubit extends Cubit<BookingState>
         emit(
           state.copyWith(
             status: BookingStatusState.failure,
-            errorMessage: failure.message,
+            errorMessage: failure.message.tr(),
             bookings: originalBookings,
           ),
         );
@@ -290,7 +291,7 @@ class BookingCubit extends Cubit<BookingState>
       (failure) => emit(
         state.copyWith(
           status: BookingStatusState.failure,
-          errorMessage: failure.message,
+          errorMessage: failure.message.tr(),
           bookings: originalBookings,
         ),
       ),
@@ -332,13 +333,15 @@ class BookingCubit extends Cubit<BookingState>
         emit(
           state.copyWith(
             status: BookingStatusState.failure,
-            errorMessage: failure.message,
+            errorMessage: failure.message.tr(),
           ),
         );
         return null;
       },
       (data) {
-        final targetLoungeId = watchedEntityId == 'all' ? null : watchedEntityId;
+        final targetLoungeId = watchedEntityId == 'all'
+            ? null
+            : watchedEntityId;
         if (watchedEntityId != null) {
           startWatchingBookings(loungeId: targetLoungeId, forceRefresh: true);
         }
@@ -347,7 +350,9 @@ class BookingCubit extends Cubit<BookingState>
     );
   }
 
-  Future<Map<String, dynamic>?> completeOpenTimeSession(String bookingId) async {
+  Future<Map<String, dynamic>?> completeOpenTimeSession(
+    String bookingId,
+  ) async {
     final result = await repository.completeOpenTimeSession(bookingId);
 
     if (isClosed) return null;
@@ -357,13 +362,15 @@ class BookingCubit extends Cubit<BookingState>
         emit(
           state.copyWith(
             status: BookingStatusState.failure,
-            errorMessage: failure.message,
+            errorMessage: failure.message.tr(),
           ),
         );
         return null;
       },
       (data) {
-        final targetLoungeId = watchedEntityId == 'all' ? null : watchedEntityId;
+        final targetLoungeId = watchedEntityId == 'all'
+            ? null
+            : watchedEntityId;
         if (watchedEntityId != null) {
           startWatchingBookings(loungeId: targetLoungeId, forceRefresh: true);
         }

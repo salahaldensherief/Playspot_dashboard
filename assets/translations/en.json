@@ -1844,5 +1844,9 @@
   "audit_unknown_action": "Other event ({code})",
   "audit_unknown_entity": "Other resource ({code})",
   "payout_entity": "Payout",
-  "tournament_entity": "Tournament"
+  "tournament_entity": "Tournament",
+  "room_has_active_session": "This room has a running session. Finish it before changing the room state or starting another session.",
+  "room_not_available_for_session": "This room is unavailable or under maintenance. Choose another room.",
+  "room_operation_permission_denied": "You do not have permission to change this room state.",
+  "room_operation_failed": "Could not change the room state. Refresh and try again."
 }

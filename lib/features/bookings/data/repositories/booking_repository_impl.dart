@@ -47,19 +47,22 @@ class BookingRepositoryImpl implements BookingRepository {
         page: page,
         pageSize: pageSize,
       );
-      return Right(PaginatedResult<Booking>(
-        items: result.items,
-        totalCount: result.totalCount,
-        page: result.page,
-        pageSize: result.pageSize,
-      ));
+      return Right(
+        PaginatedResult<Booking>(
+          items: result.items,
+          totalCount: result.totalCount,
+          page: result.page,
+          pageSize: result.pageSize,
+        ),
+      );
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, CustomerCancellationSummary>> getBookingCancellationSummary({
+  Future<Either<Failure, CustomerCancellationSummary>>
+  getBookingCancellationSummary({
     required String loungeId,
     required String userId,
   }) async {
@@ -80,7 +83,10 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateBookingStatus(String id, BookingStatus status) async {
+  Future<Either<Failure, void>> updateBookingStatus(
+    String id,
+    BookingStatus status,
+  ) async {
     try {
       await remoteDataSource.updateBookingStatus(id, status.toDbString());
       return const Right(null);
@@ -168,7 +174,9 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> validateVoucherByCode(String voucherCode) async {
+  Future<Either<Failure, Map<String, dynamic>>> validateVoucherByCode(
+    String voucherCode,
+  ) async {
     try {
       final res = await remoteDataSource.validateVoucherByCode(voucherCode);
       return Right(res);
@@ -178,7 +186,10 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> consumeVoucherByCode(String voucherCode, String bookingId) async {
+  Future<Either<Failure, void>> consumeVoucherByCode(
+    String voucherCode,
+    String bookingId,
+  ) async {
     try {
       await remoteDataSource.consumeVoucherByCode(voucherCode, bookingId);
       return const Right(null);
@@ -232,7 +243,11 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> swapRoom(String bookingId, String newRoomId, String actionBy) async {
+  Future<Either<Failure, void>> swapRoom(
+    String bookingId,
+    String newRoomId,
+    String actionBy,
+  ) async {
     try {
       await remoteDataSource.swapRoom(bookingId, newRoomId, actionBy);
       return const Right(null);
@@ -302,7 +317,10 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> approveManualBooking(String bookingId, String actionBy) async {
+  Future<Either<Failure, void>> approveManualBooking(
+    String bookingId,
+    String actionBy,
+  ) async {
     try {
       await remoteDataSource.approveManualBooking(bookingId, actionBy);
       return const Right(null);
@@ -314,7 +332,11 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> rejectManualBooking(String bookingId, String reason, String actionBy) async {
+  Future<Either<Failure, void>> rejectManualBooking(
+    String bookingId,
+    String reason,
+    String actionBy,
+  ) async {
     try {
       await remoteDataSource.rejectManualBooking(bookingId, reason, actionBy);
       return const Right(null);
@@ -327,16 +349,28 @@ class BookingRepositoryImpl implements BookingRepository {
 
   String _mapBookingErrorMessage(String message) {
     final clean = message.toLowerCase();
-    if (clean.contains('cash payment is disabled') || clean.contains('cash is disabled')) {
+    if (clean.contains('room_has_active_session')) {
+      return 'room_has_active_session';
+    }
+    if (clean.contains('room_not_available_for_session')) {
+      return 'room_not_available_for_session';
+    }
+    if (clean.contains('cash payment is disabled') ||
+        clean.contains('cash is disabled')) {
       return 'الدفع الكاش غير متاح في هذه الصالة.';
     }
-    if (clean.contains('first booking must use') || clean.contains('first_booking') || clean.contains('first booking')) {
+    if (clean.contains('first booking must use') ||
+        clean.contains('first_booking') ||
+        clean.contains('first booking')) {
       return 'أول حجز يجب تأكيده بتحويل مسبق.';
     }
-    if (clean.contains('sender_wallet_phone is required') || clean.contains('sender_wallet_phone')) {
+    if (clean.contains('sender_wallet_phone is required') ||
+        clean.contains('sender_wallet_phone')) {
       return 'يجب إدخال رقم المحفظة الذي تم التحويل منه.';
     }
-    if (clean.contains('23p01') || clean.contains('bookings_room_booking_period_excl') || clean.contains('exclusion')) {
+    if (clean.contains('23p01') ||
+        clean.contains('bookings_room_booking_period_excl') ||
+        clean.contains('exclusion')) {
       return 'الوقت المحدد تم حجزه بالفعل، يرجى اختيار وقت آخر.';
     }
     if (clean.contains('open_time_disabled')) {

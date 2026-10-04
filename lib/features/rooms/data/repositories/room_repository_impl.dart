@@ -196,7 +196,13 @@ class RoomRepositoryImpl implements RoomRepository {
       await _remoteSource.updateRoomStatus(roomId, dbStatus);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      final key =
+          e is PostgrestException && e.message == 'ROOM_HAS_ACTIVE_SESSION'
+          ? 'room_has_active_session'
+          : e is PostgrestException && e.code == '42501'
+          ? 'room_operation_permission_denied'
+          : 'room_operation_failed';
+      return Left(ServerFailure(key));
     }
   }
 

@@ -50,7 +50,7 @@ class _RoomTableSectionState extends State<RoomTableSection> {
             if (state.status == RoomStatus.failure) {
               return Center(
                 child: Text(
-                  state.errorMessage ?? AppStrings.error,
+                  state.errorMessage?.tr() ?? AppStrings.error,
                   style: const TextStyle(color: AppColors.danger),
                 ),
               );

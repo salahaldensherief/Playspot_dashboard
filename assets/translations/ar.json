@@ -1844,5 +1844,9 @@
   "audit_unknown_action": "حدث آخر ({code})",
   "audit_unknown_entity": "مورد آخر ({code})",
   "payout_entity": "تحويل مالي",
-  "tournament_entity": "بطولة"
+  "tournament_entity": "بطولة",
+  "room_has_active_session": "الغرفة فيها جلسة قيد التشغيل. أنهِ الجلسة قبل تغيير حالة الغرفة أو بدء جلسة أخرى.",
+  "room_not_available_for_session": "الغرفة غير متاحة أو تحت الصيانة. اختر غرفة أخرى.",
+  "room_operation_permission_denied": "ليس لديك صلاحية تغيير حالة هذه الغرفة.",
+  "room_operation_failed": "تعذّر تغيير حالة الغرفة. حدّث البيانات وحاول مجددًا."
 }
