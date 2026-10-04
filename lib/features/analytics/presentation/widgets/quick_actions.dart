@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_booking_dialog.dart';
-import 'package:play_spot_dashboard/features/users/presentation/widgets/add_lounge_admin_dialog.dart';
 import 'action_button.dart';
 
 class QuickActionsCard extends StatelessWidget {
@@ -56,12 +55,7 @@ class QuickActionsCard extends StatelessWidget {
         icon: Icons.add_business_outlined,
         label: AppStrings.addLounge,
         color: AppColors.neonPurple,
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (context) => const AddLoungeAdminDialog(),
-          );
-        },
+        onTap: () => context.push(RouterKeys.superAdminLounges),
       ),
       ActionButton(
         icon: Icons.category_outlined,

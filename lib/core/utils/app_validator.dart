@@ -15,8 +15,17 @@ class AppValidator {
     if (value == null || value.trim().isEmpty) {
       return AppStrings.fieldRequired;
     }
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(value.trim())) {
+    final email = value.trim();
+    final emailRegex = RegExp(
+      r'^[^\s@]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$',
+    );
+    final local = email.split('@').first;
+    if (email.length > 254 ||
+        local.length > 64 ||
+        local.startsWith('.') ||
+        local.endsWith('.') ||
+        local.contains('..') ||
+        !emailRegex.hasMatch(email)) {
       return AppStrings.invalidEmail;
     }
     return null;
@@ -46,7 +55,12 @@ class AppValidator {
   }
 
   /// Validates a number, optionally checking for negative values.
-  static String? validateNumber(String? value, {bool allowNegative = false, double? min, double? max}) {
+  static String? validateNumber(
+    String? value, {
+    bool allowNegative = false,
+    double? min,
+    double? max,
+  }) {
     if (value == null || value.trim().isEmpty) {
       return AppStrings.fieldRequired;
     }
@@ -77,7 +91,7 @@ class AppValidator {
       return AppStrings.fieldRequired;
     }
     // Generic phone regex or specific Egyptian format: 01xxxxxxxxx
-    final phoneRegex = RegExp(r'^(01)[0-2,5]{1}[0-9]{8}$'); 
+    final phoneRegex = RegExp(r'^(01)[0-2,5]{1}[0-9]{8}$');
     if (!phoneRegex.hasMatch(value.trim())) {
       return 'invalid_phone_number'.tr();
     }
@@ -110,7 +124,10 @@ class AppValidator {
   }
 
   /// Helper for optional fields that still need specific format if not empty.
-  static String? validateOptional(String? value, String? Function(String?) validator) {
+  static String? validateOptional(
+    String? value,
+    String? Function(String?) validator,
+  ) {
     if (value == null || value.trim().isEmpty) {
       return null;
     }
@@ -118,7 +135,13 @@ class AppValidator {
   }
 
   /// Validates an optional number.
-  static String? validateOptionalNumber(String? value, {bool allowNegative = false}) {
-    return validateOptional(value, (val) => validateNumber(val, allowNegative: allowNegative));
+  static String? validateOptionalNumber(
+    String? value, {
+    bool allowNegative = false,
+  }) {
+    return validateOptional(
+      value,
+      (val) => validateNumber(val, allowNegative: allowNegative),
+    );
   }
 }
