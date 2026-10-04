@@ -33,6 +33,7 @@ class DesignStyleSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return SectionContainer(
       title: AppStrings.designStyleTitle,
       children: [

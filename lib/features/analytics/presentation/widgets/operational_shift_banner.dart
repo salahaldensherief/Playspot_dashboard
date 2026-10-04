@@ -22,6 +22,7 @@ class OperationalShiftBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<LoginCubit, LoginState>(
       buildWhen: (prev, curr) => prev.user != curr.user,
       builder: (context, loginState) {

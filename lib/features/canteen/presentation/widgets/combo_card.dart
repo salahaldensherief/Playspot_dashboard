@@ -24,6 +24,7 @@ class ComboCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBackground,

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -67,6 +68,7 @@ class _AppImagePickerState extends State<AppImagePicker> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final hasInitialImage =
         widget.initialImageUrl != null &&
         widget.initialImageUrl!.trim().isNotEmpty;

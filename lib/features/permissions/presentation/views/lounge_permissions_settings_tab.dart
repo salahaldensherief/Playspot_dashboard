@@ -29,6 +29,7 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<PermissionsCubit, PermissionsState>(
       builder: (context, state) {
         return Column(

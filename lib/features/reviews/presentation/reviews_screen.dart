@@ -40,6 +40,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocListener<LoginCubit, LoginState>(
       listenWhen: (previous, current) =>
           previous.user?.loungeId != current.user?.loungeId,

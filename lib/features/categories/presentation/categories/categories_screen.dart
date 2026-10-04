@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -75,6 +76,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final categoryCubit = context.read<CategoryCubit>();
 
     return Padding(

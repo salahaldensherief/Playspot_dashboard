@@ -69,6 +69,7 @@ class AuditLogsModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final dateFormat = DateFormat('yyyy/MM/dd hh:mm:ss a');
 
     return AppDialog(

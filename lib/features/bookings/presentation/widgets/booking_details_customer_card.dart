@@ -164,6 +164,7 @@ class _BookingDetailsCustomerCardState
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final booking = widget.booking;
     final currentUser = context.watch<LoginCubit>().state.user;
     final isLoungeAdmin = currentUser?.isLoungeAdmin == true;

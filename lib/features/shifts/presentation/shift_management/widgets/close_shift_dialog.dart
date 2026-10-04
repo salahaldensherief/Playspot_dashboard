@@ -36,6 +36,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AlertDialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),

@@ -1,7 +1,7 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import '../../../art_core/app_strings.dart';
 import '../../../art_core/theme/app_colors.dart';
 import '../../../art_core/widgets/section_container.dart';
@@ -63,6 +63,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocConsumer<SupportCubit, SupportState>(
       listenWhen: (prev, curr) =>
           prev.actionStatus != curr.actionStatus ||

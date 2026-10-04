@@ -15,6 +15,7 @@ class TopLoungesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(

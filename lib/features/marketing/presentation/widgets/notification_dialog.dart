@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -52,6 +53,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),

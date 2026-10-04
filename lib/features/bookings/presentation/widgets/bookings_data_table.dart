@@ -36,6 +36,7 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<BookingCubit, BookingState>(
       builder: (context, state) {
         if (state.status == BookingStatusState.loading &&

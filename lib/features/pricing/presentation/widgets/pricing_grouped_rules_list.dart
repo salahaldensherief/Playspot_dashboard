@@ -76,6 +76,7 @@ class PricingGroupedRulesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (rules.isEmpty) {
       return Center(
         child: Container(

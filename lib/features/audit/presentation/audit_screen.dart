@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,6 +23,7 @@ class AuditScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocProvider<AuditCubit>(
       create: (_) => sl<AuditCubit>(),
       child: const _AuditScreenContent(),
@@ -53,6 +55,7 @@ class _AuditScreenContentState extends State<_AuditScreenContent> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final user = context.read<LoginCubit>().state.user;
     final loungeId = user?.loungeId ?? '';
     final isMobile = AppBreakpoints.isMobile(context);

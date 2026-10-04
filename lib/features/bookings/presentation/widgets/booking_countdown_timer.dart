@@ -47,6 +47,7 @@ class _BookingCountdownTimerState extends State<BookingCountdownTimer> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final start = widget.booking.startDateTime;
     if (start == null) return const SizedBox.shrink();
 

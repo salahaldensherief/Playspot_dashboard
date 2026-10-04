@@ -270,6 +270,7 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AppDialog(
       title: widget.initialCombo != null
           ? AppStrings.editCombo

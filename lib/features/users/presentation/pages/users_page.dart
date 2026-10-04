@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -27,6 +28,7 @@ class _UsersPageState extends State<UsersPage> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return DashboardLayout(
       title: AppStrings.userLabel,
       activeRoute: RouterKeys.superAdminUsers,

@@ -126,6 +126,7 @@ class _SessionControlActionsState extends State<SessionControlActions> {
   );
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     context.select((PermissionsCubit? cubit) => cubit?.state);
     context.select((LoginCubit? cubit) => cubit?.state.user);
     final booking = widget.booking;

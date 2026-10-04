@@ -95,6 +95,7 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final suggestions = _getSuggestions();
 
     return Column(

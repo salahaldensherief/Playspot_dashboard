@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -76,6 +77,7 @@ class _LocationInfoSectionState extends State<LocationInfoSection> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return SectionContainer(
       title: AppStrings.location, 
       children: [

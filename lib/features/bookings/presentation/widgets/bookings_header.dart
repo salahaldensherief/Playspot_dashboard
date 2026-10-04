@@ -10,6 +10,7 @@ class BookingsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AppAdaptivePageHeader(
       title: AppStrings.liveBookingsFeed,
       subtitle: AppStrings.loungeOperationsDesc,

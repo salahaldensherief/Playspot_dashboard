@@ -136,6 +136,7 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final b = widget.booking;
 
     return Container(

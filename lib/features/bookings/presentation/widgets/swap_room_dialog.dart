@@ -45,6 +45,7 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final user = context.read<LoginCubit>().state.user;
 
     return Dialog(

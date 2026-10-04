@@ -1,6 +1,6 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
@@ -50,6 +50,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AlertDialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),

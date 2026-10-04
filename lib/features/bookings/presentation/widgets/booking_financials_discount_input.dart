@@ -24,6 +24,7 @@ class BookingFinancialsDiscountInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

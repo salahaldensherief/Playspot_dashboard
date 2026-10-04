@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -81,6 +82,7 @@ class _AppMultiImagePickerState extends State<AppMultiImagePicker> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

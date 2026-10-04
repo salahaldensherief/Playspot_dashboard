@@ -20,6 +20,7 @@ class LoungeDiscountBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (lounge == null) return const SizedBox.shrink();
 
     bool hasDiscount = false;

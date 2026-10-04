@@ -72,6 +72,7 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(

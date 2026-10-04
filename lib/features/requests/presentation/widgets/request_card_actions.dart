@@ -46,6 +46,7 @@ class RequestCardActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (request.isAttended) {
       return Center(child: StatusBadge.success(AppStrings.attended));
     }
@@ -112,6 +113,7 @@ class _LiveApproveExtensionDialogState
     extends State<_LiveApproveExtensionDialog> {
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AlertDialog(
       backgroundColor: AppColors.cardBackground,
       title: AppText.subHeading(
@@ -182,6 +184,7 @@ class _LiveRejectExtensionDialogState
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AlertDialog(
       backgroundColor: AppColors.cardBackground,
       title: AppText.subHeading(

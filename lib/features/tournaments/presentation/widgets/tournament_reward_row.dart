@@ -26,6 +26,7 @@ class TournamentRewardRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(12.r),

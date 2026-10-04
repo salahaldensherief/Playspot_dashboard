@@ -24,6 +24,7 @@ class BookingUserInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final name = booking.userName ?? AppStrings.anonymous;
     final rawEmail = booking.userEmail?.trim();
     final email =

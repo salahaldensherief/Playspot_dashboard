@@ -47,6 +47,7 @@ class UpsellRuleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final impressions = conversion?.impressions ?? 0;
     final conversionsCount = conversion?.conversions ?? 0;
     final conversionRate = conversion?.conversionRatePercent ?? 0.0;

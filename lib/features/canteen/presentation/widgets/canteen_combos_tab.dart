@@ -35,6 +35,7 @@ class CanteenCombosTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<CanteenCubit, CanteenState>(
       buildWhen: (prev, curr) =>
           prev.status != curr.status ||

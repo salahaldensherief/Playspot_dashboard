@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +19,7 @@ class UtilizationChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<RoomCubit, RoomState>(
       buildWhen: (prev, curr) =>
           prev.status != curr.status || prev.rooms != curr.rooms,

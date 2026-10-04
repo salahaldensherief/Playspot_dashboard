@@ -34,6 +34,7 @@ class _SessionRequestActionsState extends State<SessionRequestActions> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     context.select((PermissionsCubit? cubit) => cubit?.state);
     context.select((LoginCubit? cubit) => cubit?.state.user);
     return Padding(

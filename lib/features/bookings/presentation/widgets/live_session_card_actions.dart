@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -161,6 +162,7 @@ class _LiveSessionCardActionsState extends State<LiveSessionCardActions> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final double h = 36.h;
     final booking = widget.booking;
 

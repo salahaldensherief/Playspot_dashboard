@@ -18,6 +18,7 @@ class TopBarBranchSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     EasyLocalization.of(
       context,
     ); // Observe locale without requiring a provider for the platform empty state.
@@ -234,6 +235,7 @@ class _BranchPickerDialogState extends State<_BranchPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final filtered = widget.lounges.where((l) {
       if (_searchQuery.isEmpty) return true;
       final name = l.name.toLowerCase();

@@ -17,6 +17,7 @@ class TournamentPrizeBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(

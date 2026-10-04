@@ -55,6 +55,7 @@ class LiveSessionTimerBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final formattedTime = _formatDuration(remaining);
     final String durationHrs = (booking.durationMinutes / 60.0)
         .toStringAsFixed(1)

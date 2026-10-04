@@ -14,6 +14,7 @@ class BookingSpecificationsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final loungeName = booking.loungeName.isNotEmpty
         ? booking.loungeName
         : AppStrings.lounges;

@@ -28,6 +28,7 @@ class NeedsAttentionPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final user = context.read<LoginCubit>().state.user;
     final isCashier = user?.role == UserRole.cashier;
 
@@ -232,6 +233,7 @@ class _AttentionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
       decoration: BoxDecoration(
@@ -272,6 +274,7 @@ class _AllClearState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 12.h),
       child: Row(

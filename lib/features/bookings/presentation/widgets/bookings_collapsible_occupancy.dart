@@ -33,6 +33,7 @@ class _BookingsCollapsibleOccupancyState
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBackground,

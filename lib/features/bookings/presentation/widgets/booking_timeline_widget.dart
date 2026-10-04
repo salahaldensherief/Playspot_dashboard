@@ -1,6 +1,6 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_section_header.dart';
@@ -18,6 +18,7 @@ class BookingTimelineWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final isCancelled =
         booking.status == BookingStatus.cancelled ||
         booking.status == BookingStatus.rejected;

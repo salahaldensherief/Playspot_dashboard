@@ -12,6 +12,7 @@ class BookingFinancialsExtrasList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (extras.isEmpty) return const SizedBox.shrink();
 
     return Column(

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart' as intl;
@@ -119,6 +120,7 @@ class _MaintenanceModeCardState extends State<MaintenanceModeCard> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final String formattedDate = _expectedEndTime != null
         ? intl.DateFormat('yyyy/MM/dd - hh:mm a').format(_expectedEndTime!)
         : AppStrings.unspecified;

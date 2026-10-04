@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:io' as io;
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
@@ -194,6 +195,7 @@ class _PromoDialogState extends State<PromoDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isCompact = screenWidth < 700;
     final dialogWidth = isCompact ? screenWidth * 0.92 : 700.w;

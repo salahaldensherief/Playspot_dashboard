@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -46,6 +47,7 @@ class BookingDetailsFinancialSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     double extrasTotal = 0.0;
     for (final item in booking.extras) {
       final q = (item['quantity'] ?? item['qty'] ?? 1) as num;

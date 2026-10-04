@@ -23,6 +23,7 @@ class BookingDetailsActionPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final cubit = context.read<BookingCubit>();
     final isPending = booking.status == BookingStatus.pending;
     final isInProgress = booking.status == BookingStatus.inProgress;

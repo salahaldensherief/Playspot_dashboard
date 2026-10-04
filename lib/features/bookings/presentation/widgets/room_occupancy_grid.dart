@@ -38,6 +38,7 @@ class _RoomOccupancyGridState extends State<RoomOccupancyGrid> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<RoomCubit, RoomState>(
       buildWhen: (prev, curr) => prev.rooms != curr.rooms,
       builder: (context, roomState) {

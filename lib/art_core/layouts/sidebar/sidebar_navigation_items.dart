@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -220,6 +221,7 @@ class SidebarNavigationItems extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       children: isSuperAdmin
           ? _buildSuperAdminItems(context)

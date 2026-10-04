@@ -27,6 +27,7 @@ class SuperAdminDashboardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return RefreshIndicator(
       onRefresh: () async {
         await context.read<DashboardCubit>().loadDashboardData();

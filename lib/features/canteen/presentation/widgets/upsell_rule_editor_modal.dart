@@ -218,6 +218,7 @@ class _UpsellRuleEditorModalState extends State<UpsellRuleEditorModal> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AppDialog(
       title: widget.initialRule != null
           ? AppStrings.editUpsellRule

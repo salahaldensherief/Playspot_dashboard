@@ -27,6 +27,7 @@ class CockpitKpiGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (isSuperAdmin) {
       return _SuperAdminKpiGrid(onRetry: onRetry);
     }
@@ -41,6 +42,7 @@ class _SuperAdminKpiGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<DashboardCubit, DashboardState>(
       buildWhen: (prev, curr) =>
           prev.status != curr.status ||
@@ -106,6 +108,7 @@ class _LoungeOwnerKpiGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<LoungeStatsCubit, LoungeStatsState>(
       buildWhen: (prev, curr) =>
           prev.status != curr.status || prev.stats != curr.stats,
@@ -367,6 +370,7 @@ class _KpiGridShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final crossAxisCount = context.responsive<int>(
       mobile: 2,
       tablet: 3,
@@ -404,6 +408,7 @@ class _KpiErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
       decoration: BoxDecoration(

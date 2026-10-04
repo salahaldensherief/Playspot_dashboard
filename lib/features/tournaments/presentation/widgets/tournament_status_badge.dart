@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
@@ -14,6 +15,7 @@ class TournamentStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     switch (status) {
       case TournamentStatus.published:
         return StatusBadge(text: AppStrings.active, color: AppColors.success);

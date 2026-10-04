@@ -265,6 +265,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Dialog(
       backgroundColor: AppColors.scaffoldBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),

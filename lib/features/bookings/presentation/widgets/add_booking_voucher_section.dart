@@ -102,6 +102,7 @@ class _AddBookingVoucherSectionState extends State<AddBookingVoucherSection> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -19,6 +19,7 @@ class CanteenItemsDetailsBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     // 1. Separate combo parents, combo components, and standard items
     final List<Map<String, dynamic>> comboParents = [];
     final Map<String, List<Map<String, dynamic>>> comboChildren = {};
@@ -257,6 +258,7 @@ class _ExpandableComboRowState extends State<_ExpandableComboRow> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final parentName =
         widget.parent['name_ar'] ??
         widget.parent['name'] ??

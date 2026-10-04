@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -19,6 +20,7 @@ class PricingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocProvider<PricingCubit>(
       create: (_) => sl<PricingCubit>(),
       child: const _PricingScreenContent(),
@@ -63,6 +65,7 @@ class _PricingScreenContentState extends State<_PricingScreenContent> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final user = context.read<LoginCubit>().state.user;
     final loungeId = user?.loungeId ?? '';
 

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -19,6 +20,7 @@ class AddBookingPlayModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (room == null) return const SizedBox.shrink();
     final singleRate = room?.hourlyRateSingle ?? room?.pricePerHour ?? 0;
     final multiRate = (room?.hourlyRateMulti ?? 0) > 0

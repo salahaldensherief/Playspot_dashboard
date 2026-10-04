@@ -21,6 +21,7 @@ class CashierSessionDetails extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       decoration: OperationsTokens.panel,
       padding: const EdgeInsets.all(OperationsTokens.padding),

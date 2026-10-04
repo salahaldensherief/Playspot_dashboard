@@ -31,6 +31,7 @@ class TournamentParticipantsTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (participants.isEmpty) {
       return Container(
         padding: EdgeInsets.all(40.r),

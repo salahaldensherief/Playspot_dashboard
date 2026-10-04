@@ -95,6 +95,7 @@ class _LoyaltyPageState extends State<LoyaltyPage>
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final loyaltyCubit = context.read<LoyaltyCubit>();
 
     return Padding(

@@ -20,6 +20,7 @@ class RoomOccupancyRequestsBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
       buildWhen: (previous, current) => previous.requests != current.requests,
       builder: (context, requestsState) {

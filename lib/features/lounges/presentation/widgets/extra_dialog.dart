@@ -151,6 +151,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final bool canEditPrice = context.hasPermission('menu_edit_prices');
 
     return Dialog(

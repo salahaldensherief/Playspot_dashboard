@@ -9,6 +9,7 @@ class KycDocumentPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final uri = Uri.tryParse(url);
     if (uri?.path.toLowerCase().endsWith('.pdf') == true) {
       return OutlinedButton.icon(

@@ -9,6 +9,7 @@ class SessionLiveClock extends StatelessWidget {
   const SessionLiveClock({super.key, required this.booking});
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final now = SessionTickerScope.nowOf(context);
     final start = booking.startDateTime;
     final upcoming = start != null && now.isBefore(start);

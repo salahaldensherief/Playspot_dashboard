@@ -21,6 +21,7 @@ class RequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final requestsCubit = context.read<ClientRequestsCubit>();
     final dashboardCubit = context.read<DashboardCubit>();
 
@@ -290,6 +291,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (_isLoading) {
       return Container(
         height: 40.h,

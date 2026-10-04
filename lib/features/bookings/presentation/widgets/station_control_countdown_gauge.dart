@@ -35,6 +35,7 @@ class StationControlCountdownGauge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final now = SessionTickerScope.nowOf(context);
     final currentRemaining = booking.remainingDuration(now);
     final currentExpired = booking.isSessionExpired(now);

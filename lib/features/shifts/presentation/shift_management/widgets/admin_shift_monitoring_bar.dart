@@ -62,6 +62,7 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<ShiftCubit, ShiftState>(
       buildWhen: (previous, current) =>
           previous.status != current.status ||

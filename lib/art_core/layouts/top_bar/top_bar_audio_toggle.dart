@@ -9,6 +9,7 @@ class TopBarAudioToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final audioService = sl<AudioService>();
     return ListenableBuilder(
       listenable: audioService,

@@ -139,6 +139,7 @@ class _CashierSessionsWorkspaceState extends State<CashierSessionsWorkspace> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final active = _ordered;
     if (active.isEmpty) return Text('cashier.empty'.tr());
     final matching = active.where((b) => b.id == _selectedId);

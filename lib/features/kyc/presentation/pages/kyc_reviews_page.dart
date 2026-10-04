@@ -32,6 +32,7 @@ class _KycReviewsPageState extends State<KycReviewsPage> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final kycCubit = context.read<KycCubit>();
 
     return Padding(
@@ -136,6 +137,7 @@ class _KycDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return DataTableWidget(
       columns: [
         AppStrings.ownerName,

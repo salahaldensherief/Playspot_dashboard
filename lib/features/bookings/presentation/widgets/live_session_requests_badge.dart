@@ -19,6 +19,7 @@ class LiveSessionRequestsBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
       buildWhen: (prev, curr) => prev.requests != curr.requests,
       builder: (context, requestsState) {

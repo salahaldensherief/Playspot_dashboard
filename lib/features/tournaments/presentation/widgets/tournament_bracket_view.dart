@@ -23,6 +23,7 @@ class TournamentBracketView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (matches.isEmpty) {
       final canDraw = tournament?.canDrawBracket ?? false;
 

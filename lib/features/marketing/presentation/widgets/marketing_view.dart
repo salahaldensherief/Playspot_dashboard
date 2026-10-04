@@ -48,6 +48,7 @@ class _MarketingViewState extends State<MarketingView> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final user = context.read<LoginCubit>().state.user;
     final isSuperAdmin = user?.isSuperAdmin ?? false;
     final marketingCubit = context.read<MarketingCubit>();

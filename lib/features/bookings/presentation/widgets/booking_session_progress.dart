@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -36,6 +37,7 @@ class _BookingSessionProgressState extends State<BookingSessionProgress> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final start = widget.booking.startDateTime;
     final end = widget.booking.endDateTime;
     final now = DateTime.now();

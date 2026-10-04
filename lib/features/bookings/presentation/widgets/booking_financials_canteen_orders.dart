@@ -16,6 +16,7 @@ class BookingFinancialsCanteenOrders extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (canteenOrders.isEmpty) return const SizedBox.shrink();
 
     return Column(

@@ -76,6 +76,7 @@ class _RoomOccupancyCardState extends State<RoomOccupancyCard> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final room = widget.room;
     final activeBooking = widget.activeBooking;
     final isOccupiedByApp =

@@ -100,6 +100,7 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(

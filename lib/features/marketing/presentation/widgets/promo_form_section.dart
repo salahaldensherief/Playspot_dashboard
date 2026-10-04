@@ -56,6 +56,7 @@ class PromoFormSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return SectionContainer(
       title: AppStrings.promotionDetails,
       children: [

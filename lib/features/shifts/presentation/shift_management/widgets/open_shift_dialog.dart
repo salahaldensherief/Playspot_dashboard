@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -45,6 +46,7 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return PopScope(
       canPop: widget.isDismissible && !_submitting,
       child: AlertDialog(

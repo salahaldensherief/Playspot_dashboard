@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -88,6 +89,7 @@ class _AdjustUserPointsDialogState extends State<AdjustUserPointsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     Map<String, dynamic>? selectedUser;
     for (final u in _users) {
       if (u['id']?.toString() == _selectedUserId) {

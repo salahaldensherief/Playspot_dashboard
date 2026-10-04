@@ -210,6 +210,7 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return SectionContainer(
       title: AppStrings.createAnnouncement,
       children: [

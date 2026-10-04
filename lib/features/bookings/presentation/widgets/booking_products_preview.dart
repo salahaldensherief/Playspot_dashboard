@@ -138,6 +138,7 @@ class BookingProductsPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final extrasCubit = context.watch<ExtrasCubit?>();
     if (extrasCubit != null &&
         extrasCubit.state.extras.isEmpty &&

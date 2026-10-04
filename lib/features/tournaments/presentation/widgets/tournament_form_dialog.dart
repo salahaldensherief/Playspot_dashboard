@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -215,6 +216,7 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final isEdit = widget.tournament != null;
 
     return AppDialog(

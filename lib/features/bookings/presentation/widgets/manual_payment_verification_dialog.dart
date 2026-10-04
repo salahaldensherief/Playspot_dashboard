@@ -218,6 +218,7 @@ class _ManualPaymentVerificationDialogState
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final b = widget.booking;
     final formattedDate = DateFormat('yyyy-MM-dd').format(b.date);
     final formattedTime = '${b.startTime} - ${b.endTime}';

@@ -33,6 +33,7 @@ class _LiveIndicatorBadgeState extends State<LiveIndicatorBadge>
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(

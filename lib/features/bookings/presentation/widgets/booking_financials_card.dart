@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -90,6 +91,7 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final extrasTotal = _calculateExtrasTotal();
     final basePrice = (widget.booking.totalPrice - extrasTotal).clamp(
       0.0,
