@@ -6,6 +6,7 @@ import 'package:http/testing.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/data/datasources/supabase_cashier_authority_transport.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/data/datasources/supabase_cashier_sync_transport.dart';
+import 'package:play_spot_dashboard/features/offline_cashier/data/datasources/supabase_cashier_bootstrap_transport.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/domain/entities/cashier_connection_mode.dart';
 
 void main() {
@@ -84,12 +85,41 @@ void main() {
       },
     );
   }
-  for (final source in ['authority', 'sync']) {
-    Future<Map<String, dynamic>> send() => source == 'authority'
-        ? authority(CashierConnectionMode.offline)
-        : SupabaseCashierSyncTransport(
-            client,
-          ).send({'actor_id': actor, 'id': 'operation'});
+  for (final mode in CashierConnectionMode.values) {
+    test('bootstrap sends exact $mode RPC and scoped parameters', () async {
+      await login(actor);
+      expect(
+        await SupabaseCashierBootstrapTransport(
+          client,
+          actor,
+        ).load(loungeId: lounge, deviceId: device, mode: mode),
+        {'ok': true},
+      );
+      expect(requests, hasLength(1));
+      expect(requests.single.method, 'POST');
+      expect(
+        requests.single.url.path,
+        '/rest/v1/rpc/bootstrap_offline_cashier',
+      );
+      expect(jsonDecode(requests.single.body), {
+        'p_lounge_id': lounge,
+        'p_device_id': device,
+        'p_online': mode == CashierConnectionMode.online,
+      });
+    });
+  }
+  for (final source in ['authority', 'sync', 'bootstrap']) {
+    Future<Map<String, dynamic>> send() => switch (source) {
+      'authority' => authority(CashierConnectionMode.offline),
+      'bootstrap' => SupabaseCashierBootstrapTransport(client, actor).load(
+        loungeId: lounge,
+        deviceId: device,
+        mode: CashierConnectionMode.offline,
+      ),
+      _ => SupabaseCashierSyncTransport(
+        client,
+      ).send({'actor_id': actor, 'id': 'operation'}),
+    };
     test('$source denies an unauthenticated request before HTTP', () async {
       await expectLater(send(), throwsStateError);
       expect(requests, isEmpty);

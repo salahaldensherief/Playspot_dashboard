@@ -7,6 +7,24 @@ class LocalCashierBookingRules {
     final payload = command.payload;
     final roomId = payload['room_id'];
     final room = _eligibleRoom(state, roomId);
+    final bootstrap = state['bootstrap'];
+    if (bootstrap is Map) {
+      final coverage = bootstrap['coverage'] as Map;
+      if (room['offline_supported'] != true ||
+          payload['timezone'] != (state['authority'] as Map)['timezone'] ||
+          payload['start_ms'] is! int ||
+          payload['end_ms'] is! int ||
+          payload['start_ms'] < coverage['from_ms'] ||
+          payload['end_ms'] > coverage['until_ms']) {
+        throw StateError('offline_cashier.outside_bootstrap');
+      }
+      for (final interval in room['blocked_intervals'] as List) {
+        if (interval['start_ms'] < payload['end_ms'] &&
+            interval['end_ms'] > payload['start_ms']) {
+          throw StateError('offline_cashier.room_conflict');
+        }
+      }
+    }
     if (bookings.containsKey(command.bookingId)) {
       throw StateError('offline_cashier.invalid_booking');
     }
@@ -23,6 +41,7 @@ class LocalCashierBookingRules {
       'items': <dynamic>[],
       'shift_id': (state['shift'] as Map)['id'],
       'sync_status': 'pending',
+      if (bootstrap is Map) 'offline_supported': true,
     };
   }
 
@@ -56,6 +75,11 @@ class LocalCashierBookingRules {
     final booking = (state['bookings'] as Map)[command.bookingId] as Map?;
     if (booking == null || booking['lounge_id'] != command.loungeId) {
       throw StateError('offline_cashier.booking_not_found');
+    }
+    if (state['bootstrap'] is Map &&
+        (booking['offline_supported'] != true ||
+            booking['shift_id'] != command.shiftId)) {
+      throw StateError('offline_cashier.invalid_transition');
     }
     return booking;
   }

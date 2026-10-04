@@ -9,10 +9,12 @@ class LocalCashierCommands {
   final EncryptedCashierJournal journal;
   final DateTime Function() _clock;
   final void Function()? _ensureActive;
+  final bool requireBootstrap;
   LocalCashierCommands(
     this.journal, {
     DateTime Function()? clock,
     void Function()? ensureActive,
+    this.requireBootstrap = false,
   }) : _clock = clock ?? DateTime.now,
        _ensureActive = ensureActive;
 
@@ -43,6 +45,9 @@ class LocalCashierCommands {
         loungeId: journal.loungeId,
         now: _clock(),
       );
+      if (requireBootstrap && state['bootstrap'] is! Map) {
+        throw StateError('offline_cashier.bootstrap_required');
+      }
       _applyCommand(state, command);
       final sequence = state['next_sequence'];
       if (sequence is! int || sequence < 1 || sequence >= 9007199254740991) {

@@ -1,0 +1,67 @@
+{
+  "rooms": {
+    "ea568d0e-71c0-40a1-9621-59dfdaf1e5ac": {
+      "id": "ea568d0e-71c0-40a1-9621-59dfdaf1e5ac",
+      "name": "Room",
+      "status": "available",
+      "is_active": true,
+      "lounge_id": "0c183b01-a6f8-4909-b96c-19b4a56036c2",
+      "is_available": true,
+      "multi_hour_minor": 15000,
+      "blocked_intervals": [],
+      "offline_supported": true,
+      "single_hour_minor": 10000
+    }
+  },
+  "shift": {
+    "id": "c3ecf59a-5900-49cb-93cc-b908c5e8e6ab",
+    "status": "open",
+    "actor_id": "fd1bcb60-8222-4a42-addb-def00d8b14a4",
+    "lounge_id": "0c183b01-a6f8-4909-b96c-19b4a56036c2",
+    "cash_total_visible": false,
+    "collected_cash_minor": 0
+  },
+  "bookings": {},
+  "complete": true,
+  "coverage": {
+    "from_ms": 1791090840000,
+    "until_ms": 1791166440000
+  },
+  "products": {
+    "a7318d50-72be-4a2d-8bb0-429c35833852": {
+      "id": "a7318d50-72be-4a2d-8bb0-429c35833852",
+      "name": "Water",
+      "is_active": true,
+      "lounge_id": "0c183b01-a6f8-4909-b96c-19b4a56036c2",
+      "track_stock": true,
+      "is_available": true,
+      "stock_quantity": 10,
+      "unit_price_minor": 1500
+    }
+  },
+  "authority": {
+    "actor_id": "fd1bcb60-8222-4a42-addb-def00d8b14a4",
+    "timezone": "Africa/Cairo",
+    "device_id": "7c884ff1-dbfc-4eb3-82e2-a6ec27c6e930",
+    "issued_ms": 1791080040000,
+    "lounge_id": "0c183b01-a6f8-4909-b96c-19b4a56036c2",
+    "permit_id": "f9622dd1-7747-4b05-abc8-fc678f428eb6",
+    "expires_ms": 1791166440000,
+    "permissions": {
+      "bookings.manage": true,
+      "billing_checkout": true,
+      "sessions_control": true
+    },
+    "lounge_active": true,
+    "lounge_status": "active",
+    "profile_active": true,
+    "profile_banned": false,
+    "server_time_ms": 1791090889548,
+    "offline_enabled": true,
+    "online_requested": false,
+    "protocol_version": 2,
+    "heartbeat_expires_at": "2026-10-04T08:14:49.548+03:00",
+    "last_applied_sequence": 0
+  },
+  "protocol_version": 2
+}

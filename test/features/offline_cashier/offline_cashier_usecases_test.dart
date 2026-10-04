@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/features/offline_cashier/domain/repositories
 import 'package:play_spot_dashboard/features/offline_cashier/domain/usecases/execute_offline_cashier_command.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/domain/usecases/synchronize_offline_cashier.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/domain/usecases/refresh_offline_cashier_authority.dart';
+import 'package:play_spot_dashboard/features/offline_cashier/domain/usecases/bootstrap_offline_cashier.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/domain/entities/cashier_connection_mode.dart';
 
 class _Repository extends Mock implements OfflineCashierRepository {}
@@ -27,6 +28,35 @@ void main() {
     payload: {'amount_minor': 100},
   );
   setUp(() => repository = _Repository());
+  for (final successful in [true, false]) {
+    test(
+      'bootstrap preserves ${successful ? 'snapshot' : 'failure'}',
+      () async {
+        final Either<Failure, Map<String, dynamic>> result = successful
+            ? const Right({'complete': true})
+            : const Left(CacheFailure('offline_cashier.bootstrap_pending'));
+        when(
+          () => repository.bootstrap(
+            deviceId: 'device',
+            mode: CashierConnectionMode.online,
+          ),
+        ).thenAnswer((_) async => result);
+        expect(
+          await BootstrapOfflineCashier(repository)(
+            deviceId: 'device',
+            mode: CashierConnectionMode.online,
+          ),
+          result,
+        );
+        verify(
+          () => repository.bootstrap(
+            deviceId: 'device',
+            mode: CashierConnectionMode.online,
+          ),
+        ).called(1);
+      },
+    );
+  }
   for (final mode in CashierConnectionMode.values) {
     test('refresh forwards the requested $mode and durable grant', () async {
       const result = Right<Failure, Map<String, dynamic>>({

@@ -19,43 +19,58 @@ class CashierAuthorityStore {
     required String deviceId,
     required CashierConnectionMode mode,
   }) {
+    final copy = Map<String, dynamic>.from(
+      jsonDecode(jsonEncode(response)) as Map,
+    );
+    return journal.mutate(
+      (state) => installInState(state, copy, deviceId: deviceId, mode: mode),
+    );
+  }
+
+  /// Used by bootstrap so the permit and its resource snapshot commit together.
+  Map<String, dynamic> installInState(
+    Map<String, dynamic> state,
+    Map<String, dynamic> response, {
+    required String deviceId,
+    required CashierConnectionMode mode,
+  }) {
+    _ensureActive?.call();
     final authority = Map<String, dynamic>.from(
       jsonDecode(jsonEncode(response)) as Map,
     );
-    return journal.mutate((state) {
-      _ensureActive?.call();
-      CashierAuthorityValidator.validate(
-        authority,
-        actorId: journal.actorId,
-        loungeId: journal.loungeId,
-        deviceId: deviceId,
-        mode: mode,
-        now: _clock(),
+    CashierAuthorityValidator.validate(
+      authority,
+      actorId: journal.actorId,
+      loungeId: journal.loungeId,
+      deviceId: deviceId,
+      mode: mode,
+      now: _clock(),
+    );
+    final previous = state['authority'] as Map?;
+    final history =
+        state.putIfAbsent('authority_history', () => <String, dynamic>{})
+            as Map;
+    _assertImmutable(previous, history, authority);
+    _installSequence(state, authority);
+    if (previous != null && previous['protocol_version'] == 2) {
+      history[previous['permit_id']] = CashierAuthorityValidator.immutableFacts(
+        previous,
       );
-      final previous = state['authority'] as Map?;
-      final history =
-          state.putIfAbsent('authority_history', () => <String, dynamic>{})
-              as Map;
-      _assertImmutable(previous, history, authority);
-      _installSequence(state, authority);
-      if (previous != null && previous['protocol_version'] == 2) {
-        history[previous['permit_id']] =
-            CashierAuthorityValidator.immutableFacts(previous);
-      }
-      history[authority['permit_id']] =
-          CashierAuthorityValidator.immutableFacts(authority);
-      state['authority'] = authority;
-      final pending = state['outbox'] as List;
-      state['authority_review_required'] = pending.any(
-        (op) =>
-            op is! Map ||
-            !CashierAuthorityValidator.isIssuedEvent(
-              history[op['permit_id']],
-              op,
-            ),
-      );
-      return authority;
-    });
+    }
+    history[authority['permit_id']] = CashierAuthorityValidator.immutableFacts(
+      authority,
+    );
+    state['authority'] = authority;
+    final pending = state['outbox'] as List;
+    state['authority_review_required'] = pending.any(
+      (op) =>
+          op is! Map ||
+          !CashierAuthorityValidator.isIssuedEvent(
+            history[op['permit_id']],
+            op,
+          ),
+    );
+    return authority;
   }
 
   void _assertImmutable(Map? previous, Map history, Map authority) {

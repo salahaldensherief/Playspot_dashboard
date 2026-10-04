@@ -10,6 +10,10 @@ abstract class OfflineCashierRepository {
     LocalCashierCommand command,
   );
   Future<Either<Failure, Map<String, dynamic>>> snapshot();
+  Future<Either<Failure, Map<String, dynamic>>> bootstrap({
+    required String deviceId,
+    required CashierConnectionMode mode,
+  });
   Future<Either<Failure, CashierSyncResult>> synchronize();
   Future<Either<Failure, Map<String, dynamic>>> refreshAuthority({
     required String deviceId,
