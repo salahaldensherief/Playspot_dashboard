@@ -1532,6 +1532,12 @@
     "invalid_storage_scope": "Sign-in configuration is invalid. Please contact support."
   },
   "offline_cashier": {
+    "release_pending": "This device is paused for handover. Confirm the saved release before recording more operations.",
+    "release_pending_operations": "Synchronize all operations and resolve conflicts before handing over this device.",
+    "release_unavailable": "Handover could not be confirmed. The device remains paused; reconnect and retry.",
+    "invalid_release": "The handover receipt could not be verified. The device remains paused and saved data is preserved.",
+    "release_close_shift": "Close your current shift before completing device handover.",
+    "release_active_session": "Finish active sessions before handing over the offline device.",
     "invalid_scope": "The account or venue could not be identified.",
     "missing_encryption_key": "Saved operations could not be opened because the encryption key is unavailable. Data has been preserved.",
     "invalid_encryption_key": "The current encryption key could not open the data.",

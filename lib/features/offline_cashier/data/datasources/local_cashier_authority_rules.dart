@@ -10,6 +10,9 @@ class LocalCashierAuthorityRules {
     required DateTime now,
   }) {
     _validateIds(command);
+    if (state['writer_release'] != null) {
+      throw StateError('offline_cashier.release_pending');
+    }
     if (state['authority_review_required'] == true) {
       throw StateError('offline_cashier.authority_review_required');
     }

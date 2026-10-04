@@ -40,6 +40,7 @@ class CashierBootstrapStore {
         Map<String, dynamic>.from(copy['authority'] as Map),
         deviceId: deviceId,
         mode: mode,
+        allowReleasedReclaim: true,
       );
       for (final key in ['rooms', 'products', 'bookings', 'shift']) {
         state[key] = copy[key];
@@ -54,6 +55,10 @@ class CashierBootstrapStore {
   }
 
   void _assertDrained(Map state) {
+    final release = state['writer_release'];
+    if (release is Map && release['status'] != 'released') {
+      throw StateError('offline_cashier.release_pending');
+    }
     if ((state['outbox'] as List).isNotEmpty ||
         (state['sync_conflicts'] as Map? ?? const {}).isNotEmpty ||
         state['authority_review_required'] == true) {

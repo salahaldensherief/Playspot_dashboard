@@ -9,6 +9,7 @@ import '../datasources/cashier_outbox_synchronizer.dart';
 import '../datasources/encrypted_cashier_journal.dart';
 import '../datasources/cashier_authority_refresher.dart';
 import '../datasources/cashier_bootstrap_refresher.dart';
+import '../datasources/cashier_writer_releaser.dart';
 
 class OfflineCashierRepositoryImpl implements OfflineCashierRepository {
   final EncryptedCashierJournal journal;
@@ -16,6 +17,7 @@ class OfflineCashierRepositoryImpl implements OfflineCashierRepository {
   final CashierOutboxSynchronizer synchronizer;
   final CashierAuthorityRefresher? authorityRefresher;
   final CashierBootstrapRefresher? bootstrapRefresher;
+  final CashierWriterReleaser? writerReleaser;
   final void Function()? _ensureActive;
   const OfflineCashierRepositoryImpl({
     required this.journal,
@@ -23,6 +25,7 @@ class OfflineCashierRepositoryImpl implements OfflineCashierRepository {
     required this.synchronizer,
     this.authorityRefresher,
     this.bootstrapRefresher,
+    this.writerReleaser,
     void Function()? ensureActive,
   }) : _ensureActive = ensureActive;
 
@@ -55,6 +58,7 @@ class OfflineCashierRepositoryImpl implements OfflineCashierRepository {
 
   @override
   Future<void> close() async {
+    writerReleaser?.stop();
     bootstrapRefresher?.stop();
     authorityRefresher?.stop();
     synchronizer.stop();
@@ -85,6 +89,15 @@ class OfflineCashierRepositoryImpl implements OfflineCashierRepository {
   @override
   Future<Either<Failure, CashierSyncResult>> synchronize() =>
       _guard(synchronizer.synchronize, 'offline_cashier.sync_failed');
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> releaseWriter() => _guard(() {
+    final releaser = writerReleaser;
+    if (releaser == null) {
+      throw StateError('offline_cashier.release_unavailable');
+    }
+    return releaser.release();
+  }, 'offline_cashier.release_unavailable');
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> refreshAuthority({

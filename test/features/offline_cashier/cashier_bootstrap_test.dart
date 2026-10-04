@@ -494,4 +494,41 @@ void main() {
       expect(await harness.journal.read(), before);
     },
   );
+  test(
+    'confirmed handover rebases drained journal after another writer advances sequence',
+    () async {
+      harness.now = DateTime.fromMillisecondsSinceEpoch(
+        harness.previous['server_time_ms'],
+        isUtc: true,
+      );
+      await harness.install(harness.previous);
+      harness.now = DateTime.fromMillisecondsSinceEpoch(
+        harness.current['server_time_ms'],
+        isUtc: true,
+      );
+      await harness.journal.mutate((state) {
+        state['writer_release'] = {
+          'status': 'released',
+          'request': {'p_permit_id': harness.previous['permit_id']},
+        };
+      });
+      final response = snapshot();
+      response['authority']['last_applied_sequence'] = 17;
+      final before = await store.prepare();
+      await store.install(
+        response,
+        deviceId: harness.deviceId,
+        mode: CashierConnectionMode.offline,
+        expectedState: before,
+      );
+      final state = await harness.journal.read();
+      expect(state['next_sequence'], 18);
+      expect(state['writer_release'], isNull);
+      expect(
+        state['authority_history'][harness.previous['permit_id']],
+        isNotNull,
+      );
+      expect(state['bookings'], response['bookings']);
+    },
+  );
 }

@@ -14,6 +14,9 @@ import 'cashier_authority_store.dart';
 import 'cashier_bootstrap_store.dart';
 import 'cashier_bootstrap_refresher.dart';
 import 'supabase_cashier_bootstrap_transport.dart';
+import 'cashier_writer_releaser.dart';
+import 'supabase_cashier_writer_release_transport.dart';
+import 'cashier_lifecycle_gate.dart';
 
 class CashierStoreFactoryImpl implements CashierStoreFactory {
   final OfflineKeyVault keys;
@@ -112,6 +115,7 @@ class CashierStoreFactoryImpl implements CashierStoreFactory {
       clock: _clock,
       ensureActive: () => _ensureScope(epoch, actorId),
     );
+    final lifecycle = CashierLifecycleGate();
     return OfflineCashierRepositoryImpl(
       ensureActive: () => _ensureScope(epoch, actorId),
       journal: journal,
@@ -122,12 +126,20 @@ class CashierStoreFactoryImpl implements CashierStoreFactory {
         requireBootstrap: true,
       ),
       authorityRefresher: CashierAuthorityRefresher(
+        lifecycle: lifecycle,
         transport: SupabaseCashierAuthorityTransport(client, actorId),
         store: authorityStore,
       ),
       bootstrapRefresher: CashierBootstrapRefresher(
+        lifecycle: lifecycle,
         transport: SupabaseCashierBootstrapTransport(client, actorId),
         store: CashierBootstrapStore(authorityStore),
+      ),
+      writerReleaser: CashierWriterReleaser(
+        lifecycle: lifecycle,
+        journal: journal,
+        transport: SupabaseCashierWriterReleaseTransport(client, actorId),
+        ensureActive: () => _ensureScope(epoch, actorId),
       ),
       synchronizer: CashierOutboxSynchronizer(
         journal: journal,

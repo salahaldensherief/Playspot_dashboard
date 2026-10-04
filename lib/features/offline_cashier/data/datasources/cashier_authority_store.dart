@@ -33,8 +33,17 @@ class CashierAuthorityStore {
     Map<String, dynamic> response, {
     required String deviceId,
     required CashierConnectionMode mode,
+    bool allowReleasedReclaim = false,
   }) {
     _ensureActive?.call();
+    final release = state['writer_release'];
+    if (release is Map &&
+        (!allowReleasedReclaim ||
+            release['status'] != 'released' ||
+            (release['request'] as Map?)?['p_permit_id'] ==
+                response['permit_id'])) {
+      throw StateError('offline_cashier.release_pending');
+    }
     final authority = Map<String, dynamic>.from(
       jsonDecode(jsonEncode(response)) as Map,
     );
@@ -51,7 +60,7 @@ class CashierAuthorityStore {
         state.putIfAbsent('authority_history', () => <String, dynamic>{})
             as Map;
     _assertImmutable(previous, history, authority);
-    _installSequence(state, authority);
+    _installSequence(state, authority, releasedReclaim: release is Map);
     if (previous != null && previous['protocol_version'] == 2) {
       history[previous['permit_id']] = CashierAuthorityValidator.immutableFacts(
         previous,
@@ -61,6 +70,9 @@ class CashierAuthorityStore {
       authority,
     );
     state['authority'] = authority;
+    // Only a confirmed release followed by a fresh server-issued permit may
+    // reopen commands. Pending/uncertain releases remain frozen across restarts.
+    if (release is Map) state.remove('writer_release');
     final pending = state['outbox'] as List;
     state['authority_review_required'] = pending.any(
       (op) =>
@@ -98,7 +110,11 @@ class CashierAuthorityStore {
     }
   }
 
-  void _installSequence(Map state, Map authority) {
+  void _installSequence(
+    Map state,
+    Map authority, {
+    bool releasedReclaim = false,
+  }) {
     final server = CashierAuthorityValidator.integer(
       authority['last_applied_sequence'],
     );
@@ -112,6 +128,20 @@ class CashierAuthorityStore {
       return;
     }
     final expected = CashierAuthorityValidator.integer(next);
+    if (releasedReclaim) {
+      // Other authorized writers may have advanced the venue sequence since
+      // this journal's confirmed release. Rebase only a fully drained journal
+      // during complete bootstrap with a new server-issued permit.
+      if (pending.isNotEmpty ||
+          (state['sync_conflicts'] as Map? ?? {}).isNotEmpty ||
+          state['authority_review_required'] == true ||
+          expected <= 0 ||
+          server < expected - 1) {
+        throw StateError('offline_cashier.sequence_mismatch');
+      }
+      state['next_sequence'] = server + 1;
+      return;
+    }
     if (expected <= 0 || server >= expected) {
       throw StateError('offline_cashier.sequence_mismatch');
     }

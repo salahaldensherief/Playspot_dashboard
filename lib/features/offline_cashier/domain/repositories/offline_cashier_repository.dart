@@ -15,6 +15,7 @@ abstract class OfflineCashierRepository {
     required CashierConnectionMode mode,
   });
   Future<Either<Failure, CashierSyncResult>> synchronize();
+  Future<Either<Failure, Map<String, dynamic>>> releaseWriter();
   Future<Either<Failure, Map<String, dynamic>>> refreshAuthority({
     required String deviceId,
     required CashierConnectionMode mode,
