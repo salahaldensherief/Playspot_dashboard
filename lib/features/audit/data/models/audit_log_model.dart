@@ -100,12 +100,16 @@ class AuditLogModel extends AuditLogEntity {
 
     final rawOccurredAt = json['occurred_at'] ?? json['created_at'];
 
-    final rawCreatedAt = rawOccurredAt != null
-        ? DateTime.tryParse(rawOccurredAt.toString()) ?? DateTime.now()
-        : DateTime.now();
+    final rawCreatedAt = DateTime.tryParse(rawOccurredAt?.toString() ?? '');
+    final id = (json['id'] ?? json['event_id'] ?? '').toString();
+    if (rawCreatedAt == null || id.trim().isEmpty) {
+      throw const FormatException(
+        'Audit event requires identity and timestamp',
+      );
+    }
 
     return AuditLogModel(
-      id: (json['id'] ?? json['event_id'] ?? '').toString(),
+      id: id,
       loungeId: json['lounge_id']?.toString(),
       entityType: rawEntityType,
       entityId:

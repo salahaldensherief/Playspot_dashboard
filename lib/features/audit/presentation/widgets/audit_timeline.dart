@@ -1,3 +1,4 @@
+import 'audit_labels.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -29,6 +30,7 @@ class AuditTimeline extends StatefulWidget {
 }
 
 class _AuditTimelineState extends State<AuditTimeline> {
+  int _fetchGeneration = 0;
   bool _isLoading = true;
   List<AuditLogEntity> _logs = [];
   String? _error;
@@ -42,18 +44,23 @@ class _AuditTimelineState extends State<AuditTimeline> {
   @override
   void didUpdateWidget(covariant AuditTimeline oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.entityId != widget.entityId || oldWidget.entityType != widget.entityType) {
+    if (oldWidget.entityId != widget.entityId ||
+        oldWidget.entityType != widget.entityType ||
+        oldWidget.loungeId != widget.loungeId) {
       _fetchTimeline();
     }
   }
 
   Future<void> _fetchTimeline() async {
+    final generation = ++_fetchGeneration;
     setState(() {
       _isLoading = true;
       _error = null;
+      _logs = [];
     });
 
-    final effectiveLoungeId = widget.loungeId ??
+    final effectiveLoungeId =
+        widget.loungeId ??
         context.read<LoginCubit>().state.user?.loungeId ??
         '';
 
@@ -66,7 +73,7 @@ class _AuditTimelineState extends State<AuditTimeline> {
       ),
     );
 
-    if (!mounted) return;
+    if (!mounted || generation != _fetchGeneration) return;
 
     result.fold(
       (failure) => setState(() {
@@ -123,12 +130,22 @@ class _AuditTimelineState extends State<AuditTimeline> {
             Center(
               child: Column(
                 children: [
-                  Text(_error!, style: TextStyle(color: AppColors.danger, fontSize: 12.sp)),
+                  Text(
+                    _error!.tr(),
+                    style: TextStyle(color: AppColors.danger, fontSize: 12.sp),
+                  ),
                   SizedBox(height: 6.h),
                   TextButton.icon(
                     onPressed: _fetchTimeline,
-                    icon: Icon(Icons.refresh, size: 16.r, color: AppColors.neonBlue),
-                    label: Text(AppStrings.retry, style: const TextStyle(color: AppColors.neonBlue)),
+                    icon: Icon(
+                      Icons.refresh,
+                      size: 16.r,
+                      color: AppColors.neonBlue,
+                    ),
+                    label: Text(
+                      AppStrings.retry,
+                      style: const TextStyle(color: AppColors.neonBlue),
+                    ),
                   ),
                 ],
               ),
@@ -139,7 +156,10 @@ class _AuditTimelineState extends State<AuditTimeline> {
                 padding: EdgeInsets.symmetric(vertical: 16.h),
                 child: Text(
                   AppStrings.noAuditLogs,
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12.sp,
+                  ),
                 ),
               ),
             ),
@@ -148,7 +168,8 @@ class _AuditTimelineState extends State<AuditTimeline> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _logs.length,
-              separatorBuilder: (ctx, i) => Divider(color: AppColors.borderDefault, height: 16.h),
+              separatorBuilder: (ctx, i) =>
+                  Divider(color: AppColors.borderDefault, height: 16.h),
               itemBuilder: (ctx, index) {
                 final item = _logs[index];
                 return InkWell(
@@ -158,7 +179,10 @@ class _AuditTimelineState extends State<AuditTimeline> {
                   ),
                   borderRadius: BorderRadius.circular(6.r),
                   child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 6.w),
+                    padding: EdgeInsets.symmetric(
+                      vertical: 4.h,
+                      horizontal: 6.w,
+                    ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -177,7 +201,7 @@ class _AuditTimelineState extends State<AuditTimeline> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                item.action.toUpperCase(),
+                                auditActionLabel(item.action),
                                 style: TextStyle(
                                   color: AppColors.textPrimary,
                                   fontSize: 12.sp,
@@ -186,7 +210,7 @@ class _AuditTimelineState extends State<AuditTimeline> {
                               ),
                               SizedBox(height: 2.h),
                               Text(
-                                '${item.actorName ?? item.actorUserId ?? 'System'} • ${_formatDateTime(item.createdAt)}',
+                                '${item.actorName ?? item.actorUserId ?? 'system_actor'.tr()} • ${_formatDateTime(item.createdAt)}',
                                 style: TextStyle(
                                   color: AppColors.textSecondary,
                                   fontSize: 11.sp,

@@ -48,6 +48,7 @@ class AuditState extends Equatable {
     String? errorMessage,
     bool? isExporting,
     bool? exportSuccess,
+    bool clearError = false,
     bool clearEntityType = false,
     bool clearSeverity = false,
     bool clearUserId = false,
@@ -59,16 +60,21 @@ class AuditState extends Equatable {
       logs: logs ?? this.logs,
       hasMore: hasMore ?? this.hasMore,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      selectedEntityType:
-          clearEntityType ? null : (selectedEntityType ?? this.selectedEntityType),
-      selectedSeverity:
-          clearSeverity ? null : (selectedSeverity ?? this.selectedSeverity),
-      selectedUserId: clearUserId ? null : (selectedUserId ?? this.selectedUserId),
-      searchBookingId:
-          clearBookingId ? null : (searchBookingId ?? this.searchBookingId),
+      selectedEntityType: clearEntityType
+          ? null
+          : (selectedEntityType ?? this.selectedEntityType),
+      selectedSeverity: clearSeverity
+          ? null
+          : (selectedSeverity ?? this.selectedSeverity),
+      selectedUserId: clearUserId
+          ? null
+          : (selectedUserId ?? this.selectedUserId),
+      searchBookingId: clearBookingId
+          ? null
+          : (searchBookingId ?? this.searchBookingId),
       startDate: clearDates ? null : (startDate ?? this.startDate),
       endDate: clearDates ? null : (endDate ?? this.endDate),
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       isExporting: isExporting ?? this.isExporting,
       exportSuccess: exportSuccess ?? this.exportSuccess,
     );
@@ -76,18 +82,18 @@ class AuditState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        logs,
-        hasMore,
-        isLoadingMore,
-        selectedEntityType,
-        selectedSeverity,
-        selectedUserId,
-        searchBookingId,
-        startDate,
-        endDate,
-        errorMessage,
-        isExporting,
-        exportSuccess,
-      ];
+    status,
+    logs,
+    hasMore,
+    isLoadingMore,
+    selectedEntityType,
+    selectedSeverity,
+    selectedUserId,
+    searchBookingId,
+    startDate,
+    endDate,
+    errorMessage,
+    isExporting,
+    exportSuccess,
+  ];
 }

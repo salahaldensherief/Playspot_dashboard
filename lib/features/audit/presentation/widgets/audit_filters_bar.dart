@@ -20,7 +20,8 @@ class AuditFiltersBar extends StatefulWidget {
     String? bookingId,
     DateTime? startDate,
     DateTime? endDate,
-  }) onFilterChanged;
+  })
+  onFilterChanged;
   final VoidCallback onReset;
   final VoidCallback onExportCsv;
 
@@ -49,7 +50,9 @@ class _AuditFiltersBarState extends State<AuditFiltersBar> {
   @override
   void initState() {
     super.initState();
-    _bookingIdController = TextEditingController(text: widget.searchBookingId ?? '');
+    _bookingIdController = TextEditingController(
+      text: widget.searchBookingId ?? '',
+    );
     _userController = TextEditingController(text: widget.selectedUserId ?? '');
   }
 
@@ -95,14 +98,18 @@ class _AuditFiltersBarState extends State<AuditFiltersBar> {
       },
     );
 
-    if (picked != null) {
+    if (mounted && picked != null) {
       widget.onFilterChanged(
         entityType: widget.selectedEntityType,
         severity: widget.selectedSeverity,
         userId: widget.selectedUserId,
         bookingId: widget.searchBookingId,
         startDate: picked.start,
-        endDate: picked.end,
+        endDate: DateTime(
+          picked.end.year,
+          picked.end.month,
+          picked.end.day + 1,
+        ).subtract(const Duration(microseconds: 1)),
       );
     }
   }
@@ -130,8 +137,15 @@ class _AuditFiltersBarState extends State<AuditFiltersBar> {
               style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp),
               decoration: InputDecoration(
                 hintText: AppStrings.searchBookingId,
-                prefixIcon: Icon(Icons.search_rounded, size: 18.r, color: AppColors.textSecondary),
-                contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  size: 18.r,
+                  color: AppColors.textSecondary,
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 10.w,
+                  vertical: 8.h,
+                ),
                 filled: true,
                 fillColor: AppColors.mutedBackground,
                 border: OutlineInputBorder(
@@ -160,8 +174,15 @@ class _AuditFiltersBarState extends State<AuditFiltersBar> {
               style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp),
               decoration: InputDecoration(
                 hintText: AppStrings.searchUser,
-                prefixIcon: Icon(Icons.person_search_rounded, size: 18.r, color: AppColors.textSecondary),
-                contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                prefixIcon: Icon(
+                  Icons.person_search_rounded,
+                  size: 18.r,
+                  color: AppColors.textSecondary,
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 10.w,
+                  vertical: 8.h,
+                ),
                 filled: true,
                 fillColor: AppColors.mutedBackground,
                 border: OutlineInputBorder(
@@ -196,13 +217,42 @@ class _AuditFiltersBarState extends State<AuditFiltersBar> {
                 dropdownColor: AppColors.cardBackground,
                 style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp),
                 items: [
-                  DropdownMenuItem(value: 'all', child: Text(AppStrings.allEntities)),
-                  DropdownMenuItem(value: 'booking', child: Text(AppStrings.bookingEntity)),
-                  DropdownMenuItem(value: 'shift', child: Text(AppStrings.shiftEntity)),
-                  DropdownMenuItem(value: 'room', child: Text(AppStrings.roomEntity)),
-                  DropdownMenuItem(value: 'system', child: Text(AppStrings.systemEntity)),
-                  DropdownMenuItem(value: 'lounge', child: Text(AppStrings.loungeEntity)),
-                  DropdownMenuItem(value: 'user', child: Text(AppStrings.userEntity)),
+                  DropdownMenuItem(
+                    value: 'all',
+                    child: Text(AppStrings.allEntities),
+                  ),
+                  DropdownMenuItem(
+                    value: 'booking',
+                    child: Text(AppStrings.bookingEntity),
+                  ),
+                  DropdownMenuItem(
+                    value: 'shift',
+                    child: Text(AppStrings.shiftEntity),
+                  ),
+                  DropdownMenuItem(
+                    value: 'room',
+                    child: Text(AppStrings.roomEntity),
+                  ),
+                  DropdownMenuItem(
+                    value: 'payout',
+                    child: Text('payout_entity'.tr()),
+                  ),
+                  DropdownMenuItem(
+                    value: 'tournament',
+                    child: Text('tournament_entity'.tr()),
+                  ),
+                  DropdownMenuItem(
+                    value: 'system',
+                    child: Text(AppStrings.systemEntity),
+                  ),
+                  DropdownMenuItem(
+                    value: 'lounge',
+                    child: Text(AppStrings.loungeEntity),
+                  ),
+                  DropdownMenuItem(
+                    value: 'user',
+                    child: Text(AppStrings.userEntity),
+                  ),
                 ],
                 onChanged: (val) {
                   widget.onFilterChanged(
@@ -232,10 +282,22 @@ class _AuditFiltersBarState extends State<AuditFiltersBar> {
                 dropdownColor: AppColors.cardBackground,
                 style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp),
                 items: [
-                  DropdownMenuItem(value: 'all', child: Text(AppStrings.allSeverities)),
-                  DropdownMenuItem(value: 'critical', child: Text(AppStrings.severityCritical)),
-                  DropdownMenuItem(value: 'warning', child: Text(AppStrings.severityWarning)),
-                  DropdownMenuItem(value: 'info', child: Text(AppStrings.severityInfo)),
+                  DropdownMenuItem(
+                    value: 'all',
+                    child: Text(AppStrings.allSeverities),
+                  ),
+                  DropdownMenuItem(
+                    value: 'critical',
+                    child: Text(AppStrings.severityCritical),
+                  ),
+                  DropdownMenuItem(
+                    value: 'warning',
+                    child: Text(AppStrings.severityWarning),
+                  ),
+                  DropdownMenuItem(
+                    value: 'info',
+                    child: Text(AppStrings.severityInfo),
+                  ),
                 ],
                 onChanged: (val) {
                   widget.onFilterChanged(
@@ -254,7 +316,11 @@ class _AuditFiltersBarState extends State<AuditFiltersBar> {
           // Period Date Range Picker
           OutlinedButton.icon(
             onPressed: () => _pickDateRange(context),
-            icon: Icon(Icons.date_range_rounded, size: 16.r, color: AppColors.neonBlue),
+            icon: Icon(
+              Icons.date_range_rounded,
+              size: 16.r,
+              color: AppColors.neonBlue,
+            ),
             label: Text(
               widget.startDate != null && widget.endDate != null
                   ? '${widget.startDate!.day}/${widget.startDate!.month} - ${widget.endDate!.day}/${widget.endDate!.month}'
@@ -264,13 +330,19 @@ class _AuditFiltersBarState extends State<AuditFiltersBar> {
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: AppColors.borderDefault),
               backgroundColor: AppColors.mutedBackground,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.r),
+              ),
             ),
           ),
 
           // Reset Filters Button
           IconButton(
-            icon: Icon(Icons.restart_alt_rounded, color: AppColors.textSecondary, size: 20.r),
+            icon: Icon(
+              Icons.restart_alt_rounded,
+              color: AppColors.textSecondary,
+              size: 20.r,
+            ),
             tooltip: AppStrings.resetFilters,
             onPressed: () {
               _bookingIdController.clear();
@@ -281,7 +353,9 @@ class _AuditFiltersBarState extends State<AuditFiltersBar> {
 
           // Export CSV Button
           AppButton(
-            text: widget.isExporting ? AppStrings.exportingCsv : AppStrings.exportCsv,
+            text: widget.isExporting
+                ? AppStrings.exportingCsv
+                : AppStrings.exportCsv,
             icon: Icons.file_download_outlined,
             isLoading: widget.isExporting,
             variant: AppButtonVariant.outlined,

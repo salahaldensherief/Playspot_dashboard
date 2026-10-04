@@ -15,6 +15,7 @@ class PermissionKey {
     'shift_view_expected_cash': 'shifts_view_blind_cash',
     'shift_start': 'shifts_open_own',
     'shift_close': 'shifts_blind_close',
+    'audit_view': 'audit.view',
   };
 
   static String canonical(String key) => _aliases[key] ?? key;

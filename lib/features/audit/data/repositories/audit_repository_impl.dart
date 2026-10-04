@@ -6,6 +6,7 @@ import '../../domain/usecases/export_audit_logs_csv_usecase.dart';
 import '../../domain/usecases/get_audit_logs_usecase.dart';
 import '../../domain/usecases/get_timeline_logs_usecase.dart';
 import '../datasources/audit_remote_datasource.dart';
+import '../audit_failure_mapper.dart';
 
 class AuditRepositoryImpl implements AuditRepository {
   final AuditRemoteDataSource remoteDataSource;
@@ -36,7 +37,7 @@ class AuditRepositoryImpl implements AuditRepository {
         ),
       );
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(auditFailure(e));
     }
   }
 
@@ -48,7 +49,7 @@ class AuditRepositoryImpl implements AuditRepository {
       final logs = await remoteDataSource.getTimelineLogs(params);
       return Right(logs);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(auditFailure(e));
     }
   }
 
@@ -60,7 +61,7 @@ class AuditRepositoryImpl implements AuditRepository {
       final csv = await remoteDataSource.exportAuditLogsCsv(params);
       return Right(csv);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(auditFailure(e));
     }
   }
 }

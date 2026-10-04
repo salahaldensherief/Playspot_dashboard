@@ -16,14 +16,23 @@ import 'package:play_spot_dashboard/features/audit/presentation/audit_screen.dar
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
+import 'package:play_spot_dashboard/features/permissions/presentation/cubit/permissions_cubit.dart';
+import 'package:play_spot_dashboard/features/permissions/presentation/cubit/permissions_state.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 
 class MockLoginCubit extends Mock implements LoginCubit {}
+
 class MockGetAuditLogsUsecase extends Mock implements GetAuditLogsUsecase {}
-class MockExportAuditLogsCsvUsecase extends Mock implements ExportAuditLogsCsvUsecase {}
+
+class MockExportAuditLogsCsvUsecase extends Mock
+    implements ExportAuditLogsCsvUsecase {}
+
+class MockPermissions extends Mock implements PermissionsCubit {}
 
 void main() {
   final sl = GetIt.instance;
   late MockLoginCubit mockLoginCubit;
+  late MockPermissions permissions;
   late MockGetAuditLogsUsecase mockGetAuditLogs;
   late MockExportAuditLogsCsvUsecase mockExportCsv;
 
@@ -36,6 +45,16 @@ void main() {
   setUp(() {
     sl.reset();
     mockLoginCubit = MockLoginCubit();
+    permissions = MockPermissions();
+    when(() => permissions.state).thenReturn(PermissionsState.initial());
+    when(() => permissions.stream).thenAnswer((_) => const Stream.empty());
+    when(
+      () => permissions.hasPermission(
+        any(),
+        userRole: any(named: 'userRole'),
+        userId: any(named: 'userId'),
+      ),
+    ).thenReturn(true);
     mockGetAuditLogs = MockGetAuditLogsUsecase();
     mockExportCsv = MockExportAuditLogsCsvUsecase();
 
@@ -47,9 +66,9 @@ void main() {
       loungeId: 'lounge-1',
     );
 
-    when(() => mockLoginCubit.state).thenReturn(
-      LoginState(status: LoginStatus.authenticated, user: user),
-    );
+    when(
+      () => mockLoginCubit.state,
+    ).thenReturn(LoginState(status: LoginStatus.authenticated, user: user));
     when(() => mockLoginCubit.stream).thenAnswer((_) => const Stream.empty());
 
     sl.registerLazySingleton<LoginCubit>(() => mockLoginCubit);
@@ -85,8 +104,11 @@ void main() {
         builder: (context, child) => MediaQuery(
           data: MediaQueryData(size: screenSize),
           child: MaterialApp(
-            home: BlocProvider<LoginCubit>.value(
-              value: mockLoginCubit,
+            home: MultiBlocProvider(
+              providers: [
+                BlocProvider<LoginCubit>.value(value: mockLoginCubit),
+                BlocProvider<PermissionsCubit>.value(value: permissions),
+              ],
               child: const Scaffold(
                 backgroundColor: AppColors.scaffoldBackground,
                 body: AuditScreen(),
@@ -98,7 +120,9 @@ void main() {
     );
   }
 
-  testWidgets('renders without overflow on Mobile screen (390x844)', (WidgetTester tester) async {
+  testWidgets('renders without overflow on Mobile screen (390x844)', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(buildTestableWidget(const Size(390, 844)));
     await tester.pumpAndSettle();
 
@@ -106,7 +130,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('renders without overflow on Tablet screen (900x1280)', (WidgetTester tester) async {
+  testWidgets('renders without overflow on Tablet screen (900x1280)', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(buildTestableWidget(const Size(900, 1280)));
     await tester.pumpAndSettle();
 
@@ -114,11 +140,72 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('renders without overflow on Desktop screen (1440x900)', (WidgetTester tester) async {
+  testWidgets('renders without overflow on Desktop screen (1440x900)', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(buildTestableWidget(const Size(1440, 900)));
     await tester.pumpAndSettle();
 
     expect(find.byType(AuditScreen), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('revoked owner audit grant hides history and makes no read', (
+    tester,
+  ) async {
+    when(
+      () => permissions.hasPermission(
+        any(),
+        userRole: any(named: 'userRole'),
+        userId: any(named: 'userId'),
+      ),
+    ).thenReturn(false);
+    await tester.pumpWidget(buildTestableWidget(const Size(1440, 900)));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.accessDeniedAudit), findsOneWidget);
+    verifyNever(() => mockGetAuditLogs(any()));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'super admin uses global scope despite a stale lounge assignment',
+    (tester) async {
+      final user = UserEntity(
+        id: 'super',
+        name: 'Admin',
+        email: 'fixture@example.invalid',
+        role: UserRole.superAdmin,
+        loungeId: 'stale-lounge',
+      );
+      when(
+        () => mockLoginCubit.state,
+      ).thenReturn(LoginState(status: LoginStatus.authenticated, user: user));
+      await tester.pumpWidget(buildTestableWidget(const Size(1440, 900)));
+      await tester.pumpAndSettle();
+      final params =
+          verify(() => mockGetAuditLogs(captureAny())).captured.single
+              as GetAuditLogsParams;
+      expect(params.loungeId, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('returning the entity filter to all clears the previous filter', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildTestableWidget(const Size(1440, 900)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButton<String>).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.bookingEntity).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButton<String>).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.allEntities).last);
+    await tester.pumpAndSettle();
+    final calls = verify(
+      () => mockGetAuditLogs(captureAny()),
+    ).captured.cast<GetAuditLogsParams>();
+    expect(calls.map((p) => p.entityType), [null, 'booking', null]);
     expect(tester.takeException(), isNull);
   });
 }

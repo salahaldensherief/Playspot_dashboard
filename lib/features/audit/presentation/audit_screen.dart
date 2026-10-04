@@ -11,6 +11,7 @@ import '../../../art_core/widgets/shimmer_loading.dart';
 import '../../../core/di/di.dart';
 import '../../../core/responsive/app_breakpoints.dart';
 import '../../../core/utils/permission_extension.dart';
+import '../../permissions/presentation/cubit/permissions_cubit.dart';
 import '../../auth/presentation/login/login_cubit.dart';
 import 'audit_cubit.dart';
 import 'audit_state.dart';
@@ -39,33 +40,41 @@ class _AuditScreenContent extends StatefulWidget {
 }
 
 class _AuditScreenContentState extends State<_AuditScreenContent> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadData();
-    });
-  }
+  String? _loadedScope;
 
   void _loadData() {
     final user = context.read<LoginCubit>().state.user;
-    final loungeId = user?.loungeId ?? '';
-    context.read<AuditCubit>().loadAuditLogs(loungeId: loungeId);
+    final loungeId = user?.isSuperAdmin == true ? '' : user?.loungeId ?? '';
+    if (user != null &&
+        (user.isSuperAdmin || context.hasPermission('audit.view'))) {
+      context.read<AuditCubit>().loadAuditLogs(loungeId: loungeId);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    final user = context.read<LoginCubit>().state.user;
-    final loungeId = user?.loungeId ?? '';
+    context.watch<PermissionsCubit>();
+    final user = context.watch<LoginCubit>().state.user;
+    final loungeId = user?.isSuperAdmin == true ? '' : user?.loungeId ?? '';
     final isMobile = AppBreakpoints.isMobile(context);
 
     // Permission guard
-    final bool canViewAudit = user != null &&
+    final bool canViewAudit =
+        user != null &&
         (user.isSuperAdmin ||
-            user.isOwner ||
             context.hasPermission('audit.view') ||
             context.hasPermission('audit_view'));
+
+    final scope = '${user?.id}:$loungeId:$canViewAudit';
+    if (_loadedScope != scope) {
+      _loadedScope = scope;
+      if (canViewAudit) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _loadedScope == scope) _loadData();
+        });
+      }
+    }
 
     if (!canViewAudit) {
       return Scaffold(
@@ -82,7 +91,11 @@ class _AuditScreenContentState extends State<_AuditScreenContent> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.gavel_rounded, size: 56.r, color: AppColors.textSecondary),
+                Icon(
+                  Icons.gavel_rounded,
+                  size: 56.r,
+                  color: AppColors.textSecondary,
+                ),
                 SizedBox(height: 16.h),
                 Text(
                   AppStrings.accessDeniedAudit,
@@ -112,10 +125,11 @@ class _AuditScreenContentState extends State<_AuditScreenContent> {
               backgroundColor: AppColors.success,
             ),
           );
-        } else if (state.errorMessage != null && state.errorMessage!.isNotEmpty) {
+        } else if (state.errorMessage != null &&
+            state.errorMessage!.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.errorMessage!),
+              content: Text(state.errorMessage!.tr()),
               backgroundColor: AppColors.danger,
             ),
           );
@@ -156,15 +170,16 @@ class _AuditScreenContentState extends State<_AuditScreenContent> {
                     startDate: state.startDate,
                     endDate: state.endDate,
                     isExporting: state.isExporting,
-                    onFilterChanged: ({
-                      bookingId,
-                      endDate,
-                      entityType,
-                      severity,
-                      startDate,
-                      userId,
-                    }) {
-                      context.read<AuditCubit>().updateFilters(
+                    onFilterChanged:
+                        ({
+                          bookingId,
+                          endDate,
+                          entityType,
+                          severity,
+                          startDate,
+                          userId,
+                        }) {
+                          context.read<AuditCubit>().updateFilters(
                             loungeId: loungeId,
                             entityType: entityType,
                             severity: severity,
@@ -172,10 +187,19 @@ class _AuditScreenContentState extends State<_AuditScreenContent> {
                             bookingId: bookingId,
                             startDate: startDate,
                             endDate: endDate,
+                            clearEntityType: entityType == null,
+                            clearSeverity: severity == null,
+                            clearUserId: userId == null,
+                            clearBookingId: bookingId == null,
+                            clearDates: startDate == null && endDate == null,
                           );
-                    },
-                    onReset: () => context.read<AuditCubit>().resetFilters(loungeId: loungeId),
-                    onExportCsv: () => context.read<AuditCubit>().exportCsv(loungeId: loungeId),
+                        },
+                    onReset: () => context.read<AuditCubit>().resetFilters(
+                      loungeId: loungeId,
+                    ),
+                    onExportCsv: () => context.read<AuditCubit>().exportCsv(
+                      loungeId: loungeId,
+                    ),
                   );
                 },
               ),
@@ -189,11 +213,13 @@ class _AuditScreenContentState extends State<_AuditScreenContent> {
                       prev.logs != curr.logs ||
                       prev.isLoadingMore != curr.isLoadingMore,
                   builder: (context, state) {
-                    if (state.status == AuditStatus.loading && state.logs.isEmpty) {
+                    if (state.status == AuditStatus.loading &&
+                        state.logs.isEmpty) {
                       return const TableShimmer(columns: 7);
                     }
 
-                    if (state.status == AuditStatus.failure && state.logs.isEmpty) {
+                    if (state.status == AuditStatus.failure &&
+                        state.logs.isEmpty) {
                       return Center(
                         child: Container(
                           padding: EdgeInsets.all(24.r),
@@ -205,14 +231,20 @@ class _AuditScreenContentState extends State<_AuditScreenContent> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.error_outline_rounded,
-                                  size: 48.r, color: AppColors.danger),
+                              Icon(
+                                Icons.error_outline_rounded,
+                                size: 48.r,
+                                color: AppColors.danger,
+                              ),
                               SizedBox(height: 12.h),
                               Text(
-                                state.errorMessage ?? AppStrings.operationError(''),
+                                state.errorMessage?.tr() ??
+                                    AppStrings.operationError(''),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                    color: AppColors.textPrimary, fontSize: 14.sp),
+                                  color: AppColors.textPrimary,
+                                  fontSize: 14.sp,
+                                ),
                               ),
                               SizedBox(height: 16.h),
                               AppButton(
@@ -240,8 +272,11 @@ class _AuditScreenContentState extends State<_AuditScreenContent> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.inbox_outlined,
-                                  size: 48.r, color: AppColors.textSecondary),
+                              Icon(
+                                Icons.inbox_outlined,
+                                size: 48.r,
+                                color: AppColors.textSecondary,
+                              ),
                               SizedBox(height: 12.h),
                               Text(
                                 AppStrings.noAuditLogs,

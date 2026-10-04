@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'audit_labels.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -26,6 +28,7 @@ class AuditMobileList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return NotificationListener<ScrollNotification>(
       onNotification: (ScrollNotification scrollInfo) {
         if (scrollInfo.metrics.pixels >=
@@ -92,7 +95,7 @@ class AuditMobileList extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4.r),
                           ),
                           child: Text(
-                            log.entityType.toUpperCase(),
+                            auditEntityLabel(log.entityType),
                             style: TextStyle(
                               color: AppColors.neonBlue,
                               fontSize: 10.sp,
@@ -103,7 +106,7 @@ class AuditMobileList extends StatelessWidget {
                         SizedBox(width: 8.w),
                         Expanded(
                           child: Text(
-                            log.action.toUpperCase(),
+                            auditActionLabel(log.action),
                             style: TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 13.sp,
@@ -128,7 +131,9 @@ class AuditMobileList extends StatelessWidget {
                             ),
                             SizedBox(width: 4.w),
                             Text(
-                              log.actorName ?? log.actorUserId ?? 'System',
+                              log.actorName ??
+                                  log.actorUserId ??
+                                  'system_actor'.tr(),
                               style: TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: 12.sp,

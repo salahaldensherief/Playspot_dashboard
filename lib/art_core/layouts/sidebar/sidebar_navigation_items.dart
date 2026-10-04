@@ -93,7 +93,8 @@ class SidebarNavigationItems extends StatelessWidget {
   List<Widget> _buildLoungeStaffItems(BuildContext context, UserEntity? user) {
     if (user == null) return [];
 
-    final canViewBookings = context.hasPermission('bookings_view') ||
+    final canViewBookings =
+        context.hasPermission('bookings_view') ||
         context.hasPermission('pos_view_menu');
     final canViewRooms = context.hasPermission('rooms_view');
     final canViewExtras = context.hasPermission('menu_view');
@@ -103,11 +104,12 @@ class SidebarNavigationItems extends StatelessWidget {
     final canManageStaff = context.hasPermission('staff_management');
     final canViewShiftHistory = context.hasPermission('shifts_view');
     final canViewReports = context.hasPermission('reports_view');
-    final canViewAudit = user.isSuperAdmin ||
-        user.isOwner ||
+    final canViewAudit =
+        user.isSuperAdmin ||
         context.hasPermission('audit.view') ||
         context.hasPermission('audit_view');
-    final canManagePricing = user.isSuperAdmin ||
+    final canManagePricing =
+        user.isSuperAdmin ||
         user.isOwner ||
         context.hasPermission('pricing.manage') ||
         context.hasPermission('pricing_manage');

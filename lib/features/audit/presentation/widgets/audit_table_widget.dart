@@ -1,3 +1,4 @@
+import 'audit_labels.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -31,7 +32,8 @@ class AuditTableWidget extends StatelessWidget {
     EasyLocalization.of(context);
     return NotificationListener<ScrollNotification>(
       onNotification: (ScrollNotification scrollInfo) {
-        if (scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200 &&
+        if (scrollInfo.metrics.pixels >=
+                scrollInfo.metrics.maxScrollExtent - 200 &&
             hasMore &&
             !isLoadingMore) {
           onLoadMore();
@@ -73,18 +75,24 @@ class AuditTableWidget extends StatelessWidget {
                   DataCell(
                     Text(
                       _formatDateTime(log.createdAt),
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12.sp,
+                      ),
                     ),
                   ),
                   DataCell(
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.w,
+                        vertical: 3.h,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.mutedBackground,
                         borderRadius: BorderRadius.circular(4.r),
                       ),
                       child: Text(
-                        log.entityType.toUpperCase(),
+                        auditEntityLabel(log.entityType),
                         style: TextStyle(
                           color: AppColors.neonBlue,
                           fontSize: 11.sp,
@@ -95,7 +103,7 @@ class AuditTableWidget extends StatelessWidget {
                   ),
                   DataCell(
                     Text(
-                      log.action.toUpperCase(),
+                      auditActionLabel(log.action),
                       style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 12.sp,
@@ -105,16 +113,21 @@ class AuditTableWidget extends StatelessWidget {
                   ),
                   DataCell(
                     Text(
-                      log.actorName ?? log.actorUserId ?? 'System',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp),
+                      log.actorName ?? log.actorUserId ?? 'system_actor'.tr(),
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 12.sp,
+                      ),
                     ),
                   ),
-                  DataCell(
-                    SeverityChip(severity: log.severity),
-                  ),
+                  DataCell(SeverityChip(severity: log.severity)),
                   DataCell(
                     IconButton(
-                      icon: Icon(Icons.visibility_outlined, size: 18.r, color: AppColors.neonBlue),
+                      icon: Icon(
+                        Icons.visibility_outlined,
+                        size: 18.r,
+                        color: AppColors.neonBlue,
+                      ),
                       tooltip: AppStrings.eventDetails,
                       onPressed: () {
                         showDialog(

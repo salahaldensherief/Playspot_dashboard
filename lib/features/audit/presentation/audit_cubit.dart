@@ -5,6 +5,8 @@ import '../domain/usecases/get_audit_logs_usecase.dart';
 import 'audit_state.dart';
 
 class AuditCubit extends Cubit<AuditState> {
+  int _generation = 0;
+  String? _loungeScope;
   final GetAuditLogsUsecase getAuditLogsUsecase;
   final ExportAuditLogsCsvUsecase exportAuditLogsCsvUsecase;
 
@@ -17,13 +19,19 @@ class AuditCubit extends Cubit<AuditState> {
     required String loungeId,
     bool refresh = true,
   }) async {
-    if (state.status == AuditStatus.loading && !refresh) return;
+    if (isClosed || (state.status == AuditStatus.loading && !refresh)) return;
+    final generation = ++_generation;
+    _loungeScope = loungeId.trim();
 
-    emit(state.copyWith(
-      status: AuditStatus.loading,
-      errorMessage: null,
-      logs: refresh ? [] : state.logs,
-    ));
+    emit(
+      state.copyWith(
+        status: AuditStatus.loading,
+        clearError: true,
+        isLoadingMore: false,
+        exportSuccess: false,
+        logs: refresh ? [] : state.logs,
+      ),
+    );
 
     final params = GetAuditLogsParams(
       loungeId: loungeId,
@@ -37,24 +45,36 @@ class AuditCubit extends Cubit<AuditState> {
     );
 
     final result = await getAuditLogsUsecase(params);
+    if (isClosed || generation != _generation) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: AuditStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (paginated) => emit(state.copyWith(
-        status: AuditStatus.success,
-        logs: paginated.logs,
-        hasMore: paginated.hasMore,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: AuditStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (paginated) => emit(
+        state.copyWith(
+          status: AuditStatus.success,
+          logs: paginated.logs,
+          hasMore: paginated.hasMore,
+        ),
+      ),
     );
   }
 
   Future<void> loadMoreLogs({required String loungeId}) async {
-    if (state.isLoadingMore || !state.hasMore || state.logs.isEmpty) return;
+    if (isClosed ||
+        _loungeScope != loungeId.trim() ||
+        state.isLoadingMore ||
+        !state.hasMore ||
+        state.logs.isEmpty) {
+      return;
+    }
+    final generation = _generation;
 
-    emit(state.copyWith(isLoadingMore: true));
+    emit(state.copyWith(isLoadingMore: true, clearError: true));
 
     final lastLog = state.logs.last;
 
@@ -72,17 +92,19 @@ class AuditCubit extends Cubit<AuditState> {
     );
 
     final result = await getAuditLogsUsecase(params);
+    if (isClosed || generation != _generation) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        isLoadingMore: false,
-        errorMessage: failure.message,
-      )),
-      (paginated) => emit(state.copyWith(
-        isLoadingMore: false,
-        logs: [...state.logs, ...paginated.logs],
-        hasMore: paginated.hasMore,
-      )),
+      (failure) => emit(
+        state.copyWith(isLoadingMore: false, errorMessage: failure.message),
+      ),
+      (paginated) => emit(
+        state.copyWith(
+          isLoadingMore: false,
+          logs: [...state.logs, ...paginated.logs],
+          hasMore: paginated.hasMore,
+        ),
+      ),
     );
   }
 
@@ -100,39 +122,48 @@ class AuditCubit extends Cubit<AuditState> {
     bool clearBookingId = false,
     bool clearDates = false,
   }) {
-    emit(state.copyWith(
-      selectedEntityType: entityType,
-      selectedSeverity: severity,
-      selectedUserId: userId,
-      searchBookingId: bookingId,
-      startDate: startDate,
-      endDate: endDate,
-      clearEntityType: clearEntityType,
-      clearSeverity: clearSeverity,
-      clearUserId: clearUserId,
-      clearBookingId: clearBookingId,
-      clearDates: clearDates,
-    ));
+    if (isClosed) return;
+    emit(
+      state.copyWith(
+        selectedEntityType: entityType,
+        selectedSeverity: severity,
+        selectedUserId: userId,
+        searchBookingId: bookingId,
+        startDate: startDate,
+        endDate: endDate,
+        clearEntityType: clearEntityType,
+        clearSeverity: clearSeverity,
+        clearUserId: clearUserId,
+        clearBookingId: clearBookingId,
+        clearDates: clearDates,
+      ),
+    );
 
     loadAuditLogs(loungeId: loungeId, refresh: true);
   }
 
   void resetFilters({required String loungeId}) {
-    emit(state.copyWith(
-      clearEntityType: true,
-      clearSeverity: true,
-      clearUserId: true,
-      clearBookingId: true,
-      clearDates: true,
-    ));
+    if (isClosed) return;
+    emit(
+      state.copyWith(
+        clearEntityType: true,
+        clearSeverity: true,
+        clearUserId: true,
+        clearBookingId: true,
+        clearDates: true,
+      ),
+    );
 
     loadAuditLogs(loungeId: loungeId, refresh: true);
   }
 
   Future<void> exportCsv({required String loungeId}) async {
-    if (state.isExporting) return;
+    if (isClosed || state.isExporting) return;
+    final generation = _generation;
 
-    emit(state.copyWith(isExporting: true, exportSuccess: false));
+    emit(
+      state.copyWith(isExporting: true, exportSuccess: false, clearError: true),
+    );
 
     final params = ExportAuditLogsParams(
       loungeId: loungeId,
@@ -145,19 +176,20 @@ class AuditCubit extends Cubit<AuditState> {
     );
 
     final result = await exportAuditLogsCsvUsecase(params);
+    if (isClosed) return;
+    if (generation != _generation) {
+      emit(state.copyWith(isExporting: false));
+      return;
+    }
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        isExporting: false,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(isExporting: false, errorMessage: failure.message),
+      ),
       (csvContent) {
         final filename = 'audit_logs_${DateTime.now().millisecondsSinceEpoch}';
         FileDownloadHelper.downloadCsv(csvContent, filename);
-        emit(state.copyWith(
-          isExporting: false,
-          exportSuccess: true,
-        ));
+        emit(state.copyWith(isExporting: false, exportSuccess: true));
       },
     );
   }
