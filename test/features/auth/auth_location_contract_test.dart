@@ -69,6 +69,50 @@ void main() {
   }
 
   test(
+    'current profile cannot be requested using another account identity',
+    () async {
+      await login();
+      expect(
+        await AuthRemoteDataSourceImpl(client).getCurrentUser(userId: other),
+        isNull,
+      );
+      expect(calls, isEmpty);
+    },
+  );
+  test(
+    'foreign profile response cannot become the authenticated user',
+    () async {
+      await login();
+      respond = (request) async =>
+          request.url.path.endsWith('/platform_super_admins')
+          ? json([])
+          : json({'id': other, 'role': 'super_admin'});
+      expect(await AuthRemoteDataSourceImpl(client).getCurrentUser(), isNull);
+    },
+  );
+  for (final eligible in [true, false]) {
+    test(
+      'platform membership only promotes an eligible profile: $eligible',
+      () async {
+        await login();
+        respond = (request) async =>
+            request.url.path.endsWith('/platform_super_admins')
+            ? json([
+                {'user_id': actor},
+              ])
+            : json({
+                'id': actor,
+                'role': 'owner',
+                'is_active': eligible,
+                'is_banned': !eligible,
+              });
+        final user = await AuthRemoteDataSourceImpl(client).getCurrentUser();
+        expect(user, isNotNull);
+        expect(user!.isSuperAdmin, eligible);
+      },
+    );
+  }
+  test(
     'location uses configured client API key and authenticated function headers',
     () async {
       await login();

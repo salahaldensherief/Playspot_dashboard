@@ -51,11 +51,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel?> getCurrentUser({String? userId}) async {
     try {
-      final finalUserId = userId ?? supabaseClient.auth.currentUser?.id;
-      if (finalUserId == null) {
-        debugPrint('AuthRemoteDataSource: No authenticated user ID found');
+      final authenticatedId = supabaseClient.auth.currentUser?.id;
+      if (authenticatedId == null ||
+          (userId != null && userId != authenticatedId)) {
         return null;
       }
+      final finalUserId = authenticatedId;
 
       debugPrint('AuthRemoteDataSource: Fetching profile for ID: $finalUserId');
 
@@ -81,9 +82,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       // 1. Try RPC first
       final response = await supabaseClient.rpc('get_my_profile');
+      if (supabaseClient.auth.currentUser?.id != authenticatedId) return null;
       if (response != null) {
         final map = Map<String, dynamic>.from(response as Map);
-        if (isPlatformSuperAdmin) {
+        if (map['id'] != authenticatedId) return null;
+        if (isPlatformSuperAdmin &&
+            map['is_active'] == true &&
+            map['is_banned'] == false) {
           map['role'] = 'super_admin';
         }
         debugPrint(
@@ -104,7 +109,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       if (tableResponse != null) {
         final map = Map<String, dynamic>.from(tableResponse as Map);
-        if (isPlatformSuperAdmin) {
+        if (supabaseClient.auth.currentUser?.id != authenticatedId ||
+            map['id'] != authenticatedId) {
+          return null;
+        }
+        if (isPlatformSuperAdmin &&
+            map['is_active'] == true &&
+            map['is_banned'] == false) {
           map['role'] = 'super_admin';
         }
         debugPrint('AuthRemoteDataSource: Profile found via direct select');
