@@ -1809,5 +1809,19 @@
   "calendar_friday_short": "جم",
   "calendar_saturday_short": "سب",
   "calendar_sunday_short": "أح",
-  "customer_warning_not_connected": "إرسال تحذيرات الإلغاء غير متاح حاليًا. لم يتم تسجيل أو إرسال تحذير للعميل. يمكنك مراجعة سجل الإلغاءات أو إرسال بلاغ للإدارة من الإجراء المخصص."
+  "customer_warning_not_connected": "إرسال تحذيرات الإلغاء غير متاح حاليًا. لم يتم تسجيل أو إرسال تحذير للعميل. يمكنك مراجعة سجل الإلغاءات أو إرسال بلاغ للإدارة من الإجراء المخصص.",
+  "moderation_report_submitted": "تم إرسال البلاغ وسيتم مراجعته من الإدارة.",
+  "moderation_lounge_ban_approved": "تم حظر المستخدم من الصالة.",
+  "moderation_global_ban_approved": "تم اعتماد الحظر العام للمستخدم.",
+  "moderation_report_rejected": "تم رفض البلاغ.",
+  "moderation_lounge_suspended": "تم تعليق الصالة.",
+  "moderation_permission_denied": "ليس لديك صلاحية تنفيذ هذا الإجراء.",
+  "moderation_session_expired": "انتهت الجلسة. يرجى تسجيل الدخول مجددًا.",
+  "moderation_service_unavailable": "خدمة مراجعة البلاغات غير متاحة حاليًا. يرجى إعادة المحاولة لاحقًا.",
+  "moderation_request_failed": "تعذر إكمال طلب البلاغات. تحقق من الاتصال وأعد المحاولة.",
+  "moderation_reason_misconduct": "سلوك غير لائق وتخريب",
+  "moderation_reason_no_show": "عدم الحضور المتكرر",
+  "moderation_reason_fraud": "تزوير إيصال الدفع أو احتيال",
+  "moderation_reason_harassment": "إزعاج العملاء أو الاعتداء اللفظي",
+  "moderation_reason_other": "أخرى"
 }

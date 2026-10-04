@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import '../cubit/moderation_cubit.dart';
 import '../cubit/moderation_state.dart';
+import 'moderation_reason_label.dart';
 
 class SuperAdminBanQueueSection extends StatefulWidget {
   const SuperAdminBanQueueSection({super.key});
@@ -105,18 +106,25 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
           ),
           SizedBox(height: 16.h),
           BlocConsumer<ModerationCubit, ModerationState>(
+            listenWhen: (previous, current) =>
+                previous.successMessage != current.successMessage ||
+                previous.errorMessage != current.errorMessage,
+            buildWhen: (previous, current) =>
+                previous.status != current.status ||
+                previous.pendingRequests != current.pendingRequests ||
+                previous.isSubmitting != current.isSubmitting,
             listener: (context, state) {
               if (state.successMessage != null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(state.successMessage!),
+                    content: Text(state.successMessage!.tr()),
                     backgroundColor: AppColors.success,
                   ),
                 );
               } else if (state.errorMessage != null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(state.errorMessage!),
+                    content: Text(state.errorMessage!.tr()),
                     backgroundColor: AppColors.danger,
                   ),
                 );
@@ -132,6 +140,27 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
                 );
               }
 
+              if (state.status == ModerationStatus.error) {
+                return Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Text(
+                        (state.errorMessage ?? 'moderation_request_failed')
+                            .tr(),
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton.icon(
+                        onPressed: () => context
+                            .read<ModerationCubit>()
+                            .loadPendingBanRequests(),
+                        icon: const Icon(Icons.refresh),
+                        label: Text('retry'.tr()),
+                      ),
+                    ],
+                  ),
+                );
+              }
               final requests = state.pendingRequests;
               if (requests.isEmpty) {
                 return Center(
@@ -206,7 +235,7 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
                         ),
                         SizedBox(height: 6.h),
                         Text(
-                          '${AppStrings.reportReason}: ${req.reason}',
+                          '${AppStrings.reportReason}: ${moderationReasonLabel(req.reason)}',
                           style: TextStyle(
                             color: AppColors.textPrimary,
                             fontSize: 13.sp,

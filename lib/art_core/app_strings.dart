@@ -289,7 +289,10 @@ class AppStrings {
 
   static String get paid => 'paid'.tr();
   static String get unpaid => 'unpaid'.tr();
-  static String get egp => 'EGP';
+  static String get egp {
+    final label = 'currency_egp'.tr();
+    return label == 'currency_egp' ? 'EGP' : label;
+  }
   static String get upcoming {
     final val = 'upcoming'.tr();
     return (val.isNotEmpty && val != 'upcoming') ? val : 'قادم';

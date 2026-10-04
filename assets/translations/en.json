@@ -1809,5 +1809,19 @@
   "calendar_friday_short": "Fri",
   "calendar_saturday_short": "Sat",
   "calendar_sunday_short": "Sun",
-  "customer_warning_not_connected": "Cancellation warnings are not available yet. No warning was recorded or sent. You can review cancellation history or use the separate report action to contact administration."
+  "customer_warning_not_connected": "Cancellation warnings are not available yet. No warning was recorded or sent. You can review cancellation history or use the separate report action to contact administration.",
+  "moderation_report_submitted": "The report was submitted for administration review.",
+  "moderation_lounge_ban_approved": "The user was banned from the lounge.",
+  "moderation_global_ban_approved": "The global user ban was approved.",
+  "moderation_report_rejected": "The report was rejected.",
+  "moderation_lounge_suspended": "The lounge was suspended.",
+  "moderation_permission_denied": "You do not have permission to perform this action.",
+  "moderation_session_expired": "Your session expired. Please sign in again.",
+  "moderation_service_unavailable": "The moderation service is unavailable. Please try again later.",
+  "moderation_request_failed": "The moderation request could not be completed. Check your connection and retry.",
+  "moderation_reason_misconduct": "Misconduct and damage",
+  "moderation_reason_no_show": "Repeated no-shows",
+  "moderation_reason_fraud": "Forged payment receipt or fraud",
+  "moderation_reason_harassment": "Customer harassment or verbal abuse",
+  "moderation_reason_other": "Other"
 }

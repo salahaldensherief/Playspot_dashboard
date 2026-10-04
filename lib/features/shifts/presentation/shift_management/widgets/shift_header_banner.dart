@@ -163,7 +163,7 @@ class ShiftHeaderBanner extends StatelessWidget {
             SizedBox(width: 24.w),
             if (isMyShift) ...[
               AppButton(
-                text: 'تسجيل مصروف / سحب',
+                text: AppStrings.recordExpense,
                 icon: Icons.receipt_long_outlined,
                 variant: AppButtonVariant.outlined,
                 height: 32.h,

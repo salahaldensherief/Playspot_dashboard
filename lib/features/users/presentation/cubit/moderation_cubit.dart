@@ -1,9 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/datasources/moderation_remote_data_source.dart';
+import '../../data/moderation_failure_mapper.dart';
 import 'moderation_state.dart';
 
 class ModerationCubit extends Cubit<ModerationState> {
   final ModerationRemoteDataSource dataSource;
+  int _loadGeneration = 0;
+  bool _mutationInFlight = false;
 
   ModerationCubit({required this.dataSource}) : super(const ModerationState());
 
@@ -13,100 +16,118 @@ class ModerationCubit extends Cubit<ModerationState> {
     String? bookingId,
     required String reason,
     String? evidenceNotes,
-  }) async {
-    emit(state.copyWith(isSubmitting: true, errorMessage: null, successMessage: null));
-    try {
-      await dataSource.createBanRequest(
-        loungeId: loungeId,
-        userId: userId,
-        bookingId: bookingId,
-        reason: reason,
-        evidenceNotes: evidenceNotes,
-      );
-      emit(state.copyWith(
-        isSubmitting: false,
-        successMessage: 'تم إرسال طلب البلاغ بنجاح وسيتم مراجعته من الإدارة',
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        isSubmitting: false,
-        errorMessage: 'فشل إرسال طلب البلاغ: $e',
-      ));
-    }
-  }
+  }) => _runMutation(
+    () => dataSource.createBanRequest(
+      loungeId: loungeId,
+      userId: userId,
+      bookingId: bookingId,
+      reason: reason,
+      evidenceNotes: evidenceNotes,
+    ),
+    'moderation_report_submitted',
+  );
 
   Future<void> loadLoungeBanRequests(String loungeId) async {
-    emit(state.copyWith(status: ModerationStatus.loading));
+    if (isClosed) return;
+    final generation = ++_loadGeneration;
+    emit(state.copyWith(status: ModerationStatus.loading, banRequests: []));
     try {
       final requests = await dataSource.getLoungeBanRequests(loungeId);
-      emit(state.copyWith(
-        status: ModerationStatus.success,
-        banRequests: requests,
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        status: ModerationStatus.error,
-        errorMessage: e.toString(),
-      ));
+      if (isClosed || generation != _loadGeneration) return;
+      emit(
+        state.copyWith(status: ModerationStatus.success, banRequests: requests),
+      );
+    } catch (error) {
+      if (isClosed || generation != _loadGeneration) return;
+      emit(
+        state.copyWith(
+          status: ModerationStatus.error,
+          errorMessage: moderationFailure(error).message,
+        ),
+      );
     }
   }
 
   Future<void> loadPendingBanRequests() async {
-    emit(state.copyWith(status: ModerationStatus.loading));
+    if (isClosed) return;
+    final generation = ++_loadGeneration;
+    emit(state.copyWith(status: ModerationStatus.loading, pendingRequests: []));
     try {
       final requests = await dataSource.getPendingBanRequests();
-      emit(state.copyWith(
-        status: ModerationStatus.success,
-        pendingRequests: requests,
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        status: ModerationStatus.error,
-        errorMessage: e.toString(),
-      ));
+      if (isClosed || generation != _loadGeneration) return;
+      emit(
+        state.copyWith(
+          status: ModerationStatus.success,
+          pendingRequests: requests,
+        ),
+      );
+    } catch (error) {
+      if (isClosed || generation != _loadGeneration) return;
+      emit(
+        state.copyWith(
+          status: ModerationStatus.error,
+          errorMessage: moderationFailure(error).message,
+        ),
+      );
     }
   }
 
-  Future<void> approveLoungeBan(String requestId, {String? adminNotes}) async {
-    emit(state.copyWith(isSubmitting: true));
-    try {
-      await dataSource.approveLoungeBanRequest(requestId, adminNotes: adminNotes);
-      emit(state.copyWith(isSubmitting: false, successMessage: 'تم حظر المستخدم من الصالة بنجاح'));
-      await loadPendingBanRequests();
-    } catch (e) {
-      emit(state.copyWith(isSubmitting: false, errorMessage: e.toString()));
-    }
-  }
+  Future<void> approveLoungeBan(String requestId, {String? adminNotes}) =>
+      _runMutation(
+        () => dataSource.approveLoungeBanRequest(
+          requestId,
+          adminNotes: adminNotes,
+        ),
+        'moderation_lounge_ban_approved',
+        reloadQueue: true,
+      );
 
-  Future<void> approveGlobalBan(String requestId, {String? adminNotes}) async {
-    emit(state.copyWith(isSubmitting: true));
-    try {
-      await dataSource.approveGlobalBanRequest(requestId, adminNotes: adminNotes);
-      emit(state.copyWith(isSubmitting: false, successMessage: 'تم الحظر الكلي للمستخدم بنجاح'));
-      await loadPendingBanRequests();
-    } catch (e) {
-      emit(state.copyWith(isSubmitting: false, errorMessage: e.toString()));
-    }
-  }
+  Future<void> approveGlobalBan(String requestId, {String? adminNotes}) =>
+      _runMutation(
+        () => dataSource.approveGlobalBanRequest(
+          requestId,
+          adminNotes: adminNotes,
+        ),
+        'moderation_global_ban_approved',
+        reloadQueue: true,
+      );
 
-  Future<void> rejectBan(String requestId, {String? adminNotes}) async {
-    emit(state.copyWith(isSubmitting: true));
-    try {
-      await dataSource.rejectBanRequest(requestId, adminNotes: adminNotes);
-      emit(state.copyWith(isSubmitting: false, successMessage: 'تم رفض طلب البلاغ'));
-      await loadPendingBanRequests();
-    } catch (e) {
-      emit(state.copyWith(isSubmitting: false, errorMessage: e.toString()));
-    }
-  }
+  Future<void> rejectBan(String requestId, {String? adminNotes}) =>
+      _runMutation(
+        () => dataSource.rejectBanRequest(requestId, adminNotes: adminNotes),
+        'moderation_report_rejected',
+        reloadQueue: true,
+      );
 
-  Future<void> suspendLounge(String loungeId, {required String reason}) async {
+  Future<void> suspendLounge(String loungeId, {required String reason}) =>
+      _runMutation(
+        () => dataSource.suspendLounge(loungeId, reason: reason),
+        'moderation_lounge_suspended',
+      );
+
+  Future<void> _runMutation(
+    Future<void> Function() submit,
+    String successKey, {
+    bool reloadQueue = false,
+  }) async {
+    if (isClosed || _mutationInFlight) return;
+    _mutationInFlight = true;
     emit(state.copyWith(isSubmitting: true));
     try {
-      await dataSource.suspendLounge(loungeId, reason: reason);
-      emit(state.copyWith(isSubmitting: false, successMessage: 'تم تعليق الصالة بنجاح'));
-    } catch (e) {
-      emit(state.copyWith(isSubmitting: false, errorMessage: e.toString()));
+      await submit();
+      if (isClosed) return;
+      emit(state.copyWith(isSubmitting: false, successMessage: successKey));
+      if (reloadQueue) await loadPendingBanRequests();
+    } catch (error) {
+      if (isClosed) return;
+      emit(
+        state.copyWith(
+          isSubmitting: false,
+          errorMessage: moderationFailure(error).message,
+        ),
+      );
+    } finally {
+      _mutationInFlight = false;
     }
   }
 }
