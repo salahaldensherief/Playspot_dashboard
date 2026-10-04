@@ -8,6 +8,58 @@ import 'package:play_spot_dashboard/features/offline_cashier/data/datasources/ca
 
 void main() {
   test(
+    'historical sign-in replay does not reject an unchanged session',
+    () async {
+      const actor = '00000000-0000-0000-0000-000000000001';
+      final client = SupabaseClient(
+        'https://auth-fixture.invalid',
+        'public-fixture-key',
+        authOptions: const AuthClientOptions(autoRefreshToken: false),
+        httpClient: MockClient(
+          (request) async => http.Response(
+            jsonEncode({
+              'access_token': 'synthetic-token',
+              'refresh_token': 'synthetic-refresh',
+              'token_type': 'bearer',
+              'user': {
+                'id': actor,
+                'aud': 'authenticated',
+                'app_metadata': {},
+                'user_metadata': {},
+                'created_at': '2026-01-01T00:00:00Z',
+              },
+            }),
+            200,
+          ),
+        ),
+      );
+      addTearDown(client.dispose);
+      await client.auth.signInWithPassword(
+        email: 'fixture@example.invalid',
+        password: 'synthetic-only',
+      );
+      expect(
+        await CashierAuthRequest.run(client, actor, () async {
+          await Future<void>.delayed(Duration.zero);
+          return 'confirmed';
+        }),
+        'confirmed',
+      );
+      final uncertain = Completer<String>();
+      await expectLater(
+        CashierAuthRequest.run(
+          client,
+          actor,
+          () => uncertain.future,
+          timeout: const Duration(milliseconds: 10),
+        ),
+        throwsA(isA<TimeoutException>()),
+      );
+      // The late response must never become a success after the caller timed out.
+      uncertain.complete('late-success');
+    },
+  );
+  test(
     'same actor sign-in discards a previous authenticated HTTP result',
     () async {
       const actorId = '00000000-0000-0000-0000-000000000001';
