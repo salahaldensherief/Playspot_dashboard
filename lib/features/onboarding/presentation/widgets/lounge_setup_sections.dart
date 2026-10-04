@@ -66,8 +66,16 @@ extension _LoungeSetupSections on _LoungeSetupViewState {
         return LocationStep(
           cityController: _cityController,
           addressController: _addressController,
+          initialLatitude: cubit.state.draft.lat,
+          initialLongitude: cubit.state.draft.lng,
           onCoordinatesDetected: (lat, lng) {
-            cubit.saveDraft(cubit.state.draft.copyWith(lat: lat, lng: lng));
+            cubit.saveDraft(
+              cubit.state.draft.copyWith(
+                lat: lat,
+                lng: lng,
+                clearCoordinates: lat == null || lng == null,
+              ),
+            );
           },
         );
       case 3:

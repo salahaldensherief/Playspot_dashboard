@@ -11,13 +11,16 @@ import 'package:play_spot_dashboard/core/services/location_service.dart';
 class LocationStep extends StatefulWidget {
   final TextEditingController cityController;
   final TextEditingController addressController;
-  final Function(double lat, double lng)? onCoordinatesDetected;
+  final void Function(double? lat, double? lng)? onCoordinatesDetected;
+  final double? initialLatitude, initialLongitude;
 
   const LocationStep({
     super.key,
     required this.cityController,
     required this.addressController,
     this.onCoordinatesDetected,
+    this.initialLatitude,
+    this.initialLongitude,
   });
 
   @override
@@ -29,16 +32,55 @@ class _LocationStepState extends State<LocationStep> {
   String? _statusMessage;
   double? _lat;
   double? _lng;
+  final _latitude = TextEditingController();
+  final _longitude = TextEditingController();
+  int _revision = 0;
 
   @override
   void initState() {
     super.initState();
+    _lat = widget.initialLatitude;
+    _lng = widget.initialLongitude;
+    _latitude.text = _lat?.toString() ?? '';
+    _longitude.text = _lng?.toString() ?? '';
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _autoDetectLocation();
+      if (mounted && (_lat == null || _lng == null)) _autoDetectLocation();
     });
   }
 
+  @override
+  void dispose() {
+    _latitude.dispose();
+    _longitude.dispose();
+    super.dispose();
+  }
+
+  double? _coordinate(String text, double limit) {
+    final value = double.tryParse(text.trim());
+    return value != null && value.isFinite && value.abs() <= limit
+        ? value
+        : null;
+  }
+
+  void _manualChanged(String _) {
+    _revision++;
+    _lat = _coordinate(_latitude.text, 90);
+    _lng = _coordinate(_longitude.text, 180);
+    final valid = _lat != null && _lng != null;
+    widget.onCoordinatesDetected?.call(
+      valid ? _lat : null,
+      valid ? _lng : null,
+    );
+    setState(
+      () => _statusMessage = valid
+          ? 'onboarding_location.manual_saved'
+          : 'onboarding_location.invalid',
+    );
+  }
+
   Future<void> _autoDetectLocation() async {
+    if (!mounted || _isLoading) return;
+    final revision = _revision;
     setState(() {
       _isLoading = true;
       _statusMessage = null;
@@ -47,13 +89,21 @@ class _LocationStepState extends State<LocationStep> {
     try {
       final locationService = sl<LocationService>();
       final pos = await locationService.getCurrentPosition();
+      if (!mounted || revision != _revision) return;
 
       if (pos != null && mounted) {
         _lat = pos.latitude;
         _lng = pos.longitude;
+        _latitude.text = pos.latitude.toString();
+        _longitude.text = pos.longitude.toString();
+
+        widget.onCoordinatesDetected?.call(pos.latitude, pos.longitude);
 
         final city = await locationService.getCityFromPosition(pos, context);
-        if (city != null && city.trim().isNotEmpty) {
+        if (!mounted || revision != _revision) return;
+        if (widget.cityController.text.trim().isEmpty &&
+            city != null &&
+            city.trim().isNotEmpty) {
           widget.cityController.text = city.trim();
         }
 
@@ -62,19 +112,17 @@ class _LocationStepState extends State<LocationStep> {
         }
 
         setState(() {
-          _statusMessage =
-              'تم الكشف عن المدينة والموقع الجغرافي تلقائياً بنجاح';
+          _statusMessage = 'onboarding_location.detected';
         });
       } else {
         setState(() {
-          _statusMessage =
-              'تعذر الوصول للموقع تلقائياً. يمكنك كتابة المدينة والعنوان يدوياً.';
+          _statusMessage = 'onboarding_location.unavailable';
         });
       }
     } catch (e) {
+      if (!mounted || revision != _revision) return;
       setState(() {
-        _statusMessage =
-            'تعذر الوصول للموقع تلقائياً. يمكنك كتابة المدينة والعنوان يدوياً.';
+        _statusMessage = 'onboarding_location.unavailable';
       });
     } finally {
       if (mounted) {
@@ -121,8 +169,13 @@ class _LocationStepState extends State<LocationStep> {
                 children: [
                   Text(
                     _lat != null && _lng != null
-                        ? 'الإحداثيات: ${_lat!.toStringAsFixed(4)}, ${_lng!.toStringAsFixed(4)}'
-                        : 'تحديد موقع الصالة الجغرافي (GPS)',
+                        ? 'onboarding_location.coordinates'.tr(
+                            namedArgs: {
+                              'latitude': _lat?.toStringAsFixed(4) ?? '',
+                              'longitude': _lng?.toStringAsFixed(4) ?? '',
+                            },
+                          )
+                        : 'onboarding_location.title'.tr(),
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 13,
@@ -131,7 +184,7 @@ class _LocationStepState extends State<LocationStep> {
                   ),
                   AppButton(
                     fontSize: 16,
-                    text: 'تحديد تلقائي',
+                    text: 'onboarding_location.detect'.tr(),
                     icon: Icons.gps_fixed_rounded,
                     variant: AppButtonVariant.primary,
                     isLoading: _isLoading,
@@ -142,15 +195,42 @@ class _LocationStepState extends State<LocationStep> {
               if (_statusMessage != null) ...[
                 SizedBox(height: 10.h),
                 Text(
-                  _statusMessage!,
+                  _statusMessage?.tr() ?? '',
                   style: TextStyle(
-                    color: _statusMessage!.contains('بنجاح')
+                    color:
+                        (_statusMessage == 'onboarding_location.detected' ||
+                            _statusMessage ==
+                                'onboarding_location.manual_saved')
                         ? AppColors.success
                         : AppColors.warning,
                     fontSize: 12,
                   ),
                 ),
               ],
+              const SizedBox(height: 12),
+              Text('onboarding_location.help'.tr()),
+              const SizedBox(height: 12),
+              AppTextField(
+                key: const ValueKey('venue-latitude'),
+                label: 'onboarding_location.latitude'.tr(),
+                controller: _latitude,
+                onChanged: _manualChanged,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                  signed: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              AppTextField(
+                key: const ValueKey('venue-longitude'),
+                label: 'onboarding_location.longitude'.tr(),
+                controller: _longitude,
+                onChanged: _manualChanged,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                  signed: true,
+                ),
+              ),
             ],
           ),
         ),
