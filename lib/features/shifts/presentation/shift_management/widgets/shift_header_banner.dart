@@ -116,6 +116,20 @@ class ShiftHeaderBanner extends StatelessWidget {
     final startTime = DateFormat('hh:mm a').format(shift.startTime);
     final user = context.read<LoginCubit>().state.user;
     final bool isMyShift = user?.id == shift.cashierId;
+    final permissions = context.watch<PermissionsCubit>();
+    final canClose =
+        user != null &&
+        user.isActive &&
+        !user.isBanned &&
+        shift.loungeId == loungeId &&
+        user.loungeId == loungeId &&
+        (isMyShift || user.isLoungeAdmin) &&
+        permissions.hasLoadedAccess(user.role.name, user.id, loungeId) &&
+        permissions.hasPermission(
+          'shift_close',
+          userRole: user.role.name,
+          userId: user.id,
+        );
 
     return Container(
       width: double.infinity,
@@ -167,13 +181,15 @@ class ShiftHeaderBanner extends StatelessWidget {
               height: 32.h,
               onPressed: () => _showAddExpenseDialog(context, shift, loungeId),
             ),
-            AppButton(
-              text: AppStrings.closeShift,
-              onPressed: () => _showCloseShiftDialog(context, shift, loungeId),
-              variant: AppButtonVariant.outlined,
-              height: 32.h,
-            ),
-          ] else ...[
+            if (canClose)
+              AppButton(
+                text: AppStrings.closeShift,
+                onPressed: () =>
+                    _showCloseShiftDialog(context, shift, loungeId),
+                variant: AppButtonVariant.outlined,
+                height: 32.h,
+              ),
+          ] else if (canClose) ...[
             AppButton(
               text: 'close_shift_handover'.tr(),
               onPressed: () => _showCloseShiftDialog(context, shift, loungeId),
@@ -262,7 +278,9 @@ class ShiftHeaderBanner extends StatelessWidget {
           onConfirm: (actualCash, notes) async {
             Navigator.pop(diagContext);
             await shiftCubit.closeShift(shift.id, actualCash, notes, loungeId);
-            if (context.mounted && shiftCubit.state.lastClosedShift != null) {
+            if (context.mounted &&
+                shiftCubit.state.status == ShiftStatus.closed &&
+                shiftCubit.state.lastClosedShift?.id == shift.id) {
               showDialog(
                 context: context,
                 builder: (_) => ShiftHandoverSummaryDialog(

@@ -16,11 +16,15 @@ import 'package:play_spot_dashboard/features/shifts/domain/entities/shift_entity
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_state.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/shift_header_banner.dart';
+import 'package:play_spot_dashboard/features/permissions/presentation/cubit/permissions_cubit.dart';
+import 'package:play_spot_dashboard/features/permissions/presentation/cubit/permissions_state.dart';
 import '../../support/local_translations_loader.dart';
 
 class _Login extends Mock implements LoginCubit {}
 
 class _Shift extends Mock implements ShiftCubit {}
+
+class _Permissions extends Mock implements PermissionsCubit {}
 
 void main() {
   setUpAll(() async {
@@ -104,22 +108,67 @@ void main() {
       );
     }
   }
-  for (final width in [360.0, 600.0, 768.0, 1024.0, 1440.0]) {
-    testWidgets(
-      'shift actions stay within viewport at $width with large text',
-      (tester) async {
+  for (final scenario in [
+    (
+      name: 'own',
+      role: UserRole.cashier,
+      actor: 'cashier',
+      grant: true,
+      loaded: true,
+      closes: true,
+    ),
+    (
+      name: 'other cashier',
+      role: UserRole.cashier,
+      actor: 'other',
+      grant: true,
+      loaded: true,
+      closes: false,
+    ),
+    (
+      name: 'manager',
+      role: UserRole.manager,
+      actor: 'manager',
+      grant: true,
+      loaded: true,
+      closes: true,
+    ),
+    (
+      name: 'revoked manager',
+      role: UserRole.manager,
+      actor: 'manager',
+      grant: false,
+      loaded: true,
+      closes: false,
+    ),
+    (
+      name: 'pending access',
+      role: UserRole.manager,
+      actor: 'manager',
+      grant: true,
+      loaded: false,
+      closes: false,
+    ),
+  ]) {
+    for (final width
+        in scenario.name == 'own'
+            ? [360.0, 600.0, 768.0, 1024.0, 1440.0]
+            : [600.0]) {
+      testWidgets('shift actions ${scenario.name} at $width with large text', (
+        tester,
+      ) async {
         tester.view.physicalSize = Size(width, 1200);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
         final login = _Login();
         when(() => login.state).thenReturn(
-          const LoginState(
+          LoginState(
             user: UserEntity(
-              id: 'cashier',
+              id: scenario.actor,
               email: 'test@example.test',
               name: 'Cashier',
-              role: UserRole.cashier,
+              role: scenario.role,
               loungeId: 'venue',
             ),
           ),
@@ -141,10 +190,28 @@ void main() {
           ),
         );
         when(() => shift.stream).thenAnswer((_) => const Stream.empty());
+        final permissions = _Permissions();
+        when(() => permissions.state).thenReturn(PermissionsState.initial());
+        when(() => permissions.stream).thenAnswer((_) => const Stream.empty());
+        when(
+          () => permissions.hasLoadedAccess(
+            scenario.role.name,
+            scenario.actor,
+            'venue',
+          ),
+        ).thenReturn(scenario.loaded);
+        when(
+          () => permissions.hasPermission(
+            'shift_close',
+            userRole: scenario.role.name,
+            userId: scenario.actor,
+          ),
+        ).thenReturn(scenario.grant);
         final banner = MultiBlocProvider(
           providers: [
             BlocProvider<LoginCubit>.value(value: login),
             BlocProvider<ShiftCubit>.value(value: shift),
+            BlocProvider<PermissionsCubit>.value(value: permissions),
           ],
           child: const Align(
             alignment: Alignment.topCenter,
@@ -178,13 +245,31 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        for (final label in [AppStrings.closeShift, AppStrings.recordExpense]) {
-          final rect = tester.getRect(find.widgetWithText(AppButton, label));
+        final label = scenario.name == 'own'
+            ? AppStrings.closeShift
+            : 'close_shift_handover'.tr();
+        final close = find.widgetWithText(AppButton, label);
+        if (scenario.closes) {
+          final rect = tester.getRect(close);
           expect(rect.left, greaterThanOrEqualTo(0));
           expect(rect.right, lessThanOrEqualTo(width));
+        } else {
+          expect(close, findsNothing);
+        }
+        if (scenario.name == 'own') {
+          final rect = tester.getRect(
+            find.widgetWithText(AppButton, AppStrings.recordExpense),
+          );
+          expect(rect.left, greaterThanOrEqualTo(0));
+          expect(rect.right, lessThanOrEqualTo(width));
+        } else {
+          expect(
+            find.widgetWithText(AppButton, AppStrings.recordExpense),
+            findsNothing,
+          );
         }
         expect(tester.takeException(), isNull);
-      },
-    );
+      });
+    }
   }
 }

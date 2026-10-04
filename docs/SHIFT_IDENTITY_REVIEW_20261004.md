@@ -1,0 +1,9 @@
+# Shift identity and action review — 2026-10-04
+
+The active shift belonged to the owner while the real cashier session exposed a close/handover action. Live `blind_close_shift` metadata requires the stored shift cashier in `p_cashier_id` and separately authorizes the actor as that cashier or an authorized manager. The client sent the current actor as the shift cashier, so manager handover of another cashier's shift could fail.
+
+Closure now reads the target cashier with both shift and lounge filters, then sends the stored identity. Missing scope, denied lookup, absent cashier and an unconfirmed RPC response remain errors. The refresh also keeps lounge scope. The banner offers closure only for the assigned cashier or a venue manager with loaded matching grants; stale/revoked grants cannot expose the action. An old `lastClosedShift` no longer triggers a successful handover dialog after a different closure fails.
+
+Six HTTP contract cases verify own/manager closure payloads and failure paths. Four additional widget cases verify another cashier, authorized manager, revoked grant and pending access. **922 offline tests passed** with `--concurrency=2`, live tests excluded. Initial parallel build/test launch crashed in the Dart runtime (`Stack overflow` / evacuation failure); the complete sequential retry passed. Web release built in 109.8s. Analyze: 51 informational lints, no warnings/errors. Cashier runtime screenshots confirm the foreign-shift close action is absent and the room actions/rates remain visible. No real shift closure was submitted.
+
+Backend follow-up remains: legacy `close_shift` uses the broader operate predicate, unlike `blind_close_shift`, and needs separate server authorization review. This client correction does not prove every legacy backend entry point safe. Screenshot evidence: cashier-foreign-shift-actions-fixed.png and cashier-foreign-shift-fixed-360.png in the local review workspace.

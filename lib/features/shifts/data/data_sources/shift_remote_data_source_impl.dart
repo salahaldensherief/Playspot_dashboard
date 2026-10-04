@@ -201,11 +201,27 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
     String? notes, {
     String? loungeId,
   }) async {
-    final cashierId = _supabase.auth.currentUser?.id;
-    if (cashierId == null || cashierId.isEmpty) {
-      throw Exception('User not authenticated');
+    final actorId = _supabase.auth.currentUser?.id;
+    if (actorId == null || actorId.isEmpty) {
+      throw const PostgrestException(
+        message: 'Authentication required',
+        code: '28000',
+      );
     }
-
+    if (loungeId == null || loungeId.trim().isEmpty) {
+      throw ArgumentError('Closing a shift requires lounge scope');
+    }
+    final shift = await _supabase
+        .from('shifts')
+        .select('id,lounge_id,cashier_id,starting_cash,start_time')
+        .eq('id', shiftId)
+        .eq('lounge_id', loungeId)
+        .single();
+    final cashierId = shift['cashier_id'];
+    if (cashierId is! String || cashierId.isEmpty) {
+      throw const FormatException('Shift cashier identity is missing');
+    }
+    // The RPC validates the actor independently against this stored cashier.
     final response = await _supabase.rpc(
       'blind_close_shift',
       params: {
@@ -218,17 +234,23 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
 
     if (response is Map) {
       final map = Map<String, dynamic>.from(response);
+      if (map['success'] != true ||
+          map['shift_id'] != shiftId ||
+          map['status'] != 'closed') {
+        throw const FormatException('Unconfirmed shift closure');
+      }
       final refreshed = await _supabase
           .from('shifts')
           .select('*, profiles:cashier_id(full_name)')
           .eq('id', shiftId)
+          .eq('lounge_id', loungeId)
           .maybeSingle();
 
       if (refreshed != null) {
         return ShiftModel.fromJson(refreshed);
       }
 
-      return ShiftModel.fromJson(map);
+      return ShiftModel.fromJson({...shift, ...map});
     }
 
     throw Exception('Invalid close shift response');
