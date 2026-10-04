@@ -43,20 +43,23 @@ class ModerationRemoteDataSourceImpl implements ModerationRemoteDataSource {
         'user_id': userId,
         if (bookingId != null && bookingId.isNotEmpty) 'booking_id': bookingId,
         'reason': reason,
-        if (evidenceNotes != null && evidenceNotes.isNotEmpty) 'evidence_notes': evidenceNotes,
+        if (evidenceNotes != null && evidenceNotes.isNotEmpty)
+          'evidence_notes': evidenceNotes,
         'status': 'pending',
       };
 
       await client.from('user_ban_requests').insert(payload);
       debugPrint('🟢 [MODERATION] Ban request created successfully');
     } catch (e) {
-      debugPrint('❌ [MODERATION] createBanRequest Error: $e');
+      _logFailure('createBanRequest', e);
       rethrow;
     }
   }
 
   @override
-  Future<List<UserBanRequestModel>> getLoungeBanRequests(String loungeId) async {
+  Future<List<UserBanRequestModel>> getLoungeBanRequests(
+    String loungeId,
+  ) async {
     try {
       final response = await client
           .from('user_ban_requests')
@@ -64,10 +67,15 @@ class ModerationRemoteDataSourceImpl implements ModerationRemoteDataSource {
           .eq('lounge_id', loungeId)
           .order('created_at', ascending: false);
 
-      return (response as List).map((json) => UserBanRequestModel.fromJson(Map<String, dynamic>.from(json))).toList();
+      return (response as List)
+          .map(
+            (json) =>
+                UserBanRequestModel.fromJson(Map<String, dynamic>.from(json)),
+          )
+          .toList();
     } catch (e) {
-      debugPrint('❌ [MODERATION] getLoungeBanRequests Error: $e');
-      return [];
+      _logFailure('getLoungeBanRequests', e);
+      rethrow;
     }
   }
 
@@ -80,37 +88,48 @@ class ModerationRemoteDataSourceImpl implements ModerationRemoteDataSource {
           .eq('status', 'pending')
           .order('created_at', ascending: false);
 
-      return (response as List).map((json) => UserBanRequestModel.fromJson(Map<String, dynamic>.from(json))).toList();
+      return (response as List)
+          .map(
+            (json) =>
+                UserBanRequestModel.fromJson(Map<String, dynamic>.from(json)),
+          )
+          .toList();
     } catch (e) {
-      debugPrint('❌ [MODERATION] getPendingBanRequests Error: $e');
-      return [];
-    }
-  }
-
-  @override
-  Future<void> approveLoungeBanRequest(String requestId, {String? adminNotes}) async {
-    try {
-      await client.rpc('approve_lounge_ban_request', params: {
-        'request_id': requestId,
-        'admin_notes': adminNotes ?? '',
-      });
-      debugPrint('🟢 [MODERATION] Approved lounge ban request $requestId');
-    } catch (e) {
-      debugPrint('❌ [MODERATION] approveLoungeBanRequest Error: $e');
+      _logFailure('getPendingBanRequests', e);
       rethrow;
     }
   }
 
   @override
-  Future<void> approveGlobalBanRequest(String requestId, {String? adminNotes}) async {
+  Future<void> approveLoungeBanRequest(
+    String requestId, {
+    String? adminNotes,
+  }) async {
     try {
-      await client.rpc('approve_global_ban_request', params: {
-        'request_id': requestId,
-        'admin_notes': adminNotes ?? '',
-      });
-      debugPrint('🟢 [MODERATION] Approved global ban request $requestId');
+      await client.rpc(
+        'approve_lounge_ban_request',
+        params: {'p_request_id': requestId, 'p_admin_notes': adminNotes},
+      );
+      debugPrint('[MODERATION] approveLoungeBanRequest completed');
     } catch (e) {
-      debugPrint('❌ [MODERATION] approveGlobalBanRequest Error: $e');
+      _logFailure('approveLoungeBanRequest', e);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> approveGlobalBanRequest(
+    String requestId, {
+    String? adminNotes,
+  }) async {
+    try {
+      await client.rpc(
+        'approve_global_ban_request',
+        params: {'p_request_id': requestId, 'p_admin_notes': adminNotes},
+      );
+      debugPrint('[MODERATION] approveGlobalBanRequest completed');
+    } catch (e) {
+      _logFailure('approveGlobalBanRequest', e);
       rethrow;
     }
   }
@@ -118,13 +137,13 @@ class ModerationRemoteDataSourceImpl implements ModerationRemoteDataSource {
   @override
   Future<void> rejectBanRequest(String requestId, {String? adminNotes}) async {
     try {
-      await client.rpc('reject_ban_request', params: {
-        'request_id': requestId,
-        'admin_notes': adminNotes ?? '',
-      });
-      debugPrint('🟢 [MODERATION] Rejected ban request $requestId');
+      await client.rpc(
+        'reject_ban_request',
+        params: {'p_request_id': requestId, 'p_admin_notes': adminNotes},
+      );
+      debugPrint('[MODERATION] rejectBanRequest completed');
     } catch (e) {
-      debugPrint('❌ [MODERATION] rejectBanRequest Error: $e');
+      _logFailure('rejectBanRequest', e);
       rethrow;
     }
   }
@@ -132,14 +151,19 @@ class ModerationRemoteDataSourceImpl implements ModerationRemoteDataSource {
   @override
   Future<void> suspendLounge(String loungeId, {required String reason}) async {
     try {
-      await client.rpc('suspend_lounge', params: {
-        'lounge_id': loungeId,
-        'reason': reason,
-      });
-      debugPrint('🟢 [MODERATION] Suspended lounge $loungeId');
+      await client.rpc(
+        'suspend_lounge',
+        params: {'p_lounge_id': loungeId, 'p_reason': reason},
+      );
+      debugPrint('[MODERATION] suspendLounge completed');
     } catch (e) {
-      debugPrint('❌ [MODERATION] suspendLounge Error: $e');
+      _logFailure('suspendLounge', e);
       rethrow;
     }
+  }
+
+  void _logFailure(String operation, Object error) {
+    final code = error is PostgrestException ? error.code : error.runtimeType;
+    debugPrint('[MODERATION] $operation failed code=$code');
   }
 }

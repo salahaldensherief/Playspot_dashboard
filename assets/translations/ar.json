@@ -1644,7 +1644,6 @@
   "venue_access_load_failed": "تعذر تحميل بيانات الصالة أو صلاحيات الحساب. أعد المحاولة.",
   "loading_venue_access": "جارٍ تحميل بيانات الصالة والتحقق من الصلاحيات…",
   "preview_notification_sound": "🔔 تجربة صوت التنبيه",
-  "customer_warning_sent": "تم تسجيل وإرسال التحذير للعميل بنجاح",
   "loading_cancellation_history": "جاري تحميل سجل الإلغاءات...",
   "currency_egp": "ج.م",
   "discount_audit_reason_hint": "سبب الخصم في سجل التدقيق…",
@@ -1809,5 +1808,6 @@
   "calendar_thursday_short": "خم",
   "calendar_friday_short": "جم",
   "calendar_saturday_short": "سب",
-  "calendar_sunday_short": "أح"
+  "calendar_sunday_short": "أح",
+  "customer_warning_not_connected": "إرسال تحذيرات الإلغاء غير متاح حاليًا. لم يتم تسجيل أو إرسال تحذير للعميل. يمكنك مراجعة سجل الإلغاءات أو إرسال بلاغ للإدارة من الإجراء المخصص."
 }

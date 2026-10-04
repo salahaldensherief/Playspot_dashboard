@@ -122,7 +122,7 @@ class _BookingDetailsCustomerCardState
           ],
         ),
         content: Text(
-          'سيتم تسجيل تحذير للعميل ${widget.booking.userName ?? ""} على تجاوزه حد الإلغاءات بعد الموافقة.',
+          'customer_warning_not_connected'.tr(),
           style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
@@ -130,19 +130,6 @@ class _BookingDetailsCustomerCardState
             text: AppStrings.cancel,
             variant: AppButtonVariant.text,
             onPressed: () => Navigator.pop(diagContext),
-          ),
-          AppButton(
-            text: 'إرسال التحذير',
-            backgroundColor: AppColors.warning,
-            onPressed: () {
-              Navigator.pop(diagContext);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('customer_warning_sent'.tr()),
-                  backgroundColor: AppColors.warning,
-                ),
-              );
-            },
           ),
         ],
       ),

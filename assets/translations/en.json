@@ -1644,7 +1644,6 @@
   "venue_access_load_failed": "Could not load venue details or account permissions. Please retry.",
   "loading_venue_access": "Loading venue details and checking permissions…",
   "preview_notification_sound": "Preview notification sound",
-  "customer_warning_sent": "The warning was recorded and sent to the customer.",
   "loading_cancellation_history": "Loading cancellation history…",
   "currency_egp": "EGP",
   "discount_audit_reason_hint": "Reason for the audit log…",
@@ -1809,5 +1808,6 @@
   "calendar_thursday_short": "Thu",
   "calendar_friday_short": "Fri",
   "calendar_saturday_short": "Sat",
-  "calendar_sunday_short": "Sun"
+  "calendar_sunday_short": "Sun",
+  "customer_warning_not_connected": "Cancellation warnings are not available yet. No warning was recorded or sent. You can review cancellation history or use the separate report action to contact administration."
 }
