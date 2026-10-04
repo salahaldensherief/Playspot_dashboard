@@ -154,7 +154,12 @@ class ComboCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4.r),
                   ),
                   child: AppText.body(
-                    'وفر ${combo.savings.toStringAsFixed(0)} ${AppStrings.egp}',
+                    'combo_savings_label'.tr(
+                      args: [
+                        (combo.savings.toStringAsFixed(0)).toString(),
+                        (AppStrings.egp).toString(),
+                      ],
+                    ),
                     fontSize: 11.sp,
                     color: AppColors.success,
                     fontWeight: FontWeight.bold,
@@ -164,7 +169,12 @@ class ComboCard extends StatelessWidget {
               const Spacer(),
               if (combo.profitMargin != null)
                 AppText.body(
-                  'هامش: ${(combo.profitMargin ?? 0).toStringAsFixed(0)} ${AppStrings.egp}',
+                  'combo_margin_label'.tr(
+                    args: [
+                      ((combo.profitMargin ?? 0).toStringAsFixed(0)).toString(),
+                      (AppStrings.egp).toString(),
+                    ],
+                  ),
                   fontSize: 11.sp,
                   color: AppColors.warning,
                   fontWeight: FontWeight.w500,

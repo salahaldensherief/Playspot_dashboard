@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -86,16 +87,16 @@ class _RoomOccupancyCardState extends State<RoomOccupancyCard> {
 
     Color borderColor = AppColors.borderDefault;
     Color statusColor = AppColors.success;
-    String statusText = 'خالية';
+    String statusText = 'room_available'.tr();
 
     if (isMaintenance) {
       borderColor = AppColors.warning.withValues(alpha: 0.5);
       statusColor = AppColors.warning;
-      statusText = 'صيانة';
+      statusText = 'room_maintenance'.tr();
     } else if (isOccupied) {
       borderColor = AppColors.danger.withValues(alpha: 0.6);
       statusColor = AppColors.danger;
-      statusText = 'مشغولة';
+      statusText = 'room_occupied'.tr();
     }
 
     Duration remaining = Duration.zero;
@@ -256,7 +257,7 @@ class _RoomOccupancyCardState extends State<RoomOccupancyCard> {
           SizedBox(width: 8.w),
           Expanded(
             child: AppText.body(
-              'المحطة تحت الصيانة حالياً وغير متاحة للحجز',
+              'station_under_maintenance'.tr(),
               fontSize: 11.sp,
               color: AppColors.warning,
             ),

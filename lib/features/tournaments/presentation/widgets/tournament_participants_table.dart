@@ -80,7 +80,9 @@ class TournamentParticipantsTable extends StatelessWidget {
                   runSpacing: 8.h,
                   children: [
                     Text(
-                      'المشاركون (${participants.length})',
+                      'tournament_participants_count'.tr(
+                        args: [(participants.length).toString()],
+                      ),
                       style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 16.sp,
@@ -99,7 +101,9 @@ class TournamentParticipantsTable extends StatelessWidget {
                           border: Border.all(color: AppColors.warning),
                         ),
                         child: Text(
-                          'قائمة الانتظار: $waitlistCount',
+                          'tournament_waitlist_count'.tr(
+                            args: [(waitlistCount).toString()],
+                          ),
                           style: TextStyle(
                             color: AppColors.warning,
                             fontSize: 12.sp,
@@ -112,7 +116,7 @@ class TournamentParticipantsTable extends StatelessWidget {
                 ),
                 if (onPromoteWaitlist != null && waitlistCount > 0)
                   AppButton(
-                    text: 'ترقية من قائمة الانتظار',
+                    text: 'promote_from_waitlist'.tr(),
                     icon: Icons.arrow_upward_rounded,
                     backgroundColor: AppColors.warning,
                     fontSize: 12.sp,

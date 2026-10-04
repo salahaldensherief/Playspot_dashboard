@@ -43,7 +43,7 @@ class BookingUserInfoCard extends StatelessWidget {
         ? (booking.userId.length > 8
               ? booking.userId.substring(0, 8)
               : booking.userId)
-        : 'زائر';
+        : 'guest'.tr();
 
     return Container(
       padding: EdgeInsets.all(16.r),

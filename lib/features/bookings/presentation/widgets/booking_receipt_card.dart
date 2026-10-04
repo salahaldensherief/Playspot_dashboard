@@ -273,7 +273,7 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
                         ),
                         SizedBox(height: 8.h),
                         AppText.body(
-                          'لم يتم إرفاق إيصال دفع من العميل بعد',
+                          'customer_receipt_not_attached'.tr(),
                           fontSize: 13.sp,
                           color: AppColors.textSecondary,
                         ),
@@ -281,7 +281,9 @@ class _BookingReceiptCardState extends State<BookingReceiptCard> {
                             b.paymentMethod!.isNotEmpty) ...[
                           SizedBox(height: 4.h),
                           AppText.body(
-                            'طريقة الدفع: ${b.paymentMethod}',
+                            'payment_method_label'.tr(
+                              args: [(b.paymentMethod).toString()],
+                            ),
                             fontSize: 11.sp,
                             color: AppColors.neonBlue,
                           ),

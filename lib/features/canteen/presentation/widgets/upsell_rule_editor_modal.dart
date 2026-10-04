@@ -46,27 +46,26 @@ class UpsellRuleEditorModal extends StatefulWidget {
 class _UpsellRuleEditorModalState extends State<UpsellRuleEditorModal> {
   final _formKey = GlobalKey<FormState>();
 
-  final List<TriggerTemplateItem> _templates = [
+  List<TriggerTemplateItem> get _templates => [
     TriggerTemplateItem(
       key: 'session_minutes_elapsed',
       title: AppStrings.triggerSessionMinutes,
-      description: 'اقتراح صنف أو عرض بعد مرور وقت محدد من بداية جلسة اللعب',
+      description: 'upsell_elapsed_description'.tr(),
     ),
     TriggerTemplateItem(
       key: 'cart_contains_category',
       title: AppStrings.triggerCartCategory,
-      description: 'اقتراح مشروب أو صنف مكمل عند إضافة صنف من تصنيف محدد للسلة',
+      description: 'upsell_cart_description'.tr(),
     ),
     TriggerTemplateItem(
       key: 'session_start',
       title: AppStrings.triggerSessionStart,
-      description: 'اقتراح ترحيبي أو كومبو بداية عند فتح الجلسة مباشرة',
+      description: 'upsell_start_description'.tr(),
     ),
     TriggerTemplateItem(
       key: 'time_of_day',
       title: AppStrings.triggerTimeOfDay,
-      description:
-          'اقتراح مخصص خلال ساعات محددة من اليوم (مثل وقت العشاء أو الذروة)',
+      description: 'upsell_hours_description'.tr(),
     ),
   ];
 
@@ -440,7 +439,9 @@ class _UpsellRuleEditorModalState extends State<UpsellRuleEditorModal> {
 
             // Priority
             AppTextField(
-              label: '${AppStrings.priority} (الأعلى = أولوية أكبر)',
+              label: 'upsell_priority_hint'.tr(
+                args: [(AppStrings.priority).toString()],
+              ),
               controller: _priorityController,
               keyboardType: TextInputType.number,
             ),

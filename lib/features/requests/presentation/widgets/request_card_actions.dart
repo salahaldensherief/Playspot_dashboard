@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -170,7 +171,7 @@ class _LiveRejectExtensionDialog extends StatefulWidget {
 class _LiveRejectExtensionDialogState
     extends State<_LiveRejectExtensionDialog> {
   final _reasonController = TextEditingController(
-    text: 'لا يوجد وقت متاح بعد الحجز الحالي',
+    text: 'no_time_after_booking'.tr(),
   );
 
   @override

@@ -224,7 +224,7 @@ class _BookingDetailsCustomerCardState
                     ),
                     SizedBox(height: 2.h),
                     Text(
-                      booking.userPhone ?? 'لا يوجد هاتف',
+                      booking.userPhone ?? 'no_customer_phone'.tr(),
                       style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12.sp,

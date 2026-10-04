@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -43,7 +44,7 @@ class BookingFinancialsExtrasList extends StatelessWidget {
                       rawName.toString().trim().isNotEmpty &&
                       rawName.toString().trim() != 'null')
                   ? rawName.toString().trim()
-                  : 'صنف';
+                  : 'item'.tr();
               final unitPrice =
                   (item['unit_price'] ?? item['price'] as num?)?.toDouble() ??
                   0.0;

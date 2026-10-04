@@ -1,6 +1,6 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
@@ -217,7 +217,7 @@ class BookingSpecificationsCard extends StatelessWidget {
                           (booking.cancellationReason != null &&
                                   booking.cancellationReason!.trim().isNotEmpty)
                               ? booking.cancellationReason!
-                              : 'لا يوجد سبب مدوّن',
+                              : 'reason_not_recorded'.tr(),
                           style: TextStyle(
                             color: booking.isCancelledByClient
                                 ? AppColors.danger

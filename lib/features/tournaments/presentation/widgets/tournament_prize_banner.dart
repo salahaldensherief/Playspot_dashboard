@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
@@ -40,8 +41,10 @@ class TournamentPrizeBanner extends StatelessWidget {
               SizedBox(height: 2.h),
               Text(
                 prizeCount == 0
-                    ? 'لم يتم تخصيص جوائز للمراكز بعد'
-                    : 'تم تخصيص $prizeCount مراكز للجوائز',
+                    ? 'tournament_prizes_not_assigned'.tr()
+                    : 'tournament_prize_placements_count'.tr(
+                        args: [(prizeCount).toString()],
+                      ),
                 style: TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 12.sp,

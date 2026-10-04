@@ -28,16 +28,18 @@ class UpsellRuleCard extends StatelessWidget {
     switch (rule.triggerType) {
       case 'session_minutes_elapsed':
         final minutes = rule.triggerParams['minutes'] ?? 45;
-        return 'بعد انقضاء $minutes دقيقة من الجلسة';
+        return 'upsell_after_minutes'.tr(args: [(minutes).toString()]);
       case 'cart_contains_category':
         final cat = rule.triggerParams['category'] ?? 'سناكس';
-        return 'عند وجود صنف من تصنيف "$cat" في السلة';
+        return 'upsell_when_category_in_basket'.tr(args: [(cat).toString()]);
       case 'session_start':
-        return 'عند بدء الجلسة مباشرة';
+        return 'upsell_at_session_start'.tr();
       case 'time_of_day':
         final start = rule.triggerParams['start_time'] ?? '18:00';
         final end = rule.triggerParams['end_time'] ?? '23:00';
-        return 'خلال الفترة من $start إلى $end';
+        return 'upsell_during_hours'.tr(
+          args: [(start).toString(), (end).toString()],
+        );
       default:
         return rule.triggerType;
     }
@@ -134,7 +136,7 @@ class UpsellRuleCard extends StatelessWidget {
               SizedBox(width: 8.w),
               Expanded(
                 child: AppText.subHeading(
-                  'يقترح: $targetName',
+                  'upsell_suggests_label'.tr(args: [(targetName).toString()]),
                   fontSize: 14.sp,
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
@@ -149,7 +151,13 @@ class UpsellRuleCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4.r),
                   ),
                   child: AppText.body(
-                    'خصم ${(rule.discountPercent ?? 0).toStringAsFixed(0)}%',
+                    'discount_percent_value'.tr(
+                      args: [
+                        ((rule.discountPercent ?? 0).toStringAsFixed(
+                          0,
+                        )).toString(),
+                      ],
+                    ),
                     fontSize: 11.sp,
                     color: AppColors.success,
                     fontWeight: FontWeight.bold,
@@ -218,7 +226,13 @@ class UpsellRuleCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               AppText.body(
-                '${AppStrings.priority}: ${rule.priority} | أقصى ظهور: ${rule.maxImpressionsPerBooking}',
+                'upsell_priority_limits'.tr(
+                  args: [
+                    (AppStrings.priority).toString(),
+                    (rule.priority).toString(),
+                    (rule.maxImpressionsPerBooking).toString(),
+                  ],
+                ),
                 fontSize: 11.sp,
                 color: AppColors.textMuted,
               ),

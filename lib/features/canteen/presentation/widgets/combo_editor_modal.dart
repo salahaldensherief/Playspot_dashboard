@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -52,14 +53,14 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
   bool _isSaving = false;
 
   final List<int> _allDays = const [0, 1, 2, 3, 4, 5, 6];
-  final List<String> _dayLabels = const [
-    'الأحد',
-    'الإثنين',
-    'الثلاثاء',
-    'الأربعاء',
-    'الخميس',
-    'الجمعة',
-    'السبت',
+  List<String> get _dayLabels => [
+    'calendar_sunday'.tr(),
+    'calendar_monday'.tr(),
+    'calendar_tuesday'.tr(),
+    'calendar_wednesday'.tr(),
+    'calendar_thursday'.tr(),
+    'calendar_friday'.tr(),
+    'calendar_saturday'.tr(),
   ];
 
   @override
@@ -74,7 +75,9 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
       text: c != null ? c.price.toStringAsFixed(0) : '',
     );
     _imageUrlController = TextEditingController(text: c?.imageUrl ?? '');
-    _availableFromController = TextEditingController(text: c?.availableFrom ?? '');
+    _availableFromController = TextEditingController(
+      text: c?.availableFrom ?? '',
+    );
     _availableToController = TextEditingController(text: c?.availableTo ?? '');
 
     _selectedDays = c?.daysOfWeek != null
@@ -84,10 +87,10 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
 
     if (c != null && c.items.isNotEmpty) {
       _items = c.items
-          .map((item) => ComboItemDraft(
-                extraId: item.extraId,
-                quantity: item.quantity,
-              ))
+          .map(
+            (item) =>
+                ComboItemDraft(extraId: item.extraId, quantity: item.quantity),
+          )
           .toList();
     } else {
       _items = [];
@@ -145,7 +148,8 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
     return total;
   }
 
-  double get _bundlePrice => double.tryParse(_priceController.text.trim()) ?? 0.0;
+  double get _bundlePrice =>
+      double.tryParse(_priceController.text.trim()) ?? 0.0;
 
   double? get _profitMargin {
     final cost = _estimatedCostTotal;
@@ -267,7 +271,9 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
   @override
   Widget build(BuildContext context) {
     return AppDialog(
-      title: widget.initialCombo != null ? AppStrings.editCombo : AppStrings.addCombo,
+      title: widget.initialCombo != null
+          ? AppStrings.editCombo
+          : AppStrings.addCombo,
       width: 720.w,
       actions: [
         AppButton(
@@ -294,8 +300,9 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
                   child: AppTextField(
                     label: AppStrings.comboNameAr,
                     controller: _nameArController,
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? AppStrings.required : null,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? AppStrings.required
+                        : null,
                   ),
                 ),
                 SizedBox(width: 16.w),
@@ -317,8 +324,9 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
                     label: '${AppStrings.bundlePrice} (${AppStrings.egp})',
                     controller: _priceController,
                     keyboardType: TextInputType.number,
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? AppStrings.required : null,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? AppStrings.required
+                        : null,
                   ),
                 ),
                 SizedBox(width: 16.w),
@@ -401,7 +409,10 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
                   final currentExtra = _findExtra(itemDraft.extraId);
 
                   return Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 8.h,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.mutedBackground,
                       borderRadius: BorderRadius.circular(10.r),
@@ -412,8 +423,11 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
                         Expanded(
                           flex: 3,
                           child: DropdownButtonFormField<String>(
-                            initialValue: itemDraft.extraId.isNotEmpty &&
-                                    widget.availableExtras.any((e) => e.id == itemDraft.extraId)
+                            initialValue:
+                                itemDraft.extraId.isNotEmpty &&
+                                    widget.availableExtras.any(
+                                      (e) => e.id == itemDraft.extraId,
+                                    )
                                 ? itemDraft.extraId
                                 : null,
                             dropdownColor: AppColors.cardBackground,
@@ -422,10 +436,15 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
                               fontSize: 13.sp,
                             ),
                             decoration: InputDecoration(
-                              contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 10.w,
+                                vertical: 8.h,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.r),
-                                borderSide: BorderSide(color: AppColors.borderDefault),
+                                borderSide: BorderSide(
+                                  color: AppColors.borderDefault,
+                                ),
                               ),
                             ),
                             items: widget.availableExtras.map((extra) {
@@ -452,7 +471,10 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
                         Row(
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.remove_circle_outline, color: AppColors.textSecondary),
+                              icon: const Icon(
+                                Icons.remove_circle_outline,
+                                color: AppColors.textSecondary,
+                              ),
                               onPressed: itemDraft.quantity > 1
                                   ? () => setState(() => itemDraft.quantity--)
                                   : null,
@@ -464,8 +486,12 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
                               fontWeight: FontWeight.bold,
                             ),
                             IconButton(
-                              icon: const Icon(Icons.add_circle_outline, color: AppColors.primary),
-                              onPressed: () => setState(() => itemDraft.quantity++),
+                              icon: const Icon(
+                                Icons.add_circle_outline,
+                                color: AppColors.primary,
+                              ),
+                              onPressed: () =>
+                                  setState(() => itemDraft.quantity++),
                             ),
                           ],
                         ),
@@ -483,7 +509,10 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
                         const Spacer(),
 
                         IconButton(
-                          icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: AppColors.error,
+                          ),
                           onPressed: () => _removeItem(index),
                         ),
                       ],
@@ -499,7 +528,9 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                ),
               ),
               child: Column(
                 children: [
@@ -547,7 +578,10 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
                         fontWeight: FontWeight.w600,
                       ),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 2.h,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.success.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6.r),
@@ -606,7 +640,9 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
                   selectedColor: AppColors.primary.withValues(alpha: 0.25),
                   checkmarkColor: AppColors.primary,
                   labelStyle: TextStyle(
-                    color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
                     fontSize: 12.sp,
                   ),
                   onSelected: (selected) {

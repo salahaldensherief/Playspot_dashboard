@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -42,7 +43,7 @@ class BookingDetailsActionPanel extends StatelessWidget {
       children: [
         if (isPending)
           AppButton(
-            text: 'قبول الحجز الآن',
+            text: 'accept_booking_now'.tr(),
             variant: AppButtonVariant.primary,
             backgroundColor: AppColors.success,
             height: 40.h,
@@ -50,7 +51,9 @@ class BookingDetailsActionPanel extends StatelessWidget {
           ),
         if ((isUpcoming || isInProgress) && !isUnpaid)
           AppButton(
-            text: isInProgress ? 'إنهاء وحساب الجلسة' : 'بدء الجلسة الآن',
+            text: isInProgress
+                ? 'finish_and_bill_session'.tr()
+                : 'start_session_now'.tr(),
             variant: AppButtonVariant.primary,
             height: 40.h,
             onPressed: () {

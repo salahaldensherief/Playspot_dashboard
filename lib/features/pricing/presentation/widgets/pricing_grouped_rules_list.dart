@@ -23,15 +23,17 @@ class PricingGroupedRulesList extends StatelessWidget {
   String _getGroupTitle(PricingRuleEntity rule) {
     switch (groupBy) {
       case PricingGroupBy.lounge:
-        return 'اللاونج العام';
+        return 'pricing_entire_lounge'.tr();
       case PricingGroupBy.spaceType:
         return rule.spaceTypeId != null && rule.spaceTypeId!.isNotEmpty
-            ? 'نوع المساحة: ${rule.spaceTypeId}'
-            : 'كل المساحات';
+            ? 'pricing_space_type_scope'.tr(
+                args: [(rule.spaceTypeId).toString()],
+              )
+            : 'pricing_all_spaces'.tr();
       case PricingGroupBy.room:
         return rule.roomId != null && rule.roomId!.isNotEmpty
-            ? 'غرفة: ${rule.roomId}'
-            : 'كل الغرف';
+            ? 'pricing_room_scope'.tr(args: [(rule.roomId).toString()])
+            : 'pricing_all_rooms'.tr();
     }
   }
 
@@ -179,7 +181,14 @@ class PricingGroupedRulesList extends StatelessWidget {
                             ),
                             SizedBox(height: 6.h),
                             Text(
-                              'الوقت: ${rule.startTime} - ${rule.endTime} | التعديل: ${rule.adjustmentValue} (${rule.adjustmentType})',
+                              'pricing_rule_summary'.tr(
+                                args: [
+                                  (rule.startTime).toString(),
+                                  (rule.endTime).toString(),
+                                  (rule.adjustmentValue).toString(),
+                                  (rule.adjustmentType).toString(),
+                                ],
+                              ),
                               style: TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: 12.sp,

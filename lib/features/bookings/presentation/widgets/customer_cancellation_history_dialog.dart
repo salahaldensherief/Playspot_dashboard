@@ -1,6 +1,6 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
@@ -74,7 +74,9 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
                         ),
                         SizedBox(height: 2.h),
                         Text(
-                          'العميل: $userName',
+                          'customer_name_label'.tr(
+                            args: [(userName).toString()],
+                          ),
                           style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12.sp,
@@ -195,7 +197,13 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
                                   ),
                                   SizedBox(width: 4.w),
                                   Text(
-                                    'تاريخ الحجز: ${_formatDate(item.date)} (${item.startTime ?? ''} - ${item.endTime ?? ''})',
+                                    'cancelled_booking_schedule'.tr(
+                                      args: [
+                                        (_formatDate(item.date)).toString(),
+                                        (item.startTime ?? '').toString(),
+                                        (item.endTime ?? '').toString(),
+                                      ],
+                                    ),
                                     style: TextStyle(
                                       color: AppColors.textSecondary,
                                       fontSize: 11.sp,
@@ -213,7 +221,13 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
                                   ),
                                   SizedBox(width: 4.w),
                                   Text(
-                                    'تاريخ ووقت الإلغاء: ${_formatDateTime(item.cancelledAt)}',
+                                    'cancelled_at_label'.tr(
+                                      args: [
+                                        (_formatDateTime(
+                                          item.cancelledAt,
+                                        )).toString(),
+                                      ],
+                                    ),
                                     style: TextStyle(
                                       color: AppColors.textSecondary,
                                       fontSize: 11.sp,
@@ -234,7 +248,11 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(6.r),
                                   ),
                                   child: Text(
-                                    'سبب الإلغاء: ${item.cancellationReason}',
+                                    'cancellation_reason_label'.tr(
+                                      args: [
+                                        (item.cancellationReason).toString(),
+                                      ],
+                                    ),
                                     style: TextStyle(
                                       color: AppColors.warning,
                                       fontSize: 11.sp,

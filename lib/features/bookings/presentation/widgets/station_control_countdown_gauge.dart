@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -76,7 +77,7 @@ class StationControlCountdownGauge extends StatelessWidget {
                 SizedBox(height: 4.h),
                 Text(
                   booking.isOpenEnded
-                      ? 'الوقت مفتوح'
+                      ? 'open_time'.tr()
                       : _formatDuration(currentRemaining),
                   style: TextStyle(
                     color: currentExpired
@@ -89,7 +90,11 @@ class StationControlCountdownGauge extends StatelessWidget {
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  AppStrings.totalDuration('${booking.durationMinutes} دقيقة'),
+                  AppStrings.totalDuration(
+                    'duration_minutes_value'.tr(
+                      args: [(booking.durationMinutes).toString()],
+                    ),
+                  ),
                   style: TextStyle(color: AppColors.textMuted, fontSize: 11.sp),
                 ),
               ],

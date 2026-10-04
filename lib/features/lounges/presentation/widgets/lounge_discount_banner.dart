@@ -130,7 +130,13 @@ class LoungeDiscountBanner extends StatelessWidget {
                               borderRadius: BorderRadius.circular(10.r),
                             ),
                             child: Text(
-                              'خصم ${discountPercentage.toStringAsFixed(0)}% شامل',
+                              'lounge_discount_percent'.tr(
+                                args: [
+                                  (discountPercentage.toStringAsFixed(
+                                    0,
+                                  )).toString(),
+                                ],
+                              ),
                               style: TextStyle(
                                 color: Colors.black,
                                 fontSize: 10.sp,
@@ -143,7 +149,9 @@ class LoungeDiscountBanner extends StatelessWidget {
                       if (expiration.isNotEmpty) ...[
                         SizedBox(height: 2.h),
                         AppText.body(
-                          'ينتهي العرض في: $expiration',
+                          'promotion_expiration_label'.tr(
+                            args: [(expiration).toString()],
+                          ),
                           fontSize: 10.sp,
                           color: AppColors.textSecondary,
                         ),

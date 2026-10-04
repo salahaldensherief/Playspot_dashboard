@@ -16,11 +16,14 @@ class MaintenanceOverlayWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeMessage = messageAr.trim().isNotEmpty
-        ? messageAr
-        : (messageEn.trim().isNotEmpty
-              ? messageEn
-              : 'النظام حالياً قيد الصيانة المبرمجة لتحديث الخدمات. يرجى إعادة المحاولة لاحقاً.');
+    final isArabic = context.locale.languageCode == 'ar';
+    final preferredMessage = isArabic ? messageAr : messageEn;
+    final alternateMessage = isArabic ? messageEn : messageAr;
+    final activeMessage = preferredMessage.trim().isNotEmpty
+        ? preferredMessage
+        : (alternateMessage.trim().isNotEmpty
+              ? alternateMessage
+              : 'maintenance_default_message'.tr());
 
     return Material(
       color: AppColors.scaffoldBackground.withAlpha(242),
@@ -103,12 +106,14 @@ class MaintenanceOverlayWidget extends StatelessWidget {
                         ),
                       ),
                       SizedBox(width: 10.w),
-                      Text(
-                        'maintenance_updates_in_progress'.tr(),
-                        style: TextStyle(
-                          color: AppColors.warning,
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w500,
+                      Flexible(
+                        child: Text(
+                          'maintenance_updates_in_progress'.tr(),
+                          style: TextStyle(
+                            color: AppColors.warning,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -88,7 +89,9 @@ class _BookingsCollapsibleOccupancyState
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                         child: Text(
-                          _isExpanded ? 'إخفاء الخريطة' : 'عرض الخريطة',
+                          _isExpanded
+                              ? 'hide_occupancy_map'.tr()
+                              : 'show_occupancy_map'.tr(),
                           style: TextStyle(
                             color: AppColors.neonBlue,
                             fontSize: 11.sp,

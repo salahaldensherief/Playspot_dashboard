@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -21,8 +22,8 @@ class ExtraDialog extends StatefulWidget {
   final Function(ExtraEntity)? onSave;
 
   const ExtraDialog({
-    super.key, 
-    required this.loungeId, 
+    super.key,
+    required this.loungeId,
     this.extra,
     this.onSave,
   });
@@ -53,7 +54,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
     'food',
     'snacks',
     'services',
-    'others'
+    'others',
   ];
 
   @override
@@ -61,10 +62,16 @@ class _ExtraDialogState extends State<ExtraDialog> {
     super.initState();
     _nameArController = TextEditingController(text: widget.extra?.nameAr);
     _nameEnController = TextEditingController(text: widget.extra?.nameEn);
-    _priceController = TextEditingController(text: widget.extra?.price.toString());
-    _stockQuantityController = TextEditingController(text: (widget.extra?.stockQuantity ?? 0).toString());
-    _minStockAlertController = TextEditingController(text: (widget.extra?.minStockAlert ?? 5).toString());
-    
+    _priceController = TextEditingController(
+      text: widget.extra?.price.toString(),
+    );
+    _stockQuantityController = TextEditingController(
+      text: (widget.extra?.stockQuantity ?? 0).toString(),
+    );
+    _minStockAlertController = TextEditingController(
+      text: (widget.extra?.minStockAlert ?? 5).toString(),
+    );
+
     final rawCat = widget.extra?.category.toLowerCase().trim() ?? 'drinks';
     _selectedCategory = _validCategories.contains(rawCat) ? rawCat : 'drinks';
     _trackStock = widget.extra?.trackStock ?? false;
@@ -101,7 +108,10 @@ class _ExtraDialogState extends State<ExtraDialog> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppStrings.imageUploadError(e.toString())), backgroundColor: AppColors.danger),
+            SnackBar(
+              content: Text(AppStrings.imageUploadError(e.toString())),
+              backgroundColor: AppColors.danger,
+            ),
           );
           setState(() {
             _isUploading = false;
@@ -112,7 +122,8 @@ class _ExtraDialogState extends State<ExtraDialog> {
     }
 
     final stockQty = int.tryParse(_stockQuantityController.text) ?? 0;
-    final isOutOfStock = (_trackStock && stockQty <= 0) || (widget.extra?.isOutOfStock ?? false);
+    final isOutOfStock =
+        (_trackStock && stockQty <= 0) || (widget.extra?.isOutOfStock ?? false);
 
     final extra = ExtraEntity(
       id: widget.extra?.id ?? const Uuid().v4(),
@@ -159,8 +170,10 @@ class _ExtraDialogState extends State<ExtraDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppText.heading(
-                  widget.extra == null ? AppStrings.addExtraItem : AppStrings.editItem, 
-                  fontSize: 22.sp
+                  widget.extra == null
+                      ? AppStrings.addExtraItem
+                      : AppStrings.editItem,
+                  fontSize: 22.sp,
                 ),
                 SizedBox(height: 20.h),
                 AppImagePicker(
@@ -207,11 +220,11 @@ class _ExtraDialogState extends State<ExtraDialog> {
                       case 'drinks':
                         return AppStrings.drinks;
                       case 'hot_drinks':
-                        return 'Hot Drinks | مشروبات ساخنة';
+                        return 'extra_category_hot_drinks'.tr();
                       case 'cold_drinks':
-                        return 'Cold Drinks | مشروبات باردة';
+                        return 'extra_category_cold_drinks'.tr();
                       case 'food':
-                        return 'Food | مأكولات';
+                        return 'extra_category_food'.tr();
                       case 'snacks':
                         return AppStrings.snacks;
                       case 'services':
@@ -269,7 +282,9 @@ class _ExtraDialogState extends State<ExtraDialog> {
                     ),
                     SizedBox(width: 16.w),
                     AppButton(
-                      text: widget.extra == null ? AppStrings.addItem : AppStrings.updateItem,
+                      text: widget.extra == null
+                          ? AppStrings.addItem
+                          : AppStrings.updateItem,
                       isLoading: _isUploading,
                       onPressed: _isUploading ? null : _submit,
                     ),

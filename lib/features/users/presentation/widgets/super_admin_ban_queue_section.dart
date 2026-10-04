@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -12,7 +13,8 @@ class SuperAdminBanQueueSection extends StatefulWidget {
   const SuperAdminBanQueueSection({super.key});
 
   @override
-  State<SuperAdminBanQueueSection> createState() => _SuperAdminBanQueueSectionState();
+  State<SuperAdminBanQueueSection> createState() =>
+      _SuperAdminBanQueueSectionState();
 }
 
 class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
@@ -22,13 +24,20 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
     context.read<ModerationCubit>().loadPendingBanRequests();
   }
 
-  void _showNotesDialog(BuildContext context, String title, Function(String notes) onSubmit) {
+  void _showNotesDialog(
+    BuildContext context,
+    String title,
+    Function(String notes) onSubmit,
+  ) {
     final controller = TextEditingController();
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        title: Text(title, style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp)),
+        title: Text(
+          title,
+          style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp),
+        ),
         content: TextField(
           controller: controller,
           maxLines: 3,
@@ -38,7 +47,9 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
             hintStyle: TextStyle(color: AppColors.textSecondary),
             filled: true,
             fillColor: AppColors.mutedBackground,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+            ),
           ),
         ),
         actions: [
@@ -78,12 +89,16 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
                 children: [
                   const Icon(Icons.security_rounded, color: AppColors.danger),
                   SizedBox(width: 10.w),
-                  AppText.subHeading(AppStrings.pendingBanQueueTitle, fontSize: 16.sp),
+                  AppText.subHeading(
+                    AppStrings.pendingBanQueueTitle,
+                    fontSize: 16.sp,
+                  ),
                 ],
               ),
               IconButton(
                 icon: const Icon(Icons.refresh, color: AppColors.neonBlue),
-                onPressed: () => context.read<ModerationCubit>().loadPendingBanRequests(),
+                onPressed: () =>
+                    context.read<ModerationCubit>().loadPendingBanRequests(),
               ),
             ],
           ),
@@ -92,17 +107,28 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
             listener: (context, state) {
               if (state.successMessage != null) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.successMessage!), backgroundColor: AppColors.success),
+                  SnackBar(
+                    content: Text(state.successMessage!),
+                    backgroundColor: AppColors.success,
+                  ),
                 );
               } else if (state.errorMessage != null) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.errorMessage!), backgroundColor: AppColors.danger),
+                  SnackBar(
+                    content: Text(state.errorMessage!),
+                    backgroundColor: AppColors.danger,
+                  ),
                 );
               }
             },
             builder: (context, state) {
               if (state.status == ModerationStatus.loading) {
-                return const Center(child: Padding(padding: EdgeInsets.all(30), child: CircularProgressIndicator()));
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(30),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
               }
 
               final requests = state.pendingRequests;
@@ -110,7 +136,13 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
                 return Center(
                   child: Padding(
                     padding: EdgeInsets.all(30.r),
-                    child: Text(AppStrings.noPendingBanRequests, style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
+                    child: Text(
+                      AppStrings.noPendingBanRequests,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13.sp,
+                      ),
+                    ),
                   ),
                 );
               }
@@ -136,27 +168,59 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              AppStrings.customerLabel(req.userName ?? req.userId),
-                              style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.bold),
+                              AppStrings.customerLabel(
+                                req.userName ?? req.userId,
+                              ),
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 3.h,
+                              ),
                               decoration: BoxDecoration(
-                                color: AppColors.warning.withValues(alpha: 0.15),
+                                color: AppColors.warning.withValues(
+                                  alpha: 0.15,
+                                ),
                                 borderRadius: BorderRadius.circular(6.r),
                               ),
                               child: Text(
-                                'الصالة: ${req.loungeName ?? req.loungeId}',
-                                style: TextStyle(color: AppColors.warning, fontSize: 11.sp, fontWeight: FontWeight.bold),
+                                'moderation_lounge_label'.tr(
+                                  args: [
+                                    (req.loungeName ?? req.loungeId).toString(),
+                                  ],
+                                ),
+                                style: TextStyle(
+                                  color: AppColors.warning,
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ],
                         ),
                         SizedBox(height: 6.h),
-                        Text('${AppStrings.reportReason}: ${req.reason}', style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp)),
-                        if (req.evidenceNotes != null && req.evidenceNotes!.isNotEmpty) ...[
+                        Text(
+                          '${AppStrings.reportReason}: ${req.reason}',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 13.sp,
+                          ),
+                        ),
+                        if (req.evidenceNotes != null &&
+                            req.evidenceNotes!.isNotEmpty) ...[
                           SizedBox(height: 4.h),
-                          Text('${AppStrings.reportEvidence}: ${req.evidenceNotes}', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                          Text(
+                            '${AppStrings.reportEvidence}: ${req.evidenceNotes}',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12.sp,
+                            ),
+                          ),
                         ],
                         SizedBox(height: 12.h),
                         Row(
@@ -165,11 +229,22 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
                             AppButton(
                               text: AppStrings.banFromThisLoungeOnly,
                               variant: AppButtonVariant.outlined,
-                              backgroundColor: AppColors.warning.withValues(alpha: 0.1),
+                              backgroundColor: AppColors.warning.withValues(
+                                alpha: 0.1,
+                              ),
                               onPressed: () {
-                                _showNotesDialog(context, AppStrings.banFromThisLoungeOnly, (notes) {
-                                  context.read<ModerationCubit>().approveLoungeBan(req.id, adminNotes: notes);
-                                });
+                                _showNotesDialog(
+                                  context,
+                                  AppStrings.banFromThisLoungeOnly,
+                                  (notes) {
+                                    context
+                                        .read<ModerationCubit>()
+                                        .approveLoungeBan(
+                                          req.id,
+                                          adminNotes: notes,
+                                        );
+                                  },
+                                );
                               },
                             ),
                             SizedBox(width: 8.w),
@@ -177,9 +252,18 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
                               text: AppStrings.globalBanApp,
                               backgroundColor: AppColors.danger,
                               onPressed: () {
-                                _showNotesDialog(context, AppStrings.globalBanApp, (notes) {
-                                  context.read<ModerationCubit>().approveGlobalBan(req.id, adminNotes: notes);
-                                });
+                                _showNotesDialog(
+                                  context,
+                                  AppStrings.globalBanApp,
+                                  (notes) {
+                                    context
+                                        .read<ModerationCubit>()
+                                        .approveGlobalBan(
+                                          req.id,
+                                          adminNotes: notes,
+                                        );
+                                  },
+                                );
                               },
                             ),
                             SizedBox(width: 8.w),
@@ -187,9 +271,16 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
                               text: AppStrings.rejectRequest,
                               variant: AppButtonVariant.outlined,
                               onPressed: () {
-                                _showNotesDialog(context, AppStrings.rejectRequest, (notes) {
-                                  context.read<ModerationCubit>().rejectBan(req.id, adminNotes: notes);
-                                });
+                                _showNotesDialog(
+                                  context,
+                                  AppStrings.rejectRequest,
+                                  (notes) {
+                                    context.read<ModerationCubit>().rejectBan(
+                                      req.id,
+                                      adminNotes: notes,
+                                    );
+                                  },
+                                );
                               },
                             ),
                           ],

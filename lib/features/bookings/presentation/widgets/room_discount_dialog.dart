@@ -134,12 +134,19 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AppText.subHeading(
-                        'إضافة خصم على [ ${widget.roomName} ]',
+                        'room_discount_title'.tr(
+                          args: [(widget.roomName).toString()],
+                        ),
                         fontSize: 15.sp,
                         color: AppColors.textPrimary,
                       ),
                       AppText.body(
-                        'السعر الإجمالي الحالي: ${widget.currentPrice.toStringAsFixed(0)} ${AppStrings.egp}',
+                        'current_price_label'.tr(
+                          args: [
+                            (widget.currentPrice.toStringAsFixed(0)).toString(),
+                            (AppStrings.egp).toString(),
+                          ],
+                        ),
                         fontSize: 11.sp,
                         color: AppColors.neonBlue,
                       ),
@@ -219,7 +226,9 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
 
             // Value Input Field
             AppText.body(
-              _isPercentage ? 'نسبة الخصم (%):' : 'مبلغ الخصم (ج.م):',
+              _isPercentage
+                  ? 'discount_percentage_input'.tr()
+                  : 'discount_amount_input'.tr(),
               fontSize: 12.sp,
               color: AppColors.textSecondary,
             ),
@@ -235,7 +244,9 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
               style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                hintText: _isPercentage ? 'مثال: 15' : 'مثال: 30',
+                hintText: _isPercentage
+                    ? 'discount_percentage_hint'.tr()
+                    : 'discount_amount_hint'.tr(),
                 hintStyle: TextStyle(
                   color: AppColors.textMuted,
                   fontSize: 12.sp,
@@ -261,7 +272,7 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
 
             // Reason Input Field
             AppText.body(
-              'سبب الخصم (مطلوب للرقابة المالية):',
+              'discount_reason_required_label'.tr(),
               fontSize: 12.sp,
               color: AppColors.textSecondary,
             ),
@@ -304,14 +315,29 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AppText.body(
-                        'خصم: ${_calculatedDiscountAmount.toStringAsFixed(0)} ${AppStrings.egp} (${_calculatedDiscountPercentage.toStringAsFixed(0)}%)',
+                        'discount_summary_label'.tr(
+                          args: [
+                            (_calculatedDiscountAmount.toStringAsFixed(
+                              0,
+                            )).toString(),
+                            (AppStrings.egp).toString(),
+                            (_calculatedDiscountPercentage.toStringAsFixed(
+                              0,
+                            )).toString(),
+                          ],
+                        ),
                         fontSize: 11.sp,
                         color: AppColors.warning,
                         fontWeight: FontWeight.w600,
                       ),
                       SizedBox(height: 2.h),
                       AppText.body(
-                        'السعر قبل الخصم: ${widget.currentPrice.toStringAsFixed(0)} ${AppStrings.egp}',
+                        'price_before_discount_label'.tr(
+                          args: [
+                            (widget.currentPrice.toStringAsFixed(0)).toString(),
+                            (AppStrings.egp).toString(),
+                          ],
+                        ),
                         fontSize: 10.sp,
                         color: AppColors.textMuted,
                       ),
@@ -321,7 +347,7 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       AppText.body(
-                        'الصافي النهائي:',
+                        'final_net_total_label'.tr(),
                         fontSize: 10.sp,
                         color: AppColors.textMuted,
                       ),
@@ -351,7 +377,7 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                 SizedBox(width: 10.w),
                 Expanded(
                   child: AppButton(
-                    text: 'تطبيق الخصم',
+                    text: 'apply_discount'.tr(),
                     onPressed: _handleConfirm,
                   ),
                 ),

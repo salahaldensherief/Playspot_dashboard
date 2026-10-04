@@ -9,48 +9,48 @@ import '../../domain/entities/tournament_audit_log_entity.dart';
 
 String formatAuditActionType(String raw) {
   final clean = raw.trim().toLowerCase();
-  if (clean.isEmpty) return 'تحديث في إعدادات البطولة';
+  if (clean.isEmpty) return 'tournament_audit_settings_changed'.tr();
   switch (clean) {
     case 'create':
     case 'tournament_created':
     case 'created':
-      return 'إنشاء مسودة البطولة';
+      return 'tournament_audit_draft_created'.tr();
     case 'update':
     case 'tournament_updated':
     case 'updated':
-      return 'تعديل بيانات البطولة';
+      return 'tournament_audit_updated'.tr();
     case 'publish':
     case 'tournament_published':
     case 'published':
-      return 'نشر البطولة للتسجيل';
+      return 'tournament_audit_published'.tr();
     case 'cancel':
     case 'tournament_cancelled':
     case 'cancelled':
-      return 'إلغاء البطولة';
+      return 'tournament_audit_cancelled'.tr();
     case 'payment_approved':
     case 'approve_payment':
-      return 'اعتماد إيصال دفع اللاعب';
+      return 'tournament_audit_receipt_approved'.tr();
     case 'payment_rejected':
     case 'reject_payment':
-      return 'رفض إيصال دفع اللاعب';
+      return 'tournament_audit_receipt_rejected'.tr();
     case 'cash_payment':
     case 'cash_payment_recorded':
-      return 'تسجيل دفع نقدي بمقر الصالة';
+      return 'tournament_audit_cash_recorded'.tr();
     case 'check_in':
     case 'participant_checked_in':
-      return 'تسجيل حضور وتأكيد لاعب';
+      return 'tournament_audit_check_in'.tr();
     case 'draw_bracket':
     case 'bracket_drawn':
-      return 'توليد وسحب قرعة البطولة';
+      return 'tournament_audit_draw'.tr();
     case 'match_started':
     case 'start_match':
-      return 'بدء مباراة جديدة';
+      return 'tournament_audit_match_started'.tr();
     case 'resolve_dispute':
     case 'dispute_resolved':
-      return 'حل نزاع مباراة وتحديد الفائز';
+      return 'tournament_audit_dispute_resolved'.tr();
     case 'complete':
     case 'tournament_completed':
-      return 'إكمال البطولة وتوزيع الجوائز';
+      return 'tournament_audit_completed'.tr();
     default:
       return raw
           .replaceAll('_', ' ')
@@ -120,7 +120,9 @@ class AuditLogsModal extends StatelessWidget {
                   final log = logs[index];
                   final performer =
                       log.performedByName ??
-                      (log.performedBy.isNotEmpty ? log.performedBy : 'النظام');
+                      (log.performedBy.isNotEmpty
+                          ? log.performedBy
+                          : 'system_actor'.tr());
 
                   return ListTile(
                     contentPadding: EdgeInsets.symmetric(
@@ -148,7 +150,9 @@ class AuditLogsModal extends StatelessWidget {
                       children: [
                         SizedBox(height: 4.h),
                         Text(
-                          'بواسطة: $performer',
+                          'audit_performer_label'.tr(
+                            args: [(performer).toString()],
+                          ),
                           style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12.sp,
@@ -157,7 +161,9 @@ class AuditLogsModal extends StatelessWidget {
                         if (log.details != null && log.details!.isNotEmpty) ...[
                           SizedBox(height: 2.h),
                           Text(
-                            'التفاصيل: ${log.details}',
+                            'audit_details_label'.tr(
+                              args: [(log.details).toString()],
+                            ),
                             style: TextStyle(
                               color: AppColors.textSecondary,
                               fontSize: 11.sp,

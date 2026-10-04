@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -149,7 +150,9 @@ class _BookingCountdownTimerState extends State<BookingCountdownTimer> {
               ),
               SizedBox(width: 4.w),
               Text(
-                'تأخير $formattedGrace د (من مهلة $graceLimit د)',
+                'session_grace_elapsed'.tr(
+                  args: [(formattedGrace).toString(), (graceLimit).toString()],
+                ),
                 style: TextStyle(
                   color: AppColors.danger,
                   fontSize: 10.sp,

@@ -52,7 +52,9 @@ class RoomOccupancyRequestsBadge extends StatelessWidget {
                   ),
                   SizedBox(width: 4.w),
                   Text(
-                    'طلبات الجلسة (${sessionRequests.length})',
+                    'session_requests_count'.tr(
+                      args: [(sessionRequests.length).toString()],
+                    ),
                     style: TextStyle(
                       color: AppColors.warning,
                       fontSize: 11.sp,

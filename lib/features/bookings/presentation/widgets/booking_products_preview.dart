@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -181,7 +182,9 @@ class BookingProductsPreview extends StatelessWidget {
                   ),
                   SizedBox(width: 4.w),
                   AppText.body(
-                    'الطلبات والمنتجات (${allItems.length}):',
+                    'booking_products_count'.tr(
+                      args: [(allItems.length).toString()],
+                    ),
                     fontSize: 9.5.sp,
                     color: AppColors.neonPurple,
                     fontWeight: FontWeight.bold,
@@ -236,7 +239,9 @@ class BookingProductsPreview extends StatelessWidget {
                         ),
                         if (itemTotal > 0)
                           Text(
-                            '${itemTotal.toStringAsFixed(0)} ج.م',
+                            'amount_egp'.tr(
+                              args: [(itemTotal.toStringAsFixed(0)).toString()],
+                            ),
                             style: TextStyle(
                               color: AppColors.neonGreen,
                               fontSize: 9.sp,

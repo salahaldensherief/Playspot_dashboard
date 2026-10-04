@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
@@ -45,20 +46,31 @@ class TournamentRewardRow extends StatelessWidget {
                   children: [
                     Text(
                       AppStrings.prizeType,
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 11.sp,
+                      ),
                     ),
                     SizedBox(height: 4.h),
                     DropdownButtonFormField<TournamentPrizeType>(
                       initialValue: reward.type,
                       dropdownColor: AppColors.cardBackground,
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 13.sp,
+                      ),
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: AppColors.cardBackground,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 10.w,
+                          vertical: 8.h,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.r),
-                          borderSide: const BorderSide(color: AppColors.borderDefault),
+                          borderSide: const BorderSide(
+                            color: AppColors.borderDefault,
+                          ),
                         ),
                       ),
                       items: [
@@ -117,7 +129,11 @@ class TournamentRewardRow extends StatelessWidget {
               if (canDelete) ...[
                 SizedBox(width: 8.w),
                 IconButton(
-                  icon: const Icon(Icons.close, color: AppColors.danger, size: 20),
+                  icon: const Icon(
+                    Icons.close,
+                    color: AppColors.danger,
+                    size: 20,
+                  ),
                   tooltip: AppStrings.cancel,
                   onPressed: onDelete,
                 ),
@@ -131,12 +147,14 @@ class TournamentRewardRow extends StatelessWidget {
                 Expanded(
                   flex: 2,
                   child: AppTextField(
-                    initialValue: reward.value != null ? reward.value.toString() : '',
+                    initialValue: reward.value != null
+                        ? reward.value.toString()
+                        : '',
                     label: reward.isCash
                         ? '${AppStrings.prizeValue} (${reward.currency ?? "EGP"})'
                         : reward.isPoints
-                            ? 'عدد النقاط'
-                            : 'نسبة الخصم / القيمة',
+                        ? 'reward_points_count'.tr()
+                        : 'reward_discount_value'.tr(),
                     keyboardType: TextInputType.number,
                     onChanged: (val) {
                       final parsed = double.tryParse(val.trim());
@@ -162,10 +180,13 @@ class TournamentRewardRow extends StatelessWidget {
               Expanded(
                 flex: 3,
                 child: AppTextField(
-                  initialValue: reward.descriptionAr ?? reward.description ?? '',
+                  initialValue:
+                      reward.descriptionAr ?? reward.description ?? '',
                   label: AppStrings.descriptionAr,
                   onChanged: (val) {
-                    onUpdate(reward.copyWith(descriptionAr: val, description: val));
+                    onUpdate(
+                      reward.copyWith(descriptionAr: val, description: val),
+                    );
                   },
                 ),
               ),

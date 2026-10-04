@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
@@ -36,16 +37,27 @@ class TournamentBracketView extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.account_tree_outlined, size: 64.r, color: AppColors.neonBlue),
+              Icon(
+                Icons.account_tree_outlined,
+                size: 64.r,
+                color: AppColors.neonBlue,
+              ),
               SizedBox(height: 16.h),
               Text(
                 AppStrings.drawBracket,
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 18.sp, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               SizedBox(height: 8.h),
               Text(
                 '${AppStrings.users}: ${tournament?.registeredCount ?? 0} / ${tournament?.minPlayers ?? 4}',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14.sp,
+                ),
               ),
               SizedBox(height: 24.h),
               AppButton(
@@ -75,7 +87,11 @@ class TournamentBracketView extends StatelessWidget {
           children: [
             Text(
               AppStrings.drawBracket,
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 18.sp, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             AppButton(
               text: AppStrings.refresh,
@@ -97,7 +113,12 @@ class TournamentBracketView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: sortedRounds.map((r) {
                 final roundMatches = rounds[r]!;
-                return _buildRoundColumn(context, r, sortedRounds.length, roundMatches);
+                return _buildRoundColumn(
+                  context,
+                  r,
+                  sortedRounds.length,
+                  roundMatches,
+                );
               }).toList(),
             ),
           ),
@@ -146,15 +167,19 @@ class TournamentBracketView extends StatelessWidget {
             ),
           ),
           SizedBox(height: 16.h),
-          ...roundMatches.map((m) => RepaintBoundary(child: _buildMatchCard(context, m))),
+          ...roundMatches.map(
+            (m) => RepaintBoundary(child: _buildMatchCard(context, m)),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildMatchCard(BuildContext context, TournamentMatchEntity match) {
-    final bool p1Won = match.winnerId != null && match.winnerId == match.player1Id;
-    final bool p2Won = match.winnerId != null && match.winnerId == match.player2Id;
+    final bool p1Won =
+        match.winnerId != null && match.winnerId == match.player1Id;
+    final bool p2Won =
+        match.winnerId != null && match.winnerId == match.player2Id;
 
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
@@ -167,7 +192,9 @@ class TournamentBracketView extends StatelessWidget {
         border: Border.all(
           color: match.isDisputed
               ? AppColors.danger
-              : (match.isCompleted ? AppColors.success.withAlpha(100) : AppColors.borderDefault),
+              : (match.isCompleted
+                    ? AppColors.success.withAlpha(100)
+                    : AppColors.borderDefault),
           width: match.isDisputed ? 2 : 1,
         ),
       ),
@@ -178,20 +205,42 @@ class TournamentBracketView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'مباراة #${match.matchNumber}',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp, fontWeight: FontWeight.bold),
+                'tournament_match_number'.tr(
+                  args: [(match.matchNumber).toString()],
+                ),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               if (match.isBye)
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                  decoration: BoxDecoration(color: Colors.blue.withAlpha(30), borderRadius: BorderRadius.circular(4.r)),
-                  child: Text(AppStrings.byeLabel, style: TextStyle(color: Colors.blue, fontSize: 10.sp)),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withAlpha(30),
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  child: Text(
+                    AppStrings.byeLabel,
+                    style: TextStyle(color: Colors.blue, fontSize: 10.sp),
+                  ),
                 )
               else if (match.isDisputed)
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                  decoration: BoxDecoration(color: AppColors.danger.withAlpha(30), borderRadius: BorderRadius.circular(4.r)),
-                  child: Text(AppStrings.disputedTag, style: TextStyle(color: AppColors.danger, fontSize: 10.sp, fontWeight: FontWeight.bold)),
+                  decoration: BoxDecoration(
+                    color: AppColors.danger.withAlpha(30),
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  child: Text(
+                    AppStrings.disputedTag,
+                    style: TextStyle(
+                      color: AppColors.danger,
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -200,7 +249,9 @@ class TournamentBracketView extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
             decoration: BoxDecoration(
-              color: p1Won ? AppColors.success.withAlpha(30) : Colors.transparent,
+              color: p1Won
+                  ? AppColors.success.withAlpha(30)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Row(
@@ -210,7 +261,9 @@ class TournamentBracketView extends StatelessWidget {
                   child: Text(
                     match.player1Name ?? 'P1',
                     style: TextStyle(
-                      color: match.player1Name != null ? AppColors.textPrimary : AppColors.textSecondary,
+                      color: match.player1Name != null
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
                       fontSize: 13.sp,
                       fontWeight: p1Won ? FontWeight.bold : FontWeight.normal,
                     ),
@@ -233,7 +286,9 @@ class TournamentBracketView extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
             decoration: BoxDecoration(
-              color: p2Won ? AppColors.success.withAlpha(30) : Colors.transparent,
+              color: p2Won
+                  ? AppColors.success.withAlpha(30)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Row(
@@ -243,7 +298,9 @@ class TournamentBracketView extends StatelessWidget {
                   child: Text(
                     match.player2Name ?? 'P2',
                     style: TextStyle(
-                      color: match.player2Name != null ? AppColors.textPrimary : AppColors.textSecondary,
+                      color: match.player2Name != null
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
                       fontSize: 13.sp,
                       fontWeight: p2Won ? FontWeight.bold : FontWeight.normal,
                     ),

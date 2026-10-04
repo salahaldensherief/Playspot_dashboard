@@ -64,7 +64,7 @@ class PromoFormSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AppText.subHeading(
-              'نطاق العرض الترويجي:',
+              'promotion_scope_label'.tr(),
               fontSize: 13.sp,
               color: AppColors.textPrimary,
             ),
@@ -101,7 +101,7 @@ class PromoFormSection extends StatelessWidget {
                           ),
                           SizedBox(width: 8.w),
                           AppText.body(
-                            'الصالة بالكامل',
+                            'promotion_whole_lounge'.tr(),
                             fontSize: 12.sp,
                             color: !isRoomSpecific
                                 ? AppColors.textPrimary
@@ -146,7 +146,7 @@ class PromoFormSection extends StatelessWidget {
                           ),
                           SizedBox(width: 8.w),
                           AppText.body(
-                            'روم / جهاز معين',
+                            'promotion_specific_room'.tr(),
                             fontSize: 12.sp,
                             color: isRoomSpecific
                                 ? AppColors.textPrimary
@@ -191,7 +191,12 @@ class PromoFormSection extends StatelessWidget {
                               ? room.nameEn
                               : 'Gaming Room');
                     return room.controllersCount > 0
-                        ? '$name (${room.controllersCount} دراعات)'
+                        ? 'room_name_controller_count'.tr(
+                            args: [
+                              (name).toString(),
+                              (room.controllersCount).toString(),
+                            ],
+                          )
                         : name;
                   },
                   onChanged: onRoomChanged,
@@ -291,8 +296,8 @@ class PromoFormSection extends StatelessWidget {
                 value: discountType,
                 items: const ['percentage', 'fixed'],
                 itemLabel: (value) => value == 'percentage'
-                    ? 'نسبة مئوية (%)'
-                    : 'قيمة ثابتة (EGP)',
+                    ? 'discount_percentage_label'.tr()
+                    : 'discount_fixed_egp_label'.tr(),
                 onChanged: (value) {
                   if (value != null) onDiscountTypeChanged(value);
                 },
@@ -303,18 +308,18 @@ class PromoFormSection extends StatelessWidget {
               child: AppTextField(
                 controller: discountValueController,
                 label: discountType == 'percentage'
-                    ? 'قيمة الخصم (%)'
-                    : 'قيمة الخصم (EGP)',
+                    ? 'promotion_percentage_value'.tr()
+                    : 'promotion_fixed_value'.tr(),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
                 validator: (value) {
                   final number = double.tryParse(value?.trim() ?? '');
                   if (number == null || number < 0) {
-                    return 'أدخل قيمة خصم صحيحة';
+                    return 'promotion_invalid_discount'.tr();
                   }
                   if (discountType == 'percentage' && number > 100) {
-                    return 'النسبة يجب ألا تتجاوز 100%';
+                    return 'promotion_percentage_maximum'.tr();
                   }
                   return null;
                 },
@@ -330,7 +335,7 @@ class PromoFormSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AppText.subHeading(
-              'الجمهور المستهدف (Audience):',
+              'promotion_audience_label'.tr(),
               fontSize: 13.sp,
               color: AppColors.textPrimary,
             ),

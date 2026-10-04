@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -234,14 +235,14 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                       children: List.generate(7, (idx) {
                         final dayNum = idx + 1;
                         final isSelected = _selectedDays.contains(dayNum);
-                        const labels = [
-                          'إث',
-                          'ثلا',
-                          'أرب',
-                          'خم',
-                          'جم',
-                          'سب',
-                          'أح',
+                        final labels = [
+                          'calendar_monday_short'.tr(),
+                          'calendar_tuesday_short'.tr(),
+                          'calendar_wednesday_short'.tr(),
+                          'calendar_thursday_short'.tr(),
+                          'calendar_friday_short'.tr(),
+                          'calendar_saturday_short'.tr(),
+                          'calendar_sunday_short'.tr(),
                         ];
                         return ChoiceChip(
                           label: Text(labels[idx]),
@@ -388,7 +389,7 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                                     ? DateFormat(
                                         'yyyy-MM-dd',
                                       ).format(_startDate!)
-                                    : 'دائم',
+                                    : 'pricing_always'.tr(),
                                 style: const TextStyle(
                                   color: AppColors.textPrimary,
                                 ),
@@ -422,7 +423,7 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                               child: Text(
                                 _endDate != null
                                     ? DateFormat('yyyy-MM-dd').format(_endDate!)
-                                    : 'بدون نهاية',
+                                    : 'pricing_no_end'.tr(),
                                 style: const TextStyle(
                                   color: AppColors.textPrimary,
                                 ),
@@ -458,10 +459,10 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                     AppTextField(
                       controller: _valueController,
                       label: _adjustmentType == 'multiplier'
-                          ? 'قيمة المضاعِف (مثال: 1.2)'
+                          ? 'pricing_multiplier_hint'.tr()
                           : _adjustmentType == 'percentage'
-                          ? 'النسبة المئوية % (مثال: 15)'
-                          : 'السعر الثابت بالجنية (مثال: 80)',
+                          ? 'pricing_percentage_hint'.tr()
+                          : 'pricing_fixed_amount_hint'.tr(),
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
@@ -517,7 +518,13 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                               ),
                               SizedBox(height: 6.h),
                               Text(
-                                'تتعارض مع: ${conflict.nameAr} (${conflict.startTime} - ${conflict.endTime})',
+                                'pricing_conflict_label'.tr(
+                                  args: [
+                                    (conflict.nameAr).toString(),
+                                    (conflict.startTime).toString(),
+                                    (conflict.endTime).toString(),
+                                  ],
+                                ),
                                 style: TextStyle(
                                   color: AppColors.textPrimary,
                                   fontSize: 11.sp,

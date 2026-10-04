@@ -260,7 +260,9 @@ class _BookingReceiptDialogState extends State<BookingReceiptDialog> {
                             b.paymentMethod!.isNotEmpty) ...[
                           SizedBox(height: 4.h),
                           Text(
-                            'طريقة الدفع: ${b.paymentMethod}',
+                            'payment_method_label'.tr(
+                              args: [(b.paymentMethod).toString()],
+                            ),
                             style: TextStyle(
                               color: AppColors.neonBlue,
                               fontSize: 12.sp,

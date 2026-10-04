@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -112,20 +113,26 @@ class _RoomOccupancyGridState extends State<RoomOccupancyGrid> {
                   ),
                   SizedBox(width: 8.w),
                   _buildFilterChip(
-                    label: 'خالية ($availableCount)',
+                    label: 'available_rooms_count'.tr(
+                      args: [(availableCount).toString()],
+                    ),
                     value: 'available',
                     color: AppColors.success,
                   ),
                   SizedBox(width: 8.w),
                   _buildFilterChip(
-                    label: 'مشغولة ($occupiedCount)',
+                    label: 'occupied_rooms_count'.tr(
+                      args: [(occupiedCount).toString()],
+                    ),
                     value: 'occupied',
                     color: AppColors.danger,
                   ),
                   if (maintenanceCount > 0) ...[
                     SizedBox(width: 8.w),
                     _buildFilterChip(
-                      label: 'صيانة ($maintenanceCount)',
+                      label: 'maintenance_rooms_count'.tr(
+                        args: [(maintenanceCount).toString()],
+                      ),
                       value: 'maintenance',
                       color: AppColors.warning,
                     ),

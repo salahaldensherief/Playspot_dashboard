@@ -1,7 +1,7 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -313,7 +313,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
       children: [
         SizedBox(height: 10.h),
         AppText.body(
-          'إيصال تحويل الدفع المرفق:',
+          'attached_payment_receipt_label'.tr(),
           fontSize: 11.sp,
           color: AppColors.neonBlue,
           fontWeight: FontWeight.bold,
@@ -337,7 +337,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           AppText.heading(
-                            'إيصال تحويل الدفع',
+                            'payment_transfer_receipt'.tr(),
                             fontSize: 16.sp,
                             color: Colors.white,
                           ),
@@ -409,7 +409,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                           ),
                           SizedBox(width: 4.w),
                           AppText.body(
-                            'تكبير الإيصال',
+                            'zoom_payment_receipt'.tr(),
                             fontSize: 10.sp,
                             color: Colors.white,
                           ),

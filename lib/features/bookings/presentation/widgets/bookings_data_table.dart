@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -210,7 +211,14 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'حجز #${booking.id.length >= 6 ? booking.id.substring(0, 6) : booking.id}',
+                'booking_short_reference'.tr(
+                  args: [
+                    (booking.id.length >= 6
+                            ? booking.id.substring(0, 6)
+                            : booking.id)
+                        .toString(),
+                  ],
+                ),
                 style: TextStyle(
                   color: AppColors.neonBlue,
                   fontWeight: FontWeight.bold,
@@ -227,7 +235,7 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
               Icon(Icons.person, color: AppColors.textSecondary, size: 14.r),
               SizedBox(width: 6.w),
               Text(
-                booking.userName ?? 'عميل زائر',
+                booking.userName ?? 'walk_in_customer'.tr(),
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
@@ -275,7 +283,7 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               AppButton(
-                text: 'التفاصيل',
+                text: 'details'.tr(),
                 variant: AppButtonVariant.outlined,
                 height: 48.h,
                 icon: Icons.info_outline,

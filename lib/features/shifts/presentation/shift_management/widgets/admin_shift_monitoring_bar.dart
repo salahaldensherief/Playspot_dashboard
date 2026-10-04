@@ -112,13 +112,13 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
           ),
           SizedBox(width: 12.w),
           AppText.body(
-            "No Active Shift Running | لا توجد وردية مفتوحة",
+            'no_active_shift_running'.tr(),
             color: AppColors.danger,
             fontWeight: FontWeight.bold,
           ),
           const Spacer(),
           AppButton(
-            text: "فتح وردية فورية الآن",
+            text: 'open_shift_now'.tr(),
             icon: Icons.flash_on_rounded,
             variant: AppButtonVariant.primary,
             height: 32.h,

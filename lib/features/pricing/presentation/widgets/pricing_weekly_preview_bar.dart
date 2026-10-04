@@ -17,14 +17,14 @@ class PricingWeeklyPreviewBar extends StatelessWidget {
     required this.ruleType,
   });
 
-  static const List<String> dayNames = [
-    'إث',
-    'ثلا',
-    'أرب',
-    'خم',
-    'جم',
-    'سب',
-    'أح',
+  static List<String> get dayNames => [
+    'calendar_monday_short'.tr(),
+    'calendar_tuesday_short'.tr(),
+    'calendar_wednesday_short'.tr(),
+    'calendar_thursday_short'.tr(),
+    'calendar_friday_short'.tr(),
+    'calendar_saturday_short'.tr(),
+    'calendar_sunday_short'.tr(),
   ];
 
   int _parseHour(String timeStr) {
@@ -76,8 +76,10 @@ class PricingWeeklyPreviewBar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
                 'pricing_weekly_preview_title'.tr(),
@@ -87,13 +89,16 @@ class PricingWeeklyPreviewBar extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
                 children: [
-                  _buildLegendDot(AppColors.warning, 'ذروة'),
-                  SizedBox(width: 8.w),
-                  _buildLegendDot(AppColors.success, 'هدوء'),
-                  SizedBox(width: 8.w),
-                  _buildLegendDot(AppColors.borderDefault, 'عادي'),
+                  _buildLegendDot(AppColors.warning, 'pricing_peak'.tr()),
+                  _buildLegendDot(AppColors.success, 'pricing_off_peak'.tr()),
+                  _buildLegendDot(
+                    AppColors.borderDefault,
+                    'pricing_regular'.tr(),
+                  ),
                 ],
               ),
             ],
@@ -147,6 +152,7 @@ class PricingWeeklyPreviewBar extends StatelessWidget {
 
   Widget _buildLegendDot(Color color, String label) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 8.r,

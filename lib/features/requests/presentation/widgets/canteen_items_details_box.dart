@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -47,14 +48,20 @@ class CanteenItemsDetailsBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.mutedBackground,
         borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: AppColors.borderDefault.withValues(alpha: 0.8)),
+        border: Border.all(
+          color: AppColors.borderDefault.withValues(alpha: 0.8),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.restaurant_menu_rounded, size: 14.r, color: AppColors.success),
+              Icon(
+                Icons.restaurant_menu_rounded,
+                size: 14.r,
+                color: AppColors.success,
+              ),
               SizedBox(width: 6.w),
               AppText.subHeading(
                 AppStrings.canteenOrderDetails,
@@ -71,15 +78,21 @@ class CanteenItemsDetailsBox extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.warning.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4.r),
-                border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.warning.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.note_alt_rounded, size: 12.r, color: AppColors.warning),
+                  Icon(
+                    Icons.note_alt_rounded,
+                    size: 12.r,
+                    color: AppColors.warning,
+                  ),
                   SizedBox(width: 4.w),
                   Expanded(
                     child: AppText.body(
-                      'ملاحظة: ${note ?? ''}',
+                      'customer_note_label'.tr(args: [(note ?? '').toString()]),
                       fontSize: 10.sp,
                       color: AppColors.warning,
                     ),
@@ -92,23 +105,28 @@ class CanteenItemsDetailsBox extends StatelessWidget {
 
           // Render Combo Parents with nested components
           ...comboParents.map((parent) {
-            final parentKey = parent['combo_line_id']?.toString() ??
+            final parentKey =
+                parent['combo_line_id']?.toString() ??
                 parent['id']?.toString() ??
                 parent['combo_id']?.toString() ??
                 'unknown';
             final children = comboChildren[parentKey] ?? [];
 
-            return _ExpandableComboRow(
-              parent: parent,
-              children: children,
-            );
+            return _ExpandableComboRow(parent: parent, children: children);
           }),
 
           // Render Standard Items
           ...standardItems.map((item) {
-            final name = item['name_ar'] ?? item['name'] ?? item['name_en'] ?? item['item_name'] ?? AppStrings.item;
+            final name =
+                item['name_ar'] ??
+                item['name'] ??
+                item['name_en'] ??
+                item['item_name'] ??
+                AppStrings.item;
             final qty = item['quantity'] ?? item['qty'] ?? 1;
-            final price = (item['price'] ?? item['unit_price'] as num?)?.toDouble() ?? 0.0;
+            final price =
+                (item['price'] ?? item['unit_price'] as num?)?.toDouble() ??
+                0.0;
             final isLowStock = item['is_low_stock'] == true;
 
             return Padding(
@@ -120,7 +138,10 @@ class CanteenItemsDetailsBox extends StatelessWidget {
                     child: Row(
                       children: [
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 2.h,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.success.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(4.r),
@@ -225,10 +246,7 @@ class _ExpandableComboRow extends StatefulWidget {
   final Map<String, dynamic> parent;
   final List<Map<String, dynamic>> children;
 
-  const _ExpandableComboRow({
-    required this.parent,
-    required this.children,
-  });
+  const _ExpandableComboRow({required this.parent, required this.children});
 
   @override
   State<_ExpandableComboRow> createState() => _ExpandableComboRowState();
@@ -239,15 +257,19 @@ class _ExpandableComboRowState extends State<_ExpandableComboRow> {
 
   @override
   Widget build(BuildContext context) {
-    final parentName = widget.parent['name_ar'] ??
+    final parentName =
+        widget.parent['name_ar'] ??
         widget.parent['name'] ??
         widget.parent['name_en'] ??
         AppStrings.combosTab;
     final parentQty = widget.parent['quantity'] ?? widget.parent['qty'] ?? 1;
     final parentPrice =
-        (widget.parent['price'] ?? widget.parent['unit_price'] as num?)?.toDouble() ?? 0.0;
+        (widget.parent['price'] ?? widget.parent['unit_price'] as num?)
+            ?.toDouble() ??
+        0.0;
 
-    final hasAnyLowStock = widget.children.any((c) => c['is_low_stock'] == true) ||
+    final hasAnyLowStock =
+        widget.children.any((c) => c['is_low_stock'] == true) ||
         widget.parent['is_low_stock'] == true;
 
     return Container(
@@ -271,7 +293,10 @@ class _ExpandableComboRowState extends State<_ExpandableComboRow> {
               child: Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 5.w,
+                      vertical: 2.h,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(4.r),
@@ -284,7 +309,11 @@ class _ExpandableComboRowState extends State<_ExpandableComboRow> {
                     ),
                   ),
                   SizedBox(width: 8.w),
-                  Icon(Icons.fastfood_rounded, size: 14.r, color: AppColors.primary),
+                  Icon(
+                    Icons.fastfood_rounded,
+                    size: 14.r,
+                    color: AppColors.primary,
+                  ),
                   SizedBox(width: 6.w),
                   Expanded(
                     child: AppText.body(
@@ -333,7 +362,8 @@ class _ExpandableComboRowState extends State<_ExpandableComboRow> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: widget.children.map((child) {
-                  final cName = child['name_ar'] ??
+                  final cName =
+                      child['name_ar'] ??
                       child['name'] ??
                       child['name_en'] ??
                       AppStrings.item;
@@ -344,8 +374,11 @@ class _ExpandableComboRowState extends State<_ExpandableComboRow> {
                     padding: EdgeInsets.symmetric(vertical: 2.h),
                     child: Row(
                       children: [
-                        Icon(Icons.subdirectory_arrow_left_rounded,
-                            size: 12.r, color: AppColors.textMuted),
+                        Icon(
+                          Icons.subdirectory_arrow_left_rounded,
+                          size: 12.r,
+                          color: AppColors.textMuted,
+                        ),
                         SizedBox(width: 4.w),
                         AppText.body(
                           '${cQty}x $cName',

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -35,7 +36,11 @@ class DesignStyleSection extends StatelessWidget {
     return SectionContainer(
       title: AppStrings.designStyleTitle,
       children: [
-        AppText.subHeading('قالب الألوان (Color Palette):', fontSize: 13.sp, color: AppColors.textPrimary),
+        AppText.subHeading(
+          'promotion_color_palette'.tr(),
+          fontSize: 13.sp,
+          color: AppColors.textPrimary,
+        ),
         SizedBox(height: 10.h),
         Row(
           children: List.generate(colorTemplates.length, (index) {
@@ -51,42 +56,62 @@ class DesignStyleSection extends StatelessWidget {
                   gradient: LinearGradient(colors: colorTemplates[index]),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected ? AppColors.textPrimary : Colors.transparent,
+                    color: isSelected
+                        ? AppColors.textPrimary
+                        : Colors.transparent,
                     width: isSelected ? 2.5 : 0,
                   ),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: colorTemplates[index].first.withValues(alpha: 0.6),
+                            color: colorTemplates[index].first.withValues(
+                              alpha: 0.6,
+                            ),
                             blurRadius: 10,
                             spreadRadius: 1,
                           ),
                         ]
                       : null,
                 ),
-                child: isSelected ? Icon(Icons.check_rounded, color: AppColors.textPrimary, size: 22.r) : null,
+                child: isSelected
+                    ? Icon(
+                        Icons.check_rounded,
+                        color: AppColors.textPrimary,
+                        size: 22.r,
+                      )
+                    : null,
               ),
             );
           }),
         ),
         SizedBox(height: 20.h),
-        AppText.subHeading('أيقونة العرض (Promo Icon):', fontSize: 13.sp, color: AppColors.textPrimary),
+        AppText.subHeading(
+          'promotion_icon_label'.tr(),
+          fontSize: 13.sp,
+          color: AppColors.textPrimary,
+        ),
         SizedBox(height: 10.h),
         Wrap(
           spacing: 10.w,
           runSpacing: 10.h,
           children: _iconMap.entries.map((entry) {
-            final isSelected = selectedIcon == entry.key || (selectedIcon == 'local_offer' && entry.key == 'Offer');
+            final isSelected =
+                selectedIcon == entry.key ||
+                (selectedIcon == 'local_offer' && entry.key == 'Offer');
             return ChoiceChip(
               avatar: Icon(
                 entry.value,
                 size: 16.r,
-                color: isSelected ? AppColors.neonPurple : AppColors.textSecondary,
+                color: isSelected
+                    ? AppColors.neonPurple
+                    : AppColors.textSecondary,
               ),
               label: Text(
                 entry.key,
                 style: TextStyle(
-                  color: isSelected ? AppColors.neonPurple : AppColors.textSecondary,
+                  color: isSelected
+                      ? AppColors.neonPurple
+                      : AppColors.textSecondary,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   fontSize: 12.sp,
                 ),
@@ -98,7 +123,9 @@ class DesignStyleSection extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.r),
                 side: BorderSide(
-                  color: isSelected ? AppColors.neonPurple : AppColors.borderDefault,
+                  color: isSelected
+                      ? AppColors.neonPurple
+                      : AppColors.borderDefault,
                 ),
               ),
             );
