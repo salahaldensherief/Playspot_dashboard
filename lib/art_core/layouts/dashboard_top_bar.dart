@@ -27,83 +27,145 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = AppBreakpoints.isMobile(context);
-    final height = isMobile ? 58.0 : _defaultHeight;
+    final isCompact = MediaQuery.sizeOf(context).width < 1024;
     final horizontalPadding = isMobile ? 12.0 : 24.0;
 
     return Container(
-      height: height,
+      constraints: const BoxConstraints(minHeight: 64),
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       decoration: const BoxDecoration(
         color: AppColors.scaffoldBackground,
         border: Border(bottom: BorderSide(color: AppColors.divider)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Left Side: Title & Menu/Leading & Branch Switcher
-          Expanded(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (showMenuButton) ...[
-                  IconButton(
-                    icon: const Icon(Icons.menu, color: AppColors.textPrimary),
-                    onPressed: () => Scaffold.of(context).openDrawer(),
+      child: isCompact
+          ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      if (showMenuButton)
+                        IconButton(
+                          icon: const Icon(
+                            Icons.menu,
+                            color: AppColors.textPrimary,
+                          ),
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                        ),
+                      if (leading != null) leading!,
+                      Expanded(
+                        child: Text(
+                          title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                            fontFamily: 'Tajawal',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const TopBarBranchSwitcher(),
+                    ],
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    alignment: WrapAlignment.end,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      if (actions != null)
+                        ...actions!
+                      else ...[
+                        const TopBarShiftIndicator(),
+                        const TopBarLoungeStatusToggle(),
+                        const TopBarAudioToggle(),
+                        const TopBarNotificationBell(),
+                      ],
+                      const TopBarUserProfile(),
+                    ],
+                  ),
                 ],
-                if (leading != null) ...[leading!, const SizedBox(width: 16)],
+              ),
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Left Side: Title & Menu/Leading & Branch Switcher
+                Expanded(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (showMenuButton) ...[
+                        IconButton(
+                          icon: const Icon(
+                            Icons.menu,
+                            color: AppColors.textPrimary,
+                          ),
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      if (leading != null) ...[
+                        leading!,
+                        const SizedBox(width: 16),
+                      ],
+                      Flexible(
+                        child: Text(
+                          title,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                            fontFamily: 'Orbitron',
+                            fontFamilyFallback: ['Tajawal'],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      const TopBarBranchSwitcher(),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                // Right Side: Actions & User Info
                 Flexible(
-                  child: Text(
-                    title,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                      fontFamily: 'Orbitron',
-                      fontFamilyFallback: ['Tajawal'],
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    reverse: true,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if (actions != null) ...[
+                          ...actions!,
+                          const SizedBox(width: 12),
+                        ] else ...[
+                          const TopBarShiftIndicator(),
+                          const SizedBox(width: 8),
+                          const TopBarLoungeStatusToggle(),
+                          const SizedBox(width: 8),
+                          const TopBarAudioToggle(),
+                          const SizedBox(width: 8),
+                          const TopBarNotificationBell(),
+                          const SizedBox(width: 12),
+                        ],
+                        const TopBarUserProfile(),
+                      ],
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                const TopBarBranchSwitcher(),
               ],
             ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // Right Side: Actions & User Info
-          Flexible(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              reverse: true,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  if (actions != null) ...[
-                    ...actions!,
-                    const SizedBox(width: 12),
-                  ] else ...[
-                    const TopBarShiftIndicator(),
-                    const SizedBox(width: 8),
-                    const TopBarLoungeStatusToggle(),
-                    const SizedBox(width: 8),
-                    const TopBarAudioToggle(),
-                    const SizedBox(width: 8),
-                    const TopBarNotificationBell(),
-                    const SizedBox(width: 12),
-                  ],
-                  const TopBarUserProfile(),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

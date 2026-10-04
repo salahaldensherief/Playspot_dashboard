@@ -100,7 +100,7 @@
   "capacity": "السعة",
   "price_per_hour": "السعر / الساعة",
   "single_price": "سعر الساعة - فردي (Single)",
-  "multi_price": "سعر الساعة - زوجي (Multi)",
+  "multi_price": "سعر الساعة - جماعي",
   "extra_controller_price": "سعر الدراع الإضافي بالساعة",
   "room_price_per_hour": "سعر إيجار الغرفة بالساعة",
   "room_capacity_label": "سعة الغرفة (أقصى عدد أفراد)",
@@ -978,8 +978,8 @@
   "booking_and_client_details": "تفاصيل الحجز والعميل",
   "station_under_maintenance": "المحطة تحت الصيانة حالياً وغير متاحة للحجز",
   "single_price_label": "سعر الفردي:",
-  "multi_price_label": "سعر الزوجي (Multi):",
-  "walk_in_booking": "حجز مباشر (Walk-in)",
+  "multi_price_label": "السعر الجماعي:",
+  "walk_in_booking": "حجز مباشر",
   "detailed_booking": "حجز تفصيلي",
   "room_occupied_by_walk_in": "الأوضة مشغولة بزبون من الصالة",
   "vacate_room": "تفريغ الغرفة (إنهاء الحجز)",
@@ -1823,5 +1823,6 @@
   "moderation_reason_no_show": "عدم الحضور المتكرر",
   "moderation_reason_fraud": "تزوير إيصال الدفع أو احتيال",
   "moderation_reason_harassment": "إزعاج العملاء أو الاعتداء اللفظي",
-  "moderation_reason_other": "أخرى"
+  "moderation_reason_other": "أخرى",
+  "close_shift_handover": "إغلاق الشفت وتسليمه"
 }

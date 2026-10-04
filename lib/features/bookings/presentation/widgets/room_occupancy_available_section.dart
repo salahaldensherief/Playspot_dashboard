@@ -41,39 +41,9 @@ class RoomOccupancyAvailableSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  AppText.body(
-                    AppStrings.singlePriceLabel,
-                    fontSize: 11.sp,
-                    color: AppColors.textSecondary,
-                  ),
-                  AppText.body(
-                    '${room.pricePerHourSingle.toStringAsFixed(0)} ${AppStrings.egp}/${AppStrings.perHour}',
-                    fontSize: 11.sp,
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ],
-              ),
-              SizedBox(height: 4.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  AppText.body(
-                    AppStrings.multiPriceLabel,
-                    fontSize: 11.sp,
-                    color: AppColors.textSecondary,
-                  ),
-                  AppText.body(
-                    '${room.pricePerHourMulti.toStringAsFixed(0)} ${AppStrings.egp}/${AppStrings.perHour}',
-                    fontSize: 11.sp,
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ],
-              ),
+              _priceRow(AppStrings.singlePriceLabel, room.pricePerHourSingle),
+              const SizedBox(height: 4),
+              _priceRow(AppStrings.multiPriceLabel, room.pricePerHourMulti),
             ],
           ),
         ),
@@ -102,46 +72,70 @@ class RoomOccupancyAvailableSection extends StatelessWidget {
           SizedBox(height: 8.h),
         ],
 
-        // One-Tap Walk-in Quick Toggle & Quick Booking Dialog
-        Row(
-          children: [
-            Expanded(
-              child: AppButton(
-                text: AppStrings.walkInBooking,
-                icon: Icons.flash_on_rounded,
-                variant: AppButtonVariant.primary,
-                height: 36.h,
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    useRootNavigator: false,
-                    builder: (_) => AddBookingDialog(
-                      loungeId: loungeId,
-                      initialRoom: room,
-                      quickMode: true,
-                    ),
-                  );
-                },
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final quickBooking = AppButton(
+              text: AppStrings.walkInBooking,
+              icon: Icons.flash_on_rounded,
+              variant: AppButtonVariant.primary,
+              onPressed: () => showDialog(
+                context: context,
+                useRootNavigator: false,
+                builder: (_) => AddBookingDialog(
+                  loungeId: loungeId,
+                  initialRoom: room,
+                  quickMode: true,
+                ),
               ),
-            ),
-            SizedBox(width: 8.w),
-            AppButton(
+            );
+            final detailedBooking = AppButton(
               text: AppStrings.detailedBooking,
               icon: Icons.add_rounded,
               variant: AppButtonVariant.outlined,
-              height: 36.h,
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  useRootNavigator: false,
-                  builder: (_) =>
-                      AddBookingDialog(loungeId: loungeId, initialRoom: room),
-                );
-              },
-            ),
-          ],
+              onPressed: () => showDialog(
+                context: context,
+                useRootNavigator: false,
+                builder: (_) =>
+                    AddBookingDialog(loungeId: loungeId, initialRoom: room),
+              ),
+            );
+            final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+            if (constraints.maxWidth < 380 * scale) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  quickBooking,
+                  const SizedBox(height: 4),
+                  detailedBooking,
+                ],
+              );
+            }
+            return Row(
+              children: [
+                Expanded(child: quickBooking),
+                const SizedBox(width: 8),
+                Expanded(child: detailedBooking),
+              ],
+            );
+          },
         ),
       ],
     );
   }
+
+  Widget _priceRow(String label, double rate) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(child: AppText.body(label, color: AppColors.textSecondary)),
+      const SizedBox(width: 8),
+      Expanded(
+        child: AppText.body(
+          '${rate.toStringAsFixed(0)} ${AppStrings.egp}/${AppStrings.perHour}',
+          textAlign: TextAlign.end,
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ],
+  );
 }

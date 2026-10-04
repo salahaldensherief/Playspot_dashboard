@@ -124,77 +124,71 @@ class ShiftHeaderBanner extends StatelessWidget {
         color: AppColors.success.withValues(alpha: 0.1),
         border: const Border(bottom: BorderSide(color: AppColors.divider)),
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(4.r),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 8.r,
-                    height: 8.r,
-                    decoration: const BoxDecoration(
-                      color: AppColors.success,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  Text(
-                    AppStrings.shiftActive,
-                    style: TextStyle(
-                      color: AppColors.success,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(4.r),
             ),
-            SizedBox(width: 16.w),
-            _buildInfoItem(AppStrings.cashier, shift.cashierName ?? 'N/A'),
-            SizedBox(width: 16.w),
-            _buildInfoItem(AppStrings.startTimeLabel, startTime),
-            SizedBox(width: 24.w),
-            if (isMyShift) ...[
-              AppButton(
-                text: AppStrings.recordExpense,
-                icon: Icons.receipt_long_outlined,
-                variant: AppButtonVariant.outlined,
-                height: 32.h,
-                onPressed: () =>
-                    _showAddExpenseDialog(context, shift, loungeId),
-              ),
-              SizedBox(width: 8.w),
-              AppButton(
-                text: AppStrings.closeShift,
-                onPressed: () =>
-                    _showCloseShiftDialog(context, shift, loungeId),
-                variant: AppButtonVariant.outlined,
-                height: 32.h,
-              ),
-            ] else ...[
-              AppButton(
-                text: 'إغلاق الشيفت (تسليم)',
-                onPressed: () =>
-                    _showCloseShiftDialog(context, shift, loungeId),
-                variant: AppButtonVariant.outlined,
-                height: 32.h,
-              ),
-            ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8.r,
+                  height: 8.r,
+                  decoration: const BoxDecoration(
+                    color: AppColors.success,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                Text(
+                  AppStrings.shiftActive,
+                  style: TextStyle(
+                    color: AppColors.success,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _buildInfoItem(AppStrings.cashier, shift.cashierName ?? 'N/A'),
+          _buildInfoItem(AppStrings.startTimeLabel, startTime),
+          if (isMyShift) ...[
+            AppButton(
+              text: AppStrings.recordExpense,
+              icon: Icons.receipt_long_outlined,
+              variant: AppButtonVariant.outlined,
+              height: 32.h,
+              onPressed: () => _showAddExpenseDialog(context, shift, loungeId),
+            ),
+            AppButton(
+              text: AppStrings.closeShift,
+              onPressed: () => _showCloseShiftDialog(context, shift, loungeId),
+              variant: AppButtonVariant.outlined,
+              height: 32.h,
+            ),
+          ] else ...[
+            AppButton(
+              text: 'close_shift_handover'.tr(),
+              onPressed: () => _showCloseShiftDialog(context, shift, loungeId),
+              variant: AppButtonVariant.outlined,
+              height: 32.h,
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildInfoItem(String label, String value) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           '$label:',

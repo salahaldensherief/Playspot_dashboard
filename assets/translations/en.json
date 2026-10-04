@@ -1823,5 +1823,6 @@
   "moderation_reason_no_show": "Repeated no-shows",
   "moderation_reason_fraud": "Forged payment receipt or fraud",
   "moderation_reason_harassment": "Customer harassment or verbal abuse",
-  "moderation_reason_other": "Other"
+  "moderation_reason_other": "Other",
+  "close_shift_handover": "Close and hand over shift"
 }
