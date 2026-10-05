@@ -898,6 +898,7 @@ class AppStrings {
   static String get transferReference => 'transfer_reference'.tr();
   static String get paidAt => 'paid_at'.tr();
   static String get add => 'add'.tr();
+  static String get permissions => 'permissions'.tr();
   static String get errorLoadingPermissions => 'error_loading_permissions'.tr();
   static String get unauthorizedAccessMsg =>
       'عذراً، لا تملك الصلاحية الكافية للوصول لهذه الشاشة';
@@ -976,6 +977,7 @@ class AppStrings {
   static String get process => 'process'.tr();
   static String get pay => 'pay'.tr();
   static String get fail => 'fail'.tr();
+  static String get markFailed => 'mark_failed'.tr();
   static String get resolve => 'resolve'.tr();
   static String get completePayoutPayment => 'complete_payout_payment'.tr();
   static String get completePayment => 'complete_payment'.tr();

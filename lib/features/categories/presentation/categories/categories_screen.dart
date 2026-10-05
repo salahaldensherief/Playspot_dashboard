@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
+import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/city_entity.dart';
 import 'category_cubit.dart';
@@ -21,7 +23,8 @@ class CategoriesScreen extends StatefulWidget {
   State<CategoriesScreen> createState() => _CategoriesScreenState();
 }
 
-class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerProviderStateMixin {
+class _CategoriesScreenState extends State<CategoriesScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -41,7 +44,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
     super.dispose();
   }
 
-  void _showCategoryDialog(BuildContext context, CategoryCubit cubit, {CategoryEntity? category}) {
+  void _showCategoryDialog(
+    BuildContext context,
+    CategoryCubit cubit, {
+    CategoryEntity? category,
+  }) {
     showDialog(
       context: context,
       builder: (diagContext) => CategoryDialog(
@@ -57,7 +64,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
     );
   }
 
-  void _showCityDialog(BuildContext context, CategoryCubit cubit, {CityEntity? city}) {
+  void _showCityDialog(
+    BuildContext context,
+    CategoryCubit cubit, {
+    CityEntity? city,
+  }) {
     showDialog(
       context: context,
       builder: (diagContext) => CityDialog(
@@ -77,8 +88,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
   Widget build(BuildContext context) {
     final categoryCubit = context.read<CategoryCubit>();
 
-    return Padding(
-      padding: EdgeInsets.all(24.r),
+    return DashboardLayout(
+      title: AppStrings.categories,
+      activeRoute: 'Categories',
+      isScrollable: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -124,7 +137,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
     );
   }
 
-  Widget _buildCategoriesGrid(BuildContext context, CategoryCubit categoryCubit) {
+  Widget _buildCategoriesGrid(
+    BuildContext context,
+    CategoryCubit categoryCubit,
+  ) {
     return BlocBuilder<CategoryCubit, CategoryState>(
       builder: (context, state) {
         if (state.status.isLoading) {
@@ -132,28 +148,46 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
         }
         if (state.status.isSuccess) {
           if (state.categories.isEmpty) {
-            return Center(child: Text(AppStrings.noCategoriesFound, style: const TextStyle(color: AppColors.textSecondary)));
+            return Center(
+              child: Text(
+                AppStrings.noCategoriesFound,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            );
           }
+          final crossAxisCount = Responsive.isMobile(context)
+              ? 1
+              : (Responsive.isTablet(context) ? 2 : 3);
           return GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 24.w,
-              mainAxisSpacing: 24.h,
-              childAspectRatio: 2.5,
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 16.r,
+              mainAxisSpacing: 16.r,
+              mainAxisExtent: 100.h,
             ),
             itemCount: state.categories.length,
             itemBuilder: (context, index) {
               final category = state.categories[index];
               return CategoryCard(
                 category: category,
-                onEdit: () => _showCategoryDialog(context, categoryCubit, category: category),
-                onDelete: () => _confirmDelete(context, categoryCubit, category),
+                onEdit: () => _showCategoryDialog(
+                  context,
+                  categoryCubit,
+                  category: category,
+                ),
+                onDelete: () =>
+                    _confirmDelete(context, categoryCubit, category),
               );
             },
           );
         }
         if (state.status.isFailure) {
-          return Center(child: Text(state.errorMessage ?? 'Error', style: const TextStyle(color: AppColors.danger)));
+          return Center(
+            child: Text(
+              state.errorMessage ?? 'Error',
+              style: const TextStyle(color: AppColors.danger),
+            ),
+          );
         }
         return const SizedBox.shrink();
       },
@@ -164,26 +198,49 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
     return BlocBuilder<CategoryCubit, CategoryState>(
       builder: (context, state) {
         if (state.status.isLoading) return const TableShimmer(columns: 1);
-        if (state.cities.isEmpty) return Center(child: Text(AppStrings.noCitiesFound, style: const TextStyle(color: AppColors.textSecondary)));
-        
+        if (state.cities.isEmpty)
+          return Center(
+            child: Text(
+              AppStrings.noCitiesFound,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          );
+
         return ListView.separated(
           itemCount: state.cities.length,
           separatorBuilder: (_, _) => Divider(color: AppColors.borderDefault),
           itemBuilder: (context, index) {
             final city = state.cities[index];
             return ListTile(
-              title: Text(city.nameEn, style: const TextStyle(color: AppColors.textPrimary)),
-              subtitle: Text(city.nameAr, style: const TextStyle(color: AppColors.textSecondary)),
+              title: Text(
+                city.nameEn,
+                style: const TextStyle(color: AppColors.textPrimary),
+              ),
+              subtitle: Text(
+                city.nameAr,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Switch(
-                    value: city.isActive, 
-                    onChanged: (val) => cubit.updateCity(city.copyWith(isActive: val)),
+                    value: city.isActive,
+                    onChanged: (val) =>
+                        cubit.updateCity(city.copyWith(isActive: val)),
                     activeThumbColor: AppColors.success,
                   ),
-                  IconButton(icon: const Icon(Icons.edit, color: AppColors.textSecondary), onPressed: () => _showCityDialog(context, cubit, city: city)),
-                  IconButton(icon: const Icon(Icons.delete, color: AppColors.danger), onPressed: () => _confirmCityDelete(context, cubit, city)),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.edit,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () =>
+                        _showCityDialog(context, cubit, city: city),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: AppColors.danger),
+                    onPressed: () => _confirmCityDelete(context, cubit, city),
+                  ),
                 ],
               ),
             );
@@ -193,12 +250,19 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
     );
   }
 
-  void _confirmDelete(BuildContext context, CategoryCubit cubit, CategoryEntity category) {
+  void _confirmDelete(
+    BuildContext context,
+    CategoryCubit cubit,
+    CategoryEntity category,
+  ) {
     showDialog(
       context: context,
       builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),
+        title: Text(
+          AppStrings.deleteConfirmation,
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
         content: Text('${AppStrings.deleteWarning} "${category.nameEn}"?'),
         actions: [
           AppButton(
@@ -219,12 +283,19 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
     );
   }
 
-  void _confirmCityDelete(BuildContext context, CategoryCubit cubit, CityEntity city) {
+  void _confirmCityDelete(
+    BuildContext context,
+    CategoryCubit cubit,
+    CityEntity city,
+  ) {
     showDialog(
       context: context,
       builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        title: Text(AppStrings.deleteCity, style: const TextStyle(color: AppColors.textPrimary)),
+        title: Text(
+          AppStrings.deleteCity,
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
         content: Text('${AppStrings.deleteCityWarning} "${city.nameEn}"?'),
         actions: [
           AppButton(

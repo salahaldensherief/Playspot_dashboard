@@ -15,14 +15,16 @@ class ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String dateFormatted =
-        DateFormat('yyyy-MM-dd • hh:mm a').format(review.createdAt);
+    final String dateFormatted = DateFormat(
+      'yyyy-MM-dd • hh:mm a',
+    ).format(review.createdAt);
     final String displayName =
         (review.userName != null && review.userName?.trim().isNotEmpty == true)
-            ? review.userName?.trim() ?? AppStrings.anonymous
-            : AppStrings.anonymous;
-    final String initial =
-        displayName.isNotEmpty ? displayName[0].toUpperCase() : 'A';
+        ? review.userName?.trim() ?? AppStrings.anonymous
+        : AppStrings.anonymous;
+    final String initial = displayName.isNotEmpty
+        ? displayName[0].toUpperCase()
+        : 'A';
     final String? avatarUrl = review.userAvatarUrl;
 
     return Container(
@@ -42,8 +44,8 @@ class ReviewCard extends StatelessWidget {
                 backgroundColor: AppColors.neonBlue.withValues(alpha: 0.15),
                 backgroundImage:
                     (avatarUrl != null && avatarUrl.trim().isNotEmpty)
-                        ? AppCachedImage.provider(avatarUrl)
-                        : null,
+                    ? AppCachedImage.provider(avatarUrl)
+                    : null,
                 child: (avatarUrl == null || avatarUrl.trim().isEmpty)
                     ? Text(
                         initial,
@@ -86,21 +88,17 @@ class ReviewCard extends StatelessWidget {
           SizedBox(height: 12.h),
           if (review.comment != null &&
               review.comment?.trim().isNotEmpty == true)
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(10.r),
-                decoration: BoxDecoration(
-                  color: AppColors.mutedBackground.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: SingleChildScrollView(
-                  child: AppText.body(
-                    review.comment?.trim() ?? '',
-                    fontSize: 11.sp,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(10.r),
+              decoration: BoxDecoration(
+                color: AppColors.mutedBackground.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: AppText.body(
+                review.comment?.trim() ?? '',
+                fontSize: 11.sp,
+                color: AppColors.textSecondary,
               ),
             )
           else

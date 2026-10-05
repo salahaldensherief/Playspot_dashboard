@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge_payment_settings.dart';
@@ -72,7 +73,8 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
     }
 
     final user = context.read<LoginCubit>().state.user;
-    final canEdit = user?.isLoungeOwner == true ||
+    final canEdit =
+        user?.isLoungeOwner == true ||
         user?.isSuperAdmin == true ||
         user?.isManager == true;
 
@@ -103,8 +105,9 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
       instapayHandle: instapay.isNotEmpty ? instapay : null,
     );
 
-    final success =
-        await context.read<LoungePaymentSettingsCubit>().saveSettings(settings);
+    final success = await context
+        .read<LoungePaymentSettingsCubit>()
+        .saveSettings(settings);
 
     if (mounted && success) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -113,14 +116,18 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
           backgroundColor: AppColors.success,
         ),
       );
-      context.read<LoginCubit>().refreshUserLounge(loungeId, forceRefresh: true);
+      context.read<LoginCubit>().refreshUserLounge(
+        loungeId,
+        forceRefresh: true,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final user = context.watch<LoginCubit>().state.user;
-    final canEdit = user?.isLoungeOwner == true ||
+    final canEdit =
+        user?.isLoungeOwner == true ||
         user?.isSuperAdmin == true ||
         user?.isManager == true;
 
@@ -158,39 +165,16 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppStrings.loungePoliciesTitle,
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 20.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          AppStrings.loungePoliciesSubtitle,
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (canEdit)
-                      AppButton(
-                        text: AppStrings.saveChanges,
-                        isLoading: isSaving,
-                        onPressed: isSaving ? null : _handleSave,
-                        width: 140.w,
-                        height: 40.h,
-                      ),
-                  ],
+                AppAdaptivePageHeader(
+                  title: AppStrings.loungePoliciesTitle,
+                  subtitle: AppStrings.loungePoliciesSubtitle,
+                  primaryAction: canEdit
+                      ? AppButton(
+                          text: AppStrings.saveChanges,
+                          isLoading: isSaving,
+                          onPressed: isSaving ? null : _handleSave,
+                        )
+                      : null,
                 ),
                 SizedBox(height: 24.h),
                 LoungeCashPolicySection(

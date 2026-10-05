@@ -29,70 +29,137 @@ class RoomsDataTable extends StatelessWidget {
     return DataTableWidget(
       mobileCardBuilder: (ctx, index) {
         final room = rooms[index];
-        return _buildMobileRoomCard(ctx, room, canEdit, roomCubit, categoryCubit, loungeId);
+        return _buildMobileRoomCard(
+          ctx,
+          room,
+          canEdit,
+          roomCubit,
+          categoryCubit,
+          loungeId,
+        );
       },
       columns: [
         AppStrings.roomName,
         AppStrings.spaceType,
-        'Pricing',
-        'Extra Ctr.',
+        AppStrings.pricePerHour,
+        AppStrings.extraControllerPrice,
         AppStrings.status,
-        if (canEdit) 'Online Toggle',
-        if (canEdit) AppStrings.actions
+        if (canEdit) AppStrings.onlineToggle,
+        if (canEdit) AppStrings.actions,
       ],
-      rows: rooms.map((room) => DataRow(
-        cells: [
-          DataCell(
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(room.nameAr.isNotEmpty ? room.nameAr : room.nameEn, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-                if (room.nameEn.isNotEmpty && room.nameEn != room.nameAr)
-                  Text(room.nameEn, style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
+      rows: rooms
+          .map(
+            (room) => DataRow(
+              cells: [
+                DataCell(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        room.nameAr.isNotEmpty ? room.nameAr : room.nameEn,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (room.nameEn.isNotEmpty && room.nameEn != room.nameAr)
+                        Text(
+                          room.nameEn,
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 11.sp,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                DataCell(
+                  _getSpaceTypeBadge(room.spaceType ?? room.spaceTypeId),
+                ),
+                DataCell(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${AppStrings.singlePrice}: ${room.hourlyRateSingle.toStringAsFixed(0)} ${AppStrings.egpPerHour}',
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '${AppStrings.multiPrice}: ${room.hourlyRateMulti.toStringAsFixed(0)} ${AppStrings.egpPerHour}',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11.sp,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    '+${room.extraControllerPrice.toStringAsFixed(0)} ${AppStrings.egpPerHour}',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                ),
+                DataCell(_getStatusBadge(room.status)),
+                if (canEdit)
+                  DataCell(
+                    Switch(
+                      value: room.status == RoomStatusEnum.available,
+                      activeThumbColor: AppColors.neonBlue,
+                      onChanged: (val) =>
+                          roomCubit.toggleRoomStatus(room.id, room.status),
+                    ),
+                  ),
+                if (canEdit)
+                  DataCell(
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.edit_outlined,
+                            color: AppColors.textSecondary,
+                            size: 20.r,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 48,
+                            minHeight: 48,
+                          ),
+                          onPressed: () => _showEditDialog(
+                            context,
+                            roomCubit,
+                            categoryCubit,
+                            loungeId,
+                            room,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.delete_outline,
+                            color: AppColors.danger,
+                            size: 20.r,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 48,
+                            minHeight: 48,
+                          ),
+                          onPressed: () =>
+                              _confirmDelete(context, roomCubit, room),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
-          ),
-          DataCell(_getSpaceTypeBadge(room.spaceType ?? room.spaceTypeId)),
-          DataCell(
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Single: ${room.hourlyRateSingle.toStringAsFixed(0)} ${AppStrings.egp}/hr', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-                Text('Multi: ${room.hourlyRateMulti.toStringAsFixed(0)} ${AppStrings.egp}/hr', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
-              ],
-            ),
-          ),
-          DataCell(Text('+${room.extraControllerPrice.toStringAsFixed(0)} ${AppStrings.egpPerHour}', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp))),
-          DataCell(_getStatusBadge(room.status)),
-          if (canEdit)
-            DataCell(
-              Switch(
-                value: room.status == RoomStatusEnum.available,
-                activeThumbColor: AppColors.neonBlue,
-                onChanged: (val) => roomCubit.toggleRoomStatus(room.id, room.status),
-              ),
-            ),
-          if (canEdit)
-            DataCell(
-              Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20.r),
-                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                    onPressed: () => _showEditDialog(context, roomCubit, categoryCubit, loungeId, room),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
-                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                    onPressed: () => _confirmDelete(context, roomCubit, room),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      )).toList(),
+          )
+          .toList(),
     );
   }
 
@@ -143,12 +210,18 @@ class RoomsDataTable extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'فردي: ${room.hourlyRateSingle.toStringAsFixed(0)} ج.م/ساعة',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                '${AppStrings.singlePrice}: ${room.hourlyRateSingle.toStringAsFixed(0)} ${AppStrings.egpPerHour}',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12.sp,
+                ),
               ),
               Text(
-                'زوجي: ${room.hourlyRateMulti.toStringAsFixed(0)} ج.م/ساعة',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                '${AppStrings.multiPrice}: ${room.hourlyRateMulti.toStringAsFixed(0)} ${AppStrings.egpPerHour}',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12.sp,
+                ),
               ),
             ],
           ),
@@ -163,14 +236,18 @@ class RoomsDataTable extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'متاحة أونلاين',
-                      style: TextStyle(color: AppColors.textMuted, fontSize: 11.sp),
+                      AppStrings.onlineAvailable,
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 11.sp,
+                      ),
                     ),
                     SizedBox(width: 4.w),
                     Switch(
                       value: isAvailable,
                       activeThumbColor: AppColors.neonBlue,
-                      onChanged: (_) => cubit.toggleRoomStatus(room.id, room.status),
+                      onChanged: (_) =>
+                          cubit.toggleRoomStatus(room.id, room.status),
                     ),
                   ],
                 ),
@@ -184,22 +261,49 @@ class RoomsDataTable extends StatelessWidget {
               children: [
                 Expanded(
                   child: AppButton(
-                    text: isOccupied ? 'إنهاء حجز (مشغولة)' : 'حجز مباشر (Walk-in)',
-                    variant: isOccupied ? AppButtonVariant.outlined : AppButtonVariant.primary,
-                    icon: isOccupied ? Icons.check_circle_outline : Icons.play_arrow_rounded,
+                    text: isOccupied
+                        ? AppStrings.endSession
+                        : AppStrings.walkInBooking,
+                    variant: isOccupied
+                        ? AppButtonVariant.outlined
+                        : AppButtonVariant.primary,
+                    icon: isOccupied
+                        ? Icons.check_circle_outline
+                        : Icons.play_arrow_rounded,
                     height: 48.h,
-                    onPressed: () => cubit.toggleWalkInStatus(room.id, room.status),
+                    onPressed: () =>
+                        cubit.toggleWalkInStatus(room.id, room.status),
                   ),
                 ),
                 SizedBox(width: 8.w),
                 IconButton(
-                  icon: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 22.r),
-                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                  onPressed: () => _showEditDialog(context, cubit, categoryCubit, loungeId, room),
+                  icon: Icon(
+                    Icons.edit_outlined,
+                    color: AppColors.textSecondary,
+                    size: 22.r,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
+                  onPressed: () => _showEditDialog(
+                    context,
+                    cubit,
+                    categoryCubit,
+                    loungeId,
+                    room,
+                  ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 22.r),
-                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                  icon: Icon(
+                    Icons.delete_outline,
+                    color: AppColors.danger,
+                    size: 22.r,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
                   onPressed: () => _confirmDelete(context, cubit, room),
                 ),
               ],
@@ -210,11 +314,17 @@ class RoomsDataTable extends StatelessWidget {
     );
   }
 
-  void _showEditDialog(BuildContext context, RoomCubit cubit, CategoryCubit categoryCubit, String loungeId, RoomEntity room) {
+  void _showEditDialog(
+    BuildContext context,
+    RoomCubit cubit,
+    CategoryCubit categoryCubit,
+    String loungeId,
+    RoomEntity room,
+  ) {
     showDialog(
       context: context,
       builder: (_) => RoomDialog(
-        loungeId: loungeId, 
+        loungeId: loungeId,
         room: room,
         categoryCubit: categoryCubit,
         onSave: (updatedRoom) => cubit.updateRoom(updatedRoom),
@@ -222,7 +332,11 @@ class RoomsDataTable extends StatelessWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, RoomCubit cubit, RoomEntity room) async {
+  void _confirmDelete(
+    BuildContext context,
+    RoomCubit cubit,
+    RoomEntity room,
+  ) async {
     final confirmed = await AppDialog.confirm(
       context: context,
       title: AppStrings.deleteConfirmation,
@@ -249,11 +363,17 @@ class RoomsDataTable extends StatelessWidget {
 
   Widget _getSpaceTypeBadge(String? type) {
     final typeLower = type?.toLowerCase() ?? '';
-    if (typeLower.contains('open') || typeLower.contains('صالة') || typeLower == 'open_area') {
+    if (typeLower.contains('open') ||
+        typeLower.contains('صالة') ||
+        typeLower == 'open_area') {
       return StatusBadge.info(AppStrings.openArea);
-    } else if (typeLower.contains('vip') || typeLower.contains('فيب') || typeLower == 'vip_room') {
+    } else if (typeLower.contains('vip') ||
+        typeLower.contains('فيب') ||
+        typeLower == 'vip_room') {
       return StatusBadge.warning(AppStrings.vipRoom);
-    } else if (typeLower.contains('standard') || typeLower.contains('عادية') || typeLower == 'standard_room') {
+    } else if (typeLower.contains('standard') ||
+        typeLower.contains('عادية') ||
+        typeLower == 'standard_room') {
       return StatusBadge.secondary(AppStrings.standardRoom);
     } else {
       return StatusBadge.neutral(type ?? 'N/A');

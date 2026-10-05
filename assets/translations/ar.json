@@ -783,6 +783,7 @@
   "process": "معالجة",
   "pay": "دفع",
   "fail": "فشل",
+  "mark_failed": "تحديد كفاشل",
   "resolve": "معالجة النزاع",
   "complete_payout_payment": "إتمام عملية الدفع والمستحقات",
   "complete_payment": "إتمام الدفع",

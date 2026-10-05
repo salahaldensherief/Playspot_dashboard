@@ -25,47 +25,53 @@ class CoreInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isCompact = MediaQuery.sizeOf(context).width < 600;
+
+    final imagePickerWidget = AppImagePicker(
+      label: AppStrings.mainImage,
+      onImageSelected: onMainImageSelected,
+    );
+
+    final fieldsWidget = Column(
+      children: [
+        AppTextField(
+          label: AppStrings.loungeName,
+          controller: nameController,
+          hintText: AppStrings.loungeNameHint,
+          validator: AppValidator.validateRequired,
+        ),
+        const SizedBox(height: 16),
+        AppTextField(
+          label: AppStrings.descriptionArLabel,
+          controller: descArController,
+          hintText: AppStrings.descriptionArHint,
+        ),
+        const SizedBox(height: 16),
+        AppTextField(
+          label: AppStrings.descriptionEnLabel,
+          controller: descEnController,
+          hintText: AppStrings.descriptionEnHint,
+        ),
+      ],
+    );
+
     return SectionContainer(
       title: AppStrings.coreInfo,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 1,
-              child: AppImagePicker(
-                label: AppStrings.mainImage,
-                onImageSelected: onMainImageSelected,
-              ),
-            ),
-            const SizedBox(width: 24),
-            Expanded(
-              flex: 2,
-              child: Column(
-                children: [
-                  AppTextField(
-                    label: AppStrings.loungeName,
-                    controller: nameController,
-                    hintText: AppStrings.loungeNameHint,
-                    validator: AppValidator.validateRequired,
-                  ),
-                  const SizedBox(height: 16),
-                  AppTextField(
-                    label: AppStrings.descriptionArLabel,
-                    controller: descArController,
-                    hintText: AppStrings.descriptionArHint,
-                  ),
-                  const SizedBox(height: 16),
-                  AppTextField(
-                    label: AppStrings.descriptionEnLabel,
-                    controller: descEnController,
-                    hintText: AppStrings.descriptionEnHint,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        if (isCompact) ...[
+          imagePickerWidget,
+          const SizedBox(height: 20),
+          fieldsWidget,
+        ] else ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 1, child: imagePickerWidget),
+              const SizedBox(width: 24),
+              Expanded(flex: 2, child: fieldsWidget),
+            ],
+          ),
+        ],
         const SizedBox(height: 24),
         AppMultiImagePicker(
           label: AppStrings.galleryImages,

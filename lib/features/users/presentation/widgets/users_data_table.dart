@@ -7,7 +7,6 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
-import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import '../cubit/admin_management_cubit.dart';
@@ -20,15 +19,6 @@ class UsersDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (Responsive.isMobile(context)) {
-      return Column(
-        children: admins.map((admin) => Padding(
-          padding: EdgeInsets.only(bottom: 16.h),
-          child: _buildUserCard(context, admin),
-        )).toList(),
-      );
-    }
-
     return DataTableWidget(
       columns: [
         AppStrings.fullName,
@@ -39,66 +29,102 @@ class UsersDataTable extends StatelessWidget {
         AppStrings.status,
         AppStrings.actions,
       ],
-      rows: admins.map((admin) => DataRow(
-        cells: [
-          DataCell(
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 14.r,
-                  backgroundColor: AppColors.neonPurple.withValues(alpha: 0.2),
-                  child: AppText.body(
-                    admin.name.isNotEmpty ? admin.name[0].toUpperCase() : '?',
-                    color: AppColors.neonPurple,
-                    fontSize: 12.sp,
+      mobileCardBuilder: (context, index) =>
+          _buildUserCard(context, admins[index]),
+      rows: admins
+          .map(
+            (admin) => DataRow(
+              cells: [
+                DataCell(
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 14.r,
+                        backgroundColor: AppColors.neonPurple.withValues(
+                          alpha: 0.2,
+                        ),
+                        child: AppText.body(
+                          admin.name.isNotEmpty
+                              ? admin.name[0].toUpperCase()
+                              : '?',
+                          color: AppColors.neonPurple,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      AppText.body(admin.name, color: AppColors.textPrimary),
+                    ],
                   ),
                 ),
-                SizedBox(width: 12.w),
-                AppText.body(admin.name, color: AppColors.textPrimary),
+                DataCell(
+                  AppText.body(admin.email, color: AppColors.textSecondary),
+                ),
+                DataCell(
+                  AppText.body(
+                    admin.role == UserRole.superAdmin
+                        ? AppStrings.superAdmin
+                        : AppStrings.loungeManager,
+                    color: admin.role == UserRole.superAdmin
+                        ? AppColors.neonPurple
+                        : AppColors.neonBlue,
+                  ),
+                ),
+                DataCell(
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.share_outlined,
+                        size: 16.r,
+                        color: AppColors.neonBlue,
+                      ),
+                      SizedBox(width: 6.w),
+                      AppText.body(
+                        '${admin.referralCount}',
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ],
+                  ),
+                ),
+                DataCell(
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 4.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
+                        color: AppColors.warning.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.stars_rounded,
+                          size: 14.r,
+                          color: AppColors.warning,
+                        ),
+                        SizedBox(width: 4.w),
+                        AppText.body(
+                          '${admin.pointsBalance} ${AppStrings.pointsUnit}',
+                          color: AppColors.warning,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.sp,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                DataCell(StatusBadge.success(AppStrings.active)),
+                DataCell(_buildActions(context, admin)),
               ],
             ),
-          ),
-          DataCell(AppText.body(admin.email, color: AppColors.textSecondary)),
-          DataCell(
-            AppText.body(
-              admin.role == UserRole.superAdmin ? AppStrings.superAdmin : AppStrings.loungeManager,
-              color: admin.role == UserRole.superAdmin ? AppColors.neonPurple : AppColors.neonBlue,
-            ),
-          ),
-          DataCell(
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.share_outlined, size: 16.r, color: AppColors.neonBlue),
-                SizedBox(width: 6.w),
-                AppText.body('${admin.referralCount}', color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-              ],
-            ),
-          ),
-          DataCell(
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.stars_rounded, size: 14.r, color: AppColors.warning),
-                  SizedBox(width: 4.w),
-                  AppText.body('${admin.pointsBalance} ${AppStrings.pointsUnit}', color: AppColors.warning, fontWeight: FontWeight.bold, fontSize: 12.sp),
-                ],
-              ),
-            ),
-          ),
-          DataCell(StatusBadge.success(AppStrings.active)),
-          DataCell(
-            _buildActions(context, admin),
-          ),
-        ],
-      )).toList(),
+          )
+          .toList(),
     );
   }
 
@@ -129,7 +155,11 @@ class UsersDataTable extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AppText.body(admin.name, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                    AppText.body(
+                      admin.name,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
                     AppText.body(admin.email, fontSize: 12.sp),
                   ],
                 ),
@@ -143,9 +173,17 @@ class UsersDataTable extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.share_outlined, size: 16.r, color: AppColors.neonBlue),
+                  Icon(
+                    Icons.share_outlined,
+                    size: 16.r,
+                    color: AppColors.neonBlue,
+                  ),
                   SizedBox(width: 6.w),
-                  AppText.body('${AppStrings.referrals}: ${admin.referralCount}', color: AppColors.textSecondary, fontSize: 12.sp),
+                  AppText.body(
+                    '${AppStrings.referrals}: ${admin.referralCount}',
+                    color: AppColors.textSecondary,
+                    fontSize: 12.sp,
+                  ),
                 ],
               ),
               Container(
@@ -153,14 +191,25 @@ class UsersDataTable extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.warning.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppColors.warning.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.stars_rounded, size: 14.r, color: AppColors.warning),
+                    Icon(
+                      Icons.stars_rounded,
+                      size: 14.r,
+                      color: AppColors.warning,
+                    ),
                     SizedBox(width: 4.w),
-                    AppText.body('${admin.pointsBalance} ${AppStrings.pointsUnit}', color: AppColors.warning, fontWeight: FontWeight.bold, fontSize: 12.sp),
+                    AppText.body(
+                      '${admin.pointsBalance} ${AppStrings.pointsUnit}',
+                      color: AppColors.warning,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.sp,
+                    ),
                   ],
                 ),
               ),
@@ -171,8 +220,12 @@ class UsersDataTable extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               AppText.body(
-                admin.role == UserRole.superAdmin ? AppStrings.superAdmin : AppStrings.loungeManager,
-                color: admin.role == UserRole.superAdmin ? AppColors.neonPurple : AppColors.neonBlue,
+                admin.role == UserRole.superAdmin
+                    ? AppStrings.superAdmin
+                    : AppStrings.loungeManager,
+                color: admin.role == UserRole.superAdmin
+                    ? AppColors.neonPurple
+                    : AppColors.neonBlue,
                 fontWeight: FontWeight.bold,
               ),
               StatusBadge.success(AppStrings.active),
@@ -192,9 +245,16 @@ class UsersDataTable extends StatelessWidget {
           value: 'edit',
           child: Row(
             children: [
-              const Icon(Icons.edit_outlined, size: 18, color: AppColors.textPrimary),
+              const Icon(
+                Icons.edit_outlined,
+                size: 18,
+                color: AppColors.textPrimary,
+              ),
               const SizedBox(width: 12),
-              Text(AppStrings.edit, style: const TextStyle(color: AppColors.textPrimary)),
+              Text(
+                AppStrings.edit,
+                style: const TextStyle(color: AppColors.textPrimary),
+              ),
             ],
           ),
         ),
@@ -202,9 +262,16 @@ class UsersDataTable extends StatelessWidget {
           value: 'delete',
           child: Row(
             children: [
-              const Icon(Icons.delete_outline, size: 18, color: AppColors.danger),
+              const Icon(
+                Icons.delete_outline,
+                size: 18,
+                color: AppColors.danger,
+              ),
               const SizedBox(width: 12),
-              Text(AppStrings.delete, style: const TextStyle(color: AppColors.danger)),
+              Text(
+                AppStrings.delete,
+                style: const TextStyle(color: AppColors.danger),
+              ),
             ],
           ),
         ),
@@ -225,7 +292,10 @@ class UsersDataTable extends StatelessWidget {
       context: context,
       builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),
+        title: Text(
+          AppStrings.deleteConfirmation,
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
         content: Text('${AppStrings.deleteWarning} "$name"?'),
         actions: [
           AppButton(
@@ -239,7 +309,10 @@ class UsersDataTable extends StatelessWidget {
             onPressed: () async {
               Navigator.pop(diagContext);
               final currentUser = context.read<LoginCubit>().state.user;
-              await cubit.deleteAdmin(adminId, isSuperAdmin: currentUser?.isSuperAdmin ?? false);
+              await cubit.deleteAdmin(
+                adminId,
+                isSuperAdmin: currentUser?.isSuperAdmin ?? false,
+              );
             },
           ),
         ],
@@ -251,27 +324,31 @@ class UsersDataTable extends StatelessWidget {
     final cubit = context.read<AdminManagementCubit>();
     showDialog(
       context: context,
-      builder: (diagContext) => BlocConsumer<AdminManagementCubit, AdminManagementState>(
-        bloc: cubit,
-        listener: (context, state) {
-          if (state.status == AdminManagementStatus.success) {
-            Navigator.pop(diagContext);
-          } else if (state.status == AdminManagementStatus.failure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage ?? AppStrings.error), backgroundColor: AppColors.danger),
-            );
-          }
-        },
-        builder: (context, state) {
-          return EditAdminDialog(
-            admin: admin,
-            isLoading: state.status == AdminManagementStatus.loading,
-            onSave: (name, email) {
-              cubit.updateAdmin(admin.id, name: name, email: email);
+      builder: (diagContext) =>
+          BlocConsumer<AdminManagementCubit, AdminManagementState>(
+            bloc: cubit,
+            listener: (context, state) {
+              if (state.status == AdminManagementStatus.success) {
+                Navigator.pop(diagContext);
+              } else if (state.status == AdminManagementStatus.failure) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.errorMessage ?? AppStrings.error),
+                    backgroundColor: AppColors.danger,
+                  ),
+                );
+              }
             },
-          );
-        },
-      ),
+            builder: (context, state) {
+              return EditAdminDialog(
+                admin: admin,
+                isLoading: state.status == AdminManagementStatus.loading,
+                onSave: (name, email) {
+                  cubit.updateAdmin(admin.id, name: name, email: email);
+                },
+              );
+            },
+          ),
     );
   }
 }

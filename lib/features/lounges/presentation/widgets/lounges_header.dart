@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import '../cubit/lounge_cubit.dart';
 import '../cubit/lounge_state.dart';
@@ -13,37 +13,14 @@ class LoungesHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              AppStrings.lounges,
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 32.sp,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Orbitron',
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              AppStrings.loungesHeaderSubtitle,
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14.sp,
-              ),
-            ),
-          ],
-        ),
-        AppButton(
-          text: "Create Lounge & Owner",
-          icon: Icons.add,
-          onPressed: () => _showAddLoungeDialog(context),
-        ),
-      ],
+    return AppAdaptivePageHeader(
+      title: AppStrings.lounges,
+      subtitle: AppStrings.loungesHeaderSubtitle,
+      primaryAction: AppButton(
+        text: AppStrings.createLoungeAndOwner,
+        icon: Icons.add,
+        onPressed: () => _showAddLoungeDialog(context),
+      ),
     );
   }
 
@@ -54,39 +31,44 @@ class LoungesHeader extends StatelessWidget {
       builder: (diagContext) => BlocConsumer<LoungeCubit, LoungeState>(
         bloc: cubit,
         listener: (context, state) {
-          if (state.status == LoungeStatus.success && state.errorMessage == null) {
-            // We only want to show success if it was an "add" action, 
+          if (state.status == LoungeStatus.success &&
+              state.errorMessage == null) {
+            // We only want to show success if it was an "add" action,
             // but for simplicity we can just check if state is success.
             // However, fetchLounges also sets success.
           }
           if (state.status == LoungeStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage ?? 'Error'), backgroundColor: AppColors.danger),
+              SnackBar(
+                content: Text(state.errorMessage ?? 'Error'),
+                backgroundColor: AppColors.danger,
+              ),
             );
           }
         },
         builder: (context, state) {
           return AddLoungeDialog(
             isLoading: state.status == LoungeStatus.loading,
-            onSave: ({
-              required String loungeName,
-              String? address,
-              String? phone,
-              required String ownerName,
-              required String ownerEmail,
-              String? ownerPhone,
-              String? ownerPassword,
-            }) async {
-              await cubit.createLoungeWithOwner(
-                loungeName: loungeName,
-                address: address,
-                phone: phone,
-                ownerName: ownerName,
-                ownerEmail: ownerEmail,
-                ownerPhone: ownerPhone,
-                ownerPassword: ownerPassword,
-              );
-            },
+            onSave:
+                ({
+                  required String loungeName,
+                  String? address,
+                  String? phone,
+                  required String ownerName,
+                  required String ownerEmail,
+                  String? ownerPhone,
+                  String? ownerPassword,
+                }) async {
+                  await cubit.createLoungeWithOwner(
+                    loungeName: loungeName,
+                    address: address,
+                    phone: phone,
+                    ownerName: ownerName,
+                    ownerEmail: ownerEmail,
+                    ownerPhone: ownerPhone,
+                    ownerPassword: ownerPassword,
+                  );
+                },
           );
         },
       ),

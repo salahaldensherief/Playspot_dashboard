@@ -63,17 +63,22 @@ class _RoomDialogState extends State<RoomDialog> {
     _nameEnController = TextEditingController(text: r?.nameEn);
     _descriptionArController = TextEditingController(text: r?.descriptionAr);
     _descriptionEnController = TextEditingController(text: r?.descriptionEn);
-    _hourlyRateSingleController =
-        TextEditingController(text: r?.hourlyRateSingle.toString() ?? '0.0');
-    _hourlyRateMultiController =
-        TextEditingController(text: r?.hourlyRateMulti.toString() ?? '0.0');
+    _hourlyRateSingleController = TextEditingController(
+      text: r?.hourlyRateSingle.toString() ?? '0.0',
+    );
+    _hourlyRateMultiController = TextEditingController(
+      text: r?.hourlyRateMulti.toString() ?? '0.0',
+    );
     _maxCapacityController = TextEditingController(
       text: r?.maxCapacity.toString() ?? (r?.isOpenArea == true ? '2' : '4'),
     );
-    _controllersController = TextEditingController(text: r?.controllersCount.toString() ?? '2');
+    _controllersController = TextEditingController(
+      text: r?.controllersCount.toString() ?? '2',
+    );
     _screenSizeController = TextEditingController(text: r?.screenSize ?? '43"');
-    _extraPriceController =
-        TextEditingController(text: r?.extraControllerPrice.toString() ?? '0.0');
+    _extraPriceController = TextEditingController(
+      text: r?.extraControllerPrice.toString() ?? '0.0',
+    );
 
     const validSpaceTypes = ['open_area', 'standard_room', 'vip_room'];
     if (r != null && validSpaceTypes.contains(r.spaceTypeId)) {
@@ -111,7 +116,10 @@ class _RoomDialogState extends State<RoomDialog> {
     if (form != null && form.validate()) {
       if (_roomImages.isEmpty && (widget.room?.images.isEmpty ?? true)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.minImagesError), backgroundColor: AppColors.danger),
+          SnackBar(
+            content: Text(AppStrings.minImagesError),
+            backgroundColor: AppColors.danger,
+          ),
         );
         return;
       }
@@ -132,8 +140,10 @@ class _RoomDialogState extends State<RoomDialog> {
         if (mounted) {
           final spaceTypeId = _selectedSpaceTypeId ?? 'open_area';
           final isOpenArea = spaceTypeId == 'open_area';
-          final singleRate = double.tryParse(_hourlyRateSingleController.text) ?? 0.0;
-          final multiRate = double.tryParse(_hourlyRateMultiController.text) ?? 0.0;
+          final singleRate =
+              double.tryParse(_hourlyRateSingleController.text) ?? 0.0;
+          final multiRate =
+              double.tryParse(_hourlyRateMultiController.text) ?? 0.0;
 
           final room = RoomEntity(
             id: widget.room?.id ?? const Uuid().v4(),
@@ -148,9 +158,14 @@ class _RoomDialogState extends State<RoomDialog> {
             spaceTypeId: spaceTypeId,
             hourlyRateSingle: singleRate,
             hourlyRateMulti: multiRate,
-            extraControllerPrice: double.tryParse(_extraPriceController.text) ?? 0,
-            maxCapacity: int.tryParse(_maxCapacityController.text) ?? (isOpenArea ? 2 : 4),
-            controllersCount: isOpenArea ? (int.tryParse(_controllersController.text) ?? 2) : 2,
+            extraControllerPrice:
+                double.tryParse(_extraPriceController.text) ?? 0,
+            maxCapacity:
+                int.tryParse(_maxCapacityController.text) ??
+                (isOpenArea ? 2 : 4),
+            controllersCount: isOpenArea
+                ? (int.tryParse(_controllersController.text) ?? 2)
+                : 2,
             screenSize: isOpenArea ? _screenSizeController.text : '',
             activityIds: _selectedActivityIds,
             featuresAr: _featuresAr,
@@ -169,7 +184,10 @@ class _RoomDialogState extends State<RoomDialog> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${AppStrings.error}: $e'), backgroundColor: AppColors.danger),
+            SnackBar(
+              content: Text('${AppStrings.error}: $e'),
+              backgroundColor: AppColors.danger,
+            ),
           );
         }
       } finally {
@@ -180,13 +198,21 @@ class _RoomDialogState extends State<RoomDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Container(
-        width: 800.w,
-        padding: EdgeInsets.all(32.r),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12.w : 24.w,
+        vertical: 24.h,
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 800,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+        ),
         child: SingleChildScrollView(
+          padding: EdgeInsets.all(isMobile ? 16.r : 32.r),
           child: Form(
             key: _formKey,
             child: Column(
@@ -197,7 +223,12 @@ class _RoomDialogState extends State<RoomDialog> {
                 SizedBox(height: 32.h),
                 CustomDropdown<String>(
                   label: AppStrings.spaceType,
-                  value: ['open_area', 'standard_room', 'vip_room'].contains(_selectedSpaceTypeId)
+                  value:
+                      [
+                        'open_area',
+                        'standard_room',
+                        'vip_room',
+                      ].contains(_selectedSpaceTypeId)
                       ? (_selectedSpaceTypeId ?? 'open_area')
                       : 'open_area',
                   items: const ['open_area', 'standard_room', 'vip_room'],
@@ -315,17 +346,21 @@ class _RoomDialogState extends State<RoomDialog> {
   }
 
   Widget _buildActions() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+    return Wrap(
+      alignment: WrapAlignment.end,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 16.w,
+      runSpacing: 12.h,
       children: [
         AppButton(
           text: AppStrings.cancel,
           variant: AppButtonVariant.outlined,
           onPressed: () => Navigator.pop(context),
         ),
-        SizedBox(width: 16.w),
         AppButton(
-          text: widget.room == null ? AppStrings.createStation : AppStrings.updateStation,
+          text: widget.room == null
+              ? AppStrings.createStation
+              : AppStrings.updateStation,
           isLoading: _isUploading,
           onPressed: _submit,
         ),

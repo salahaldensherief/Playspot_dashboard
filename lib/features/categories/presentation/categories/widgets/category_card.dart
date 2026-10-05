@@ -7,7 +7,7 @@ class CategoryCard extends StatelessWidget {
   final CategoryEntity category;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
-  
+
   const CategoryCard({
     super.key,
     required this.category,
@@ -42,11 +42,18 @@ class CategoryCard extends StatelessWidget {
               children: [
                 Text(
                   category.nameEn,
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   category.nameAr,
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14.sp,
+                  ),
                 ),
               ],
             ),
@@ -54,7 +61,10 @@ class CategoryCard extends StatelessWidget {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.edit_outlined, color: AppColors.textSecondary),
+                icon: const Icon(
+                  Icons.edit_outlined,
+                  color: AppColors.textSecondary,
+                ),
                 onPressed: onEdit,
               ),
               IconButton(

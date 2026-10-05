@@ -864,6 +864,7 @@
   "process": "Process",
   "pay": "Pay",
   "fail": "Fail",
+  "mark_failed": "Mark Failed",
   "resolve": "Resolve",
   "complete_payout_payment": "Complete Payout Payment",
   "complete_payment": "Complete Payment",

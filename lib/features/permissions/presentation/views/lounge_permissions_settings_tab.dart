@@ -15,16 +15,22 @@ class LoungePermissionsSettingsTab extends StatefulWidget {
   const LoungePermissionsSettingsTab({super.key});
 
   @override
-  State<LoungePermissionsSettingsTab> createState() => _LoungePermissionsSettingsTabState();
+  State<LoungePermissionsSettingsTab> createState() =>
+      _LoungePermissionsSettingsTabState();
 }
 
-class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettingsTab> {
+class _LoungePermissionsSettingsTabState
+    extends State<LoungePermissionsSettingsTab> {
   @override
   void initState() {
     super.initState();
-    final loungeId = context.read<LoginCubit>().state.userLounge?.id ??
+    final loungeId =
+        context.read<LoginCubit>().state.userLounge?.id ??
         context.read<LoginCubit>().state.user?.loungeId;
-    context.read<PermissionsCubit>().fetchPermissions('cashier', loungeId: loungeId);
+    context.read<PermissionsCubit>().fetchPermissions(
+      'cashier',
+      loungeId: loungeId,
+    );
   }
 
   @override
@@ -36,10 +42,19 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
           children: [
             _buildRoleSelector(state.selectedRole),
             SizedBox(height: 32.h),
-            if (state.status == PermissionsStatus.loading && state.permissions.isEmpty)
-              const Center(child: CircularProgressIndicator(color: AppColors.neonBlue))
-            else if (state.status == PermissionsStatus.failure && state.permissions.isEmpty)
-              Center(child: AppText.body(state.errorMessage ?? AppStrings.errorLoadingPermissions, color: AppColors.danger))
+            if (state.status == PermissionsStatus.loading &&
+                state.permissions.isEmpty)
+              const Center(
+                child: CircularProgressIndicator(color: AppColors.neonBlue),
+              )
+            else if (state.status == PermissionsStatus.failure &&
+                state.permissions.isEmpty)
+              Center(
+                child: AppText.body(
+                  state.errorMessage ?? AppStrings.errorLoadingPermissions,
+                  color: AppColors.danger,
+                ),
+              )
             else
               _buildPermissionsGrid(state.permissions, state.selectedRole),
           ],
@@ -57,9 +72,13 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
       ],
       selected: {selectedRole},
       onSelectionChanged: (Set<String> newSelection) {
-        final loungeId = context.read<LoginCubit>().state.userLounge?.id ??
+        final loungeId =
+            context.read<LoginCubit>().state.userLounge?.id ??
             context.read<LoginCubit>().state.user?.loungeId;
-        context.read<PermissionsCubit>().fetchPermissions(newSelection.first, loungeId: loungeId);
+        context.read<PermissionsCubit>().fetchPermissions(
+          newSelection.first,
+          loungeId: loungeId,
+        );
       },
       style: ButtonStyle(
         backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
@@ -74,7 +93,10 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
     );
   }
 
-  Widget _buildPermissionsGrid(List<PermissionItemEntity> permissions, String role) {
+  Widget _buildPermissionsGrid(
+    List<PermissionItemEntity> permissions,
+    String role,
+  ) {
     final Map<String, List<PermissionItemEntity>> categories = {};
     for (var p in permissions) {
       categories.putIfAbsent(p.category, () => []).add(p);
@@ -94,13 +116,17 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
       itemCount: sortedCategoryKeys.length,
       itemBuilder: (context, index) {
         final category = sortedCategoryKeys[index];
-        final categoryPermissions = categories[category]!;
+        final categoryPermissions = categories[category] ?? [];
         return _buildCategoryCard(category, categoryPermissions, role);
       },
     );
   }
 
-  Widget _buildCategoryCard(String category, List<PermissionItemEntity> permissions, String role) {
+  Widget _buildCategoryCard(
+    String category,
+    List<PermissionItemEntity> permissions,
+    String role,
+  ) {
     final categoryTitle = category.tr();
     return Material(
       color: AppColors.cardBackground,
@@ -118,7 +144,11 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
               children: [
                 _getCategoryIcon(category),
                 SizedBox(width: 12.w),
-                AppText.heading(categoryTitle, fontSize: 18.sp, color: AppColors.neonPurple),
+                AppText.heading(
+                  categoryTitle,
+                  fontSize: 18.sp,
+                  color: AppColors.neonPurple,
+                ),
               ],
             ),
             SizedBox(height: 16.h),
@@ -126,8 +156,10 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
             Expanded(
               child: ListView.separated(
                 itemCount: permissions.length,
-                separatorBuilder: (context, index) => const Divider(color: AppColors.divider, height: 1),
-                itemBuilder: (context, index) => _buildPermissionTile(permissions[index], role),
+                separatorBuilder: (context, index) =>
+                    const Divider(color: AppColors.divider, height: 1),
+                itemBuilder: (context, index) =>
+                    _buildPermissionTile(permissions[index], role),
               ),
             ),
           ],
@@ -139,7 +171,9 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
   Widget _getCategoryIcon(String category) {
     IconData icon;
     final lower = category.toLowerCase();
-    if (lower.contains('pos') || lower.contains('منيو') || lower.contains('menu')) {
+    if (lower.contains('pos') ||
+        lower.contains('منيو') ||
+        lower.contains('menu')) {
       icon = Icons.restaurant_menu;
     } else if (lower.contains('financial') || lower.contains('مالي')) {
       icon = Icons.account_balance_wallet_outlined;
@@ -156,12 +190,27 @@ class _LoungePermissionsSettingsTabState extends State<LoungePermissionsSettings
     return SwitchListTile(
       value: p.isEnabled,
       onChanged: (val) {
-        final loungeId = context.read<LoginCubit>().state.userLounge?.id ??
+        final loungeId =
+            context.read<LoginCubit>().state.userLounge?.id ??
             context.read<LoginCubit>().state.user?.loungeId;
-        context.read<PermissionsCubit>().togglePermission(role, p.key, val, loungeId: loungeId);
+        context.read<PermissionsCubit>().togglePermission(
+          role,
+          p.key,
+          val,
+          loungeId: loungeId,
+        );
       },
-      title: AppText.body(p.nameAr.isNotEmpty && isArabic ? p.nameAr : (p.nameEn.isNotEmpty ? p.nameEn : p.key), fontWeight: FontWeight.bold),
-      subtitle: AppText.body(isArabic ? p.descriptionAr : p.descriptionEn, color: AppColors.textSecondary, fontSize: 12.sp),
+      title: AppText.body(
+        p.nameAr.isNotEmpty && isArabic
+            ? p.nameAr
+            : (p.nameEn.isNotEmpty ? p.nameEn : p.key),
+        fontWeight: FontWeight.bold,
+      ),
+      subtitle: AppText.body(
+        isArabic ? p.descriptionAr : p.descriptionEn,
+        color: AppColors.textSecondary,
+        fontSize: 12.sp,
+      ),
       activeTrackColor: AppColors.neonBlue,
       activeThumbColor: AppColors.textPrimary,
       contentPadding: EdgeInsets.zero,

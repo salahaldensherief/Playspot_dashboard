@@ -16,9 +16,10 @@ class LoungeProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.read<LoginCubit>().state.user;
-    final canManagePermissions = user?.isLoungeOwner == true || 
-                                user?.isSuperAdmin == true || 
-                                user?.isManager == true;
+    final canManagePermissions =
+        user?.isLoungeOwner == true ||
+        user?.isSuperAdmin == true ||
+        user?.isManager == true;
 
     final tabCount = canManagePermissions ? 3 : 2;
 
@@ -40,8 +41,7 @@ class LoungeProfilePage extends StatelessWidget {
               tabs: [
                 Tab(text: AppStrings.coreInfo),
                 Tab(text: AppStrings.loungePoliciesTitle),
-                if (canManagePermissions)
-                  const Tab(text: 'الصلاحيات - Permissions'),
+                if (canManagePermissions) Tab(text: AppStrings.permissions),
               ],
             ),
             Expanded(
