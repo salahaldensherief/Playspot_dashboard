@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
+import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import '../../domain/entities/kyc_request.dart';
 import '../cubit/kyc_cubit.dart';
 import '../cubit/kyc_state.dart';
@@ -32,60 +34,39 @@ class _KycReviewsPageState extends State<KycReviewsPage> {
 
   @override
   Widget build(BuildContext context) {
-    EasyLocalization.of(context);
     final kycCubit = context.read<KycCubit>();
 
-    return Padding(
-      padding: EdgeInsets.all(24.r),
+    return DashboardLayout(
+      title: AppStrings.kycReviews,
+      activeRoute: 'KYC',
+      isScrollable: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(),
-          SizedBox(height: 32.h),
+          AppAdaptivePageHeader(
+            title: AppStrings.kycReviews,
+            subtitle: AppStrings.kycHeaderDesc,
+            primaryAction: AppButton(
+              text: AppStrings.refresh,
+              icon: Icons.refresh,
+              variant: AppButtonVariant.outlined,
+              height: 38.h,
+              onPressed: () => kycCubit.loadPendingReviews(),
+            ),
+          ),
+          SizedBox(height: 20.h),
           Expanded(
             child: BlocBuilder<KycCubit, KycState>(
               bloc: kycCubit,
               builder: (context, state) {
                 if (state.status == KycStatus.loading) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppColors.neonBlue),
-                  );
+                  return const TableShimmer(rows: 4, columns: 5);
                 }
                 if (state.status == KycStatus.failure) {
                   return Center(
-                    child: SingleChildScrollView(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 560),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.cloud_off_outlined,
-                              size: 40,
-                              color: AppColors.warning,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              (state.errorMessage ==
-                                          'kyc_review_service_unavailable'
-                                      ? 'kyc_review_service_unavailable'
-                                      : 'kyc_review_load_failed')
-                                  .tr(),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            AppButton(
-                              text: AppStrings.refresh,
-                              icon: Icons.refresh,
-                              onPressed: kycCubit.loadPendingReviews,
-                            ),
-                          ],
-                        ),
-                      ),
+                    child: AppText.body(
+                      state.errorMessage ?? AppStrings.error,
+                      color: AppColors.danger,
                     ),
                   );
                 }
@@ -98,17 +79,6 @@ class _KycReviewsPageState extends State<KycReviewsPage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppText.heading(AppStrings.kycReviews, fontSize: 32.sp),
-        SizedBox(height: 8.h),
-        AppText.body(AppStrings.kycHeaderDesc),
-      ],
     );
   }
 
@@ -137,7 +107,6 @@ class _KycDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    EasyLocalization.of(context);
     return DataTableWidget(
       columns: [
         AppStrings.ownerName,
@@ -146,6 +115,87 @@ class _KycDataTable extends StatelessWidget {
         AppStrings.businessDoc,
         AppStrings.actions,
       ],
+      mobileCardBuilder: (context, index) {
+        final req = requests[index];
+        return Container(
+          padding: EdgeInsets.all(16.r),
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: AppColors.borderDefault),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      req.ownerName,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.sp,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    req.loungeName,
+                    style: TextStyle(
+                      color: AppColors.neonCyan,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 6.h),
+              Text(
+                req.ownerEmail,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12.sp,
+                ),
+              ),
+              if (req.ownerPhone.isNotEmpty) ...[
+                SizedBox(height: 4.h),
+                Text(
+                  req.ownerPhone,
+                  style: TextStyle(color: AppColors.neonBlue, fontSize: 12.sp),
+                ),
+              ],
+              SizedBox(height: 12.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      text: AppStrings.viewDocument,
+                      icon: Icons.visibility_outlined,
+                      variant: AppButtonVariant.outlined,
+                      height: 36.h,
+                      fontSize: 12.sp,
+                      onPressed: () => _showInspection(context, req, cubit),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: AppButton(
+                      text: AppStrings.kycInspection,
+                      icon: Icons.fact_check_outlined,
+                      variant: AppButtonVariant.primary,
+                      height: 36.h,
+                      fontSize: 12.sp,
+                      onPressed: () => _showInspection(context, req, cubit),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
       rows: requests
           .map(
             (req) => DataRow(

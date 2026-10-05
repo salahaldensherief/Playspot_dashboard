@@ -1,21 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:easy_localization/easy_localization.dart';
-import '../../domain/entities/room_space_type.dart';
-import '../cubit/room_cubit.dart';
-import '../cubit/room_state.dart';
-import 'room_space_type_selector.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_multi_image_picker.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:uuid/uuid.dart';
-import 'package:play_spot_dashboard/features/audit/presentation/widgets/audit_timeline.dart';
 import '../../../categories/presentation/categories/category_cubit.dart';
 import '../../domain/entities/room_entity.dart';
 import 'room_basic_info_form.dart';
@@ -53,24 +45,15 @@ class _RoomDialogState extends State<RoomDialog> {
   late TextEditingController _controllersController;
   late TextEditingController _screenSizeController;
   late TextEditingController _extraPriceController;
-  late TextEditingController _openTimeCustomRateController;
-  late TextEditingController _openTimeMarkupPercentController;
-  late TextEditingController _openTimeMinimumMinutesController;
-  late TextEditingController _openTimeRoundingMinutesController;
-  late TextEditingController _openTimeMaxMinutesController;
-  late TextEditingController _openTimeBufferMinutesController;
 
   final List<String> _selectedActivityIds = [];
   final List<String> _featuresAr = [];
   final List<String> _featuresEn = [];
-  final ScrollController _scrollController = ScrollController();
 
   RoomStatusEnum _selectedStatus = RoomStatusEnum.available;
   String? _selectedSpaceTypeId;
   List<SelectedImage> _roomImages = [];
   bool _isUploading = false;
-  bool _openTimeEnabled = false;
-  String _openTimePricingMode = 'same_hourly';
 
   @override
   void initState() {
@@ -96,35 +79,13 @@ class _RoomDialogState extends State<RoomDialog> {
     _extraPriceController = TextEditingController(
       text: r?.extraControllerPrice.toString() ?? '0.0',
     );
-    _openTimeEnabled = r?.openTimeEnabled ?? false;
-    _openTimePricingMode = r?.openTimePricingMode ?? 'same_hourly';
-    _openTimeCustomRateController = TextEditingController(
-      text: r?.openTimeCustomHourlyRate?.toString() ?? '',
-    );
-    _openTimeMarkupPercentController = TextEditingController(
-      text: (((r?.openTimePriceMultiplier ?? 1.0) - 1) * 100)
-          .clamp(0, 1000)
-          .toStringAsFixed(0),
-    );
-    _openTimeMinimumMinutesController = TextEditingController(
-      text: (r?.openTimeMinimumMinutes ?? 30).toString(),
-    );
-    _openTimeRoundingMinutesController = TextEditingController(
-      text: (r?.openTimeRoundingMinutes ?? 15).toString(),
-    );
-    _openTimeMaxMinutesController = TextEditingController(
-      text: r?.openTimeMaxMinutes?.toString() ?? '',
-    );
-    _openTimeBufferMinutesController = TextEditingController(
-      text: (r?.openTimeBufferBeforeBookingMinutes ?? 15).toString(),
-    );
 
-    _selectedSpaceTypeId = r?.spaceTypeId;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && context.read<RoomCubit>().state.spaceTypes.isEmpty) {
-        context.read<RoomCubit>().loadSpaceTypes();
-      }
-    });
+    const validSpaceTypes = ['open_area', 'standard_room', 'vip_room'];
+    if (r != null && validSpaceTypes.contains(r.spaceTypeId)) {
+      _selectedSpaceTypeId = r.spaceTypeId;
+    } else {
+      _selectedSpaceTypeId = 'open_area';
+    }
 
     _selectedStatus = r?.status ?? RoomStatusEnum.available;
     if (r != null) {
@@ -146,25 +107,11 @@ class _RoomDialogState extends State<RoomDialog> {
     _controllersController.dispose();
     _screenSizeController.dispose();
     _extraPriceController.dispose();
-    _openTimeCustomRateController.dispose();
-    _openTimeMarkupPercentController.dispose();
-    _openTimeMinimumMinutesController.dispose();
-    _openTimeRoundingMinutesController.dispose();
-    _openTimeMaxMinutesController.dispose();
-    _openTimeBufferMinutesController.dispose();
-    _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (_isUploading) return;
-    final selectedType = _selectedType;
-    if (selectedType == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('room_space_types_unavailable'.tr())),
-      );
-      return;
-    }
     final form = _formKey.currentState;
     if (form != null && form.validate()) {
       if (_roomImages.isEmpty && (widget.room?.images.isEmpty ?? true)) {
@@ -191,14 +138,12 @@ class _RoomDialogState extends State<RoomDialog> {
         }
 
         if (mounted) {
-          final spaceTypeId = selectedType.id;
-          final isOpenArea = selectedType.categoryKey == 'open_area';
+          final spaceTypeId = _selectedSpaceTypeId ?? 'open_area';
+          final isOpenArea = spaceTypeId == 'open_area';
           final singleRate =
               double.tryParse(_hourlyRateSingleController.text) ?? 0.0;
           final multiRate =
               double.tryParse(_hourlyRateMultiController.text) ?? 0.0;
-          final markupPercent =
-              double.tryParse(_openTimeMarkupPercentController.text) ?? 0;
 
           final room = RoomEntity(
             id: widget.room?.id ?? const Uuid().v4(),
@@ -207,7 +152,9 @@ class _RoomDialogState extends State<RoomDialog> {
             nameEn: _nameEnController.text,
             descriptionAr: _descriptionArController.text,
             descriptionEn: _descriptionEnController.text,
-            spaceType: selectedType.name,
+            spaceType: isOpenArea
+                ? 'Open Area'
+                : (spaceTypeId == 'vip_room' ? 'VIP Room' : 'Standard Room'),
             spaceTypeId: spaceTypeId,
             hourlyRateSingle: singleRate,
             hourlyRateMulti: multiRate,
@@ -226,21 +173,6 @@ class _RoomDialogState extends State<RoomDialog> {
             images: images,
             isAvailable: _selectedStatus == RoomStatusEnum.available,
             status: _selectedStatus,
-            openTimeEnabled: _openTimeEnabled,
-            openTimePricingMode: _openTimePricingMode,
-            openTimeCustomHourlyRate: double.tryParse(
-              _openTimeCustomRateController.text,
-            ),
-            openTimePriceMultiplier: 1 + (markupPercent / 100),
-            openTimeMinimumMinutes:
-                int.tryParse(_openTimeMinimumMinutesController.text) ?? 30,
-            openTimeRoundingMinutes:
-                int.tryParse(_openTimeRoundingMinutesController.text) ?? 15,
-            openTimeMaxMinutes: int.tryParse(
-              _openTimeMaxMinutesController.text,
-            ),
-            openTimeBufferBeforeBookingMinutes:
-                int.tryParse(_openTimeBufferMinutesController.text) ?? 15,
           );
 
           if (widget.onSave != null) {
@@ -266,135 +198,127 @@ class _RoomDialogState extends State<RoomDialog> {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<RoomCubit>();
-    context.locale;
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Container(
-        width: 800.w,
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12.w : 24.w,
+        vertical: 24.h,
+      ),
+      child: ConstrainedBox(
         constraints: BoxConstraints(
+          maxWidth: 800,
           maxHeight: MediaQuery.sizeOf(context).height * 0.9,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(32.r, 24.r, 32.r, 16.r),
-              child: _buildHeader(),
-            ),
-            const Divider(height: 1, color: AppColors.borderDefault),
-            Flexible(
-              child: Scrollbar(
-                controller: _scrollController,
-                thumbVisibility: true,
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  padding: EdgeInsets.symmetric(horizontal: 32.r, vertical: 24.r),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSpaceTypeSelector(),
-                        SizedBox(height: 24.h),
-                        AppMultiImagePicker(
-                          label: AppStrings.roomStationImage,
-                          initialUrls: widget.room?.images,
-                          onImagesSelected: (images) {
-                            _roomImages = images;
-                          },
-                        ),
-                        SizedBox(height: 24.h),
-                        RoomBasicInfoForm(
-                          nameArController: _nameArController,
-                          nameEnController: _nameEnController,
-                          descriptionArController: _descriptionArController,
-                          descriptionEnController: _descriptionEnController,
-                          hourlyRateSingleController: _hourlyRateSingleController,
-                          hourlyRateMultiController: _hourlyRateMultiController,
-                          isOpenArea: _selectedType?.categoryKey == 'open_area',
-                        ),
-                        SizedBox(height: 20.h),
-                        RoomSpecsForm(
-                          capacityController: _maxCapacityController,
-                          controllersController: _controllersController,
-                          screenSizeController: _screenSizeController,
-                          extraPriceController: _extraPriceController,
-                          selectedSpaceTypeId: _selectedType?.categoryKey,
-                          status: _selectedStatus,
-                          onStatusChanged: (v) {
-                            if (v != null) {
-                              setState(() => _selectedStatus = v);
-                            }
-                          },
-                          featuresEn: _featuresEn,
-                          onFeatureChanged: (feature, selected) {
-                            setState(() {
-                              if (selected) {
-                                if (!_featuresEn.contains(feature)) {
-                                  _featuresEn.add(feature);
-                                  _featuresAr.add(feature);
-                                }
-                              } else {
-                                final idx = _featuresEn.indexOf(feature);
-                                if (idx != -1) {
-                                  _featuresEn.removeAt(idx);
-                                  _featuresAr.removeAt(idx);
-                                }
-                              }
-                            });
-                          },
-                        ),
-                        SizedBox(height: 24.h),
-                        _buildOpenTimeSettings(),
-                        SizedBox(height: 24.h),
-                        RoomFeaturesSection(
-                          featuresAr: _featuresAr,
-                          featuresEn: _featuresEn,
-                          selectedActivityIds: _selectedActivityIds,
-                          activitiesList: widget.categoryCubit.state.activityTypes,
-                          onAddFeature: (en, ar) => setState(() {
-                            _featuresEn.add(en);
-                            _featuresAr.add(ar);
-                          }),
-                          onRemoveFeature: (idx) => setState(() {
-                            _featuresEn.removeAt(idx);
-                            _featuresAr.removeAt(idx);
-                          }),
-                          onToggleTag: (tag) => setState(() {
-                            if (_featuresEn.contains(tag)) {
-                              final idx = _featuresEn.indexOf(tag);
-                              _featuresEn.removeAt(idx);
-                              _featuresAr.removeAt(idx);
-                            } else {
-                              _featuresEn.add(tag);
-                              _featuresAr.add(tag);
-                            }
-                          }),
-                        ),
-                        if (widget.room != null) ...[
-                          SizedBox(height: 24.h),
-                          AuditTimeline(
-                            entityType: 'room',
-                            entityId: widget.room!.id,
-                            loungeId: widget.loungeId,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(isMobile ? 16.r : 32.r),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                SizedBox(height: 32.h),
+                CustomDropdown<String>(
+                  label: AppStrings.spaceType,
+                  value:
+                      [
+                        'open_area',
+                        'standard_room',
+                        'vip_room',
+                      ].contains(_selectedSpaceTypeId)
+                      ? (_selectedSpaceTypeId ?? 'open_area')
+                      : 'open_area',
+                  items: const ['open_area', 'standard_room', 'vip_room'],
+                  itemLabel: (id) {
+                    if (id == 'open_area') return AppStrings.openArea;
+                    if (id == 'standard_room') return AppStrings.standardRoom;
+                    if (id == 'vip_room') return AppStrings.vipRoom;
+                    return id;
+                  },
+                  onChanged: (v) => setState(() => _selectedSpaceTypeId = v),
                 ),
-              ),
+                SizedBox(height: 24.h),
+                AppMultiImagePicker(
+                  label: AppStrings.roomStationImage,
+                  initialUrls: widget.room?.images,
+                  onImagesSelected: (images) {
+                    _roomImages = images;
+                  },
+                ),
+                SizedBox(height: 24.h),
+                RoomBasicInfoForm(
+                  nameArController: _nameArController,
+                  nameEnController: _nameEnController,
+                  descriptionArController: _descriptionArController,
+                  descriptionEnController: _descriptionEnController,
+                  hourlyRateSingleController: _hourlyRateSingleController,
+                  hourlyRateMultiController: _hourlyRateMultiController,
+                  isOpenArea: _selectedSpaceTypeId == 'open_area',
+                ),
+                SizedBox(height: 20.h),
+                RoomSpecsForm(
+                  capacityController: _maxCapacityController,
+                  controllersController: _controllersController,
+                  screenSizeController: _screenSizeController,
+                  extraPriceController: _extraPriceController,
+                  selectedSpaceTypeId: _selectedSpaceTypeId,
+                  status: _selectedStatus,
+                  onStatusChanged: (v) {
+                    if (v != null) {
+                      setState(() => _selectedStatus = v);
+                    }
+                  },
+                  featuresEn: _featuresEn,
+                  onFeatureChanged: (feature, selected) {
+                    setState(() {
+                      if (selected) {
+                        if (!_featuresEn.contains(feature)) {
+                          _featuresEn.add(feature);
+                          _featuresAr.add(feature);
+                        }
+                      } else {
+                        final idx = _featuresEn.indexOf(feature);
+                        if (idx != -1) {
+                          _featuresEn.removeAt(idx);
+                          _featuresAr.removeAt(idx);
+                        }
+                      }
+                    });
+                  },
+                ),
+                SizedBox(height: 24.h),
+                RoomFeaturesSection(
+                  featuresAr: _featuresAr,
+                  featuresEn: _featuresEn,
+                  selectedActivityIds: _selectedActivityIds,
+                  activitiesList: widget.categoryCubit.state.activityTypes,
+                  onAddFeature: (en, ar) => setState(() {
+                    _featuresEn.add(en);
+                    _featuresAr.add(ar);
+                  }),
+                  onRemoveFeature: (idx) => setState(() {
+                    _featuresEn.removeAt(idx);
+                    _featuresAr.removeAt(idx);
+                  }),
+                  onToggleTag: (tag) => setState(() {
+                    if (_featuresEn.contains(tag)) {
+                      final idx = _featuresEn.indexOf(tag);
+                      _featuresEn.removeAt(idx);
+                      _featuresAr.removeAt(idx);
+                    } else {
+                      _featuresEn.add(tag);
+                      _featuresAr.add(tag);
+                    }
+                  }),
+                ),
+                SizedBox(height: 32.h),
+                _buildActions(),
+              ],
             ),
-            const Divider(height: 1, color: AppColors.borderDefault),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 32.r, vertical: 20.r),
-              child: _buildActions(),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -411,7 +335,6 @@ class _RoomDialogState extends State<RoomDialog> {
             fontSize: 24.sp,
             fontWeight: FontWeight.bold,
             fontFamily: 'Orbitron',
-            fontFamilyFallback: const ['Tajawal'],
           ),
         ),
         IconButton(
@@ -422,174 +345,18 @@ class _RoomDialogState extends State<RoomDialog> {
     );
   }
 
-  Widget _buildOpenTimeSettings() {
-    Widget numberField({
-      required TextEditingController controller,
-      required String label,
-      String? suffix,
-    }) {
-      return AppTextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        labelText: label,
-        suffix: suffix != null
-            ? Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8.w),
-                child: Text(
-                  suffix,
-                  style: const TextStyle(color: AppColors.textSecondary),
-                ),
-              )
-            : null,
-      );
-    }
-
-    return Container(
-      padding: EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-        color: AppColors.mutedBackground.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.borderDefault),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Material(
-            color: Colors.transparent,
-            child: SwitchListTile(
-              value: _openTimeEnabled,
-              contentPadding: EdgeInsets.zero,
-              activeThumbColor: AppColors.neonBlue,
-              title: Text(
-                'room_enable_open_time'.tr(),
-                style: TextStyle(color: AppColors.textPrimary),
-              ),
-              subtitle: Text(
-                'room_open_time_description'.tr(),
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-              onChanged: (value) => setState(() => _openTimeEnabled = value),
-            ),
-          ),
-          SizedBox(height: 12.h),
-          CustomDropdown<String>(
-            label: 'room_open_time_pricing_mode'.tr(),
-            value: _openTimePricingMode,
-            items: const [
-              'same_hourly',
-              'custom_hourly',
-              'hourly_plus_percentage',
-            ],
-            itemLabel: (value) => switch (value) {
-              'custom_hourly' => 'room_custom_hourly_mode'.tr(),
-              'hourly_plus_percentage' => 'room_hourly_markup_mode'.tr(),
-              _ => 'room_same_hourly_mode'.tr(),
-            },
-            onChanged: (value) {
-              if (value != null) {
-                setState(() => _openTimePricingMode = value);
-              }
-            },
-          ),
-          SizedBox(height: 12.h),
-          if (_openTimePricingMode == 'custom_hourly')
-            numberField(
-              controller: _openTimeCustomRateController,
-              label: 'room_custom_hourly_rate'.tr(),
-              suffix: AppStrings.egp,
-            ),
-          if (_openTimePricingMode == 'hourly_plus_percentage')
-            numberField(
-              controller: _openTimeMarkupPercentController,
-              label: 'room_hourly_markup_percentage'.tr(),
-              suffix: '%',
-            ),
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              Expanded(
-                child: numberField(
-                  controller: _openTimeMinimumMinutesController,
-                  label: 'room_minimum_billed_duration'.tr(),
-                  suffix: 'room_duration_minutes'.tr(),
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: numberField(
-                  controller: _openTimeRoundingMinutesController,
-                  label: 'room_billing_rounding_step'.tr(),
-                  suffix: 'room_duration_minutes'.tr(),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              Expanded(
-                child: numberField(
-                  controller: _openTimeMaxMinutesController,
-                  label: 'room_optional_maximum_duration'.tr(),
-                  suffix: 'room_duration_minutes'.tr(),
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: numberField(
-                  controller: _openTimeBufferMinutesController,
-                  label: 'room_next_booking_buffer'.tr(),
-                  suffix: 'room_duration_minutes'.tr(),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  RoomSpaceType? get _selectedType {
-    for (final type in context.read<RoomCubit>().state.spaceTypes) {
-      if (type.id == _selectedSpaceTypeId) return type;
-    }
-    return null;
-  }
-
-  Widget _buildSpaceTypeSelector() {
-    final state = context.read<RoomCubit>().state;
-    if (state.spaceTypesStatus == RoomStatus.loading &&
-        state.spaceTypes.isEmpty) {
-      return const LinearProgressIndicator();
-    }
-    if (state.spaceTypes.isEmpty) {
-      return Column(
-        children: [
-          Text('room_space_types_unavailable'.tr()),
-          TextButton(
-            onPressed: () => context.read<RoomCubit>().loadSpaceTypes(),
-            child: Text(AppStrings.retry),
-          ),
-        ],
-      );
-    }
-    return RoomSpaceTypeSelector(
-      types: state.spaceTypes,
-      selectedId: _selectedSpaceTypeId,
-      onChanged: (value) => setState(() => _selectedSpaceTypeId = value),
-    );
-  }
-
   Widget _buildActions() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+    return Wrap(
+      alignment: WrapAlignment.end,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 16.w,
+      runSpacing: 12.h,
       children: [
         AppButton(
           text: AppStrings.cancel,
           variant: AppButtonVariant.outlined,
           onPressed: () => Navigator.pop(context),
         ),
-        SizedBox(width: 16.w),
         AppButton(
           text: widget.room == null
               ? AppStrings.createStation

@@ -1,4 +1,3 @@
-import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -59,12 +58,14 @@ class _LocationInfoSectionState extends State<LocationInfoSection> {
         });
       } else {
         setState(() {
-          _statusMessage = 'تعذر تحديد الموقع تلقائياً من المتصفح. يمكنك إدخال البيانات يدوياً.';
+          _statusMessage =
+              'تعذر تحديد الموقع تلقائياً من المتصفح. يمكنك إدخال البيانات يدوياً.';
         });
       }
     } catch (e) {
       setState(() {
-        _statusMessage = 'تعذر تحديد الموقع تلقائياً من المتصفح. يمكنك إدخال البيانات يدوياً.';
+        _statusMessage =
+            'تعذر تحديد الموقع تلقائياً من المتصفح. يمكنك إدخال البيانات يدوياً.';
       });
     } finally {
       if (mounted) {
@@ -77,116 +78,101 @@ class _LocationInfoSectionState extends State<LocationInfoSection> {
 
   @override
   Widget build(BuildContext context) {
-    EasyLocalization.of(context);
+    final isCompact = AppBreakpoints.isMobile(context);
+
+    final cityField = AppTextField(
+      label: AppStrings.city,
+      controller: widget.cityController,
+      hintText: AppStrings.cityHint,
+      validator: AppValidator.validateRequired,
+    );
+
+    final addressField = AppTextField(
+      label: AppStrings.address,
+      controller: widget.addressController,
+      hintText: AppStrings.addressHint,
+      validator: AppValidator.validateRequired,
+    );
+
+    final String latLngText = (widget.lat != null && widget.lng != null)
+        ? '${widget.lat?.toStringAsFixed(4) ?? ''}, ${widget.lng?.toStringAsFixed(4) ?? ''}'
+        : AppStrings.addressHint;
+
+    final locationCoordinatesBox = Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.location_on_outlined,
+            color: AppColors.neonBlue,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              latLngText,
+              style: const TextStyle(color: AppColors.textPrimary),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final autoDetectButton = AppButton(
+      text: AppStrings.updateMyLocation,
+      icon: Icons.my_location_rounded,
+      variant: AppButtonVariant.primary,
+      isLoading: _isLoading,
+      onPressed: _autoDetectLocation,
+    );
+
     return SectionContainer(
-      title: AppStrings.location, 
+      title: AppStrings.location,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: AppTextField(
-                label: AppStrings.city,
-                controller: widget.cityController,
-                hintText: AppStrings.cityHint,
-                validator: AppValidator.validateRequired,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: AppTextField(
-                label: AppStrings.address,
-                controller: widget.addressController,
-                hintText: AppStrings.addressHint,
-                validator: AppValidator.validateRequired,
-              ),
-            ),
-          ],
-        ),
+        if (isCompact) ...[
+          cityField,
+          const SizedBox(height: 16),
+          addressField,
+        ] else ...[
+          Row(
+            children: [
+              Expanded(child: cityField),
+              const SizedBox(width: 16),
+              Expanded(child: addressField),
+            ],
+          ),
+        ],
         const SizedBox(height: 24),
-        if (AppBreakpoints.isMobile(context))
+        if (isCompact)
           Column(
             children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.cardBackground,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.borderDefault),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.location_on_outlined, color: AppColors.neonBlue, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        widget.lat != null && widget.lng != null 
-                            ? '${widget.lat!.toStringAsFixed(4)}, ${widget.lng!.toStringAsFixed(4)}'
-                            : AppStrings.addressHint,
-                        style: const TextStyle(color: AppColors.textPrimary),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              locationCoordinatesBox,
               const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: AppButton(
-                  text: 'تحديد الموقع تلقائياً',
-                  icon: Icons.my_location_rounded,
-                  variant: AppButtonVariant.primary,
-                  isLoading: _isLoading,
-                  onPressed: _autoDetectLocation,
-                ),
-              ),
+              SizedBox(width: double.infinity, child: autoDetectButton),
             ],
           )
         else
           Row(
             children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.cardBackground,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.borderDefault),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.location_on_outlined, color: AppColors.neonBlue, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          widget.lat != null && widget.lng != null 
-                              ? '${widget.lat!.toStringAsFixed(4)}, ${widget.lng!.toStringAsFixed(4)}'
-                              : AppStrings.addressHint,
-                          style: const TextStyle(color: AppColors.textPrimary),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              Expanded(child: locationCoordinatesBox),
               const SizedBox(width: 12),
-              AppButton(
-                text: 'تحديد الموقع تلقائياً',
-                icon: Icons.my_location_rounded,
-                variant: AppButtonVariant.primary,
-                isLoading: _isLoading,
-                onPressed: _autoDetectLocation,
-              ),
+              autoDetectButton,
             ],
           ),
         if (_statusMessage != null) ...[
           const SizedBox(height: 12),
           Text(
-            _statusMessage!,
+            _statusMessage ?? '',
             style: TextStyle(
-              color: _statusMessage!.contains('بنجاح') ? AppColors.success : AppColors.warning,
+              color: (_statusMessage?.contains('بنجاح') ?? false)
+                  ? AppColors.success
+                  : AppColors.warning,
               fontSize: 12,
             ),
           ),

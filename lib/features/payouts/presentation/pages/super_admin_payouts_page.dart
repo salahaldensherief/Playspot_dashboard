@@ -1,8 +1,10 @@
-import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/utils/app_logger.dart';
@@ -233,30 +235,22 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
 
   @override
   Widget build(BuildContext context) {
-    EasyLocalization.of(context);
-    return Padding(
-      padding: EdgeInsets.all(24.r),
+    return DashboardLayout(
+      title: AppStrings.loungePayouts,
+      activeRoute: 'Payouts',
+      isScrollable: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                AppStrings.loungePayouts,
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 28.sp,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Orbitron',
-                  fontFamilyFallback: const ['Tajawal'],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.refresh, color: AppColors.neonCyan),
-                onPressed: _fetchData,
-              ),
-            ],
+          AppAdaptivePageHeader(
+            title: AppStrings.loungePayouts,
+            primaryAction: AppButton(
+              text: AppStrings.refresh,
+              icon: Icons.refresh,
+              variant: AppButtonVariant.outlined,
+              height: 38.h,
+              onPressed: _fetchData,
+            ),
           ),
           SizedBox(height: 16.h),
           TabBar(
@@ -268,7 +262,7 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
               Tab(text: AppStrings.allPayoutsHistory),
             ],
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 16.h),
           Expanded(
             child: _isLoading
                 ? const TableShimmer(columns: 5)
@@ -293,7 +287,7 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
                         onProcess: _processPayout,
                         onPay: _showCompletePayout,
                         onFail: (id) => _showActionWithReason(
-                          'Mark Failed',
+                          AppStrings.markFailed,
                           'fail_payout',
                           id,
                         ),

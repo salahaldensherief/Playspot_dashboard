@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge_payment_settings.dart';
@@ -199,39 +200,16 @@ class _LoungePoliciesFormState extends State<LoungePoliciesForm> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppStrings.loungePoliciesTitle,
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 20.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          AppStrings.loungePoliciesSubtitle,
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (canEdit)
-                      AppButton(
-                        text: AppStrings.saveChanges,
-                        isLoading: isSaving,
-                        onPressed: isSaving ? null : _handleSave,
-                        width: 140.w,
-                        height: 40.h,
-                      ),
-                  ],
+                AppAdaptivePageHeader(
+                  title: AppStrings.loungePoliciesTitle,
+                  subtitle: AppStrings.loungePoliciesSubtitle,
+                  primaryAction: canEdit
+                      ? AppButton(
+                          text: AppStrings.saveChanges,
+                          isLoading: isSaving,
+                          onPressed: isSaving ? null : _handleSave,
+                        )
+                      : null,
                 ),
                 SizedBox(height: 24.h),
                 LoungeCashPolicySection(

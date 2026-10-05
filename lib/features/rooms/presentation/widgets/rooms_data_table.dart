@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:go_router/go_router.dart';
-import 'package:play_spot_dashboard/core/router/router_keys.dart';
-import 'package:play_spot_dashboard/features/permissions/presentation/cubit/permissions_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -16,7 +12,6 @@ import 'package:play_spot_dashboard/features/categories/presentation/categories/
 import 'package:play_spot_dashboard/features/rooms/presentation/widgets/room_dialog.dart';
 import '../../domain/entities/room_entity.dart';
 import '../cubit/room_cubit.dart';
-import 'room_space_type_label.dart';
 
 class RoomsDataTable extends StatelessWidget {
   final List<RoomEntity> rooms;
@@ -25,17 +20,9 @@ class RoomsDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.locale;
-    final user = context.watch<LoginCubit>().state.user;
+    final user = context.read<LoginCubit>().state.user;
     final loungeId = user?.loungeId ?? '';
-    final permissions = context.watch<PermissionsCubit>();
-    final bool canEdit =
-        user != null &&
-        permissions.hasPermission(
-          'rooms_manage',
-          userRole: user.role.name,
-          userId: user.id,
-        );
+    final bool canEdit = user?.canEditSetup ?? false;
     final roomCubit = context.read<RoomCubit>();
     final categoryCubit = context.read<CategoryCubit>();
 
@@ -57,7 +44,7 @@ class RoomsDataTable extends StatelessWidget {
         AppStrings.pricePerHour,
         AppStrings.extraControllerPrice,
         AppStrings.status,
-        if (canEdit) AppStrings.onlineAvailable,
+        if (canEdit) AppStrings.onlineToggle,
         if (canEdit) AppStrings.actions,
       ],
       rows: rooms
@@ -70,22 +57,18 @@ class RoomsDataTable extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        _roomName(context, room),
+                        room.nameAr.isNotEmpty ? room.nameAr : room.nameEn,
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      if (room.nameEn.isNotEmpty &&
-                          room.nameAr.isNotEmpty &&
-                          room.nameEn != room.nameAr)
+                      if (room.nameEn.isNotEmpty && room.nameEn != room.nameAr)
                         Text(
-                          context.locale.languageCode == 'ar'
-                              ? room.nameEn
-                              : room.nameAr,
-                          style: const TextStyle(
+                          room.nameEn,
+                          style: TextStyle(
                             color: AppColors.textSecondary,
-                            fontSize: 14,
+                            fontSize: 11.sp,
                           ),
                         ),
                     ],
@@ -100,17 +83,17 @@ class RoomsDataTable extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        '${AppStrings.singlePriceLabel} ${room.hourlyRateSingle.toStringAsFixed(0)} ${AppStrings.egpPerHour}',
+                        '${AppStrings.singlePrice}: ${room.hourlyRateSingle.toStringAsFixed(0)} ${AppStrings.egpPerHour}',
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        '${AppStrings.multiPriceLabel} ${room.hourlyRateMulti.toStringAsFixed(0)} ${AppStrings.egpPerHour}',
-                        style: const TextStyle(
+                        '${AppStrings.multiPrice}: ${room.hourlyRateMulti.toStringAsFixed(0)} ${AppStrings.egpPerHour}',
+                        style: TextStyle(
                           color: AppColors.textSecondary,
-                          fontSize: 14,
+                          fontSize: 11.sp,
                         ),
                       ),
                     ],
@@ -119,9 +102,9 @@ class RoomsDataTable extends StatelessWidget {
                 DataCell(
                   Text(
                     '+${room.extraControllerPrice.toStringAsFixed(0)} ${AppStrings.egpPerHour}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textSecondary,
-                      fontSize: 14,
+                      fontSize: 12.sp,
                     ),
                   ),
                 ),
@@ -131,12 +114,8 @@ class RoomsDataTable extends StatelessWidget {
                     Switch(
                       value: room.status == RoomStatusEnum.available,
                       activeThumbColor: AppColors.neonBlue,
-                      onChanged: room.status == RoomStatusEnum.occupied
-                          ? null
-                          : (val) => roomCubit.toggleRoomStatus(
-                              room.id,
-                              room.status,
-                            ),
+                      onChanged: (val) =>
+                          roomCubit.toggleRoomStatus(room.id, room.status),
                     ),
                   ),
                 if (canEdit)
@@ -144,7 +123,6 @@ class RoomsDataTable extends StatelessWidget {
                     Row(
                       children: [
                         IconButton(
-                          tooltip: AppStrings.edit,
                           icon: Icon(
                             Icons.edit_outlined,
                             color: AppColors.textSecondary,
@@ -163,7 +141,6 @@ class RoomsDataTable extends StatelessWidget {
                           ),
                         ),
                         IconButton(
-                          tooltip: AppStrings.delete,
                           icon: Icon(
                             Icons.delete_outline,
                             color: AppColors.danger,
@@ -216,10 +193,10 @@ class RoomsDataTable extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  _roomName(context, room),
+                  room.nameAr.isNotEmpty ? room.nameAr : room.nameEn,
                   style: TextStyle(
                     color: AppColors.textPrimary,
-                    fontSize: 16,
+                    fontSize: 15.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -229,51 +206,48 @@ class RoomsDataTable extends StatelessWidget {
           ),
           SizedBox(height: 8.h),
 
-          Wrap(
-            spacing: 16,
-            runSpacing: 6,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${AppStrings.singlePriceLabel} ${room.hourlyRateSingle.toStringAsFixed(0)} ${AppStrings.egpPerHour}',
-                style: const TextStyle(
+                '${AppStrings.singlePrice}: ${room.hourlyRateSingle.toStringAsFixed(0)} ${AppStrings.egpPerHour}',
+                style: TextStyle(
                   color: AppColors.textSecondary,
-                  fontSize: 14,
+                  fontSize: 12.sp,
                 ),
               ),
               Text(
-                '${AppStrings.multiPriceLabel} ${room.hourlyRateMulti.toStringAsFixed(0)} ${AppStrings.egpPerHour}',
-                style: const TextStyle(
+                '${AppStrings.multiPrice}: ${room.hourlyRateMulti.toStringAsFixed(0)} ${AppStrings.egpPerHour}',
+                style: TextStyle(
                   color: AppColors.textSecondary,
-                  fontSize: 14,
+                  fontSize: 12.sp,
                 ),
               ),
             ],
           ),
           SizedBox(height: 12.h),
 
-          Wrap(
-            spacing: 12,
-            runSpacing: 8,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _getStatusBadge(room.status),
               if (canEdit)
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 4,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       AppStrings.onlineAvailable,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textMuted,
-                        fontSize: 14,
+                        fontSize: 11.sp,
                       ),
                     ),
+                    SizedBox(width: 4.w),
                     Switch(
                       value: isAvailable,
                       activeThumbColor: AppColors.neonBlue,
-                      onChanged: isOccupied
-                          ? null
-                          : (_) => cubit.toggleRoomStatus(room.id, room.status),
+                      onChanged: (_) =>
+                          cubit.toggleRoomStatus(room.id, room.status),
                     ),
                   ],
                 ),
@@ -287,7 +261,9 @@ class RoomsDataTable extends StatelessWidget {
               children: [
                 Expanded(
                   child: AppButton(
-                    text: AppStrings.bookings,
+                    text: isOccupied
+                        ? AppStrings.endSession
+                        : AppStrings.walkInBooking,
                     variant: isOccupied
                         ? AppButtonVariant.outlined
                         : AppButtonVariant.primary,
@@ -295,12 +271,12 @@ class RoomsDataTable extends StatelessWidget {
                         ? Icons.check_circle_outline
                         : Icons.play_arrow_rounded,
                     height: 48.h,
-                    onPressed: () => context.go(RouterKeys.loungeAdminLiveOps),
+                    onPressed: () =>
+                        cubit.toggleWalkInStatus(room.id, room.status),
                   ),
                 ),
                 SizedBox(width: 8.w),
                 IconButton(
-                  tooltip: AppStrings.edit,
                   icon: Icon(
                     Icons.edit_outlined,
                     color: AppColors.textSecondary,
@@ -319,7 +295,6 @@ class RoomsDataTable extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: AppStrings.delete,
                   icon: Icon(
                     Icons.delete_outline,
                     color: AppColors.danger,
@@ -346,23 +321,13 @@ class RoomsDataTable extends StatelessWidget {
     String loungeId,
     RoomEntity room,
   ) {
-    final loginCubit = context.read<LoginCubit>();
-    final permissionsCubit = context.read<PermissionsCubit>();
     showDialog(
       context: context,
-      builder: (_) => MultiBlocProvider(
-        providers: [
-          BlocProvider<RoomCubit>.value(value: cubit),
-          BlocProvider<CategoryCubit>.value(value: categoryCubit),
-          BlocProvider<LoginCubit>.value(value: loginCubit),
-          BlocProvider<PermissionsCubit>.value(value: permissionsCubit),
-        ],
-        child: RoomDialog(
-          loungeId: loungeId,
-          room: room,
-          categoryCubit: categoryCubit,
-          onSave: (updatedRoom) => cubit.updateRoom(updatedRoom),
-        ),
+      builder: (_) => RoomDialog(
+        loungeId: loungeId,
+        room: room,
+        categoryCubit: categoryCubit,
+        onSave: (updatedRoom) => cubit.updateRoom(updatedRoom),
       ),
     );
   }
@@ -375,7 +340,7 @@ class RoomsDataTable extends StatelessWidget {
     final confirmed = await AppDialog.confirm(
       context: context,
       title: AppStrings.deleteConfirmation,
-      message: '${AppStrings.deleteWarning} "${_roomName(context, room)}"?',
+      message: '${AppStrings.deleteWarning} "${room.nameEn}"?',
       confirmText: AppStrings.delete,
       confirmColor: AppColors.danger,
     );
@@ -388,21 +353,12 @@ class RoomsDataTable extends StatelessWidget {
   Widget _getStatusBadge(RoomStatusEnum status) {
     switch (status) {
       case RoomStatusEnum.available:
-        return StatusBadge.success(AppStrings.availableStatus);
+        return StatusBadge.success('Available');
       case RoomStatusEnum.maintenance:
-        return StatusBadge.warning(AppStrings.maintenanceStatus);
+        return StatusBadge.warning('Maintenance');
       case RoomStatusEnum.occupied:
-        return StatusBadge.danger(AppStrings.occupiedStatus);
+        return StatusBadge.danger('Occupied');
     }
-  }
-
-  String _roomName(BuildContext context, RoomEntity room) {
-    final primary = context.locale.languageCode == 'ar'
-        ? room.nameAr
-        : room.nameEn;
-    return primary.isNotEmpty
-        ? primary
-        : (room.nameAr.isNotEmpty ? room.nameAr : room.nameEn);
   }
 
   Widget _getSpaceTypeBadge(String? type) {
@@ -420,7 +376,7 @@ class RoomsDataTable extends StatelessWidget {
         typeLower == 'standard_room') {
       return StatusBadge.secondary(AppStrings.standardRoom);
     } else {
-      return StatusBadge.neutral(roomSpaceTypeLabel(type));
+      return StatusBadge.neutral(type ?? 'N/A');
     }
   }
 }

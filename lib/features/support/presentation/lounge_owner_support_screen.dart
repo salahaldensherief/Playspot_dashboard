@@ -1,7 +1,7 @@
-import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -9,12 +9,12 @@ import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.da
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
+import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import '../domain/entities/app_settings_entity.dart';
 import '../domain/entities/support_ticket_entity.dart';
 import 'support_cubit.dart';
 import 'support_state.dart';
-import 'widgets/new_support_ticket_dialog.dart';
 
 class LoungeOwnerSupportScreen extends StatefulWidget {
   const LoungeOwnerSupportScreen({super.key});
@@ -30,41 +30,14 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _reload();
+        context.read<SupportCubit>().loadAppSettings();
+        context.read<SupportCubit>().loadTickets();
       }
     });
   }
 
-  Future<void> _reload() async {
-    final cubit = context.read<SupportCubit>();
-    await cubit.loadAppSettings();
-    if (mounted) await cubit.loadTickets();
-  }
-
-  Future<void> _showNewTicketDialog() async {
-    final cubit = context.read<SupportCubit>();
-    final created = await showDialog<bool>(
-      context: context,
-      builder: (_) => NewSupportTicketDialog(
-        onSubmit: (issueType, message) =>
-            cubit.createTicket(issueType: issueType, message: message),
-      ),
-    );
-    if (created == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            cubit.state.successMessage ?? AppStrings.supportTickets,
-          ),
-          backgroundColor: AppColors.success,
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    EasyLocalization.of(context);
     return DashboardLayout(
       title: AppStrings.supportAndHelp,
       activeRoute: 'Support',
@@ -78,16 +51,14 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
               AppAdaptivePageHeader(
                 title: AppStrings.supportCenter,
                 subtitle: AppStrings.supportCenterSubtitle,
-                secondaryAction: AppButton(
-                  text: AppStrings.create,
-                  icon: Icons.add,
-                  onPressed: _showNewTicketDialog,
-                ),
                 primaryAction: AppButton(
                   text: AppStrings.refresh,
                   icon: Icons.refresh,
                   variant: AppButtonVariant.outlined,
-                  onPressed: _reload,
+                  onPressed: () {
+                    context.read<SupportCubit>().loadAppSettings();
+                    context.read<SupportCubit>().loadTickets();
+                  },
                 ),
               ),
               SizedBox(height: 24.h),
@@ -101,18 +72,7 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
               SizedBox(height: 12.h),
 
               if (isLoading)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(32.0),
-                    child: CircularProgressIndicator(color: AppColors.neonBlue),
-                  ),
-                )
-              else if (state.status == SupportStatus.failure &&
-                  state.tickets.isEmpty)
-                Text(
-                  state.errorMessage ?? AppStrings.actionFailed,
-                  style: const TextStyle(color: AppColors.danger),
-                )
+                const TableShimmer(rows: 4, columns: 4)
               else if (state.tickets.isEmpty)
                 _buildEmptyTicketsCard()
               else
@@ -158,25 +118,25 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
                   icon: Icons.chat_bubble_outline,
                   color: AppColors.success,
                   title: AppStrings.whatsappSupport,
-                  value: settings?.whatsappPhone ?? '',
+                  value: settings?.whatsappPhone ?? '+201000000000',
                 ),
                 _buildContactTile(
                   icon: Icons.phone_outlined,
                   color: AppColors.neonBlue,
                   title: AppStrings.phone,
-                  value: settings?.supportPhone ?? '',
+                  value: settings?.supportPhone ?? '19000',
                 ),
                 _buildContactTile(
                   icon: Icons.email_outlined,
                   color: AppColors.warning,
                   title: AppStrings.email,
-                  value: settings?.supportEmail ?? '',
+                  value: settings?.supportEmail ?? 'support@playspot.app',
                 ),
                 _buildContactTile(
                   icon: Icons.account_balance_wallet_outlined,
                   color: AppColors.neonGreen,
                   title: AppStrings.vodafoneCash,
-                  value: settings?.vodafoneCashNumber ?? '',
+                  value: settings?.vodafoneCashNumber ?? '01000000000',
                 ),
               ];
 
@@ -236,59 +196,6 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
   }
 
   Widget _buildTicketsTable(List<SupportTicketEntity> tickets) {
-    if (MediaQuery.sizeOf(context).width < 700) {
-      return Column(
-        children: tickets
-            .map(
-              (ticket) => Container(
-                width: double.infinity,
-                margin: EdgeInsets.only(bottom: 10.h),
-                padding: EdgeInsets.all(14.r),
-                decoration: BoxDecoration(
-                  color: AppColors.cardBackground,
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: AppColors.borderDefault),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            ticket.issueType,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        _getStatusBadge(ticket.status),
-                      ],
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      ticket.message,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      ticket.createdAt != null
-                          ? DateFormat(
-                              'yyyy-MM-dd hh:mm a',
-                            ).format(ticket.createdAt!)
-                          : AppStrings.notAvailable,
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    ),
-                  ],
-                ),
-              ),
-            )
-            .toList(),
-      );
-    }
     return DataTableWidget(
       columns: [
         AppStrings.nameAndDetails,
@@ -296,7 +203,88 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
         AppStrings.status,
         AppStrings.date,
       ],
+      mobileCardBuilder: (context, index) {
+        final ticket = tickets[index];
+        final createdAt = ticket.createdAt;
+        final dateStr = createdAt != null
+            ? DateFormat('yyyy-MM-dd hh:mm a').format(createdAt)
+            : 'N/A';
+        return Container(
+          padding: EdgeInsets.all(16.r),
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: AppColors.borderDefault),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      ticket.userName,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.sp,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  _getStatusBadge(ticket.status),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                ticket.message,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13.sp,
+                ),
+              ),
+              SizedBox(height: 10.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 3.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.mutedBackground,
+                      borderRadius: BorderRadius.circular(6.r),
+                    ),
+                    child: Text(
+                      ticket.issueType,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 11.sp,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    dateStr,
+                    style: TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 11.sp,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
       rows: tickets.map((ticket) {
+        final createdAt = ticket.createdAt;
+        final dateStr = createdAt != null
+            ? DateFormat('yyyy-MM-dd hh:mm a').format(createdAt)
+            : 'N/A';
         return DataRow(
           cells: [
             DataCell(
@@ -334,9 +322,7 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
             DataCell(_getStatusBadge(ticket.status)),
             DataCell(
               Text(
-                ticket.createdAt != null
-                    ? DateFormat('yyyy-MM-dd hh:mm a').format(ticket.createdAt!)
-                    : AppStrings.notAvailable,
+                dateStr,
                 style: TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 12.sp,
@@ -386,7 +372,7 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
                 ),
                 SizedBox(height: 2.h),
                 SelectableText(
-                  value.trim().isEmpty ? AppStrings.notAvailable : value,
+                  value,
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
