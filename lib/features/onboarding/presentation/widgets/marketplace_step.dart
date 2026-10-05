@@ -6,7 +6,9 @@ import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import '../../../lounges/presentation/widgets/extra_dialog.dart';
+import '../../../permissions/presentation/cubit/permissions_cubit.dart';
 import '../cubit/onboarding_cubit.dart';
 import '../cubit/onboarding_state.dart';
 
@@ -120,11 +122,19 @@ class MarketplaceStep extends StatelessWidget {
 
   void _showAddExtraDialog(BuildContext context) {
     final onboardingCubit = context.read<OnboardingCubit>();
+    final loginCubit = context.read<LoginCubit>();
+    final permissionsCubit = context.read<PermissionsCubit>();
     showDialog(
       context: context,
-      builder: (diagContext) => ExtraDialog(
-        loungeId: loungeId,
-        onSave: (newExtra) => onboardingCubit.addNewExtra(newExtra),
+      builder: (diagContext) => MultiBlocProvider(
+        providers: [
+          BlocProvider<LoginCubit>.value(value: loginCubit),
+          BlocProvider<PermissionsCubit>.value(value: permissionsCubit),
+        ],
+        child: ExtraDialog(
+          loungeId: loungeId,
+          onSave: (newExtra) => onboardingCubit.addNewExtra(newExtra),
+        ),
       ),
     );
   }
