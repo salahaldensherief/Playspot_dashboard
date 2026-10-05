@@ -53,7 +53,7 @@ class UsersHeader extends StatelessWidget {
                   String? ownerPhone,
                   String? ownerPassword,
                 }) async {
-                  await cubit.createLoungeWithOwner(
+                  return await cubit.createLoungeWithOwner(
                     loungeName: loungeName,
                     address: address,
                     phone: phone,
