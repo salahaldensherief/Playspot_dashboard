@@ -62,6 +62,7 @@ class _RoomDialogState extends State<RoomDialog> {
   final List<String> _selectedActivityIds = [];
   final List<String> _featuresAr = [];
   final List<String> _featuresEn = [];
+  final ScrollController _scrollController = ScrollController();
 
   RoomStatusEnum _selectedStatus = RoomStatusEnum.available;
   String? _selectedSpaceTypeId;
@@ -150,6 +151,7 @@ class _RoomDialogState extends State<RoomDialog> {
     _openTimeRoundingMinutesController.dispose();
     _openTimeMaxMinutesController.dispose();
     _openTimeBufferMinutesController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -270,106 +272,128 @@ class _RoomDialogState extends State<RoomDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Container(
         width: 800.w,
-        padding: EdgeInsets.all(32.r),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                SizedBox(height: 32.h),
-                _buildSpaceTypeSelector(),
-                SizedBox(height: 24.h),
-                AppMultiImagePicker(
-                  label: AppStrings.roomStationImage,
-                  initialUrls: widget.room?.images,
-                  onImagesSelected: (images) {
-                    _roomImages = images;
-                  },
-                ),
-                SizedBox(height: 24.h),
-                RoomBasicInfoForm(
-                  nameArController: _nameArController,
-                  nameEnController: _nameEnController,
-                  descriptionArController: _descriptionArController,
-                  descriptionEnController: _descriptionEnController,
-                  hourlyRateSingleController: _hourlyRateSingleController,
-                  hourlyRateMultiController: _hourlyRateMultiController,
-                  isOpenArea: _selectedType?.categoryKey == 'open_area',
-                ),
-                SizedBox(height: 20.h),
-                RoomSpecsForm(
-                  capacityController: _maxCapacityController,
-                  controllersController: _controllersController,
-                  screenSizeController: _screenSizeController,
-                  extraPriceController: _extraPriceController,
-                  selectedSpaceTypeId: _selectedType?.categoryKey,
-                  status: _selectedStatus,
-                  onStatusChanged: (v) {
-                    if (v != null) {
-                      setState(() => _selectedStatus = v);
-                    }
-                  },
-                  featuresEn: _featuresEn,
-                  onFeatureChanged: (feature, selected) {
-                    setState(() {
-                      if (selected) {
-                        if (!_featuresEn.contains(feature)) {
-                          _featuresEn.add(feature);
-                          _featuresAr.add(feature);
-                        }
-                      } else {
-                        final idx = _featuresEn.indexOf(feature);
-                        if (idx != -1) {
-                          _featuresEn.removeAt(idx);
-                          _featuresAr.removeAt(idx);
-                        }
-                      }
-                    });
-                  },
-                ),
-                SizedBox(height: 24.h),
-                _buildOpenTimeSettings(),
-                SizedBox(height: 24.h),
-                RoomFeaturesSection(
-                  featuresAr: _featuresAr,
-                  featuresEn: _featuresEn,
-                  selectedActivityIds: _selectedActivityIds,
-                  activitiesList: widget.categoryCubit.state.activityTypes,
-                  onAddFeature: (en, ar) => setState(() {
-                    _featuresEn.add(en);
-                    _featuresAr.add(ar);
-                  }),
-                  onRemoveFeature: (idx) => setState(() {
-                    _featuresEn.removeAt(idx);
-                    _featuresAr.removeAt(idx);
-                  }),
-                  onToggleTag: (tag) => setState(() {
-                    if (_featuresEn.contains(tag)) {
-                      final idx = _featuresEn.indexOf(tag);
-                      _featuresEn.removeAt(idx);
-                      _featuresAr.removeAt(idx);
-                    } else {
-                      _featuresEn.add(tag);
-                      _featuresAr.add(tag);
-                    }
-                  }),
-                ),
-                if (widget.room != null) ...[
-                  SizedBox(height: 24.h),
-                  AuditTimeline(
-                    entityType: 'room',
-                    entityId: widget.room!.id,
-                    loungeId: widget.loungeId,
-                  ),
-                ],
-                SizedBox(height: 32.h),
-                _buildActions(),
-              ],
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(32.r, 24.r, 32.r, 16.r),
+              child: _buildHeader(),
             ),
-          ),
+            const Divider(height: 1, color: AppColors.borderDefault),
+            Flexible(
+              child: Scrollbar(
+                controller: _scrollController,
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  padding: EdgeInsets.symmetric(horizontal: 32.r, vertical: 24.r),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSpaceTypeSelector(),
+                        SizedBox(height: 24.h),
+                        AppMultiImagePicker(
+                          label: AppStrings.roomStationImage,
+                          initialUrls: widget.room?.images,
+                          onImagesSelected: (images) {
+                            _roomImages = images;
+                          },
+                        ),
+                        SizedBox(height: 24.h),
+                        RoomBasicInfoForm(
+                          nameArController: _nameArController,
+                          nameEnController: _nameEnController,
+                          descriptionArController: _descriptionArController,
+                          descriptionEnController: _descriptionEnController,
+                          hourlyRateSingleController: _hourlyRateSingleController,
+                          hourlyRateMultiController: _hourlyRateMultiController,
+                          isOpenArea: _selectedType?.categoryKey == 'open_area',
+                        ),
+                        SizedBox(height: 20.h),
+                        RoomSpecsForm(
+                          capacityController: _maxCapacityController,
+                          controllersController: _controllersController,
+                          screenSizeController: _screenSizeController,
+                          extraPriceController: _extraPriceController,
+                          selectedSpaceTypeId: _selectedType?.categoryKey,
+                          status: _selectedStatus,
+                          onStatusChanged: (v) {
+                            if (v != null) {
+                              setState(() => _selectedStatus = v);
+                            }
+                          },
+                          featuresEn: _featuresEn,
+                          onFeatureChanged: (feature, selected) {
+                            setState(() {
+                              if (selected) {
+                                if (!_featuresEn.contains(feature)) {
+                                  _featuresEn.add(feature);
+                                  _featuresAr.add(feature);
+                                }
+                              } else {
+                                final idx = _featuresEn.indexOf(feature);
+                                if (idx != -1) {
+                                  _featuresEn.removeAt(idx);
+                                  _featuresAr.removeAt(idx);
+                                }
+                              }
+                            });
+                          },
+                        ),
+                        SizedBox(height: 24.h),
+                        _buildOpenTimeSettings(),
+                        SizedBox(height: 24.h),
+                        RoomFeaturesSection(
+                          featuresAr: _featuresAr,
+                          featuresEn: _featuresEn,
+                          selectedActivityIds: _selectedActivityIds,
+                          activitiesList: widget.categoryCubit.state.activityTypes,
+                          onAddFeature: (en, ar) => setState(() {
+                            _featuresEn.add(en);
+                            _featuresAr.add(ar);
+                          }),
+                          onRemoveFeature: (idx) => setState(() {
+                            _featuresEn.removeAt(idx);
+                            _featuresAr.removeAt(idx);
+                          }),
+                          onToggleTag: (tag) => setState(() {
+                            if (_featuresEn.contains(tag)) {
+                              final idx = _featuresEn.indexOf(tag);
+                              _featuresEn.removeAt(idx);
+                              _featuresAr.removeAt(idx);
+                            } else {
+                              _featuresEn.add(tag);
+                              _featuresAr.add(tag);
+                            }
+                          }),
+                        ),
+                        if (widget.room != null) ...[
+                          SizedBox(height: 24.h),
+                          AuditTimeline(
+                            entityType: 'room',
+                            entityId: widget.room!.id,
+                            loungeId: widget.loungeId,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const Divider(height: 1, color: AppColors.borderDefault),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32.r, vertical: 20.r),
+              child: _buildActions(),
+            ),
+          ],
         ),
       ),
     );
