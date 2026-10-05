@@ -116,6 +116,7 @@ class AppRouter {
                 providers: [
                   BlocProvider(create: (_) => sl<OnboardingCubit>()),
                   BlocProvider(create: (_) => sl<CategoryCubit>()),
+                  BlocProvider(create: (_) => sl<RoomCubit>()),
                   BlocProvider(create: (_) => sl<KycCubit>()),
                 ],
                 child: const onboarding.LoungeSetupPage(),

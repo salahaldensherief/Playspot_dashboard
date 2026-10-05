@@ -7,6 +7,7 @@ import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_text.dart';
+import '../../../rooms/presentation/cubit/room_cubit.dart';
 import '../../../rooms/presentation/widgets/room_dialog.dart';
 import '../cubit/onboarding_cubit.dart';
 import '../cubit/onboarding_state.dart';
@@ -132,13 +133,17 @@ class AssetsStep extends StatelessWidget {
   void _showAddRoomDialog(BuildContext context) {
     final onboardingCubit = context.read<OnboardingCubit>();
     final categoryCubit = context.read<CategoryCubit>();
+    final roomCubit = context.read<RoomCubit>();
 
     showDialog(
       context: context,
-      builder: (diagContext) => RoomDialog(
-        loungeId: loungeId,
-        categoryCubit: categoryCubit,
-        onSave: (newRoom) => onboardingCubit.addNewRoom(newRoom),
+      builder: (diagContext) => BlocProvider<RoomCubit>.value(
+        value: roomCubit,
+        child: RoomDialog(
+          loungeId: loungeId,
+          categoryCubit: categoryCubit,
+          onSave: (newRoom) => onboardingCubit.addNewRoom(newRoom),
+        ),
       ),
     );
   }
