@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../art_core/widgets/app_button.dart';
+import '../../../../art_core/widgets/app_text_field.dart';
 import '../cashier_conflict_cubit.dart';
 import '../cashier_conflict_state.dart';
 
@@ -149,14 +150,12 @@ class _ReasonDialogState extends State<_ReasonDialog> {
       width: 440,
       child: Form(
         key: _formKey,
-        child: TextFormField(
+        child: AppTextField(
           controller: _reasonController,
           minLines: 2,
           maxLines: 5,
           maxLength: 1000,
-          decoration: InputDecoration(
-            labelText: 'offline_conflicts.reason'.tr(),
-          ),
+          labelText: 'offline_conflicts.reason'.tr(),
           validator: (value) => (value?.trim().runes.length ?? 0) < 10
               ? 'offline_conflicts.reason_invalid'.tr()
               : null,

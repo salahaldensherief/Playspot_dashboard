@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/utils/debouncer.dart';
 
 class ShiftFiltersBar extends StatefulWidget {
@@ -122,33 +123,12 @@ class _ShiftFiltersBarState extends State<ShiftFiltersBar> {
               children: [
                 AppText.body(AppStrings.searchCashier, fontSize: 11.sp, color: AppColors.textSecondary),
                 SizedBox(height: 6.h),
-                SizedBox(
-                  height: 38.h,
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (_) => _searchDebouncer.run(_notifyParent),
-                    style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
-                    decoration: InputDecoration(
-                      hintText: AppStrings.cashierNameHint,
-                      hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
-                      prefixIcon: Icon(Icons.search, size: 18.r, color: AppColors.textSecondary),
-                      contentPadding: EdgeInsets.symmetric(vertical: 0.h, horizontal: 10.w),
-                      filled: true,
-                      fillColor: AppColors.mutedBackground,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                        borderSide: const BorderSide(color: AppColors.borderDefault),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                        borderSide: const BorderSide(color: AppColors.borderDefault),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                        borderSide: const BorderSide(color: AppColors.neonBlue),
-                      ),
-                    ),
-                  ),
+                AppTextField(
+                  controller: _searchController,
+                  hintText: AppStrings.cashierNameHint,
+                  prefixIcon: Icons.search,
+                  contentPadding: EdgeInsets.symmetric(vertical: 0.h, horizontal: 10.w),
+                  onChanged: (_) => _searchDebouncer.run(_notifyParent),
                 ),
               ],
             ),

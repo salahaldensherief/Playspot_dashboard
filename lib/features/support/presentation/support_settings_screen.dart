@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../art_core/app_strings.dart';
 import '../../../art_core/theme/app_colors.dart';
 import '../../../art_core/widgets/app_button.dart';
+import '../../../art_core/widgets/app_text_field.dart';
 import '../../../art_core/widgets/section_container.dart';
 import '../domain/entities/app_settings_entity.dart';
 import 'support_cubit.dart';
@@ -199,48 +200,17 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
     required String hint,
     required IconData icon,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        SizedBox(height: 8.h),
-        TextFormField(
-          controller: controller,
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 13.sp),
-            prefixIcon: Icon(icon, color: AppColors.neonBlue, size: 20.r),
-            filled: true,
-            fillColor: AppColors.scaffoldBackground,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.r),
-              borderSide: const BorderSide(color: AppColors.borderDefault),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.r),
-              borderSide: const BorderSide(color: AppColors.borderDefault),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.r),
-              borderSide: const BorderSide(color: AppColors.neonBlue, width: 1.5),
-            ),
-          ),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return AppStrings.fieldRequired;
-            }
-            return null;
-          },
-        ),
-      ],
+    return AppTextField(
+      controller: controller,
+      label: label,
+      hintText: hint,
+      prefixIcon: icon,
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return AppStrings.fieldRequired;
+        }
+        return null;
+      },
     );
   }
 }

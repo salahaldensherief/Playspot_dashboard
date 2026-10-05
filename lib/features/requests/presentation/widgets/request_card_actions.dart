@@ -4,7 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/domain/entities/client_request_entity.dart';
@@ -172,9 +174,15 @@ class _LiveRejectExtensionDialog extends StatefulWidget {
 
 class _LiveRejectExtensionDialogState
     extends State<_LiveRejectExtensionDialog> {
-  final _reasonController = TextEditingController(
-    text: 'no_time_after_booking'.tr(),
-  );
+  late final TextEditingController _reasonController;
+
+  @override
+  void initState() {
+    super.initState();
+    _reasonController = TextEditingController(
+      text: AppStrings.noTimeAfterBooking,
+    );
+  }
 
   @override
   void dispose() {
@@ -184,31 +192,9 @@ class _LiveRejectExtensionDialogState
 
   @override
   Widget build(BuildContext context) {
-    EasyLocalization.of(context);
-    return AlertDialog(
-      backgroundColor: AppColors.cardBackground,
-      title: AppText.subHeading(
-        AppStrings.rejectExtensionTitle,
-        fontSize: 16.sp,
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AppText.body(AppStrings.rejectReasonLabel, fontSize: 13.sp),
-          SizedBox(height: 10.h),
-          TextField(
-            controller: _reasonController,
-            maxLines: 2,
-            decoration: InputDecoration(
-              labelText: AppStrings.rejectionReasonField,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return AppDialog(
+      title: AppStrings.rejectExtensionTitle,
+      maxWidth: 440.w,
       actions: [
         AppButton(
           text: AppStrings.cancel,
@@ -237,6 +223,19 @@ class _LiveRejectExtensionDialogState
           },
         ),
       ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppText.body(AppStrings.rejectReasonLabel, fontSize: 13.sp),
+          SizedBox(height: 10.h),
+          AppTextField(
+            controller: _reasonController,
+            maxLines: 2,
+            label: AppStrings.rejectionReasonField,
+          ),
+        ],
+      ),
     );
   }
 }

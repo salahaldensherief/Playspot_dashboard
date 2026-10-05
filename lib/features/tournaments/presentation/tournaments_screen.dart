@@ -6,6 +6,8 @@ import '../../../art_core/app_strings.dart';
 import '../../../art_core/layouts/dashboard_layout.dart';
 import '../../../art_core/theme/app_colors.dart';
 import '../../../art_core/widgets/app_button.dart';
+import '../../../art_core/widgets/app_dialog.dart';
+import '../../../art_core/widgets/app_text_field.dart';
 import '../../auth/presentation/login/login_cubit.dart';
 import '../domain/entities/tournament_entity.dart';
 import 'tournament_cubit.dart';
@@ -104,39 +106,21 @@ class _TournamentsScreenState extends State<TournamentsScreen>
     final reasonController = TextEditingController();
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        title: Text(
-          AppStrings.cancelTournament,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Column(
+      builder: (ctx) => AppDialog(
+        title: AppStrings.cancelTournament,
+        width: 440.w,
+        child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               '${AppStrings.cancelTournament} "${tournament.title}"؟',
               style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
             ),
-            SizedBox(height: 12.h),
-            TextField(
+            SizedBox(height: 16.h),
+            AppTextField(
               controller: reasonController,
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: InputDecoration(
-                hintText: AppStrings.reasonOrNote,
-                hintStyle: const TextStyle(color: AppColors.textSecondary),
-                filled: true,
-                fillColor: AppColors.mutedBackground,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-              ),
+              hintText: AppStrings.reasonOrNote,
             ),
           ],
         ),
@@ -146,6 +130,7 @@ class _TournamentsScreenState extends State<TournamentsScreen>
             variant: AppButtonVariant.outlined,
             onPressed: () => Navigator.pop(ctx, false),
           ),
+          SizedBox(width: 12.w),
           AppButton(
             text: AppStrings.cancelTournament,
             variant: AppButtonVariant.danger,

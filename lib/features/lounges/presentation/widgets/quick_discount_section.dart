@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import '../../domain/entities/lounge.dart';
 import '../cubit/lounge_cubit.dart';
@@ -298,39 +299,15 @@ class _QuickDiscountSectionState extends State<QuickDiscountSection> {
     VoidCallback? onTap,
     Widget? suffixIcon,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        SizedBox(height: 8.h),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          inputFormatters: inputFormatters,
-          readOnly: readOnly,
-          onTap: onTap,
-          style: const TextStyle(color: AppColors.textPrimary),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 13.sp),
-            filled: true,
-            fillColor: AppColors.mutedBackground,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: BorderSide.none,
-            ),
-            suffixIcon: suffixIcon,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-          ),
-        ),
-      ],
+    return AppTextField(
+      label: label,
+      controller: controller,
+      hintText: hint,
+      keyboardType: keyboardType ?? TextInputType.text,
+      inputFormatters: inputFormatters,
+      readOnly: readOnly,
+      onTap: onTap,
+      suffix: suffixIcon,
     );
   }
 }

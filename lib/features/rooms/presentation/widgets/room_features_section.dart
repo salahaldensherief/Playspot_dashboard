@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import '../../../categories/domain/entities/activity_type_entity.dart';
 
 class RoomFeaturesSection extends StatefulWidget {
@@ -143,36 +144,16 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
         Row(
           children: [
             Expanded(
-              child: TextFormField(
+              child: AppTextField(
                 controller: _featureArController,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  hintText: AppStrings.nameAr,
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
-                  filled: true,
-                  fillColor: AppColors.mutedBackground,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
+                hintText: AppStrings.nameAr,
               ),
             ),
             SizedBox(width: 12.w),
             Expanded(
-              child: TextFormField(
+              child: AppTextField(
                 controller: _featureEnController,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  hintText: AppStrings.nameEn,
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
-                  filled: true,
-                  fillColor: AppColors.mutedBackground,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
+                hintText: AppStrings.nameEn,
               ),
             ),
             SizedBox(width: 12.w),

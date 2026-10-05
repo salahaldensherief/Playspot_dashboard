@@ -6,6 +6,7 @@ import '../../../art_core/app_strings.dart';
 import '../../../art_core/theme/app_colors.dart';
 import '../../../art_core/widgets/app_adaptive_page_header.dart';
 import '../../../art_core/widgets/app_button.dart';
+import '../../../art_core/widgets/app_text_field.dart';
 import '../../../art_core/widgets/section_container.dart';
 import '../domain/entities/app_policy_entity.dart';
 import 'support_cubit.dart';
@@ -316,43 +317,20 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
           ],
         ),
         SizedBox(height: 16.h),
-        Text(
-          isArabic ? AppStrings.policyTitleAr : AppStrings.policyTitleEn,
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
-        ),
-        SizedBox(height: 6.h),
-        TextField(
+        AppTextField(
           controller: titleController,
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: AppColors.scaffoldBackground,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-          ),
+          label: isArabic ? AppStrings.policyTitleAr : AppStrings.policyTitleEn,
         ),
         SizedBox(height: 16.h),
-        Text(
-          isArabic ? AppStrings.policyContentAr : AppStrings.policyContentEn,
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
-        ),
-        SizedBox(height: 6.h),
-        TextField(
+        AppTextField(
           controller: contentController,
+          label: isArabic
+              ? AppStrings.policyContentAr
+              : AppStrings.policyContentEn,
+          hintText: isArabic
+              ? AppStrings.policyContentArHint
+              : AppStrings.policyContentEnHint,
           maxLines: 12,
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
-          decoration: InputDecoration(
-            hintText: isArabic
-                ? AppStrings.policyContentArHint
-                : AppStrings.policyContentEnHint,
-            hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 13.sp),
-            filled: true,
-            fillColor: AppColors.scaffoldBackground,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-          ),
         ),
       ],
     );

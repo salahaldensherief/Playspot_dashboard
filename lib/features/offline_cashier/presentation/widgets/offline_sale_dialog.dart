@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../art_core/widgets/app_button.dart';
+import '../../../../art_core/widgets/app_text_field.dart';
 import '../offline_workspace_cubit.dart';
 import '../offline_cash_amount.dart';
 import '../../domain/entities/local_cashier_command.dart';
@@ -78,14 +79,12 @@ class _OfflineSaleDialogState extends State<OfflineSaleDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (widget.cash)
-                TextField(
+                AppTextField(
                   controller: amount,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  decoration: InputDecoration(
-                    labelText: 'offline_workspace.amount'.tr(),
-                  ),
+                  labelText: 'offline_workspace.amount'.tr(),
                 )
               else ...[
                 DropdownButtonFormField<String>(

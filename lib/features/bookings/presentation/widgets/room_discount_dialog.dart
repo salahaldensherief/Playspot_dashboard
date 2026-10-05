@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 
 /// Interactive Room & Session Discount Modal Dialog
 /// Enables cashiers/managers to apply a room-specific discount
@@ -226,78 +227,34 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
             SizedBox(height: 16.h),
 
             // Value Input Field
-            AppText.body(
-              _isPercentage
-                  ? 'discount_percentage_input'.tr()
-                  : 'discount_amount_input'.tr(),
-              fontSize: 12.sp,
-              color: AppColors.textSecondary,
-            ),
-            SizedBox(height: 6.h),
-            TextFormField(
+            AppTextField(
               controller: _valueController,
+              label: _isPercentage
+                  ? AppStrings.discountPercentageInput
+                  : AppStrings.discountAmountInput,
+              hintText: _isPercentage
+                  ? AppStrings.discountPercentageHint
+                  : AppStrings.discountAmountHint,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
               ],
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
               onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                hintText: _isPercentage
-                    ? 'discount_percentage_hint'.tr()
-                    : 'discount_amount_hint'.tr(),
-                hintStyle: TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 12.sp,
-                ),
-                filled: true,
-                fillColor: AppColors.mutedBackground,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12.w,
-                  vertical: 12.h,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: const BorderSide(color: AppColors.borderDefault),
-                ),
-                suffixIcon: Icon(
-                  _isPercentage ? Icons.percent : Icons.payments_outlined,
-                  color: AppColors.neonBlue,
-                  size: 18.r,
-                ),
+              suffix: Icon(
+                _isPercentage ? Icons.percent : Icons.payments_outlined,
+                color: AppColors.neonBlue,
+                size: 18.r,
               ),
             ),
             SizedBox(height: 12.h),
 
             // Reason Input Field
-            AppText.body(
-              'discount_reason_required_label'.tr(),
-              fontSize: 12.sp,
-              color: AppColors.textSecondary,
-            ),
-            SizedBox(height: 6.h),
-            TextFormField(
+            AppTextField(
               controller: _reasonController,
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
-              decoration: InputDecoration(
-                hintText: 'room_discount_reason_hint'.tr(),
-                hintStyle: TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 12.sp,
-                ),
-                filled: true,
-                fillColor: AppColors.mutedBackground,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12.w,
-                  vertical: 12.h,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: const BorderSide(color: AppColors.borderDefault),
-                ),
-              ),
+              label: AppStrings.discountReasonRequiredLabel,
+              hintText: AppStrings.roomDiscountReasonHint,
             ),
             SizedBox(height: 16.h),
 

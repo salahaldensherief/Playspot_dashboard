@@ -10,6 +10,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_multi_image_picker.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
@@ -427,17 +428,19 @@ class _RoomDialogState extends State<RoomDialog> {
       required String label,
       String? suffix,
     }) {
-      return TextFormField(
+      return AppTextField(
         controller: controller,
         keyboardType: TextInputType.number,
-        style: const TextStyle(color: AppColors.textPrimary),
-        decoration: InputDecoration(
-          labelText: label,
-          suffixText: suffix,
-          filled: true,
-          fillColor: AppColors.mutedBackground,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-        ),
+        labelText: label,
+        suffix: suffix != null
+            ? Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8.w),
+                child: Text(
+                  suffix,
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+              )
+            : null,
       );
     }
 

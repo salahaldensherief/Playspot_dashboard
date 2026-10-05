@@ -1,4 +1,3 @@
-import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 
@@ -38,7 +38,8 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
     if (_submitting || !_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
     try {
-      await widget.onConfirm(double.parse(_controller.text));
+      final amount = double.tryParse(_controller.text.trim()) ?? 0.0;
+      await widget.onConfirm(amount);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -46,33 +47,38 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
 
   @override
   Widget build(BuildContext context) {
-    EasyLocalization.of(context);
     return PopScope(
       canPop: widget.isDismissible && !_submitting,
-      child: AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.vpn_key_outlined, color: AppColors.neonBlue, size: 24.r),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Text(
-                AppStrings.openNewShift,
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Orbitron',
-                  fontFamilyFallback: const ['Tajawal'],
-                ),
-              ),
+      child: AppDialog(
+        title: AppStrings.openNewShift,
+        icon: Icons.vpn_key_outlined,
+        maxWidth: 440.w,
+        actions: [
+          if (widget.isDismissible)
+            AppButton(
+              text: AppStrings.cancel,
+              variant: AppButtonVariant.outlined,
+              onPressed: _submitting ? null : () => Navigator.pop(context),
+            )
+          else
+            AppButton(
+              text: AppStrings.logout,
+              icon: Icons.logout,
+              variant: AppButtonVariant.danger,
+              onPressed: _submitting
+                  ? null
+                  : () {
+                      Navigator.pop(context);
+                      context.read<LoginCubit>().logout();
+                    },
             ),
-          ],
-        ),
-        content: Form(
+          AppButton(
+            text: AppStrings.openNewShift,
+            isLoading: _submitting,
+            onPressed: _submit,
+          ),
+        ],
+        child: Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -94,44 +100,19 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
                   decimal: true,
                 ),
                 validator: (val) {
-                  if (val == null || val.isEmpty)
+                  if (val == null || val.isEmpty) {
                     return AppStrings.fieldRequired;
+                  }
                   final amount = double.tryParse(val);
-                  if (amount == null || !amount.isFinite || amount < 0)
+                  if (amount == null || !amount.isFinite || amount < 0) {
                     return AppStrings.invalidNumber;
+                  }
                   return null;
                 },
               ),
             ],
           ),
         ),
-        actionsPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-        actions: [
-          if (widget.isDismissible)
-            AppButton(
-              text: AppStrings.cancel,
-              variant: AppButtonVariant.outlined,
-              onPressed: _submitting ? null : () => Navigator.pop(context),
-            )
-          else
-            AppButton(
-              text: AppStrings.logout,
-              icon: Icons.logout,
-              variant: AppButtonVariant.danger,
-              onPressed: _submitting
-                  ? null
-                  : () {
-                      Navigator.pop(context);
-                      context.read<LoginCubit>().logout();
-                    },
-            ),
-          SizedBox(width: 8.w),
-          AppButton(
-            text: AppStrings.openNewShift,
-            isLoading: _submitting,
-            onPressed: _submit,
-          ),
-        ],
       ),
     );
   }

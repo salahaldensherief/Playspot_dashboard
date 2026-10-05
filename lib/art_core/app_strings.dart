@@ -1696,6 +1696,38 @@ class AppStrings {
   static String get customerNameOptional => 'customer_name_optional'.tr();
   static String get customerPhoneOptional => 'customer_phone_optional'.tr();
   static String get openTimeDialogNotice => 'open_time_dialog_notice'.tr();
+  static String get confirmCashInstruction => 'confirm_cash_instruction'.tr();
+  static String get verifiedManuallyFinanceRecords =>
+      'verified_manually_finance_records'.tr();
+  static String get maintenanceEnabledSuccess =>
+      'maintenance_enabled_success'.tr();
+  static String get maintenanceDisabledSuccess =>
+      'maintenance_disabled_success'.tr();
+  static String get appVersionsUpdatedSuccess =>
+      'app_versions_updated_success'.tr();
+  static String get announcementPublishedSuccess =>
+      'announcement_published_success'.tr();
+  static String get announcementDeactivatedSuccess =>
+      'announcement_deactivated_success'.tr();
+  static String get discountPercentageInput => 'discount_percentage_input'.tr();
+  static String get discountAmountInput => 'discount_amount_input'.tr();
+  static String get discountPercentageHint => 'discount_percentage_hint'.tr();
+  static String get discountAmountHint => 'discount_amount_hint'.tr();
+  static String get discountReasonRequiredLabel =>
+      'discount_reason_required_label'.tr();
+  static String get roomDiscountReasonHint => 'room_discount_reason_hint'.tr();
+  static String get bookingVoucherDiscount => 'booking_voucher_discount'.tr();
+  static String get bookingVoucherInvalid => 'booking_voucher_invalid'.tr();
+  static String get bookingVoucherUnavailable =>
+      'booking_voucher_unavailable'.tr();
+  static String get bookingVoucherChecking => 'booking_voucher_checking'.tr();
+  static String get bookingVoucherApply => 'booking_voucher_apply'.tr();
+  static String get noTimeAfterBooking => 'no_time_after_booking'.tr();
+  static String get newSupportTicket => 'new_support_ticket'.tr();
+  static String get issueTypeGeneral => 'issue_type_general'.tr();
+  static String get issueTypeBooking => 'issue_type_booking'.tr();
+  static String get issueTypePayment => 'issue_type_payment'.tr();
+  static String get issueTypeTechnical => 'issue_type_technical'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }
