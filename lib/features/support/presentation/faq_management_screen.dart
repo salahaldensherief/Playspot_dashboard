@@ -6,6 +6,7 @@ import '../../../art_core/app_strings.dart';
 import '../../../art_core/theme/app_colors.dart';
 import '../../../art_core/widgets/app_adaptive_page_header.dart';
 import '../../../art_core/widgets/app_button.dart';
+import '../../../art_core/widgets/app_dialog.dart';
 import '../../../art_core/widgets/section_container.dart';
 import '../../../art_core/widgets/status_badge.dart';
 import '../domain/entities/faq_entity.dart';
@@ -41,31 +42,17 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
     );
   }
 
-  void _confirmDelete(String id) {
-    showDialog(
+  void _confirmDelete(String id) async {
+    final confirmed = await AppDialog.confirm(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppColors.cardBackground,
-          title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),
-          content: Text(AppStrings.deleteFaqConfirm, style: const TextStyle(color: AppColors.textSecondary)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(AppStrings.cancel),
-            ),
-            AppButton(
-              text: AppStrings.delete,
-              variant: AppButtonVariant.danger,
-              onPressed: () {
-                context.read<SupportCubit>().removeFaq(id);
-                Navigator.pop(dialogContext);
-              },
-            ),
-          ],
-        );
-      },
+      title: AppStrings.deleteConfirmation,
+      message: AppStrings.deleteFaqConfirm,
+      confirmText: AppStrings.delete,
+      confirmColor: AppColors.danger,
     );
+    if (confirmed == true && mounted) {
+      context.read<SupportCubit>().removeFaq(id);
+    }
   }
 
   @override
@@ -80,14 +67,14 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
         if (state.actionStatus == SupportStatus.success && state.successMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.successMessage!),
+              content: Text(state.successMessage ?? ''),
               backgroundColor: AppColors.success,
             ),
           );
         } else if (state.actionStatus == SupportStatus.failure && state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.errorMessage!),
+              content: Text(state.errorMessage ?? ''),
               backgroundColor: AppColors.danger,
             ),
           );

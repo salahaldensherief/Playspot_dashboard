@@ -94,11 +94,11 @@ class AppDialog extends StatelessWidget {
                 ),
               ),
             ),
-            if (actions != null && actions!.isNotEmpty) ...[
+            if (actions != null && (actions?.isNotEmpty ?? false)) ...[
               const Divider(height: 1, color: AppColors.divider),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 28.r, vertical: 16.r),
-                child: Row(mainAxisAlignment: MainAxisAlignment.end, children: actions!),
+                child: Row(mainAxisAlignment: MainAxisAlignment.end, children: actions ?? const []),
               ),
             ],
           ],
