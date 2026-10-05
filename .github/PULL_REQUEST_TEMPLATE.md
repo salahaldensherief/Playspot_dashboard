@@ -1,28 +1,41 @@
-## What changed
+## Summary
 
-Describe the behavior/contract changed by this PR.
+Describe what changed and why.
 
-## Why
+## Scope
 
-Explain the problem this solves.
+- [ ] Mobile UI / state
+- [ ] Dashboard UI / state
+- [ ] Domain / repository contract
+- [ ] Supabase schema / RPC / RLS
+- [ ] Payments / pricing
+- [ ] Booking lifecycle
+- [ ] Notifications / realtime
+- [ ] No backend contract changes
 
-## Validation
+## Safety checks
 
-- [ ] `dart format --output=none --set-exit-if-changed lib test`
+- [ ] I reviewed the repository agent rules before changing code.
+- [ ] No service-role key, password, token, or secret was added to source control.
+- [ ] User-facing strings use localization.
+- [ ] Server-authoritative pricing / permissions / availability rules were not duplicated in the client.
+- [ ] New or changed Supabase behavior is represented by a tracked migration.
+- [ ] RLS / RPC grants were reviewed when database access changed.
+- [ ] Realtime subscriptions and controllers are disposed correctly.
+
+## Verification
+
 - [ ] `flutter analyze --no-fatal-infos`
 - [ ] `flutter test`
-- [ ] UI checked in Arabic and English when relevant
-- [ ] No secrets or production credentials added
+- [ ] Relevant success path tested
+- [ ] Relevant failure / empty / unauthorized path tested
+- [ ] Arabic / RTL checked when UI changed
+- [ ] English / LTR checked when UI changed
 
-## Supabase / backend impact
+## Database impact
 
-- [ ] No database change
-- [ ] Includes a reviewed migration
-- [ ] RLS / grants / SECURITY DEFINER reviewed
-- [ ] Migration must deploy before client changes
+Describe migrations, RPC changes, RLS changes, backfills, rollback considerations, or write **None**.
 
-Migration / RPC notes:
+## Cross-repository impact
 
-## Rollout / risk
-
-Call out compatibility requirements, order-of-deployment constraints, or rollback concerns.
+Describe whether the companion Mobile/Dashboard repository requires a matching contract change, or write **None**.
