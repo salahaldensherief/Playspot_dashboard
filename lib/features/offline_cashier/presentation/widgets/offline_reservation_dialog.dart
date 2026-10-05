@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../art_core/widgets/app_button.dart';
+import '../../../../art_core/widgets/app_text_field.dart';
 import '../offline_workspace_cubit.dart';
 import '../../domain/entities/local_cashier_command.dart';
 
@@ -67,21 +68,19 @@ class _OfflineReservationDialogState extends State<OfflineReservationDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('offline_workspace.fixed_only'.tr()),
-              TextField(
+              AppTextField(
                 controller: name,
                 maxLength: 120,
-                decoration: InputDecoration(
-                  labelText: 'offline_workspace.customer'.tr(),
-                ),
+                labelText: 'offline_workspace.customer'.tr(),
               ),
-              TextField(
+              const SizedBox(height: 12),
+              AppTextField(
                 controller: phone,
                 maxLength: 32,
                 keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: 'offline_workspace.phone'.tr(),
-                ),
+                labelText: 'offline_workspace.phone'.tr(),
               ),
+              const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: room,
                 isExpanded: true,

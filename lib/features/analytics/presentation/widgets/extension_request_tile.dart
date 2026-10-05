@@ -6,6 +6,7 @@ import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_text.dart';
+import '../../../../art_core/widgets/app_text_field.dart';
 import '../../../requests/domain/entities/client_request_entity.dart';
 import '../../../requests/presentation/client_requests_cubit.dart';
 import '../dashboard_cubit.dart';
@@ -230,29 +231,10 @@ class _ApproveExtensionDialogState extends State<_ApproveExtensionDialog> {
         children: [
           AppText.body(AppStrings.pricePerHour, fontSize: 13.sp),
           SizedBox(height: 10.h),
-          TextField(
+          AppTextField(
             controller: _costController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 15.sp,
-              fontWeight: FontWeight.bold,
-            ),
-            decoration: InputDecoration(
-              labelText: AppStrings.amount,
-              labelStyle: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
-              filled: true,
-              fillColor: AppColors.scaffoldBackground,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: const BorderSide(color: AppColors.borderDefault),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: const BorderSide(color: AppColors.neonBlue, width: 1.5),
-              ),
-            ),
+            labelText: AppStrings.amount,
           ),
         ],
       ),
@@ -329,13 +311,10 @@ class _RejectExtensionDialogState extends State<_RejectExtensionDialog> {
         children: [
           AppText.body(AppStrings.disputeReasonLabel, fontSize: 13.sp),
           SizedBox(height: 10.h),
-          TextField(
+          AppTextField(
             controller: _reasonController,
             maxLines: 2,
-            decoration: InputDecoration(
-              labelText: AppStrings.disputeReasonLabel,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-            ),
+            labelText: AppStrings.disputeReasonLabel,
           ),
         ],
       ),

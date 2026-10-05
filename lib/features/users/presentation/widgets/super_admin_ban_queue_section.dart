@@ -5,7 +5,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import '../cubit/moderation_cubit.dart';
 import '../cubit/moderation_state.dart';
 import 'moderation_reason_label.dart';
@@ -33,38 +35,28 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
     final controller = TextEditingController();
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        title: Text(
-          title,
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp),
-        ),
-        content: TextField(
+      builder: (_) => AppDialog(
+        title: title,
+        width: 440.w,
+        child: AppTextField(
           controller: controller,
           maxLines: 3,
-          style: TextStyle(color: AppColors.textPrimary),
-          decoration: InputDecoration(
-            hintText: AppStrings.adminNotesHint,
-            hintStyle: TextStyle(color: AppColors.textSecondary),
-            filled: true,
-            fillColor: AppColors.mutedBackground,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-          ),
+          hintText: AppStrings.adminNotesHint,
         ),
         actions: [
-          TextButton(
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.outlined,
             onPressed: () => Navigator.pop(context),
-            child: Text(AppStrings.cancel),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+          SizedBox(width: 12.w),
+          AppButton(
+            text: AppStrings.confirmDecision,
+            variant: AppButtonVariant.danger,
             onPressed: () {
               Navigator.pop(context);
               onSubmit(controller.text.trim());
             },
-            child: Text(AppStrings.confirmDecision),
           ),
         ],
       ),

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
+import '../../../../art_core/widgets/app_text_field.dart';
 import '../../domain/entities/faq_entity.dart';
 
 class FaqDialog extends StatefulWidget {
@@ -166,31 +167,18 @@ class _FaqDialogState extends State<FaqDialog> {
     int maxLines = 1,
     bool isNumber = false,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
-        SizedBox(height: 6.h),
-        TextFormField(
-          controller: controller,
-          maxLines: maxLines,
-          keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
-            filled: true,
-            fillColor: AppColors.scaffoldBackground,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-          ),
-          validator: (value) {
-            if (!isNumber && (value == null || value.trim().isEmpty)) {
-              return 'هذا الحقل مطلوب';
-            }
-            return null;
-          },
-        ),
-      ],
+    return AppTextField(
+      controller: controller,
+      labelText: label,
+      hintText: hint,
+      maxLines: maxLines,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      validator: (value) {
+        if (!isNumber && (value == null || value.trim().isEmpty)) {
+          return AppStrings.fieldRequired;
+        }
+        return null;
+      },
     );
   }
 }

@@ -194,57 +194,53 @@ class _TournamentPrizesDialogState extends State<TournamentPrizesDialog> {
       ],
       child: Form(
         key: _formKey,
-        child: SizedBox(
-          height: 550.h,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      AppStrings.tournamentPrizes,
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    AppButton(
-                      text: AppStrings.addPlacement,
-                      icon: Icons.add_circle_outline,
-                      variant: AppButtonVariant.outlined,
-                      fontSize: 12.sp,
-                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                      onPressed: _addPlacement,
-                    ),
-                  ],
+                Text(
+                  AppStrings.tournamentPrizes,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                SizedBox(height: 16.h),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _prizes.length,
-                  itemBuilder: (context, placementIndex) {
-                    final prize = _prizes[placementIndex];
-                    return TournamentPlacementCard(
-                      key: ValueKey(prize.id),
-                      prize: prize,
-                      placementIndex: placementIndex,
-                      canDeletePlacement: _prizes.length > 1,
-                      onAddReward: () => _addReward(placementIndex),
-                      onRemovePlacement: () => _removePlacement(placementIndex),
-                      onUpdateReward: (rewardIdx, updated) =>
-                          _updateReward(placementIndex, rewardIdx, updated),
-                      onRemoveReward: (rewardIdx) =>
-                          _removeReward(placementIndex, rewardIdx),
-                    );
-                  },
+                AppButton(
+                  text: AppStrings.addPlacement,
+                  icon: Icons.add_circle_outline,
+                  variant: AppButtonVariant.outlined,
+                  fontSize: 12.sp,
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                  onPressed: _addPlacement,
                 ),
               ],
             ),
-          ),
+            SizedBox(height: 16.h),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _prizes.length,
+              itemBuilder: (context, placementIndex) {
+                final prize = _prizes[placementIndex];
+                return TournamentPlacementCard(
+                  key: ValueKey(prize.id),
+                  prize: prize,
+                  placementIndex: placementIndex,
+                  canDeletePlacement: _prizes.length > 1,
+                  onAddReward: () => _addReward(placementIndex),
+                  onRemovePlacement: () => _removePlacement(placementIndex),
+                  onUpdateReward: (rewardIdx, updated) =>
+                      _updateReward(placementIndex, rewardIdx, updated),
+                  onRemoveReward: (rewardIdx) =>
+                      _removeReward(placementIndex, rewardIdx),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

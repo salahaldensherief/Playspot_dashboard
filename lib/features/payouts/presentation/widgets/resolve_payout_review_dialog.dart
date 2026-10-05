@@ -25,9 +25,17 @@ class ResolvePayoutReviewDialog extends StatefulWidget {
 
 class _ResolvePayoutReviewDialogState extends State<ResolvePayoutReviewDialog> {
   String _resolution = 'approve';
-  final _reasonController = TextEditingController(text: 'Verified manually with finance records');
+  late final TextEditingController _reasonController;
   bool _isSubmitting = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _reasonController = TextEditingController(
+      text: AppStrings.verifiedManuallyFinanceRecords,
+    );
+  }
 
   @override
   void dispose() {

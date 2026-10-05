@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
+import '../../../../art_core/widgets/app_text_field.dart';
 import '../../domain/entities/support_ticket_entity.dart';
 
 class TicketDetailsDialog extends StatefulWidget {
@@ -139,19 +140,11 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                 ),
               ),
               SizedBox(height: 16.h),
-              Text(AppStrings.adminNotes, style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
-              SizedBox(height: 6.h),
-              TextField(
+              AppTextField(
                 controller: _notesController,
                 maxLines: 3,
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
-                decoration: InputDecoration(
-                  hintText: AppStrings.adminNotesHint,
-                  hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
-                  filled: true,
-                  fillColor: AppColors.mutedBackground,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-                ),
+                labelText: AppStrings.adminNotes,
+                hintText: AppStrings.adminNotesHint,
               ),
             ],
           ),

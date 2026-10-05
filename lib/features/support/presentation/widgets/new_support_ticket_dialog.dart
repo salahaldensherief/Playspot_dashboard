@@ -1,9 +1,10 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 
 class NewSupportTicketDialog extends StatefulWidget {
   final Future<bool> Function(String issueType, String message) onSubmit;
@@ -44,40 +45,32 @@ class _NewSupportTicketDialogState extends State<NewSupportTicketDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
-    return AlertDialog(
-      backgroundColor: AppColors.cardBackground,
-      title: Text(isArabic ? 'تذكرة دعم جديدة' : 'New support ticket',
-          style: const TextStyle(color: AppColors.textPrimary)),
-      content: SizedBox(
-        width: 420.w,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DropdownButtonFormField<String>(
-              initialValue: _issueType,
-              dropdownColor: AppColors.cardBackground,
-              decoration: InputDecoration(labelText: AppStrings.issueType),
-              items: [
-                DropdownMenuItem(value: 'general', child: Text(isArabic ? 'عام' : 'General')),
-                DropdownMenuItem(value: 'booking', child: Text(isArabic ? 'حجز' : 'Booking')),
-                DropdownMenuItem(value: 'payment', child: Text(isArabic ? 'دفع' : 'Payment')),
-                DropdownMenuItem(value: 'technical', child: Text(isArabic ? 'تقني' : 'Technical')),
-              ],
-              onChanged: _submitting ? null : (value) => setState(() => _issueType = value ?? 'general'),
-            ),
-            SizedBox(height: 16.h),
-            TextField(
-              controller: _messageController,
-              maxLines: 5,
-              maxLength: 2000,
-              decoration: InputDecoration(
-                labelText: AppStrings.message,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
+    return AppDialog(
+      title: AppStrings.newSupportTicket,
+      width: 440.w,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DropdownButtonFormField<String>(
+            value: _issueType,
+            dropdownColor: AppColors.cardBackground,
+            decoration: InputDecoration(labelText: AppStrings.issueType),
+            items: [
+              DropdownMenuItem(value: 'general', child: Text(AppStrings.issueTypeGeneral)),
+              DropdownMenuItem(value: 'booking', child: Text(AppStrings.issueTypeBooking)),
+              DropdownMenuItem(value: 'payment', child: Text(AppStrings.issueTypePayment)),
+              DropdownMenuItem(value: 'technical', child: Text(AppStrings.issueTypeTechnical)),
+            ],
+            onChanged: _submitting ? null : (value) => setState(() => _issueType = value ?? 'general'),
+          ),
+          SizedBox(height: 16.h),
+          AppTextField(
+            controller: _messageController,
+            maxLines: 5,
+            maxLength: 2000,
+            labelText: AppStrings.message,
+          ),
+        ],
       ),
       actions: [
         AppButton(
@@ -85,6 +78,7 @@ class _NewSupportTicketDialogState extends State<NewSupportTicketDialog> {
           variant: AppButtonVariant.outlined,
           onPressed: _submitting ? null : () => Navigator.of(context).pop(),
         ),
+        SizedBox(width: 12.w),
         AppButton(
           text: AppStrings.create,
           isLoading: _submitting,

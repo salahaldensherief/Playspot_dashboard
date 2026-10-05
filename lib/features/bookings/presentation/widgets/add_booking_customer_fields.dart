@@ -1,9 +1,7 @@
-import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
-import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 
 class AddBookingCustomerFields extends StatelessWidget {
   final TextEditingController nameController;
@@ -15,68 +13,32 @@ class AddBookingCustomerFields extends StatelessWidget {
     required this.phoneController,
   });
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    TextInputType? keyboardType,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppText.body(label, fontWeight: FontWeight.bold),
-        SizedBox(height: 8.h),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          style: const TextStyle(color: AppColors.textPrimary),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(color: AppColors.textSecondary),
-            filled: true,
-            fillColor: AppColors.cardBackground,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: const BorderSide(color: AppColors.borderDefault),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: const BorderSide(color: AppColors.borderDefault),
-            ),
-          ),
-          validator: (val) => null,
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    EasyLocalization.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final name = _buildTextField(
+        final name = AppTextField(
           controller: nameController,
           label: AppStrings.customerName,
-          hint: AppStrings.fullName,
+          hintText: AppStrings.fullName,
         );
-        final phone = _buildTextField(
+        final phone = AppTextField(
           controller: phoneController,
           label: AppStrings.phoneNumber,
-          hint: "01xxxxxxxxx",
+          hintText: AppStrings.hintPhoneNumber,
           keyboardType: TextInputType.phone,
         );
         if (constraints.maxWidth <
             480 * MediaQuery.textScalerOf(context).scale(1)) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [name, const SizedBox(height: 16), phone],
+            children: [name, SizedBox(height: 16.h), phone],
           );
         }
         return Row(
           children: [
             Expanded(child: name),
-            const SizedBox(width: 16),
+            SizedBox(width: 16.w),
             Expanded(child: phone),
           ],
         );

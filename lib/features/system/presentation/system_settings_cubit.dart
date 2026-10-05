@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/repositories/lounge_repository.dart';
 import '../domain/entities/app_status_entity.dart';
 import '../domain/entities/announcement_entity.dart';
@@ -102,8 +103,8 @@ class SystemSettingsCubit extends Cubit<SystemSettingsState> {
           actionStatus: SystemSettingsStatus.success,
           appStatus: updatedStatus,
           successMessage: isMaintenanceMode
-              ? 'تم تفعيل وضع الصيانة بنجاح!'
-              : 'تم إلغاء تفعيل وضع الصيانة، النظام يعمل الآن بشكل طبيعي.',
+              ? AppStrings.maintenanceEnabledSuccess
+              : AppStrings.maintenanceDisabledSuccess,
         ));
       },
     );
@@ -122,7 +123,7 @@ class SystemSettingsCubit extends Cubit<SystemSettingsState> {
       (_) => emit(state.copyWith(
         actionStatus: SystemSettingsStatus.success,
         appStatus: updatedStatus,
-        successMessage: 'تم تحديث إعدادات الإصدارات والتحديثات بنجاح.',
+        successMessage: AppStrings.appVersionsUpdatedSuccess,
       )),
     );
   }
@@ -140,7 +141,7 @@ class SystemSettingsCubit extends Cubit<SystemSettingsState> {
       (_) async {
         emit(state.copyWith(
           actionStatus: SystemSettingsStatus.success,
-          successMessage: 'تم نشر الإعلان وإرسال التنبيهات بنجاح.',
+          successMessage: AppStrings.announcementPublishedSuccess,
         ));
         await _refreshAnnouncements();
       },
@@ -160,7 +161,7 @@ class SystemSettingsCubit extends Cubit<SystemSettingsState> {
       (_) async {
         emit(state.copyWith(
           actionStatus: SystemSettingsStatus.success,
-          successMessage: 'تم إنهاء الإعلان بنجاح.',
+          successMessage: AppStrings.announcementDeactivatedSuccess,
         ));
         await _refreshAnnouncements();
       },

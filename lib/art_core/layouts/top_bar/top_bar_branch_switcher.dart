@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_state.dart';
@@ -292,45 +293,13 @@ class _BranchPickerDialogState extends State<_BranchPickerDialog> {
 
               // Search field (if more than 3 branches)
               if (widget.lounges.length > 3) ...[
-                TextField(
+                AppTextField(
                   controller: _searchController,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 13.sp,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: AppStrings.searchBranches,
-                    hintStyle: TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 13.sp,
-                    ),
-                    prefixIcon: Icon(
-                      Icons.search_rounded,
-                      color: AppColors.textSecondary,
-                      size: 20.r,
-                    ),
-                    filled: true,
-                    fillColor: AppColors.mutedBackground,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 12.h,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(
-                        color: AppColors.borderDefault,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(
-                        color: AppColors.borderDefault,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(color: AppColors.neonBlue),
-                    ),
+                  hintText: AppStrings.searchBranches,
+                  prefixIcon: Icons.search_rounded,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 12.h,
                   ),
                 ),
                 SizedBox(height: 16.h),

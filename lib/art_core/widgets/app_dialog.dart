@@ -9,6 +9,8 @@ class AppDialog extends StatelessWidget {
   final Widget child;
   final List<Widget>? actions;
   final double? width;
+  final double? maxWidth;
+  final IconData? icon;
   final bool showCloseIcon;
 
   const AppDialog({
@@ -17,6 +19,8 @@ class AppDialog extends StatelessWidget {
     required this.child,
     this.actions,
     this.width,
+    this.maxWidth,
+    this.icon,
     this.showCloseIcon = true,
   });
 
@@ -28,6 +32,7 @@ class AppDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Container(
         width: width ?? 600.w,
+        constraints: maxWidth != null ? BoxConstraints(maxWidth: maxWidth!) : null,
         padding: EdgeInsets.all(32.r),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -36,6 +41,10 @@ class AppDialog extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                if (icon != null) ...[
+                  Icon(icon, color: AppColors.neonBlue, size: 24.r),
+                  SizedBox(width: 10.w),
+                ],
                 Expanded(
                   child: Text(
                     title,

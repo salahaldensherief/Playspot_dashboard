@@ -4,6 +4,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../cubit/booking_cubit.dart';
@@ -111,38 +112,19 @@ class _AddBookingVoucherSectionState extends State<AddBookingVoucherSection> {
         Row(
           children: [
             Expanded(
-              child: TextFormField(
+              child: AppTextField(
                 controller: _controller,
-                textCapitalization: TextCapitalization.characters,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  hintText: AppStrings.enterVoucherCodeHint,
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
-                  filled: true,
-                  fillColor: AppColors.cardBackground,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                    borderSide: const BorderSide(
-                      color: AppColors.borderDefault,
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                    borderSide: const BorderSide(
-                      color: AppColors.borderDefault,
-                    ),
-                  ),
-                  suffixIcon: _appliedCode != null
-                      ? IconButton(
-                          icon: const Icon(
-                            Icons.clear,
-                            size: 18,
-                            color: AppColors.textMuted,
-                          ),
-                          onPressed: _clearVoucher,
-                        )
-                      : null,
-                ),
+                hintText: AppStrings.enterVoucherCodeHint,
+                suffix: _appliedCode != null
+                    ? IconButton(
+                        icon: const Icon(
+                          Icons.clear,
+                          size: 18,
+                          color: AppColors.textMuted,
+                        ),
+                        onPressed: _clearVoucher,
+                      )
+                    : null,
                 onChanged: (_) {
                   if (_errorMessage != null || _appliedCode != null) {
                     setState(() {
@@ -158,8 +140,8 @@ class _AddBookingVoucherSectionState extends State<AddBookingVoucherSection> {
             SizedBox(width: 8.w),
             AppButton(
               text: _isValidating
-                  ? 'booking_voucher_checking'.tr()
-                  : 'booking_voucher_apply'.tr(),
+                  ? AppStrings.bookingVoucherChecking
+                  : AppStrings.bookingVoucherApply,
               variant: AppButtonVariant.primary,
               isLoading: _isValidating,
               onPressed: _isValidating ? null : _validateVoucher,

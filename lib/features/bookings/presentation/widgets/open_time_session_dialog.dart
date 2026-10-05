@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
@@ -117,25 +118,15 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
                 ],
               ),
               SizedBox(height: 14.h),
-              TextField(
+              AppTextField(
                 controller: _nameController,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  labelText: AppStrings.customerNameOptional,
-                  filled: true,
-                  fillColor: AppColors.mutedBackground,
-                ),
+                label: AppStrings.customerNameOptional,
               ),
               SizedBox(height: 12.h),
-              TextField(
+              AppTextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  labelText: AppStrings.customerPhoneOptional,
-                  filled: true,
-                  fillColor: AppColors.mutedBackground,
-                ),
+                label: AppStrings.customerPhoneOptional,
               ),
               SizedBox(height: 14.h),
               SegmentedButton<String>(

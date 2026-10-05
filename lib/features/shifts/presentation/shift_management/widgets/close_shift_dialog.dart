@@ -1,9 +1,9 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 
 /// Blind Shift Closing Dialog.
@@ -36,76 +36,16 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
 
   @override
   Widget build(BuildContext context) {
-    EasyLocalization.of(context);
-    return AlertDialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      title: Row(
-        children: [
-          Icon(Icons.lock_clock_outlined, color: AppColors.danger, size: 24.r),
-          SizedBox(width: 12.w),
-          Text(
-            AppStrings.closeShift,
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Orbitron',
-              fontFamilyFallback: const ['Tajawal'],
-            ),
-          ),
-        ],
-      ),
-      content: SizedBox(
-        width: 400.w,
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'confirm_cash_instruction'.tr(),
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14.sp,
-                ),
-              ),
-              SizedBox(height: 24.h),
-              AppTextField(
-                controller: _cashController,
-                label: AppStrings.actualCash,
-                hintText: AppStrings.hintAmount,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty)
-                    return AppStrings.fieldRequired;
-                  if (double.tryParse(val.trim()) == null)
-                    return AppStrings.invalidNumber;
-                  return null;
-                },
-              ),
-              SizedBox(height: 16.h),
-              AppTextField(
-                controller: _notesController,
-                label: AppStrings.notes,
-                hintText: AppStrings.descriptionHint,
-                maxLines: 2,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actionsPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+    return AppDialog(
+      title: AppStrings.closeShift,
+      icon: Icons.lock_clock_outlined,
+      maxWidth: 440.w,
       actions: [
         AppButton(
           text: AppStrings.cancel,
           variant: AppButtonVariant.outlined,
           onPressed: () => Navigator.pop(context),
         ),
-        SizedBox(width: 8.w),
         AppButton(
           text: AppStrings.closeShift,
           variant: AppButtonVariant.danger,
@@ -121,6 +61,47 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
           },
         ),
       ],
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppStrings.confirmCashInstruction,
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14.sp,
+              ),
+            ),
+            SizedBox(height: 24.h),
+            AppTextField(
+              controller: _cashController,
+              label: AppStrings.actualCash,
+              hintText: AppStrings.hintAmount,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              validator: (val) {
+                if (val == null || val.trim().isEmpty) {
+                  return AppStrings.fieldRequired;
+                }
+                if (double.tryParse(val.trim()) == null) {
+                  return AppStrings.invalidNumber;
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: 16.h),
+            AppTextField(
+              controller: _notesController,
+              label: AppStrings.notes,
+              hintText: AppStrings.descriptionHint,
+              maxLines: 2,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

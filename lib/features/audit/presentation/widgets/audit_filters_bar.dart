@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
+import '../../../../art_core/widgets/app_text_field.dart';
 
 class AuditFiltersBar extends StatefulWidget {
   final String? selectedEntityType;
@@ -132,28 +133,16 @@ class _AuditFiltersBarState extends State<AuditFiltersBar> {
           // Search Booking ID
           SizedBox(
             width: 180.w,
-            child: TextField(
+            child: AppTextField(
               controller: _bookingIdController,
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp),
-              decoration: InputDecoration(
-                hintText: AppStrings.searchBookingId,
-                prefixIcon: Icon(
-                  Icons.search_rounded,
-                  size: 18.r,
-                  color: AppColors.textSecondary,
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 10.w,
-                  vertical: 8.h,
-                ),
-                filled: true,
-                fillColor: AppColors.mutedBackground,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6.r),
-                  borderSide: const BorderSide(color: AppColors.borderDefault),
-                ),
+              hintText: AppStrings.searchBookingId,
+              fontSize: 12.sp,
+              prefixIcon: Icons.search_rounded,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 10.w,
+                vertical: 8.h,
               ),
-              onSubmitted: (val) {
+              onFieldSubmitted: (val) {
                 widget.onFilterChanged(
                   bookingId: val.trim().isEmpty ? null : val.trim(),
                   entityType: widget.selectedEntityType,
@@ -169,28 +158,16 @@ class _AuditFiltersBarState extends State<AuditFiltersBar> {
           // Search User
           SizedBox(
             width: 160.w,
-            child: TextField(
+            child: AppTextField(
               controller: _userController,
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp),
-              decoration: InputDecoration(
-                hintText: AppStrings.searchUser,
-                prefixIcon: Icon(
-                  Icons.person_search_rounded,
-                  size: 18.r,
-                  color: AppColors.textSecondary,
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 10.w,
-                  vertical: 8.h,
-                ),
-                filled: true,
-                fillColor: AppColors.mutedBackground,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6.r),
-                  borderSide: const BorderSide(color: AppColors.borderDefault),
-                ),
+              hintText: AppStrings.searchUser,
+              fontSize: 12.sp,
+              prefixIcon: Icons.person_search_rounded,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 10.w,
+                vertical: 8.h,
               ),
-              onSubmitted: (val) {
+              onFieldSubmitted: (val) {
                 widget.onFilterChanged(
                   userId: val.trim().isEmpty ? null : val.trim(),
                   entityType: widget.selectedEntityType,

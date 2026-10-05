@@ -1,9 +1,10 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import '../../../domain/entities/shift_entity.dart';
 
 class ShiftSummaryModal extends StatelessWidget {
@@ -18,71 +19,53 @@ class ShiftSummaryModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    EasyLocalization.of(context);
-    return AlertDialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      title: Center(
-        child: Text(
-          AppStrings.zReport,
-          style: TextStyle(
-            color: AppColors.neonBlue,
-            fontSize: 24.sp,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Orbitron',
-            fontFamilyFallback: const ['Tajawal'],
-          ),
-        ),
-      ),
-      content: SizedBox(
-        width: 400.w,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildRow(AppStrings.cashier, shift.cashierName ?? 'N/A'),
-            _buildRow(
-              AppStrings.startTimeLabel,
-              DateFormat('yyyy-MM-dd hh:mm a').format(shift.startTime),
-            ),
-            const Divider(color: AppColors.borderDefault),
-            _buildRow(
-              AppStrings.startingCash,
-              '${shift.startingCash.toStringAsFixed(2)} ${AppStrings.egp}',
-            ),
-            _buildRow(
-              AppStrings.cashRevenue,
-              '${shift.cashRevenue?.toStringAsFixed(2)} ${AppStrings.egp}',
-            ),
-            _buildRow(
-              AppStrings.digitalRevenue,
-              '${shift.digitalRevenue?.toStringAsFixed(2)} ${AppStrings.egp}',
-              isInfo: true,
-            ),
-            const Divider(color: AppColors.borderDefault),
-            _buildRow(
-              AppStrings.expectedCash,
-              '${shift.expectedCash?.toStringAsFixed(2)} ${AppStrings.egp}',
-              isBold: true,
-            ),
-            _buildRow(
-              AppStrings.actualCash,
-              '${shift.actualCash?.toStringAsFixed(2)} ${AppStrings.egp}',
-              isBold: true,
-            ),
-            const Divider(color: AppColors.borderDefault),
-            _buildDiscrepancyRow(shift.discrepancy ?? 0),
-          ],
-        ),
-      ),
-      actionsPadding: EdgeInsets.only(bottom: 24.h),
+    return AppDialog(
+      title: AppStrings.zReport,
+      icon: Icons.receipt_long_outlined,
+      maxWidth: 440.w,
       actions: [
-        Center(
-          child: AppButton(
-            text: AppStrings.logoutAfterClose,
-            onPressed: onFinish,
-          ),
+        AppButton(
+          text: AppStrings.logoutAfterClose,
+          onPressed: onFinish,
         ),
       ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildRow(AppStrings.cashier, shift.cashierName ?? 'N/A'),
+          _buildRow(
+            AppStrings.startTimeLabel,
+            DateFormat('yyyy-MM-dd hh:mm a').format(shift.startTime),
+          ),
+          const Divider(color: AppColors.borderDefault),
+          _buildRow(
+            AppStrings.startingCash,
+            '${shift.startingCash.toStringAsFixed(2)} ${AppStrings.egp}',
+          ),
+          _buildRow(
+            AppStrings.cashRevenue,
+            '${shift.cashRevenue?.toStringAsFixed(2)} ${AppStrings.egp}',
+          ),
+          _buildRow(
+            AppStrings.digitalRevenue,
+            '${shift.digitalRevenue?.toStringAsFixed(2)} ${AppStrings.egp}',
+            isInfo: true,
+          ),
+          const Divider(color: AppColors.borderDefault),
+          _buildRow(
+            AppStrings.expectedCash,
+            '${shift.expectedCash?.toStringAsFixed(2)} ${AppStrings.egp}',
+            isBold: true,
+          ),
+          _buildRow(
+            AppStrings.actualCash,
+            '${shift.actualCash?.toStringAsFixed(2)} ${AppStrings.egp}',
+            isBold: true,
+          ),
+          const Divider(color: AppColors.borderDefault),
+          _buildDiscrepancyRow(shift.discrepancy ?? 0),
+        ],
+      ),
     );
   }
 
@@ -119,8 +102,8 @@ class ShiftSummaryModal extends StatelessWidget {
         ? AppColors.success
         : (val < 0 ? AppColors.danger : AppColors.warning);
     final statusText = val == 0
-        ? 'matched'.tr()
-        : (val < 0 ? 'deficit'.tr() : 'surplus'.tr());
+        ? AppStrings.matched
+        : (val < 0 ? AppStrings.deficit : AppStrings.surplus);
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 12.h),

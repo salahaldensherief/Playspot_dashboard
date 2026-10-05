@@ -192,7 +192,7 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
       id: widget.tournament?.id ?? const Uuid().v4(),
       title: _titleController.text.trim().isNotEmpty
           ? _titleController.text.trim()
-          : 'البطولة',
+          : AppStrings.tournamentTitle,
       treeSize: _treeSize,
       status: widget.tournament?.status ?? TournamentStatus.draft,
       entryFee: double.tryParse(_entryFeeController.text.trim()) ?? 0.0,
