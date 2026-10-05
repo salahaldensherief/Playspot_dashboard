@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
@@ -83,98 +84,75 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
           );
         }
       },
-      child: Dialog(
-        backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Container(
-          width: 500.w,
-          padding: EdgeInsets.all(32.r),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isEdit ? AppStrings.editStaff : AppStrings.addStaff,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Orbitron',
-                    fontFamilyFallback: const ['Tajawal'],
+      child: AppDialog(
+        title: isEdit ? AppStrings.editStaff : AppStrings.addStaff,
+        width: 520.w,
+        actions: [
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.outlined,
+            onPressed: () => Navigator.pop(context),
+          ),
+          SizedBox(width: 16.w),
+          AppButton(
+            text: isEdit ? AppStrings.saveChanges : AppStrings.addStaff,
+            onPressed: _submit,
+          ),
+        ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppTextField(
+                label: AppStrings.staffName,
+                controller: _nameController,
+                validator: AppValidator.validateRequired,
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppTextField(
+                      label: AppStrings.email,
+                      controller: _emailController,
+                      validator: AppValidator.validateEmail,
+                      readOnly: isEdit,
+                    ),
                   ),
-                ),
-                SizedBox(height: 24.h),
-                AppTextField(
-                  label: AppStrings.staffName,
-                  controller: _nameController,
-                  validator: AppValidator.validateRequired,
-                ),
-                SizedBox(height: 16.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextField(
-                        label: AppStrings.email,
-                        controller: _emailController,
-                        validator: AppValidator.validateEmail,
-                        readOnly: isEdit,
-                      ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: AppTextField(
+                      label: AppStrings.staffPhone,
+                      controller: _phoneController,
+                      validator: AppValidator.validateRequired,
                     ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      child: AppTextField(
-                        label: AppStrings.staffPhone,
-                        controller: _phoneController,
-                        validator: AppValidator.validateRequired,
-                      ),
-                    ),
-                  ],
-                ),
-                if (!isEdit) ...[
-                  SizedBox(height: 16.h),
-                  AppTextField(
-                    label: AppStrings.tempPassword,
-                    controller: _passwordController,
-                    validator: (v) =>
-                        AppValidator.validatePassword(v, minLength: 8),
-                    isPassword: true,
                   ),
                 ],
-                SizedBox(height: 24.h),
-                Text(
-                  AppStrings.roleLabel,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                _buildRoleSelection(),
-                SizedBox(height: 32.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    AppButton(
-                      text: AppStrings.cancel,
-                      variant: AppButtonVariant.outlined,
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    SizedBox(width: 16.w),
-                    AppButton(
-                      text: isEdit
-                          ? AppStrings.saveChanges
-                          : AppStrings.addStaff,
-                      onPressed: _submit,
-                    ),
-                  ],
+              ),
+              if (!isEdit) ...[
+                SizedBox(height: 16.h),
+                AppTextField(
+                  label: AppStrings.tempPassword,
+                  controller: _passwordController,
+                  validator: (v) =>
+                      AppValidator.validatePassword(v, minLength: 8),
+                  isPassword: true,
                 ),
               ],
-            ),
+              SizedBox(height: 24.h),
+              Text(
+                AppStrings.roleLabel,
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              _buildRoleSelection(),
+            ],
           ),
         ),
       ),

@@ -97,7 +97,7 @@ class _PaymentReceiptDialogState extends State<PaymentReceiptDialog> {
               Text('${AppStrings.customerName}: ', style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp)),
               Text(p.userName, style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.bold)),
               const Spacer(),
-              if (p.userPhone != null) Text(p.userPhone!, style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp)),
+              if (p.userPhone != null) Text(p.userPhone ?? '', style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp)),
             ],
           ),
           SizedBox(height: 16.h),
@@ -112,9 +112,9 @@ class _PaymentReceiptDialogState extends State<PaymentReceiptDialog> {
               border: Border.all(color: AppColors.borderDefault),
             ),
             clipBehavior: Clip.antiAlias,
-            child: (p.signedReceiptUrl != null && p.signedReceiptUrl!.isNotEmpty)
+            child: (p.signedReceiptUrl != null && (p.signedReceiptUrl?.isNotEmpty ?? false))
                 ? AppCachedImage(
-                    imageUrl: p.signedReceiptUrl!,
+                    imageUrl: p.signedReceiptUrl ?? '',
                     fit: BoxFit.contain,
                   )
                 : Center(
@@ -124,7 +124,7 @@ class _PaymentReceiptDialogState extends State<PaymentReceiptDialog> {
                         Icon(Icons.receipt_long, size: 48.r, color: AppColors.textSecondary),
                         SizedBox(height: 8.h),
                         Text(
-                          AppStrings.noPromotions,
+                          AppStrings.noReceiptImage,
                           style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
                         ),
                       ],

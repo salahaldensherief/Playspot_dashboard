@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -41,6 +42,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _scrollController = ScrollController();
 
   String? _appliedVoucherCode;
   double _voucherDiscount = 0.0;
@@ -64,6 +66,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -266,153 +269,159 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
+    final screenSize = MediaQuery.sizeOf(context);
+    final dialogWidth = math.min(560.0, screenSize.width - 32);
+
     return Dialog(
       backgroundColor: AppColors.scaffoldBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: ConstrainedBox(
+      child: Container(
+        width: dialogWidth,
         constraints: BoxConstraints(
-          maxWidth: 560,
-          maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+          maxHeight: screenSize.height * 0.88,
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: AbsorbPointer(
-            absorbing: _isSubmitting,
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(20.r, 20.r, 20.r, 16.r),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: AppText.heading(
-                          widget.quickMode
-                              ? AppStrings.walkInBooking
-                              : AppStrings.detailedBooking,
-                          fontSize: 24,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(
-                          Icons.close,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
+                  Expanded(
+                    child: AppText.heading(
+                      widget.quickMode
+                          ? AppStrings.walkInBooking
+                          : AppStrings.detailedBooking,
+                      fontSize: 22.sp,
+                    ),
                   ),
-                  Divider(height: 32.h, color: AppColors.borderDefault),
-
-                  // Customer Info
-                  AddBookingCustomerFields(
-                    nameController: _nameController,
-                    phoneController: _phoneController,
-                  ),
-                  SizedBox(height: 16.h),
-
-                  // Room Selector Widget
-                  if (!widget.quickMode)
-                    AddBookingRoomSelector(
-                      initialRoom: widget.initialRoom,
-                      selectedRoom: _selectedRoom,
-                      onRoomSelected: (val) =>
-                          setState(() => _selectedRoom = val),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppColors.textSecondary,
                     ),
-                  if (!widget.quickMode) SizedBox(height: 16.h),
-
-                  // Play Mode Selector Widget
-                  AddBookingPlayModeSelector(
-                    room: _selectedRoom,
-                    selectedMode: _playMode,
-                    onModeChanged: (mode) => setState(() => _playMode = mode),
-                  ),
-                  SizedBox(height: 24.h),
-
-                  // Date, Time & Duration Picker
-                  AddBookingSchedulePicker(
-                    selectedDate: _selectedDate,
-                    startTime: _startTime,
-                    onDateChanged: (date) =>
-                        setState(() => _selectedDate = date),
-                    onStartTimeChanged: (time) =>
-                        setState(() => _startTime = time),
-                    quickMode: widget.quickMode,
-                  ),
-                  SizedBox(height: 20.h),
-
-                  // Extras Section
-                  if (!widget.quickMode)
-                    AddBookingExtrasSection(
-                      loungeId: widget.loungeId,
-                      selectedExtras: _selectedExtras,
-                      onExtrasChanged: _onExtrasChanged,
-                    ),
-                  if (!widget.quickMode) SizedBox(height: 20.h),
-
-                  // Immediate Session Start Toggle
-                  if (!widget.quickMode)
-                    AddBookingImmediateToggle(
-                      isImmediate: _startSessionImmediately,
-                      onChanged: (val) =>
-                          setState(() => _startSessionImmediately = val),
-                    ),
-                  if (!widget.quickMode) SizedBox(height: 20.h),
-
-                  // Voucher Section
-                  if (!widget.quickMode)
-                    AddBookingVoucherSection(
-                      onVoucherChanged: _onVoucherChanged,
-                    ),
-                  if (!widget.quickMode) SizedBox(height: 20.h),
-
-                  // Price Calculation Summary Card
-                  if (_selectedRoom != null)
-                    BlocBuilder<BookingCubit, BookingState>(
-                      buildWhen: (p, c) =>
-                          p.selectedDurationMinutes !=
-                          c.selectedDurationMinutes,
-                      builder: (context, state) {
-                        return AddBookingSummaryCard(
-                          room: _selectedRoom,
-                          durationMinutes: state.selectedDurationMinutes,
-                          selectedExtras: _selectedExtras,
-                          voucherDiscount: _voucherDiscount,
-                          playMode: _playMode,
-                        );
-                      },
-                    ),
-                  SizedBox(height: 24.h),
-
-                  // Action Buttons
-                  Wrap(
-                    alignment: WrapAlignment.end,
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      AppButton(
-                        text: AppStrings.cancel,
-                        variant: AppButtonVariant.text,
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      AppButton(
-                        text: widget.quickMode
-                            ? AppStrings.walkInBooking
-                            : AppStrings.newBooking,
-                        variant: AppButtonVariant.primary,
-                        isLoading: _isSubmitting,
-                        onPressed: _selectedRoom == null || _isSubmitting
-                            ? null
-                            : _submit,
-                      ),
-                    ],
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
                 ],
               ),
             ),
-          ),
+            const Divider(height: 1, color: AppColors.borderDefault),
+            Flexible(
+              child: Scrollbar(
+                thumbVisibility: true,
+                controller: _scrollController,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  padding: EdgeInsets.all(20.r),
+                  child: AbsorbPointer(
+                    absorbing: _isSubmitting,
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AddBookingCustomerFields(
+                            nameController: _nameController,
+                            phoneController: _phoneController,
+                          ),
+                          SizedBox(height: 16.h),
+                          if (!widget.quickMode)
+                            AddBookingRoomSelector(
+                              initialRoom: widget.initialRoom,
+                              selectedRoom: _selectedRoom,
+                              onRoomSelected: (val) =>
+                                  setState(() => _selectedRoom = val),
+                            ),
+                          if (!widget.quickMode) SizedBox(height: 16.h),
+                          AddBookingPlayModeSelector(
+                            room: _selectedRoom,
+                            selectedMode: _playMode,
+                            onModeChanged: (mode) =>
+                                setState(() => _playMode = mode),
+                          ),
+                          SizedBox(height: 24.h),
+                          AddBookingSchedulePicker(
+                            selectedDate: _selectedDate,
+                            startTime: _startTime,
+                            onDateChanged: (date) =>
+                                setState(() => _selectedDate = date),
+                            onStartTimeChanged: (time) =>
+                                setState(() => _startTime = time),
+                            quickMode: widget.quickMode,
+                          ),
+                          SizedBox(height: 20.h),
+                          if (!widget.quickMode)
+                            AddBookingExtrasSection(
+                              loungeId: widget.loungeId,
+                              selectedExtras: _selectedExtras,
+                              onExtrasChanged: _onExtrasChanged,
+                            ),
+                          if (!widget.quickMode) SizedBox(height: 20.h),
+                          if (!widget.quickMode)
+                            AddBookingImmediateToggle(
+                              isImmediate: _startSessionImmediately,
+                              onChanged: (val) =>
+                                  setState(() => _startSessionImmediately = val),
+                            ),
+                          if (!widget.quickMode) SizedBox(height: 20.h),
+                          if (!widget.quickMode)
+                            AddBookingVoucherSection(
+                              onVoucherChanged: _onVoucherChanged,
+                            ),
+                          if (!widget.quickMode) SizedBox(height: 20.h),
+                          if (_selectedRoom != null)
+                            BlocBuilder<BookingCubit, BookingState>(
+                              buildWhen: (p, c) =>
+                                  p.selectedDurationMinutes !=
+                                  c.selectedDurationMinutes,
+                              builder: (context, state) {
+                                return AddBookingSummaryCard(
+                                  room: _selectedRoom,
+                                  durationMinutes: state.selectedDurationMinutes,
+                                  selectedExtras: _selectedExtras,
+                                  voucherDiscount: _voucherDiscount,
+                                  playMode: _playMode,
+                                );
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const Divider(height: 1, color: AppColors.borderDefault),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.r, vertical: 16.r),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  AppButton(
+                    text: AppStrings.cancel,
+                    variant: AppButtonVariant.text,
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  SizedBox(width: 12.w),
+                  AppButton(
+                    text: widget.quickMode
+                        ? AppStrings.walkInBooking
+                        : AppStrings.newBooking,
+                    variant: AppButtonVariant.primary,
+                    isLoading: _isSubmitting,
+                    onPressed: _selectedRoom == null || _isSubmitting
+                        ? null
+                        : _submit,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

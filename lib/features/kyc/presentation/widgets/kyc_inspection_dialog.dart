@@ -12,7 +12,7 @@ import '../cubit/kyc_state.dart';
 import 'kyc_snapshot_details.dart';
 import 'kyc_rejection_dialog.dart';
 
-class KycInspectionDialog extends StatelessWidget {
+class KycInspectionDialog extends StatefulWidget {
   final KycRequest request;
   final KycCubit cubit;
   const KycInspectionDialog({
@@ -20,6 +20,19 @@ class KycInspectionDialog extends StatelessWidget {
     required this.request,
     required this.cubit,
   });
+
+  @override
+  State<KycInspectionDialog> createState() => _KycInspectionDialogState();
+}
+
+class _KycInspectionDialogState extends State<KycInspectionDialog> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,30 +64,35 @@ class KycInspectionDialog extends StatelessWidget {
               ),
               const Divider(),
               Expanded(
-                child: SingleChildScrollView(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final details = KycSnapshotDetails(request: request);
-                      final documents = _documents(context);
-                      if (constraints.maxWidth < 700) {
-                        return Column(
+                child: Scrollbar(
+                  thumbVisibility: true,
+                  controller: _scrollController,
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final details = KycSnapshotDetails(request: widget.request);
+                        final documents = _documents(context);
+                        if (constraints.maxWidth < 700) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              details,
+                              const SizedBox(height: 24),
+                              documents,
+                            ],
+                          );
+                        }
+                        return Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            details,
-                            const SizedBox(height: 24),
-                            documents,
+                            Expanded(child: details),
+                            const SizedBox(width: 24),
+                            Expanded(child: documents),
                           ],
                         );
-                      }
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(child: details),
-                          const SizedBox(width: 24),
-                          Expanded(child: documents),
-                        ],
-                      );
-                    },
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -87,24 +105,27 @@ class KycInspectionDialog extends StatelessWidget {
     );
   }
 
-  Widget _documents(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      AppText.subHeading(AppStrings.idCardImage, fontSize: 16),
-      _document(context, request.idDocumentUrl),
-      if (request.businessDocumentUrl?.isNotEmpty == true) ...[
-        const SizedBox(height: 20),
-        AppText.subHeading(AppStrings.businessDocImage, fontSize: 16),
-        _document(context, request.businessDocumentUrl!),
+  Widget _documents(BuildContext context) {
+    final businessDoc = widget.request.businessDocumentUrl;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppText.subHeading(AppStrings.idCardImage, fontSize: 16),
+        _document(context, widget.request.idDocumentUrl),
+        if (businessDoc != null && businessDoc.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          AppText.subHeading(AppStrings.businessDocImage, fontSize: 16),
+          _document(context, businessDoc),
+        ],
       ],
-    ],
-  );
+    );
+  }
 
   Widget _document(BuildContext context, String url) =>
       KycDocumentPreview(url: url);
 
   Widget _actions(BuildContext context) => BlocBuilder<KycCubit, KycState>(
-    bloc: cubit,
+    bloc: widget.cubit,
     buildWhen: (previous, current) =>
         previous.status != current.status ||
         previous.errorMessage != current.errorMessage,
@@ -159,9 +180,9 @@ class KycInspectionDialog extends StatelessWidget {
     bool approve, [
     String? notes,
   ]) async {
-    final accepted = await cubit.reviewKyc(
-      requestId: request.submissionId,
-      revision: request.revision,
+    final accepted = await widget.cubit.reviewKyc(
+      requestId: widget.request.submissionId,
+      revision: widget.request.revision,
       approve: approve,
       notes: notes,
     );

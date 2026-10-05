@@ -1951,5 +1951,26 @@
     "kind_close": "End session",
     "kind_addItems": "Product sale",
     "kind_collectCash": "Cash collection"
-  }
+  },
+  "new_support_ticket": "New Support Ticket",
+  "issue_category_general": "General",
+  "issue_category_booking": "Booking",
+  "issue_category_payment": "Payment",
+  "issue_category_technical": "Technical",
+  "support_contact_settings_saved": "Contact and payment settings saved successfully",
+  "support_policy_saved": "Policy saved and published successfully",
+  "faq_saved_success": "FAQ saved successfully",
+  "faq_deleted_success": "FAQ deleted successfully",
+  "ticket_submitted_success": "Support ticket submitted successfully! Technical support will review it.",
+  "national_identity_details": "National Identity Details",
+  "national_id_number": "National ID Number",
+  "id_front": "ID Front",
+  "id_back": "ID Back",
+  "member_since": "Member since",
+  "tournament_title_default": "Tournament",
+  "championship_trophy": "Championship Trophy",
+  "cash_prize": "Cash Prize",
+  "second_place_prize": "2nd Place Prize",
+  "bonus_points": "Bonus Points",
+  "new_reward": "New Reward"
 }

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,6 +33,7 @@ class ManualPaymentVerificationDialog extends StatefulWidget {
 
 class _ManualPaymentVerificationDialogState
     extends State<ManualPaymentVerificationDialog> {
+  final _scrollController = ScrollController();
   String? _signedReceiptUrl;
   bool _isLoadingReceipt = true;
   String? _selectedRejectionReason;
@@ -50,6 +52,12 @@ class _ManualPaymentVerificationDialogState
   void initState() {
     super.initState();
     _resolveReceiptUrl();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _resolveReceiptUrl() async {
@@ -222,23 +230,25 @@ class _ManualPaymentVerificationDialogState
     final b = widget.booking;
     final formattedDate = DateFormat('yyyy-MM-dd').format(b.date);
     final formattedTime = '${b.startTime} - ${b.endTime}';
+    final screenSize = MediaQuery.sizeOf(context);
+    final dialogWidth = math.min(800.0, screenSize.width - 32);
 
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       insetPadding: EdgeInsets.all(12.r),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Container(
-        width: 800.w.clamp(0, 800),
+        width: dialogWidth,
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+          maxHeight: screenSize.height * 0.88,
         ),
-        padding: EdgeInsets.all(24.r),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(24.r, 20.r, 24.r, 16.r),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
@@ -247,7 +257,7 @@ class _ManualPaymentVerificationDialogState
                         Icon(
                           Icons.verified_user_rounded,
                           color: AppColors.neonBlue,
-                          size: 28.r,
+                          size: 26.r,
                         ),
                         SizedBox(width: 12.w),
                         Expanded(
@@ -264,40 +274,55 @@ class _ManualPaymentVerificationDialogState
                       Icons.close,
                       color: AppColors.textSecondary,
                     ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
-              Divider(color: AppColors.borderDefault, height: 24.h),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final details = _buildPaymentDetails(
-                    b,
-                    formattedDate,
-                    formattedTime,
-                  );
-                  final receipt = _buildReceiptPreview();
-                  if (constraints.maxWidth < 680) {
-                    return Column(
-                      children: [
-                        details,
-                        SizedBox(height: 24.h),
-                        receipt,
-                      ],
-                    );
-                  }
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: details),
-                      SizedBox(width: 24.w),
-                      Expanded(child: receipt),
-                    ],
-                  );
-                },
+            ),
+            const Divider(color: AppColors.borderDefault, height: 1),
+            Flexible(
+              child: Scrollbar(
+                thumbVisibility: true,
+                controller: _scrollController,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  padding: EdgeInsets.all(24.r),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final details = _buildPaymentDetails(
+                        b,
+                        formattedDate,
+                        formattedTime,
+                      );
+                      final receipt = _buildReceiptPreview();
+                      if (constraints.maxWidth < 680) {
+                        return Column(
+                          children: [
+                            details,
+                            SizedBox(height: 24.h),
+                            receipt,
+                          ],
+                        );
+                      }
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: details),
+                          SizedBox(width: 24.w),
+                          Expanded(child: receipt),
+                        ],
+                      );
+                    },
+                  ),
+                ),
               ),
-              SizedBox(height: 24.h),
-              Wrap(
+            ),
+            const Divider(color: AppColors.borderDefault, height: 1),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.r, vertical: 16.r),
+              child: Wrap(
                 alignment: WrapAlignment.end,
                 spacing: 12.w,
                 runSpacing: 8.h,
@@ -337,8 +362,8 @@ class _ManualPaymentVerificationDialogState
                   ],
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

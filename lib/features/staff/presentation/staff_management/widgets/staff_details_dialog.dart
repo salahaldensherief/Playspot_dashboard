@@ -10,6 +10,7 @@ import 'package:play_spot_dashboard/features/staff/domain/entities/staff_entity.
 
 import '../../../../../art_core/widgets/app_avatar.dart';
 import '../../../../../art_core/widgets/app_cached_image.dart';
+import '../../../../../art_core/widgets/app_dialog.dart';
 
 class StaffDetailsDialog extends StatelessWidget {
   final StaffEntity staff;
@@ -19,106 +20,10 @@ class StaffDetailsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    return AlertDialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      title: Row(
-        children: [
-          Builder(
-            builder: (context) {
-              return AppAvatar(
-                radius: 20.r,
-                imageUrl: staff.avatarUrl,
-                backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
-                fallback: Icon(
-                  Icons.person,
-                  color: AppColors.neonBlue,
-                  size: 20.r,
-                ),
-              );
-            },
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: AppText.subHeading(staff.name, fontSize: 18.sp, maxLines: 1),
-          ),
-          _buildRoleBadge(staff.role),
-        ],
-      ),
-      content: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 600.r),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionTitle(
-                Icons.contact_mail_outlined,
-                AppStrings.contactLabel,
-              ),
-              SizedBox(height: 12.h),
-              _buildInfoRow(
-                Icons.email_outlined,
-                AppStrings.email,
-                staff.email,
-              ),
-              _buildInfoRow(
-                Icons.phone_android_outlined,
-                AppStrings.staffPhone,
-                staff.phone ?? 'N/A',
-              ),
-
-              const Divider(color: AppColors.borderDefault),
-              SizedBox(height: 8.h),
-
-              _buildSectionTitle(
-                Icons.badge_outlined,
-                "National Identity Details",
-              ),
-              SizedBox(height: 12.h),
-              _buildInfoRow(
-                Icons.numbers_outlined,
-                "National ID Number",
-                staff.nationalIdNumber ?? 'N/A',
-              ),
-
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildIdCardPreview(
-                      context,
-                      "ID Front",
-                      staff.idFrontUrl,
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: _buildIdCardPreview(
-                      context,
-                      "ID Back",
-                      staff.idBackUrl,
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 24.h),
-              const Divider(color: AppColors.borderDefault),
-              SizedBox(height: 8.h),
-
-              _buildSectionTitle(
-                Icons.history_outlined,
-                AppStrings.shiftHistory,
-              ),
-              SizedBox(height: 8.h),
-              AppText.body(
-                "Member since ${DateFormat('MMM yyyy').format(staff.createdAt)}",
-                color: AppColors.textSecondary,
-              ),
-            ],
-          ),
-        ),
-      ),
+    return AppDialog(
+      title: staff.name,
+      icon: Icons.badge_outlined,
+      width: 600.w,
       actions: [
         AppButton(
           text: AppStrings.close,
@@ -126,6 +31,104 @@ class StaffDetailsDialog extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              AppAvatar(
+                radius: 24.r,
+                imageUrl: staff.avatarUrl,
+                backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
+                fallback: Icon(
+                  Icons.person,
+                  color: AppColors.neonBlue,
+                  size: 24.r,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppText.subHeading(staff.name, fontSize: 16.sp, maxLines: 1),
+                    SizedBox(height: 4.h),
+                    _buildRoleBadge(staff.role),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          const Divider(color: AppColors.borderDefault),
+          SizedBox(height: 12.h),
+
+          _buildSectionTitle(
+            Icons.contact_mail_outlined,
+            AppStrings.contactLabel,
+          ),
+          SizedBox(height: 12.h),
+          _buildInfoRow(
+            Icons.email_outlined,
+            AppStrings.email,
+            staff.email,
+          ),
+          _buildInfoRow(
+            Icons.phone_android_outlined,
+            AppStrings.staffPhone,
+            staff.phone ?? 'N/A',
+          ),
+
+          const Divider(color: AppColors.borderDefault),
+          SizedBox(height: 8.h),
+
+          _buildSectionTitle(
+            Icons.badge_outlined,
+            AppStrings.nationalIdentityDetails,
+          ),
+          SizedBox(height: 12.h),
+          _buildInfoRow(
+            Icons.numbers_outlined,
+            AppStrings.nationalIdNumber,
+            staff.nationalIdNumber ?? 'N/A',
+          ),
+
+          SizedBox(height: 16.h),
+          Row(
+            children: [
+              Expanded(
+                child: _buildIdCardPreview(
+                  context,
+                  AppStrings.idFront,
+                  staff.idFrontUrl,
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: _buildIdCardPreview(
+                  context,
+                  AppStrings.idBack,
+                  staff.idBackUrl,
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 24.h),
+          const Divider(color: AppColors.borderDefault),
+          SizedBox(height: 8.h),
+
+          _buildSectionTitle(
+            Icons.history_outlined,
+            AppStrings.shiftHistory,
+          ),
+          SizedBox(height: 8.h),
+          AppText.body(
+            '${AppStrings.memberSince} ${DateFormat('MMM yyyy').format(staff.createdAt)}',
+            color: AppColors.textSecondary,
+          ),
+        ],
+      ),
     );
   }
 

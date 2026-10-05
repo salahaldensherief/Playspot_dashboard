@@ -2,8 +2,8 @@ import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
-import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
@@ -54,83 +54,72 @@ class _NotificationDialogState extends State<NotificationDialog> {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    return Dialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Container(
-        width: 600.w,
-        padding: EdgeInsets.all(32.r),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                AppStrings.newNotification,
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 24.sp, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 24.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppTextField(
-                      label: AppStrings.promoTitleAr,
-                      controller: _titleArController,
-                      validator: AppValidator.validateRequired,
-                    ),
+    return AppDialog(
+      title: AppStrings.newNotification,
+      width: 580.w,
+      actions: [
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.outlined,
+          onPressed: () => Navigator.pop(context),
+        ),
+        SizedBox(width: 16.w),
+        AppButton(
+          text: AppStrings.newNotification,
+          onPressed: _submit,
+          icon: Icons.send,
+        ),
+      ],
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.promoTitleAr,
+                    controller: _titleArController,
+                    validator: AppValidator.validateRequired,
                   ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: AppTextField(
-                      label: AppStrings.promoTitleEn,
-                      controller: _titleEnController,
-                      validator: AppValidator.validateRequired,
-                    ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.promoTitleEn,
+                    controller: _titleEnController,
+                    validator: AppValidator.validateRequired,
                   ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-              AppTextField(
-                label: AppStrings.descriptionArLabel,
-                controller: _bodyArController,
-                maxLines: 3,
-                validator: AppValidator.validateRequired,
-              ),
-              SizedBox(height: 16.h),
-              AppTextField(
-                label: AppStrings.descriptionEnLabel,
-                controller: _bodyEnController,
-                maxLines: 3,
-                validator: AppValidator.validateRequired,
-              ),
-              SizedBox(height: 16.h),
-              CustomDropdown<NotificationType>(
-                label: AppStrings.rewardType,
-                value: _selectedType,
-                items: NotificationType.values,
-                itemLabel: (t) => t.name.toUpperCase(),
-                onChanged: (v) => setState(() => _selectedType = v!),
-              ),
-              SizedBox(height: 32.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  AppButton(
-                    text: AppStrings.cancel,
-                    variant: AppButtonVariant.outlined,
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  SizedBox(width: 16.w),
-                  AppButton(
-                    text: AppStrings.newNotification,
-                    onPressed: _submit,
-                    icon: Icons.send,
-                  ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            AppTextField(
+              label: AppStrings.descriptionArLabel,
+              controller: _bodyArController,
+              maxLines: 3,
+              validator: AppValidator.validateRequired,
+            ),
+            SizedBox(height: 16.h),
+            AppTextField(
+              label: AppStrings.descriptionEnLabel,
+              controller: _bodyEnController,
+              maxLines: 3,
+              validator: AppValidator.validateRequired,
+            ),
+            SizedBox(height: 16.h),
+            CustomDropdown<NotificationType>(
+              label: AppStrings.rewardType,
+              value: _selectedType,
+              items: NotificationType.values,
+              itemLabel: (t) => t.name.toUpperCase(),
+              onChanged: (v) {
+                if (v != null) setState(() => _selectedType = v);
+              },
+            ),
+          ],
         ),
       ),
     );

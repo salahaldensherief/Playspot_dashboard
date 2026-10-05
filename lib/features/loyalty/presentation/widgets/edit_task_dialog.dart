@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
+import '../../../../art_core/widgets/app_dialog.dart';
 import '../../../../art_core/widgets/app_text.dart';
 import '../../../../art_core/widgets/app_text_field.dart';
 import '../../domain/entities/loyalty_task_entity.dart';
@@ -75,100 +76,77 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    return Dialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Container(
-        width: 500.w,
-        padding: EdgeInsets.all(24.r),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  AppText.subHeading(AppStrings.editTask, fontSize: 20.sp),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const Divider(color: AppColors.borderDefault, height: 24),
-              SizedBox(height: 12.h),
+    return AppDialog(
+      title: AppStrings.editTask,
+      icon: Icons.task_alt_rounded,
+      width: 500.w,
+      actions: [
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.outlined,
+          onPressed: () => Navigator.pop(context),
+        ),
+        SizedBox(width: 12.w),
+        AppButton(
+          text: AppStrings.saveChanges,
+          onPressed: _submit,
+        ),
+      ],
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title AR & EN
+            AppTextField(
+              controller: _titleArController,
+              label: AppStrings.taskNameAr,
+              validator: (val) => val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
+            ),
+            SizedBox(height: 12.h),
+            AppTextField(
+              controller: _titleEnController,
+              label: AppStrings.taskNameEn,
+              validator: (val) => val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
+            ),
+            SizedBox(height: 12.h),
 
-              // Title AR & EN
-              AppTextField(
-                controller: _titleArController,
-                label: AppStrings.taskNameAr,
-                validator: (val) => val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
-              ),
-              SizedBox(height: 12.h),
-              AppTextField(
-                controller: _titleEnController,
-                label: AppStrings.taskNameEn,
-                validator: (val) => val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
-              ),
-              SizedBox(height: 12.h),
+            // Description AR & EN
+            AppTextField(
+              controller: _descriptionArController,
+              label: AppStrings.taskDescAr,
+              maxLines: 2,
+            ),
+            SizedBox(height: 12.h),
+            AppTextField(
+              controller: _descriptionEnController,
+              label: AppStrings.taskDescEn,
+              maxLines: 2,
+            ),
+            SizedBox(height: 12.h),
 
-              // Description AR & EN
-              AppTextField(
-                controller: _descriptionArController,
-                label: AppStrings.taskDescAr,
-                maxLines: 2,
-              ),
-              SizedBox(height: 12.h),
-              AppTextField(
-                controller: _descriptionEnController,
-                label: AppStrings.taskDescEn,
-                maxLines: 2,
-              ),
-              SizedBox(height: 12.h),
+            // Points
+            AppTextField(
+              controller: _pointsController,
+              label: AppStrings.rewardPoints,
+              keyboardType: TextInputType.number,
+              validator: (val) {
+                if (val == null || val.trim().isEmpty) return AppStrings.fieldRequired;
+                if (int.tryParse(val) == null) return AppStrings.invalidNumber;
+                return null;
+              },
+            ),
+            SizedBox(height: 16.h),
 
-              // Points
-              AppTextField(
-                controller: _pointsController,
-                label: AppStrings.rewardPoints,
-                keyboardType: TextInputType.number,
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty) return AppStrings.fieldRequired;
-                  if (int.tryParse(val) == null) return AppStrings.invalidNumber;
-                  return null;
-                },
-              ),
-              SizedBox(height: 16.h),
-
-              // Active status toggle
-              SwitchListTile(
-                value: _isActive,
-                activeThumbColor: AppColors.neonBlue,
-                title: AppText.body(AppStrings.taskStatus),
-                subtitle: AppText.body(_isActive ? AppStrings.active : AppStrings.inactive, fontSize: 12.sp, color: AppColors.textSecondary),
-                onChanged: (val) => setState(() => _isActive = val),
-              ),
-              SizedBox(height: 24.h),
-
-              // Actions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  AppButton(
-                    text: AppStrings.cancel,
-                    variant: AppButtonVariant.outlined,
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  SizedBox(width: 12.w),
-                  AppButton(
-                    text: AppStrings.saveChanges,
-                    onPressed: _submit,
-                  ),
-                ],
-              ),
-            ],
-          ),
+            // Active status toggle
+            SwitchListTile(
+              value: _isActive,
+              activeThumbColor: AppColors.neonBlue,
+              title: AppText.body(AppStrings.taskStatus),
+              subtitle: AppText.body(_isActive ? AppStrings.active : AppStrings.inactive, fontSize: 12.sp, color: AppColors.textSecondary),
+              onChanged: (val) => setState(() => _isActive = val),
+            ),
+          ],
         ),
       ),
     );

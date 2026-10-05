@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 
 class StopConfirmationDialog extends StatefulWidget {
@@ -40,70 +41,10 @@ class _StopConfirmationDialogState extends State<StopConfirmationDialog> {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    return AlertDialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-        side: const BorderSide(color: AppColors.danger, width: 2),
-      ),
-      title: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(8.r),
-            decoration: BoxDecoration(
-              color: AppColors.danger.withAlpha(30),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.warning_amber_rounded,
-              color: AppColors.danger,
-              size: 28.r,
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Text(
-              AppStrings.confirmMaintenanceTitle,
-              style: TextStyle(
-                color: AppColors.danger,
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-      content: SizedBox(
-        width: 480.w,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              AppStrings.confirmMaintenanceWarning,
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 14.sp,
-                height: 1.5,
-              ),
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              AppStrings.confirmMaintenanceHint,
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13.sp,
-              ),
-            ),
-            SizedBox(height: 12.h),
-            AppTextField(
-              controller: _controller,
-              hintText: AppStrings.confirmStopHintInput,
-              onChanged: _onTextChanged,
-            ),
-          ],
-        ),
-      ),
+    return AppDialog(
+      title: AppStrings.confirmMaintenanceTitle,
+      icon: Icons.warning_amber_rounded,
+      width: 500.w,
       actions: [
         AppButton(
           text: AppStrings.cancel,
@@ -118,6 +59,33 @@ class _StopConfirmationDialogState extends State<StopConfirmationDialog> {
           onPressed: _canConfirm ? () => Navigator.pop(context, true) : null,
         ),
       ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppStrings.confirmMaintenanceWarning,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 14.sp,
+              height: 1.5,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            AppStrings.confirmMaintenanceHint,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13.sp,
+            ),
+          ),
+          SizedBox(height: 12.h),
+          AppTextField(
+            controller: _controller,
+            hintText: AppStrings.confirmStopHintInput,
+            onChanged: _onTextChanged,
+          ),
+        ],
+      ),
     );
   }
 }

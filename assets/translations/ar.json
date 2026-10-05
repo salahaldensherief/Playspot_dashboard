@@ -1951,5 +1951,26 @@
     "kind_close": "إنهاء جلسة",
     "kind_addItems": "بيع منتجات",
     "kind_collectCash": "تحصيل نقدي"
-  }
+  },
+  "new_support_ticket": "تذكرة دعم جديدة",
+  "issue_category_general": "عام",
+  "issue_category_booking": "حجز",
+  "issue_category_payment": "دفع",
+  "issue_category_technical": "تقني",
+  "support_contact_settings_saved": "تم حفظ إعدادات التواصل والدفع بنجاح",
+  "support_policy_saved": "تم حفظ ونشر السياسة بنجاح",
+  "faq_saved_success": "تم حفظ السؤال الشائع بنجاح",
+  "faq_deleted_success": "تم حذف السؤال الشائع",
+  "ticket_submitted_success": "تم تقديم تذكرة الدعم بنجاح! سيقوم الدعم الفني بمراجعتها والتواصل معك.",
+  "national_identity_details": "تفاصيل بطاقة الهوية",
+  "national_id_number": "الرقم القومي",
+  "id_front": "صورة الهوية (الوجه الأمامي)",
+  "id_back": "صورة الهوية (الوجه الخلفي)",
+  "member_since": "عضو منذ",
+  "tournament_title_default": "البطولة",
+  "championship_trophy": "كأس البطولة",
+  "cash_prize": "جائزة مالية",
+  "second_place_prize": "جائزة المركز الثاني",
+  "bonus_points": "نقاط مكافأة",
+  "new_reward": "جائزة جديدة"
 }

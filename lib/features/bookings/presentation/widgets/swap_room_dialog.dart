@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
@@ -43,153 +44,131 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
     });
   }
 
+  void _confirmSwap() {
+    final targetRoomId = _selectedRoomId;
+    if (targetRoomId == null) return;
+
+    final user = context.read<LoginCubit>().state.user;
+    final bookingCubit = context.read<BookingCubit>();
+    final bookings = bookingCubit.state.bookings;
+    final currentBookingList = bookings.where(
+      (b) => b.id == widget.bookingId,
+    );
+
+    if (currentBookingList.isNotEmpty) {
+      final b = currentBookingList.first;
+      if (b.status != BookingStatus.inProgress && b.checkedInAt == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('swap_room_requires_started_session'.tr()),
+            backgroundColor: AppColors.danger,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        return;
+      }
+    }
+
+    final availableRooms = context.read<RoomCubit>().state.rooms;
+    final foundRoomList = availableRooms.where((r) => r.id == targetRoomId);
+    final roomName = foundRoomList.isNotEmpty
+        ? (foundRoomList.first.nameEn.isNotEmpty
+            ? foundRoomList.first.nameEn
+            : foundRoomList.first.nameAr)
+        : '';
+
+    bookingCubit.swapRoom(
+      widget.bookingId,
+      targetRoomId,
+      user?.id ?? '',
+      newRoomName: roomName,
+    );
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppStrings.roomSwappedSuccess),
+        backgroundColor: AppColors.success,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    final user = context.read<LoginCubit>().state.user;
 
-    return Dialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Container(
-        width: 450.w,
-        padding: EdgeInsets.all(32.r),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppText.heading(AppStrings.swapRoom, fontSize: 24.sp),
-            SizedBox(height: 24.h),
-            BlocBuilder<RoomCubit, RoomState>(
-              builder: (context, state) {
-                final availableRooms = state.rooms
-                    .where(
-                      (r) =>
-                          r.status == RoomStatusEnum.available &&
-                          r.id != widget.currentRoomId,
-                    )
-                    .toList();
-
-                if (state.status == RoomStatus.loading &&
-                    availableRooms.isEmpty) {
-                  return Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.h),
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.neonBlue,
-                      ),
-                    ),
-                  );
-                }
-
-                if (availableRooms.isEmpty) {
-                  return Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.h),
-                    child: Center(
-                      child: AppText.body(
-                        AppStrings.noAvailableRooms,
-                        color: AppColors.danger,
-                      ),
-                    ),
-                  );
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CustomDropdown<String>(
-                      label: AppStrings.selectNewRoom,
-                      value: _selectedRoomId,
-                      items: availableRooms.map((r) => r.id).toList(),
-                      itemLabel: (id) {
-                        final found = availableRooms.firstWhere(
-                          (r) => r.id == id,
-                        );
-                        return found.nameEn.isNotEmpty
-                            ? found.nameEn
-                            : found.nameAr;
-                      },
-                      onChanged: (val) => setState(() => _selectedRoomId = val),
-                    ),
-                    if (_selectedRoomId != null) ...[
-                      SizedBox(height: 20.h),
-                      _buildRateBreakdownCard(state.rooms),
-                    ],
-                  ],
-                );
-              },
-            ),
-            SizedBox(height: 32.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                AppButton(
-                  text: AppStrings.cancel,
-                  variant: AppButtonVariant.outlined,
-                  onPressed: () => Navigator.pop(context),
-                ),
-                SizedBox(width: 16.w),
-                AppButton(
-                  text: AppStrings.confirmSwap,
-                  onPressed: _selectedRoomId == null
-                      ? null
-                      : () {
-                          if (_selectedRoomId != null) {
-                            final bookingCubit = context.read<BookingCubit>();
-                            final bookings = bookingCubit.state.bookings;
-                            final currentBookingList = bookings.where(
-                              (b) => b.id == widget.bookingId,
-                            );
-
-                            if (currentBookingList.isNotEmpty) {
-                              final b = currentBookingList.first;
-                              if (b.status != BookingStatus.inProgress &&
-                                  b.checkedInAt == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'swap_room_requires_started_session'.tr(),
-                                    ),
-                                    backgroundColor: AppColors.danger,
-                                    duration: const Duration(seconds: 4),
-                                  ),
-                                );
-                                return;
-                              }
-                            }
-
-                            final availableRooms = context
-                                .read<RoomCubit>()
-                                .state
-                                .rooms;
-                            final foundRoom = availableRooms.firstWhere(
-                              (r) => r.id == _selectedRoomId,
-                            );
-                            final roomName = foundRoom.nameEn.isNotEmpty
-                                ? foundRoom.nameEn
-                                : foundRoom.nameAr;
-
-                            bookingCubit.swapRoom(
-                              widget.bookingId,
-                              _selectedRoomId!,
-                              user?.id ?? '',
-                              newRoomName: roomName,
-                            );
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(AppStrings.roomSwappedSuccess),
-                                backgroundColor: AppColors.success,
-                                duration: const Duration(seconds: 3),
-                              ),
-                            );
-                          }
-                        },
-                ),
-              ],
-            ),
-          ],
+    return AppDialog(
+      title: AppStrings.swapRoom,
+      width: 480.w,
+      actions: [
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.outlined,
+          onPressed: () => Navigator.pop(context),
         ),
+        SizedBox(width: 16.w),
+        AppButton(
+          text: AppStrings.confirmSwap,
+          onPressed: _selectedRoomId == null ? null : _confirmSwap,
+        ),
+      ],
+      child: BlocBuilder<RoomCubit, RoomState>(
+        builder: (context, state) {
+          final availableRooms = state.rooms
+              .where(
+                (r) =>
+                    r.status == RoomStatusEnum.available &&
+                    r.id != widget.currentRoomId,
+              )
+              .toList();
+
+          if (state.status == RoomStatus.loading && availableRooms.isEmpty) {
+            return Padding(
+              padding: EdgeInsets.symmetric(vertical: 16.h),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.neonBlue,
+                ),
+              ),
+            );
+          }
+
+          if (availableRooms.isEmpty) {
+            return Padding(
+              padding: EdgeInsets.symmetric(vertical: 16.h),
+              child: Center(
+                child: AppText.body(
+                  AppStrings.noAvailableRooms,
+                  color: AppColors.danger,
+                ),
+              ),
+            );
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CustomDropdown<String>(
+                label: AppStrings.selectNewRoom,
+                value: _selectedRoomId,
+                items: availableRooms.map((r) => r.id).toList(),
+                itemLabel: (id) {
+                  final found = availableRooms.firstWhere(
+                    (r) => r.id == id,
+                  );
+                  return found.nameEn.isNotEmpty
+                      ? found.nameEn
+                      : found.nameAr;
+                },
+                onChanged: (val) => setState(() => _selectedRoomId = val),
+              ),
+              if (_selectedRoomId != null) ...[
+                SizedBox(height: 20.h),
+                _buildRateBreakdownCard(state.rooms),
+              ],
+            ],
+          );
+        },
       ),
     );
   }

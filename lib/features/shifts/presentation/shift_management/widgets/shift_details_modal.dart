@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -46,12 +47,13 @@ class _ShiftDetailsModalState extends State<ShiftDetailsModal> with SingleTicker
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
+    final screenSize = MediaQuery.sizeOf(context);
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Container(
-        width: 850.w,
-        height: 650.h,
+        width: math.min(850.w, screenSize.width - 32),
+        height: math.min(650.h, screenSize.height * 0.9),
         padding: EdgeInsets.all(24.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

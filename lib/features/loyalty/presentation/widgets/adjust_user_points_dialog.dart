@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
+import '../../../../art_core/widgets/app_dialog.dart';
 import '../../../../art_core/widgets/app_text.dart';
 import '../../../../art_core/widgets/app_text_field.dart';
 import '../../../../art_core/widgets/custom_dropdown.dart';
@@ -67,7 +68,8 @@ class _AdjustUserPointsDialogState extends State<AdjustUserPointsDialog> {
   }
 
   void _submit() {
-    if (_selectedUserId == null || _selectedUserId!.isEmpty) {
+    final selectedId = _selectedUserId;
+    if (selectedId == null || selectedId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppStrings.selectUser), backgroundColor: AppColors.danger),
       );
@@ -78,7 +80,7 @@ class _AdjustUserPointsDialogState extends State<AdjustUserPointsDialog> {
       final delta = int.tryParse(_pointsDeltaController.text.trim()) ?? 0;
       final reason = _reasonController.text.trim();
 
-      widget.onAdjust(_selectedUserId!, delta, reason);
+      widget.onAdjust(selectedId, delta, reason);
       Navigator.pop(context);
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -101,37 +103,29 @@ class _AdjustUserPointsDialogState extends State<AdjustUserPointsDialog> {
     final currentPoints = selectedUser != null ? ((selectedUser['points_balance'] as num?)?.toInt() ?? 0) : 0;
     final userIds = _users.map((u) => u['id']?.toString() ?? '').where((id) => id.isNotEmpty).toList();
 
-    return Dialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Container(
-        width: 480.w,
-        padding: EdgeInsets.all(24.r),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.edit_attributes_rounded, color: AppColors.neonBlue, size: 24.r),
-                      SizedBox(width: 8.w),
-                      AppText.subHeading(AppStrings.adjustUserPoints, fontSize: 20.sp),
-                    ],
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const Divider(color: AppColors.borderDefault, height: 24),
-              AppText.body(AppStrings.superAdminOnlyPoints, fontSize: 12.sp, color: AppColors.warning),
-              SizedBox(height: 16.h),
+    return AppDialog(
+      title: AppStrings.adjustUserPoints,
+      icon: Icons.edit_attributes_rounded,
+      width: 480.w,
+      actions: [
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.outlined,
+          onPressed: () => Navigator.pop(context),
+        ),
+        SizedBox(width: 12.w),
+        AppButton(
+          text: AppStrings.saveChanges,
+          onPressed: _submit,
+        ),
+      ],
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppText.body(AppStrings.superAdminOnlyPoints, fontSize: 12.sp, color: AppColors.warning),
+            SizedBox(height: 16.h),
 
               // User Selector
               if (_isLoadingUsers)
@@ -198,28 +192,9 @@ class _AdjustUserPointsDialogState extends State<AdjustUserPointsDialog> {
                 maxLines: 2,
                 validator: (val) => val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
               ),
-              SizedBox(height: 24.h),
-
-              // Actions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  AppButton(
-                    text: AppStrings.cancel,
-                    variant: AppButtonVariant.outlined,
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  SizedBox(width: 12.w),
-                  AppButton(
-                    text: AppStrings.saveChanges,
-                    onPressed: _submit,
-                  ),
-                ],
-              ),
             ],
           ),
         ),
-      ),
     );
   }
 }

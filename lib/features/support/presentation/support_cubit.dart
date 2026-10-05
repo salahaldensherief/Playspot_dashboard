@@ -12,6 +12,7 @@ import '../domain/usecases/delete_faq_usecase.dart';
 import '../domain/usecases/get_support_tickets_usecase.dart';
 import '../domain/usecases/create_support_ticket_usecase.dart';
 import '../domain/usecases/update_ticket_status_usecase.dart';
+import '../../../art_core/app_strings.dart';
 import 'support_state.dart';
 
 class SupportCubit extends Cubit<SupportState> {
@@ -65,7 +66,7 @@ class SupportCubit extends Cubit<SupportState> {
       (_) => emit(state.copyWith(
         actionStatus: SupportStatus.success,
         settings: newSettings,
-        successMessage: 'تم حفظ إعدادات التواصل والدفع بنجاح',
+        successMessage: AppStrings.supportContactSettingsSaved,
       )),
     );
   }
@@ -101,7 +102,7 @@ class SupportCubit extends Cubit<SupportState> {
         emit(state.copyWith(
           actionStatus: SupportStatus.success,
           policies: updatedList,
-          successMessage: 'تم حفظ ونشر السياسة بنجاح',
+          successMessage: AppStrings.supportPolicySaved,
         ));
       },
     );
@@ -133,7 +134,7 @@ class SupportCubit extends Cubit<SupportState> {
       (_) {
         emit(state.copyWith(
           actionStatus: SupportStatus.success,
-          successMessage: 'تم حفظ السؤال الشائع بنجاح',
+          successMessage: AppStrings.faqSavedSuccess,
         ));
         loadFaqs();
       },
@@ -151,7 +152,7 @@ class SupportCubit extends Cubit<SupportState> {
       (_) {
         emit(state.copyWith(
           actionStatus: SupportStatus.success,
-          successMessage: 'تم حذف السؤال الشائع',
+          successMessage: AppStrings.faqDeletedSuccess,
         ));
         loadFaqs();
       },
@@ -194,7 +195,7 @@ class SupportCubit extends Cubit<SupportState> {
       (_) {
         emit(state.copyWith(
           actionStatus: SupportStatus.success,
-          successMessage: 'تم تقديم تذكرة الدعم بنجاح! سيقوم الدعم الفني بمراجعتها والتواصل معك.',
+          successMessage: AppStrings.ticketSubmittedSuccess,
         ));
         loadTickets();
         return true;

@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/utils/app_validator.dart';
@@ -73,139 +74,108 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    return Dialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Container(
-        width: 480.w,
-        padding: EdgeInsets.all(28.r),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(8.r),
-                    decoration: BoxDecoration(
-                      color: AppColors.warning.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      _selectedType == 'expense' ? Icons.receipt_long_outlined : Icons.move_to_inbox,
-                      color: AppColors.warning,
-                      size: 22.r,
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: AppText.heading(
-                      AppStrings.registerExpenseTitle,
-                      fontSize: 18.sp,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-              SizedBox(height: 20.h),
-
-              // Type Selector (Expense vs Cash Drop)
-              AppText.body(AppStrings.operationType, fontWeight: FontWeight.bold, fontSize: 12.sp),
-              SizedBox(height: 8.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: ChoiceChip(
-                      label: Center(
-                        child: AppText.body(
-                          AppStrings.operationalExpense,
-                          color: _selectedType == 'expense' ? AppColors.textPrimary : AppColors.textPrimary,
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
+    return AppDialog(
+      title: AppStrings.registerExpenseTitle,
+      width: 500.w,
+      actions: [
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.outlined,
+          onPressed: () => Navigator.pop(context),
+        ),
+        SizedBox(width: 12.w),
+        AppButton(
+          text: AppStrings.confirmRegistration,
+          isLoading: _isSubmitting,
+          onPressed: _submit,
+        ),
+      ],
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Type Selector (Expense vs Cash Drop)
+            AppText.body(
+              AppStrings.operationType,
+              fontWeight: FontWeight.bold,
+              fontSize: 12.sp,
+            ),
+            SizedBox(height: 8.h),
+            Row(
+              children: [
+                Expanded(
+                  child: ChoiceChip(
+                    label: Center(
+                      child: AppText.body(
+                        AppStrings.operationalExpense,
+                        color: AppColors.textPrimary,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.bold,
                       ),
-                      selected: _selectedType == 'expense',
-                      selectedColor: AppColors.neonBlue,
-                      backgroundColor: AppColors.cardBackground,
-                      side: BorderSide(
-                        color: _selectedType == 'expense' ? AppColors.neonBlue : AppColors.borderDefault,
-                      ),
-                      onSelected: (selected) {
-                        if (selected) setState(() => _selectedType = 'expense');
-                      },
                     ),
-                  ),
-                  SizedBox(width: 10.w),
-                  Expanded(
-                    child: ChoiceChip(
-                      label: Center(
-                        child: AppText.body(
-                          AppStrings.cashDrop,
-                          color: _selectedType == 'cash_drop' ? AppColors.textPrimary : AppColors.textPrimary,
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      selected: _selectedType == 'cash_drop',
-                      selectedColor: AppColors.warning,
-                      backgroundColor: AppColors.cardBackground,
-                      side: BorderSide(
-                        color: _selectedType == 'cash_drop' ? AppColors.warning : AppColors.borderDefault,
-                      ),
-                      onSelected: (selected) {
-                        if (selected) setState(() => _selectedType = 'cash_drop');
-                      },
+                    selected: _selectedType == 'expense',
+                    selectedColor: AppColors.neonBlue,
+                    backgroundColor: AppColors.cardBackground,
+                    side: BorderSide(
+                      color: _selectedType == 'expense'
+                          ? AppColors.neonBlue
+                          : AppColors.borderDefault,
                     ),
+                    onSelected: (selected) {
+                      if (selected) setState(() => _selectedType = 'expense');
+                    },
                   ),
-                ],
-              ),
-              SizedBox(height: 18.h),
-
-              // Amount Field
-              AppTextField(
-                label: AppStrings.amountEgp,
-                hintText: AppStrings.hintAmount,
-                controller: _amountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: AppValidator.validateNumber,
-              ),
-              SizedBox(height: 16.h),
-
-              // Reason / Purpose Field
-              AppTextField(
-                label: AppStrings.reasonDetails,
-                hintText: AppStrings.expenseReasonHint,
-                controller: _reasonController,
-                maxLines: 2,
-                validator: AppValidator.validateRequired,
-              ),
-              SizedBox(height: 28.h),
-
-              // Action Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  AppButton(
-                    text: AppStrings.cancel,
-                    variant: AppButtonVariant.outlined,
-                    onPressed: () => Navigator.pop(context),
+                ),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: ChoiceChip(
+                    label: Center(
+                      child: AppText.body(
+                        AppStrings.cashDrop,
+                        color: AppColors.textPrimary,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    selected: _selectedType == 'cash_drop',
+                    selectedColor: AppColors.warning,
+                    backgroundColor: AppColors.cardBackground,
+                    side: BorderSide(
+                      color: _selectedType == 'cash_drop'
+                          ? AppColors.warning
+                          : AppColors.borderDefault,
+                    ),
+                    onSelected: (selected) {
+                      if (selected) setState(() => _selectedType = 'cash_drop');
+                    },
                   ),
-                  SizedBox(width: 12.w),
-                  AppButton(
-                    text: AppStrings.confirmRegistration,
-                    isLoading: _isSubmitting,
-                    onPressed: _submit,
-                  ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+            SizedBox(height: 18.h),
+
+            // Amount Field
+            AppTextField(
+              label: AppStrings.amountEgp,
+              hintText: AppStrings.hintAmount,
+              controller: _amountController,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              validator: AppValidator.validateNumber,
+            ),
+            SizedBox(height: 16.h),
+
+            // Reason / Purpose Field
+            AppTextField(
+              label: AppStrings.reasonDetails,
+              hintText: AppStrings.expenseReasonHint,
+              controller: _reasonController,
+              maxLines: 2,
+              validator: AppValidator.validateRequired,
+            ),
+          ],
         ),
       ),
     );

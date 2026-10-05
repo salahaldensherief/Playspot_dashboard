@@ -92,8 +92,9 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
             instapayAccount: _instapayController.text.trim().isEmpty ? null : _instapayController.text.trim(),
           );
 
-          if (widget.onSave != null) {
-             await widget.onSave!(updatedLounge);
+          final onSave = widget.onSave;
+          if (onSave != null) {
+            await onSave(updatedLounge);
           }
           
           if (mounted) Navigator.pop(context);

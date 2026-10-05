@@ -44,12 +44,10 @@ class _EditAdminDialogState extends State<EditAdminDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      if (widget.onSave != null) {
-        widget.onSave!(
-          _nameController.text,
-          _emailController.text,
-        );
-      }
+      widget.onSave?.call(
+        _nameController.text,
+        _emailController.text,
+      );
     }
   }
 

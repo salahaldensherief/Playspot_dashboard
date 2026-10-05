@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
-import '../../../../art_core/widgets/app_text_field.dart';
+import '../../../../art_core/widgets/app_dialog.dart';
 import '../../domain/entities/support_ticket_entity.dart';
 
 class TicketDetailsDialog extends StatefulWidget {
@@ -52,109 +52,17 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    return AlertDialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.confirmation_number_outlined, color: AppColors.neonBlue, size: 24.r),
-              SizedBox(width: 8.w),
-              Text(
-                AppStrings.complaintDetails,
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 18.sp, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.close, color: AppColors.textSecondary),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-      content: SizedBox(
-        width: 550.w,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildInfoRow(AppStrings.fullName, widget.ticket.userName, Icons.person_outline),
-              _buildInfoRow(AppStrings.phoneNumber, widget.ticket.userPhone, Icons.phone_outlined),
-              _buildInfoRow(AppStrings.issueType, widget.ticket.issueType, Icons.category_outlined),
-              _buildInfoRow(AppStrings.sentDate, _formatDate(widget.ticket.createdAt), Icons.calendar_today_outlined),
-              if (widget.ticket.resolvedAt != null)
-                _buildInfoRow(AppStrings.resolvedDate, _formatDate(widget.ticket.resolvedAt), Icons.check_circle_outline),
-              SizedBox(height: 16.h),
-              const Divider(color: AppColors.borderDefault),
-              SizedBox(height: 12.h),
-              Text(AppStrings.ticketMessageText, style: TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold, fontSize: 14.sp)),
-              SizedBox(height: 6.h),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(12.r),
-                decoration: BoxDecoration(
-                  color: AppColors.mutedBackground,
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: AppColors.borderDefault),
-                ),
-                child: Text(
-                  widget.ticket.message,
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp, height: 1.4),
-                ),
-              ),
-              SizedBox(height: 20.h),
-              const Divider(color: AppColors.borderDefault),
-              SizedBox(height: 12.h),
-              Text(AppStrings.updateTicketStatus, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp)),
-              SizedBox(height: 8.h),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w),
-                decoration: BoxDecoration(
-                  color: AppColors.mutedBackground,
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: AppColors.borderDefault),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedStatus,
-                    dropdownColor: AppColors.cardBackground,
-                    isExpanded: true,
-                    style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
-                    items: _statusOptions.map((s) {
-                      return DropdownMenuItem<String>(
-                        value: s['key'],
-                        child: Text(s['label']!),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) {
-                        setState(() {
-                          _selectedStatus = val;
-                        });
-                      }
-                    },
-                  ),
-                ),
-              ),
-              SizedBox(height: 16.h),
-              AppTextField(
-                controller: _notesController,
-                maxLines: 3,
-                labelText: AppStrings.adminNotes,
-                hintText: AppStrings.adminNotesHint,
-              ),
-            ],
-          ),
-        ),
-      ),
+    return AppDialog(
+      title: AppStrings.complaintDetails,
+      icon: Icons.confirmation_number_outlined,
+      width: 600.w,
       actions: [
-        TextButton(
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.outlined,
           onPressed: () => Navigator.pop(context),
-          child: Text(AppStrings.cancel, style: const TextStyle(color: AppColors.textSecondary)),
         ),
+        SizedBox(width: 12.w),
         AppButton(
           text: AppStrings.updateStatus,
           variant: AppButtonVariant.gradient,
@@ -164,6 +72,84 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
           },
         ),
       ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildInfoRow(AppStrings.fullName, widget.ticket.userName, Icons.person_outline),
+          _buildInfoRow(AppStrings.phoneNumber, widget.ticket.userPhone, Icons.phone_outlined),
+          _buildInfoRow(AppStrings.issueType, widget.ticket.issueType, Icons.category_outlined),
+          _buildInfoRow(AppStrings.sentDate, _formatDate(widget.ticket.createdAt), Icons.calendar_today_outlined),
+          if (widget.ticket.resolvedAt != null)
+            _buildInfoRow(AppStrings.resolvedDate, _formatDate(widget.ticket.resolvedAt), Icons.check_circle_outline),
+          SizedBox(height: 16.h),
+          const Divider(color: AppColors.borderDefault),
+          SizedBox(height: 12.h),
+          Text(AppStrings.ticketMessageText, style: TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold, fontSize: 14.sp)),
+          SizedBox(height: 6.h),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(
+              color: AppColors.mutedBackground,
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: AppColors.borderDefault),
+            ),
+            child: Text(
+              widget.ticket.message,
+              style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp, height: 1.4),
+            ),
+          ),
+          SizedBox(height: 20.h),
+          const Divider(color: AppColors.borderDefault),
+          SizedBox(height: 12.h),
+          Text(AppStrings.updateTicketStatus, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp)),
+          SizedBox(height: 8.h),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.w),
+            decoration: BoxDecoration(
+              color: AppColors.mutedBackground,
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: AppColors.borderDefault),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _selectedStatus,
+                dropdownColor: AppColors.cardBackground,
+                isExpanded: true,
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
+                items: _statusOptions.map((s) {
+                  return DropdownMenuItem<String>(
+                    value: s['key'],
+                    child: Text(s['label'] ?? ''),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() {
+                      _selectedStatus = val;
+                    });
+                  }
+                },
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Text(AppStrings.adminNotes, style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
+          SizedBox(height: 6.h),
+          TextField(
+            controller: _notesController,
+            maxLines: 3,
+            style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
+            decoration: InputDecoration(
+              hintText: AppStrings.adminNotesHint,
+              hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
+              filled: true,
+              fillColor: AppColors.mutedBackground,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -5,7 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
@@ -84,93 +84,70 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
     EasyLocalization.of(context);
     final room = widget.room;
 
-    return Dialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 460.w),
-        child: Padding(
-          padding: EdgeInsets.all(22.r),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${AppStrings.startOpenTime} - ${room.nameAr.isNotEmpty ? room.nameAr : room.nameEn}',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(
-                      Icons.close,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 14.h),
-              AppTextField(
-                controller: _nameController,
-                label: AppStrings.customerNameOptional,
-              ),
-              SizedBox(height: 12.h),
-              AppTextField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                label: AppStrings.customerPhoneOptional,
-              ),
-              SizedBox(height: 14.h),
-              SegmentedButton<String>(
-                segments: [
-                  ButtonSegment(
-                    value: 'single',
-                    label: Text(AppStrings.single),
-                  ),
-                  ButtonSegment(value: 'multi', label: Text(AppStrings.multi)),
-                ],
-                selected: {_playMode},
-                onSelectionChanged: (values) {
-                  setState(() => _playMode = values.first);
-                },
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                AppStrings.openTimeDialogNotice,
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12.sp,
-                ),
-              ),
-              SizedBox(height: 22.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  AppButton(
-                    text: AppStrings.cancel,
-                    variant: AppButtonVariant.outlined,
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  SizedBox(width: 12.w),
-                  AppButton(
-                    text: AppStrings.startOpenTime,
-                    icon: Icons.play_arrow_rounded,
-                    isLoading: _isSubmitting,
-                    onPressed: _start,
-                  ),
-                ],
-              ),
-            ],
-          ),
+    return AppDialog(
+      title: '${AppStrings.startOpenTime} - ${room.nameAr.isNotEmpty ? room.nameAr : room.nameEn}',
+      icon: Icons.timer_outlined,
+      width: 460.w,
+      actions: [
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.outlined,
+          onPressed: () => Navigator.pop(context),
         ),
+        SizedBox(width: 12.w),
+        AppButton(
+          text: AppStrings.startOpenTime,
+          icon: Icons.play_arrow_rounded,
+          isLoading: _isSubmitting,
+          onPressed: _start,
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: _nameController,
+            style: const TextStyle(color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              labelText: AppStrings.customerNameOptional,
+              filled: true,
+              fillColor: AppColors.mutedBackground,
+            ),
+          ),
+          SizedBox(height: 12.h),
+          TextField(
+            controller: _phoneController,
+            keyboardType: TextInputType.phone,
+            style: const TextStyle(color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              labelText: AppStrings.customerPhoneOptional,
+              filled: true,
+              fillColor: AppColors.mutedBackground,
+            ),
+          ),
+          SizedBox(height: 14.h),
+          SegmentedButton<String>(
+            segments: [
+              ButtonSegment(
+                value: 'single',
+                label: Text(AppStrings.single),
+              ),
+              ButtonSegment(value: 'multi', label: Text(AppStrings.multi)),
+            ],
+            selected: {_playMode},
+            onSelectionChanged: (values) {
+              setState(() => _playMode = values.first);
+            },
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            AppStrings.openTimeDialogNotice,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12.sp,
+            ),
+          ),
+        ],
       ),
     );
   }

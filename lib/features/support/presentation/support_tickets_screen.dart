@@ -44,18 +44,18 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
   }
 
   String _formatDate(DateTime? dt) {
-    if (dt == null) return 'غير محدد';
+    if (dt == null) return AppStrings.unspecified;
     return DateFormat('yyyy/MM/dd').format(dt);
   }
 
   Widget _buildTicketStatusBadge(String status) {
     switch (status) {
       case 'new':
-        return StatusBadge.warning('جديدة');
+        return StatusBadge.warning(AppStrings.ticketStatusNew);
       case 'in_progress':
-        return StatusBadge.info('جاري العمل عليها');
+        return StatusBadge.info(AppStrings.ticketStatusInProgress);
       case 'resolved':
-        return StatusBadge.success('تم الحل');
+        return StatusBadge.success(AppStrings.ticketStatusResolved);
       default:
         return StatusBadge.neutral(status);
     }

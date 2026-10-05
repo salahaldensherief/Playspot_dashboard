@@ -118,8 +118,7 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
       ],
       child: Form(
         key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
+        child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // --- Section 1: Lounge Details ---
@@ -217,7 +216,6 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
             ],
           ),
         ),
-      ),
     );
   }
 }

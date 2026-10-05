@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -41,12 +42,18 @@ class BookingDetailsDialog extends StatefulWidget {
 class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
   final _discountController = TextEditingController();
   final _reasonController = TextEditingController();
+  final _leftScrollController = ScrollController();
+  final _rightScrollController = ScrollController();
+  final _mobileScrollController = ScrollController();
   final bool _isPercentage = false;
 
   @override
   void dispose() {
     _discountController.dispose();
     _reasonController.dispose();
+    _leftScrollController.dispose();
+    _rightScrollController.dispose();
+    _mobileScrollController.dispose();
     super.dispose();
   }
 
@@ -87,7 +94,7 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
         : discount;
 
     if (widget.onConfirmPayment != null) {
-      widget.onConfirmPayment!(
+      widget.onConfirmPayment?.call(
         calculatedDiscountAmount,
         percent,
         _reasonController.text.trim(),
@@ -164,17 +171,19 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktopOrTablet = screenWidth >= 850;
+    final screenSize = MediaQuery.sizeOf(context);
+    final isDesktopOrTablet = screenSize.width >= 850;
 
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       insetPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Container(
-        width: isDesktopOrTablet ? 900.w : double.infinity,
+        width: isDesktopOrTablet
+            ? math.min(900.w, screenSize.width - 32)
+            : double.infinity,
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.9,
+          maxHeight: screenSize.height * 0.9,
         ),
         padding: EdgeInsets.all(20.r),
         child: BlocBuilder<BookingCubit, BookingState>(
@@ -201,24 +210,29 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                           children: [
                             Expanded(
                               flex: 6,
-                              child: SingleChildScrollView(
-                                child: Column(
-                                  children: [
-                                    BookingDetailsCustomerCard(
-                                      booking: currentBooking,
-                                    ),
-                                    SizedBox(height: 12.h),
-                                    AuditTimeline(
-                                      entityType: 'booking',
-                                      entityId: currentBooking.id,
-                                    ),
-                                    SizedBox(height: 12.h),
-                                    BookingSpecificationsCard(
-                                      booking: currentBooking,
-                                    ),
-                                    SizedBox(height: 12.h),
-                                    BookingReceiptCard(booking: currentBooking),
-                                  ],
+                              child: Scrollbar(
+                                thumbVisibility: true,
+                                controller: _leftScrollController,
+                                child: SingleChildScrollView(
+                                  controller: _leftScrollController,
+                                  child: Column(
+                                    children: [
+                                      BookingDetailsCustomerCard(
+                                        booking: currentBooking,
+                                      ),
+                                      SizedBox(height: 12.h),
+                                      AuditTimeline(
+                                        entityType: 'booking',
+                                        entityId: currentBooking.id,
+                                      ),
+                                      SizedBox(height: 12.h),
+                                      BookingSpecificationsCard(
+                                        booking: currentBooking,
+                                      ),
+                                      SizedBox(height: 12.h),
+                                      BookingReceiptCard(booking: currentBooking),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -228,9 +242,14 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                               child: Column(
                                 children: [
                                   Expanded(
-                                    child: SingleChildScrollView(
-                                      child: BookingDetailsFinancialSummary(
-                                        booking: currentBooking,
+                                    child: Scrollbar(
+                                      thumbVisibility: true,
+                                      controller: _rightScrollController,
+                                      child: SingleChildScrollView(
+                                        controller: _rightScrollController,
+                                        child: BookingDetailsFinancialSummary(
+                                          booking: currentBooking,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -249,38 +268,43 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                             ),
                           ],
                         )
-                      : SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              BookingDetailsCustomerCard(
-                                booking: currentBooking,
-                              ),
-                              SizedBox(height: 12.h),
-                              AuditTimeline(
-                                entityType: 'booking',
-                                entityId: currentBooking.id,
-                              ),
-                              SizedBox(height: 12.h),
-                              BookingSpecificationsCard(
-                                booking: currentBooking,
-                              ),
-                              SizedBox(height: 12.h),
-                              BookingDetailsFinancialSummary(
-                                booking: currentBooking,
-                              ),
-                              SizedBox(height: 12.h),
-                              BookingReceiptCard(booking: currentBooking),
-                              SizedBox(height: 16.h),
-                              BookingDetailsActionPanel(
-                                booking: currentBooking,
-                                isLoading: isLoading,
-                                onConfirmCashPayment: () =>
-                                    _handleConfirmPayment(
-                                      context,
-                                      currentBooking,
-                                    ),
-                              ),
-                            ],
+                      : Scrollbar(
+                          thumbVisibility: true,
+                          controller: _mobileScrollController,
+                          child: SingleChildScrollView(
+                            controller: _mobileScrollController,
+                            child: Column(
+                              children: [
+                                BookingDetailsCustomerCard(
+                                  booking: currentBooking,
+                                ),
+                                SizedBox(height: 12.h),
+                                AuditTimeline(
+                                  entityType: 'booking',
+                                  entityId: currentBooking.id,
+                                ),
+                                SizedBox(height: 12.h),
+                                BookingSpecificationsCard(
+                                  booking: currentBooking,
+                                ),
+                                SizedBox(height: 12.h),
+                                BookingDetailsFinancialSummary(
+                                  booking: currentBooking,
+                                ),
+                                SizedBox(height: 12.h),
+                                BookingReceiptCard(booking: currentBooking),
+                                SizedBox(height: 16.h),
+                                BookingDetailsActionPanel(
+                                  booking: currentBooking,
+                                  isLoading: isLoading,
+                                  onConfirmCashPayment: () =>
+                                      _handleConfirmPayment(
+                                        context,
+                                        currentBooking,
+                                      ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                 ),

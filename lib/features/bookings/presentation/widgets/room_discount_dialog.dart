@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -33,12 +34,14 @@ class RoomDiscountDialog extends StatefulWidget {
 }
 
 class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
+  final _scrollController = ScrollController();
   bool _isPercentage = true;
   final _valueController = TextEditingController();
   final _reasonController = TextEditingController();
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _valueController.dispose();
     _reasonController.dispose();
     super.dispose();
@@ -102,6 +105,9 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
+    final screenSize = MediaQuery.sizeOf(context);
+    final dialogWidth = math.min(440.w, screenSize.width - 32);
+
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(
@@ -109,57 +115,78 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
         side: const BorderSide(color: AppColors.borderDefault),
       ),
       child: Container(
-        width: 420.w,
-        padding: EdgeInsets.all(20.r),
+        width: dialogWidth,
+        constraints: BoxConstraints(maxHeight: screenSize.height * 0.88),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Title Header
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(8.r),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
+            Padding(
+              padding: EdgeInsets.fromLTRB(20.r, 20.r, 20.r, 12.r),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(8.r),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.local_offer_rounded,
+                      color: AppColors.warning,
+                      size: 20.r,
+                    ),
                   ),
-                  child: Icon(
-                    Icons.local_offer_rounded,
-                    color: AppColors.warning,
-                    size: 20.r,
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppText.subHeading(
+                          'room_discount_title'.tr(
+                            args: [(widget.roomName).toString()],
+                          ),
+                          fontSize: 15.sp,
+                          color: AppColors.textPrimary,
+                        ),
+                        AppText.body(
+                          'current_price_label'.tr(
+                            args: [
+                              (widget.currentPrice.toStringAsFixed(0)).toString(),
+                              (AppStrings.egp).toString(),
+                            ],
+                          ),
+                          fontSize: 11.sp,
+                          color: AppColors.neonBlue,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(width: 10.w),
-                Expanded(
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon:
+                        const Icon(Icons.close, color: AppColors.textSecondary),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: AppColors.divider),
+            // Scrollable Body
+            Flexible(
+              child: Scrollbar(
+                thumbVisibility: true,
+                controller: _scrollController,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 20.r, vertical: 16.r),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      AppText.subHeading(
-                        'room_discount_title'.tr(
-                          args: [(widget.roomName).toString()],
-                        ),
-                        fontSize: 15.sp,
-                        color: AppColors.textPrimary,
-                      ),
-                      AppText.body(
-                        'current_price_label'.tr(
-                          args: [
-                            (widget.currentPrice.toStringAsFixed(0)).toString(),
-                            (AppStrings.egp).toString(),
-                          ],
-                        ),
-                        fontSize: 11.sp,
-                        color: AppColors.neonBlue,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-
-            // Discount Type Toggle Tabs
+                      // Discount Type Toggle Tabs
             Container(
               padding: EdgeInsets.all(3.r),
               decoration: BoxDecoration(
@@ -320,26 +347,33 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                 ],
               ),
             ),
-            SizedBox(height: 20.h),
-
+          ],
+        ),
+      ),
+    ),
+  ),
+            const Divider(height: 1, color: AppColors.divider),
             // Action Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: AppButton(
-                    text: AppStrings.cancel,
-                    variant: AppButtonVariant.outlined,
-                    onPressed: () => Navigator.of(context).pop(),
+            Padding(
+              padding: EdgeInsets.all(16.r),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      text: AppStrings.cancel,
+                      variant: AppButtonVariant.outlined,
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
                   ),
-                ),
-                SizedBox(width: 10.w),
-                Expanded(
-                  child: AppButton(
-                    text: 'apply_discount'.tr(),
-                    onPressed: _handleConfirm,
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: AppButton(
+                      text: 'apply_discount'.tr(),
+                      onPressed: _handleConfirm,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/customer_cancellation_summary.dart';
 
 class CustomerCancellationHistoryDialog extends StatelessWidget {
@@ -38,246 +38,186 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    return Dialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Container(
-        width: 550.w,
-        constraints: BoxConstraints(maxHeight: 600.h),
-        padding: EdgeInsets.all(20.r),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
+    return AppDialog(
+      title: AppStrings.cancellationHistoryTitle,
+      icon: Icons.history_toggle_off_rounded,
+      width: 550.w,
+      actions: [
+        AppButton(
+          text: AppStrings.close,
+          variant: AppButtonVariant.outlined,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'customer_name_label'.tr(args: [userName]),
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12.sp,
+            ),
+          ),
+          SizedBox(height: 12.h),
+          if (history.isEmpty)
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 32.h),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      padding: EdgeInsets.all(8.r),
-                      decoration: BoxDecoration(
-                        color: AppColors.danger.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: const Icon(
-                        Icons.history_toggle_off_rounded,
-                        color: AppColors.danger,
-                      ),
+                    Icon(
+                      Icons.check_circle_outline_rounded,
+                      size: 48.r,
+                      color: AppColors.success,
                     ),
-                    SizedBox(width: 10.w),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AppText.heading(
-                          AppStrings.cancellationHistoryTitle,
-                          fontSize: 16.sp,
-                        ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          'customer_name_label'.tr(
-                            args: [(userName).toString()],
-                          ),
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12.sp,
-                          ),
-                        ),
-                      ],
+                    SizedBox(height: 12.h),
+                    Text(
+                      AppStrings.noCancellationHistory,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13.sp,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(
-                    Icons.close_rounded,
-                    color: AppColors.textSecondary,
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: history.length,
+              separatorBuilder: (_, _) => SizedBox(height: 10.h),
+              itemBuilder: (context, index) {
+                final item = history[index];
+                final reason = item.cancellationReason?.trim();
+                return Container(
+                  padding: EdgeInsets.all(12.r),
+                  decoration: BoxDecoration(
+                    color: AppColors.mutedBackground.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(10.r),
+                    border: Border.all(color: AppColors.borderDefault),
                   ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            const Divider(color: AppColors.borderDefault, height: 1),
-            SizedBox(height: 16.h),
-            Expanded(
-              child: history.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(
-                            Icons.check_circle_outline_rounded,
-                            size: 48.r,
-                            color: AppColors.success,
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.event_seat_rounded,
+                                size: 16.r,
+                                color: AppColors.neonBlue,
+                              ),
+                              SizedBox(width: 6.w),
+                              Text(
+                                item.roomName ?? AppStrings.roomLabel,
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(height: 12.h),
-                          Text(
-                            AppStrings.noCancellationHistory,
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 13.sp,
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 2.h,
                             ),
-                            textAlign: TextAlign.center,
+                            decoration: BoxDecoration(
+                              color: AppColors.danger.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6.r),
+                              border: Border.all(
+                                color: AppColors.danger.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Text(
+                              '#${item.bookingId.length > 8 ? item.bookingId.substring(0, 8) : item.bookingId}',
+                              style: TextStyle(
+                                color: AppColors.danger,
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    )
-                  : ListView.separated(
-                      itemCount: history.length,
-                      separatorBuilder: (_, _) => SizedBox(height: 10.h),
-                      itemBuilder: (context, index) {
-                        final item = history[index];
-                        return Container(
-                          padding: EdgeInsets.all(12.r),
-                          decoration: BoxDecoration(
-                            color: AppColors.mutedBackground.withValues(
-                              alpha: 0.4,
-                            ),
-                            borderRadius: BorderRadius.circular(10.r),
-                            border: Border.all(color: AppColors.borderDefault),
+                      SizedBox(height: 8.h),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today_rounded,
+                            size: 13.r,
+                            color: AppColors.textMuted,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.event_seat_rounded,
-                                        size: 16.r,
-                                        color: AppColors.neonBlue,
-                                      ),
-                                      SizedBox(width: 6.w),
-                                      Text(
-                                        item.roomName ?? AppStrings.roomLabel,
-                                        style: TextStyle(
-                                          color: AppColors.textPrimary,
-                                          fontSize: 13.sp,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 8.w,
-                                      vertical: 2.h,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.danger.withValues(
-                                        alpha: 0.15,
-                                      ),
-                                      borderRadius: BorderRadius.circular(6.r),
-                                      border: Border.all(
-                                        color: AppColors.danger.withValues(
-                                          alpha: 0.3,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      '#${item.bookingId.length > 8 ? item.bookingId.substring(0, 8) : item.bookingId}',
-                                      style: TextStyle(
-                                        color: AppColors.danger,
-                                        fontSize: 10.sp,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 8.h),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.calendar_today_rounded,
-                                    size: 13.r,
-                                    color: AppColors.textMuted,
-                                  ),
-                                  SizedBox(width: 4.w),
-                                  Text(
-                                    'cancelled_booking_schedule'.tr(
-                                      args: [
-                                        (_formatDate(item.date)).toString(),
-                                        (item.startTime ?? '').toString(),
-                                        (item.endTime ?? '').toString(),
-                                      ],
-                                    ),
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 11.sp,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 4.h),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.access_time_filled_rounded,
-                                    size: 13.r,
-                                    color: AppColors.textMuted,
-                                  ),
-                                  SizedBox(width: 4.w),
-                                  Text(
-                                    'cancelled_at_label'.tr(
-                                      args: [
-                                        (_formatDateTime(
-                                          item.cancelledAt,
-                                        )).toString(),
-                                      ],
-                                    ),
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 11.sp,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (item.cancellationReason != null &&
-                                  item.cancellationReason!
-                                      .trim()
-                                      .isNotEmpty) ...[
-                                SizedBox(height: 6.h),
-                                Container(
-                                  width: double.infinity,
-                                  padding: EdgeInsets.all(8.r),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.cardBackground,
-                                    borderRadius: BorderRadius.circular(6.r),
-                                  ),
-                                  child: Text(
-                                    'cancellation_reason_label'.tr(
-                                      args: [
-                                        (item.cancellationReason).toString(),
-                                      ],
-                                    ),
-                                    style: TextStyle(
-                                      color: AppColors.warning,
-                                      fontSize: 11.sp,
-                                    ),
-                                  ),
-                                ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            'cancelled_booking_schedule'.tr(
+                              args: [
+                                _formatDate(item.date),
+                                (item.startTime ?? '').toString(),
+                                (item.endTime ?? '').toString(),
                               ],
-                            ],
+                            ),
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 11.sp,
+                            ),
                           ),
-                        );
-                      },
-                    ),
+                        ],
+                      ),
+                      SizedBox(height: 4.h),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time_filled_rounded,
+                            size: 13.r,
+                            color: AppColors.textMuted,
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            'cancelled_at_label'.tr(
+                              args: [_formatDateTime(item.cancelledAt)],
+                            ),
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 11.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (reason != null && reason.isNotEmpty) ...[
+                        SizedBox(height: 6.h),
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(8.r),
+                          decoration: BoxDecoration(
+                            color: AppColors.cardBackground,
+                            borderRadius: BorderRadius.circular(6.r),
+                          ),
+                          child: Text(
+                            'cancellation_reason_label'.tr(
+                              args: [reason],
+                            ),
+                            style: TextStyle(
+                              color: AppColors.warning,
+                              fontSize: 11.sp,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
             ),
-            SizedBox(height: 16.h),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: AppButton(
-                text: AppStrings.cancel,
-                variant: AppButtonVariant.outlined,
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }

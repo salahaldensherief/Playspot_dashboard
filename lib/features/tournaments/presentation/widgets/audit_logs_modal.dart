@@ -159,11 +159,11 @@ class AuditLogsModal extends StatelessWidget {
                             fontSize: 12.sp,
                           ),
                         ),
-                        if (log.details != null && log.details!.isNotEmpty) ...[
+                        if (log.details != null && (log.details?.isNotEmpty ?? false)) ...[
                           SizedBox(height: 2.h),
                           Text(
                             'audit_details_label'.tr(
-                              args: [(log.details).toString()],
+                              args: [(log.details ?? '').toString()],
                             ),
                             style: TextStyle(
                               color: AppColors.textSecondary,

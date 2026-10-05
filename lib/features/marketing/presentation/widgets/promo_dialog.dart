@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:io' as io;
 import 'dart:typed_data';
@@ -8,6 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/marketing/presentation/cubit/marketing_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
@@ -29,6 +31,7 @@ class PromoDialog extends StatefulWidget {
 
 class _PromoDialogState extends State<PromoDialog> {
   final _formKey = GlobalKey<FormState>();
+  final _scrollController = ScrollController();
   late TextEditingController _titleArController;
   late TextEditingController _titleEnController;
   late TextEditingController _expirationDateController;
@@ -186,6 +189,7 @@ class _PromoDialogState extends State<PromoDialog> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _titleArController.dispose();
     _titleEnController.dispose();
     _expirationDateController.dispose();
@@ -196,10 +200,13 @@ class _PromoDialogState extends State<PromoDialog> {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final isCompact = screenWidth < 700;
-    final dialogWidth = isCompact ? screenWidth * 0.92 : 700.w;
-    final dialogPadding = isCompact ? 16.r : 32.r;
+    final screenSize = MediaQuery.sizeOf(context);
+    final isCompact = screenSize.width < 700;
+    final dialogWidth = math.min(
+      isCompact ? screenSize.width * 0.92 : 700.w,
+      screenSize.width - 32,
+    );
+    final dialogPadding = isCompact ? 16.r : 24.r;
     final contentWidth = dialogWidth - dialogPadding * 2;
     return BlocBuilder<RoomCubit, RoomState>(
       builder: (context, roomState) {
@@ -210,15 +217,45 @@ class _PromoDialogState extends State<PromoDialog> {
           ),
           child: Container(
             width: dialogWidth,
-            constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.9),
-            padding: EdgeInsets.all(dialogPadding),
-            child: SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Wrap(
+            constraints: BoxConstraints(maxHeight: screenSize.height * 0.88),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      AppText(
+                        widget.promo.id.isEmpty
+                            ? AppStrings.createPromotion
+                            : AppStrings.promotionsMarketing,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1, color: AppColors.divider),
+                Flexible(
+                  child: Scrollbar(
+                    thumbVisibility: true,
+                    controller: _scrollController,
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      padding: EdgeInsets.all(dialogPadding),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Wrap(
                       spacing: 32.w,
                       runSpacing: 24.h,
                       children: [
@@ -299,16 +336,20 @@ class _PromoDialogState extends State<PromoDialog> {
                                             fit: BoxFit.cover,
                                           )
                                         : (_currentImageUrl != null &&
-                                              _currentImageUrl!
-                                                  .trim()
-                                                  .isNotEmpty)
-                                        ? DecorationImage(
-                                            image: AppCachedImage.provider(
-                                              _currentImageUrl,
-                                            )!,
-                                            fit: BoxFit.cover,
-                                          )
-                                        : null,
+                                                _currentImageUrl!
+                                                    .trim()
+                                                    .isNotEmpty &&
+                                                AppCachedImage.provider(
+                                                      _currentImageUrl,
+                                                    ) !=
+                                                    null)
+                                            ? DecorationImage(
+                                                image: AppCachedImage.provider(
+                                                  _currentImageUrl,
+                                                ) as ImageProvider,
+                                                fit: BoxFit.cover,
+                                              )
+                                            : null,
                                   ),
                                   child:
                                       (_selectedImageBytes == null &&
@@ -381,29 +422,36 @@ class _PromoDialogState extends State<PromoDialog> {
                       onIconChanged: (v) =>
                           setState(() => _selectedIcon = v ?? 'Flash'),
                     ),
-                    SizedBox(height: 32.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        AppButton(
-                          text: AppStrings.cancel,
-                          variant: AppButtonVariant.outlined,
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                        SizedBox(width: 16.w),
-                        AppButton(
-                          text: AppStrings.saveChanges,
-                          onPressed: _isUploading ? null : _submit,
-                          isLoading: _isUploading,
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
             ),
           ),
-        );
+        ),
+        const Divider(height: 1, color: AppColors.divider),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              AppButton(
+                text: AppStrings.cancel,
+                variant: AppButtonVariant.outlined,
+                onPressed: () => Navigator.pop(context),
+              ),
+              SizedBox(width: 16.w),
+              AppButton(
+                text: AppStrings.saveChanges,
+                onPressed: _isUploading ? null : _submit,
+                isLoading: _isUploading,
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  ),
+);
       },
     );
   }

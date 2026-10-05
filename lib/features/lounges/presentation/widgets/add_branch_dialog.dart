@@ -65,7 +65,7 @@ class _AddBranchDialogState extends State<AddBranchDialog> {
       };
 
       if (widget.onSave != null) {
-        await widget.onSave!(branchData);
+        await widget.onSave?.call(branchData);
       }
 
       if (mounted) {

@@ -133,7 +133,7 @@ class _DisputeResolutionDialogState extends State<DisputeResolutionDialog> {
             ),
           ),
           SizedBox(height: 16.h),
-          if (m.disputeReason != null && m.disputeReason!.isNotEmpty) ...[
+          if (m.disputeReason != null && (m.disputeReason?.isNotEmpty ?? false)) ...[
             Text(AppStrings.disputeReasonLabel, style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold, fontSize: 14.sp)),
             SizedBox(height: 6.h),
             Container(
@@ -144,11 +144,11 @@ class _DisputeResolutionDialogState extends State<DisputeResolutionDialog> {
                 borderRadius: BorderRadius.circular(8.r),
                 border: Border.all(color: AppColors.danger.withAlpha(80)),
               ),
-              child: Text(m.disputeReason!, style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp)),
+              child: Text(m.disputeReason ?? '', style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp)),
             ),
             SizedBox(height: 16.h),
           ],
-          if (m.proofUrl != null && m.proofUrl!.isNotEmpty) ...[
+          if (m.proofUrl != null && (m.proofUrl?.isNotEmpty ?? false)) ...[
             Text(AppStrings.disputeProofImageLabel, style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp)),
             SizedBox(height: 6.h),
             Container(
@@ -159,7 +159,7 @@ class _DisputeResolutionDialogState extends State<DisputeResolutionDialog> {
                 borderRadius: BorderRadius.circular(8.r),
               ),
               clipBehavior: Clip.antiAlias,
-              child: AppCachedImage(imageUrl: m.proofUrl!, fit: BoxFit.contain),
+              child: AppCachedImage(imageUrl: m.proofUrl ?? '', fit: BoxFit.contain),
             ),
             SizedBox(height: 20.h),
           ],

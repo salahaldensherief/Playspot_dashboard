@@ -1729,5 +1729,28 @@ class AppStrings {
   static String get issueTypePayment => 'issue_type_payment'.tr();
   static String get issueTypeTechnical => 'issue_type_technical'.tr();
 
+  static String get newSupportTicket => 'new_support_ticket'.tr();
+  static String get issueCategoryGeneral => 'issue_category_general'.tr();
+  static String get issueCategoryBooking => 'issue_category_booking'.tr();
+  static String get issueCategoryPayment => 'issue_category_payment'.tr();
+  static String get issueCategoryTechnical => 'issue_category_technical'.tr();
+  static String get supportContactSettingsSaved => 'support_contact_settings_saved'.tr();
+  static String get supportPolicySaved => 'support_policy_saved'.tr();
+  static String get faqSavedSuccess => 'faq_saved_success'.tr();
+  static String get faqDeletedSuccess => 'faq_deleted_success'.tr();
+  static String get ticketSubmittedSuccess => 'ticket_submitted_success'.tr();
+  static String get nationalIdentityDetails => 'national_identity_details'.tr();
+  static String get nationalIdNumber => 'national_id_number'.tr();
+  static String get idFront => 'id_front'.tr();
+  static String get idBack => 'id_back'.tr();
+  static String get memberSince => 'member_since'.tr();
+  static String get tournamentTitleDefault => 'tournament_title_default'.tr();
+  static String get noReceiptImage => 'no_receipt_image'.tr();
+  static String get championshipTrophy => 'championship_trophy'.tr();
+  static String get cashPrize => 'cash_prize'.tr();
+  static String get secondPlacePrize => 'second_place_prize'.tr();
+  static String get bonusPoints => 'bonus_points'.tr();
+  static String get newReward => 'new_reward'.tr();
+
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }
