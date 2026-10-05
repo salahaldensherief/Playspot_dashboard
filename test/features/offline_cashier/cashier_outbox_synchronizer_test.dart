@@ -136,24 +136,39 @@ void main() {
       ]);
     },
   );
-  test('conflict remains on device and blocks dependent commands', () async {
-    final transport = _Transport(
-      (operation) async => {
-        ...ack(operation, status: 'conflict'),
-        'code': 'ROOM_CONFLICT',
-      },
-    );
-    final synchronizer = CashierOutboxSynchronizer(
-      journal: journal,
-      transport: transport,
-    );
-    final result = await synchronizer.synchronize();
-    expect(result.blockedOperationId, 'operation-1');
-    expect(result.pendingCount, 2);
-    expect((await journal.read())['outbox'], hasLength(2));
-    await synchronizer.synchronize();
-    expect(transport.calls, hasLength(1));
-  });
+  test(
+    'conflict remains on device, retries after approval and clears conflict',
+    () async {
+      var approved = false;
+      final transport = _Transport(
+        (operation) async => approved
+            ? ack(operation)
+            : {...ack(operation, status: 'conflict'), 'code': 'ROOM_CONFLICT'},
+      );
+      final synchronizer = CashierOutboxSynchronizer(
+        journal: journal,
+        transport: transport,
+      );
+      final result = await synchronizer.synchronize();
+      expect(result.blockedOperationId, 'operation-1');
+      expect(result.pendingCount, 2);
+      expect((await journal.read())['outbox'], hasLength(2));
+      expect((await journal.read())['sync_conflicts'], isNotEmpty);
+      expect(transport.calls, hasLength(1));
+
+      approved = true;
+      final retriedResult = await synchronizer.synchronize();
+      expect(retriedResult.appliedCount, 2);
+      expect(retriedResult.pendingCount, 0);
+      expect((await journal.read())['outbox'], isEmpty);
+      expect(
+        (await journal.read())['sync_conflicts']?.containsKey('operation-1') ??
+            false,
+        isFalse,
+      );
+      expect(transport.calls, hasLength(3));
+    },
+  );
   test('unrelated server receipt never deletes local data', () async {
     final transport = _Transport(
       (operation) async => {...ack(operation), 'operation_id': 'wrong-id'},

@@ -11,6 +11,7 @@ import 'offline_workspace_state.dart';
 import '../domain/entities/local_cashier_command.dart';
 import 'widgets/offline_reservation_dialog.dart';
 import 'widgets/offline_sale_dialog.dart';
+import 'widgets/cashier_conflict_review.dart';
 
 class OfflineWorkspacePage extends StatefulWidget {
   const OfflineWorkspacePage({super.key});
@@ -199,6 +200,12 @@ class _OfflineWorkspacePageState extends State<OfflineWorkspacePage> {
                     );
                   },
                 ),
+                if (context.read<LoginCubit>().state.user case final user?)
+                  if (user.isManager || user.isOwner || user.isSuperAdmin)
+                    CashierConflictReview(
+                      actorId: user.id,
+                      loungeId: user.loungeId ?? '',
+                    ),
                 for (final value in conflicts.values)
                   if (value is Map)
                     Card(

@@ -1,3 +1,7 @@
+import 'data/datasources/cashier_conflict_data_source.dart';
+import 'data/repositories/cashier_conflict_repository_impl.dart';
+import 'domain/repositories/cashier_conflict_repository.dart';
+import 'presentation/cashier_conflict_cubit.dart';
 import 'domain/repositories/cashier_workspace_store.dart';
 import 'data/datasources/cashier_workspace_store_impl.dart';
 import 'presentation/offline_workspace_cubit.dart';
@@ -25,6 +29,13 @@ Future<void> initOfflineCashierDI(GetIt sl) async {
   sl.registerLazySingleton<CashierDevicePreferences>(
     () => CashierDevicePreferences(GetStorage('playspot_device_preferences')),
   );
+  sl.registerLazySingleton<CashierConflictDataSource>(
+    () => CashierConflictDataSource(sl()),
+  );
+  sl.registerLazySingleton<CashierConflictRepository>(
+    () => CashierConflictRepositoryImpl(sl()),
+  );
+  sl.registerFactory<CashierConflictCubit>(() => CashierConflictCubit(sl()));
   sl.registerFactory<OfflineWorkspaceCubit>(() => OfflineWorkspaceCubit(sl()));
   sl.registerLazySingleton<CashierWorkspaceStore>(
     () => CashierWorkspaceStoreImpl(sl(), sl()),

@@ -1919,5 +1919,26 @@
     "resume_help": "Synchronize all operations first. Online reservations resume only after successful synchronization and a fresh complete snapshot.",
     "release_help": "Synchronize all operations, resolve conflicts and close your own shift first. This pauses local changes before releasing the device; an uncertain response stays paused until retried.",
     "close_help": "End the session and release its room. Any unpaid balance remains due."
+  },
+  "offline_conflicts": {
+    "title": "Review pending conflicts",
+    "explanation": "After correcting the cause, approve one retry of the original operation. No payment, price or receipt is changed by approval.",
+    "refresh": "Refresh conflicts",
+    "empty": "No pending conflicts.",
+    "operation": "Operation {} · Booking {}",
+    "saved_reason": "Recorded conflict: {}",
+    "waiting": "Approved; synchronize from the original cashier device.",
+    "approve": "Approve one retry",
+    "reason": "What was corrected?",
+    "reason_invalid": "Enter a reason between 10 and 1000 characters.",
+    "retry_same_reason": "An uncertain approval must be retried with the same reason.",
+    "failed": "Review failed. Refresh or retry with the same reason.",
+    "denied": "You do not have permission to review conflicts for this lounge.",
+    "invalid_response": "The server returned an invalid review receipt.",
+    "kind_reserve": "Reservation",
+    "kind_start": "Start session",
+    "kind_close": "End session",
+    "kind_addItems": "Product sale",
+    "kind_collectCash": "Cash collection"
   }
 }

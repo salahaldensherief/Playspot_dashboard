@@ -28,14 +28,6 @@ class CashierOutboxSynchronizer {
         return CashierSyncResult(appliedCount: applied, pendingCount: 0);
       }
       final operation = Map<String, dynamic>.from(outbox.first as Map);
-      final conflicts = state['sync_conflicts'] as Map? ?? const {};
-      if (conflicts.containsKey(operation['id'])) {
-        return CashierSyncResult(
-          appliedCount: applied,
-          pendingCount: outbox.length,
-          blockedOperationId: operation['id'] as String,
-        );
-      }
       final response = await transport.send(operation);
       _checkActive();
       CashierReceiptValidator.validate(operation, response);
@@ -70,6 +62,8 @@ class CashierOutboxSynchronizer {
       throw StateError('offline_cashier.outbox_changed');
     }
     pending.removeAt(0);
+    final conflicts = state['sync_conflicts'] as Map?;
+    conflicts?.remove(operation['id']);
     final acknowledgements =
         state.putIfAbsent('acknowledgements', () => <String, dynamic>{}) as Map;
     acknowledgements[operation['id']] = response;

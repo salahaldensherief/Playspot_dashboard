@@ -184,9 +184,7 @@ class LoungeQueryRemoteHelper {
       return;
     } catch (e) {
       AppLogger.error('deleteLounge soft delete failed: $e');
-      throw Exception(
-        'فشل تعليق الصالة: لا تملك الصلاحيات الكافية لتعديل حالة الصالة.',
-      );
+      rethrow;
     }
   }
 

@@ -1,5 +1,6 @@
 import '../../features/offline_cashier/presentation/offline_workspace_page.dart';
 import '../../features/offline_cashier/presentation/offline_workspace_cubit.dart';
+import '../../features/offline_cashier/presentation/cashier_conflict_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:play_spot_dashboard/art_core/di/provider_scope.dart';
@@ -70,7 +71,10 @@ List<RouteBase> getLoungeAdminRoutes(LoginCubit authCubit) {
       pageBuilder: (context, state) => NoTransitionPage(
         child: BlocProvider(
           create: (_) => sl<OfflineWorkspaceCubit>(),
-          child: const OfflineWorkspacePage(),
+          child: BlocProvider(
+            create: (_) => sl<CashierConflictCubit>(),
+            child: const OfflineWorkspacePage(),
+          ),
         ),
       ),
     ),

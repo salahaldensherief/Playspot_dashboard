@@ -71,13 +71,15 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
 
   void _initializePermissionsAndLounges() {
     final loginState = context.read<LoginCubit>().state;
-    final user = loginState.user;
-    final loungeId = user?.loungeId ?? loginState.userLounge?.id;
-    final roleStr = user?.rawRole ?? user?.role.name ?? 'staff';
+    final user = loginState.user ?? widget.user;
+    if (user == null) return;
+    final raw = user.rawRole;
+    final roleStr = (raw != null && raw.isNotEmpty) ? raw : user.role.name;
+    final loungeId = user.loungeId ?? loginState.userLounge?.id;
     context.read<PermissionsCubit>().ensureUserPermissions(
       roleStr,
       loungeId: loungeId,
-      userId: user?.id,
+      userId: user.id,
     );
 
     final loungeCubit = context.read<LoungeCubit>();
@@ -99,9 +101,10 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
     if (widget.location != oldWidget.location) {
       _checkUnauthorizedNotice();
     }
-    if (widget.user?.id != oldWidget.user?.id ||
-        widget.user?.role != oldWidget.user?.role ||
-        widget.user?.loungeId != oldWidget.user?.loungeId) {
+    if (widget.user != null &&
+        (widget.user?.id != oldWidget.user?.id ||
+            widget.user?.role != oldWidget.user?.role ||
+            widget.user?.loungeId != oldWidget.user?.loungeId)) {
       _initializePermissionsAndLounges();
     }
     if (widget.user?.id != oldWidget.user?.id ||
