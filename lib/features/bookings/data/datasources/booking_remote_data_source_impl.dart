@@ -62,7 +62,13 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     if (response is! List) {
       throw const FormatException('Invalid priced slots response');
     }
-    return response
+
+    final rows =
+        response.length == 1 && response.first is List
+        ? response.first as List
+        : response;
+
+    return rows
         .map((row) => Map<String, dynamic>.from(row as Map))
         .toList();
   }
