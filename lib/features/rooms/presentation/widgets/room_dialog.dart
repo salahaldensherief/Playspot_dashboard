@@ -10,6 +10,7 @@ import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:uuid/uuid.dart';
 import '../../../categories/presentation/categories/category_cubit.dart';
 import '../../domain/entities/room_entity.dart';
+import '../cubit/room_cubit.dart';
 import 'room_basic_info_form.dart';
 import 'room_features_section.dart';
 import 'room_specs_form.dart';
@@ -80,12 +81,7 @@ class _RoomDialogState extends State<RoomDialog> {
       text: r?.extraControllerPrice.toString() ?? '0.0',
     );
 
-    const validSpaceTypes = ['open_area', 'standard_room', 'vip_room'];
-    if (r != null && validSpaceTypes.contains(r.spaceTypeId)) {
-      _selectedSpaceTypeId = r.spaceTypeId;
-    } else {
-      _selectedSpaceTypeId = 'open_area';
-    }
+    _selectedSpaceTypeId = r?.spaceTypeId;
 
     _selectedStatus = r?.status ?? RoomStatusEnum.available;
     if (r != null) {
@@ -138,8 +134,22 @@ class _RoomDialogState extends State<RoomDialog> {
         }
 
         if (mounted) {
-          final spaceTypeId = _selectedSpaceTypeId ?? 'open_area';
-          final isOpenArea = spaceTypeId == 'open_area';
+          final spaceTypes = context.read<RoomCubit>().state.spaceTypes;
+          final selectedSpaceTypeId =
+              _selectedSpaceTypeId ??
+              (spaceTypes.isNotEmpty ? spaceTypes.first.id : null);
+          if (selectedSpaceTypeId == null) {
+            throw StateError('Room space types are unavailable.');
+          }
+
+          final selectedSpaceType = spaceTypes
+              .where((type) => type.id == selectedSpaceTypeId)
+              .firstOrNull;
+          if (selectedSpaceType == null) {
+            throw StateError('Selected room space type is no longer available.');
+          }
+
+          final isOpenArea = selectedSpaceType.categoryKey == 'open_area';
           final singleRate =
               double.tryParse(_hourlyRateSingleController.text) ?? 0.0;
           final multiRate =
@@ -152,10 +162,8 @@ class _RoomDialogState extends State<RoomDialog> {
             nameEn: _nameEnController.text,
             descriptionAr: _descriptionArController.text,
             descriptionEn: _descriptionEnController.text,
-            spaceType: isOpenArea
-                ? 'Open Area'
-                : (spaceTypeId == 'vip_room' ? 'VIP Room' : 'Standard Room'),
-            spaceTypeId: spaceTypeId,
+            spaceType: selectedSpaceType.name,
+            spaceTypeId: selectedSpaceType.id,
             hourlyRateSingle: singleRate,
             hourlyRateMulti: multiRate,
             extraControllerPrice:
@@ -199,6 +207,17 @@ class _RoomDialogState extends State<RoomDialog> {
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final roomState = context.watch<RoomCubit>().state;
+    final spaceTypes = roomState.spaceTypes;
+    final selectedSpaceType = spaceTypes
+        .where((type) => type.id == _selectedSpaceTypeId)
+        .firstOrNull;
+    final effectiveSpaceTypeId =
+        selectedSpaceType?.id ?? (spaceTypes.isNotEmpty ? spaceTypes.first.id : null);
+    final effectiveSpaceType =
+        selectedSpaceType ?? (spaceTypes.isNotEmpty ? spaceTypes.first : null);
+    final isOpenArea = effectiveSpaceType?.categoryKey == 'open_area';
+
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
@@ -221,25 +240,19 @@ class _RoomDialogState extends State<RoomDialog> {
               children: [
                 _buildHeader(),
                 SizedBox(height: 32.h),
-                CustomDropdown<String>(
-                  label: AppStrings.spaceType,
-                  value:
-                      [
-                        'open_area',
-                        'standard_room',
-                        'vip_room',
-                      ].contains(_selectedSpaceTypeId)
-                      ? (_selectedSpaceTypeId ?? 'open_area')
-                      : 'open_area',
-                  items: const ['open_area', 'standard_room', 'vip_room'],
-                  itemLabel: (id) {
-                    if (id == 'open_area') return AppStrings.openArea;
-                    if (id == 'standard_room') return AppStrings.standardRoom;
-                    if (id == 'vip_room') return AppStrings.vipRoom;
-                    return id;
-                  },
-                  onChanged: (v) => setState(() => _selectedSpaceTypeId = v),
-                ),
+                if (spaceTypes.isNotEmpty)
+                  CustomDropdown<String>(
+                    label: AppStrings.spaceType,
+                    value: effectiveSpaceTypeId,
+                    items: spaceTypes.map((type) => type.id).toList(),
+                    itemLabel: (id) => spaceTypes
+                        .where((type) => type.id == id)
+                        .map((type) => type.label)
+                        .firstOrNull ?? id,
+                    onChanged: (v) => setState(() => _selectedSpaceTypeId = v),
+                  )
+                else
+                  const LinearProgressIndicator(),
                 SizedBox(height: 24.h),
                 AppMultiImagePicker(
                   label: AppStrings.roomStationImage,
@@ -256,7 +269,7 @@ class _RoomDialogState extends State<RoomDialog> {
                   descriptionEnController: _descriptionEnController,
                   hourlyRateSingleController: _hourlyRateSingleController,
                   hourlyRateMultiController: _hourlyRateMultiController,
-                  isOpenArea: _selectedSpaceTypeId == 'open_area',
+                  isOpenArea: isOpenArea,
                 ),
                 SizedBox(height: 20.h),
                 RoomSpecsForm(
