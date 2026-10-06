@@ -34,11 +34,6 @@ class ActivityTypeModel extends ActivityTypeEntity {
       'name': name,
       'label': label,
       'sort_order': sortOrder,
-      'category': category,
-      'icon_name': iconName,
-      'pricing_model': pricingModel,
-      'requires_screen': requiresScreen,
-      'requires_controllers': requiresControllers,
     };
   }
 }
