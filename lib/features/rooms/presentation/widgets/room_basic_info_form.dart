@@ -12,6 +12,7 @@ class RoomBasicInfoForm extends StatelessWidget {
   final TextEditingController hourlyRateSingleController;
   final TextEditingController hourlyRateMultiController;
   final bool isOpenArea;
+  final bool supportsMultiRate;
 
   const RoomBasicInfoForm({
     super.key,
@@ -22,6 +23,7 @@ class RoomBasicInfoForm extends StatelessWidget {
     required this.hourlyRateSingleController,
     required this.hourlyRateMultiController,
     this.isOpenArea = false,
+    this.supportsMultiRate = true,
   });
 
   @override
@@ -65,7 +67,9 @@ class RoomBasicInfoForm extends StatelessWidget {
     );
 
     final singleRateField = AppTextField(
-      label: AppStrings.singleRateLabel,
+      label: supportsMultiRate
+          ? AppStrings.singleRateLabel
+          : AppStrings.pricePerHour,
       hintText: AppStrings.pricePerHourHint,
       controller: hourlyRateSingleController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -92,8 +96,10 @@ class RoomBasicInfoForm extends StatelessWidget {
           descEnField,
           SizedBox(height: 16.h),
           singleRateField,
-          SizedBox(height: 16.h),
-          multiRateField,
+          if (supportsMultiRate) ...[
+            SizedBox(height: 16.h),
+            multiRateField,
+          ],
         ],
       );
     }
@@ -119,8 +125,10 @@ class RoomBasicInfoForm extends StatelessWidget {
         Row(
           children: [
             Expanded(child: singleRateField),
-            SizedBox(width: 16.w),
-            Expanded(child: multiRateField),
+            if (supportsMultiRate) ...[
+              SizedBox(width: 16.w),
+              Expanded(child: multiRateField),
+            ],
           ],
         ),
       ],
