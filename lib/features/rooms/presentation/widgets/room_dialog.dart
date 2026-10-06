@@ -110,6 +110,16 @@ class _RoomDialogState extends State<RoomDialog> {
     if (_isUploading) return;
     final form = _formKey.currentState;
     if (form != null && form.validate()) {
+      if (_selectedActivityIds.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppStrings.selectRoomActivityError),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+        return;
+      }
+
       if (_roomImages.isEmpty && (widget.room?.images.isEmpty ?? true)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -150,10 +160,40 @@ class _RoomDialogState extends State<RoomDialog> {
           }
 
           final isOpenArea = selectedSpaceType.categoryKey == 'open_area';
+          final activityTypes =
+              context.read<CategoryCubit>().state.activityTypes;
+          final selectedActivities = activityTypes
+              .where((activity) => _selectedActivityIds.contains(activity.id))
+              .toList();
+          if (selectedActivities.isEmpty) {
+            throw StateError('Selected room activities are unavailable.');
+          }
+
+          final requiresScreen = selectedActivities.any(
+            (activity) => activity.requiresScreen,
+          );
+          final requiresControllers = selectedActivities.any(
+            (activity) => activity.requiresControllers,
+          );
+          final supportsMultiRate = selectedActivities.any(
+            (activity) => activity.pricingModel == 'single_multi_hour',
+          );
+          final categories = selectedActivities
+              .map((activity) => activity.category)
+              .where((value) => value.trim().isNotEmpty)
+              .toSet();
+          final resourceType = categories.length == 1
+              ? categories.first
+              : 'mixed';
+          final pricingModel = supportsMultiRate
+              ? 'single_multi_hour'
+              : selectedActivities.first.pricingModel;
+
           final singleRate =
               double.tryParse(_hourlyRateSingleController.text) ?? 0.0;
-          final multiRate =
-              double.tryParse(_hourlyRateMultiController.text) ?? 0.0;
+          final multiRate = supportsMultiRate
+              ? (double.tryParse(_hourlyRateMultiController.text) ?? singleRate)
+              : singleRate;
 
           final room = RoomEntity(
             id: widget.room?.id ?? const Uuid().v4(),
@@ -166,15 +206,20 @@ class _RoomDialogState extends State<RoomDialog> {
             spaceTypeId: selectedSpaceType.id,
             hourlyRateSingle: singleRate,
             hourlyRateMulti: multiRate,
-            extraControllerPrice:
-                double.tryParse(_extraPriceController.text) ?? 0,
+            extraControllerPrice: requiresControllers
+                ? (double.tryParse(_extraPriceController.text) ?? 0)
+                : 0,
             maxCapacity:
                 int.tryParse(_maxCapacityController.text) ??
                 (isOpenArea ? 2 : 4),
-            controllersCount: isOpenArea
+            controllersCount: requiresControllers
                 ? (int.tryParse(_controllersController.text) ?? 2)
-                : 2,
-            screenSize: isOpenArea ? _screenSizeController.text : '',
+                : 0,
+            screenSize: requiresScreen ? _screenSizeController.text : '',
+            resourceType: resourceType,
+            requiresScreen: requiresScreen,
+            requiresControllers: requiresControllers,
+            pricingModel: pricingModel,
             activityIds: _selectedActivityIds,
             featuresAr: _featuresAr,
             featuresEn: _featuresEn,
@@ -217,6 +262,21 @@ class _RoomDialogState extends State<RoomDialog> {
     final effectiveSpaceType =
         selectedSpaceType ?? (spaceTypes.isNotEmpty ? spaceTypes.first : null);
     final isOpenArea = effectiveSpaceType?.categoryKey == 'open_area';
+    final activityTypes = context.watch<CategoryCubit>().state.activityTypes;
+    final selectedActivities = activityTypes
+        .where((activity) => _selectedActivityIds.contains(activity.id))
+        .toList();
+    final requiresScreen = selectedActivities.isNotEmpty
+        ? selectedActivities.any((activity) => activity.requiresScreen)
+        : (widget.room?.requiresScreen ?? true);
+    final requiresControllers = selectedActivities.isNotEmpty
+        ? selectedActivities.any((activity) => activity.requiresControllers)
+        : (widget.room?.requiresControllers ?? true);
+    final supportsMultiRate = selectedActivities.isNotEmpty
+        ? selectedActivities.any(
+            (activity) => activity.pricingModel == 'single_multi_hour',
+          )
+        : (widget.room?.pricingModel == 'single_multi_hour');
 
     return Dialog(
       backgroundColor: AppColors.cardBackground,
@@ -254,6 +314,41 @@ class _RoomDialogState extends State<RoomDialog> {
                 else
                   const LinearProgressIndicator(),
                 SizedBox(height: 24.h),
+                Text(
+                  AppStrings.roomActivities,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                if (activityTypes.isEmpty)
+                  const LinearProgressIndicator()
+                else
+                  Wrap(
+                    spacing: 8.w,
+                    runSpacing: 8.h,
+                    children: activityTypes.map((activity) {
+                      final selected = _selectedActivityIds.contains(activity.id);
+                      return FilterChip(
+                        label: Text(activity.label),
+                        selected: selected,
+                        onSelected: (value) {
+                          setState(() {
+                            if (value) {
+                              if (!_selectedActivityIds.contains(activity.id)) {
+                                _selectedActivityIds.add(activity.id);
+                              }
+                            } else {
+                              _selectedActivityIds.remove(activity.id);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                SizedBox(height: 24.h),
                 AppMultiImagePicker(
                   label: AppStrings.roomStationImage,
                   initialUrls: widget.room?.images,
@@ -270,6 +365,7 @@ class _RoomDialogState extends State<RoomDialog> {
                   hourlyRateSingleController: _hourlyRateSingleController,
                   hourlyRateMultiController: _hourlyRateMultiController,
                   isOpenArea: isOpenArea,
+                  supportsMultiRate: supportsMultiRate,
                 ),
                 SizedBox(height: 20.h),
                 RoomSpecsForm(
@@ -277,7 +373,9 @@ class _RoomDialogState extends State<RoomDialog> {
                   controllersController: _controllersController,
                   screenSizeController: _screenSizeController,
                   extraPriceController: _extraPriceController,
-                  selectedSpaceTypeId: _selectedSpaceTypeId,
+                  selectedSpaceTypeId: effectiveSpaceType?.categoryKey,
+                  requiresControllers: requiresControllers,
+                  requiresScreen: requiresScreen,
                   status: _selectedStatus,
                   onStatusChanged: (v) {
                     if (v != null) {
@@ -307,7 +405,7 @@ class _RoomDialogState extends State<RoomDialog> {
                   featuresAr: _featuresAr,
                   featuresEn: _featuresEn,
                   selectedActivityIds: _selectedActivityIds,
-                  activitiesList: widget.categoryCubit.state.activityTypes,
+                  activitiesList: activityTypes,
                   onAddFeature: (en, ar) => setState(() {
                     _featuresEn.add(en);
                     _featuresAr.add(ar);
