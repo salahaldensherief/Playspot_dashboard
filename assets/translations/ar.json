@@ -94,6 +94,8 @@
   "live_bookings_feed": "موجز الحجوزات المباشرة",
   "add_new": "+ إضافة جديد",
   "add_new_activity": "إضافة نوع تجربة جديد",
+  "room_activities": "الأنشطة",
+  "select_room_activity_error": "اختار نشاط واحد على الأقل للمكان.",
   "manage_rooms_desc": "إدارة التوفر وحالة الصيانة لمحطات اللعب",
   "add_new_lounge": "إضافة صالة جديدة",
   "manage_lounges_desc": "إدارة مواقع الألعاب والغرف والأنشطة الخاصة بك",
