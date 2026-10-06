@@ -228,8 +228,16 @@ class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository
             name: a.name,
             label: a.label,
             sortOrder: a.sortOrder,
+            category: a.category,
+            iconName: a.iconName,
+            pricingModel: a.pricingModel,
+            requiresScreen: a.requiresScreen,
+            requiresControllers: a.requiresControllers,
           )).toList();
-          _localCacheService.setJson(cacheKey, models.map((m) => m.toJson()).toList());
+          _localCacheService.setJson(
+            cacheKey,
+            models.map((m) => m.toCacheJson()).toList(),
+          );
         },
       );
       return result;
@@ -254,8 +262,16 @@ class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository
         name: a.name,
         label: a.label,
         sortOrder: a.sortOrder,
+        category: a.category,
+        iconName: a.iconName,
+        pricingModel: a.pricingModel,
+        requiresScreen: a.requiresScreen,
+        requiresControllers: a.requiresControllers,
       )).toList();
-      await _localCacheService.setJson(cacheKey, models.map((m) => m.toJson()).toList());
+      await _localCacheService.setJson(
+        cacheKey,
+        models.map((m) => m.toCacheJson()).toList(),
+      );
     } catch (_) {}
   }
 
