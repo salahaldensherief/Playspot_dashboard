@@ -407,7 +407,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       params: {
         'p_booking_id': bookingId,
         'p_new_room_id': newRoomId,
-        'p_action_by': actionBy,
+        'p_actor_id': actionBy,
       },
     );
   }
