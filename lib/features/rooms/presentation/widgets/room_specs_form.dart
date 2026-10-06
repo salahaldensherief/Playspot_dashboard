@@ -14,6 +14,8 @@ class RoomSpecsForm extends StatelessWidget {
   final TextEditingController screenSizeController;
   final TextEditingController extraPriceController;
   final String? selectedSpaceTypeId;
+  final bool requiresControllers;
+  final bool requiresScreen;
   final RoomStatusEnum status;
   final Function(RoomStatusEnum?)? onStatusChanged;
   final List<String> featuresEn;
@@ -26,6 +28,8 @@ class RoomSpecsForm extends StatelessWidget {
     required this.screenSizeController,
     required this.extraPriceController,
     this.selectedSpaceTypeId,
+    this.requiresControllers = true,
+    this.requiresScreen = true,
     required this.status,
     this.onStatusChanged,
     required this.featuresEn,
@@ -85,12 +89,16 @@ class RoomSpecsForm extends StatelessWidget {
         if (isCompact) ...[
           statusDropdown,
           SizedBox(height: 16.h),
-          extraPriceField,
-          SizedBox(height: 16.h),
+          if (requiresControllers) ...[
+            extraPriceField,
+            SizedBox(height: 16.h),
+          ],
           capacityField,
-          if (isOpenArea) ...[
+          if (requiresControllers) ...[
             SizedBox(height: 16.h),
             controllersField,
+          ],
+          if (requiresScreen) ...[
             SizedBox(height: 16.h),
             screenSizeField,
           ],
@@ -98,21 +106,23 @@ class RoomSpecsForm extends StatelessWidget {
           Row(
             children: [
               Expanded(child: statusDropdown),
-              SizedBox(width: 16.w),
-              Expanded(child: extraPriceField),
+              if (requiresControllers) ...[
+                SizedBox(width: 16.w),
+                Expanded(child: extraPriceField),
+              ],
             ],
           ),
           SizedBox(height: 20.h),
           Row(
             children: [
               Expanded(child: capacityField),
-              SizedBox(width: 16.w),
-              if (isOpenArea) ...[
+              if (requiresControllers) ...[
+                SizedBox(width: 16.w),
                 Expanded(child: controllersField),
+              ],
+              if (requiresScreen) ...[
                 SizedBox(width: 16.w),
                 Expanded(child: screenSizeField),
-              ] else ...[
-                const Spacer(flex: 2),
               ],
             ],
           ),
@@ -138,7 +148,8 @@ class RoomSpecsForm extends StatelessWidget {
               ),
               _buildFeatureCheckbox(AppStrings.soundproof, 'Soundproof'),
               _buildFeatureCheckbox(AppStrings.soundSystem, 'Sound System'),
-              _buildFeatureCheckbox(AppStrings.screen4k, '4K Screen'),
+              if (requiresScreen)
+                _buildFeatureCheckbox(AppStrings.screen4k, '4K Screen'),
             ],
           ),
         ],
