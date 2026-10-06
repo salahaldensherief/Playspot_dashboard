@@ -94,6 +94,8 @@
   "live_bookings_feed": "Live Bookings Feed",
   "add_new": "+ Add New",
   "add_new_activity": "Add New Experience Type",
+  "room_activities": "Activities",
+  "select_room_activity_error": "Select at least one activity for this room.",
   "add_new_room": "Add New Room",
   "manage_rooms_desc": "Manage availability and maintenance status of your gaming stations",
   "add_new_lounge": "Add New Lounge",
