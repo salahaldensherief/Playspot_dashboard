@@ -121,20 +121,45 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
                       tournament.registrationDeadline)
                   .toUtc()
                   .toIso8601String(),
-          'p_tournament_starts_at': tournament.startDate
-              .toUtc()
+          'p_payment_deadline_minutes':
+              tournament.paymentDeadlineMinutes ?? 30,
+          'p_check_in_opens_at': tournament.checkInOpensAt
+              ?.toUtc()
               .toIso8601String(),
-          'p_rules': tournament.rules,
-          'p_banner_url': tournament.bannerUrl,
+          'p_check_in_closes_at': tournament.checkInClosesAt
+              ?.toUtc()
+              .toIso8601String(),
+          'p_tournament_starts_at':
+              (tournament.tournamentStartsAt ?? tournament.startDate)
+                  .toUtc()
+                  .toIso8601String(),
         },
       );
 
-      final createdData = response is List && response.isNotEmpty
+      dynamic createdData = response is List && response.isNotEmpty
           ? response.first
           : (response is Map ? response : null);
       if (createdData != null) {
+        final createdMap = Map<String, dynamic>.from(createdData as Map);
+        final metadata = <String, dynamic>{
+          if (tournament.rules != null && tournament.rules!.trim().isNotEmpty)
+            'description_ar': tournament.rules!.trim(),
+          if (tournament.rules != null && tournament.rules!.trim().isNotEmpty)
+            'description_en': tournament.rules!.trim(),
+          if (tournament.bannerUrl != null &&
+              tournament.bannerUrl!.trim().isNotEmpty)
+            'banner_url': tournament.bannerUrl!.trim(),
+        };
+        if (metadata.isNotEmpty) {
+          createdData = await client
+              .from('tournaments')
+              .update(metadata)
+              .eq('id', createdMap['id'])
+              .select()
+              .single();
+        }
         final model = TournamentModel.fromJson(
-          Map<String, dynamic>.from(createdData),
+          Map<String, dynamic>.from(createdData as Map),
         );
         if (tournament.prizes.isNotEmpty) {
           final prizeModels = tournament.prizes
