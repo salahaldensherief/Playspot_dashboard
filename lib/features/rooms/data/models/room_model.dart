@@ -26,6 +26,10 @@ class RoomModel extends RoomEntity {
     required super.featuresEn,
     super.controllersCount,
     super.screenSize,
+    super.resourceType,
+    super.requiresScreen,
+    super.requiresControllers,
+    super.pricingModel,
     super.status,
     super.hasOffer,
     super.offerTitle,
@@ -130,7 +134,12 @@ class RoomModel extends RoomEntity {
           ? List<String>.from(json['features_en'])
           : [],
       controllersCount: parseInt(json['controllers_count'], 2),
-      screenSize: json['screen_size']?.toString() ?? '43"',
+      screenSize: json['screen_size']?.toString() ?? '',
+      resourceType: json['resource_type']?.toString() ?? 'console',
+      requiresScreen: json['requires_screen'] as bool? ?? true,
+      requiresControllers: json['requires_controllers'] as bool? ?? true,
+      pricingModel:
+          json['pricing_model']?.toString() ?? 'single_multi_hour',
       status: parseStatus(json['status']),
       openTimeEnabled: json['open_time_enabled'] == true,
       openTimePricingMode:
@@ -177,7 +186,11 @@ class RoomModel extends RoomEntity {
       'features_ar': featuresAr,
       'features_en': featuresEn,
       'controllers_count': controllersCount,
-      'screen_size': screenSize,
+      'screen_size': requiresScreen ? screenSize : '',
+      'resource_type': resourceType,
+      'requires_screen': requiresScreen,
+      'requires_controllers': requiresControllers,
+      'pricing_model': pricingModel,
       'status': switch (status) {
         RoomStatusEnum.available => 'available',
         RoomStatusEnum.maintenance => 'maintenance',
