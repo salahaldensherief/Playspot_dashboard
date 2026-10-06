@@ -127,34 +127,23 @@ class PricingRemoteDataSourceImpl implements PricingRemoteDataSource {
     int extraControllers = 0,
     String? couponCode,
   }) async {
-    try {
-      final response = await supabase.rpc(
-        'quote_booking_price',
-        params: {
-          'p_room_id': roomId,
-          'p_date': date,
-          'p_start': startTime,
-          'p_end': endTime,
-          'p_play_mode': playMode,
-          'p_extra_controllers': extraControllers,
-          'p_coupon_code':
-              (couponCode != null && couponCode.isNotEmpty) ? couponCode : null,
-        },
-      );
-      if (response is Map) {
-        return PricingQuoteModel.fromJson(Map<String, dynamic>.from(response));
-      }
-    } catch (_) {
-      // Safe fallback quote
-    }
-
-    return const PricingQuoteModel(
-      segments: [],
-      roomSubtotal: 0.0,
-      extraControllersAmount: 0.0,
-      discountAmount: 0.0,
-      total: 0.0,
+    final response = await supabase.rpc(
+      'quote_booking_price',
+      params: {
+        'p_room_id': roomId,
+        'p_date': date,
+        'p_start': startTime,
+        'p_end': endTime,
+        'p_play_mode': playMode,
+        'p_extra_controllers': extraControllers,
+        'p_coupon_code':
+            (couponCode != null && couponCode.isNotEmpty) ? couponCode : null,
+      },
     );
+    if (response is! Map) {
+      throw const FormatException('Invalid pricing quote response');
+    }
+    return PricingQuoteModel.fromJson(Map<String, dynamic>.from(response));
   }
 
   @override
@@ -170,26 +159,32 @@ class PricingRemoteDataSourceImpl implements PricingRemoteDataSource {
           'p_date': date,
         },
       );
-      if (response is List) {
-        return response.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      if (response is! List) {
+        throw const FormatException('Invalid priced slots response');
       }
-    } catch (_) {}
-    return [];
+      final rows =
+          response.length == 1 && response.first is List
+          ? response.first as List
+          : response;
+      return rows
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+    } catch (_) {
+      rethrow;
+    }
   }
 
   @override
   Future<Map<String, dynamic>> getLoungePriceRange({
     required String loungeId,
   }) async {
-    try {
-      final response = await supabase.rpc(
-        'get_lounge_price_range',
-        params: {'p_lounge_id': loungeId},
-      );
-      if (response is Map) {
-        return Map<String, dynamic>.from(response);
-      }
-    } catch (_) {}
-    return {'min_hourly_rate': 0, 'max_hourly_rate': 0, 'currency': 'EGP'};
+    final response = await supabase.rpc(
+      'get_lounge_price_range',
+      params: {'p_lounge_id': loungeId},
+    );
+    if (response is! Map) {
+      throw const FormatException('Invalid lounge price range response');
+    }
+    return Map<String, dynamic>.from(response);
   }
 }
