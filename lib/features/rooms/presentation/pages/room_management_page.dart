@@ -5,6 +5,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
+import 'package:play_spot_dashboard/features/categories/presentation/categories/category_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/room_cubit.dart';
 import '../widgets/room_management_header.dart';
@@ -25,6 +26,9 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
       _loadedLoungeId = loungeId;
       context.read<RoomCubit>().watchRooms(loungeId);
       context.read<RoomCubit>().loadSpaceTypes();
+      if (context.read<CategoryCubit>().state.activityTypes.isEmpty) {
+        context.read<CategoryCubit>().loadCategories();
+      }
     }
   }
 
