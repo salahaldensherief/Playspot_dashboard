@@ -36,4 +36,15 @@ class ActivityTypeModel extends ActivityTypeEntity {
       'sort_order': sortOrder,
     };
   }
+
+  Map<String, dynamic> toCacheJson() {
+    return {
+      ...toJson(),
+      'category': category,
+      'icon_name': iconName,
+      'pricing_model': pricingModel,
+      'requires_screen': requiresScreen,
+      'requires_controllers': requiresControllers,
+    };
+  }
 }
