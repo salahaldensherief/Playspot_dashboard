@@ -132,6 +132,8 @@ class AppStrings {
   // Room Management
   static String get addNew => 'add_new'.tr();
   static String get addNewActivity => 'add_new_activity'.tr();
+  static String get roomActivities => 'room_activities'.tr();
+  static String get selectRoomActivityError => 'select_room_activity_error'.tr();
   static String get addNewRoom => 'add_new_room'.tr();
   static String get manageRoomsDesc => 'manage_rooms_desc'.tr();
   static String get roomName => 'room_name'.tr();
