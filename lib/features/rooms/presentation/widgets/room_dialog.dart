@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../audit/presentation/widgets/audit_timeline.dart';
+import '../../../categories/presentation/categories/category_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -263,7 +265,8 @@ class _RoomDialogState extends State<RoomDialog> {
     final effectiveSpaceType =
         selectedSpaceType ?? (spaceTypes.isNotEmpty ? spaceTypes.first : null);
     final isOpenArea = effectiveSpaceType?.categoryKey == 'open_area';
-    final activityTypes = context.watch<CategoryCubit>().state.activityTypes;
+    final categoryState = context.watch<CategoryCubit>().state;
+    final activityTypes = categoryState.activityTypes;
     final selectedActivities = activityTypes
         .where((activity) => _selectedActivityIds.contains(activity.id))
         .toList();
@@ -324,8 +327,10 @@ class _RoomDialogState extends State<RoomDialog> {
                   ),
                 ),
                 SizedBox(height: 10.h),
-                if (activityTypes.isEmpty)
+                if (activityTypes.isEmpty && categoryState.status.isLoading)
                   const LinearProgressIndicator()
+                else if (activityTypes.isEmpty)
+                  Text(AppStrings.selectRoomActivityError)
                 else
                   Wrap(
                     spacing: 8.w,
@@ -426,6 +431,10 @@ class _RoomDialogState extends State<RoomDialog> {
                     }
                   }),
                 ),
+                if (widget.room != null) ...[
+                  SizedBox(height: 24.h),
+                  AuditTimeline(entityType: 'room', entityId: widget.room!.id, loungeId: widget.loungeId),
+                ],
                 SizedBox(height: 32.h),
                 _buildActions(),
               ],

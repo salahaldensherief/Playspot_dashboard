@@ -44,13 +44,17 @@ class RoomSpecsForm extends StatelessWidget {
     final statusDropdown = CustomDropdown<RoomStatusEnum>(
       label: AppStrings.status,
       value: status,
-      items: RoomStatusEnum.values,
-      itemLabel: (s) => s.name.toUpperCase(),
-      onChanged: (val) {
-        if (onStatusChanged != null) {
-          onStatusChanged!(val);
-        }
+      items: status == RoomStatusEnum.occupied
+          ? [RoomStatusEnum.occupied]
+          : [RoomStatusEnum.available, RoomStatusEnum.maintenance],
+      itemLabel: (s) => switch (s) {
+        RoomStatusEnum.available => AppStrings.availableStatus,
+        RoomStatusEnum.maintenance => AppStrings.maintenanceStatus,
+        RoomStatusEnum.occupied => AppStrings.occupiedStatus,
       },
+      onChanged: status == RoomStatusEnum.occupied || onStatusChanged == null
+          ? null
+          : (val) => onStatusChanged!(val),
     );
 
     final extraPriceField = AppTextField(

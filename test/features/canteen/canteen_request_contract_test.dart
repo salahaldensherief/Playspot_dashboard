@@ -12,7 +12,7 @@ void main() {
     final client = SupabaseClient('https://example.invalid', 'test-key',
       httpClient: MockClient((request) async => http.Response(
         '{"message":"Denied","code":"42501"}',403,
-        headers: {'content-type':'application/json'})));
+        headers: {'content-type':'application/json'}, request: request)));
     addTearDown(client.dispose);
     final source = CanteenRemoteDataSourceImpl(client);
     for (final request in [
@@ -29,7 +29,7 @@ void main() {
     final client = SupabaseClient('https://example.invalid','test-key',
       httpClient: MockClient((request) async {
         requests.add(request);
-        return http.Response('null',200,headers:{'content-type':'application/json'});
+        return http.Response('null',200,headers:{'content-type':'application/json'}, request: request);
       }));
     addTearDown(client.dispose);
     final source = CanteenRemoteDataSourceImpl(client);
@@ -49,7 +49,7 @@ void main() {
       httpClient: MockClient((request) async {
         requests.add(request);
         return http.Response(deny ? '{"message":"Denied","code":"42501"}' : '[]',
-          deny ? 403 : 200,headers:{'content-type':'application/json'});
+          deny ? 403 : 200,headers:{'content-type':'application/json'}, request: request);
       }));
     addTearDown(client.dispose);
     final source = PricingRemoteDataSourceImpl(client);

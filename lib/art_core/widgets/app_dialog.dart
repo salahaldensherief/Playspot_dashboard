@@ -98,7 +98,12 @@ class AppDialog extends StatelessWidget {
               const Divider(height: 1, color: AppColors.divider),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 28.r, vertical: 16.r),
-                child: Row(mainAxisAlignment: MainAxisAlignment.end, children: actions ?? const []),
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  runSpacing: 8,
+                  children: actions ?? const [],
+                ),
               ),
             ],
           ],

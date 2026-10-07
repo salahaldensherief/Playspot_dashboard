@@ -17,6 +17,10 @@ void main() {
     await EasyLocalization.ensureInitialized();
   });
   testWidgets('failed activity save keeps the form and prevents duplicate pending writes', (tester) async {
+    tester.view.physicalSize = const Size(1440, 1024);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     final pending = Completer<ActivityTypeEntity?>();
     var calls = 0;
     const activity = ActivityTypeEntity(id:'activity',name:'table_tennis',label:'Table Tennis',
@@ -32,7 +36,7 @@ void main() {
             expect(value.requiresScreen,isFalse); return pending.future;
           })))))));
     await tester.pumpAndSettle();
-    final save = find.widgetWithText(AppButton,AppStrings.save);
+    final save = find.byWidgetPredicate((widget) => widget is AppButton && widget.text == AppStrings.save);
     await tester.tap(save); await tester.pump();
     expect(calls,1);
     expect(tester.widget<AppButton>(save).onPressed,isNull);

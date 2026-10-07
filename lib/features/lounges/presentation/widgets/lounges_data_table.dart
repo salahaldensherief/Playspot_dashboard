@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -35,6 +36,7 @@ class LoungesDataTable extends StatelessWidget {
           previous.status != current.status ||
           previous.lounges != current.lounges,
       builder: (context, state) {
+        context.locale;
         if (state.status == LoungeStatus.loading && state.lounges.isEmpty) {
           return const TableShimmer(columns: 6);
         }
@@ -184,7 +186,8 @@ class LoungesDataTable extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
+              Expanded(
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -203,7 +206,9 @@ class LoungesDataTable extends StatelessWidget {
                     ),
                   ),
                 ],
+                ),
               ),
+              const SizedBox(width: 8),
               lounge.status == 'pending'
                   ? StatusBadge.warning(AppStrings.pending)
                   : lounge.isOpen
@@ -262,17 +267,21 @@ class LoungesDataTable extends StatelessWidget {
       children: [
         Icon(icon, size: 16.r, color: AppColors.textSecondary),
         SizedBox(width: 8.w),
-        Text(
+        Flexible(
+          child: Text(
           '$label:',
           style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+          ),
         ),
         SizedBox(width: 4.w),
-        Text(
+        Flexible(
+          child: Text(
           value,
           style: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 12.sp,
             fontWeight: FontWeight.w500,
+          ),
           ),
         ),
       ],
@@ -296,6 +305,7 @@ class LoungesDataTable extends StatelessWidget {
           }
         },
         builder: (context, state) {
+        context.locale;
           return EditLoungeDialog(
             lounge: lounge,
             isLoading: state.status == LoungeStatus.loading,

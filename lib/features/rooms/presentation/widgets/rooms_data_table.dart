@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
+import '../../../permissions/presentation/cubit/permissions_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -6,7 +8,6 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/categories/presentation/categories/category_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/widgets/room_dialog.dart';
@@ -20,9 +21,13 @@ class RoomsDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<LoginCubit>().state.user;
+    context.locale;
+    final user = context.watch<LoginCubit>().state.user;
+    final permissions = context.watch<PermissionsCubit>();
     final loungeId = user?.loungeId ?? '';
-    final bool canEdit = user?.canEditSetup ?? false;
+    final bool canEdit = user != null && permissions.hasPermission(
+      'rooms_manage', userRole: user.role.name, userId: user.id,
+    );
     final roomCubit = context.read<RoomCubit>();
     final categoryCubit = context.read<CategoryCubit>();
 
@@ -57,7 +62,9 @@ class RoomsDataTable extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        room.nameAr.isNotEmpty ? room.nameAr : room.nameEn,
+                        context.locale.languageCode == 'ar'
+                      ? (room.nameAr.isNotEmpty ? room.nameAr : room.nameEn)
+                      : (room.nameEn.isNotEmpty ? room.nameEn : room.nameAr),
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
@@ -114,7 +121,7 @@ class RoomsDataTable extends StatelessWidget {
                     Switch(
                       value: room.status == RoomStatusEnum.available,
                       activeThumbColor: AppColors.neonBlue,
-                      onChanged: (val) =>
+                      onChanged: room.status == RoomStatusEnum.occupied ? null : (_) =>
                           roomCubit.toggleRoomStatus(room.id, room.status),
                     ),
                   ),
@@ -193,7 +200,9 @@ class RoomsDataTable extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  room.nameAr.isNotEmpty ? room.nameAr : room.nameEn,
+                  context.locale.languageCode == 'ar'
+                      ? (room.nameAr.isNotEmpty ? room.nameAr : room.nameEn)
+                      : (room.nameEn.isNotEmpty ? room.nameEn : room.nameAr),
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 15.sp,
@@ -206,8 +215,9 @@ class RoomsDataTable extends StatelessWidget {
           ),
           SizedBox(height: 8.h),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
             children: [
               Text(
                 '${AppStrings.singlePrice}: ${room.hourlyRateSingle.toStringAsFixed(0)} ${AppStrings.egpPerHour}',
@@ -227,8 +237,10 @@ class RoomsDataTable extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               _getStatusBadge(room.status),
               if (canEdit)
@@ -246,7 +258,7 @@ class RoomsDataTable extends StatelessWidget {
                     Switch(
                       value: isAvailable,
                       activeThumbColor: AppColors.neonBlue,
-                      onChanged: (_) =>
+                      onChanged: isOccupied ? null : (_) =>
                           cubit.toggleRoomStatus(room.id, room.status),
                     ),
                   ],
@@ -259,23 +271,6 @@ class RoomsDataTable extends StatelessWidget {
             SizedBox(height: 8.h),
             Row(
               children: [
-                Expanded(
-                  child: AppButton(
-                    text: isOccupied
-                        ? AppStrings.endSession
-                        : AppStrings.walkInBooking,
-                    variant: isOccupied
-                        ? AppButtonVariant.outlined
-                        : AppButtonVariant.primary,
-                    icon: isOccupied
-                        ? Icons.check_circle_outline
-                        : Icons.play_arrow_rounded,
-                    height: 48.h,
-                    onPressed: () =>
-                        cubit.toggleWalkInStatus(room.id, room.status),
-                  ),
-                ),
-                SizedBox(width: 8.w),
                 IconButton(
                   icon: Icon(
                     Icons.edit_outlined,
@@ -321,13 +316,23 @@ class RoomsDataTable extends StatelessWidget {
     String loungeId,
     RoomEntity room,
   ) {
+    final loginCubit = context.read<LoginCubit>();
+    final permissionsCubit = context.read<PermissionsCubit>();
     showDialog(
       context: context,
-      builder: (_) => RoomDialog(
+      builder: (_) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: cubit),
+          BlocProvider.value(value: categoryCubit),
+          BlocProvider.value(value: loginCubit),
+          BlocProvider.value(value: permissionsCubit),
+        ],
+        child: RoomDialog(
         loungeId: loungeId,
         room: room,
         categoryCubit: categoryCubit,
         onSave: (updatedRoom) => cubit.updateRoom(updatedRoom),
+        ),
       ),
     );
   }

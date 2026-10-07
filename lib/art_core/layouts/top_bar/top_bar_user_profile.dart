@@ -33,6 +33,7 @@ class TopBarUserProfile extends StatelessWidget {
     return BlocBuilder<LoginCubit, LoginState>(
       buildWhen: (prev, curr) => prev.user != curr.user,
       builder: (context, state) {
+        context.locale;
         final user = state.user;
         if (user == null) return _buildDefaultAvatar();
 

@@ -125,6 +125,7 @@ class _ActivityTypeDialogState extends State<ActivityTypeDialog> {
           ? AppStrings.addNewActivity
           : AppStrings.editActivity,
       width: 620.w,
+      showCloseIcon: !_isSaving,
       actions: [
         AppButton(
           text: AppStrings.cancel,
