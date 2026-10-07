@@ -40,31 +40,37 @@ class ExtrasCubit extends Cubit<ExtrasState> {
     );
   }
 
-  Future<void> addExtra(ExtraEntity extra) async {
+  Future<bool> addExtra(ExtraEntity extra) async {
     final result = await repository.addExtra(extra);
     
-    if (isClosed) return;
+    if (isClosed) return false;
 
-    result.fold(
-      (failure) => emit(state.copyWith(
+    return result.fold<Future<bool>>(
+      (failure) async {
+        emit(state.copyWith(
         status: ExtrasStatus.failure,
         errorMessage: failure.message,
-      )),
-      (_) => loadExtras(extra.loungeId),
+        ));
+        return false;
+      },
+      (_) async { await loadExtras(extra.loungeId); return true; },
     );
   }
 
-  Future<void> updateExtra(ExtraEntity extra) async {
+  Future<bool> updateExtra(ExtraEntity extra) async {
     final result = await repository.updateExtra(extra);
     
-    if (isClosed) return;
+    if (isClosed) return false;
 
-    result.fold(
-      (failure) => emit(state.copyWith(
+    return result.fold<Future<bool>>(
+      (failure) async {
+        emit(state.copyWith(
         status: ExtrasStatus.failure,
         errorMessage: failure.message,
-      )),
-      (_) => loadExtras(extra.loungeId),
+        ));
+        return false;
+      },
+      (_) async { await loadExtras(extra.loungeId); return true; },
     );
   }
 
