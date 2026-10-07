@@ -9,12 +9,9 @@ import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.da
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/core/responsive/responsive.dart';
-import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/city_entity.dart';
 import 'category_cubit.dart';
 import 'category_state.dart';
-import 'widgets/category_card.dart';
-import 'widgets/category_dialog.dart';
 import 'widgets/city_dialog.dart';
 
 class CategoriesScreen extends StatefulWidget {
@@ -43,26 +40,6 @@ class _CategoriesScreenState extends State<CategoriesScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
-  }
-
-  void _showCategoryDialog(
-    BuildContext context,
-    CategoryCubit cubit, {
-    CategoryEntity? category,
-  }) {
-    showDialog(
-      context: context,
-      builder: (diagContext) => CategoryDialog(
-        category: category,
-        onSave: (cat) {
-          if (category == null) {
-            cubit.addCategory(cat);
-          } else {
-            cubit.updateCategory(cat);
-          }
-        },
-      ),
-    );
   }
 
   void _showCityDialog(
@@ -106,11 +83,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
               icon: Icons.location_city,
               variant: AppButtonVariant.outlined,
             ),
-            primaryAction: AppButton(
-              text: AppStrings.addCategory,
-              onPressed: () => _showCategoryDialog(context, categoryCubit),
-              icon: Icons.add,
-            ),
+            primaryAction: null,
           ),
           SizedBox(height: 24.h),
           TabBar(
@@ -120,7 +93,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
             unselectedLabelColor: AppColors.textSecondary,
             indicatorColor: AppColors.neonBlue,
             tabs: [
-              Tab(text: AppStrings.categories),
+              Tab(text: AppStrings.roomActivities),
               Tab(text: AppStrings.cities),
             ],
           ),
@@ -148,41 +121,6 @@ class _CategoriesScreenState extends State<CategoriesScreen>
         if (state.status.isLoading) {
           return const GridShimmer(itemCount: 6, aspectRatio: 2.5);
         }
-        if (state.status.isSuccess) {
-          if (state.categories.isEmpty) {
-            return Center(
-              child: Text(
-                AppStrings.noCategoriesFound,
-                style: const TextStyle(color: AppColors.textSecondary),
-              ),
-            );
-          }
-          final crossAxisCount = Responsive.isMobile(context)
-              ? 1
-              : (Responsive.isTablet(context) ? 2 : 3);
-          return GridView.builder(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: 16.r,
-              mainAxisSpacing: 16.r,
-              mainAxisExtent: 100.h,
-            ),
-            itemCount: state.categories.length,
-            itemBuilder: (context, index) {
-              final category = state.categories[index];
-              return CategoryCard(
-                category: category,
-                onEdit: () => _showCategoryDialog(
-                  context,
-                  categoryCubit,
-                  category: category,
-                ),
-                onDelete: () =>
-                    _confirmDelete(context, categoryCubit, category),
-              );
-            },
-          );
-        }
         if (state.status.isFailure) {
           return Center(
             child: Text(
@@ -191,7 +129,68 @@ class _CategoriesScreenState extends State<CategoriesScreen>
             ),
           );
         }
-        return const SizedBox.shrink();
+        if (state.activityTypes.isEmpty) {
+          return Center(
+            child: Text(
+              AppStrings.noCategoriesFound,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          );
+        }
+
+        final crossAxisCount = Responsive.isMobile(context)
+            ? 1
+            : (Responsive.isTablet(context) ? 2 : 3);
+
+        return GridView.builder(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 16.r,
+            mainAxisSpacing: 16.r,
+            mainAxisExtent: 120.h,
+          ),
+          itemCount: state.activityTypes.length,
+          itemBuilder: (context, index) {
+            final activity = state.activityTypes[index];
+            return Container(
+              padding: EdgeInsets.all(16.r),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: AppColors.borderDefault),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    activity.label,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 6.h),
+                  Text(
+                    activity.name,
+                    style: const TextStyle(color: AppColors.textSecondary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 6.h),
+                  Text(
+                    '${activity.category} • ${activity.pricingModel}',
+                    style: const TextStyle(color: AppColors.textMuted),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            );
+          },
+        );
       },
     );
   }
@@ -249,39 +248,6 @@ class _CategoriesScreenState extends State<CategoriesScreen>
           },
         );
       },
-    );
-  }
-
-  void _confirmDelete(
-    BuildContext context,
-    CategoryCubit cubit,
-    CategoryEntity category,
-  ) {
-    showDialog(
-      context: context,
-      builder: (diagContext) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        title: Text(
-          AppStrings.deleteConfirmation,
-          style: const TextStyle(color: AppColors.textPrimary),
-        ),
-        content: Text('${AppStrings.deleteWarning} "${category.nameEn}"?'),
-        actions: [
-          AppButton(
-            text: AppStrings.cancel,
-            variant: AppButtonVariant.outlined,
-            onPressed: () => Navigator.pop(diagContext),
-          ),
-          AppButton(
-            text: AppStrings.delete,
-            variant: AppButtonVariant.danger,
-            onPressed: () {
-              cubit.deleteCategory(category.id);
-              Navigator.pop(diagContext);
-            },
-          ),
-        ],
-      ),
     );
   }
 
