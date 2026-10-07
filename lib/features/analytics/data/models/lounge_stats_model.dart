@@ -1,6 +1,12 @@
 import '../../domain/entities/lounge_stats_entity.dart';
 
 class LoungeStatsModel extends LoungeStatsEntity {
+  static double _normalizeOccupancyRate(Object? value) {
+    final raw = value is num ? value.toDouble() : 0.0;
+    if (raw <= 0) return 0.0;
+    return raw > 1 ? (raw / 100).clamp(0.0, 1.0) : raw.clamp(0.0, 1.0);
+  }
+
   const LoungeStatsModel({
     required super.success,
     required super.loungeId,
@@ -22,7 +28,7 @@ class LoungeStatsModel extends LoungeStatsEntity {
       monthlyRevenue: (json['monthly_revenue'] as num?)?.toDouble() ?? 0.0,
       totalRooms: (json['total_rooms'] as num?)?.toInt() ?? 0,
       occupiedRooms: (json['occupied_rooms'] as num?)?.toInt() ?? 0,
-      occupancyRate: (json['occupancy_rate'] as num?)?.toDouble() ?? 0.0,
+      occupancyRate: _normalizeOccupancyRate(json['occupancy_rate']),
       activeBookings: (json['active_bookings'] as num?)?.toInt() ?? 0,
       openShifts: (json['open_shifts'] as num?)?.toInt() ?? 0,
       lowStockItems: (json['low_stock_items'] as num?)?.toInt() ?? 0,
