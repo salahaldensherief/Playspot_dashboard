@@ -42,7 +42,7 @@ void main() {
     expect(tester.widget<AppButton>(save).onPressed,isNull);
     pending.complete(null); await tester.pumpAndSettle();
     expect(find.byType(ActivityTypeDialog),findsOneWidget);
-    expect(find.text('Table Tennis'),findsOneWidget);
+    expect(find.byWidgetPredicate((widget) => widget is EditableText && widget.controller.text == 'Table Tennis'),findsOneWidget);
     expect(find.text(AppStrings.actionFailed),findsOneWidget);
     expect(tester.takeException(),isNull);
   });
