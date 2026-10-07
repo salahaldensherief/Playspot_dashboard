@@ -9,9 +9,11 @@ import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.da
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/core/responsive/responsive.dart';
+import '../../domain/entities/activity_type_entity.dart';
 import '../../domain/entities/city_entity.dart';
 import 'category_cubit.dart';
 import 'category_state.dart';
+import 'widgets/activity_type_dialog.dart';
 import 'widgets/city_dialog.dart';
 
 class CategoriesScreen extends StatefulWidget {
@@ -40,6 +42,20 @@ class _CategoriesScreenState extends State<CategoriesScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _showActivityDialog(
+    BuildContext context,
+    CategoryCubit cubit, {
+    ActivityTypeEntity? activity,
+  }) {
+    showDialog(
+      context: context,
+      builder: (diagContext) => ActivityTypeDialog(
+        activity: activity,
+        onSave: cubit.saveActivityType,
+      ),
+    );
   }
 
   void _showCityDialog(
@@ -83,7 +99,11 @@ class _CategoriesScreenState extends State<CategoriesScreen>
               icon: Icons.location_city,
               variant: AppButtonVariant.outlined,
             ),
-            primaryAction: null,
+            primaryAction: AppButton(
+              text: AppStrings.addNewActivity,
+              onPressed: () => _showActivityDialog(context, categoryCubit),
+              icon: Icons.add,
+            ),
           ),
           SizedBox(height: 24.h),
           TabBar(
@@ -159,32 +179,77 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                 borderRadius: BorderRadius.circular(12.r),
                 border: Border.all(color: AppColors.borderDefault),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Row(
                 children: [
-                  Text(
-                    activity.label,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    width: 42.r,
+                    height: 42.r,
+                    decoration: BoxDecoration(
+                      color: AppColors.neonBlue.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10.r),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    child: const Icon(
+                      Icons.sports_esports_outlined,
+                      color: AppColors.neonBlue,
+                    ),
                   ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    activity.name,
-                    style: const TextStyle(color: AppColors.textSecondary),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          activity.label,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          activity.name,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          '${activity.category} • ${activity.pricingModel}',
+                          style: const TextStyle(color: AppColors.textMuted),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    '${activity.category} • ${activity.pricingModel}',
-                    style: const TextStyle(color: AppColors.textMuted),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  IconButton(
+                    tooltip: AppStrings.edit,
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () => _showActivityDialog(
+                      context,
+                      categoryCubit,
+                      activity: activity,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: AppStrings.delete,
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: AppColors.danger,
+                    ),
+                    onPressed: () => _confirmActivityDelete(
+                      context,
+                      categoryCubit,
+                      activity,
+                    ),
                   ),
                 ],
               ),
@@ -248,6 +313,42 @@ class _CategoriesScreenState extends State<CategoriesScreen>
           },
         );
       },
+    );
+  }
+
+  void _confirmActivityDelete(
+    BuildContext context,
+    CategoryCubit cubit,
+    ActivityTypeEntity activity,
+  ) {
+    showDialog(
+      context: context,
+      builder: (diagContext) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        title: Text(
+          AppStrings.deleteConfirmation,
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
+        content: Text(
+          '${AppStrings.deleteWarning} "${activity.label}"?',
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.outlined,
+            onPressed: () => Navigator.pop(diagContext),
+          ),
+          AppButton(
+            text: AppStrings.delete,
+            variant: AppButtonVariant.danger,
+            onPressed: () {
+              cubit.deleteActivityType(activity.id);
+              Navigator.pop(diagContext);
+            },
+          ),
+        ],
+      ),
     );
   }
 
