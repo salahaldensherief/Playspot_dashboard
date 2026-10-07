@@ -485,7 +485,6 @@ BEGIN
       )
   );
 END;
-$function$
-
+$function$;
 
 COMMIT;
