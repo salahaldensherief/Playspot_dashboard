@@ -1393,6 +1393,7 @@
   "confirm_save_rule": "تأكيد حفظ قاعدة التسعير",
   "affected_rooms_notice": "سيتم تطبيق هذه القاعدة على {count} غرفة متأثرة.",
   "existing_bookings_unaffected": "ملاحظة: الحجوزات الحالية القائمة لن تتأثر بهذا التعديل.",
+  "pricing_future_scope_notice": "ستُطبق هذه القاعدة على عروض الأسعار والحجوزات المستقبلية المطابقة لنطاقها.",
   "active_status": "فعّالة",
   "scheduled_status": "مجدولة",
   "expired_status": "منتهية",
