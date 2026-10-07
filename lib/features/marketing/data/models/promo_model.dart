@@ -19,6 +19,9 @@ class PromoModel extends PromoEntity {
     super.targetAudience = 'all',
     super.discountType = 'percentage',
     super.discountValue = 0,
+    super.isActive = true,
+    super.archivedAt,
+    super.resharedFromId,
   });
 
   factory PromoModel.fromJson(Map<String, dynamic> json) {
@@ -74,6 +77,11 @@ class PromoModel extends PromoEntity {
       targetAudience: json['target_audience']?.toString() ?? 'all',
       discountType: json['discount_type']?.toString() ?? 'percentage',
       discountValue: (json['discount_value'] as num?)?.toDouble() ?? 0,
+      isActive: json['is_active'] as bool? ?? true,
+      archivedAt: json['archived_at'] != null
+          ? DateTime.tryParse(json['archived_at'].toString())
+          : null,
+      resharedFromId: json['reshared_from_id']?.toString(),
     );
   }
 
@@ -104,6 +112,9 @@ class PromoModel extends PromoEntity {
       'target_audience': targetAudience,
       'discount_type': discountType,
       'discount_value': discountValue,
+      'is_active': isActive,
+      'archived_at': archivedAt?.toIso8601String(),
+      'reshared_from_id': resharedFromId,
     };
   }
 }
