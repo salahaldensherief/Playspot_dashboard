@@ -275,14 +275,51 @@ class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository
     } catch (_) {}
   }
 
+  ActivityTypeModel _activityModel(ActivityTypeEntity activityType) {
+    return ActivityTypeModel(
+      id: activityType.id,
+      name: activityType.name,
+      label: activityType.label,
+      sortOrder: activityType.sortOrder,
+      category: activityType.category,
+      iconName: activityType.iconName,
+      pricingModel: activityType.pricingModel,
+      requiresScreen: activityType.requiresScreen,
+      requiresControllers: activityType.requiresControllers,
+    );
+  }
+
   @override
-  Future<Either<Failure, ActivityTypeEntity>> addActivityType(ActivityTypeEntity activityType) async {
-    final result = await callRepository(() => _remoteSource.addActivityType(ActivityTypeModel(
-          id: activityType.id,
-          name: activityType.name,
-          label: activityType.label,
-          sortOrder: activityType.sortOrder,
-        )));
+  Future<Either<Failure, ActivityTypeEntity>> addActivityType(
+    ActivityTypeEntity activityType,
+  ) async {
+    final result = await callRepository(
+      () => _remoteSource.addActivityType(_activityModel(activityType)),
+    );
+    if (result.isRight()) {
+      await _localCacheService.remove('cache_activity_types');
+    }
+    return result;
+  }
+
+  @override
+  Future<Either<Failure, ActivityTypeEntity>> updateActivityType(
+    ActivityTypeEntity activityType,
+  ) async {
+    final result = await callRepository(
+      () => _remoteSource.updateActivityType(_activityModel(activityType)),
+    );
+    if (result.isRight()) {
+      await _localCacheService.remove('cache_activity_types');
+    }
+    return result;
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteActivityType(String id) async {
+    final result = await callRepository(
+      () => _remoteSource.deleteActivityType(id),
+    );
     if (result.isRight()) {
       await _localCacheService.remove('cache_activity_types');
     }
