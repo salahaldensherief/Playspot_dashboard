@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/features/system/domain/entities/app_status_entity.dart';
 import 'package:play_spot_dashboard/features/system/domain/usecases/get_app_status_usecase.dart';
@@ -38,9 +39,9 @@ class AppStatusCubit extends Cubit<AppStatusCubitState> {
   AppStatusCubit({
     required GetAppStatusUseCase getAppStatusUseCase,
     required SupabaseClient supabaseClient,
-  })  : _getAppStatusUseCase = getAppStatusUseCase,
-        _supabaseClient = supabaseClient,
-        super(const AppStatusCubitState());
+  }) : _getAppStatusUseCase = getAppStatusUseCase,
+       _supabaseClient = supabaseClient,
+       super(const AppStatusCubitState());
 
   void initAppStatusWatch() {
     if (isClosed || _watching) return;
