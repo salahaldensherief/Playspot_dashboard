@@ -1653,7 +1653,12 @@
   "promotion_session_expired": "انتهت جلستك. سجّل الدخول مجددًا.",
   "promotion_invalid_details": "راجع بيانات العرض وقيمة الخصم والغرفة المختارة.",
   "promotion_operation_failed": "تعذر إتمام عملية العرض. تحقق من الاتصال وحاول مجددًا.",
-  "promo_deleted_success": "تم أرشفة العرض.",\n  "promo_archived": "مؤرشف",\n  "archive_promotion": "أرشفة",\n  "reshare_promotion": "إعادة نشر",\n  "archived_promotions": "المؤرشفة",\n  "promo_reshared_success": "تمت إعادة نشر العرض بنجاح.",
+  "promo_deleted_success": "تم أرشفة العرض.",
+  "promo_archived": "مؤرشف",
+  "archive_promotion": "أرشفة",
+  "reshare_promotion": "إعادة نشر",
+  "archived_promotions": "المؤرشفة",
+  "promo_reshared_success": "تمت إعادة نشر العرض بنجاح.",
   "priced_per_room": "السعر حسب الغرفة",
   "room_enable_open_time": "تفعيل الوقت المفتوح",
   "room_open_time_description": "يسمح للكاشير ببدء جلسة بدون وقت نهاية ثابت وحسابها عند الإغلاق.",
@@ -1975,6 +1980,5 @@
   "cash_prize": "جائزة مالية",
   "second_place_prize": "جائزة المركز الثاني",
   "bonus_points": "نقاط مكافأة",
-  "new_reward": "جائزة جديدة",
-  undefined
+  "new_reward": "جائزة جديدة"
 }
