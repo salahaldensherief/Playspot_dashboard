@@ -122,7 +122,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
                   .toUtc()
                   .toIso8601String(),
           'p_payment_deadline_minutes':
-              tournament.paymentDeadlineMinutes ?? 30,
+              tournament.paymentDeadlineMinutes,
           'p_check_in_opens_at': tournament.checkInOpensAt
               ?.toUtc()
               .toIso8601String(),
@@ -140,7 +140,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
           ? response.first
           : (response is Map ? response : null);
       if (createdData != null) {
-        final createdMap = Map<String, dynamic>.from(createdData as Map);
+        final createdMap = Map<String, dynamic>.from(createdData);
         final metadata = <String, dynamic>{
           if (tournament.rules != null && tournament.rules!.trim().isNotEmpty)
             'description_ar': tournament.rules!.trim(),
@@ -159,7 +159,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
               .single();
         }
         final model = TournamentModel.fromJson(
-          Map<String, dynamic>.from(createdData as Map),
+          Map<String, dynamic>.from(createdData),
         );
         if (tournament.prizes.isNotEmpty) {
           final prizeModels = tournament.prizes
@@ -201,7 +201,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
                 .toUtc()
                 .toIso8601String(),
         'p_payment_deadline_minutes':
-            tournament.paymentDeadlineMinutes ?? 30,
+            tournament.paymentDeadlineMinutes,
         'p_check_in_opens_at': tournament.checkInOpensAt
             ?.toUtc()
             .toIso8601String(),
@@ -233,7 +233,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
     }
 
     final updatedModel = TournamentModel.fromJson(
-      Map<String, dynamic>.from(updatedData as Map),
+      Map<String, dynamic>.from(updatedData),
     );
     if (tournament.prizes.isNotEmpty) {
       final prizeModels = tournament.prizes
