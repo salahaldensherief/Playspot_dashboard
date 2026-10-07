@@ -20,9 +20,18 @@ class LoungeAnalyticsRemoteHelper {
   }
 
   Map<String, dynamic> _dashboardMap(Object? response) {
-    if (response is! Map)
+    if (response is! Map) {
       throw const FormatException('invalid_dashboard_response');
-    return Map<String, dynamic>.from(response);
+    }
+    final map = Map<String, dynamic>.from(response);
+    final rawOccupancy = map['occupancy_rate'];
+    if (rawOccupancy is num) {
+      final value = rawOccupancy.toDouble();
+      map['occupancy_rate'] = value > 1
+          ? (value / 100).clamp(0.0, 1.0)
+          : value.clamp(0.0, 1.0);
+    }
+    return map;
   }
 
   Future<List<Map<String, dynamic>>> getRevenueOverTime(String period) async {
