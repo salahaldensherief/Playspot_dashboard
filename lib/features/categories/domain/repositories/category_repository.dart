@@ -18,5 +18,11 @@ abstract class CategoryRepository {
 
   // Activity Types
   Future<Either<Failure, List<ActivityTypeEntity>>> getActivityTypes({bool forceRefresh = false});
-  Future<Either<Failure, ActivityTypeEntity>> addActivityType(ActivityTypeEntity activityType);
+  Future<Either<Failure, ActivityTypeEntity>> addActivityType(
+    ActivityTypeEntity activityType,
+  );
+  Future<Either<Failure, ActivityTypeEntity>> updateActivityType(
+    ActivityTypeEntity activityType,
+  );
+  Future<Either<Failure, void>> deleteActivityType(String id);
 }
