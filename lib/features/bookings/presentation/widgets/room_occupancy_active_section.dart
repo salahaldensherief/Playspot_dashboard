@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
+
 import 'session_time_builder.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -137,56 +139,60 @@ class _RoomOccupancyActiveSectionState
                 ? '$hours:$minutes:$secs'
                 : '$minutes:$secs';
             return Container(
-          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-          decoration: BoxDecoration(
-            color: isExpired
-                ? AppColors.danger.withValues(alpha: 0.15)
-                : AppColors.neonBlue.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(
-              color: isExpired
-                  ? AppColors.danger
-                  : AppColors.neonBlue.withValues(alpha: 0.3),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: isExpired
+                    ? AppColors.danger.withValues(alpha: 0.15)
+                    : AppColors.neonBlue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(
+                  color: isExpired
+                      ? AppColors.danger
+                      : AppColors.neonBlue.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(
-                    isOpenTime
-                        ? Icons.all_inclusive_rounded
-                        : (isExpired ? Icons.timer_off : Icons.timer),
-                    size: 16.r,
-                    color: isExpired ? AppColors.danger : AppColors.neonBlue,
+                  Row(
+                    children: [
+                      Icon(
+                        isOpenTime
+                            ? Icons.all_inclusive_rounded
+                            : (isExpired ? Icons.timer_off : Icons.timer),
+                        size: 16.r,
+                        color: isExpired
+                            ? AppColors.danger
+                            : AppColors.neonBlue,
+                      ),
+                      SizedBox(width: 6.w),
+                      AppText.body(
+                        isOpenTime
+                            ? AppStrings.duration
+                            : (isExpired
+                                  ? AppStrings.timeExpired
+                                  : AppStrings.remainingTime),
+                        fontSize: 11.sp,
+                        color: isExpired
+                            ? AppColors.danger
+                            : AppColors.textSecondary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 6.w),
-                  AppText.body(
+                  AppText.subHeading(
                     isOpenTime
-                        ? AppStrings.duration
+                        ? formattedRemaining
                         : (isExpired
-                              ? AppStrings.timeExpired
-                              : AppStrings.remainingTime),
-                    fontSize: 11.sp,
-                    color: isExpired
-                        ? AppColors.danger
-                        : AppColors.textSecondary,
+                              ? '-$formattedRemaining'
+                              : formattedRemaining),
+                    fontSize: 14.sp,
+                    color: isExpired ? AppColors.danger : AppColors.neonBlue,
                     fontWeight: FontWeight.bold,
                   ),
                 ],
               ),
-              AppText.subHeading(
-                isOpenTime
-                    ? formattedRemaining
-                    : (isExpired ? '-$formattedRemaining' : formattedRemaining),
-                fontSize: 14.sp,
-                color: isExpired ? AppColors.danger : AppColors.neonBlue,
-                fontWeight: FontWeight.bold,
-              ),
-            ],
-          ),
-        );
+            );
           },
         ),
         RoomOccupancyRequestsBadge(booking: activeBooking, room: room),

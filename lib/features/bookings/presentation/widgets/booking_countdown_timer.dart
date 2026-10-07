@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
+
 import 'session_time_builder.dart';
+
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -18,15 +20,13 @@ class BookingCountdownTimer extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => SessionTimeBuilder(
-    builder: _buildCountdown,
-  );
+  Widget build(BuildContext context) =>
+      SessionTimeBuilder(builder: _buildCountdown);
 
   Widget _buildCountdown(BuildContext context, DateTime now) {
     EasyLocalization.of(context);
     final start = booking.startDateTime;
     if (start == null) return const SizedBox.shrink();
-
 
     if (now.isBefore(start)) {
       // Countdown to start time

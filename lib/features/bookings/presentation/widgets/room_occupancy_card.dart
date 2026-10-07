@@ -172,10 +172,7 @@ class RoomOccupancyCard extends StatelessWidget {
           ] else if (isMaintenance) ...[
             _buildMaintenanceContent(),
           ] else ...[
-            RoomOccupancyAvailableSection(
-              room: room,
-              loungeId: loungeId,
-            ),
+            RoomOccupancyAvailableSection(room: room, loungeId: loungeId),
           ],
         ],
       ),

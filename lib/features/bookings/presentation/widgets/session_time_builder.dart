@@ -10,9 +10,15 @@ class SessionTimeBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (context.getInheritedWidgetOfExactType<SessionTickerScope>() == null) {
+    final scope = context.getInheritedWidgetOfExactType<SessionTickerScope>();
+    if (scope == null) {
       return SessionClockHost(child: SessionTimeBuilder(builder: builder));
     }
-    return builder(context, SessionTickerScope.nowOf(context));
+    final ticker = scope.notifier!;
+    if (!TickerMode.of(context)) return builder(context, ticker.now);
+    return AnimatedBuilder(
+      animation: ticker,
+      builder: (context, child) => builder(context, ticker.now),
+    );
   }
 }

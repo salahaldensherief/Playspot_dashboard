@@ -1,6 +1,8 @@
 import 'package:play_spot_dashboard/core/error/backend_access_error.dart';
+
 import '../../../../core/streams/refreshing_stream.dart';
 import 'requests_realtime_invalidations.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import 'package:play_spot_dashboard/features/requests/data/datasources/requests_fallback_fetcher.dart';
@@ -30,9 +32,8 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     return refreshingStream<List<ClientRequestModel>>(
       fetch: () => getClientRequests(loungeId: cleanLoungeId),
       invalidations: () => watchRequestInvalidations(client, cleanLoungeId),
-      onRealtimeError: (error) => debugPrint(
-        '⚠️ [REQUESTS_DATA_SOURCE] Realtime Error: $error',
-      ),
+      onRealtimeError: (error) =>
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Realtime Error: $error'),
     );
   }
 

@@ -1,4 +1,5 @@
 import '../../../../core/streams/refreshing_stream.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/features/bookings/data/models/booking_model.dart';
@@ -19,9 +20,8 @@ class ActiveSessionsStreamHelper {
         if (cleanLoungeId != null) query = query.eq('lounge_id', cleanLoungeId);
         return query;
       },
-      onRealtimeError: (error) => debugPrint(
-        '⚠️ [ActiveSessionsStreamHelper] Realtime Error: $error',
-      ),
+      onRealtimeError: (error) =>
+          debugPrint('⚠️ [ActiveSessionsStreamHelper] Realtime Error: $error'),
     );
   }
 
