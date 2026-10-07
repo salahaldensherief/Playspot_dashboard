@@ -178,16 +178,29 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
 
   @override
   Future<void> sendNotification(NotificationModel notification) async {
+    final params = {
+      'p_title_ar': notification.titleAr,
+      'p_title_en': notification.titleEn,
+      'p_body_ar': notification.bodyAr,
+      'p_body_en': notification.bodyEn,
+      'p_type': notification.type.name,
+      'p_metadata': notification.metadata ?? <String, dynamic>{},
+    };
+
+    final targetUserId = notification.userId?.trim();
+    if (targetUserId == null || targetUserId.isEmpty) {
+      await _supabase.rpc(
+        'send_broadcast_notification',
+        params: params,
+      );
+      return;
+    }
+
     await _supabase.rpc(
       'send_user_notification',
       params: {
-        'p_user_id': notification.userId,
-        'p_title_ar': notification.titleAr,
-        'p_title_en': notification.titleEn,
-        'p_body_ar': notification.bodyAr,
-        'p_body_en': notification.bodyEn,
-        'p_type': notification.type.toString().split('.').last,
-        'p_metadata': <String, dynamic>{},
+        'p_user_id': targetUserId,
+        ...params,
       },
     );
   }
