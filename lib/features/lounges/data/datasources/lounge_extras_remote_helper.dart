@@ -10,26 +10,53 @@ class LoungeExtrasRemoteHelper {
     final response = await client
         .from('extras')
         .select('*')
-        .eq('lounge_id', loungeId);
+        .eq('lounge_id', loungeId)
+        .eq('is_active', true);
     return (response as List).map((e) => ExtraModel.fromJson(e)).toList();
   }
 
   Future<void> addExtra(ExtraModel extra) async {
-    await client.from('extras').insert(extra.toJson());
+    await _saveExtra(extra);
   }
 
   Future<void> updateExtra(ExtraModel extra) async {
-    await client.from('extras').update(extra.toJson()).eq('id', extra.id);
+    await _saveExtra(extra);
+  }
+
+  Future<void> _saveExtra(ExtraModel extra) async {
+    final response = await client.rpc(
+      'save_lounge_extra',
+      params: {'p_extra': extra.toJson()},
+    );
+    if (response is! Map || response['id']?.toString() != extra.id) {
+      throw const FormatException('Invalid extra save response');
+    }
   }
 
   Future<void> deleteExtra(String extraId) async {
-    await client.from('extras').delete().eq('id', extraId);
+    final response = await client.rpc(
+      'archive_lounge_extra',
+      params: {'p_extra_id': extraId},
+    );
+    if (response is! Map ||
+        response['success'] != true ||
+        response['extra_id']?.toString() != extraId) {
+      throw const FormatException('Invalid extra archive response');
+    }
   }
 
   Future<void> toggleExtraStock(String extraId, bool isOutOfStock) async {
-    await client
-        .from('extras')
-        .update({'is_available': !isOutOfStock})
-        .eq('id', extraId);
+    final response = await client.rpc(
+      'set_lounge_extra_availability',
+      params: {
+        'p_extra_id': extraId,
+        'p_is_available': !isOutOfStock,
+      },
+    );
+    if (response is! Map ||
+        response['success'] != true ||
+        response['extra_id']?.toString() != extraId) {
+      throw const FormatException('Invalid extra availability response');
+    }
   }
 }
