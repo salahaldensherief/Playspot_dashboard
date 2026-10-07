@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../domain/entities/pricing_rule_entity.dart';
+import '../domain/usecases/check_pricing_rule_conflicts_usecase.dart';
 import '../domain/usecases/delete_pricing_rule_usecase.dart';
 import '../domain/usecases/get_pricing_rules_usecase.dart';
 import '../domain/usecases/quote_booking_price_usecase.dart';
@@ -10,6 +11,7 @@ class PricingCubit extends Cubit<PricingState> {
   final GetPricingRulesUseCase getPricingRulesUseCase;
   final SavePricingRuleUseCase savePricingRuleUseCase;
   final DeletePricingRuleUseCase deletePricingRuleUseCase;
+  final CheckPricingRuleConflictsUseCase checkPricingRuleConflictsUseCase;
   final QuoteBookingPriceUseCase quoteBookingPriceUseCase;
 
   PricingCubit({
@@ -44,8 +46,47 @@ class PricingCubit extends Cubit<PricingState> {
     emit(state.copyWith(groupBy: groupBy));
   }
 
-  Future<bool> saveRule(PricingRuleEntity rule, {required String loungeId}) async {
-    emit(state.copyWith(isSaving: true, errorMessage: null));
+  Future<bool> saveRule(
+    PricingRuleEntity rule, {
+    required String loungeId,
+  }) async {
+    emit(
+      state.copyWith(
+        isSaving: true,
+        errorMessage: null,
+        conflictingRules: const [],
+      ),
+    );
+
+    final conflictResult = await checkPricingRuleConflictsUseCase(
+      CheckPricingRuleConflictsParams(rule: rule),
+    );
+
+    final conflicts = conflictResult.fold<List<PricingRuleEntity>>(
+      (failure) {
+        emit(
+          state.copyWith(
+            isSaving: false,
+            errorMessage: failure.message,
+          ),
+        );
+        return const [];
+      },
+      (value) => value,
+    );
+
+    if (state.errorMessage != null) return false;
+
+    if (conflicts.isNotEmpty) {
+      emit(
+        state.copyWith(
+          isSaving: false,
+          conflictingRules: conflicts,
+        ),
+      );
+      return false;
+    }
+
     final result = await savePricingRuleUseCase(
       SavePricingRuleParams(rule: rule),
     );
