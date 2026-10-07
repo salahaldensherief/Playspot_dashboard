@@ -1653,7 +1653,12 @@
   "promotion_session_expired": "Your session expired. Sign in again.",
   "promotion_invalid_details": "Check the promotion details, discount value and selected room.",
   "promotion_operation_failed": "Could not complete the promotion operation. Check your connection and retry.",
-  "promo_deleted_success": "Promotion archived.",\n  "promo_archived": "Archived",\n  "archive_promotion": "Archive",\n  "reshare_promotion": "Re-share",\n  "archived_promotions": "Archived",\n  "promo_reshared_success": "Promotion re-shared successfully.",
+  "promo_deleted_success": "Promotion archived.",
+  "promo_archived": "Archived",
+  "archive_promotion": "Archive",
+  "reshare_promotion": "Re-share",
+  "archived_promotions": "Archived",
+  "promo_reshared_success": "Promotion re-shared successfully.",
   "priced_per_room": "Priced per room",
   "room_enable_open_time": "Enable open-ended sessions",
   "room_open_time_description": "Allow the cashier to start a session without a fixed end time and bill it when closed.",
@@ -1975,6 +1980,5 @@
   "cash_prize": "Cash Prize",
   "second_place_prize": "2nd Place Prize",
   "bonus_points": "Bonus Points",
-  "new_reward": "New Reward",
-  undefined
+  "new_reward": "New Reward"
 }
