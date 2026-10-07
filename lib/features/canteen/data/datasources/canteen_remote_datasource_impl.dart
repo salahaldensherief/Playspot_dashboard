@@ -12,35 +12,31 @@ class CanteenRemoteDataSourceImpl implements CanteenRemoteDataSource {
 
   @override
   Future<List<CanteenComboModel>> getCombos({required String loungeId}) async {
-    try {
-      final response = await supabase
-          .from('canteen_combos')
-          .select('''
-            *,
-            canteen_combo_items (
-              combo_id,
-              extra_id,
-              quantity,
-              extras (
-                id,
-                name_ar,
-                name_en,
-                price,
-                cost_price,
-                image_url
-              )
+    final response = await supabase
+        .from('canteen_combos')
+        .select('''
+          *,
+          canteen_combo_items (
+            combo_id,
+            extra_id,
+            quantity,
+            extras (
+              id,
+              name_ar,
+              name_en,
+              price,
+              cost_price,
+              image_url
             )
-          ''')
-          .eq('lounge_id', loungeId)
-          .order('sort_order', ascending: true)
-          .order('created_at', ascending: false);
+          )
+        ''')
+        .eq('lounge_id', loungeId)
+        .order('sort_order', ascending: true)
+        .order('created_at', ascending: false);
 
-      return (response as List)
-          .map((e) => CanteenComboModel.fromJson(Map<String, dynamic>.from(e as Map)))
-          .toList();
-    } catch (_) {
-      return [];
-    }
+    return (response as List)
+        .map((e) => CanteenComboModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
   }
 
   @override
@@ -71,41 +67,37 @@ class CanteenRemoteDataSourceImpl implements CanteenRemoteDataSource {
 
   @override
   Future<void> deleteCombo(String id) async {
-    await supabase.from('canteen_combos').delete().eq('id', id);
+    await supabase.from('canteen_combos').update({'is_active': false}).eq('id', id);
   }
 
   @override
   Future<List<UpsellRuleModel>> getUpsellRules({required String loungeId}) async {
-    try {
-      final response = await supabase
-          .from('upsell_rules')
-          .select('''
-            *,
-            extras (
-              id,
-              name_ar,
-              name_en,
-              price,
-              image_url
-            ),
-            canteen_combos (
-              id,
-              name_ar,
-              name_en,
-              price,
-              image_url
-            )
-          ''')
-          .eq('lounge_id', loungeId)
-          .order('priority', ascending: false)
-          .order('created_at', ascending: false);
+    final response = await supabase
+        .from('upsell_rules')
+        .select('''
+          *,
+          extras (
+            id,
+            name_ar,
+            name_en,
+            price,
+            image_url
+          ),
+          canteen_combos (
+            id,
+            name_ar,
+            name_en,
+            price,
+            image_url
+          )
+        ''')
+        .eq('lounge_id', loungeId)
+        .order('priority', ascending: false)
+        .order('created_at', ascending: false);
 
-      return (response as List)
-          .map((e) => UpsellRuleModel.fromJson(Map<String, dynamic>.from(e as Map)))
-          .toList();
-    } catch (_) {
-      return [];
-    }
+    return (response as List)
+        .map((e) => UpsellRuleModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
   }
 
   @override
@@ -154,38 +146,30 @@ class CanteenRemoteDataSourceImpl implements CanteenRemoteDataSource {
 
   @override
   Future<void> deleteUpsellRule(String id) async {
-    await supabase.from('upsell_rules').delete().eq('id', id);
+    await supabase.from('upsell_rules').update({'is_active': false}).eq('id', id);
   }
 
   @override
   Future<List<UpsellConversionModel>> getUpsellConversions({required String loungeId}) async {
-    try {
-      final response = await supabase
-          .from('canteen_upsell_conversion_v')
-          .select('*')
-          .eq('lounge_id', loungeId);
+    final response = await supabase
+        .from('canteen_upsell_conversion_v')
+        .select('*')
+        .eq('lounge_id', loungeId);
 
-      return (response as List)
-          .map((e) => UpsellConversionModel.fromJson(Map<String, dynamic>.from(e as Map)))
-          .toList();
-    } catch (_) {
-      return [];
-    }
+    return (response as List)
+        .map((e) => UpsellConversionModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
   }
 
   @override
   Future<List<LowStockAlertModel>> getLowStockAlerts({required String loungeId}) async {
-    try {
-      final response = await supabase
-          .from('canteen_low_stock_alerts_v')
-          .select('*')
-          .eq('lounge_id', loungeId);
+    final response = await supabase
+        .from('canteen_low_stock_alerts_v')
+        .select('*')
+        .eq('lounge_id', loungeId);
 
-      return (response as List)
-          .map((e) => LowStockAlertModel.fromJson(Map<String, dynamic>.from(e as Map)))
-          .toList();
-    } catch (_) {
-      return [];
-    }
+    return (response as List)
+        .map((e) => LowStockAlertModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
   }
 }

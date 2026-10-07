@@ -353,11 +353,11 @@ class RoomsDataTable extends StatelessWidget {
   Widget _getStatusBadge(RoomStatusEnum status) {
     switch (status) {
       case RoomStatusEnum.available:
-        return StatusBadge.success('Available');
+        return StatusBadge.success(AppStrings.availableStatus);
       case RoomStatusEnum.maintenance:
-        return StatusBadge.warning('Maintenance');
+        return StatusBadge.warning(AppStrings.maintenanceStatus);
       case RoomStatusEnum.occupied:
-        return StatusBadge.danger('Occupied');
+        return StatusBadge.danger(AppStrings.occupiedStatus);
     }
   }
 

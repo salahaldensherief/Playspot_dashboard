@@ -66,7 +66,7 @@ class LoungesDataTable extends StatelessWidget {
             AppStrings.loungeName,
             AppStrings.loungeOwnerAdmin,
             AppStrings.location,
-            AppStrings.pricedPerRoom,
+            AppStrings.roomPricePerHour,
             AppStrings.status,
             AppStrings.actions,
           ],

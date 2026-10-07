@@ -73,7 +73,7 @@ void main() {
       expect(lounge.id, 'lounge-1');
       expect(lounge.status, 'pending');
       expect(requests.map((r) => r.method), ['POST', 'GET']);
-      expect(requests.first.url.path, '/rest/v1/rpc/batch_complete_onboarding');
+      expect(requests.first.url.path, '/rest/v1/rpc/batch_complete_onboarding_v2');
       expect(jsonDecode(requests.first.body), {
         'p_lounge_id': 'lounge-1',
         'p_lounge_data': {'name': 'Test lounge'},

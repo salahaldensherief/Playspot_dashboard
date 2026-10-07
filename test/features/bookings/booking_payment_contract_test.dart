@@ -13,7 +13,7 @@ void main() {
       'lib/features/bookings/data/datasources/booking_mutation_helper.dart',
     ).readAsStringSync();
 
-    expect(source, contains("'complete_booking_payment'"));
+    expect(source, contains("'create_manual_booking_admin'"));
     expect(source, isNot(contains("client.rpc('start_booking_session'")));
     expect(source, isNot(contains(".from('rooms')")));
   });

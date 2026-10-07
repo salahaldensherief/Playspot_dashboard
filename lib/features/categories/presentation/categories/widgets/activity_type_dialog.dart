@@ -10,7 +10,7 @@ import '../../../domain/entities/activity_type_entity.dart';
 
 class ActivityTypeDialog extends StatefulWidget {
   final ActivityTypeEntity? activity;
-  final ValueChanged<ActivityTypeEntity> onSave;
+  final Future<ActivityTypeEntity?> Function(ActivityTypeEntity) onSave;
 
   const ActivityTypeDialog({
     super.key,
@@ -33,6 +33,8 @@ class _ActivityTypeDialogState extends State<ActivityTypeDialog> {
   late String _pricingModel;
   late bool _requiresScreen;
   late bool _requiresControllers;
+  bool _isSaving = false;
+  bool _saveFailed = false;
 
   static const _categories = <String>[
     'console',
@@ -78,10 +80,16 @@ class _ActivityTypeDialogState extends State<ActivityTypeDialog> {
     super.dispose();
   }
 
-  void _submit() {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
+  Future<void> _submit() async {
+    if (_isSaving || !(_formKey.currentState?.validate() ?? false)) return;
+    setState(() {
+      _isSaving = true;
+      _saveFailed = false;
+    });
 
-    widget.onSave(
+    ActivityTypeEntity? saved;
+    try {
+      saved = await widget.onSave(
       ActivityTypeEntity(
         id: widget.activity?.id ?? '',
         name: _nameController.text.trim().toLowerCase().replaceAll(' ', '_'),
@@ -95,8 +103,19 @@ class _ActivityTypeDialogState extends State<ActivityTypeDialog> {
         requiresScreen: _requiresScreen,
         requiresControllers: _requiresControllers,
       ),
-    );
-    Navigator.pop(context);
+      );
+    } catch (_) {
+      saved = null;
+    }
+    if (!mounted) return;
+    if (saved != null) {
+      Navigator.pop(context);
+    } else {
+      setState(() {
+        _isSaving = false;
+        _saveFailed = true;
+      });
+    }
   }
 
   @override
@@ -110,13 +129,14 @@ class _ActivityTypeDialogState extends State<ActivityTypeDialog> {
         AppButton(
           text: AppStrings.cancel,
           variant: AppButtonVariant.outlined,
-          onPressed: () => Navigator.pop(context),
+          onPressed: _isSaving ? null : () => Navigator.pop(context),
         ),
         SizedBox(width: 12.w),
         AppButton(
           text: AppStrings.save,
           icon: Icons.save_outlined,
-          onPressed: _submit,
+          onPressed: _isSaving ? null : _submit,
+          isLoading: _isSaving,
         ),
       ],
       child: Form(
@@ -124,6 +144,14 @@ class _ActivityTypeDialogState extends State<ActivityTypeDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (_saveFailed)
+              Padding(
+                padding: EdgeInsets.only(bottom: 12.h),
+                child: Text(
+                  AppStrings.actionFailed,
+                  style: const TextStyle(color: AppColors.danger),
+                ),
+              ),
             Row(
               children: [
                 Expanded(

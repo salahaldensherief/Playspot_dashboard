@@ -80,43 +80,26 @@ class PricingRemoteDataSourceImpl implements PricingRemoteDataSource {
 
   @override
   Future<List<PricingRuleModel>> checkRuleConflicts(PricingRuleModel rule) async {
-    try {
-      final response = await supabase.rpc(
-        'check_pricing_rule_conflicts',
-        params: {
-          'p_lounge_id': rule.loungeId,
-          if (rule.spaceTypeId != null) 'p_space_type_id': rule.spaceTypeId,
-          if (rule.roomId != null) 'p_room_id': rule.roomId,
-          'p_start_time': rule.startTime,
-          'p_end_time': rule.endTime,
-          'p_days': rule.daysOfWeek,
-          if (rule.id.isNotEmpty) 'p_exclude_rule_id': rule.id,
-        },
-      );
-      if (response is List) {
-        return response
-            .map((e) => PricingRuleModel.fromJson(Map<String, dynamic>.from(e as Map)))
-            .toList();
-      }
-    } catch (_) {
-      // Fallback local conflict check against table if RPC not present
-      final allRules = await getPricingRules(loungeId: rule.loungeId);
-      final conflicts = allRules.where((existing) {
-        if (rule.id.isNotEmpty && existing.id == rule.id) return false;
-        if (!existing.isActive) return false;
-
-        final daysOverlap =
-            existing.daysOfWeek.any((day) => rule.daysOfWeek.contains(day));
-        if (!daysOverlap) return false;
-
-        final timeOverlap = (rule.startTime.compareTo(existing.endTime) < 0) &&
-            (rule.endTime.compareTo(existing.startTime) > 0);
-        return timeOverlap;
-      }).toList();
-
-      return conflicts;
+    final response = await supabase.rpc(
+      'check_pricing_rule_conflicts_v2',
+      params: {
+        'p_lounge_id': rule.loungeId,
+        if (rule.spaceTypeId != null) 'p_space_type_id': rule.spaceTypeId,
+        if (rule.roomId != null) 'p_room_id': rule.roomId,
+        'p_start_time': rule.startTime,
+        'p_end_time': rule.endTime,
+        'p_days': rule.daysOfWeek,
+        if (rule.id.isNotEmpty) 'p_exclude_rule_id': rule.id,
+        'p_start_date': rule.startDate?.toIso8601String().split('T').first,
+        'p_end_date': rule.endDate?.toIso8601String().split('T').first,
+      },
+    );
+    if (response is! List) {
+      throw const FormatException('Invalid pricing conflict response');
     }
-    return [];
+    return response
+        .map((e) => PricingRuleModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
   }
 
   @override
