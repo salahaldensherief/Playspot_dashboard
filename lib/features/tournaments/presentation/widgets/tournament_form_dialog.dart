@@ -9,8 +9,6 @@ import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_dialog.dart';
 import '../../../../art_core/widgets/app_image_picker.dart';
 import '../../../../art_core/widgets/app_text_field.dart';
-import '../../../../core/di/di.dart';
-import '../../../../core/services/storage_service.dart';
 import '../../domain/entities/tournament_entity.dart';
 import '../../domain/entities/tournament_prize_entity.dart';
 import 'tournament_basic_details_section.dart';
@@ -21,7 +19,7 @@ import 'tournament_schedule_section.dart';
 class TournamentFormDialog extends StatefulWidget {
   final TournamentEntity? tournament;
   final String? loungeId;
-  final Function(TournamentEntity) onSubmit;
+  final Future<bool> Function(TournamentEntity, Uint8List?, String?) onSubmit;
 
   const TournamentFormDialog({
     super.key,
@@ -134,14 +132,6 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
       String? bannerUrl = widget.tournament?.bannerUrl;
       final tournamentId = widget.tournament?.id ?? const Uuid().v4();
 
-      if (_bannerBytes != null && _bannerName != null) {
-        bannerUrl = await sl<StorageService>().uploadTournamentBanner(
-          _bannerBytes!,
-          _bannerName!,
-          tournamentId,
-        );
-      }
-
       if (mounted) {
         final entity = TournamentEntity(
           id: widget.tournament?.id ?? tournamentId,
@@ -173,8 +163,8 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
           cityId: widget.tournament?.cityId,
         );
 
-        widget.onSubmit(entity);
-        Navigator.pop(context);
+        final saved = await widget.onSubmit(entity, _bannerBytes, _bannerName);
+        if (mounted && saved) Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {

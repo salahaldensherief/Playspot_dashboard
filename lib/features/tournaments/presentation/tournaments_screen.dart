@@ -68,9 +68,8 @@ class _TournamentsScreenState extends State<TournamentsScreen>
       context: context,
       builder: (ctx) => TournamentFormDialog(
         loungeId: activeLoungeId,
-        onSubmit: (entity) {
-          context.read<TournamentCubit>().createTournament(entity);
-        },
+        onSubmit: (entity, bytes, name) => context.read<TournamentCubit>()
+            .createTournament(entity, bannerBytes: bytes, bannerName: name),
       ),
     );
   }
@@ -80,9 +79,8 @@ class _TournamentsScreenState extends State<TournamentsScreen>
       context: context,
       builder: (ctx) => TournamentFormDialog(
         tournament: tournament,
-        onSubmit: (entity) {
-          context.read<TournamentCubit>().updateTournament(entity);
-        },
+        onSubmit: (entity, bytes, name) => context.read<TournamentCubit>()
+            .updateTournament(entity, bannerBytes: bytes, bannerName: name),
       ),
     );
   }

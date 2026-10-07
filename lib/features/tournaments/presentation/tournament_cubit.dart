@@ -139,33 +139,40 @@ class TournamentCubit extends Cubit<TournamentState> {
   }) async {
     emit(state.copyWith(status: TournamentCubitStatus.loading));
 
-    TournamentEntity entity = tournament;
+    final result = await _createTournamentUseCase(tournament);
+    return result.fold<Future<bool>>(
+      (failure) async {
+        emit(state.copyWith(status: TournamentCubitStatus.failure, errorMessage: failure.message));
+        return false;
+      },
+      (created) async {
+    TournamentEntity entity = created;
     try {
       final bannerUrl = await _bannerUploader.upload(
         bytes: bannerBytes,
         name: bannerName,
-        tournamentId: tournament.id,
+        tournamentId: created.id,
       );
       if (bannerUrl != null) {
-        entity = entity.copyWith(bannerUrl: bannerUrl);
+        final update = await _updateTournamentUseCase(created.copyWith(bannerUrl: bannerUrl));
+        update.fold((failure) => throw Exception(failure.message), (saved) => entity = saved);
       }
     } catch (e) {
       final cleanMsg = e.toString().replaceFirst('Exception: ', '');
-      emit(state.copyWith(status: TournamentCubitStatus.failure, errorMessage: cleanMsg));
-      return false;
+      // Keep the authorized draft so the operator can retry its banner from Edit.
+      // A failed image upload must never create duplicate tournaments on retry.
+      emit(state.copyWith(
+        status: TournamentCubitStatus.failure,
+        tournaments: [created, ...state.tournaments],
+        selectedTournament: created,
+        errorMessage: 'تم حفظ البطولة كمسودة، لكن تعذر حفظ البانر. افتح تعديل البطولة لإعادة المحاولة. $cleanMsg',
+      ));
+      return true;
     }
-
-    final result = await _createTournamentUseCase(entity);
-    return result.fold(
-      (failure) {
-        emit(state.copyWith(status: TournamentCubitStatus.failure, errorMessage: failure.message));
-        return false;
-      },
-      (created) {
         emit(state.copyWith(
           status: TournamentCubitStatus.actionSuccess,
-          tournaments: [created, ...state.tournaments],
-          selectedTournament: created,
+          tournaments: [entity, ...state.tournaments],
+          selectedTournament: entity,
           successMessage: 'تم إنشاء البطولة بنجاح',
         ));
         _refreshSelectedTournamentData(created.id);

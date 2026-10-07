@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:dartz/dartz.dart';
@@ -44,6 +45,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(FakeTournamentEntity());
+    registerFallbackValue(Uint8List(0));
   });
 
   setUp(() {
@@ -124,6 +126,54 @@ void main() {
 
     expect(cubit.state.status, equals(TournamentCubitStatus.actionSuccess));
     expect(cubit.state.tournaments, contains(tTournament));
+  });
+
+  test('create stores draft before uploading and uses the server tournament id', () async {
+    final events = <String>[];
+    final draft = tTournament.copyWith(id: 'server-id');
+    when(() => mockRepository.createTournament(any())).thenAnswer((_) async {
+      events.add('create');
+      return Right(draft);
+    });
+    when(() => mockStorageService.uploadTournamentBanner(any(), any(), any()))
+        .thenAnswer((invocation) async {
+      events.add('upload');
+      expect(invocation.positionalArguments[2], 'server-id');
+      return 'https://example.com/banner.png';
+    });
+    when(() => mockRepository.updateTournament(any())).thenAnswer((invocation) async {
+      events.add('update');
+      final entity = invocation.positionalArguments.first as TournamentEntity;
+      expect(entity.id, 'server-id');
+      expect(entity.bannerUrl, 'https://example.com/banner.png');
+      return Right(entity);
+    });
+    when(() => mockRepository.getTournamentAuditLogsPage(
+      tournamentId: any(named: 'tournamentId'), page: any(named: 'page'),
+      pageSize: any(named: 'pageSize'),
+    )).thenAnswer((_) async => Right(PaginatedResult<TournamentAuditLogEntity>(
+      items: const [], totalCount: 0, page: 1, pageSize: 20,
+    )));
+    when(() => mockRepository.watchDisputedMatches(any()))
+        .thenAnswer((_) => const Stream.empty());
+    expect(await cubit.createTournament(tTournament,
+      bannerBytes: Uint8List.fromList([1]), bannerName: 'banner.png'), isTrue);
+    expect(events, ['create', 'upload', 'update']);
+    expect(cubit.state.status, TournamentCubitStatus.actionSuccess);
+  });
+
+  test('failed banner retains a single editable draft rather than retrying creation', () async {
+    final draft = tTournament.copyWith(id: 'server-id');
+    when(() => mockRepository.createTournament(any())).thenAnswer((_) async => Right(draft));
+    when(() => mockStorageService.uploadTournamentBanner(any(), any(), any()))
+        .thenThrow(Exception('permission denied'));
+    expect(await cubit.createTournament(tTournament,
+      bannerBytes: Uint8List.fromList([1]), bannerName: 'banner.png'), isTrue);
+    expect(cubit.state.tournaments, [draft]);
+    expect(cubit.state.selectedTournament, draft);
+    expect(cubit.state.status, TournamentCubitStatus.failure);
+    expect(cubit.state.errorMessage, contains('مسودة'));
+    verifyNever(() => mockRepository.updateTournament(any()));
   });
 
   test('deleteDraftTournament handles failure correctly', () async {

@@ -27,7 +27,9 @@ class BucketUploadStrategy {
         final errStr = e.toString().toLowerCase();
         if (errStr.contains('network') || errStr.contains('socket') || errStr.contains('connection')) {
           throw Exception('تعذر الاتصال بالخادم. يرجى التحقق من الاتصال بالإنترنت وإعادة المحاولة.');
-        } else if (errStr.contains('401') || errStr.contains('jwt') || errStr.contains('unauthorized')) {
+        } else if (errStr.contains('403') || errStr.contains('row-level security') || errStr.contains('permission denied')) {
+          throw Exception('ليس لديك صلاحية رفع الصورة لهذا العنصر. تأكد من صلاحيات حسابك ووجود العنصر ثم أعد المحاولة.');
+        } else if (errStr.contains('401') || errStr.contains('jwt expired') || errStr.contains('invalid jwt')) {
           throw Exception('انتهت صلاحية الجلسة. يرجى إعادة تسجيل الدخول والتجربة مرة أخرى.');
         }
         debugPrint('⚠️ [BUCKET_STRATEGY] Upload to bucket "$bucket" failed ($e). ${i < buckets.length - 1 ? "Attempting fallback bucket..." : "All bucket attempts failed."}');

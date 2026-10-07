@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import '../../../../core/router/router_keys.dart';
 import '../../../../art_core/widgets/app_button.dart';
+import '../widgets/online_booking_status.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -263,6 +264,7 @@ class _BookingsPageState extends State<BookingsPage>
                           ),
                         ),
 
+                        SliverToBoxAdapter(child: OnlineBookingStatus(loungeId: loungeId)),
                         SliverToBoxAdapter(
                           child: LoungeDiscountBanner(lounge: userLounge),
                         ),
