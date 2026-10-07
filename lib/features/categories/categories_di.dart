@@ -58,6 +58,12 @@ void initCategoriesDI(GetIt sl) {
   if (!sl.isRegistered<AddActivityTypeUseCase>()) {
     sl.registerLazySingleton(() => AddActivityTypeUseCase(sl()));
   }
+  if (!sl.isRegistered<UpdateActivityTypeUseCase>()) {
+    sl.registerLazySingleton(() => UpdateActivityTypeUseCase(sl()));
+  }
+  if (!sl.isRegistered<DeleteActivityTypeUseCase>()) {
+    sl.registerLazySingleton(() => DeleteActivityTypeUseCase(sl()));
+  }
 
   // Cubits
   if (!sl.isRegistered<CategoryCubit>()) {
@@ -73,6 +79,8 @@ void initCategoriesDI(GetIt sl) {
         deleteCityUseCase: sl(),
         getActivityTypesUseCase: sl(),
         addActivityTypeUseCase: sl(),
+        updateActivityTypeUseCase: sl(),
+        deleteActivityTypeUseCase: sl(),
       ),
     );
   }
