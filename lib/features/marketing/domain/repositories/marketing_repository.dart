@@ -13,6 +13,7 @@ abstract class MarketingRepository {
   Future<Either<Failure, void>> createPromotion(PromoEntity promo);
   Future<Either<Failure, void>> updatePromotion(PromoEntity promo);
   Future<Either<Failure, void>> deletePromotion(String id);
+  Future<Either<Failure, void>> resharePromotion(String id);
   Future<Either<Failure, String>> uploadPromoPoster(
     Uint8List fileBytes,
     String fileName,
