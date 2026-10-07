@@ -105,7 +105,6 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
     showDialog(
       context: context,
       builder: (_) => PricingConfirmationModal(
-        affectedRoomsCount: 5,
         onConfirm: _executeSave,
       ),
     );
