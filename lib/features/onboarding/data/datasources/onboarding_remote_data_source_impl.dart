@@ -128,7 +128,7 @@ class OnboardingRemoteDataSourceImpl implements OnboardingRemoteDataSource {
     required List<Map<String, dynamic>> extras,
   }) async {
     await _supabase.rpc(
-      'batch_complete_onboarding',
+      'batch_complete_onboarding_v2',
       params: {
         'p_lounge_id': loungeId,
         'p_lounge_data': loungeData,
