@@ -1393,6 +1393,7 @@
   "confirm_save_rule": "Confirm Save Pricing Rule",
   "affected_rooms_notice": "This rule will apply to {count} affected rooms.",
   "existing_bookings_unaffected": "Note: Existing bookings will not be affected by this change.",
+  "pricing_future_scope_notice": "This rule will apply to future price quotes and bookings that match its scope.",
   "active_status": "Active",
   "scheduled_status": "Scheduled",
   "expired_status": "Expired",
