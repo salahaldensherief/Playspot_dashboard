@@ -45,65 +45,28 @@ class CanteenRemoteDataSourceImpl implements CanteenRemoteDataSource {
 
   @override
   Future<CanteenComboModel> saveCombo(CanteenComboModel combo) async {
-    final payload = combo.toJson();
-    String comboId = combo.id;
-
-    if (comboId.isNotEmpty) {
-      await supabase
-          .from('canteen_combos')
-          .update(payload)
-          .eq('id', comboId);
-
-      // Re-sync items: delete existing and reinsert
-      await supabase
-          .from('canteen_combo_items')
-          .delete()
-          .eq('combo_id', comboId);
-    } else {
-      final insertRes = await supabase
-          .from('canteen_combos')
-          .insert(payload)
-          .select('id')
-          .single();
-      comboId = insertRes['id'].toString();
-    }
-
-    // Insert combo components
-    if (combo.items.isNotEmpty) {
-      final itemsPayload = combo.items.map((item) {
-        return {
-          'combo_id': comboId,
-          'extra_id': item.extraId,
-          'quantity': item.quantity,
-        };
-      }).toList();
-
-      await supabase.from('canteen_combo_items').insert(itemsPayload);
-    }
-
-    // Fetch and return the newly saved combo with full relations
-    final response = await supabase
-        .from('canteen_combos')
-        .select('''
-          *,
-          canteen_combo_items (
-            combo_id,
-            extra_id,
-            quantity,
-            extras (
-              id,
-              name_ar,
-              name_en,
-              price,
-              cost_price,
-              image_url
+    final response = await supabase.rpc(
+      'save_canteen_combo',
+      params: {
+        'p_combo': combo.toJson(),
+        'p_items': combo.items
+            .map(
+              (item) => {
+                'extra_id': item.extraId,
+                'quantity': item.quantity,
+              },
             )
-          )
-        ''')
-        .eq('id', comboId)
-        .single();
+            .toList(),
+      },
+    );
 
-    return CanteenComboModel.fromJson(Map<String, dynamic>.from(response));
+    if (response is! Map) {
+      throw const FormatException('Invalid combo save response');
+    }
+
+    return CanteenComboModel.fromJson(
+      Map<String, dynamic>.from(response),
+    );
   }
 
   @override
