@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../audit/presentation/widgets/audit_timeline.dart';
-import '../../../categories/presentation/categories/category_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
