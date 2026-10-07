@@ -9,6 +9,7 @@ abstract class MarketingRemoteDataSource {
   Future<void> createPromotion(PromoModel promo);
   Future<void> updatePromotion(PromoModel promo);
   Future<void> deletePromotion(String id);
+  Future<void> resharePromotion(String id);
   Future<String> uploadPromoPoster(
     Uint8List fileBytes,
     String fileName,
@@ -135,6 +136,18 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
 
     await _supabase.rpc(
       'delete_promotion',
+      params: {'p_promotion_id': cleanId},
+    );
+  }
+
+  @override
+  Future<void> resharePromotion(String id) async {
+    final cleanId = id.trim();
+    if (cleanId.isEmpty) {
+      throw Exception('Promotion ID is required for reshare');
+    }
+    await _supabase.rpc(
+      'reshare_promotion',
       params: {'p_promotion_id': cleanId},
     );
   }
