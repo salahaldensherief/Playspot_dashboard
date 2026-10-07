@@ -66,7 +66,7 @@ class LoungesDataTable extends StatelessWidget {
             AppStrings.loungeName,
             AppStrings.loungeOwnerAdmin,
             AppStrings.location,
-            AppStrings.pricePerHour,
+            AppStrings.pricedPerRoom,
             AppStrings.status,
             AppStrings.actions,
           ],
@@ -127,7 +127,7 @@ class LoungesDataTable extends StatelessWidget {
                     ),
                     DataCell(
                       Text(
-                        '\$${lounge.pricePerHour.toStringAsFixed(2)}',
+                        AppStrings.pricedPerRoom,
                         style: const TextStyle(color: AppColors.textPrimary),
                       ),
                     ),
@@ -226,8 +226,8 @@ class LoungesDataTable extends StatelessWidget {
           SizedBox(height: 8.h),
           _buildInfoRow(
             Icons.payments_outlined,
-            AppStrings.pricePerHour,
-            '\$${lounge.pricePerHour.toStringAsFixed(2)}',
+            AppStrings.pricedPerRoom,
+            AppStrings.pricedPerRoom,
           ),
           const Divider(height: 24, color: AppColors.divider),
           Row(
