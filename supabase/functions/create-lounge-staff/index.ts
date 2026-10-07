@@ -97,9 +97,6 @@ Deno.serve(async (req: Request) => {
   }
 
   const isSuperAdmin = actorRole === "super_admin";
-  if (!isSuperAdmin && String(profile.lounge_id ?? "") !== loungeId) {
-    return json({ error: "Cross-lounge staff management is not allowed" }, 403);
-  }
 
   const callerClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     global: { headers: { Authorization: authHeader } },
