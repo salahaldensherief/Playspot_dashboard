@@ -1,4 +1,6 @@
 {
+  "booking_extension_conflict": "This session cannot be extended because the next slot is reserved.",
+  "booking_extension_failed": "Could not extend the session. Refresh the booking and try again.",
   "onboarding_location": {
     "title": "Venue map location (GPS)",
     "coordinates": "Coordinates: {latitude}, {longitude}",

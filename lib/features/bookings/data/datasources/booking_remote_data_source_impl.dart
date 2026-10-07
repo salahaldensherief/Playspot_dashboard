@@ -437,6 +437,20 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
 
   @override
+  Future<void> extendBookingSession(String bookingId, int additionalMinutes) async {
+    final response = await client.rpc(
+      'extend_booking_session',
+      params: {
+        'p_booking_id': bookingId,
+        'p_additional_minutes': additionalMinutes,
+      },
+    );
+    if (response is! Map || response['success'] != true) {
+      throw const FormatException('Invalid session extension response');
+    }
+  }
+
+  @override
   Future<Map<String, dynamic>> startOpenTimeSession({
     required String roomId,
     String? customerName,

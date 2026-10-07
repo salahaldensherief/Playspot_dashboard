@@ -6,7 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/core/audio/audio_service.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
 import 'package:play_spot_dashboard/core/utils/realtime_watcher_mixin.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/booking.dart';
 import '../../domain/repositories/booking_repository.dart';
 import '../../domain/usecases/confirm_cash_payment.dart';
@@ -29,6 +28,7 @@ class BookingCubit extends Cubit<BookingState>
 
   late final BookingSessionScheduler _scheduler;
   final Set<String> _knownBookingIds = {};
+  final Set<String> _pendingExtensions = {};
   bool _isFirstLoad = true;
 
   BookingCubit({
@@ -426,52 +426,29 @@ class BookingCubit extends Cubit<BookingState>
   }
 
   Future<bool> extendBookingDuration(String id, int additionalMinutes) async {
-    final originalBookings = List<Booking>.from(state.bookings);
     final foundIndex = state.bookings.indexWhere((b) => b.id == id);
-    if (foundIndex == -1) return false;
+    if (foundIndex == -1 || !_pendingExtensions.add(id)) return false;
 
     try {
-      final client = Supabase.instance.client;
-      try {
-        await client.rpc(
-          'extend_booking_session',
-          params: {
-            'p_booking_id': id,
-            'p_extension_minutes': additionalMinutes,
-          },
-        );
-      } catch (_) {
-        await client.rpc(
-          'extend_booking_session',
-          params: {
-            'p_booking_id': id,
-            'p_additional_minutes': additionalMinutes,
-          },
-        );
-      }
-
-      if (watchedEntityId != null) {
+      final result = await repository.extendBookingSession(id, additionalMinutes);
+      if (isClosed) return false;
+      return result.fold((failure) {
+        emit(state.copyWith(
+          status: BookingStatusState.failure,
+          errorMessage: failure.message.tr(),
+        ));
+        return false;
+      }, (_) {
+        if (watchedEntityId != null) {
         final targetLoungeId = watchedEntityId == 'all'
             ? null
             : watchedEntityId;
-        startWatchingBookings(loungeId: targetLoungeId);
-      }
-      return true;
-    } catch (e) {
-      final errorStr = e.toString();
-      debugPrint('🔴 [CUBIT] Extend Duration Failed: $errorStr');
-      final cleanMessage = errorStr.contains('BOOKING_EXTENSION_CONFLICT')
-          ? 'لا يمكن تمديد الحجز لأن هناك حجزاً آخر يبدأ بعد وقت حجزك مباشرة.'
-          : errorStr.replaceFirst('Exception: ', '');
-
-      emit(
-        state.copyWith(
-          status: BookingStatusState.failure,
-          errorMessage: cleanMessage,
-          bookings: originalBookings,
-        ),
-      );
-      return false;
+          startWatchingBookings(loungeId: targetLoungeId, forceRefresh: true);
+        }
+        return true;
+      });
+    } finally {
+      _pendingExtensions.remove(id);
     }
   }
 

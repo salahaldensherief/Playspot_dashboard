@@ -1,4 +1,6 @@
 {
+  "booking_extension_conflict": "لا يمكن تمديد الجلسة لأن الوقت التالي محجوز.",
+  "booking_extension_failed": "تعذر تمديد الجلسة. حدّث الحجز وحاول مرة أخرى.",
   "onboarding_location": {
     "title": "موقع الصالة على الخريطة (GPS)",
     "coordinates": "الإحداثيات: {latitude}، {longitude}",

@@ -77,6 +77,7 @@ abstract class BookingRemoteDataSource {
   Future<void> swapRoom(String bookingId, String newRoomId, String actionBy);
 
   Future<void> startBookingSession(String bookingId);
+  Future<void> extendBookingSession(String bookingId, int additionalMinutes);
 
   Future<Map<String, dynamic>> startOpenTimeSession({
     required String roomId,
