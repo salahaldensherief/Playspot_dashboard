@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
 import 'package:play_spot_dashboard/features/pricing/domain/entities/pricing_rule_entity.dart';
+import 'package:play_spot_dashboard/features/pricing/domain/usecases/check_pricing_rule_conflicts_usecase.dart';
 import 'package:play_spot_dashboard/features/pricing/domain/usecases/delete_pricing_rule_usecase.dart';
 import 'package:play_spot_dashboard/features/pricing/domain/usecases/get_pricing_rules_usecase.dart';
 import 'package:play_spot_dashboard/features/pricing/domain/usecases/quote_booking_price_usecase.dart';
@@ -19,6 +20,9 @@ class MockSavePricingRuleUseCase extends Mock
 class MockDeletePricingRuleUseCase extends Mock
     implements DeletePricingRuleUseCase {}
 
+class MockCheckPricingRuleConflictsUseCase extends Mock
+    implements CheckPricingRuleConflictsUseCase {}
+
 class MockQuoteBookingPriceUseCase extends Mock
     implements QuoteBookingPriceUseCase {}
 
@@ -27,18 +31,21 @@ void main() {
   late MockGetPricingRulesUseCase mockGetRules;
   late MockSavePricingRuleUseCase mockSaveRule;
   late MockDeletePricingRuleUseCase mockDeleteRule;
+  late MockCheckPricingRuleConflictsUseCase mockCheckConflicts;
   late MockQuoteBookingPriceUseCase mockQuotePrice;
 
   setUp(() {
     mockGetRules = MockGetPricingRulesUseCase();
     mockSaveRule = MockSavePricingRuleUseCase();
     mockDeleteRule = MockDeletePricingRuleUseCase();
+    mockCheckConflicts = MockCheckPricingRuleConflictsUseCase();
     mockQuotePrice = MockQuoteBookingPriceUseCase();
 
     cubit = PricingCubit(
       getPricingRulesUseCase: mockGetRules,
       savePricingRuleUseCase: mockSaveRule,
       deletePricingRuleUseCase: mockDeleteRule,
+      checkPricingRuleConflictsUseCase: mockCheckConflicts,
       quoteBookingPriceUseCase: mockQuotePrice,
     );
   });
