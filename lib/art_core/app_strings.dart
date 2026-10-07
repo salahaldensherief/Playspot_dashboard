@@ -132,6 +132,15 @@ class AppStrings {
   // Room Management
   static String get addNew => 'add_new'.tr();
   static String get addNewActivity => 'add_new_activity'.tr();
+  static String get editActivity => 'edit_activity'.tr();
+  static String get activityKey => 'activity_key'.tr();
+  static String get activityLabel => 'activity_label'.tr();
+  static String get activityCategory => 'activity_category'.tr();
+  static String get activityPricingModel => 'activity_pricing_model'.tr();
+  static String get activityIconKey => 'activity_icon_key'.tr();
+  static String get sortOrder => 'sort_order'.tr();
+  static String get requiresScreen => 'requires_screen'.tr();
+  static String get requiresControllers => 'requires_controllers'.tr();
   static String get roomActivities => 'room_activities'.tr();
   static String get selectRoomActivityError => 'select_room_activity_error'.tr();
   static String get addNewRoom => 'add_new_room'.tr();
