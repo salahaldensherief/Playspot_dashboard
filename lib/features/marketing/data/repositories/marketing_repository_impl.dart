@@ -102,6 +102,16 @@ class MarketingRepositoryImpl implements MarketingRepository {
   }
 
   @override
+  Future<Either<Failure, void>> resharePromotion(String id) async {
+    try {
+      await remoteDataSource.resharePromotion(id);
+      return const Right(null);
+    } catch (e) {
+      return Left(marketingFailure(e));
+    }
+  }
+
+  @override
   Future<Either<Failure, String>> uploadPromoPoster(
     Uint8List fileBytes,
     String fileName,
