@@ -71,4 +71,5 @@ class BookingMutationHelper {
       '🟢 [BookingMutationHelper] Server-authoritative manual booking created: '
       '${response['booking_id']}',
     );
-  }}
+  }
+}
