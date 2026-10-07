@@ -227,7 +227,7 @@ class LoungesDataTable extends StatelessWidget {
           _buildInfoRow(
             Icons.payments_outlined,
             AppStrings.pricedPerRoom,
-            AppStrings.pricedPerRoom,
+            '—',
           ),
           const Divider(height: 24, color: AppColors.divider),
           Row(
