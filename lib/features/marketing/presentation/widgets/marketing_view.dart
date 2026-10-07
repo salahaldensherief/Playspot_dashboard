@@ -24,7 +24,7 @@ class MarketingView extends StatefulWidget {
 }
 
 class _MarketingViewState extends State<MarketingView> {
-  String _selectedFilterStatus = 'All'; // 'All', 'Active', 'Expired'
+  String _selectedFilterStatus = 'All'; // All, Active, Expired, Archived
   String _selectedFilterTag = 'All';
 
   @override
@@ -162,12 +162,23 @@ class _MarketingViewState extends State<MarketingView> {
         // Filter by Status (Active / Expired)
         if (_selectedFilterStatus == 'Active') {
           promos = promos
-              .where((p) => p.expiresAt == null || p.expiresAt!.isAfter(now))
+              .where(
+                (p) =>
+                    p.isActive &&
+                    (p.expiresAt == null || p.expiresAt!.isAfter(now)),
+              )
               .toList();
         } else if (_selectedFilterStatus == 'Expired') {
           promos = promos
-              .where((p) => p.expiresAt != null && p.expiresAt!.isBefore(now))
+              .where(
+                (p) =>
+                    p.isActive &&
+                    p.expiresAt != null &&
+                    p.expiresAt!.isBefore(now),
+              )
               .toList();
+        } else if (_selectedFilterStatus == 'Archived') {
+          promos = promos.where((p) => !p.isActive).toList();
         }
 
         // Filter by Tag
@@ -205,6 +216,11 @@ class _MarketingViewState extends State<MarketingView> {
                       _buildStatusChip(AppStrings.active, 'Active'),
                       SizedBox(width: 8.w),
                       _buildStatusChip(AppStrings.timeExpired, 'Expired'),
+                      SizedBox(width: 8.w),
+                      _buildStatusChip(
+                        AppStrings.archivedPromotions,
+                        'Archived',
+                      ),
                     ],
                   ),
                 ),
@@ -292,11 +308,19 @@ class _MarketingViewState extends State<MarketingView> {
                     final promo = promos[index];
                     return PromoCard(
                       promo: promo,
-                      onEdit: () => _showEditPromoDialog(context, cubit, promo),
-                      onDelete: () => _confirmDelete(
-                        context,
-                        cubit,
-                        promo,
+                      onEdit: promo.isActive
+                          ? () => _showEditPromoDialog(context, cubit, promo)
+                          : null,
+                      onDelete: promo.isActive
+                          ? () => _confirmDelete(
+                              context,
+                              cubit,
+                              promo,
+                              loungeId: loungeId,
+                            )
+                          : null,
+                      onReshare: () => cubit.resharePromotion(
+                        promo.id,
                         loungeId: loungeId,
                       ),
                     );
@@ -369,14 +393,14 @@ class _MarketingViewState extends State<MarketingView> {
           borderRadius: BorderRadius.circular(16.r),
         ),
         title: Text(
-          AppStrings.deleteConfirmation,
+          AppStrings.archivePromotion,
           style: const TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
-          '${AppStrings.deleteWarning} "$title"؟',
+          '${AppStrings.archivePromotion}: "$title"؟',
           style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
@@ -386,7 +410,7 @@ class _MarketingViewState extends State<MarketingView> {
             onPressed: () => Navigator.pop(diagContext),
           ),
           AppButton(
-            text: AppStrings.delete,
+            text: AppStrings.archivePromotion,
             variant: AppButtonVariant.danger,
             onPressed: () {
               cubit.deletePromotion(promo.id, loungeId: loungeId);
