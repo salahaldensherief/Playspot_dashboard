@@ -74,11 +74,17 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     cleanData.remove('id');
     cleanData.remove('owner_name');
     cleanData.remove('owner_email');
+    cleanData.remove('owner_id');
     cleanData.remove('rating');
     cleanData.remove('distance');
     cleanData.remove('price_per_hour');
     cleanData.remove('available_rooms');
     cleanData.remove('total_reviews');
+    cleanData.remove('is_open');
+    cleanData.remove('status');
+    cleanData.remove('is_active');
+    cleanData.remove('suspension_reason');
+    cleanData.remove('created_at');
     cleanData.remove('opens_at');
     cleanData.remove('closes_at');
     cleanData.remove('description');
