@@ -60,7 +60,7 @@ class AdminManagementRemoteDataSourceImpl
       final response = await supabaseClient
           .from('profiles')
           .select(
-            'id, email, full_name, role, lounge_id, avatar_url, is_setup_completed, points_balance, reward_points, referral_count, referrals_count, is_active, city_id, cities:city_id(id, name_ar, name_en)',
+            'id, email, full_name, role, lounge_id, avatar_url, is_setup_completed, points, is_active, is_banned, banned_reason, city_id, cities:city_id(id, name_ar, name_en)',
           )
           .neq('role', 'inactive')
           .order('full_name');
