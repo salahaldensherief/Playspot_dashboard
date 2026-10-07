@@ -25,3 +25,29 @@ class AddActivityTypeUseCase implements UseCase<ActivityTypeEntity, ActivityType
     return repository.addActivityType(activityType);
   }
 }
+
+
+class UpdateActivityTypeUseCase
+    implements UseCase<ActivityTypeEntity, ActivityTypeEntity> {
+  final CategoryRepository repository;
+
+  UpdateActivityTypeUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, ActivityTypeEntity>> call(
+    ActivityTypeEntity activityType,
+  ) {
+    return repository.updateActivityType(activityType);
+  }
+}
+
+class DeleteActivityTypeUseCase implements UseCase<void, String> {
+  final CategoryRepository repository;
+
+  DeleteActivityTypeUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, void>> call(String id) {
+    return repository.deleteActivityType(id);
+  }
+}
