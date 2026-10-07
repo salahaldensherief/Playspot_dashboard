@@ -101,7 +101,7 @@ class _TournamentsScreenState extends State<TournamentsScreen>
   }
 
   void _confirmCancel(TournamentEntity tournament) async {
-    final reasonController = TextEditingController();
+    var reason = '';
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AppDialog(
@@ -117,7 +117,7 @@ class _TournamentsScreenState extends State<TournamentsScreen>
             ),
             SizedBox(height: 16.h),
             AppTextField(
-              controller: reasonController,
+              onChanged: (value) => reason = value,
               hintText: AppStrings.reasonOrNote,
             ),
           ],
@@ -133,7 +133,7 @@ class _TournamentsScreenState extends State<TournamentsScreen>
             text: AppStrings.cancelTournament,
             variant: AppButtonVariant.danger,
             onPressed: () {
-              if (reasonController.text.trim().isEmpty) return;
+              if (reason.trim().isEmpty) return;
               Navigator.pop(ctx, true);
             },
           ),
@@ -144,7 +144,7 @@ class _TournamentsScreenState extends State<TournamentsScreen>
     if (confirmed == true && mounted) {
       context.read<TournamentCubit>().cancelTournament(
         tournament.id,
-        reasonController.text.trim(),
+        reason.trim(),
       );
     }
   }

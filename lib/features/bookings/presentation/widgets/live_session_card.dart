@@ -15,7 +15,8 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_session_requests_badge.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_session_timer_box.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_discount_dialog.dart';
-import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_ticker.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_time_builder.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_time_selector.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/station_control_drawer.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/swap_room_dialog.dart';
 
@@ -121,14 +122,25 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    final now = SessionTickerScope.nowOf(context);
+    return SessionTimeSelector<int>(
+      select: (now) {
+        final booking = widget.booking;
+        if (booking.isSessionExpired(now)) return 2;
+        return !booking.isOpenEnded && booking.remainingDuration(now).inMinutes <= 10
+            ? 1
+            : 0;
+      },
+      builder: _buildCard,
+    );
+  }
+
+  Widget _buildCard(BuildContext context, int phase) {
     final booking = widget.booking;
-    final remaining = booking.remainingDuration(now);
-    final isExpired = booking.isSessionExpired(now);
+    final isExpired = phase == 2;
 
     final Color accent = isExpired
         ? AppColors.danger
-        : (!booking.isOpenEnded && remaining.inMinutes <= 10
+        : (phase == 1
               ? AppColors.warning
               : AppColors.neonBlue);
 
@@ -202,13 +214,15 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
                           children: [
                             BookingCardCustomerRow(booking: booking),
                             SizedBox(height: 12.h),
-                            LiveSessionTimerBox(
-                              booking: booking,
-                              accent: accent,
-                              isExpired: isExpired,
-                              remaining: remaining,
-                              onOpenStationControl: _openStationControl,
-                              onExtendMinutes: _handleExtendMinutes,
+                            SessionTimeBuilder(
+                              builder: (context, now) => LiveSessionTimerBox(
+                                booking: booking,
+                                accent: accent,
+                                isExpired: booking.isSessionExpired(now),
+                                remaining: booking.remainingDuration(now),
+                                onOpenStationControl: _openStationControl,
+                                onExtendMinutes: _handleExtendMinutes,
+                              ),
                             ),
                             LiveSessionRequestsBadge(booking: booking),
                             BookingProductsPreview(

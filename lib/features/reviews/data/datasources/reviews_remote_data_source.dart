@@ -1,7 +1,7 @@
-import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
+import 'package:play_spot_dashboard/core/streams/refreshing_stream.dart';
 import '../models/lounge_review_model.dart';
 
 abstract class ReviewsRemoteDataSource {
@@ -106,67 +106,17 @@ class ReviewsRemoteDataSourceImpl implements ReviewsRemoteDataSource {
       return Stream.value([]);
     }
 
-    late StreamController<List<LoungeReviewModel>> controller;
-    Timer? heartbeatTimer;
-    StreamSubscription? postgresSubscription;
-
-    void fetchAndEmit() async {
-      try {
-        final list = await _fetchReviewsFromSupabase(loungeId);
-        if (!controller.isClosed) {
-          controller.add(list);
-        }
-      } catch (e) {
-        if (!controller.isClosed) {
-          debugPrint('🔴 [REVIEWS_DATA_SOURCE] fetchAndEmit Error: $e');
-          controller.addError(e);
-        }
-      }
-    }
-
-    controller = StreamController<List<LoungeReviewModel>>(
-      onListen: () {
-        debugPrint(
-          '🚀 [REVIEWS_DATA_SOURCE] Starting real-time stream subscription for lounge: $loungeId',
-        );
-        fetchAndEmit();
-
-        try {
-          postgresSubscription = supabaseClient
-              .from('lounge_reviews')
-              .stream(primaryKey: ['id'])
-              .eq('lounge_id', loungeId)
-              .listen(
-                (_) {
-                  debugPrint(
-                    '🔔 [REVIEWS_DATA_SOURCE] Realtime event received on `lounge_reviews` table',
-                  );
-                  fetchAndEmit();
-                },
-                onError: (e) {
-                  debugPrint(
-                    '⚠️ [REVIEWS_DATA_SOURCE] Realtime Stream Error: $e',
-                  );
-                },
-              );
-        } catch (e) {
-          debugPrint('⚠️ [REVIEWS_DATA_SOURCE] Realtime Listen Exception: $e');
-        }
-
-        heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-          fetchAndEmit();
-        });
-      },
-      onCancel: () {
-        debugPrint(
-          '🛑 [REVIEWS_DATA_SOURCE] Cancelling review stream subscription',
-        );
-        postgresSubscription?.cancel();
-        heartbeatTimer?.cancel();
-      },
+    return refreshingStream<List<LoungeReviewModel>>(
+      fetch: () => _fetchReviewsFromSupabase(loungeId),
+      invalidations: () => supabaseClient
+          .from('lounge_reviews')
+          .stream(primaryKey: ['id'])
+          .eq('lounge_id', loungeId),
+      pollInterval: const Duration(seconds: 10),
+      onRealtimeError: (error) => debugPrint(
+        '[REVIEWS_DATA_SOURCE] Realtime unavailable: $error',
+      ),
     );
-
-    return controller.stream;
   }
 
   @override

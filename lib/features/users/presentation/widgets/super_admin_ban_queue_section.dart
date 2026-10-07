@@ -32,14 +32,14 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
     String title,
     Function(String notes) onSubmit,
   ) {
-    final controller = TextEditingController();
+    var notes = '';
     showDialog(
       context: context,
       builder: (_) => AppDialog(
         title: title,
         width: 440.w,
         child: AppTextField(
-          controller: controller,
+          onChanged: (value) => notes = value,
           maxLines: 3,
           hintText: AppStrings.adminNotesHint,
         ),
@@ -55,7 +55,7 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
             variant: AppButtonVariant.danger,
             onPressed: () {
               Navigator.pop(context);
-              onSubmit(controller.text.trim());
+              onSubmit(notes.trim());
             },
           ),
         ],

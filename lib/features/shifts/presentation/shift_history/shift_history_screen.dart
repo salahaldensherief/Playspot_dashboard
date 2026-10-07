@@ -410,7 +410,7 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
   }
 
   void _showApproveDialog(BuildContext context, ShiftEntity shift) {
-    final notesController = TextEditingController();
+    var notes = '';
     final user = context.read<LoginCubit>().state.user;
     final cubit = context.read<ShiftCubit>();
 
@@ -445,7 +445,7 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
               AppTextField(
                 label: AppStrings.managerNotes,
                 hintText: AppStrings.managerNotesPrompt,
-                controller: notesController,
+                onChanged: (value) => notes = value,
                 maxLines: 3,
               ),
               SizedBox(height: 24.h),
@@ -464,9 +464,9 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                       cubit.approveShift(
                         shift.id,
                         user?.id ?? '',
-                        notesController.text.trim().isEmpty
+                        notes.trim().isEmpty
                             ? null
-                            : notesController.text.trim(),
+                            : notes.trim(),
                         loungeId: user?.isStaff == true ? user?.loungeId : null,
                       );
                       Navigator.pop(dialogContext);
