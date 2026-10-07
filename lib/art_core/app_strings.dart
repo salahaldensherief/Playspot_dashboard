@@ -362,6 +362,10 @@ class AppStrings {
   static String get changePoster => 'change_poster'.tr();
   static String get promoPoster => 'promo_poster'.tr();
   static String get promoPublishedSuccess => 'promo_published_success'.tr();
+  static String get promoArchived => 'promo_archived'.tr();
+  static String get archivePromotion => 'archive_promotion'.tr();
+  static String get resharePromotion => 'reshare_promotion'.tr();
+  static String get archivedPromotions => 'archived_promotions'.tr();
   static String get promoPublishError => 'promo_publish_error'.tr();
   static String get noPromotions => 'no_promotions'.tr();
   static String get noTournaments => 'no_tournaments'.tr();
