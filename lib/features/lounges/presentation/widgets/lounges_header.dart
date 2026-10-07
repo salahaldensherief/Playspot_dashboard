@@ -13,10 +13,12 @@ class LoungesHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 900 || textScale > 1.3;
+
+        final title = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -31,16 +33,43 @@ class LoungesHeader extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               AppStrings.loungesHeaderSubtitle,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14.sp,
+              ),
             ),
           ],
-        ),
-        AppButton(
-          text: "Create Lounge & Owner",
+        );
+
+        final action = AppButton(
+          text: AppStrings.createLoungeAndOwner,
           icon: Icons.add,
           onPressed: () => _showAddLoungeDialog(context),
-        ),
-      ],
+        );
+
+        if (compact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              title,
+              SizedBox(height: 16.h),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: action,
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: title),
+            SizedBox(width: 20.w),
+            Flexible(child: action),
+          ],
+        );
+      },
     );
   }
 
