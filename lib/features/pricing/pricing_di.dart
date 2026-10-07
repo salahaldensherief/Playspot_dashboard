@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'data/datasources/pricing_remote_datasource.dart';
 import 'data/repositories/pricing_repository_impl.dart';
 import 'domain/repositories/pricing_repository.dart';
+import 'domain/usecases/check_pricing_rule_conflicts_usecase.dart';
 import 'domain/usecases/delete_pricing_rule_usecase.dart';
 import 'domain/usecases/get_pricing_rules_usecase.dart';
 import 'domain/usecases/quote_booking_price_usecase.dart';
@@ -23,6 +24,7 @@ void initPricingDI(GetIt sl) {
   sl.registerLazySingleton(() => GetPricingRulesUseCase(sl()));
   sl.registerLazySingleton(() => SavePricingRuleUseCase(sl()));
   sl.registerLazySingleton(() => DeletePricingRuleUseCase(sl()));
+  sl.registerLazySingleton(() => CheckPricingRuleConflictsUseCase(sl()));
   sl.registerLazySingleton(() => QuoteBookingPriceUseCase(sl()));
 
   // Cubit
@@ -31,6 +33,7 @@ void initPricingDI(GetIt sl) {
       getPricingRulesUseCase: sl(),
       savePricingRuleUseCase: sl(),
       deletePricingRuleUseCase: sl(),
+      checkPricingRuleConflictsUseCase: sl(),
       quoteBookingPriceUseCase: sl(),
     ),
   );
