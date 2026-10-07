@@ -16,9 +16,12 @@ mixin RepositoryHelper {
           e.message.contains('no_overlapping_room_bookings')) {
         return Left(ServerFailure(AppStrings.overlappingBookingError.tr()));
       }
-      if (e.code == 'PGRST301' || e.code == 'PGRST302' ||
+      if (e.code == 'PGRST302') {
+        return Left(AuthFailure('يرجى تسجيل الدخول لإتمام العملية'));
+      }
+      if (e.code == 'PGRST301' || e.code == 'PGRST303' ||
           e.message.toLowerCase().contains('jwt expired')) {
-        return Left(AuthFailure('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجددًا'));
+        return Left(AuthFailure('الجلسة غير صالحة أو منتهية، يرجى تسجيل الدخول مجددًا'));
       }
       if (e.code == '42501' ||
           e.message.toLowerCase().contains('row-level security') ||
