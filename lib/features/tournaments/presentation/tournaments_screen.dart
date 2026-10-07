@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../../../art_core/app_strings.dart';
 import '../../../art_core/layouts/dashboard_layout.dart';
 import '../../../art_core/theme/app_colors.dart';
@@ -68,7 +69,8 @@ class _TournamentsScreenState extends State<TournamentsScreen>
       context: context,
       builder: (ctx) => TournamentFormDialog(
         loungeId: activeLoungeId,
-        onSubmit: (entity, bytes, name) => context.read<TournamentCubit>()
+        onSubmit: (entity, bytes, name) => context
+            .read<TournamentCubit>()
             .createTournament(entity, bannerBytes: bytes, bannerName: name),
       ),
     );
@@ -79,7 +81,8 @@ class _TournamentsScreenState extends State<TournamentsScreen>
       context: context,
       builder: (ctx) => TournamentFormDialog(
         tournament: tournament,
-        onSubmit: (entity, bytes, name) => context.read<TournamentCubit>()
+        onSubmit: (entity, bytes, name) => context
+            .read<TournamentCubit>()
             .updateTournament(entity, bannerBytes: bytes, bannerName: name),
       ),
     );

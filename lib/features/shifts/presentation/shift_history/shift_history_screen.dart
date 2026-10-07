@@ -14,6 +14,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+
 import '../../domain/entities/shift_entity.dart';
 import '../shift_management/shift_cubit.dart';
 import '../shift_management/shift_state.dart';
@@ -187,9 +188,8 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
         rows: shifts.map((shift) {
           final discrepancy = shift.calculatedDiscrepancy;
           final isHealthy = discrepancy >= 0;
-          final startStr = DateFormat(
-            'MMM dd, hh:mm a',
-          ).format(shift.startTime);
+          final startStr = DateFormat('MMM dd, hh:mm a')
+              .format(shift.startTime);
           final endStr = shift.endTime != null
               ? DateFormat('hh:mm a').format(shift.endTime!)
               : AppStrings.currentShiftOngoing;
@@ -464,9 +464,7 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                       cubit.approveShift(
                         shift.id,
                         user?.id ?? '',
-                        notes.trim().isEmpty
-                            ? null
-                            : notes.trim(),
+                        notes.trim().isEmpty ? null : notes.trim(),
                         loungeId: user?.isStaff == true ? user?.loungeId : null,
                       );
                       Navigator.pop(dialogContext);

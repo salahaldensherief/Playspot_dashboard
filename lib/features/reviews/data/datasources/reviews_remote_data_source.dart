@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import 'package:play_spot_dashboard/core/streams/refreshing_stream.dart';
+
 import '../models/lounge_review_model.dart';
 
 abstract class ReviewsRemoteDataSource {
@@ -113,9 +114,8 @@ class ReviewsRemoteDataSourceImpl implements ReviewsRemoteDataSource {
           .stream(primaryKey: ['id'])
           .eq('lounge_id', loungeId),
       pollInterval: const Duration(seconds: 10),
-      onRealtimeError: (error) => debugPrint(
-        '[REVIEWS_DATA_SOURCE] Realtime unavailable: $error',
-      ),
+      onRealtimeError: (error) =>
+          debugPrint('[REVIEWS_DATA_SOURCE] Realtime unavailable: $error'),
     );
   }
 

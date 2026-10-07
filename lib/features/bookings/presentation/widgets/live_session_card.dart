@@ -126,7 +126,8 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
       select: (now) {
         final booking = widget.booking;
         if (booking.isSessionExpired(now)) return 2;
-        return !booking.isOpenEnded && booking.remainingDuration(now).inMinutes <= 10
+        return !booking.isOpenEnded &&
+                booking.remainingDuration(now).inMinutes <= 10
             ? 1
             : 0;
       },
@@ -140,9 +141,7 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
 
     final Color accent = isExpired
         ? AppColors.danger
-        : (phase == 1
-              ? AppColors.warning
-              : AppColors.neonBlue);
+        : (phase == 1 ? AppColors.warning : AppColors.neonBlue);
 
     final Color borderColor = _isHovered
         ? accent.withValues(alpha: 0.9)

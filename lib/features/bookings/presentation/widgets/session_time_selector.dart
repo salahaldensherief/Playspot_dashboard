@@ -30,13 +30,15 @@ class _SessionTimeSelectorState<T> extends State<SessionTimeSelector<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return SessionTimeBuilder(builder: (context, now) {
-      final selected = widget.select(now);
-      if (_child == null || selected != _selected) {
-        _selected = selected;
-        _child = widget.builder(context, selected);
-      }
-      return _child!;
-    });
+    return SessionTimeBuilder(
+      builder: (context, now) {
+        final selected = widget.select(now);
+        if (_child == null || selected != _selected) {
+          _selected = selected;
+          _child = widget.builder(context, selected);
+        }
+        return _child!;
+      },
+    );
   }
 }

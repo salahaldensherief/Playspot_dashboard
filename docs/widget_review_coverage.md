@@ -88,4 +88,6 @@ Three dialogs now store text through onChanged instead of constructing unowned T
 
 ## Verification limits
 
+Additional resource checks traced the cashier classification timer, schedule intrinsic layout and system status watcher. AppStatusCubit now initializes its watcher once, rejects checks after close, stops polling and awaits channel removal after marking the Cubit closed. Regressions cover repeated initialization, delayed cleanup and late status results. These checks do not certify every controller/dialog in the other features.
+
 Flutter CI runs analysis, the full automated tests and release compilation. Physical-device/browser CPU/GPU profiling and retained-heap measurements are unavailable locally. Every screen's appearance, every live role/backend flow and all duplicated UI have **not** been exhaustively verified. See [performance_architecture_audit.md](performance_architecture_audit.md) for the profiling procedure and earlier changes.
