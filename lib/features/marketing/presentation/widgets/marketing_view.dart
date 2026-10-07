@@ -55,9 +55,8 @@ class _MarketingViewState extends State<MarketingView> {
     EasyLocalization.of(context);
     final user = context.select((LoginCubit cubit) => cubit.state.user);
     final isSuperAdmin = user?.isSuperAdmin ?? false;
-    final hasMarketingPermission = context.select<PermissionsCubit, bool>(
-      (_) => context.hasPermission('marketing_manage'),
-    );
+    context.select((PermissionsCubit cubit) => cubit.state);
+    final hasMarketingPermission = context.hasPermission('marketing_manage');
     final canCreate = canManagePromotion(
       user: user,
       promotionLoungeId: user?.loungeId,
