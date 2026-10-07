@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../domain/entities/pricing_rule_entity.dart';
 import '../domain/usecases/check_pricing_rule_conflicts_usecase.dart';
+import '../domain/usecases/check_pricing_rule_conflicts_usecase.dart';
 import '../domain/usecases/delete_pricing_rule_usecase.dart';
 import '../domain/usecases/get_pricing_rules_usecase.dart';
 import '../domain/usecases/quote_booking_price_usecase.dart';
