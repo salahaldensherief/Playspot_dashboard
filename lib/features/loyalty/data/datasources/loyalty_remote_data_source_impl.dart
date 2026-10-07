@@ -144,7 +144,7 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
 
   @override
   Future<void> createRedemptionOption(RedemptionOptionModel option) async {
-    await client.from('redemption_options').insert(option.toJson());
+    await _saveRedemptionOption(null, option);
   }
 
   @override
@@ -152,11 +152,44 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
     String id,
     Map<String, dynamic> data,
   ) async {
-    await client.from('redemption_options').update(data).eq('id', id);
+    final current = await client
+        .from('redemption_options')
+        .select()
+        .eq('id', id)
+        .single();
+    final merged = <String, dynamic>{
+      ...Map<String, dynamic>.from(current),
+      ...data,
+      'id': id,
+    };
+    await _saveRedemptionOption(id, RedemptionOptionModel.fromJson(merged));
+  }
+
+  Future<void> _saveRedemptionOption(
+    String? id,
+    RedemptionOptionModel option,
+  ) async {
+    await client.rpc(
+      'save_redemption_option_admin',
+      params: {
+        'p_option_id': id,
+        'p_title_ar': option.titleAr,
+        'p_title_en': option.titleEn,
+        'p_description_ar': option.descriptionAr,
+        'p_description_en': option.descriptionEn,
+        'p_points_cost': option.pointsCost,
+        'p_reward_type': option.rewardType,
+        'p_reward_value': option.rewardValue,
+        'p_is_active': option.isActive,
+      },
+    );
   }
 
   @override
   Future<void> deleteRedemptionOption(String id) async {
-    await client.from('redemption_options').delete().eq('id', id);
+    await client.rpc(
+      'archive_redemption_option_admin',
+      params: {'p_option_id': id},
+    );
   }
 }
