@@ -182,6 +182,23 @@ void main() {
   });
 
   group('CanteenItemExtractor & Stock Alerts', () {
+    test('catalogue price changes cannot overwrite the purchased offer price', () {
+      final items = CanteenItemExtractor.extract({
+        'items': [
+          {
+            'extra_id': 'drink',
+            'quantity': 2,
+            'unit_price': 36.0,
+            'total_price': 72.0,
+            'extras': {'name': 'Drink', 'price': 50.0},
+          },
+        ],
+      });
+      expect(items.single['price'], 36.0);
+      expect(items.single['unit_price'], 36.0);
+      expect(items.single['total_price'], 72.0);
+    });
+
     test('extracts combo parent, combo components, and low stock flag', () {
       final rawData = {
         'canteen_order_items': [
