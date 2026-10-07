@@ -32,11 +32,26 @@ class CanteenComboComponentModel extends CanteenComboComponentEntity {
       comboId: (json['combo_id'] ?? '').toString(),
       extraId: (json['extra_id'] ?? '').toString(),
       quantity: (json['quantity'] as num?)?.toInt() ?? 1,
-      extraNameAr: nameAr ?? json['extra_name_ar']?.toString(),
-      extraNameEn: nameEn ?? json['extra_name_en']?.toString(),
-      extraPrice: price ?? (json['extra_price'] as num?)?.toDouble(),
-      extraCostPrice: costPrice ?? (json['extra_cost_price'] as num?)?.toDouble(),
-      extraImageUrl: imageUrl ?? json['extra_image_url']?.toString(),
+      extraNameAr:
+          nameAr ??
+          json['extra_name_ar']?.toString() ??
+          json['name_ar']?.toString(),
+      extraNameEn:
+          nameEn ??
+          json['extra_name_en']?.toString() ??
+          json['name_en']?.toString(),
+      extraPrice:
+          price ??
+          (json['extra_price'] as num?)?.toDouble() ??
+          (json['price'] as num?)?.toDouble(),
+      extraCostPrice:
+          costPrice ??
+          (json['extra_cost_price'] as num?)?.toDouble() ??
+          (json['cost_price'] as num?)?.toDouble(),
+      extraImageUrl:
+          imageUrl ??
+          json['extra_image_url']?.toString() ??
+          json['image_url']?.toString(),
     );
   }
 
