@@ -136,11 +136,11 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     emit(state.copyWith(status: OnboardingStatus.completed));
   }
 
-  Future<void> addNewRoom(RoomEntity room) async {
+  Future<bool> addNewRoom(RoomEntity room) async {
     emit(state.copyWith(status: OnboardingStatus.loading));
     final result = await addRoomUseCase(room);
 
-    if (isClosed) return;
+    if (isClosed) return false;
 
     result.fold(
       (failure) => emit(
@@ -156,6 +156,7 @@ class OnboardingCubit extends Cubit<OnboardingState> {
         ),
       ),
     );
+    return result.isRight();
   }
 
   void removeRoom(String roomId) {

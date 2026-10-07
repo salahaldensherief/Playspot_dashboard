@@ -21,7 +21,7 @@ class RoomDialog extends StatefulWidget {
   final String loungeId;
   final RoomEntity? room;
   final CategoryCubit categoryCubit;
-  final Future<void> Function(RoomEntity)? onSave;
+  final Future<bool> Function(RoomEntity)? onSave;
 
   const RoomDialog({
     super.key,
@@ -228,13 +228,22 @@ class _RoomDialogState extends State<RoomDialog> {
             images: images,
             isAvailable: _selectedStatus == RoomStatusEnum.available,
             status: _selectedStatus,
+            hasOffer: widget.room?.hasOffer ?? false,
+            offerTitle: widget.room?.offerTitle,
+            offerTag: widget.room?.offerTag,
+            activePromotionId: widget.room?.activePromotionId,
+            openTimeEnabled: widget.room?.openTimeEnabled ?? false,
+            openTimePricingMode: widget.room?.openTimePricingMode ?? 'same_hourly',
+            openTimeCustomHourlyRate: widget.room?.openTimeCustomHourlyRate,
+            openTimePriceMultiplier: widget.room?.openTimePriceMultiplier ?? 1.0,
+            openTimeMinimumMinutes: widget.room?.openTimeMinimumMinutes ?? 30,
+            openTimeRoundingMinutes: widget.room?.openTimeRoundingMinutes ?? 15,
+            openTimeMaxMinutes: widget.room?.openTimeMaxMinutes,
+            openTimeBufferBeforeBookingMinutes: widget.room?.openTimeBufferBeforeBookingMinutes ?? 15,
           );
 
-          if (widget.onSave != null) {
-            await widget.onSave!(room);
-          }
-
-          if (mounted) Navigator.pop(context);
+          final saved = await widget.onSave?.call(room) ?? false;
+          if (mounted && saved) Navigator.pop(context);
         }
       } catch (e) {
         if (mounted) {

@@ -178,11 +178,11 @@ class RoomCubit extends Cubit<RoomState> with RealtimeWatcherMixin<RoomState> {
     );
   }
 
-  Future<void> addNewRoom(RoomEntity room) async {
+  Future<bool> addNewRoom(RoomEntity room) async {
     emit(state.copyWith(status: RoomStatus.loading));
     final result = await _repository.addRoom(room);
 
-    if (isClosed) return;
+    if (isClosed) return false;
 
     result.fold(
       (failure) => emit(
@@ -191,15 +191,16 @@ class RoomCubit extends Cubit<RoomState> with RealtimeWatcherMixin<RoomState> {
           errorMessage: failure.message,
         ),
       ),
-      (_) => null,
+      (_) => emit(state.copyWith(status: RoomStatus.success)),
     );
+    return result.isRight();
   }
 
-  Future<void> updateRoom(RoomEntity room) async {
+  Future<bool> updateRoom(RoomEntity room) async {
     emit(state.copyWith(status: RoomStatus.loading));
     final result = await _repository.updateRoom(room);
 
-    if (isClosed) return;
+    if (isClosed) return false;
 
     result.fold(
       (failure) => emit(
@@ -208,8 +209,9 @@ class RoomCubit extends Cubit<RoomState> with RealtimeWatcherMixin<RoomState> {
           errorMessage: failure.message,
         ),
       ),
-      (_) => null,
+      (_) => emit(state.copyWith(status: RoomStatus.success)),
     );
+    return result.isRight();
   }
 
   Future<void> deleteRoom(String roomId) async {
