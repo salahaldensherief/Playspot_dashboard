@@ -10,10 +10,13 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import '../../domain/entities/activity_type_entity.dart';
+import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/city_entity.dart';
 import 'category_cubit.dart';
 import 'category_state.dart';
 import 'widgets/activity_type_dialog.dart';
+import 'widgets/category_card.dart';
+import 'widgets/category_dialog.dart';
 import 'widgets/city_dialog.dart';
 
 class CategoriesScreen extends StatefulWidget {
@@ -30,7 +33,8 @@ class _CategoriesScreenState extends State<CategoriesScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(_handleTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<CategoryCubit>().loadCategories();
@@ -38,10 +42,35 @@ class _CategoriesScreenState extends State<CategoriesScreen>
     });
   }
 
+  void _handleTabChanged() {
+    if (mounted && !_tabController.indexIsChanging) setState(() {});
+  }
+
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabChanged);
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _showCategoryDialog(
+    BuildContext context,
+    CategoryCubit cubit, {
+    CategoryEntity? category,
+  }) {
+    showDialog(
+      context: context,
+      builder: (diagContext) => CategoryDialog(
+        category: category,
+        onSave: (value) {
+          if (category == null) {
+            cubit.addCategory(value);
+          } else {
+            cubit.updateCategory(value);
+          }
+        },
+      ),
+    );
   }
 
   void _showActivityDialog(
@@ -93,15 +122,21 @@ class _CategoriesScreenState extends State<CategoriesScreen>
           AppAdaptivePageHeader(
             title: AppStrings.categories,
             subtitle: AppStrings.manageRoomsDesc,
-            secondaryAction: AppButton(
-              text: AppStrings.addCity,
-              onPressed: () => _showCityDialog(context, categoryCubit),
-              icon: Icons.location_city,
-              variant: AppButtonVariant.outlined,
-            ),
             primaryAction: AppButton(
-              text: AppStrings.addNewActivity,
-              onPressed: () => _showActivityDialog(context, categoryCubit),
+              text: _tabController.index == 0
+                  ? AppStrings.addCategory
+                  : _tabController.index == 1
+                  ? AppStrings.addNewActivity
+                  : AppStrings.addCity,
+              onPressed: () {
+                if (_tabController.index == 0) {
+                  _showCategoryDialog(context, categoryCubit);
+                } else if (_tabController.index == 1) {
+                  _showActivityDialog(context, categoryCubit);
+                } else {
+                  _showCityDialog(context, categoryCubit);
+                }
+              },
               icon: Icons.add,
             ),
           ),
@@ -113,6 +148,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
             unselectedLabelColor: AppColors.textSecondary,
             indicatorColor: AppColors.neonBlue,
             tabs: [
+              Tab(text: AppStrings.categories),
               Tab(text: AppStrings.roomActivities),
               Tab(text: AppStrings.cities),
             ],
@@ -122,7 +158,8 @@ class _CategoriesScreenState extends State<CategoriesScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildCategoriesGrid(context, categoryCubit),
+                _buildCategoryDefinitionsGrid(context, categoryCubit),
+                _buildActivityTypesGrid(context, categoryCubit),
                 _buildCitiesList(context, categoryCubit),
               ],
             ),
@@ -132,7 +169,66 @@ class _CategoriesScreenState extends State<CategoriesScreen>
     );
   }
 
-  Widget _buildCategoriesGrid(
+  Widget _buildCategoryDefinitionsGrid(
+    BuildContext context,
+    CategoryCubit categoryCubit,
+  ) {
+    return BlocBuilder<CategoryCubit, CategoryState>(
+      builder: (context, state) {
+        if (state.status.isLoading) {
+          return const GridShimmer(itemCount: 6, aspectRatio: 2.5);
+        }
+        if (state.status.isFailure) {
+          return Center(
+            child: Text(
+              state.errorMessage ?? 'Error',
+              style: const TextStyle(color: AppColors.danger),
+            ),
+          );
+        }
+        if (state.categories.isEmpty) {
+          return Center(
+            child: Text(
+              AppStrings.noCategoriesFound,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          );
+        }
+
+        final crossAxisCount = Responsive.isMobile(context)
+            ? 1
+            : (Responsive.isTablet(context) ? 2 : 3);
+
+        return GridView.builder(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 16.r,
+            mainAxisSpacing: 16.r,
+            mainAxisExtent: 100.h,
+          ),
+          itemCount: state.categories.length,
+          itemBuilder: (context, index) {
+            final category = state.categories[index];
+            return CategoryCard(
+              category: category,
+              onEdit: () => _showCategoryDialog(
+                context,
+                categoryCubit,
+                category: category,
+              ),
+              onDelete: () => _confirmCategoryDelete(
+                context,
+                categoryCubit,
+                category,
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildActivityTypesGrid(
     BuildContext context,
     CategoryCubit categoryCubit,
   ) {
@@ -313,6 +409,42 @@ class _CategoriesScreenState extends State<CategoriesScreen>
           },
         );
       },
+    );
+  }
+
+  void _confirmCategoryDelete(
+    BuildContext context,
+    CategoryCubit cubit,
+    CategoryEntity category,
+  ) {
+    showDialog(
+      context: context,
+      builder: (diagContext) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        title: Text(
+          AppStrings.deleteConfirmation,
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
+        content: Text(
+          '${AppStrings.deleteWarning} "${category.nameEn}"?',
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          AppButton(
+            text: AppStrings.cancel,
+            variant: AppButtonVariant.outlined,
+            onPressed: () => Navigator.pop(diagContext),
+          ),
+          AppButton(
+            text: AppStrings.delete,
+            variant: AppButtonVariant.danger,
+            onPressed: () {
+              cubit.deleteCategory(category.id);
+              Navigator.pop(diagContext);
+            },
+          ),
+        ],
+      ),
     );
   }
 
