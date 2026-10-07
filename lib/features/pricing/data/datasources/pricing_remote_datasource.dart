@@ -37,20 +37,22 @@ class PricingRemoteDataSourceImpl implements PricingRemoteDataSource {
   PricingRemoteDataSourceImpl(this.supabase);
 
   @override
-  Future<List<PricingRuleModel>> getPricingRules({required String loungeId}) async {
-    try {
-      final response = await supabase
-          .from('pricing_rules')
-          .select('*')
-          .eq('lounge_id', loungeId)
-          .order('created_at', ascending: false);
+  Future<List<PricingRuleModel>> getPricingRules({
+    required String loungeId,
+  }) async {
+    final response = await supabase
+        .from('pricing_rules')
+        .select('*')
+        .eq('lounge_id', loungeId)
+        .order('created_at', ascending: false);
 
-      return (response as List)
-          .map((e) => PricingRuleModel.fromJson(Map<String, dynamic>.from(e as Map)))
-          .toList();
-    } catch (_) {
-      return [];
-    }
+    return (response as List)
+        .map(
+          (e) => PricingRuleModel.fromJson(
+            Map<String, dynamic>.from(e as Map),
+          ),
+        )
+        .toList();
   }
 
   @override
