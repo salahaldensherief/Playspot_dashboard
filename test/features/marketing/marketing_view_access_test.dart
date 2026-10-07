@@ -1,4 +1,3 @@
-import 'package:bloc_test/bloc_test.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,10 +18,10 @@ import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
 import '../../support/local_translations_loader.dart';
 
-class _Auth extends MockCubit<LoginState> implements LoginCubit {}
-class _Marketing extends MockCubit<MarketingState> implements MarketingCubit {}
-class _Permissions extends MockCubit<PermissionsState> implements PermissionsCubit {}
-class _Rooms extends MockCubit<RoomState> implements RoomCubit {}
+class _Auth extends Mock implements LoginCubit {}
+class _Marketing extends Mock implements MarketingCubit {}
+class _Permissions extends Mock implements PermissionsCubit {}
+class _Rooms extends Mock implements RoomCubit {}
 
 void main() {
   setUpAll(() async {
@@ -40,10 +39,14 @@ void main() {
     const user = UserEntity(id: 'owner', email: '', name: '', role: UserRole.owner, loungeId: 'venue');
     const globalOffer = PromoEntity(id: 'global', titleAr: 'عرض عام', titleEn: 'Platform offer', tagAr: '', tagEn: '', hexColors: ['#000000', '#ffffff'], iconKey: 'Flash');
     const localOffer = PromoEntity(id: 'local', titleAr: 'عرض الصالة', titleEn: 'Venue offer', tagAr: '', tagEn: '', hexColors: ['#000000', '#ffffff'], iconKey: 'Flash', loungeId: 'venue');
-    whenListen(auth, const Stream<LoginState>.empty(), initialState: const LoginState(status: LoginStatus.authenticated, user: user));
-    whenListen(marketing, const Stream<MarketingState>.empty(), initialState: const MarketingState(status: MarketingStatus.success, promotions: [globalOffer, localOffer]));
-    whenListen(permissions, const Stream<PermissionsState>.empty(), initialState: PermissionsState.initial());
-    whenListen(rooms, const Stream<RoomState>.empty(), initialState: const RoomState());
+    when(() => auth.state).thenReturn(const LoginState(status: LoginStatus.authenticated, user: user));
+    when(() => auth.stream).thenAnswer((_) => const Stream<LoginState>.empty());
+    when(() => marketing.state).thenReturn(const MarketingState(status: MarketingStatus.success, promotions: [globalOffer, localOffer]));
+    when(() => marketing.stream).thenAnswer((_) => const Stream<MarketingState>.empty());
+    when(() => permissions.state).thenReturn(PermissionsState.initial());
+    when(() => permissions.stream).thenAnswer((_) => const Stream<PermissionsState>.empty());
+    when(() => rooms.state).thenReturn(const RoomState());
+    when(() => rooms.stream).thenAnswer((_) => const Stream<RoomState>.empty());
     when(() => permissions.hasPermission('marketing_manage', userRole: 'owner', userId: 'owner')).thenReturn(true);
     when(() => marketing.loadPromotions(loungeId: 'venue')).thenAnswer((_) async {});
     await tester.pumpWidget(EasyLocalization(
