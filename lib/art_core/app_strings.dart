@@ -1619,6 +1619,8 @@ class AppStrings {
       'affected_rooms_notice'.tr(namedArgs: {'count': count.toString()});
   static String get existingBookingsUnaffected =>
       'existing_bookings_unaffected'.tr();
+  static String get pricingFutureScopeNotice =>
+      'pricing_future_scope_notice'.tr();
   static String get activeStatus => 'active_status'.tr();
   static String get scheduledStatus => 'scheduled_status'.tr();
   static String get expiredStatus => 'expired_status'.tr();
