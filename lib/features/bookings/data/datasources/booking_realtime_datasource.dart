@@ -1,4 +1,4 @@
-import 'dart:async';
+import '../../../../core/streams/refreshing_stream.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/booking_model.dart';
 import 'booking_remote_data_source.dart';
@@ -15,75 +15,17 @@ class BookingRealtimeDataSourceImpl implements BookingRealtimeDataSource {
 
   @override
   Stream<List<BookingModel>> watchBookings({String? loungeId}) {
-    late StreamController<List<BookingModel>> controller;
-    Timer? backupSyncTimer;
-    Timer? debounceTimer;
-    StreamSubscription? realtimeSubscription;
-    bool isFetching = false;
-
-    void debouncedFetchAndEmit() {
-      debounceTimer?.cancel();
-      debounceTimer = Timer(const Duration(milliseconds: 300), () async {
-        if (isFetching || controller.isClosed) return;
-        isFetching = true;
-        try {
-          await _fetchAndEmit(controller, loungeId);
-        } finally {
-          isFetching = false;
-        }
-      });
-    }
-
-    void cancelResources() {
-      debounceTimer?.cancel();
-      backupSyncTimer?.cancel();
-      realtimeSubscription?.cancel();
-    }
-
-    controller = StreamController<List<BookingModel>>(
-      onListen: () {
-        // 1. Fetch initial data immediately on subscription
-        _fetchAndEmit(controller, loungeId);
-
-        // 2. Realtime postgres changes listener
-        try {
-          final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
-          var streamQuery = _client.from('bookings').stream(primaryKey: ['id']);
-          if (cleanLoungeId != null) {
-            streamQuery = streamQuery.eq('lounge_id', cleanLoungeId);
-          }
-          realtimeSubscription = streamQuery.order('created_at').listen((_) {
-            debouncedFetchAndEmit();
-          }, onError: (e) {
-            // Ignore silent socket drops; backup timer will continue polling
-          });
-        } catch (e) {
-          // Ignore stream setup errors; backup polling will fetch updates
-        }
-
-        // 3. Periodic 30-second fallback backup poll (safety net for socket drops)
-        backupSyncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-          debouncedFetchAndEmit();
-        });
-      },
-      onCancel: () {
-        cancelResources();
+    final cleanLoungeId = loungeId?.trim();
+    final scopedId = cleanLoungeId == null || cleanLoungeId.isEmpty
+        ? null
+        : cleanLoungeId;
+    return refreshingStream<List<BookingModel>>(
+      fetch: () => _remoteDataSource.getBookings(loungeId: scopedId),
+      invalidations: () {
+        var query = _client.from('bookings').stream(primaryKey: ['id']);
+        if (scopedId != null) query = query.eq('lounge_id', scopedId);
+        return query.order('created_at');
       },
     );
-
-    return controller.stream;
-  }
-
-  Future<void> _fetchAndEmit(StreamController<List<BookingModel>> controller, String? loungeId) async {
-    try {
-      final bookings = await _remoteDataSource.getBookings(loungeId: loungeId);
-      if (!controller.isClosed) {
-        controller.add(bookings);
-      }
-    } catch (e) {
-      if (!controller.isClosed) {
-        controller.addError(e);
-      }
-    }
   }
 }

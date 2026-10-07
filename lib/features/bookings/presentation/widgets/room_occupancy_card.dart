@@ -1,5 +1,4 @@
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -11,7 +10,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_occupancy_walk_in_section.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
 
-class RoomOccupancyCard extends StatefulWidget {
+class RoomOccupancyCard extends StatelessWidget {
   final RoomEntity room;
   final Booking? activeBooking;
   final String loungeId;
@@ -24,61 +23,9 @@ class RoomOccupancyCard extends StatefulWidget {
   });
 
   @override
-  State<RoomOccupancyCard> createState() => _RoomOccupancyCardState();
-}
-
-class _RoomOccupancyCardState extends State<RoomOccupancyCard> {
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.activeBooking != null) {
-      _startTimer();
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant RoomOccupancyCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.activeBooking != oldWidget.activeBooking) {
-      if (widget.activeBooking != null) {
-        _startTimer();
-      } else {
-        _timer?.cancel();
-      }
-    }
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  String _formatDuration(Duration duration) {
-    final totalSeconds = duration.inSeconds.abs();
-    final hours = (totalSeconds ~/ 3600).toString().padLeft(2, '0');
-    final minutes = ((totalSeconds % 3600) ~/ 60).toString().padLeft(2, '0');
-    final seconds = (totalSeconds % 60).toString().padLeft(2, '0');
-    if (totalSeconds >= 3600) {
-      return '$hours:$minutes:$seconds';
-    }
-    return '$minutes:$seconds';
-  }
-
-  @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    final room = widget.room;
-    final activeBooking = widget.activeBooking;
+    final activeBooking = this.activeBooking;
     final isOccupiedByApp =
         activeBooking != null && activeBooking.isBookingActive();
     final isOccupiedByWalkIn =
@@ -98,13 +45,6 @@ class _RoomOccupancyCardState extends State<RoomOccupancyCard> {
       borderColor = AppColors.danger.withValues(alpha: 0.6);
       statusColor = AppColors.danger;
       statusText = 'room_occupied'.tr();
-    }
-
-    Duration remaining = Duration.zero;
-    bool isExpired = false;
-    if (activeBooking != null && isOccupiedByApp) {
-      remaining = activeBooking.remainingDuration();
-      isExpired = activeBooking.isSessionExpired();
     }
 
     final screenWidth = MediaQuery.sizeOf(context).width;
@@ -226,9 +166,6 @@ class _RoomOccupancyCardState extends State<RoomOccupancyCard> {
             RoomOccupancyActiveSection(
               activeBooking: activeBooking,
               room: room,
-              remaining: remaining,
-              isExpired: isExpired,
-              formattedRemaining: _formatDuration(remaining),
             ),
           ] else if (isOccupiedByWalkIn) ...[
             RoomOccupancyWalkInSection(room: room),
@@ -237,7 +174,7 @@ class _RoomOccupancyCardState extends State<RoomOccupancyCard> {
           ] else ...[
             RoomOccupancyAvailableSection(
               room: room,
-              loungeId: widget.loungeId,
+              loungeId: loungeId,
             ),
           ],
         ],

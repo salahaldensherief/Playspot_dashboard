@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
+import 'session_time_builder.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -18,17 +19,11 @@ import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit
 class RoomOccupancyActiveSection extends StatefulWidget {
   final Booking activeBooking;
   final RoomEntity room;
-  final Duration remaining;
-  final bool isExpired;
-  final String formattedRemaining;
 
   const RoomOccupancyActiveSection({
     super.key,
     required this.activeBooking,
     required this.room,
-    required this.remaining,
-    required this.isExpired,
-    required this.formattedRemaining,
   });
 
   @override
@@ -45,8 +40,6 @@ class _RoomOccupancyActiveSectionState
     EasyLocalization.of(context);
     final activeBooking = widget.activeBooking;
     final room = widget.room;
-    final isExpired = widget.isExpired;
-    final formattedRemaining = widget.formattedRemaining;
     final phone = activeBooking.userPhone;
     final isOpenTime = activeBooking.isOpenEnded;
 
@@ -132,8 +125,18 @@ class _RoomOccupancyActiveSectionState
         ),
         SizedBox(height: 10.h),
 
-        // Remaining Time Bar
-        Container(
+        SessionTimeBuilder(
+          builder: (context, now) {
+            final remaining = activeBooking.remainingDuration(now);
+            final isExpired = activeBooking.isSessionExpired(now);
+            final seconds = remaining.inSeconds.abs();
+            final hours = (seconds ~/ 3600).toString().padLeft(2, '0');
+            final minutes = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
+            final secs = (seconds % 60).toString().padLeft(2, '0');
+            final formattedRemaining = seconds >= 3600
+                ? '$hours:$minutes:$secs'
+                : '$minutes:$secs';
+            return Container(
           padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
           decoration: BoxDecoration(
             color: isExpired
@@ -183,6 +186,8 @@ class _RoomOccupancyActiveSectionState
               ),
             ],
           ),
+        );
+          },
         ),
         RoomOccupancyRequestsBadge(booking: activeBooking, room: room),
         SizedBox(height: 10.h),

@@ -8,6 +8,8 @@ class TournamentAuditManager {
   final GetTournamentAuditLogsUseCase getTournamentAuditLogsUseCase;
   final WatchDisputedMatchesUseCase watchDisputedMatchesUseCase;
   StreamSubscription<List<TournamentMatchEntity>>? _disputesSubscription;
+  int _watchGeneration = 0;
+  bool _disposed = false;
 
   TournamentAuditManager({
     required this.getTournamentAuditLogsUseCase,
@@ -19,11 +21,13 @@ class TournamentAuditManager {
     int page = 1,
     int pageSize = 50,
   }) async {
+    if (_disposed) return null;
     final result = await getTournamentAuditLogsUseCase(GetTournamentAuditLogsParams(
       tournamentId: tournamentId,
       page: page,
       pageSize: pageSize,
     ));
+    if (_disposed) return null;
     return result.fold((_) => null, (paginated) => paginated);
   }
 
@@ -31,12 +35,21 @@ class TournamentAuditManager {
     String tournamentId,
     void Function(List<TournamentMatchEntity>) onDisputesUpdated,
   ) {
+    if (_disposed) return;
+    final generation = ++_watchGeneration;
     _disputesSubscription?.cancel();
     _disputesSubscription =
-        watchDisputedMatchesUseCase(tournamentId).listen(onDisputesUpdated);
+        watchDisputedMatchesUseCase(tournamentId).listen((matches) {
+          if (!_disposed && generation == _watchGeneration) {
+            onDisputesUpdated(matches);
+          }
+        });
   }
 
   void dispose() {
+    _disposed = true;
+    _watchGeneration++;
     _disputesSubscription?.cancel();
+    _disputesSubscription = null;
   }
 }

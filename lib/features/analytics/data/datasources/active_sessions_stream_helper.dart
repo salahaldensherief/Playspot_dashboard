@@ -1,4 +1,4 @@
-import 'dart:async';
+import '../../../../core/streams/refreshing_stream.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/features/bookings/data/models/booking_model.dart';
@@ -12,75 +12,17 @@ class ActiveSessionsStreamHelper {
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty)
         ? loungeId.trim()
         : null;
-    late StreamController<List<BookingModel>> controller;
-    Timer? backupSyncTimer;
-    Timer? debounceTimer;
-    StreamSubscription? postgresSubscription;
-    bool isFetching = false;
-
-    void debouncedFetch() {
-      debounceTimer?.cancel();
-      debounceTimer = Timer(const Duration(milliseconds: 300), () async {
-        if (isFetching || controller.isClosed) return;
-        isFetching = true;
-        try {
-          await _fetchAndEmitActiveSessions(controller, cleanLoungeId);
-        } finally {
-          isFetching = false;
-        }
-      });
-    }
-
-    void cleanup() {
-      debounceTimer?.cancel();
-      backupSyncTimer?.cancel();
-      postgresSubscription?.cancel();
-    }
-
-    controller = StreamController<List<BookingModel>>(
-      onListen: () {
-        _fetchAndEmitActiveSessions(controller, cleanLoungeId);
-
-        try {
-          postgresSubscription = supabaseClient
-              .from('bookings')
-              .stream(primaryKey: ['id'])
-              .listen(
-                (_) {
-                  debouncedFetch();
-                },
-                onError: (e) {
-                  debugPrint(
-                    '⚠️ [ActiveSessionsStreamHelper] Realtime Error: $e',
-                  );
-                },
-              );
-        } catch (e) {
-          debugPrint(
-            '⚠️ [ActiveSessionsStreamHelper] Stream Listener Exception: $e',
-          );
-        }
-
-        backupSyncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-          debouncedFetch();
-        });
+    return refreshingStream<List<BookingModel>>(
+      fetch: () => fetchActiveSessions(loungeId: cleanLoungeId),
+      invalidations: () {
+        var query = supabaseClient.from('bookings').stream(primaryKey: ['id']);
+        if (cleanLoungeId != null) query = query.eq('lounge_id', cleanLoungeId);
+        return query;
       },
-      onCancel: cleanup,
+      onRealtimeError: (error) => debugPrint(
+        '⚠️ [ActiveSessionsStreamHelper] Realtime Error: $error',
+      ),
     );
-
-    return controller.stream;
-  }
-
-  Future<void> _fetchAndEmitActiveSessions(
-    StreamController<List<BookingModel>> controller,
-    String? loungeId,
-  ) async {
-    try {
-      final sessions = await fetchActiveSessions(loungeId: loungeId);
-      if (!controller.isClosed) controller.add(sessions);
-    } catch (error) {
-      if (!controller.isClosed) controller.addError(error);
-    }
   }
 
   Future<List<BookingModel>> fetchActiveSessions({String? loungeId}) async {

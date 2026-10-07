@@ -1,13 +1,13 @@
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'session_time_builder.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 
 /// Live Countdown Timer widget for cash bookings
-class BookingCountdownTimer extends StatefulWidget {
+class BookingCountdownTimer extends StatelessWidget {
   final Booking booking;
   final int gracePeriodMinutes;
 
@@ -18,40 +18,15 @@ class BookingCountdownTimer extends StatefulWidget {
   });
 
   @override
-  State<BookingCountdownTimer> createState() => _BookingCountdownTimerState();
-}
+  Widget build(BuildContext context) => SessionTimeBuilder(
+    builder: _buildCountdown,
+  );
 
-class _BookingCountdownTimerState extends State<BookingCountdownTimer> {
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _startTimer();
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() {});
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildCountdown(BuildContext context, DateTime now) {
     EasyLocalization.of(context);
-    final start = widget.booking.startDateTime;
+    final start = booking.startDateTime;
     if (start == null) return const SizedBox.shrink();
 
-    final now = DateTime.now();
 
     if (now.isBefore(start)) {
       // Countdown to start time
@@ -95,7 +70,7 @@ class _BookingCountdownTimerState extends State<BookingCountdownTimer> {
       // Past start time - grace period tracking
       final elapsed = now.difference(start);
       final elapsedMins = elapsed.inMinutes;
-      final graceLimit = widget.gracePeriodMinutes;
+      final graceLimit = gracePeriodMinutes;
 
       final isExpired = elapsedMins >= graceLimit;
 
