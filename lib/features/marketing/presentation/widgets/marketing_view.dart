@@ -1,5 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import '../marketing_message.dart';
+import '../promotion_access.dart';
+import '../../../auth/domain/entities/user_entity.dart';
+import '../../../permissions/presentation/cubit/permissions_cubit.dart';
+import '../../../../core/utils/permission_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -49,8 +53,16 @@ class _MarketingViewState extends State<MarketingView> {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    final user = context.read<LoginCubit>().state.user;
+    final user = context.select((LoginCubit cubit) => cubit.state.user);
     final isSuperAdmin = user?.isSuperAdmin ?? false;
+    final hasMarketingPermission = context.select<PermissionsCubit, bool>(
+      (_) => context.hasPermission('marketing_manage'),
+    );
+    final canCreate = canManagePromotion(
+      user: user,
+      promotionLoungeId: user?.loungeId,
+      hasMarketingPermission: hasMarketingPermission,
+    );
     final marketingCubit = context.read<MarketingCubit>();
 
     return BlocListener<MarketingCubit, MarketingState>(
@@ -92,37 +104,50 @@ class _MarketingViewState extends State<MarketingView> {
                       variant: AppButtonVariant.outlined,
                     )
                   : null,
-              primaryAction: AppButton(
-                text: AppStrings.createPromotion,
-                onPressed: () => _showEditPromoDialog(
-                  context,
-                  marketingCubit,
-                  PromoEntity(
-                    id: '',
-                    titleAr: '',
-                    titleEn: '',
-                    tagAr: '',
-                    tagEn: '',
-                    hexColors: const [],
-                    iconKey: 'Flash',
-                    loungeId: user?.loungeId,
-                  ),
-                ),
-                icon: Icons.add,
-              ),
+              primaryAction: canCreate
+                  ? AppButton(
+                      text: AppStrings.createPromotion,
+                      onPressed: () => _showEditPromoDialog(
+                        context,
+                        marketingCubit,
+                        PromoEntity(
+                          id: '',
+                          titleAr: '',
+                          titleEn: '',
+                          tagAr: '',
+                          tagEn: '',
+                          hexColors: const [],
+                          iconKey: 'Flash',
+                          loungeId: user?.loungeId,
+                        ),
+                      ),
+                      icon: Icons.add,
+                    )
+                  : null,
             ),
             SizedBox(height: 24.h),
 
             // Main Promotions Dashboard Content
-            Expanded(child: _buildPromotionsContent(marketingCubit)),
+            Expanded(
+              child: _buildPromotionsContent(
+                marketingCubit,
+                user: user,
+                hasMarketingPermission: hasMarketingPermission,
+                canCreate: canCreate,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPromotionsContent(MarketingCubit cubit) {
-    final user = context.read<LoginCubit>().state.user;
+  Widget _buildPromotionsContent(
+    MarketingCubit cubit, {
+    required UserEntity? user,
+    required bool hasMarketingPermission,
+    required bool canCreate,
+  }) {
     final loungeId = user?.loungeId;
 
     return BlocBuilder<MarketingCubit, MarketingState>(
@@ -271,7 +296,8 @@ class _MarketingViewState extends State<MarketingView> {
                         ),
                       ),
                       SizedBox(height: 16.h),
-                      AppButton(
+                      if (canCreate)
+                        AppButton(
                         text: AppStrings.createPromotion,
                         onPressed: () => _showEditPromoDialog(
                           context,
@@ -306,12 +332,17 @@ class _MarketingViewState extends State<MarketingView> {
                   itemCount: promos.length,
                   itemBuilder: (context, index) {
                     final promo = promos[index];
+                    final canManage = canManagePromotion(
+                      user: user,
+                      promotionLoungeId: promo.loungeId,
+                      hasMarketingPermission: hasMarketingPermission,
+                    );
                     return PromoCard(
                       promo: promo,
-                      onEdit: promo.isActive
+                      onEdit: canManage && promo.isActive
                           ? () => _showEditPromoDialog(context, cubit, promo)
                           : null,
-                      onDelete: promo.isActive
+                      onDelete: canManage && promo.isActive
                           ? () => _confirmDelete(
                               context,
                               cubit,
@@ -319,10 +350,12 @@ class _MarketingViewState extends State<MarketingView> {
                               loungeId: loungeId,
                             )
                           : null,
-                      onReshare: () => cubit.resharePromotion(
-                        promo.id,
-                        loungeId: loungeId,
-                      ),
+                      onReshare: canManage
+                          ? () => cubit.resharePromotion(
+                              promo.id,
+                              loungeId: loungeId,
+                            )
+                          : null,
                     );
                   },
                 ),
