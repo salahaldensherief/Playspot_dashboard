@@ -28,7 +28,7 @@ class MarketingView extends StatefulWidget {
 }
 
 class _MarketingViewState extends State<MarketingView> {
-  String _selectedFilterStatus = 'All'; // All, Active, Expired, Archived
+  String _selectedFilterStatus = 'Active'; // All, Active, Expired, Archived
   String _selectedFilterTag = 'All';
 
   @override

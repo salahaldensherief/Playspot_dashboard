@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
@@ -39,9 +40,11 @@ void main() {
     const user = UserEntity(id: 'owner', email: '', name: '', role: UserRole.owner, loungeId: 'venue');
     const globalOffer = PromoEntity(id: 'global', titleAr: 'عرض عام', titleEn: 'Platform offer', tagAr: '', tagEn: '', hexColors: ['#000000', '#ffffff'], iconKey: 'Flash');
     const localOffer = PromoEntity(id: 'local', titleAr: 'عرض الصالة', titleEn: 'Venue offer', tagAr: '', tagEn: '', hexColors: ['#000000', '#ffffff'], iconKey: 'Flash', loungeId: 'venue');
+    final expiredGlobal = PromoEntity(id: 'expired-global', titleAr: 'عام منتهي', titleEn: 'Expired platform offer', tagAr: '', tagEn: '', hexColors: const ['#000000', '#ffffff'], iconKey: 'Flash', expiresAt: DateTime(2020));
+    final expiredLocal = PromoEntity(id: 'expired-local', titleAr: 'عرض منتهي', titleEn: 'Expired venue offer', tagAr: '', tagEn: '', hexColors: const ['#000000', '#ffffff'], iconKey: 'Flash', loungeId: 'venue', expiresAt: DateTime(2020));
     when(() => auth.state).thenReturn(const LoginState(status: LoginStatus.authenticated, user: user));
     when(() => auth.stream).thenAnswer((_) => const Stream<LoginState>.empty());
-    when(() => marketing.state).thenReturn(const MarketingState(status: MarketingStatus.success, promotions: [globalOffer, localOffer]));
+    when(() => marketing.state).thenReturn(MarketingState(status: MarketingStatus.success, promotions: [globalOffer, localOffer, expiredGlobal, expiredLocal]));
     when(() => marketing.stream).thenAnswer((_) => const Stream<MarketingState>.empty());
     when(() => permissions.state).thenReturn(PermissionsState.initial());
     when(() => permissions.stream).thenAnswer((_) => const Stream<PermissionsState>.empty());
@@ -67,6 +70,14 @@ void main() {
     expect(find.byIcon(Icons.archive_outlined), findsOneWidget);
     expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
     expect(find.byIcon(Icons.repeat_rounded), findsOneWidget);
+    expect(find.text('Expired platform offer'), findsNothing);
+    expect(find.text('Expired venue offer'), findsNothing);
+    await tester.tap(find.text(AppStrings.timeExpired));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Expired platform offer'), findsOneWidget);
+    expect(find.text('Expired venue offer'), findsOneWidget);
+    expect(find.byIcon(Icons.archive_outlined), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 }
