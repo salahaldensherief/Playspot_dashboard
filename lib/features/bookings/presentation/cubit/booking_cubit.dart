@@ -432,7 +432,7 @@ class BookingCubit extends Cubit<BookingState>
     try {
       final result = await repository.extendBookingSession(id, additionalMinutes);
       if (isClosed) return false;
-      return result.fold((failure) {
+      return result.fold<bool>((failure) {
         emit(state.copyWith(
           status: BookingStatusState.failure,
           errorMessage: failure.message.tr(),
