@@ -66,8 +66,8 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Verify owner Auth provisioning boundary
-        run: node --test supabase/functions/create-lounge-owner/handler.test.mjs supabase/functions/update-user-location/handler.test.mjs supabase/functions/send-system-announcement/authorization.test.mjs
+      - name: Verify Edge authorization and partial failure contracts
+        run: node --test supabase/functions/*/*.test.mjs
 
       - name: Verify release build
         run: flutter build web --release

@@ -48,48 +48,36 @@ Deno.serve(async (req: Request) => {
 
   const userId = userData.user.id;
 
-  // Remove only user-owned personal/application data requested by the account-deletion policy.
-  // bookings and payments are intentionally not touched.
-  const deleteOperations = [
-    ["points_transactions", admin.from("points_transactions").delete().eq("user_id", userId)],
-    ["user_vouchers", admin.from("user_vouchers").delete().eq("user_id", userId)],
-    ["notifications", admin.from("notifications").delete().eq("user_id", userId)],
-    ["notification_settings", admin.from("notification_settings").delete().eq("user_id", userId)],
-    ["favorites", admin.from("favorites").delete().eq("user_id", userId)],
-  ] as const;
-
-  for (const [table, operation] of deleteOperations) {
-    const { error } = await operation;
-    if (error) {
-      console.error(`Failed deleting ${table}`, { userId, error: error.message });
-      return json({ error: "Account anonymization failed" }, 500);
-    }
-  }
-
-  const { error: profileError } = await admin
-    .from("profiles")
-    .update({
-      full_name: "Deleted User",
-      phone: null,
-      email: null,
-      avatar_url: null,
-      fcm_token: null,
-    })
-    .eq("id", userId);
-
-  if (profileError) {
-    console.error("Failed anonymizing profile", { userId, error: profileError.message });
+  // One transaction owns deletion, application deactivation and the durable Auth retry record.
+  // The request body cannot choose another account.
+  const { data: deletion, error: profileError } = await admin.rpc(
+    "anonymize_account_for_deletion", { p_user_id: userId },
+  );
+  if (profileError || deletion?.success !== true || deletion?.deactivated !== true) {
+    console.error("Failed anonymizing profile", { userId, error: profileError?.message });
     return json({ error: "Account anonymization failed" }, 500);
   }
 
   // Disable future authentication without deleting the auth record.
-  const { error: banError } = await admin.auth.admin.updateUserById(userId, {
-    ban_duration: "876000h",
-  });
-
-  if (banError) {
-    console.error("Failed disabling auth account", { userId, error: banError.message });
-    return json({ error: "Account data anonymized, but auth disabling failed" }, 500);
+  let banErrorMessage: string | null = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { error } = await admin.auth.admin.updateUserById(userId, {
+      ban_duration: "876000h",
+    });
+    banErrorMessage = error?.message ?? null;
+    if (!error) break;
+  }
+  if (banErrorMessage) {
+    console.error("Failed disabling auth account", { userId, error: banErrorMessage });
+    return json({ error: "Account deactivated; authentication disabling requires retry", deactivated: true }, 503);
+  }
+  const { data: completed, error: completionError } = await admin
+    .from("account_deletion_requests")
+    .update({ auth_disabled_at: new Date().toISOString() })
+    .eq("user_id", userId).select("user_id").maybeSingle();
+  if (completionError || !completed) {
+    console.error("Failed recording auth disable completion", { userId, error: completionError?.message });
+    return json({ error: "Account disabled; completion record requires reconciliation", deactivated: true, auth_disabled: true }, 503);
   }
 
   return json({
