@@ -30,6 +30,7 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _nameController;
+  late TextEditingController _contactPhoneController;
   late TextEditingController _descArController;
   late TextEditingController _descEnController;
   late TextEditingController _cityController;
@@ -53,6 +54,9 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
     final lounge = context.read<LoginCubit>().state.userLounge;
 
     _nameController = TextEditingController(text: lounge?.name ?? '');
+    _contactPhoneController = TextEditingController(
+      text: lounge?.contactPhone ?? '',
+    );
     _descArController = TextEditingController(
       text: lounge?.descriptionAr ?? '',
     );
@@ -84,6 +88,7 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
 
   void _populateFromLounge(Lounge lounge) {
     _nameController.text = lounge.name;
+    _contactPhoneController.text = lounge.contactPhone ?? '';
     _descArController.text = lounge.descriptionAr ?? '';
     _descEnController.text = lounge.descriptionEn ?? '';
     _cityController.text = lounge.city ?? '';
@@ -100,6 +105,7 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
   @override
   void dispose() {
     _nameController.dispose();
+    _contactPhoneController.dispose();
     _descArController.dispose();
     _descEnController.dispose();
     _cityController.dispose();
@@ -112,6 +118,7 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
   }
 
   Future<void> _saveProfile() async {
+    if (_isSaving) return;
     if (_vodafoneCashController.text.trim().isEmpty &&
         _instapayController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -151,6 +158,7 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
         if (mounted) {
           final updatedLounge = lounge.copyWith(
             name: _nameController.text.trim(),
+            contactPhone: _contactPhoneController.text.trim(),
             descriptionAr: _descArController.text.trim(),
             descriptionEn: _descEnController.text.trim(),
             city: _cityController.text.trim(),
@@ -231,6 +239,7 @@ class _LoungeProfileViewState extends State<LoungeProfileView> {
                   SizedBox(height: 32.h),
                   CoreInfoSection(
                     nameController: _nameController,
+                    contactPhoneController: _contactPhoneController,
                     descArController: _descArController,
                     descEnController: _descEnController,
                     onMainImageSelected: (bytes, name) {

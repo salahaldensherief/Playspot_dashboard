@@ -10,12 +10,14 @@ import 'dart:typed_data';
 class LoungeInfoForm extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController? cityController;
+  final TextEditingController? contactPhoneController;
   final Function(Uint8List? bytes, String? name) onImageSelected;
 
   const LoungeInfoForm({
     super.key,
     required this.nameController,
     this.cityController,
+    this.contactPhoneController,
     required this.onImageSelected,
   });
 
@@ -42,6 +44,15 @@ class LoungeInfoForm extends StatelessWidget {
             hintText: AppStrings.cityHint,
             controller: cityController!,
             validator: AppValidator.validateRequired,
+          ),
+        ],
+        if (contactPhoneController != null) ...[
+          SizedBox(height: 20.h),
+          AppTextField(
+            label: AppStrings.contactPhone,
+            hintText: AppStrings.loungePhoneHint,
+            controller: contactPhoneController,
+            keyboardType: TextInputType.phone,
           ),
         ],
       ],

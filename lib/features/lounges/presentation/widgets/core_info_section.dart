@@ -9,6 +9,7 @@ import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 
 class CoreInfoSection extends StatelessWidget {
   final TextEditingController nameController;
+  final TextEditingController contactPhoneController;
   final TextEditingController descArController;
   final TextEditingController descEnController;
   final Function(Uint8List? bytes, String? name) onMainImageSelected;
@@ -17,6 +18,7 @@ class CoreInfoSection extends StatelessWidget {
   const CoreInfoSection({
     super.key,
     required this.nameController,
+    required this.contactPhoneController,
     required this.descArController,
     required this.descEnController,
     required this.onMainImageSelected,
@@ -39,6 +41,13 @@ class CoreInfoSection extends StatelessWidget {
           controller: nameController,
           hintText: AppStrings.loungeNameHint,
           validator: AppValidator.validateRequired,
+        ),
+        const SizedBox(height: 16),
+        AppTextField(
+          label: AppStrings.contactPhone,
+          controller: contactPhoneController,
+          hintText: AppStrings.loungePhoneHint,
+          keyboardType: TextInputType.phone,
         ),
         const SizedBox(height: 16),
         AppTextField(
