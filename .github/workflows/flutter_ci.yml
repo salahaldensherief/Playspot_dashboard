@@ -67,7 +67,7 @@ jobs:
           node-version: '24'
 
       - name: Verify owner Auth provisioning boundary
-        run: node --test supabase/functions/create-lounge-owner/handler.test.mjs supabase/functions/update-user-location/handler.test.mjs
+        run: node --test supabase/functions/create-lounge-owner/handler.test.mjs supabase/functions/update-user-location/handler.test.mjs supabase/functions/send-system-announcement/authorization.test.mjs
 
       - name: Verify release build
         run: flutter build web --release
