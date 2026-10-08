@@ -19,6 +19,7 @@ import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.da
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
 import '../../support/local_translations_loader.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 
 class _Store extends Mock implements CashierWorkspaceStore {}
 
@@ -297,4 +298,67 @@ void main() {
       });
     }
   }
+  testWidgets('fresh device requests online without entering offline mode', (
+    tester,
+  ) async {
+    projection = {'bookings': {}, 'outbox': []};
+    final login = _Login();
+    when(() => login.state).thenReturn(
+      const LoginState(
+        user: UserEntity(
+          id: 'actor',
+          name: 'Test',
+          email: 'test@example.invalid',
+          role: UserRole.cashier,
+          loungeId: 'lounge',
+        ),
+      ),
+    );
+    when(() => login.stream).thenAnswer((_) => const Stream.empty());
+    await tester.pumpWidget(
+      EasyLocalization(
+        supportedLocales: const [Locale('en'), Locale('ar')],
+        startLocale: const Locale('en'),
+        saveLocale: false,
+        path: 'assets/translations',
+        assetLoader: const LocalTranslationsLoader(),
+        child: ScreenUtilInit(
+          designSize: const Size(1440, 900),
+          builder: (context, _) => MaterialApp(
+            locale: context.locale,
+            supportedLocales: context.supportedLocales,
+            localizationsDelegates: context.localizationDelegates,
+            home: MultiBlocProvider(
+              providers: [
+                BlocProvider<LoginCubit>.value(value: login),
+                BlocProvider<OfflineWorkspaceCubit>.value(value: cubit),
+              ],
+              child: const OfflineWorkspacePage(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(cubit.state.prepared, false);
+    final resume = find.widgetWithText(AppButton, 'Resume online reservations');
+    expect(tester.widget<AppButton>(resume).onPressed, isNotNull);
+    await tester.tap(resume);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(AppButton, 'Confirm'));
+    await tester.pumpAndSettle();
+    verify(
+      () => repo.bootstrap(
+        deviceId: 'device',
+        mode: CashierConnectionMode.online,
+      ),
+    ).called(1);
+    verifyNever(
+      () => repo.bootstrap(
+        deviceId: any(named: 'deviceId'),
+        mode: CashierConnectionMode.offline,
+      ),
+    );
+    expect(tester.takeException(), isNull);
+  });
 }
