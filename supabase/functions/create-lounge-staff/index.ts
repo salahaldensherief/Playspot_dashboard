@@ -83,25 +83,28 @@ Deno.serve(async (req: Request) => {
 
   const { data: profile, error: profileError } = await service
     .from("profiles")
-    .select("id, role, lounge_id, is_active")
+    .select("id, role, lounge_id, is_active, is_banned")
     .eq("id", caller.id)
     .maybeSingle();
 
-  if (profileError || !profile || profile.is_active !== true) {
+  if (profileError || !profile || profile.is_active !== true || profile.is_banned !== false) {
     return json({ error: "Active staff profile is required" }, 403);
   }
-
-  const actorRole = String(profile.role ?? "").trim().toLowerCase();
-  if (!["super_admin", "owner", "lounge_owner", "manager", "lounge_admin"].includes(actorRole)) {
-    return json({ error: "Only lounge administrators can manage staff" }, 403);
-  }
-
-  const isSuperAdmin = actorRole === "super_admin";
 
   const callerClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     global: { headers: { Authorization: authHeader } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
+  const { data: canonicalSuperAdmin, error: authorityError } =
+    await callerClient.rpc("is_super_admin");
+  if (authorityError) {
+    return json({ error: "Could not verify administrator authority" }, 403);
+  }
+  const isSuperAdmin = canonicalSuperAdmin === true;
+  const actorRole = String(profile.role ?? "").trim().toLowerCase();
+  if (!isSuperAdmin && !["owner", "lounge_owner", "manager", "lounge_admin"].includes(actorRole)) {
+    return json({ error: "Only lounge administrators can manage staff" }, 403);
+  }
 
   if (!isSuperAdmin) {
     const { data: allowed, error: permissionError } = await callerClient.rpc(

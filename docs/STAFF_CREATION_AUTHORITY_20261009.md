@@ -1,0 +1,9 @@
+# Staff creation authority
+
+`create-lounge-staff` verified the Auth token and active profile, but skipped `staff_manage` when the profile role label was `super_admin`, and never explicitly checked `is_banned`. It now rejects banned or unknown eligibility, calls `is_super_admin` under the verified caller JWT, and requires strict scoped `staff_manage=true` for ordinary lounge administrators. The manager/peer-manager restriction remains. Failed authority lookup rejects before creating an Auth account.
+
+Nine Node 24 tests execute the complete TypeScript handler with synthetic Auth/database dependencies and stop the authorized path at a mocked `createUser`. Five failed before the fix; all nine pass after it. They cover stale role authority, banned/inactive profiles, authority lookup failure, another lounge without permission, cashier role, manager peers, and authorized owner/platform-admin control cases. No real staff account was created. These tests do not replace a deployed Edge integration test.
+
+Read-only inspection on 2026-10-09 found hosted `create-lounge-staff` version 4 still using the role shortcut without the explicit banned check. `send-system-announcement` version 1 also predates the local canonical authorization fix. `delete-account` version 6 and `deactivate-lounge-admin` version 1 still require partial-failure recovery review. Pushing `dev` does not deploy these functions.
+
+Deploy the reviewed function to a separate staging project first, preserve the previous function bundle/config, then test the supplied roles against a dedicated test lounge and cross-lounge attempts. Review Auth creation compensation after a profile/member write fails before calling the entire lifecycle verified. Production deployment requires explicit approval. A rollback uses the preserved version-4 bundle/config and reinstates the old authority weakness, so it must be a reviewed decision. Do not publish keys or copy customer records into fixtures.
