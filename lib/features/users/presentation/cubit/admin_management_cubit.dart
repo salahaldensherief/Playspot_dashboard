@@ -20,7 +20,12 @@ class AdminManagementCubit extends Cubit<AdminManagementState> {
   }) : super(const AdminManagementState());
 
   Future<void> fetchAdmins() async {
-    emit(state.copyWith(status: AdminManagementStatus.loading));
+    emit(
+      state.copyWith(
+        status: AdminManagementStatus.loading,
+        clearErrorMessage: true,
+      ),
+    );
     final result = await getAdminsUseCase();
 
     if (isClosed) return;
@@ -28,15 +33,20 @@ class AdminManagementCubit extends Cubit<AdminManagementState> {
     result.fold(
       (failure) {
         AppLogger.error('Failed to fetch admins: ${failure.message}');
-        emit(state.copyWith(
-          status: AdminManagementStatus.failure,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: AdminManagementStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
-      (admins) => emit(state.copyWith(
-        status: AdminManagementStatus.success,
-        admins: admins,
-      )),
+      (admins) => emit(
+        state.copyWith(
+          status: AdminManagementStatus.success,
+          admins: admins,
+          clearErrorMessage: true,
+        ),
+      ),
     );
   }
 
@@ -61,16 +71,20 @@ class AdminManagementCubit extends Cubit<AdminManagementState> {
     result.fold(
       (failure) {
         AppLogger.error('Failed to create admin: ${failure.message}');
-        emit(state.copyWith(
-          status: AdminManagementStatus.failure,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: AdminManagementStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (admin) {
-        emit(state.copyWith(
-          status: AdminManagementStatus.success,
-          lastCreatedAdmin: admin,
-        ));
+        emit(
+          state.copyWith(
+            status: AdminManagementStatus.success,
+            lastCreatedAdmin: admin,
+          ),
+        );
         fetchAdmins();
       },
     );
@@ -79,10 +93,13 @@ class AdminManagementCubit extends Cubit<AdminManagementState> {
   Future<void> deleteAdmin(String adminId, {bool isSuperAdmin = false}) async {
     if (!isSuperAdmin) {
       AppLogger.warning('Blocked non-super-admin from calling deleteAdmin');
-      emit(state.copyWith(
-        status: AdminManagementStatus.failure,
-        errorMessage: 'عفواً، يتطلب حذف إدارة الصالات صلاحية المسؤول الفائق (Super Admin).',
-      ));
+      emit(
+        state.copyWith(
+          status: AdminManagementStatus.failure,
+          errorMessage:
+              'عفواً، يتطلب حذف إدارة الصالات صلاحية المسؤول الفائق (Super Admin).',
+        ),
+      );
       return;
     }
 
@@ -94,41 +111,48 @@ class AdminManagementCubit extends Cubit<AdminManagementState> {
     result.fold(
       (failure) {
         AppLogger.error('Failed to delete admin: ${failure.message}');
-        emit(state.copyWith(
-          status: AdminManagementStatus.failure,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: AdminManagementStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (_) {
-        final updatedAdmins = state.admins.where((a) => a.id != adminId).toList();
-        emit(state.copyWith(
-          status: AdminManagementStatus.success,
-          admins: updatedAdmins,
-        ));
+        final updatedAdmins = state.admins
+            .where((a) => a.id != adminId)
+            .toList();
+        emit(
+          state.copyWith(
+            status: AdminManagementStatus.success,
+            admins: updatedAdmins,
+          ),
+        );
         fetchAdmins();
       },
     );
   }
 
-  Future<void> updateAdmin(String adminId, {String? name, String? email}) async {
+  Future<void> updateAdmin(
+    String adminId, {
+    String? name,
+    String? email,
+  }) async {
     emit(state.copyWith(status: AdminManagementStatus.loading));
-    final result = await updateAdminUseCase(UpdateAdminParams(
-      adminId: adminId,
-      name: name,
-      email: email,
-    ));
+    final result = await updateAdminUseCase(
+      UpdateAdminParams(adminId: adminId, name: name, email: email),
+    );
 
     if (isClosed) return;
 
-    result.fold(
-      (failure) {
-        AppLogger.error('Failed to update admin: ${failure.message}');
-        emit(state.copyWith(
+    result.fold((failure) {
+      AppLogger.error('Failed to update admin: ${failure.message}');
+      emit(
+        state.copyWith(
           status: AdminManagementStatus.failure,
           errorMessage: failure.message,
-        ));
-      },
-      (_) => fetchAdmins(),
-    );
+        ),
+      );
+    }, (_) => fetchAdmins());
   }
 }

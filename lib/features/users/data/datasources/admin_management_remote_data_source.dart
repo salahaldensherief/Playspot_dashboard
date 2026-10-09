@@ -56,42 +56,21 @@ class AdminManagementRemoteDataSourceImpl
 
   @override
   Future<List<UserEntity>> getAdmins() async {
-    try {
-      final response = await supabaseClient
-          .from('profiles')
-          .select(
-            'id, email, full_name, role, lounge_id, avatar_url, is_setup_completed, points, is_active, is_banned, banned_reason, city_id, cities:city_id(id, name_ar, name_en)',
-          )
-          .neq('role', 'inactive')
-          .order('full_name');
-      return (response as List)
-          .where(
-            (json) => json['is_active'] != false && json['role'] != 'inactive',
-          )
-          .map((json) {
-            return UserModel.fromJson(Map<String, dynamic>.from(json));
-          })
-          .toList();
-    } catch (_) {
-      try {
-        final fallbackResponse = await supabaseClient
-            .from('profiles')
-            .select('*, cities:city_id(id, name_ar, name_en)')
-            .neq('role', 'inactive')
-            .order('full_name');
-        return (fallbackResponse as List)
-            .where(
-              (json) =>
-                  json['is_active'] != false && json['role'] != 'inactive',
-            )
-            .map((json) {
-              return UserModel.fromJson(Map<String, dynamic>.from(json));
-            })
-            .toList();
-      } catch (fallbackError) {
-        return [];
-      }
-    }
+    final response = await supabaseClient
+        .from('profiles')
+        .select(
+          'id, email, full_name, role, lounge_id, avatar_url, is_setup_completed, points, is_active, is_banned, banned_reason, city_id, cities:city_id(id, name_ar, name_en)',
+        )
+        .neq('role', 'inactive')
+        .order('full_name');
+    return response
+        .where(
+          (json) => json['is_active'] != false && json['role'] != 'inactive',
+        )
+        .map((json) {
+          return UserModel.fromJson(Map<String, dynamic>.from(json));
+        })
+        .toList();
   }
 
   @override
@@ -105,7 +84,9 @@ class AdminManagementRemoteDataSourceImpl
     );
 
     final data = response.data;
-    if (data is! Map || data['success'] != true || data['auth_disabled'] != true) {
+    if (data is! Map ||
+        data['success'] != true ||
+        data['auth_disabled'] != true) {
       final error = data is Map ? data['error']?.toString() : null;
       throw Exception(error ?? 'Failed to deactivate lounge admin');
     }
