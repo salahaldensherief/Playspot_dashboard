@@ -69,6 +69,41 @@ void main() {
     cubit.updateUser(oldUser);
   });
   tearDown(() => cubit.close());
+  test(
+    'profile failure is recoverable without logout or cached access',
+    () async {
+      when(
+        () => auth.getCurrentUser(),
+      ).thenAnswer((_) async => const Left(ServerFailure('offline')));
+      await cubit.checkInitialAuth();
+      expect(cubit.state.status.name, 'profileFailure');
+      verifyNever(() => auth.logout());
+      when(() => location.checkPermissions()).thenAnswer((_) async => false);
+      when(
+        () => auth.getCurrentUser(),
+      ).thenAnswer((_) async => const Right(newUser));
+      await cubit.checkInitialAuth();
+      expect(cubit.state.status, LoginStatus.authenticated);
+      expect(cubit.state.user, newUser);
+      expect(cubit.state.errorMessage, isNull);
+    },
+  );
+  test(
+    'profile refresh failure is visible and a missing session clears identity',
+    () async {
+      when(
+        () => auth.getCurrentUser(),
+      ).thenAnswer((_) async => const Left(ServerFailure('offline')));
+      await cubit.refreshProfile();
+      expect(cubit.state.status.name, 'profileFailure');
+      when(
+        () => auth.getCurrentUser(),
+      ).thenAnswer((_) async => const Right(null));
+      await cubit.checkInitialAuth();
+      expect(cubit.state.status, LoginStatus.unauthenticated);
+      expect(cubit.state.user, isNull);
+    },
+  );
   const scopedUser = UserEntity(
     id: 'operator',
     email: '',

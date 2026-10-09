@@ -21,8 +21,9 @@ class RouterGuards {
         uri.hasAuthority ||
         !(uri.path.startsWith('/lounge-admin/') ||
             uri.path.startsWith('/super-admin/') ||
-            uri.path == RouterKeys.profile))
+            uri.path == RouterKeys.profile)) {
       return fallback;
+    }
     return uri.toString();
   }
 
@@ -41,6 +42,15 @@ class RouterGuards {
     final authState = authCubit.state;
     final bool isLoggingIn = state.matchedLocation == RouterKeys.login;
     final user = authState.user;
+
+    if (authState.status == LoginStatus.profileFailure) {
+      return state.matchedLocation == RouterKeys.accessLoading
+          ? null
+          : Uri(
+              path: RouterKeys.accessLoading,
+              queryParameters: {'from': state.uri.toString()},
+            ).toString();
+    }
 
     if (authState.status == LoginStatus.initial ||
         authState.status == LoginStatus.checking) {

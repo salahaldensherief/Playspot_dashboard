@@ -62,6 +62,29 @@ void main() {
   }
 
   group('RouterGuards.redirect', () {
+    test(
+      'profile failure gates even cached super admin access on a retry page',
+      () {
+        when(() => state.uri).thenReturn(Uri.parse(RouterKeys.superAdminUsers));
+        final redirect = guard(
+          status: LoginStatus.profileFailure,
+          user: _user(UserRole.superAdmin),
+          location: RouterKeys.superAdminUsers,
+        );
+        expect(Uri.parse(redirect!).path, RouterKeys.accessLoading);
+        expect(
+          Uri.parse(redirect).queryParameters['from'],
+          RouterKeys.superAdminUsers,
+        );
+        expect(
+          guard(
+            status: LoginStatus.profileFailure,
+            location: RouterKeys.accessLoading,
+          ),
+          isNull,
+        );
+      },
+    );
     test('missing lounge data cannot grant dashboard access', () {
       for (final role in [
         UserRole.owner,

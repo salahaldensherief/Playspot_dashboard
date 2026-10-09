@@ -5,6 +5,7 @@ import '../../../lounges/domain/entities/lounge.dart';
 enum LoginStatus {
   initial,
   checking,
+  profileFailure,
   loading,
   success,
   failure,
@@ -47,7 +48,7 @@ class LoginState extends Equatable {
     bool clearUserLounge = false,
     bool? isLoadingLounge,
     Object? loungeLoadError = _unchanged,
-    String? errorMessage,
+    Object? errorMessage = _unchanged,
     bool? isSetupCompleted,
     bool? locationCaptured,
     bool? isLoadingLocation,
@@ -61,7 +62,9 @@ class LoginState extends Equatable {
       loungeLoadError: identical(loungeLoadError, _unchanged)
           ? this.loungeLoadError
           : loungeLoadError as String?,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: identical(errorMessage, _unchanged)
+          ? this.errorMessage
+          : errorMessage as String?,
       isSetupCompleted: isSetupCompleted ?? this.isSetupCompleted,
       locationCaptured: locationCaptured ?? this.locationCaptured,
       isLoadingLocation: isLoadingLocation ?? this.isLoadingLocation,

@@ -1996,5 +1996,6 @@
   "cash_prize": "جائزة مالية",
   "second_place_prize": "جائزة المركز الثاني",
   "bonus_points": "نقاط مكافأة",
-  "new_reward": "جائزة جديدة"
+  "new_reward": "جائزة جديدة",
+  "profile_access_load_failed": "تعذر التحقق من حسابك. جلسة الدخول محفوظة. أعد المحاولة للمتابعة."
 }

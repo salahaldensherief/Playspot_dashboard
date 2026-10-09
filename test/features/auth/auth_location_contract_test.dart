@@ -90,6 +90,28 @@ void main() {
       expect(await AuthRemoteDataSourceImpl(client).getCurrentUser(), isNull);
     },
   );
+  test(
+    'profile request failure preserves the session and can be retried',
+    () async {
+      await login();
+      var fail = true;
+      respond = (request) async {
+        if (request.url.path.endsWith('/platform_super_admins'))
+          return json([]);
+        if (fail)
+          return json({'message': 'synthetic denied', 'code': '42501'}, 403);
+        return json({'id': actor, 'role': 'owner'});
+      };
+      final source = AuthRemoteDataSourceImpl(client);
+      await expectLater(
+        source.getCurrentUser(),
+        throwsA(isA<PostgrestException>()),
+      );
+      expect(client.auth.currentUser?.id, actor);
+      fail = false;
+      expect((await source.getCurrentUser())?.id, actor);
+    },
+  );
   for (final eligible in [true, false]) {
     test(
       'platform membership only promotes an eligible profile: $eligible',

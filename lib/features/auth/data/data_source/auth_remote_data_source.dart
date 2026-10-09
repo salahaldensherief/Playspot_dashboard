@@ -50,8 +50,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<UserModel?> getCurrentUser({String? userId}) async {
+    final authenticatedId = supabaseClient.auth.currentUser?.id;
     try {
-      final authenticatedId = supabaseClient.auth.currentUser?.id;
       if (authenticatedId == null ||
           (userId != null && userId != authenticatedId)) {
         return null;
@@ -125,10 +125,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       debugPrint(
         'AuthRemoteDataSource: Profile record totally missing in profiles table',
       );
-    } catch (e) {
-      debugPrint('AuthRemoteDataSource: Error in getCurrentUser: $e');
+    } catch (_) {
+      if (supabaseClient.auth.currentUser?.id != authenticatedId) return null;
+      rethrow;
     }
-    return null;
+    if (supabaseClient.auth.currentUser?.id != authenticatedId) return null;
+    throw StateError('Authenticated profile is missing');
   }
 
   @override

@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/auth/presentation/login/login_cubit.dart';
+import '../../features/auth/presentation/login/login_state.dart';
 import '../../features/permissions/presentation/cubit/permissions_cubit.dart';
 import '../../features/permissions/presentation/cubit/permissions_state.dart';
 import '../../art_core/app_strings.dart';
@@ -22,7 +23,12 @@ class _AccessLoadingPageState extends State<AccessLoadingPage> {
   }
 
   void _loadPermissions() {
-    final user = context.read<LoginCubit>().state.user;
+    final auth = context.read<LoginCubit>().state;
+    if (auth.status != LoginStatus.authenticated &&
+        auth.status != LoginStatus.success) {
+      return;
+    }
+    final user = auth.user;
     if (user == null) return;
     final permissions = context.read<PermissionsCubit>();
     final rawRole = user.rawRole?.trim();
@@ -31,8 +37,9 @@ class _AccessLoadingPageState extends State<AccessLoadingPage> {
         : rawRole;
     if (permissions.hasLoadedAccess(role, user.id, user.loungeId)) return;
     if (permissions.hasAccessIdentity(role, user.id, user.loungeId) &&
-        permissions.state.accessStatus == PermissionsStatus.loading)
+        permissions.state.accessStatus == PermissionsStatus.loading) {
       return;
+    }
     permissions.ensureUserPermissions(
       role,
       loungeId: user.loungeId,
@@ -46,8 +53,11 @@ class _AccessLoadingPageState extends State<AccessLoadingPage> {
     final auth = context.watch<LoginCubit>().state;
     final access = context.watch<PermissionsCubit>().state;
     final loungeFailed = auth.loungeLoadError != null;
+    final profileFailed = auth.status == LoginStatus.profileFailure;
     final failed =
-        loungeFailed || access.accessStatus == PermissionsStatus.failure;
+        profileFailed ||
+        loungeFailed ||
+        access.accessStatus == PermissionsStatus.failure;
     return Scaffold(
       body: Center(
         child: Padding(
@@ -58,19 +68,33 @@ class _AccessLoadingPageState extends State<AccessLoadingPage> {
               if (!failed) const CircularProgressIndicator(),
               const SizedBox(height: 16),
               Text(
-                (failed ? 'venue_access_load_failed' : 'loading_venue_access')
+                (profileFailed
+                        ? 'profile_access_load_failed'
+                        : failed
+                        ? 'venue_access_load_failed'
+                        : 'loading_venue_access')
                     .tr(),
                 textAlign: TextAlign.center,
               ),
               if (failed)
                 TextButton.icon(
                   onPressed: () {
-                    if (loungeFailed)
+                    if (profileFailed) {
+                      context.read<LoginCubit>().checkInitialAuth();
+                      return;
+                    }
+                    if (loungeFailed) {
                       context.read<LoginCubit>().reloadLoungeAccess();
+                    }
                     _loadPermissions();
                   },
                   icon: const Icon(Icons.refresh),
                   label: Text(AppStrings.retry),
+                ),
+              if (profileFailed)
+                TextButton(
+                  onPressed: () => context.read<LoginCubit>().logout(),
+                  child: Text(AppStrings.logout),
                 ),
             ],
           ),
