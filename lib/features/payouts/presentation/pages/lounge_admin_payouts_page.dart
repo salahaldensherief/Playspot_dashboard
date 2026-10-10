@@ -76,7 +76,7 @@ class _LoungeAdminPayoutsPageState extends State<LoungeAdminPayoutsPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '\$${p.amount.toStringAsFixed(2)}',
+                '${p.amount.toStringAsFixed(2)} ${AppStrings.egp}',
                 style: TextStyle(
                   color: AppColors.neonGreen,
                   fontSize: 18.sp,
@@ -253,7 +253,7 @@ class _LoungeAdminPayoutsPageState extends State<LoungeAdminPayoutsPage> {
                                 ),
                                 DataCell(
                                   Text(
-                                    '\$${p.amount.toStringAsFixed(2)}',
+                                    '${p.amount.toStringAsFixed(2)} ${AppStrings.egp}',
                                     style: const TextStyle(
                                       color: AppColors.neonGreen,
                                       fontWeight: FontWeight.bold,
