@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class ShiftEntity extends Equatable {
+  final bool financialsVisible;
   final String id;
   final String? loungeId;
   final String cashierId;
@@ -32,8 +33,11 @@ class ShiftEntity extends Equatable {
   /// Unified Expected Cash Calculation:
   /// Expected Cash = Starting Cash + Cash Revenue - Expenses - Cash Drops
   double get calculatedExpectedCash {
-    if (expectedCash != null && expectedCash! > 0) return expectedCash!;
-    return startingCash + (cashRevenue ?? 0) - (expensesTotal ?? 0) - (cashDropsTotal ?? 0);
+    if (expectedCash != null) return expectedCash!;
+    return startingCash +
+        (cashRevenue ?? 0) -
+        (expensesTotal ?? 0) -
+        (cashDropsTotal ?? 0);
   }
 
   /// Unified Discrepancy Calculation:
@@ -44,6 +48,7 @@ class ShiftEntity extends Equatable {
   }
 
   const ShiftEntity({
+    this.financialsVisible = true,
     required this.id,
     this.loungeId,
     required this.cashierId,
@@ -68,25 +73,26 @@ class ShiftEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        loungeId,
-        cashierId,
-        cashierName,
-        startingCash,
-        cashRevenue,
-        digitalRevenue,
-        expensesTotal,
-        cashDropsTotal,
-        expectedCash,
-        actualCash,
-        discrepancy,
-        status,
-        startTime,
-        endTime,
-        notes,
-        isApproved,
-        approvedBy,
-        approvedAt,
-        managerNotes,
-      ];
+    financialsVisible,
+    id,
+    loungeId,
+    cashierId,
+    cashierName,
+    startingCash,
+    cashRevenue,
+    digitalRevenue,
+    expensesTotal,
+    cashDropsTotal,
+    expectedCash,
+    actualCash,
+    discrepancy,
+    status,
+    startTime,
+    endTime,
+    notes,
+    isApproved,
+    approvedBy,
+    approvedAt,
+    managerNotes,
+  ];
 }

@@ -1997,5 +1997,6 @@
   "second_place_prize": "2nd Place Prize",
   "bonus_points": "Bonus Points",
   "new_reward": "New Reward",
-  "profile_access_load_failed": "We could not verify your account. Your session is saved. Retry to continue."
+  "profile_access_load_failed": "We could not verify your account. Your session is saved. Retry to continue.",
+  "shift_financials_withheld": "Reconciliation data withheld by permissions"
 }

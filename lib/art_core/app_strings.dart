@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 
 class AppStrings {
+  static String get shiftFinancialsWithheld => 'shift_financials_withheld'.tr();
   static String get playMode => 'play_mode'.tr();
   static String get noBookingExtras => 'no_booking_extras'.tr();
   static String get appName => 'app_name'.tr();
@@ -142,7 +143,8 @@ class AppStrings {
   static String get requiresScreen => 'requires_screen'.tr();
   static String get requiresControllers => 'requires_controllers'.tr();
   static String get roomActivities => 'room_activities'.tr();
-  static String get selectRoomActivityError => 'select_room_activity_error'.tr();
+  static String get selectRoomActivityError =>
+      'select_room_activity_error'.tr();
   static String get addNewRoom => 'add_new_room'.tr();
   static String get manageRoomsDesc => 'manage_rooms_desc'.tr();
   static String get roomName => 'room_name'.tr();
@@ -304,6 +306,7 @@ class AppStrings {
     final label = 'currency_egp'.tr();
     return label == 'currency_egp' ? 'EGP' : label;
   }
+
   static String get upcoming {
     final val = 'upcoming'.tr();
     return (val.isNotEmpty && val != 'upcoming') ? val : 'قادم';
@@ -1751,7 +1754,8 @@ class AppStrings {
   static String get issueCategoryBooking => 'issue_category_booking'.tr();
   static String get issueCategoryPayment => 'issue_category_payment'.tr();
   static String get issueCategoryTechnical => 'issue_category_technical'.tr();
-  static String get supportContactSettingsSaved => 'support_contact_settings_saved'.tr();
+  static String get supportContactSettingsSaved =>
+      'support_contact_settings_saved'.tr();
   static String get supportPolicySaved => 'support_policy_saved'.tr();
   static String get faqSavedSuccess => 'faq_saved_success'.tr();
   static String get faqDeletedSuccess => 'faq_deleted_success'.tr();

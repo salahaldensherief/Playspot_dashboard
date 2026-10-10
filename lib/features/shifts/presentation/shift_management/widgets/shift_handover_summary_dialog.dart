@@ -24,7 +24,13 @@ class ShiftHandoverSummaryDialog extends StatelessWidget {
     final String statusLabel;
     final IconData statusIcon;
 
-    if (diff == 0) {
+    if (!shift.financialsVisible ||
+        shift.expectedCash == null ||
+        shift.actualCash == null) {
+      statusColor = AppColors.textSecondary;
+      statusLabel = AppStrings.shiftFinancialsWithheld;
+      statusIcon = Icons.lock_outline;
+    } else if (diff == 0) {
       statusColor = AppColors.success;
       statusLabel = AppStrings.matched;
       statusIcon = Icons.check_circle_rounded;
@@ -81,37 +87,42 @@ class ShiftHandoverSummaryDialog extends StatelessWidget {
             ),
           ),
           SizedBox(height: 16.h),
-          Container(
-            padding: EdgeInsets.all(16.r),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: statusColor, width: 1.5),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppText.body(
-                        '${AppStrings.discrepancy}: $statusLabel',
-                        color: statusColor,
-                        fontSize: 13.sp,
-                      ),
-                      SizedBox(height: 4.h),
-                      AppText.heading(
-                        '${diff > 0 ? "+" : (diff < 0 ? "-" : "")}${diff.abs().toStringAsFixed(2)} ${AppStrings.egp}',
-                        color: statusColor,
-                        fontSize: 22.sp,
-                      ),
-                    ],
+          if (shift.financialsVisible &&
+              shift.expectedCash != null &&
+              shift.actualCash != null)
+            Container(
+              padding: EdgeInsets.all(16.r),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: statusColor, width: 1.5),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppText.body(
+                          '${AppStrings.discrepancy}: $statusLabel',
+                          color: statusColor,
+                          fontSize: 13.sp,
+                        ),
+                        SizedBox(height: 4.h),
+                        AppText.heading(
+                          '${diff > 0 ? "+" : (diff < 0 ? "-" : "")}${diff.abs().toStringAsFixed(2)} ${AppStrings.egp}',
+                          color: statusColor,
+                          fontSize: 22.sp,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                StatusBadge(text: statusLabel, color: statusColor),
-              ],
+                  StatusBadge(text: statusLabel, color: statusColor),
+                ],
+              ),
             ),
-          ),
+          if (!shift.financialsVisible)
+            Text(AppStrings.shiftFinancialsWithheld),
           SizedBox(height: 20.h),
           _buildDetailRow(
             AppStrings.countedCash,
@@ -120,7 +131,9 @@ class ShiftHandoverSummaryDialog extends StatelessWidget {
           SizedBox(height: 12.h),
           _buildDetailRow(
             AppStrings.expectedCash,
-            '${expected.toStringAsFixed(2)} ${AppStrings.egp}',
+            shift.financialsVisible
+                ? '${expected.toStringAsFixed(2)} ${AppStrings.egp}'
+                : AppStrings.shiftFinancialsWithheld,
           ),
           if (notes != null && notes.isNotEmpty) ...[
             SizedBox(height: 12.h),

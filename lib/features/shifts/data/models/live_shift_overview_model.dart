@@ -39,11 +39,12 @@ class LiveShiftOverviewModel extends LiveShiftOverviewEntity {
         (json['opened_at'] ?? json['start_time'] ?? '').toString(),
       ),
       startingCash: (json['starting_cash'] ?? json['opening_cash'])?.toDouble(),
-      cashInDrawer:
-          (json['expected_cash'] ??
-                  json['cash_in_drawer'] ??
-                  json['actual_cash_counted'])
-              ?.toDouble(),
+      cashInDrawer: json['financials_visible'] == false
+          ? null
+          : (json['expected_cash'] ??
+                    json['cash_in_drawer'] ??
+                    json['actual_cash_counted'])
+                ?.toDouble(),
       digitalPayments: (json['digital_sales'] ?? json['digital_payments'])
           ?.toDouble(),
       activeSessions: (json['active_sessions'] as num?)?.toInt(),
