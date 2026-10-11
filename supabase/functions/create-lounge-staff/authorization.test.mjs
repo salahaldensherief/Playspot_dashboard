@@ -50,3 +50,7 @@ test('canonical active super admin reaches creation without scoped role bypass',
  const r=await request({role:'super_admin',superAdmin:true});assert.equal(r.creates,1);assert.equal(r.body.error,'STOP_AFTER_AUTHORIZATION');
  assert.deepEqual(r.rpcCalls.map(c=>c.name),['is_super_admin']);
 });
+test('canonical platform authority with manager profile may create manager',async()=>{
+ const r=await request({role:'manager',superAdmin:true,staffRole:'manager'});
+ assert.equal(r.creates,1);assert.equal(r.body.error,'STOP_AFTER_AUTHORIZATION');
+});

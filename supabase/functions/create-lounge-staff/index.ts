@@ -60,6 +60,9 @@ Deno.serve(async (req: Request) => {
   } catch {
     return json({ error: "Invalid JSON body" }, 400);
   }
+  if (!body || Array.isArray(body) || typeof body !== "object") {
+    return json({ error: "JSON object is required" }, 400);
+  }
 
   const email = String(body.email ?? "").trim().toLowerCase();
   const password = String(body.password ?? "");
@@ -120,68 +123,57 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  if (["manager", "lounge_admin"].includes(actorRole) && staffRole === "manager") {
+  if (!isSuperAdmin && ["manager", "lounge_admin"].includes(actorRole) && staffRole === "manager") {
     return json({ error: "Managers cannot create peer managers" }, 403);
   }
 
-  const { data: created, error: createError } = await service.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: {
-      full_name: fullName,
-      name: fullName,
-    },
-  });
-
-  if (createError || !created.user) {
-    const message = createError?.message ?? "Could not create staff account";
-    const status = /already|registered|exists/i.test(message) ? 409 : 400;
-    return json({ error: message }, status);
+  const recoveryUserId = String(body.recovery_user_id ?? "").trim();
+  let newUserId = recoveryUserId;
+  if (!newUserId) {
+    try {
+    const { data: created, error: createError } = await service.auth.admin.createUser({
+      email, password, email_confirm: true,
+      user_metadata: { full_name: fullName, name: fullName },
+      app_metadata: { staff_provisioning: { actor_id: caller.id, lounge_id: loungeId, role: staffRole } },
+    });
+    if (createError || !created.user) {
+      const message = createError?.message ?? "Could not create staff account";
+      if (!/already|registered|exists/i.test(message)) {
+        return json({ error: message }, 400);
+      }
+    } else {
+      newUserId = created.user.id;
+    }
+    } catch {
+      // Auth may have committed even when its response did not arrive.
+    }
+    if (!newUserId) {
+      try {
+        const { data, error } = await service.rpc("recover_lounge_staff_provisioning", {
+          p_actor_id: caller.id, p_email: email, p_lounge_id: loungeId, p_role: staffRole,
+        });
+        if (error) throw error;
+        if (typeof data !== "string" || !data) {
+          return json({ error: "Account creation was not confirmed; retry the original details", provisioning_confirmed: false }, 503);
+        }
+        newUserId = data;
+      } catch {
+        return json({ error: "Account creation was not confirmed; retry the original details", provisioning_confirmed: false }, 503);
+      }
+    }
   }
-
-  const newUserId = created.user.id;
-
   try {
-    const { error: profileWriteError } = await service
-      .from("profiles")
-      .upsert({
-        id: newUserId,
-        email,
-        full_name: fullName,
-        phone,
-        role: staffRole,
-        lounge_id: loungeId,
-        is_active: true,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "id" });
-
-    if (profileWriteError) throw profileWriteError;
-
-    const { error: staffWriteError } = await service
-      .from("lounge_staff")
-      .insert({
-        lounge_id: loungeId,
-        user_id: newUserId,
-        role: staffRole,
-      });
-
-    if (staffWriteError) throw staffWriteError;
-
-    return json({
-      success: true,
-      user_id: newUserId,
-      role: staffRole,
-    }, 201);
-  } catch (error) {
-    await service.from("lounge_staff").delete().eq("user_id", newUserId);
-    await service.from("profiles").delete().eq("id", newUserId);
-    await service.auth.admin.deleteUser(newUserId);
-
-    const message = error instanceof Error
-      ? error.message
-      : "Failed to persist staff account";
-    console.error("create-lounge-staff rollback:", message);
-    return json({ error: "Could not create staff account" }, 500);
+    const { data, error } = await service.rpc("finalize_lounge_staff_provisioning", {
+      p_actor_id: caller.id, p_user_id: newUserId, p_lounge_id: loungeId,
+      p_role: staffRole, p_full_name: fullName, p_phone: phone,
+    });
+    if (error || data?.success !== true || data?.user_id !== newUserId || data?.role !== staffRole) {
+      throw new Error("Staff finalization was not confirmed");
+    }
+    return json(data, 201);
+  } catch {
+    console.error("STAFF_PROVISIONING_REQUIRES_RECOVERY", newUserId);
+    return json({ error: "Staff provisioning requires recovery", recovery_user_id: newUserId,
+      provisioning_confirmed: false }, 503);
   }
 });
