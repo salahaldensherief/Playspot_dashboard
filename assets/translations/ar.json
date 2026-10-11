@@ -2013,5 +2013,7 @@
   "payout_reconciliation_required": "بيانات التسوية تحتاج مطابقة. راجع العمليات والإثباتات قبل اعتماد أو دفع السحب.",
   "payout_transfer_evidence_required": "وسيلة التحويل ومرجع التحويل الفعلي مطلوبان قبل تأكيد الدفع.",
   "staff_creation_unconfirmed": "إنشاء الموظف لم يتأكد. أعد المحاولة بنفس البيانات.",
-  "staff_creation_retry_original_details": "أعد المحاولة ببيانات الموظف الأصلية لاسترجاع العملية بدون إنشاء حساب آخر."
+  "staff_creation_retry_original_details": "أعد المحاولة ببيانات الموظف الأصلية لاسترجاع العملية بدون إنشاء حساب آخر.",
+  "pricing_rule_saved": "تم حفظ قاعدة التسعير بنجاح",
+  "pricing_rule_deleted": "تم حذف قاعدة التسعير"
 }

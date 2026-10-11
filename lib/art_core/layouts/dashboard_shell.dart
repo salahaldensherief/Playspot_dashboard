@@ -59,7 +59,10 @@ class _DashboardShellState extends State<DashboardShell> {
       return;
     }
 
-    final loungeId = user.loungeId?.trim();
+    final loungeId = permissionsCubit.accessLoungeIdFor(
+      user.id,
+      fallbackLoungeId: user.loungeId,
+    );
     final identity = '${user.id}|${_permissionRole(user)}|${loungeId ?? ''}';
     if (_loadedPermissionIdentity == identity) return;
     _loadedPermissionIdentity = identity;

@@ -7,6 +7,7 @@ enum PricingStatus { initial, loading, success, failure }
 enum PricingGroupBy { lounge, spaceType, room }
 
 class PricingState extends Equatable {
+  static const _unchanged = Object();
   final PricingStatus status;
   final List<PricingRuleEntity> rules;
   final PricingGroupBy groupBy;
@@ -32,7 +33,7 @@ class PricingState extends Equatable {
     List<PricingRuleEntity>? rules,
     PricingGroupBy? groupBy,
     List<PricingRuleEntity>? conflictingRules,
-    PricingQuoteEntity? liveQuote,
+    Object? liveQuote = _unchanged,
     bool? isSaving,
     String? errorMessage,
     String? successMessage,
@@ -42,7 +43,9 @@ class PricingState extends Equatable {
       rules: rules ?? this.rules,
       groupBy: groupBy ?? this.groupBy,
       conflictingRules: conflictingRules ?? this.conflictingRules,
-      liveQuote: liveQuote ?? this.liveQuote,
+      liveQuote: identical(liveQuote, _unchanged)
+          ? this.liveQuote
+          : liveQuote as PricingQuoteEntity?,
       isSaving: isSaving ?? this.isSaving,
       errorMessage: errorMessage,
       successMessage: successMessage,
@@ -51,13 +54,13 @@ class PricingState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        rules,
-        groupBy,
-        conflictingRules,
-        liveQuote,
-        isSaving,
-        errorMessage,
-        successMessage,
-      ];
+    status,
+    rules,
+    groupBy,
+    conflictingRules,
+    liveQuote,
+    isSaving,
+    errorMessage,
+    successMessage,
+  ];
 }

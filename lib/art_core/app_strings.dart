@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 
 class AppStrings {
+  static String get pricingRuleSaved => 'pricing_rule_saved'.tr();
+  static String get pricingRuleDeleted => 'pricing_rule_deleted'.tr();
   static String get paymentFundsReview => 'payment_funds_review'.tr();
   static String get paymentFundsReviewHelp => 'payment_funds_review_help'.tr();
   static String get reviewFundsHolder => 'review_funds_holder'.tr();

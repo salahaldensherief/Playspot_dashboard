@@ -127,6 +127,37 @@ void main() {
     },
   );
   test(
+    'selected branch B stays authoritative when profile belongs to branch A',
+    () async {
+      when(
+        () => repository.getUserPermissions(loungeId: 'branch-b'),
+      ).thenAnswer((_) async => const Right([roomGrant]));
+      await permissions.loadUserPermissions(
+        'cashier',
+        userId: actor.id,
+        loungeId: 'branch-b',
+      );
+      expect(redirect(RouterKeys.loungeAdminRooms), isNull);
+      expect(
+        redirect(waiting(RouterKeys.loungeAdminRooms)),
+        RouterKeys.loungeAdminRooms,
+      );
+      expect(
+        permissions.accessLoungeIdFor(actor.id, fallbackLoungeId: 'venue'),
+        'branch-b',
+      );
+      expect(
+        permissions.accessLoungeIdFor(
+          'another-user',
+          fallbackLoungeId: 'their-venue',
+        ),
+        'their-venue',
+      );
+      verifyNever(() => repository.getUserPermissions(loungeId: 'venue'));
+    },
+  );
+
+  test(
     'actual missing grant is denied after loading, never granted by waiting',
     () async {
       await load([]);

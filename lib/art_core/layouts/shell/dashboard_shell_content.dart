@@ -75,7 +75,10 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
     if (user == null) return;
     final raw = user.rawRole;
     final roleStr = (raw != null && raw.isNotEmpty) ? raw : user.role.name;
-    final loungeId = user.loungeId ?? loginState.userLounge?.id;
+    final loungeId = context.read<PermissionsCubit>().accessLoungeIdFor(
+      user.id,
+      fallbackLoungeId: user.loungeId ?? loginState.userLounge?.id,
+    );
     context.read<PermissionsCubit>().ensureUserPermissions(
       roleStr,
       loungeId: loungeId,

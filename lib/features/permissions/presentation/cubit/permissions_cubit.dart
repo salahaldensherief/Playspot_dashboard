@@ -232,6 +232,9 @@ class PermissionsCubit extends Cubit<PermissionsState> {
     }
   }
 
+  String? accessLoungeIdFor(String userId, {String? fallbackLoungeId}) =>
+      state.userId == userId ? _activeLoungeId : fallbackLoungeId?.trim();
+
   bool hasAccessIdentity(String role, String userId, String? loungeId) =>
       state.userRole == _normalizeRole(role) &&
       state.userId == userId &&

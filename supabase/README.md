@@ -10,3 +10,9 @@ the required migration and rollout order in their pull request.
 
 This rule prevents the mobile and dashboard repositories from defining two
 different versions of the same backend contract.
+
+CI accepts only unchanged SQL bytes from the approved legacy snapshot at
+`e0ea905276cb350a7f20100822c4b3e1d8b872f6`. This allows the existing dev history
+to be promoted to main without treating those files as deployable migrations.
+New paths or modified SQL are rejected on every PR, including release PRs.
+The reference is pinned rather than following the moving dev branch.

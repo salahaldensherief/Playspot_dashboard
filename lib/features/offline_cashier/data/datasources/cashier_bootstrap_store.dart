@@ -45,6 +45,9 @@ class CashierBootstrapStore {
       for (final key in ['rooms', 'products', 'bookings', 'shift']) {
         state[key] = copy[key];
       }
+      // This complete server snapshot supersedes earlier projection overlays.
+      // Keep command receipts and sequence history for local idempotency.
+      state.remove('server_bookings');
       state['bootstrap'] = {
         'protocol_version': 2,
         'coverage': copy['coverage'],
