@@ -25,8 +25,8 @@ class ExtraCardDesktop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    final isOut = extra.isOutOfStock ||
-        (extra.trackStock && extra.stockQuantity <= 0);
+    final isOut =
+        extra.isOutOfStock || (extra.trackStock && extra.stockQuantity <= 0);
 
     return Container(
       decoration: BoxDecoration(
@@ -51,7 +51,8 @@ class ExtraCardDesktop extends StatelessWidget {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: extra.imageUrl != null &&
+                    child:
+                        extra.imageUrl != null &&
                             extra.imageUrl!.trim().isNotEmpty
                         ? AppCachedImage(
                             imageUrl: extra.imageUrl,
@@ -113,9 +114,11 @@ class ExtraCardDesktop extends StatelessWidget {
                           value: !extra.isOutOfStock,
                           activeThumbColor: AppColors.neonBlue,
                           onChanged: (val) {
-                            context
-                                .read<ExtrasCubit>()
-                                .toggleStock(extra.id, !val, loungeId);
+                            context.read<ExtrasCubit>().toggleStock(
+                              extra.id,
+                              !val,
+                              loungeId,
+                            );
                           },
                         ),
                       ),
@@ -128,8 +131,11 @@ class ExtraCardDesktop extends StatelessWidget {
                       IconButton(
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        icon: Icon(Icons.edit_outlined,
-                            color: AppColors.textSecondary, size: 20.r),
+                        icon: Icon(
+                          Icons.edit_outlined,
+                          color: AppColors.textSecondary,
+                          size: 20.r,
+                        ),
                         onPressed: () {
                           showDialog(
                             context: context,
@@ -138,8 +144,8 @@ class ExtraCardDesktop extends StatelessWidget {
                               loungeId: loungeId,
                               extra: extra,
                               onSave: (updatedExtra) => context
-                                    .read<ExtrasCubit>()
-                                    .updateExtra(updatedExtra),
+                                  .read<ExtrasCubit>()
+                                  .updateExtra(updatedExtra),
                             ),
                           );
                         },
@@ -148,8 +154,11 @@ class ExtraCardDesktop extends StatelessWidget {
                       IconButton(
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        icon: Icon(Icons.delete_outline,
-                            color: AppColors.danger, size: 20.r),
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: AppColors.danger,
+                          size: 20.r,
+                        ),
                         onPressed: () => _confirmDelete(context),
                       ),
                     ],
@@ -169,8 +178,10 @@ class ExtraCardDesktop extends StatelessWidget {
       useRootNavigator: false,
       builder: (dialogCtx) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        title: Text(AppStrings.deleteConfirmation,
-            style: const TextStyle(color: AppColors.textPrimary)),
+        title: Text(
+          AppStrings.deleteConfirmation,
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
         content: Text('${AppStrings.deleteWarning} "${extra.name}"?'),
         actions: [
           TextButton(
@@ -182,8 +193,10 @@ class ExtraCardDesktop extends StatelessWidget {
               context.read<ExtrasCubit>().deleteExtra(extra.id, loungeId);
               Navigator.pop(dialogCtx);
             },
-            child: Text(AppStrings.delete,
-                style: const TextStyle(color: AppColors.danger)),
+            child: Text(
+              AppStrings.delete,
+              style: const TextStyle(color: AppColors.danger),
+            ),
           ),
         ],
       ),

@@ -55,8 +55,12 @@ class _CompletePayoutDialogState extends State<CompletePayoutDialog> {
       payoutId: widget.payoutId,
       transferMethod: _transferMethod,
       transferReference: _refController.text.trim(),
-      receiptUrl: _receiptController.text.trim().isEmpty ? null : _receiptController.text.trim(),
-      notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+      receiptUrl: _receiptController.text.trim().isEmpty
+          ? null
+          : _receiptController.text.trim(),
+      notes: _notesController.text.trim().isEmpty
+          ? null
+          : _notesController.text.trim(),
     );
 
     if (!mounted) return;
@@ -100,14 +104,23 @@ class _CompletePayoutDialogState extends State<CompletePayoutDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(AppStrings.transferMethod, style: const TextStyle(color: AppColors.textSecondary)),
+          Text(
+            AppStrings.transferMethod,
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
           DropdownButton<String>(
             value: _transferMethod,
             dropdownColor: AppColors.cardBackground,
             style: const TextStyle(color: AppColors.textPrimary),
-            items: ['bank_transfer', 'instapay', 'vodafone_cash', 'cash', 'other']
-                .map((m) => DropdownMenuItem(value: m, child: Text(m.toUpperCase())))
-                .toList(),
+            items:
+                ['bank_transfer', 'instapay', 'vodafone_cash', 'cash', 'other']
+                    .map(
+                      (m) => DropdownMenuItem(
+                        value: m,
+                        child: Text(m.toUpperCase()),
+                      ),
+                    )
+                    .toList(),
             onChanged: _isSubmitting
                 ? null
                 : (val) {
@@ -115,11 +128,20 @@ class _CompletePayoutDialogState extends State<CompletePayoutDialog> {
                   },
           ),
           SizedBox(height: 16.h),
-          AppTextField(label: AppStrings.transferRefRequired, controller: _refController),
+          AppTextField(
+            label: AppStrings.transferRefRequired,
+            controller: _refController,
+          ),
           SizedBox(height: 16.h),
-          AppTextField(label: AppStrings.receiptUrlOptional, controller: _receiptController),
+          AppTextField(
+            label: AppStrings.receiptUrlOptional,
+            controller: _receiptController,
+          ),
           SizedBox(height: 16.h),
-          AppTextField(label: AppStrings.notesOptional, controller: _notesController),
+          AppTextField(
+            label: AppStrings.notesOptional,
+            controller: _notesController,
+          ),
           if (_errorMessage != null) ...[
             SizedBox(height: 12.h),
             Text(

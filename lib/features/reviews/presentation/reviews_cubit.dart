@@ -10,15 +10,19 @@ class ReviewsCubit extends Cubit<ReviewsState> {
   StreamSubscription<List<LoungeReviewEntity>>? _subscription;
   String? _watchedLoungeId;
 
-  ReviewsCubit({
-    required this.watchLoungeReviewsUseCase,
-  }) : super(const ReviewsState());
+  ReviewsCubit({required this.watchLoungeReviewsUseCase})
+    : super(const ReviewsState());
 
-  void startWatchingReviews({required String loungeId, bool forceRefresh = false}) {
+  void startWatchingReviews({
+    required String loungeId,
+    bool forceRefresh = false,
+  }) {
     final cleanLoungeId = loungeId.trim();
     if (cleanLoungeId.isEmpty) return;
 
-    if (!forceRefresh && _subscription != null && _watchedLoungeId == cleanLoungeId) {
+    if (!forceRefresh &&
+        _subscription != null &&
+        _watchedLoungeId == cleanLoungeId) {
       return;
     }
 
@@ -40,19 +44,23 @@ class ReviewsCubit extends Cubit<ReviewsState> {
             ? (totalRating / reviews.length)
             : 0.0;
 
-        emit(state.copyWith(
-          status: ReviewsStatus.success,
-          reviews: reviews,
-          averageRating: double.parse(avgRating.toStringAsFixed(1)),
-        ));
+        emit(
+          state.copyWith(
+            status: ReviewsStatus.success,
+            reviews: reviews,
+            averageRating: double.parse(avgRating.toStringAsFixed(1)),
+          ),
+        );
       },
       onError: (error) {
         if (isClosed) return;
         debugPrint('🔴 [REVIEWS_CUBIT] Stream Error: $error');
-        emit(state.copyWith(
-          status: ReviewsStatus.failure,
-          errorMessage: error.toString(),
-        ));
+        emit(
+          state.copyWith(
+            status: ReviewsStatus.failure,
+            errorMessage: error.toString(),
+          ),
+        );
       },
     );
   }
@@ -67,20 +75,23 @@ class ReviewsCubit extends Cubit<ReviewsState> {
 
     emit(state.copyWith(status: ReviewsStatus.loading));
 
-    final result = await watchLoungeReviewsUseCase.repository.getLoungeReviewsPage(
-      loungeId: cleanLoungeId,
-      page: page,
-      pageSize: pageSize,
-    );
+    final result = await watchLoungeReviewsUseCase.repository
+        .getLoungeReviewsPage(
+          loungeId: cleanLoungeId,
+          page: page,
+          pageSize: pageSize,
+        );
 
     if (isClosed) return;
 
     result.fold(
       (failure) {
-        emit(state.copyWith(
-          status: ReviewsStatus.failure,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: ReviewsStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (paginated) {
         double totalRating = 0.0;
@@ -92,14 +103,16 @@ class ReviewsCubit extends Cubit<ReviewsState> {
             ? (totalRating / paginated.items.length)
             : 0.0;
 
-        emit(state.copyWith(
-          status: ReviewsStatus.success,
-          reviews: paginated.items,
-          averageRating: double.parse(avgRating.toStringAsFixed(1)),
-          page: paginated.page,
-          pageSize: paginated.pageSize,
-          totalCount: paginated.totalCount,
-        ));
+        emit(
+          state.copyWith(
+            status: ReviewsStatus.success,
+            reviews: paginated.items,
+            averageRating: double.parse(avgRating.toStringAsFixed(1)),
+            page: paginated.page,
+            pageSize: paginated.pageSize,
+            totalCount: paginated.totalCount,
+          ),
+        );
       },
     );
   }

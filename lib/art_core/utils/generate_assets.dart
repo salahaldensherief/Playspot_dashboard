@@ -25,9 +25,7 @@ class AssetGeneratorApp extends StatelessWidget {
         theme: ThemeData.dark(),
         home: const Scaffold(
           backgroundColor: Color(0xFF0A0A0F),
-          body: Center(
-            child: IconRenderer(),
-          ),
+          body: Center(child: IconRenderer()),
         ),
       ),
     );
@@ -49,15 +47,17 @@ class _IconRendererState extends State<IconRenderer> {
     setState(() => _status = 'Rendering...');
 
     try {
-      final boundary = _globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      
+      final boundary =
+          _globalKey.currentContext!.findRenderObject()
+              as RenderRepaintBoundary;
+
       // Use pixelRatio 4.0 for high resolution (128 * 4 = 512px)
       final ui.Image image = await boundary.toImage(pixelRatio: 4.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       final bytes = byteData!.buffer.asUint8List();
 
       final projectRoot = Directory.current.path;
-      
+
       // Paths
       final faviconPath = '$projectRoot/web/favicon.png';
       final icon192Path = '$projectRoot/web/icons/Icon-192.png';

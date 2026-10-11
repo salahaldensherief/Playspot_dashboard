@@ -35,10 +35,7 @@ class TournamentPrizeRemoteHelper {
 
     await client.rpc(
       'save_tournament_prizes',
-      params: {
-        'p_tournament_id': tournamentId,
-        'p_prizes': payload,
-      },
+      params: {'p_tournament_id': tournamentId, 'p_prizes': payload},
     );
   }
 }

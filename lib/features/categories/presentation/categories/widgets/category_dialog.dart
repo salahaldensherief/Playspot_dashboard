@@ -84,10 +84,7 @@ class _CategoryDialogState extends State<CategoryDialog> {
           onPressed: () => Navigator.pop(context),
         ),
         SizedBox(width: 16.w),
-        AppButton(
-          text: AppStrings.saveCategory,
-          onPressed: _submit,
-        ),
+        AppButton(text: AppStrings.saveCategory, onPressed: _submit),
       ],
       child: Form(
         key: _formKey,

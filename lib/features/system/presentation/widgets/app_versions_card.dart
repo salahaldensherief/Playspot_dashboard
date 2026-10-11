@@ -37,14 +37,30 @@ class _AppVersionsCardState extends State<AppVersionsCard> {
   @override
   void initState() {
     super.initState();
-    _minAndroidController = TextEditingController(text: widget.appStatus.minAndroidVersion);
-    _minIosController = TextEditingController(text: widget.appStatus.minIosVersion);
-    _latestAndroidController = TextEditingController(text: widget.appStatus.latestAndroidVersion);
-    _latestIosController = TextEditingController(text: widget.appStatus.latestIosVersion);
-    _storeAndroidController = TextEditingController(text: widget.appStatus.storeUrlAndroid);
-    _storeIosController = TextEditingController(text: widget.appStatus.storeUrlIos);
-    _msgArController = TextEditingController(text: widget.appStatus.updateMessageAr);
-    _msgEnController = TextEditingController(text: widget.appStatus.updateMessageEn);
+    _minAndroidController = TextEditingController(
+      text: widget.appStatus.minAndroidVersion,
+    );
+    _minIosController = TextEditingController(
+      text: widget.appStatus.minIosVersion,
+    );
+    _latestAndroidController = TextEditingController(
+      text: widget.appStatus.latestAndroidVersion,
+    );
+    _latestIosController = TextEditingController(
+      text: widget.appStatus.latestIosVersion,
+    );
+    _storeAndroidController = TextEditingController(
+      text: widget.appStatus.storeUrlAndroid,
+    );
+    _storeIosController = TextEditingController(
+      text: widget.appStatus.storeUrlIos,
+    );
+    _msgArController = TextEditingController(
+      text: widget.appStatus.updateMessageAr,
+    );
+    _msgEnController = TextEditingController(
+      text: widget.appStatus.updateMessageEn,
+    );
   }
 
   @override

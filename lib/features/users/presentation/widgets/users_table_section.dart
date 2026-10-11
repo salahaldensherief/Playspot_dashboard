@@ -17,7 +17,8 @@ class UsersTableSection extends StatelessWidget {
     EasyLocalization.of(context);
     return BlocConsumer<AdminManagementCubit, AdminManagementState>(
       listenWhen: (previous, current) =>
-          previous.status != current.status && current.status == AdminManagementStatus.failure,
+          previous.status != current.status &&
+          current.status == AdminManagementStatus.failure,
       listener: (context, state) {
         if (state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -29,15 +30,23 @@ class UsersTableSection extends StatelessWidget {
         }
       },
       buildWhen: (previous, current) =>
-          previous.status != current.status || previous.admins != current.admins,
+          previous.status != current.status ||
+          previous.admins != current.admins,
       builder: (context, state) {
-        if (state.status == AdminManagementStatus.loading && state.admins.isEmpty) {
+        if (state.status == AdminManagementStatus.loading &&
+            state.admins.isEmpty) {
           return const TableShimmer(columns: 7);
         }
-        if (state.status == AdminManagementStatus.failure && state.admins.isEmpty) {
-          return Center(child: AppText.body(state.errorMessage ?? AppStrings.error, color: AppColors.danger));
+        if (state.status == AdminManagementStatus.failure &&
+            state.admins.isEmpty) {
+          return Center(
+            child: AppText.body(
+              state.errorMessage ?? AppStrings.error,
+              color: AppColors.danger,
+            ),
+          );
         }
-        
+
         return UsersDataTable(admins: state.admins);
       },
     );

@@ -24,10 +24,18 @@ class ShiftAuditLogModel extends ShiftAuditLogEntity {
       entityId: json['entity_id']?.toString(),
       action: (json['action'] ?? 'insert').toString(),
       actorUserId: json['actor_user_id']?.toString(),
-      actorName: json['profiles']?['full_name']?.toString() ?? json['actor_name']?.toString(),
-      oldData: json['old_data'] is Map ? Map<String, dynamic>.from(json['old_data'] as Map) : null,
-      newData: json['new_data'] is Map ? Map<String, dynamic>.from(json['new_data'] as Map) : null,
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'].toString()) : DateTime.now(),
+      actorName:
+          json['profiles']?['full_name']?.toString() ??
+          json['actor_name']?.toString(),
+      oldData: json['old_data'] is Map
+          ? Map<String, dynamic>.from(json['old_data'] as Map)
+          : null,
+      newData: json['new_data'] is Map
+          ? Map<String, dynamic>.from(json['new_data'] as Map)
+          : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'].toString())
+          : DateTime.now(),
     );
   }
 }

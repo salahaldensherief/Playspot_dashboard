@@ -19,7 +19,8 @@ class MaintenanceModeCard extends StatefulWidget {
     required String maintenanceMessageAr,
     required String maintenanceMessageEn,
     DateTime? expectedEndTime,
-  }) onSave;
+  })
+  onSave;
 
   const MaintenanceModeCard({
     super.key,
@@ -42,8 +43,12 @@ class _MaintenanceModeCardState extends State<MaintenanceModeCard> {
   void initState() {
     super.initState();
     _isMaintenanceMode = widget.appStatus.isMaintenanceMode;
-    _msgArController = TextEditingController(text: widget.appStatus.maintenanceMessageAr);
-    _msgEnController = TextEditingController(text: widget.appStatus.maintenanceMessageEn);
+    _msgArController = TextEditingController(
+      text: widget.appStatus.maintenanceMessageAr,
+    );
+    _msgEnController = TextEditingController(
+      text: widget.appStatus.maintenanceMessageEn,
+    );
     _expectedEndTime = widget.appStatus.expectedEndTime;
   }
 
@@ -92,7 +97,9 @@ class _MaintenanceModeCardState extends State<MaintenanceModeCard> {
     if (pickedDate != null && mounted) {
       final pickedTime = await showTimePicker(
         context: context,
-        initialTime: TimeOfDay.fromDateTime(_expectedEndTime ?? now.add(const Duration(hours: 2))),
+        initialTime: TimeOfDay.fromDateTime(
+          _expectedEndTime ?? now.add(const Duration(hours: 2)),
+        ),
       );
 
       if (pickedTime != null) {
@@ -131,10 +138,14 @@ class _MaintenanceModeCardState extends State<MaintenanceModeCard> {
         Container(
           padding: EdgeInsets.all(16.r),
           decoration: BoxDecoration(
-            color: _isMaintenanceMode ? AppColors.danger.withAlpha(20) : AppColors.mutedBackground,
+            color: _isMaintenanceMode
+                ? AppColors.danger.withAlpha(20)
+                : AppColors.mutedBackground,
             borderRadius: BorderRadius.circular(12.r),
             border: Border.all(
-              color: _isMaintenanceMode ? AppColors.danger : AppColors.borderDefault,
+              color: _isMaintenanceMode
+                  ? AppColors.danger
+                  : AppColors.borderDefault,
             ),
           ),
           child: Row(
@@ -143,8 +154,12 @@ class _MaintenanceModeCardState extends State<MaintenanceModeCard> {
               Row(
                 children: [
                   Icon(
-                    _isMaintenanceMode ? Icons.build_circle : Icons.check_circle_outline,
-                    color: _isMaintenanceMode ? AppColors.danger : AppColors.success,
+                    _isMaintenanceMode
+                        ? Icons.build_circle
+                        : Icons.check_circle_outline,
+                    color: _isMaintenanceMode
+                        ? AppColors.danger
+                        : AppColors.success,
                     size: 28.r,
                   ),
                   SizedBox(width: 12.w),
@@ -176,8 +191,12 @@ class _MaintenanceModeCardState extends State<MaintenanceModeCard> {
               Row(
                 children: [
                   StatusBadge(
-                    text: _isMaintenanceMode ? AppStrings.active : AppStrings.inactive,
-                    color: _isMaintenanceMode ? AppColors.danger : AppColors.success,
+                    text: _isMaintenanceMode
+                        ? AppStrings.active
+                        : AppStrings.inactive,
+                    color: _isMaintenanceMode
+                        ? AppColors.danger
+                        : AppColors.success,
                   ),
                   SizedBox(width: 16.w),
                   Switch.adaptive(
@@ -233,7 +252,10 @@ class _MaintenanceModeCardState extends State<MaintenanceModeCard> {
                     onTap: _pickDateTime,
                     borderRadius: BorderRadius.circular(8.r),
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 12.h,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.mutedBackground,
                         borderRadius: BorderRadius.circular(8.r),
@@ -241,17 +263,29 @@ class _MaintenanceModeCardState extends State<MaintenanceModeCard> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.calendar_today, color: AppColors.neonBlue, size: 20.r),
+                          Icon(
+                            Icons.calendar_today,
+                            color: AppColors.neonBlue,
+                            size: 20.r,
+                          ),
                           SizedBox(width: 12.w),
                           Text(
                             formattedDate,
-                            style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 14.sp,
+                            ),
                           ),
                           const Spacer(),
                           if (_expectedEndTime != null)
                             IconButton(
-                              icon: Icon(Icons.clear, color: AppColors.textSecondary, size: 18.r),
-                              onPressed: () => setState(() => _expectedEndTime = null),
+                              icon: Icon(
+                                Icons.clear,
+                                color: AppColors.textSecondary,
+                                size: 18.r,
+                              ),
+                              onPressed: () =>
+                                  setState(() => _expectedEndTime = null),
                             ),
                         ],
                       ),
@@ -268,7 +302,9 @@ class _MaintenanceModeCardState extends State<MaintenanceModeCard> {
                   text: AppStrings.saveAndUpdateMaintenance,
                   icon: Icons.save_outlined,
                   isLoading: widget.isLoading,
-                  backgroundColor: _isMaintenanceMode ? AppColors.danger : AppColors.neonBlue,
+                  backgroundColor: _isMaintenanceMode
+                      ? AppColors.danger
+                      : AppColors.neonBlue,
                   onPressed: _submit,
                 ),
               ),

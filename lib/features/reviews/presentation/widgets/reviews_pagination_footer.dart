@@ -23,8 +23,10 @@ class ReviewsPaginationFooter extends StatelessWidget {
     }
 
     final startIndex = (state.page - 1) * state.pageSize + 1;
-    final endIndex =
-        (startIndex + state.reviews.length - 1).clamp(0, state.totalCount);
+    final endIndex = (startIndex + state.reviews.length - 1).clamp(
+      0,
+      state.totalCount,
+    );
 
     return Container(
       margin: EdgeInsets.only(top: 20.h),
@@ -49,10 +51,10 @@ class ReviewsPaginationFooter extends StatelessWidget {
                 fontSize: 12.sp,
                 onPressed: state.hasPreviousPage
                     ? () => context.read<ReviewsCubit>().fetchReviewsPage(
-                          loungeId: loungeId,
-                          page: state.page - 1,
-                          pageSize: state.pageSize,
-                        )
+                        loungeId: loungeId,
+                        page: state.page - 1,
+                        pageSize: state.pageSize,
+                      )
                     : null,
               ),
               SizedBox(width: 12.w),
@@ -71,10 +73,10 @@ class ReviewsPaginationFooter extends StatelessWidget {
                 fontSize: 12.sp,
                 onPressed: state.hasNextPage
                     ? () => context.read<ReviewsCubit>().fetchReviewsPage(
-                          loungeId: loungeId,
-                          page: state.page + 1,
-                          pageSize: state.pageSize,
-                        )
+                        loungeId: loungeId,
+                        page: state.page + 1,
+                        pageSize: state.pageSize,
+                      )
                     : null,
               ),
             ],

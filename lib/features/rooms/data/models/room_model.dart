@@ -138,8 +138,7 @@ class RoomModel extends RoomEntity {
       resourceType: json['resource_type']?.toString() ?? 'console',
       requiresScreen: json['requires_screen'] as bool? ?? true,
       requiresControllers: json['requires_controllers'] as bool? ?? true,
-      pricingModel:
-          json['pricing_model']?.toString() ?? 'single_multi_hour',
+      pricingModel: json['pricing_model']?.toString() ?? 'single_multi_hour',
       status: parseStatus(json['status']),
       openTimeEnabled: json['open_time_enabled'] == true,
       openTimePricingMode:

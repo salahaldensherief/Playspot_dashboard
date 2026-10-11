@@ -43,8 +43,13 @@ class DashboardStatsGrid extends StatelessWidget {
           children: isSuperAdmin
               ? [
                   if (canViewRevenue)
-                    BlocSelector<DashboardCubit, DashboardState, (double, double)>(
-                      selector: (state) => (state.totalRevenue, state.revenueTrend),
+                    BlocSelector<
+                      DashboardCubit,
+                      DashboardState,
+                      (double, double)
+                    >(
+                      selector: (state) =>
+                          (state.totalRevenue, state.revenueTrend),
                       builder: (context, data) {
                         return StatCard(
                           title: AppStrings.globalOverview,
@@ -55,8 +60,16 @@ class DashboardStatsGrid extends StatelessWidget {
                         );
                       },
                     ),
-                  BlocSelector<DashboardCubit, DashboardState, (int, int, double)>(
-                    selector: (state) => (state.totalBookings, state.bookingsToday, state.bookingsTrend),
+                  BlocSelector<
+                    DashboardCubit,
+                    DashboardState,
+                    (int, int, double)
+                  >(
+                    selector: (state) => (
+                      state.totalBookings,
+                      state.bookingsToday,
+                      state.bookingsTrend,
+                    ),
                     builder: (context, data) {
                       return StatCard(
                         title: AppStrings.bookingsLabel,
@@ -68,8 +81,16 @@ class DashboardStatsGrid extends StatelessWidget {
                       );
                     },
                   ),
-                  BlocSelector<DashboardCubit, DashboardState, (int, int, double)>(
-                    selector: (state) => (state.activeLounges, state.totalLounges, state.loungesTrend),
+                  BlocSelector<
+                    DashboardCubit,
+                    DashboardState,
+                    (int, int, double)
+                  >(
+                    selector: (state) => (
+                      state.activeLounges,
+                      state.totalLounges,
+                      state.loungesTrend,
+                    ),
                     builder: (context, data) {
                       return StatCard(
                         title: AppStrings.lounges,
@@ -107,8 +128,13 @@ class DashboardStatsGrid extends StatelessWidget {
                 ]
               : [
                   if (canViewRevenue)
-                    BlocSelector<DashboardCubit, DashboardState, (double, double)>(
-                      selector: (state) => (state.totalRevenue, state.revenueTrend),
+                    BlocSelector<
+                      DashboardCubit,
+                      DashboardState,
+                      (double, double)
+                    >(
+                      selector: (state) =>
+                          (state.totalRevenue, state.revenueTrend),
                       builder: (context, data) {
                         return StatCard(
                           title: AppStrings.dailyRevenue,
@@ -120,7 +146,8 @@ class DashboardStatsGrid extends StatelessWidget {
                       },
                     ),
                   BlocSelector<DashboardCubit, DashboardState, (int, double)>(
-                    selector: (state) => (state.activeSessions, state.bookingsTrend),
+                    selector: (state) =>
+                        (state.activeSessions, state.bookingsTrend),
                     builder: (context, data) {
                       return StatCard(
                         title: AppStrings.activeSessions,
@@ -131,8 +158,13 @@ class DashboardStatsGrid extends StatelessWidget {
                       );
                     },
                   ),
-                  BlocSelector<DashboardCubit, DashboardState, (double, double)>(
-                    selector: (state) => (state.occupancyRate, state.occupancyTrend),
+                  BlocSelector<
+                    DashboardCubit,
+                    DashboardState,
+                    (double, double)
+                  >(
+                    selector: (state) =>
+                        (state.occupancyRate, state.occupancyTrend),
                     builder: (context, data) {
                       return StatCard(
                         title: AppStrings.loungeOccupancy,
@@ -144,7 +176,8 @@ class DashboardStatsGrid extends StatelessWidget {
                     },
                   ),
                   BlocSelector<DashboardCubit, DashboardState, (int, double)>(
-                    selector: (state) => (state.activeRoomsCount, state.loungesTrend),
+                    selector: (state) =>
+                        (state.activeRoomsCount, state.loungesTrend),
                     builder: (context, data) {
                       return StatCard(
                         title: AppStrings.activeBookings,

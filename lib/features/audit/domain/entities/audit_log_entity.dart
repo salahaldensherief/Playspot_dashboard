@@ -118,23 +118,23 @@ class AuditLogEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        loungeId,
-        entityType,
-        entityId,
-        action,
-        eventCode,
-        titleAr,
-        titleEn,
-        actorUserId,
-        actorName,
-        actorRole,
-        severity,
-        oldData,
-        newData,
-        reason,
-        createdAt,
-      ];
+    id,
+    loungeId,
+    entityType,
+    entityId,
+    action,
+    eventCode,
+    titleAr,
+    titleEn,
+    actorUserId,
+    actorName,
+    actorRole,
+    severity,
+    oldData,
+    newData,
+    reason,
+    createdAt,
+  ];
 }
 
 class AuditLogPaginatedResult extends Equatable {
@@ -151,10 +151,5 @@ class AuditLogPaginatedResult extends Equatable {
   });
 
   @override
-  List<Object?> get props => [
-        logs,
-        hasMore,
-        nextCursorId,
-        nextCursorCreatedAt,
-      ];
+  List<Object?> get props => [logs, hasMore, nextCursorId, nextCursorCreatedAt];
 }

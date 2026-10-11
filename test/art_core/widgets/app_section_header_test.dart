@@ -9,9 +9,7 @@ void main() {
   Widget buildTestableWidget(Widget child) {
     return ScreenUtilInit(
       designSize: const Size(1920, 1080),
-      builder: (context, _) => MaterialApp(
-        home: Scaffold(body: child),
-      ),
+      builder: (context, _) => MaterialApp(home: Scaffold(body: child)),
     );
   }
 
@@ -32,22 +30,25 @@ void main() {
     expect(tapped, isTrue);
   });
 
-  testWidgets('AppSectionHeader renders title, badgeCount, and subtitle correctly', (tester) async {
-    await tester.pumpWidget(
-      buildTestableWidget(
-        const AppSectionHeader(
-          title: 'Running Sessions',
-          subtitle: 'Active now',
-          icon: Icons.sports_esports_outlined,
-          iconColor: AppColors.neonGreen,
-          badgeCount: 5,
+  testWidgets(
+    'AppSectionHeader renders title, badgeCount, and subtitle correctly',
+    (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          const AppSectionHeader(
+            title: 'Running Sessions',
+            subtitle: 'Active now',
+            icon: Icons.sports_esports_outlined,
+            iconColor: AppColors.neonGreen,
+            badgeCount: 5,
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(find.text('Running Sessions'), findsOneWidget);
-    expect(find.text('Active now'), findsOneWidget);
-    expect(find.text('5'), findsOneWidget);
-    expect(find.byIcon(Icons.sports_esports_outlined), findsOneWidget);
-  });
+      expect(find.text('Running Sessions'), findsOneWidget);
+      expect(find.text('Active now'), findsOneWidget);
+      expect(find.text('5'), findsOneWidget);
+      expect(find.byIcon(Icons.sports_esports_outlined), findsOneWidget);
+    },
+  );
 }

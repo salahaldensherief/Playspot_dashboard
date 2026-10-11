@@ -26,16 +26,20 @@ class ExtensionRequestTile extends StatelessWidget {
         ? request.metadata.items.first
         : <String, dynamic>{};
 
-    final int requestedMinutes = (firstMetadataItem['requested_minutes'] ??
-            firstMetadataItem['minutes'] as num?)
+    final int requestedMinutes =
+        (firstMetadataItem['requested_minutes'] ??
+                firstMetadataItem['minutes'] as num?)
             ?.toInt() ??
         30;
 
     final int currentDuration =
         (firstMetadataItem['current_duration'] as num?)?.toInt() ?? 60;
 
-    final String timeFormatted = DateFormat('hh:mm a').format(request.createdAt);
-    final String bookingId = request.bookingId ?? request.id.replaceFirst('ext_', '');
+    final String timeFormatted = DateFormat(
+      'hh:mm a',
+    ).format(request.createdAt);
+    final String bookingId =
+        request.bookingId ?? request.id.replaceFirst('ext_', '');
 
     return Container(
       padding: EdgeInsets.all(12.r),
@@ -59,12 +63,15 @@ class ExtensionRequestTile extends StatelessWidget {
                   ),
                   SizedBox(width: 8.w),
                   AppText.subHeading(
-                    request.roomName ?? request.userName ?? AppStrings.anonymous,
+                    request.roomName ??
+                        request.userName ??
+                        AppStrings.anonymous,
                     fontSize: 14.sp,
                     color: AppColors.textPrimary,
                   ),
                   SizedBox(width: 8.w),
-                  if (request.userName != null && (request.userName?.isNotEmpty ?? false))
+                  if (request.userName != null &&
+                      (request.userName?.isNotEmpty ?? false))
                     AppText.body(
                       '(${request.userName ?? ''})',
                       fontSize: 12.sp,
@@ -87,7 +94,9 @@ class ExtensionRequestTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.neonBlue.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppColors.neonBlue.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -207,7 +216,8 @@ class _ApproveExtensionDialog extends StatefulWidget {
   });
 
   @override
-  State<_ApproveExtensionDialog> createState() => _ApproveExtensionDialogState();
+  State<_ApproveExtensionDialog> createState() =>
+      _ApproveExtensionDialogState();
 }
 
 class _ApproveExtensionDialogState extends State<_ApproveExtensionDialog> {

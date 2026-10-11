@@ -8,7 +8,9 @@ class GetLoungeReviewsUseCase {
 
   GetLoungeReviewsUseCase(this.repository);
 
-  Future<Either<Failure, List<LoungeReviewEntity>>> call({required String loungeId}) {
+  Future<Either<Failure, List<LoungeReviewEntity>>> call({
+    required String loungeId,
+  }) {
     return repository.getLoungeReviews(loungeId: loungeId);
   }
 }

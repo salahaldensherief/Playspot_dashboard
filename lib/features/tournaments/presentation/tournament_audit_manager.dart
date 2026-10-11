@@ -42,12 +42,13 @@ class TournamentAuditManager {
     if (_disposed) return;
     final generation = ++_watchGeneration;
     _disputesSubscription?.cancel();
-    _disputesSubscription = watchDisputedMatchesUseCase(tournamentId)
-        .listen((matches) {
-          if (!_disposed && generation == _watchGeneration) {
-            onDisputesUpdated(matches);
-          }
-        });
+    _disputesSubscription = watchDisputedMatchesUseCase(tournamentId).listen((
+      matches,
+    ) {
+      if (!_disposed && generation == _watchGeneration) {
+        onDisputesUpdated(matches);
+      }
+    });
   }
 
   void dispose() {

@@ -24,12 +24,8 @@ void initLoungesDI(GetIt sl) {
   );
 
   // Cubits
-  sl.registerFactory<LoungeCubit>(
-    () => LoungeCubit(sl()),
-  );
-  sl.registerFactory<ExtrasCubit>(
-    () => ExtrasCubit(sl()),
-  );
+  sl.registerFactory<LoungeCubit>(() => LoungeCubit(sl()));
+  sl.registerFactory<ExtrasCubit>(() => ExtrasCubit(sl()));
   sl.registerFactory<LoungePaymentSettingsCubit>(
     () => LoungePaymentSettingsCubit(sl()),
   );

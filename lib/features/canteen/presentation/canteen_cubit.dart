@@ -54,27 +54,33 @@ class CanteenCubit extends Cubit<CanteenState> {
     if (isClosed) return;
 
     combosRes.fold(
-      (failure) => emit(state.copyWith(
-        status: CanteenStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: CanteenStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (combos) {
         rulesRes.fold(
-          (failure) => emit(state.copyWith(
-            status: CanteenStatus.failure,
-            errorMessage: failure.message,
-          )),
+          (failure) => emit(
+            state.copyWith(
+              status: CanteenStatus.failure,
+              errorMessage: failure.message,
+            ),
+          ),
           (rules) {
             final convList = convRes.getOrElse(() => []);
             final alertsList = alertsRes.getOrElse(() => []);
 
-            emit(state.copyWith(
-              status: CanteenStatus.success,
-              combos: combos,
-              upsellRules: rules,
-              conversions: convList,
-              lowStockAlerts: alertsList,
-            ));
+            emit(
+              state.copyWith(
+                status: CanteenStatus.success,
+                combos: combos,
+                upsellRules: rules,
+                conversions: convList,
+                lowStockAlerts: alertsList,
+              ),
+            );
           },
         );
       },
@@ -200,7 +206,9 @@ class CanteenCubit extends Cubit<CanteenState> {
         return false;
       },
       (_) {
-        final currentRules = state.upsellRules.where((r) => r.id != id).toList();
+        final currentRules = state.upsellRules
+            .where((r) => r.id != id)
+            .toList();
         emit(state.copyWith(upsellRules: currentRules));
         return true;
       },

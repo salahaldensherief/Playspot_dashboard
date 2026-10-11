@@ -26,14 +26,14 @@ class QuoteBookingPriceParams extends Equatable {
 
   @override
   List<Object?> get props => [
-        roomId,
-        date,
-        startTime,
-        endTime,
-        playMode,
-        extraControllers,
-        couponCode,
-      ];
+    roomId,
+    date,
+    startTime,
+    endTime,
+    playMode,
+    extraControllers,
+    couponCode,
+  ];
 }
 
 class QuoteBookingPriceUseCase

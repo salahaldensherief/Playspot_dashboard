@@ -1,8 +1,12 @@
 import 'package:play_spot_dashboard/features/lounges/domain/entities/extra_entity.dart';
 
-String resolveItemName(Map<String, dynamic> itemMap, List<ExtraEntity> availableExtras) {
+String resolveItemName(
+  Map<String, dynamic> itemMap,
+  List<ExtraEntity> availableExtras,
+) {
   // 1. Direct name fields prioritizing Arabic / English / Default name
-  final candidateName = itemMap['name_ar'] ??
+  final candidateName =
+      itemMap['name_ar'] ??
       itemMap['name_en'] ??
       itemMap['name'] ??
       itemMap['extra_name'] ??
@@ -21,14 +25,16 @@ String resolveItemName(Map<String, dynamic> itemMap, List<ExtraEntity> available
   }
 
   // 2. Nested objects check (extras, extra, canteen_items, item, canteen_item)
-  final nestedObj = itemMap['extras'] ??
+  final nestedObj =
+      itemMap['extras'] ??
       itemMap['extra'] ??
       itemMap['canteen_items'] ??
       itemMap['item'] ??
       itemMap['canteen_item'];
 
   if (nestedObj is Map) {
-    final nestedName = nestedObj['name_ar'] ??
+    final nestedName =
+        nestedObj['name_ar'] ??
         nestedObj['name_en'] ??
         nestedObj['name'] ??
         nestedObj['title'];
@@ -40,11 +46,13 @@ String resolveItemName(Map<String, dynamic> itemMap, List<ExtraEntity> available
   }
 
   // 3. Match extra_id / product_id / item_id / id against availableExtras
-  final extraId = (itemMap['extra_id'] ??
-      itemMap['product_id'] ??
-      itemMap['item_id'] ??
-      itemMap['canteen_item_id'] ??
-      itemMap['id'])?.toString();
+  final extraId =
+      (itemMap['extra_id'] ??
+              itemMap['product_id'] ??
+              itemMap['item_id'] ??
+              itemMap['canteen_item_id'] ??
+              itemMap['id'])
+          ?.toString();
 
   if (extraId != null && extraId.isNotEmpty) {
     try {

@@ -26,15 +26,15 @@ class ExportAuditLogsParams extends Equatable {
 
   @override
   List<Object?> get props => [
-        loungeId,
-        entityType,
-        entityId,
-        userId,
-        severity,
-        bookingId,
-        startDate,
-        endDate,
-      ];
+    loungeId,
+    entityType,
+    entityId,
+    userId,
+    severity,
+    bookingId,
+    startDate,
+    endDate,
+  ];
 }
 
 class ExportAuditLogsCsvUsecase {

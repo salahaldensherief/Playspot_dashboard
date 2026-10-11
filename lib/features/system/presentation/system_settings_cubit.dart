@@ -52,23 +52,24 @@ class SystemSettingsCubit extends Cubit<SystemSettingsState> {
       (list) => announcements = list,
     );
 
-    loungesResult.fold(
-      (_) {},
-      (list) => lounges = list,
-    );
+    loungesResult.fold((_) {}, (list) => lounges = list);
 
     if (errorMsg != null && appStatus.id == null && announcements.isEmpty) {
-      emit(state.copyWith(
-        status: SystemSettingsStatus.failure,
-        errorMessage: errorMsg,
-      ));
+      emit(
+        state.copyWith(
+          status: SystemSettingsStatus.failure,
+          errorMessage: errorMsg,
+        ),
+      );
     } else {
-      emit(state.copyWith(
-        status: SystemSettingsStatus.success,
-        appStatus: appStatus,
-        announcements: announcements,
-        lounges: lounges,
-      ));
+      emit(
+        state.copyWith(
+          status: SystemSettingsStatus.success,
+          appStatus: appStatus,
+          announcements: announcements,
+          lounges: lounges,
+        ),
+      );
     }
   }
 
@@ -88,10 +89,12 @@ class SystemSettingsCubit extends Cubit<SystemSettingsState> {
     );
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        actionStatus: SystemSettingsStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          actionStatus: SystemSettingsStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) {
         final updatedStatus = state.appStatus.copyWith(
           isMaintenanceMode: isMaintenanceMode,
@@ -99,13 +102,15 @@ class SystemSettingsCubit extends Cubit<SystemSettingsState> {
           maintenanceMessageEn: maintenanceMessageEn,
           expectedEndTime: expectedEndTime,
         );
-        emit(state.copyWith(
-          actionStatus: SystemSettingsStatus.success,
-          appStatus: updatedStatus,
-          successMessage: isMaintenanceMode
-              ? AppStrings.maintenanceEnabledSuccess
-              : AppStrings.maintenanceDisabledSuccess,
-        ));
+        emit(
+          state.copyWith(
+            actionStatus: SystemSettingsStatus.success,
+            appStatus: updatedStatus,
+            successMessage: isMaintenanceMode
+                ? AppStrings.maintenanceEnabledSuccess
+                : AppStrings.maintenanceDisabledSuccess,
+          ),
+        );
       },
     );
   }
@@ -116,15 +121,19 @@ class SystemSettingsCubit extends Cubit<SystemSettingsState> {
     final result = await updateAppVersionsUseCase(updatedStatus);
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        actionStatus: SystemSettingsStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (_) => emit(state.copyWith(
-        actionStatus: SystemSettingsStatus.success,
-        appStatus: updatedStatus,
-        successMessage: AppStrings.appVersionsUpdatedSuccess,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          actionStatus: SystemSettingsStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (_) => emit(
+        state.copyWith(
+          actionStatus: SystemSettingsStatus.success,
+          appStatus: updatedStatus,
+          successMessage: AppStrings.appVersionsUpdatedSuccess,
+        ),
+      ),
     );
   }
 
@@ -134,15 +143,19 @@ class SystemSettingsCubit extends Cubit<SystemSettingsState> {
     final result = await createAnnouncementUseCase(announcement);
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        actionStatus: SystemSettingsStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          actionStatus: SystemSettingsStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) async {
-        emit(state.copyWith(
-          actionStatus: SystemSettingsStatus.success,
-          successMessage: AppStrings.announcementPublishedSuccess,
-        ));
+        emit(
+          state.copyWith(
+            actionStatus: SystemSettingsStatus.success,
+            successMessage: AppStrings.announcementPublishedSuccess,
+          ),
+        );
         await _refreshAnnouncements();
       },
     );
@@ -154,15 +167,19 @@ class SystemSettingsCubit extends Cubit<SystemSettingsState> {
     final result = await deactivateAnnouncementUseCase(id);
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        actionStatus: SystemSettingsStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          actionStatus: SystemSettingsStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) async {
-        emit(state.copyWith(
-          actionStatus: SystemSettingsStatus.success,
-          successMessage: AppStrings.announcementDeactivatedSuccess,
-        ));
+        emit(
+          state.copyWith(
+            actionStatus: SystemSettingsStatus.success,
+            successMessage: AppStrings.announcementDeactivatedSuccess,
+          ),
+        );
         await _refreshAnnouncements();
       },
     );
@@ -170,10 +187,7 @@ class SystemSettingsCubit extends Cubit<SystemSettingsState> {
 
   Future<void> _refreshAnnouncements() async {
     final result = await getAnnouncementsUseCase();
-    result.fold(
-      (_) {},
-      (list) => emit(state.copyWith(announcements: list)),
-    );
+    result.fold((_) {}, (list) => emit(state.copyWith(announcements: list)));
   }
 
   void clearMessages() {

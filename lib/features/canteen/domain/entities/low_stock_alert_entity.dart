@@ -21,12 +21,12 @@ class LowStockAlertEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        loungeId,
-        extraId,
-        nameAr,
-        nameEn,
-        category,
-        stockQuantity,
-        minStockThreshold,
-      ];
+    loungeId,
+    extraId,
+    nameAr,
+    nameEn,
+    category,
+    stockQuantity,
+    minStockThreshold,
+  ];
 }

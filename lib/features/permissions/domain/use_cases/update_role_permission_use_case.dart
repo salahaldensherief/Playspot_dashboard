@@ -7,7 +7,17 @@ class UpdateRolePermissionUseCase {
 
   UpdateRolePermissionUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(String role, String permissionKey, bool isEnabled, {String? loungeId}) async {
-    return await repository.updateRolePermission(role, permissionKey, isEnabled, loungeId: loungeId);
+  Future<Either<Failure, void>> call(
+    String role,
+    String permissionKey,
+    bool isEnabled, {
+    String? loungeId,
+  }) async {
+    return await repository.updateRolePermission(
+      role,
+      permissionKey,
+      isEnabled,
+      loungeId: loungeId,
+    );
   }
 }

@@ -12,11 +12,7 @@ class ActivityTypeDialog extends StatefulWidget {
   final ActivityTypeEntity? activity;
   final Future<ActivityTypeEntity?> Function(ActivityTypeEntity) onSave;
 
-  const ActivityTypeDialog({
-    super.key,
-    this.activity,
-    required this.onSave,
-  });
+  const ActivityTypeDialog({super.key, this.activity, required this.onSave});
 
   @override
   State<ActivityTypeDialog> createState() => _ActivityTypeDialogState();
@@ -48,10 +44,7 @@ class _ActivityTypeDialogState extends State<ActivityTypeDialog> {
     'other',
   ];
 
-  static const _pricingModels = <String>[
-    'single_multi_hour',
-    'per_room_hour',
-  ];
+  static const _pricingModels = <String>['single_multi_hour', 'per_room_hour'];
 
   @override
   void initState() {
@@ -90,19 +83,19 @@ class _ActivityTypeDialogState extends State<ActivityTypeDialog> {
     ActivityTypeEntity? saved;
     try {
       saved = await widget.onSave(
-      ActivityTypeEntity(
-        id: widget.activity?.id ?? '',
-        name: _nameController.text.trim().toLowerCase().replaceAll(' ', '_'),
-        label: _labelController.text.trim(),
-        sortOrder: int.tryParse(_sortController.text.trim()) ?? 0,
-        category: _category,
-        iconName: _iconController.text.trim().isEmpty
-            ? 'category'
-            : _iconController.text.trim(),
-        pricingModel: _pricingModel,
-        requiresScreen: _requiresScreen,
-        requiresControllers: _requiresControllers,
-      ),
+        ActivityTypeEntity(
+          id: widget.activity?.id ?? '',
+          name: _nameController.text.trim().toLowerCase().replaceAll(' ', '_'),
+          label: _labelController.text.trim(),
+          sortOrder: int.tryParse(_sortController.text.trim()) ?? 0,
+          category: _category,
+          iconName: _iconController.text.trim().isEmpty
+              ? 'category'
+              : _iconController.text.trim(),
+          pricingModel: _pricingModel,
+          requiresScreen: _requiresScreen,
+          requiresControllers: _requiresControllers,
+        ),
       );
     } catch (_) {
       saved = null;
@@ -160,8 +153,7 @@ class _ActivityTypeDialogState extends State<ActivityTypeDialog> {
                     label: AppStrings.activityKey,
                     controller: _nameController,
                     hintText: 'table_tennis',
-                    validator: (value) =>
-                        value == null || value.trim().isEmpty
+                    validator: (value) => value == null || value.trim().isEmpty
                         ? AppStrings.fieldRequired
                         : null,
                   ),
@@ -172,8 +164,7 @@ class _ActivityTypeDialogState extends State<ActivityTypeDialog> {
                     label: AppStrings.activityLabel,
                     controller: _labelController,
                     hintText: 'Table Tennis',
-                    validator: (value) =>
-                        value == null || value.trim().isEmpty
+                    validator: (value) => value == null || value.trim().isEmpty
                         ? AppStrings.fieldRequired
                         : null,
                   ),

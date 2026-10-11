@@ -216,11 +216,8 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                 categoryCubit,
                 category: category,
               ),
-              onDelete: () => _confirmCategoryDelete(
-                context,
-                categoryCubit,
-                category,
-              ),
+              onDelete: () =>
+                  _confirmCategoryDelete(context, categoryCubit, category),
             );
           },
         );

@@ -269,9 +269,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Container(
         width: dialogWidth,
-        constraints: BoxConstraints(
-          maxHeight: screenSize.height * 0.88,
-        ),
+        constraints: BoxConstraints(maxHeight: screenSize.height * 0.88),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -357,8 +355,9 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                           if (!widget.quickMode)
                             AddBookingImmediateToggle(
                               isImmediate: _startSessionImmediately,
-                              onChanged: (val) =>
-                                  setState(() => _startSessionImmediately = val),
+                              onChanged: (val) => setState(
+                                () => _startSessionImmediately = val,
+                              ),
                             ),
                           if (!widget.quickMode) SizedBox(height: 20.h),
                           if (_selectedRoom != null)
@@ -369,7 +368,8 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                               builder: (context, state) {
                                 return AddBookingSummaryCard(
                                   room: _selectedRoom,
-                                  durationMinutes: state.selectedDurationMinutes,
+                                  durationMinutes:
+                                      state.selectedDurationMinutes,
                                   selectedExtras: _selectedExtras,
                                   voucherDiscount: _voucherDiscount,
                                   playMode: _playMode,

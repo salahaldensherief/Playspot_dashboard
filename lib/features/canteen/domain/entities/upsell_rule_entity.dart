@@ -39,21 +39,21 @@ class UpsellRuleEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        loungeId,
-        triggerType,
-        triggerParams,
-        suggestExtraId,
-        suggestComboId,
-        discountPercent,
-        maxImpressionsPerBooking,
-        priority,
-        isActive,
-        createdAt,
-        suggestedNameAr,
-        suggestedNameEn,
-        suggestedPrice,
-        suggestedImageUrl,
-        isCombo,
-      ];
+    id,
+    loungeId,
+    triggerType,
+    triggerParams,
+    suggestExtraId,
+    suggestComboId,
+    discountPercent,
+    maxImpressionsPerBooking,
+    priority,
+    isActive,
+    createdAt,
+    suggestedNameAr,
+    suggestedNameEn,
+    suggestedPrice,
+    suggestedImageUrl,
+    isCombo,
+  ];
 }

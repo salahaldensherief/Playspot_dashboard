@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/app_logger.dart';
 import '../utils/serialized_task_queue.dart';
 import 'local_cache_service.dart';
 
@@ -10,9 +11,13 @@ class LocalCacheServiceImpl implements LocalCacheService {
 
   String? _ownedKey(String key) {
     final normalized = key.trim();
-    return normalized.startsWith('cache_') && normalized.length > 6
-        ? normalized
-        : null;
+    if (normalized.startsWith('cache_') && normalized.length > 6) {
+      return normalized;
+    }
+    AppLogger.warning(
+      'LocalCacheService: Key "$key" does not start with required "cache_" prefix and will be ignored.',
+    );
+    return null;
   }
 
   @override

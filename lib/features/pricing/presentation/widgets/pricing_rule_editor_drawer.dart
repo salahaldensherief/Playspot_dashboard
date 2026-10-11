@@ -104,9 +104,7 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
 
     showDialog(
       context: context,
-      builder: (_) => PricingConfirmationModal(
-        onConfirm: _executeSave,
-      ),
+      builder: (_) => PricingConfirmationModal(onConfirm: _executeSave),
     );
   }
 

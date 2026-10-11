@@ -33,7 +33,11 @@ class TournamentDisputesAlertBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 28),
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: AppColors.danger,
+            size: 28,
+          ),
           SizedBox(width: 12.w),
           Expanded(
             child: Column(
@@ -50,7 +54,10 @@ class TournamentDisputesAlertBanner extends StatelessWidget {
                 SizedBox(height: 2.h),
                 Text(
                   '${AppStrings.resolveDispute} $player1Name vs $player2Name',
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 13.sp,
+                  ),
                 ),
               ],
             ),

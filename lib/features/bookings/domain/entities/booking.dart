@@ -117,54 +117,54 @@ class Booking extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        userName,
-        userEmail,
-        userPhone,
-        loungeId,
-        roomId,
-        loungeName,
-        loungeLocation,
-        roomName,
-        controllersCount,
-        screenSize,
-        date,
-        startTime,
-        endTime,
-        durationMinutes,
-        status,
-        paymentStatus,
-        totalPrice,
-        addonsPrice,
-        voucherDiscount,
-        voucherCode,
-        discountAmount,
-        discountPercentage,
-        discountReason,
-        extras,
-        canteenOrders,
-        lat,
-        lng,
-        shiftId,
-        playMode,
-        roomPrice,
-        visitNumber,
-        paymentMethod,
-        receiptUrl,
-        expiresAt,
-        isFirstBooking,
-        senderWalletPhone,
-        checkedInAt,
-        createdAt,
-        cancellationReason,
-        cancelledBy,
-        cancelledAt,
-        isOpenTime,
-        openTimeStartedAt,
-        openTimeEndedAt,
-        openTimePricingSnapshot,
-      ];
+    id,
+    userId,
+    userName,
+    userEmail,
+    userPhone,
+    loungeId,
+    roomId,
+    loungeName,
+    loungeLocation,
+    roomName,
+    controllersCount,
+    screenSize,
+    date,
+    startTime,
+    endTime,
+    durationMinutes,
+    status,
+    paymentStatus,
+    totalPrice,
+    addonsPrice,
+    voucherDiscount,
+    voucherCode,
+    discountAmount,
+    discountPercentage,
+    discountReason,
+    extras,
+    canteenOrders,
+    lat,
+    lng,
+    shiftId,
+    playMode,
+    roomPrice,
+    visitNumber,
+    paymentMethod,
+    receiptUrl,
+    expiresAt,
+    isFirstBooking,
+    senderWalletPhone,
+    checkedInAt,
+    createdAt,
+    cancellationReason,
+    cancelledBy,
+    cancelledAt,
+    isOpenTime,
+    openTimeStartedAt,
+    openTimeEndedAt,
+    openTimePricingSnapshot,
+  ];
 
   Booking copyWith({
     String? id,
@@ -277,7 +277,11 @@ class Booking extends Equatable {
 
   bool get isManualTransfer {
     final pm = (paymentMethod ?? '').toLowerCase().trim();
-    return pm == 'manual_transfer' || pm == 'manual' || pm == 'wallet' || pm == 'vodafone_cash' || pm == 'instapay';
+    return pm == 'manual_transfer' ||
+        pm == 'manual' ||
+        pm == 'wallet' ||
+        pm == 'vodafone_cash' ||
+        pm == 'instapay';
   }
 
   bool get isWalletPayment => isManualTransfer;
@@ -328,7 +332,8 @@ class Booking extends Equatable {
           final hour = int.tryParse(parts[0]) ?? 0;
           final minute = int.tryParse(parts[1]) ?? 0;
           var end = DateTime(date.year, date.month, date.day, hour, minute);
-          if (start != null && (end.isBefore(start) || end.isAtSameMomentAs(start))) {
+          if (start != null &&
+              (end.isBefore(start) || end.isAtSameMomentAs(start))) {
             end = end.add(const Duration(days: 1));
           }
           return end;
@@ -342,7 +347,8 @@ class Booking extends Equatable {
 
   /// Determines if the booking is currently active in real-time.
   bool isBookingActive([DateTime? now]) {
-    if (status == BookingStatus.completed || status == BookingStatus.cancelled) {
+    if (status == BookingStatus.completed ||
+        status == BookingStatus.cancelled) {
       return false;
     }
     if (status == BookingStatus.inProgress) {
@@ -354,24 +360,30 @@ class Booking extends Equatable {
     final start = startDateTime;
     if (end == null || start == null) return false;
 
-    return (currentTime.isAfter(start) || currentTime.isAtSameMomentAs(start)) &&
+    return (currentTime.isAfter(start) ||
+            currentTime.isAtSameMomentAs(start)) &&
         currentTime.isBefore(end);
   }
 
   /// Checks if the session or cash hold has expired.
   /// For pending bookings, uses [expiresAt] as hold expiration if available.
   /// For active/upcoming sessions, calculates end time + grace period.
-  bool isSessionExpired([DateTime? now, Duration gracePeriod = const Duration(minutes: 5)]) {
+  bool isSessionExpired([
+    DateTime? now,
+    Duration gracePeriod = const Duration(minutes: 5),
+  ]) {
     final currentTime = now ?? DateTime.now();
     final holdExpiry = expiresAt;
     if (status == BookingStatus.pending && holdExpiry != null) {
-      return currentTime.isAfter(holdExpiry) || currentTime.isAtSameMomentAs(holdExpiry);
+      return currentTime.isAfter(holdExpiry) ||
+          currentTime.isAtSameMomentAs(holdExpiry);
     }
     if (isOpenEnded) return false;
     final end = endDateTime;
     if (end == null) return false;
     final endWithGrace = end.add(gracePeriod);
-    return currentTime.isAfter(endWithGrace) || currentTime.isAtSameMomentAs(endWithGrace);
+    return currentTime.isAfter(endWithGrace) ||
+        currentTime.isAtSameMomentAs(endWithGrace);
   }
 
   /// Alias for checking if hold grace period has expired using [expiresAt] SSOT

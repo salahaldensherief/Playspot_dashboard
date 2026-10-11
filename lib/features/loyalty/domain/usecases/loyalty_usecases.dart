@@ -27,16 +27,25 @@ class GetLoyaltyStatsParams extends Equatable {
   });
 
   @override
-  List<Object?> get props => [startDate, endDate, levelId, referralStatus, userId];
+  List<Object?> get props => [
+    startDate,
+    endDate,
+    levelId,
+    referralStatus,
+    userId,
+  ];
 }
 
-class GetLoyaltyStatsUseCase implements UseCase<LoyaltyStatsModel, GetLoyaltyStatsParams> {
+class GetLoyaltyStatsUseCase
+    implements UseCase<LoyaltyStatsModel, GetLoyaltyStatsParams> {
   final LoyaltyRepository repository;
 
   GetLoyaltyStatsUseCase(this.repository);
 
   @override
-  Future<Either<Failure, LoyaltyStatsModel>> call(GetLoyaltyStatsParams params) {
+  Future<Either<Failure, LoyaltyStatsModel>> call(
+    GetLoyaltyStatsParams params,
+  ) {
     return repository.getLoyaltyStats(
       startDate: params.startDate,
       endDate: params.endDate,
@@ -64,13 +73,16 @@ class GetReferralsParams extends Equatable {
   List<Object?> get props => [startDate, endDate, status, userId];
 }
 
-class GetReferralsUseCase implements UseCase<List<ReferralEntity>, GetReferralsParams> {
+class GetReferralsUseCase
+    implements UseCase<List<ReferralEntity>, GetReferralsParams> {
   final LoyaltyRepository repository;
 
   GetReferralsUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<ReferralEntity>>> call(GetReferralsParams params) {
+  Future<Either<Failure, List<ReferralEntity>>> call(
+    GetReferralsParams params,
+  ) {
     return repository.getReferrals(
       startDate: params.startDate,
       endDate: params.endDate,
@@ -80,7 +92,8 @@ class GetReferralsUseCase implements UseCase<List<ReferralEntity>, GetReferralsP
   }
 }
 
-class GetLoyaltyTasksUseCase implements UseCase<List<LoyaltyTaskEntity>, NoParams> {
+class GetLoyaltyTasksUseCase
+    implements UseCase<List<LoyaltyTaskEntity>, NoParams> {
   final LoyaltyRepository repository;
 
   GetLoyaltyTasksUseCase(this.repository);
@@ -101,7 +114,8 @@ class UpdateLoyaltyTaskParams extends Equatable {
   List<Object?> get props => [id, data];
 }
 
-class UpdateLoyaltyTaskUseCase implements UseCase<void, UpdateLoyaltyTaskParams> {
+class UpdateLoyaltyTaskUseCase
+    implements UseCase<void, UpdateLoyaltyTaskParams> {
   final LoyaltyRepository repository;
 
   UpdateLoyaltyTaskUseCase(this.repository);
@@ -112,7 +126,8 @@ class UpdateLoyaltyTaskUseCase implements UseCase<void, UpdateLoyaltyTaskParams>
   }
 }
 
-class GetLoyaltyLevelsUseCase implements UseCase<List<LoyaltyLevelEntity>, NoParams> {
+class GetLoyaltyLevelsUseCase
+    implements UseCase<List<LoyaltyLevelEntity>, NoParams> {
   final LoyaltyRepository repository;
 
   GetLoyaltyLevelsUseCase(this.repository);
@@ -133,7 +148,8 @@ class UpdateLoyaltyLevelParams extends Equatable {
   List<Object?> get props => [id, data];
 }
 
-class UpdateLoyaltyLevelUseCase implements UseCase<void, UpdateLoyaltyLevelParams> {
+class UpdateLoyaltyLevelUseCase
+    implements UseCase<void, UpdateLoyaltyLevelParams> {
   final LoyaltyRepository repository;
 
   UpdateLoyaltyLevelUseCase(this.repository);
@@ -185,14 +201,19 @@ class GetPointsTransactionsPageParams extends Equatable {
 }
 
 class GetPointsTransactionsPageUseCase
-    implements UseCase<PaginatedResult<PointsTransactionEntity>, GetPointsTransactionsPageParams> {
+    implements
+        UseCase<
+          PaginatedResult<PointsTransactionEntity>,
+          GetPointsTransactionsPageParams
+        > {
   final LoyaltyRepository repository;
 
   GetPointsTransactionsPageUseCase(this.repository);
 
   @override
   Future<Either<Failure, PaginatedResult<PointsTransactionEntity>>> call(
-      GetPointsTransactionsPageParams params) {
+    GetPointsTransactionsPageParams params,
+  ) {
     return repository.getPointsTransactionsPage(
       page: params.page,
       pageSize: params.pageSize,
@@ -200,7 +221,8 @@ class GetPointsTransactionsPageUseCase
   }
 }
 
-class GetRedemptionOptionsUseCase implements UseCase<List<RedemptionOptionEntity>, NoParams> {
+class GetRedemptionOptionsUseCase
+    implements UseCase<List<RedemptionOptionEntity>, NoParams> {
   final LoyaltyRepository repository;
 
   GetRedemptionOptionsUseCase(this.repository);
@@ -211,7 +233,8 @@ class GetRedemptionOptionsUseCase implements UseCase<List<RedemptionOptionEntity
   }
 }
 
-class CreateRedemptionOptionUseCase implements UseCase<void, RedemptionOptionEntity> {
+class CreateRedemptionOptionUseCase
+    implements UseCase<void, RedemptionOptionEntity> {
   final LoyaltyRepository repository;
 
   CreateRedemptionOptionUseCase(this.repository);
@@ -232,7 +255,8 @@ class UpdateRedemptionOptionParams extends Equatable {
   List<Object?> get props => [id, data];
 }
 
-class UpdateRedemptionOptionUseCase implements UseCase<void, UpdateRedemptionOptionParams> {
+class UpdateRedemptionOptionUseCase
+    implements UseCase<void, UpdateRedemptionOptionParams> {
   final LoyaltyRepository repository;
 
   UpdateRedemptionOptionUseCase(this.repository);

@@ -8,7 +8,8 @@ import 'package:play_spot_dashboard/features/bookings/domain/repositories/bookin
 class BookingSessionScheduler {
   final BookingRepository repository;
   final AudioService audioService;
-  final void Function(String bookingId, BookingStatus newStatus) onTransitionStatus;
+  final void Function(String bookingId, BookingStatus newStatus)
+  onTransitionStatus;
 
   Timer? _periodicTimer;
   final Set<String> _alertedStartBookingIds = {};
@@ -29,25 +30,35 @@ class BookingSessionScheduler {
   }
 
   void triggerAutoCancelExpired() {
-    repository.autoCancelExpiredBookings().then((_) {
-      debugPrint('🟢 [BookingSessionScheduler] autoCancelExpiredBookings completed');
-    }).catchError((e) {
-      debugPrint('⚠️ [BookingSessionScheduler] autoCancelExpiredBookings error: $e');
-    });
+    repository
+        .autoCancelExpiredBookings()
+        .then((_) {
+          debugPrint(
+            '🟢 [BookingSessionScheduler] autoCancelExpiredBookings completed',
+          );
+        })
+        .catchError((e) {
+          debugPrint(
+            '⚠️ [BookingSessionScheduler] autoCancelExpiredBookings error: $e',
+          );
+        });
   }
 
   void checkBookingStartTimesAndNotify(List<Booking> bookings) {
     final now = DateTime.now();
 
     for (final booking in bookings) {
-      if (booking.status == BookingStatus.upcoming || booking.status == BookingStatus.pending) {
+      if (booking.status == BookingStatus.upcoming ||
+          booking.status == BookingStatus.pending) {
         final start = booking.startDateTime;
         if (start != null) {
           final diffMinutes = now.difference(start).inMinutes;
           if (diffMinutes >= 0 && diffMinutes <= 5) {
             if (!_alertedStartBookingIds.contains(booking.id)) {
               _alertedStartBookingIds.add(booking.id);
-              debugPrint('🔔 [BookingSessionScheduler] Booking ${booking.id} start time arrived!');
+              debugPrint(
+                '🔔 [BookingSessionScheduler] Booking ${booking.id} start time arrived!',
+              );
               try {
                 audioService.playUrgentAlertSound();
               } catch (e) {
@@ -67,7 +78,9 @@ class BookingSessionScheduler {
     }).toList();
 
     for (final booking in expiredInProgress) {
-      debugPrint('🔄 [BookingSessionScheduler] Auto-transitioning expired session ${booking.id} to completed...');
+      debugPrint(
+        '🔄 [BookingSessionScheduler] Auto-transitioning expired session ${booking.id} to completed...',
+      );
       onTransitionStatus(booking.id, BookingStatus.completed);
     }
   }

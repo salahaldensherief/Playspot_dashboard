@@ -43,12 +43,14 @@ class _CityDialogState extends State<CityDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      widget.onSave(CityEntity(
-        id: widget.city?.id ?? const Uuid().v4(),
-        nameAr: _nameArController.text,
-        nameEn: _nameEnController.text,
-        isActive: _isActive,
-      ));
+      widget.onSave(
+        CityEntity(
+          id: widget.city?.id ?? const Uuid().v4(),
+          nameAr: _nameArController.text,
+          nameEn: _nameEnController.text,
+          isActive: _isActive,
+        ),
+      );
       Navigator.pop(context);
     }
   }
@@ -66,10 +68,7 @@ class _CityDialogState extends State<CityDialog> {
           onPressed: () => Navigator.pop(context),
         ),
         SizedBox(width: 16.w),
-        AppButton(
-          text: AppStrings.saveChanges,
-          onPressed: _submit,
-        ),
+        AppButton(text: AppStrings.saveChanges, onPressed: _submit),
       ],
       child: Form(
         key: _formKey,
@@ -100,8 +99,10 @@ class _CityDialogState extends State<CityDialog> {
                 ),
                 Text(
                   AppStrings.isActive,
-                  style:
-                      TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14.sp,
+                  ),
                 ),
               ],
             ),

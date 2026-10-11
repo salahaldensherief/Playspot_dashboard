@@ -16,8 +16,14 @@ class PointsTransactionModel extends PointsTransactionEntity {
     return PointsTransactionModel(
       id: json['id']?.toString() ?? '',
       userId: json['user_id']?.toString() ?? '',
-      pointsDelta: (json['points_delta'] as num?)?.toInt() ?? (json['points'] as num?)?.toInt() ?? 0,
-      type: json['type']?.toString() ?? json['source_type']?.toString() ?? 'unknown',
+      pointsDelta:
+          (json['points_delta'] as num?)?.toInt() ??
+          (json['points'] as num?)?.toInt() ??
+          0,
+      type:
+          json['type']?.toString() ??
+          json['source_type']?.toString() ??
+          'unknown',
       sourceType: json['source_type']?.toString(),
       sourceId: json['source_id']?.toString(),
       reason: json['reason']?.toString(),

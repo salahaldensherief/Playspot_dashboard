@@ -19,11 +19,15 @@ class ExtraModel extends ExtraEntity {
   });
 
   factory ExtraModel.fromJson(Map<String, dynamic> json) {
-    String rawCategory = (json['category']?.toString() ?? 'other').toLowerCase().trim();
+    String rawCategory = (json['category']?.toString() ?? 'other')
+        .toLowerCase()
+        .trim();
     if (rawCategory == 'others') rawCategory = 'other';
 
     final rawImage = json['image_url']?.toString();
-    final imageUrl = (rawImage != null && rawImage.trim().isNotEmpty) ? rawImage.trim() : null;
+    final imageUrl = (rawImage != null && rawImage.trim().isNotEmpty)
+        ? rawImage.trim()
+        : null;
 
     return ExtraModel(
       id: json['id']?.toString() ?? '',
@@ -51,7 +55,9 @@ class ExtraModel extends ExtraEntity {
     return {
       'id': id,
       'lounge_id': loungeId,
-      'name': nameEn.isEmpty ? (nameAr.isEmpty ? 'Extra Item' : nameAr) : nameEn,
+      'name': nameEn.isEmpty
+          ? (nameAr.isEmpty ? 'Extra Item' : nameAr)
+          : nameEn,
       'name_ar': nameAr,
       'name_en': nameEn,
       'price': price,

@@ -1,4 +1,3 @@
-
 import 'package:play_spot_dashboard/features/categories/domain/entities/activity_type_entity.dart';
 
 class ActivityTypeModel extends ActivityTypeEntity {

@@ -27,7 +27,10 @@ class DashboardLayout extends StatelessWidget {
         : (AppBreakpoints.isTablet(context) ? 20.h : 28.r);
 
     final body = Padding(
-      padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
+      ),
       child: child,
     );
 

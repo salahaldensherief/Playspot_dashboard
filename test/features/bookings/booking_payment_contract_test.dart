@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_remote_data_source_impl.dart';
+import 'package:play_spot_dashboard/features/bookings/data/models/booking_model.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 
 void main() {
   test('walk-in creation has no client-side session or room fallback', () {
@@ -52,6 +54,31 @@ void main() {
 
     await client.dispose();
   });
+
+  test(
+    'approved upcoming booking with unpaid cash status parses as upcoming, not pending',
+    () {
+      final rawBooking = {
+        'id': 'booking-cash-upcoming',
+        'user_id': 'user-1',
+        'lounge_id': 'lounge-1',
+        'room_id': 'room-1',
+        'date': '2026-10-11T12:00:00Z',
+        'start_time': '14:00',
+        'end_time': '15:00',
+        'duration_minutes': 60,
+        'status': 'upcoming',
+        'payment_status': 'unpaid',
+        'payment_method': 'cash',
+        'total_price': 50.0,
+      };
+
+      final model = BookingModel.fromJson(rawBooking);
+
+      expect(model.status, BookingStatus.upcoming);
+      expect(model.paymentStatus, PaymentStatus.unpaid);
+    },
+  );
 
   test(
     'cash payment uses the canonical complete_booking_payment RPC',

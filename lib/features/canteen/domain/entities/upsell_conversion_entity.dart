@@ -21,12 +21,12 @@ class UpsellConversionEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        loungeId,
-        ruleId,
-        triggerType,
-        impressions,
-        conversions,
-        conversionRatePercent,
-        revenueGenerated,
-      ];
+    loungeId,
+    ruleId,
+    triggerType,
+    impressions,
+    conversions,
+    conversionRatePercent,
+    revenueGenerated,
+  ];
 }

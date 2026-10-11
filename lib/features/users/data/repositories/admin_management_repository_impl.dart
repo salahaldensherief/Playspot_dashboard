@@ -52,12 +52,16 @@ class AdminManagementRepositoryImpl implements AdminManagementRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateAdmin(String adminId, {String? name, String? email}) async {
+  Future<Either<Failure, void>> updateAdmin(
+    String adminId, {
+    String? name,
+    String? email,
+  }) async {
     try {
       final data = <String, dynamic>{};
       if (name != null) data['full_name'] = name;
       if (email != null) data['email'] = email;
-      
+
       await remoteDataSource.updateAdmin(adminId, data);
       return const Right(null);
     } catch (e) {

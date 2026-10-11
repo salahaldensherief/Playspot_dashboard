@@ -56,10 +56,6 @@ class CanteenComboComponentModel extends CanteenComboComponentEntity {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'combo_id': comboId,
-      'extra_id': extraId,
-      'quantity': quantity,
-    };
+    return {'combo_id': comboId, 'extra_id': extraId, 'quantity': quantity};
   }
 }

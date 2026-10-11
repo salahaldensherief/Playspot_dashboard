@@ -49,8 +49,12 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
   int _treeSize = 16;
   DateTime _registrationOpensAt = DateTime.now();
   DateTime _registrationClosesAt = DateTime.now().add(const Duration(days: 5));
-  DateTime _checkInOpensAt = DateTime.now().add(const Duration(days: 5, hours: 2));
-  DateTime _checkInClosesAt = DateTime.now().add(const Duration(days: 7, hours: -1));
+  DateTime _checkInOpensAt = DateTime.now().add(
+    const Duration(days: 5, hours: 2),
+  );
+  DateTime _checkInClosesAt = DateTime.now().add(
+    const Duration(days: 7, hours: -1),
+  );
   DateTime _startDate = DateTime.now().add(const Duration(days: 7));
   DateTime _endDate = DateTime.now().add(const Duration(days: 8));
   List<TournamentPrizeEntity> _prizes = [];
@@ -60,11 +64,21 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
     super.initState();
     final t = widget.tournament;
     _titleController = TextEditingController(text: t?.title ?? '');
-    _gameTitleController = TextEditingController(text: t?.gameTitle ?? 'EA FC 25');
-    _entryFeeController = TextEditingController(text: t?.entryFee.toString() ?? '50');
-    _prizePoolController = TextEditingController(text: t?.prizePool.toString() ?? '500');
-    _minPlayersController = TextEditingController(text: t?.minPlayers.toString() ?? '4');
-    _maxPlayersController = TextEditingController(text: t?.maxPlayers.toString() ?? '16');
+    _gameTitleController = TextEditingController(
+      text: t?.gameTitle ?? 'EA FC 25',
+    );
+    _entryFeeController = TextEditingController(
+      text: t?.entryFee.toString() ?? '50',
+    );
+    _prizePoolController = TextEditingController(
+      text: t?.prizePool.toString() ?? '500',
+    );
+    _minPlayersController = TextEditingController(
+      text: t?.minPlayers.toString() ?? '4',
+    );
+    _maxPlayersController = TextEditingController(
+      text: t?.maxPlayers.toString() ?? '16',
+    );
     _rulesController = TextEditingController(text: t?.rules ?? '');
 
     if (t != null) {
@@ -73,8 +87,11 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
       _endDate = t.endDate;
       _registrationOpensAt = t.registrationOpensAt ?? DateTime.now();
       _registrationClosesAt = t.registrationClosesAt ?? t.registrationDeadline;
-      _checkInOpensAt = t.checkInOpensAt ?? t.registrationDeadline.add(const Duration(hours: 1));
-      _checkInClosesAt = t.checkInClosesAt ?? t.startDate.subtract(const Duration(hours: 1));
+      _checkInOpensAt =
+          t.checkInOpensAt ??
+          t.registrationDeadline.add(const Duration(hours: 1));
+      _checkInClosesAt =
+          t.checkInClosesAt ?? t.startDate.subtract(const Duration(hours: 1));
       _prizes = t.prizes;
     }
   }
@@ -155,7 +172,8 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
           checkInClosesAt: _checkInClosesAt,
           tournamentStartsAt: _startDate,
           minPlayers: int.tryParse(_minPlayersController.text.trim()) ?? 4,
-          maxPlayers: int.tryParse(_maxPlayersController.text.trim()) ?? _treeSize,
+          maxPlayers:
+              int.tryParse(_maxPlayersController.text.trim()) ?? _treeSize,
           rules: _rulesController.text.trim(),
           registeredCount: widget.tournament?.registeredCount ?? 0,
           prizes: _prizes,
@@ -288,8 +306,10 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
               checkInOpensAt: _checkInOpensAt,
               startDate: _startDate,
               endDate: _endDate,
-              onRegistrationOpensChanged: (d) => setState(() => _registrationOpensAt = d),
-              onRegistrationClosesChanged: (d) => setState(() => _registrationClosesAt = d),
+              onRegistrationOpensChanged: (d) =>
+                  setState(() => _registrationOpensAt = d),
+              onRegistrationClosesChanged: (d) =>
+                  setState(() => _registrationClosesAt = d),
               onCheckInOpensChanged: (d) => setState(() => _checkInOpensAt = d),
               onStartDateChanged: (d) => setState(() => _startDate = d),
               onEndDateChanged: (d) => setState(() => _endDate = d),

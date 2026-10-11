@@ -119,10 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
         SizedBox(height: 16.h),
         Text(
           AppStrings.appName,
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: AppColors.textSecondary,
-          ),
+          style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary),
         ),
       ],
     );

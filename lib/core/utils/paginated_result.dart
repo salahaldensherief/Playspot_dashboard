@@ -17,7 +17,10 @@ class PaginatedResult<T> extends Equatable {
   bool get hasPreviousPage => page > 1;
   int get totalPages => pageSize > 0 ? (totalCount / pageSize).ceil() : 0;
 
-  static PaginatedResult<T> empty<T>({int requestedPage = 1, int requestedPageSize = 20}) {
+  static PaginatedResult<T> empty<T>({
+    int requestedPage = 1,
+    int requestedPageSize = 20,
+  }) {
     return PaginatedResult<T>(
       items: const [],
       totalCount: 0,
@@ -57,7 +60,8 @@ class PaginatedResult<T> extends Equatable {
     final firstRow = Map<String, dynamic>.from(response.first as Map);
     final totalCount = (firstRow['total_count'] as num?)?.toInt() ?? 0;
     final page = (firstRow['page'] as num?)?.toInt() ?? requestedPage;
-    final pageSize = (firstRow['page_size'] as num?)?.toInt() ?? requestedPageSize;
+    final pageSize =
+        (firstRow['page_size'] as num?)?.toInt() ?? requestedPageSize;
 
     return PaginatedResult<T>(
       items: items,

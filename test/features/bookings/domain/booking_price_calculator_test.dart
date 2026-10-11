@@ -2,10 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking_price_calculator.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
 
-RoomEntity _room({
-  double single = 60.0,
-  double multi = 80.0,
-}) {
+RoomEntity _room({double single = 60.0, double multi = 80.0}) {
   return RoomEntity(
     id: 'r1',
     loungeId: 'l1',

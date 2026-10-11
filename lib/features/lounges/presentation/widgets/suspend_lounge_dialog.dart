@@ -86,9 +86,9 @@ class _SuspendLoungeDialogState extends State<SuspendLoungeDialog> {
                         return;
                       }
                       context.read<ModerationCubit>().suspendLounge(
-                            widget.loungeId,
-                            reason: _reasonController.text.trim(),
-                          );
+                        widget.loungeId,
+                        reason: _reasonController.text.trim(),
+                      );
                     },
             ),
           ],

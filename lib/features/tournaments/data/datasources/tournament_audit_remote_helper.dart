@@ -10,7 +10,10 @@ class TournamentAuditRemoteHelper {
 
   Future<Map<String, dynamic>> awardPrizes(String tournamentId) async {
     try {
-      final response = await client.rpc('award_tournament_prizes', params: {'p_tournament_id': tournamentId});
+      final response = await client.rpc(
+        'award_tournament_prizes',
+        params: {'p_tournament_id': tournamentId},
+      );
       if (response != null && response is Map) {
         return Map<String, dynamic>.from(response);
       }
@@ -21,7 +24,9 @@ class TournamentAuditRemoteHelper {
     }
   }
 
-  Future<List<TournamentAuditLogModel>> getAuditLogs(String tournamentId) async {
+  Future<List<TournamentAuditLogModel>> getAuditLogs(
+    String tournamentId,
+  ) async {
     try {
       final response = await client
           .from('tournament_audit_logs')
@@ -30,7 +35,9 @@ class TournamentAuditRemoteHelper {
           .order('created_at', ascending: false);
 
       return (response as List).map((json) {
-        return TournamentAuditLogModel.fromJson(Map<String, dynamic>.from(json));
+        return TournamentAuditLogModel.fromJson(
+          Map<String, dynamic>.from(json),
+        );
       }).toList();
     } catch (e) {
       AppLogger.warning('getAuditLogs error', e);
@@ -41,7 +48,9 @@ class TournamentAuditRemoteHelper {
           .order('created_at', ascending: false);
 
       return (plainResponse as List).map((json) {
-        return TournamentAuditLogModel.fromJson(Map<String, dynamic>.from(json));
+        return TournamentAuditLogModel.fromJson(
+          Map<String, dynamic>.from(json),
+        );
       }).toList();
     }
   }
@@ -53,18 +62,24 @@ class TournamentAuditRemoteHelper {
   }) async {
     final cleanTournamentId = tournamentId.trim();
     if (cleanTournamentId.isEmpty) {
-      return PaginatedResult.empty(requestedPage: page, requestedPageSize: pageSize);
+      return PaginatedResult.empty(
+        requestedPage: page,
+        requestedPageSize: pageSize,
+      );
     }
 
     final clampedPageSize = pageSize.clamp(1, 100);
     final validPage = page < 1 ? 1 : page;
 
     try {
-      final response = await client.rpc('get_tournament_audit_logs_page', params: {
-        'p_tournament_id': cleanTournamentId,
-        'p_page': validPage,
-        'p_page_size': clampedPageSize,
-      });
+      final response = await client.rpc(
+        'get_tournament_audit_logs_page',
+        params: {
+          'p_tournament_id': cleanTournamentId,
+          'p_page': validPage,
+          'p_page_size': clampedPageSize,
+        },
+      );
 
       return PaginatedResult.fromRpcResponse<TournamentAuditLogModel>(
         response,
@@ -73,7 +88,10 @@ class TournamentAuditRemoteHelper {
         requestedPageSize: clampedPageSize,
       );
     } catch (e) {
-      AppLogger.warning('get_tournament_audit_logs_page RPC error, falling back', e);
+      AppLogger.warning(
+        'get_tournament_audit_logs_page RPC error, falling back',
+        e,
+      );
       final fallbackList = await getAuditLogs(cleanTournamentId);
       return PaginatedResult(
         items: fallbackList,

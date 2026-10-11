@@ -125,8 +125,9 @@ class _ExtraDialogState extends State<ExtraDialog> {
 
     if (!mounted) return;
     final stockQty = int.tryParse(_stockQuantityController.text) ?? 0;
-    final isOutOfStock =
-        _trackStock ? stockQty <= 0 : (widget.extra?.isOutOfStock ?? false);
+    final isOutOfStock = _trackStock
+        ? stockQty <= 0
+        : (widget.extra?.isOutOfStock ?? false);
 
     final extra = ExtraEntity(
       id: widget.extra?.id ?? const Uuid().v4(),
@@ -148,10 +149,13 @@ class _ExtraDialogState extends State<ExtraDialog> {
       final saved = await widget.onSave?.call(extra) ?? false;
       if (mounted && saved) Navigator.pop(context);
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('${AppStrings.error}: $error'),
-        backgroundColor: AppColors.danger,
-      ));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${AppStrings.error}: $error'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }
@@ -187,7 +191,10 @@ class _ExtraDialogState extends State<ExtraDialog> {
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppColors.textSecondary,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -201,7 +208,10 @@ class _ExtraDialogState extends State<ExtraDialog> {
                 thumbVisibility: true,
                 child: SingleChildScrollView(
                   controller: _scrollController,
-                  padding: EdgeInsets.symmetric(horizontal: 28.r, vertical: 20.r),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 28.r,
+                    vertical: 20.r,
+                  ),
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -266,7 +276,8 @@ class _ExtraDialogState extends State<ExtraDialog> {
                             }
                           },
                           onChanged: (val) {
-                            if (val != null) setState(() => _selectedCategory = val);
+                            if (val != null)
+                              setState(() => _selectedCategory = val);
                           },
                         ),
                         SizedBox(height: 20.h),

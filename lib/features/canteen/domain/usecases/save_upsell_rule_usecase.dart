@@ -11,9 +11,7 @@ class SaveUpsellRuleUseCase
   SaveUpsellRuleUseCase(this.repository);
 
   @override
-  Future<Either<Failure, UpsellRuleEntity>> call(
-    UpsellRuleEntity rule,
-  ) {
+  Future<Either<Failure, UpsellRuleEntity>> call(UpsellRuleEntity rule) {
     return repository.saveUpsellRule(rule);
   }
 }

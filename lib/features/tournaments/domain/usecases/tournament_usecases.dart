@@ -9,7 +9,6 @@ import '../entities/tournament_match_entity.dart';
 import '../entities/tournament_prize_entity.dart';
 import '../repositories/tournament_repository.dart';
 
-
 class GetTournamentsParams extends Equatable {
   final double? latitude;
   final double? longitude;
@@ -28,16 +27,26 @@ class GetTournamentsParams extends Equatable {
   });
 
   @override
-  List<Object?> get props => [latitude, longitude, loungeId, status, limit, offset];
+  List<Object?> get props => [
+    latitude,
+    longitude,
+    loungeId,
+    status,
+    limit,
+    offset,
+  ];
 }
 
-class GetTournamentsUseCase implements UseCase<List<TournamentEntity>, GetTournamentsParams> {
+class GetTournamentsUseCase
+    implements UseCase<List<TournamentEntity>, GetTournamentsParams> {
   final TournamentRepository repository;
 
   GetTournamentsUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<TournamentEntity>>> call(GetTournamentsParams params) {
+  Future<Either<Failure, List<TournamentEntity>>> call(
+    GetTournamentsParams params,
+  ) {
     return repository.getTournaments(
       latitude: params.latitude,
       longitude: params.longitude,
@@ -49,7 +58,8 @@ class GetTournamentsUseCase implements UseCase<List<TournamentEntity>, GetTourna
   }
 }
 
-class CreateTournamentUseCase implements UseCase<TournamentEntity, TournamentEntity> {
+class CreateTournamentUseCase
+    implements UseCase<TournamentEntity, TournamentEntity> {
   final TournamentRepository repository;
 
   CreateTournamentUseCase(this.repository);
@@ -60,7 +70,8 @@ class CreateTournamentUseCase implements UseCase<TournamentEntity, TournamentEnt
   }
 }
 
-class UpdateTournamentUseCase implements UseCase<TournamentEntity, TournamentEntity> {
+class UpdateTournamentUseCase
+    implements UseCase<TournamentEntity, TournamentEntity> {
   final TournamentRepository repository;
 
   UpdateTournamentUseCase(this.repository);
@@ -75,13 +86,17 @@ class SaveTournamentPrizesParams extends Equatable {
   final String tournamentId;
   final List<TournamentPrizeEntity> prizes;
 
-  const SaveTournamentPrizesParams({required this.tournamentId, required this.prizes});
+  const SaveTournamentPrizesParams({
+    required this.tournamentId,
+    required this.prizes,
+  });
 
   @override
   List<Object?> get props => [tournamentId, prizes];
 }
 
-class SaveTournamentPrizesUseCase implements UseCase<void, SaveTournamentPrizesParams> {
+class SaveTournamentPrizesUseCase
+    implements UseCase<void, SaveTournamentPrizesParams> {
   final TournamentRepository repository;
 
   SaveTournamentPrizesUseCase(this.repository);
@@ -107,7 +122,10 @@ class CancelTournamentParams extends Equatable {
   final String tournamentId;
   final String reason;
 
-  const CancelTournamentParams({required this.tournamentId, required this.reason});
+  const CancelTournamentParams({
+    required this.tournamentId,
+    required this.reason,
+  });
 
   @override
   List<Object?> get props => [tournamentId, reason];
@@ -184,14 +202,19 @@ class GetTournamentAuditLogsParams extends Equatable {
 }
 
 class GetTournamentAuditLogsUseCase
-    implements UseCase<PaginatedResult<TournamentAuditLogEntity>, GetTournamentAuditLogsParams> {
+    implements
+        UseCase<
+          PaginatedResult<TournamentAuditLogEntity>,
+          GetTournamentAuditLogsParams
+        > {
   final TournamentRepository repository;
 
   GetTournamentAuditLogsUseCase(this.repository);
 
   @override
   Future<Either<Failure, PaginatedResult<TournamentAuditLogEntity>>> call(
-      GetTournamentAuditLogsParams params) {
+    GetTournamentAuditLogsParams params,
+  ) {
     return repository.getTournamentAuditLogsPage(
       tournamentId: params.tournamentId,
       page: params.page,
@@ -209,4 +232,3 @@ class WatchDisputedMatchesUseCase {
     return repository.watchDisputedMatches(tournamentId);
   }
 }
-

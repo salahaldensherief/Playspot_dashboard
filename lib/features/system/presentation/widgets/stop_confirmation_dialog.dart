@@ -54,8 +54,12 @@ class _StopConfirmationDialogState extends State<StopConfirmationDialog> {
         SizedBox(width: 12.w),
         AppButton(
           text: AppStrings.enableMaintenanceNow,
-          backgroundColor: _canConfirm ? AppColors.danger : AppColors.mutedBackground,
-          foregroundColor: _canConfirm ? AppColors.textPrimary : AppColors.textMuted,
+          backgroundColor: _canConfirm
+              ? AppColors.danger
+              : AppColors.mutedBackground,
+          foregroundColor: _canConfirm
+              ? AppColors.textPrimary
+              : AppColors.textMuted,
           onPressed: _canConfirm ? () => Navigator.pop(context, true) : null,
         ),
       ],
@@ -73,10 +77,7 @@ class _StopConfirmationDialogState extends State<StopConfirmationDialog> {
           SizedBox(height: 16.h),
           Text(
             AppStrings.confirmMaintenanceHint,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 13.sp,
-            ),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
           ),
           SizedBox(height: 12.h),
           AppTextField(

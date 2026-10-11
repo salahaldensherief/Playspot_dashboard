@@ -37,7 +37,10 @@ class _AppMultiImagePickerState extends State<AppMultiImagePicker> {
   Future<void> _pickImages() async {
     if (_selectedImages.length >= widget.maxImages) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppStrings.maxImagesError), backgroundColor: AppColors.danger),
+        SnackBar(
+          content: Text(AppStrings.maxImagesError),
+          backgroundColor: AppColors.danger,
+        ),
       );
       return;
     }
@@ -67,7 +70,10 @@ class _AppMultiImagePickerState extends State<AppMultiImagePicker> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.errorPickingImages(e.toString())), backgroundColor: AppColors.danger),
+          SnackBar(
+            content: Text(AppStrings.errorPickingImages(e.toString())),
+            backgroundColor: AppColors.danger,
+          ),
         );
       }
     }
@@ -98,9 +104,14 @@ class _AppMultiImagePickerState extends State<AppMultiImagePicker> {
               ),
             ),
             Text(
-              AppStrings.imagesCount.replaceFirst('{}', _selectedImages.length.toString()),
+              AppStrings.imagesCount.replaceFirst(
+                '{}',
+                _selectedImages.length.toString(),
+              ),
               style: TextStyle(
-                color: _selectedImages.isEmpty ? AppColors.textSecondary : AppColors.neonBlue,
+                color: _selectedImages.isEmpty
+                    ? AppColors.textSecondary
+                    : AppColors.neonBlue,
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w500,
               ),
@@ -128,7 +139,10 @@ class _AppMultiImagePickerState extends State<AppMultiImagePicker> {
                       height: 100.h,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(color: AppColors.neonBlue, width: 1.5),
+                        border: Border.all(
+                          color: AppColors.neonBlue,
+                          width: 1.5,
+                        ),
                         image: DecorationImage(
                           image: MemoryImage(_selectedImages[index].bytes),
                           fit: BoxFit.cover,
@@ -146,7 +160,11 @@ class _AppMultiImagePickerState extends State<AppMultiImagePicker> {
                             color: AppColors.danger,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.close, color: AppColors.textPrimary, size: 16),
+                          child: const Icon(
+                            Icons.close,
+                            color: AppColors.textPrimary,
+                            size: 16,
+                          ),
                         ),
                       ),
                     ),
@@ -168,11 +186,18 @@ class _AppMultiImagePickerState extends State<AppMultiImagePicker> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add_photo_alternate_outlined, color: AppColors.textSecondary, size: 24.r),
+                        Icon(
+                          Icons.add_photo_alternate_outlined,
+                          color: AppColors.textSecondary,
+                          size: 24.r,
+                        ),
                         SizedBox(height: 4.h),
                         Text(
                           AppStrings.add,
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 10.sp),
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 10.sp,
+                          ),
                         ),
                       ],
                     ),

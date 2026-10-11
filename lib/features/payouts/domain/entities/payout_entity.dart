@@ -7,7 +7,8 @@ class PayoutEntity extends Equatable {
   final double amount;
   final String periodStart;
   final String periodEnd;
-  final String status; // pending, approved, processing, paid, failed, cancelled, reversed, needs_review
+  final String
+  status; // pending, approved, processing, paid, failed, cancelled, reversed, needs_review
   final String? notes;
   final DateTime createdAt;
   final DateTime? paidAt;
@@ -33,20 +34,20 @@ class PayoutEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        loungeId,
-        loungeName,
-        amount,
-        periodStart,
-        periodEnd,
-        status,
-        notes,
-        createdAt,
-        paidAt,
-        transferReference,
-        transferMethod,
-        paymentCount,
-      ];
+    id,
+    loungeId,
+    loungeName,
+    amount,
+    periodStart,
+    periodEnd,
+    status,
+    notes,
+    createdAt,
+    paidAt,
+    transferReference,
+    transferMethod,
+    paymentCount,
+  ];
 }
 
 class PendingPayoutOverview extends Equatable {
@@ -63,5 +64,10 @@ class PendingPayoutOverview extends Equatable {
   });
 
   @override
-  List<Object?> get props => [loungeId, loungeName, pendingAmount, pendingPaymentsCount];
+  List<Object?> get props => [
+    loungeId,
+    loungeName,
+    pendingAmount,
+    pendingPaymentsCount,
+  ];
 }

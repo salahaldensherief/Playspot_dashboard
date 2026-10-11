@@ -26,11 +26,17 @@ abstract class LoyaltyRepository {
 
   Future<Either<Failure, List<LoyaltyTaskEntity>>> getTasks();
 
-  Future<Either<Failure, void>> updateTask(String id, Map<String, dynamic> data);
+  Future<Either<Failure, void>> updateTask(
+    String id,
+    Map<String, dynamic> data,
+  );
 
   Future<Either<Failure, List<LoyaltyLevelEntity>>> getLevels();
 
-  Future<Either<Failure, void>> updateLevel(String id, Map<String, dynamic> data);
+  Future<Either<Failure, void>> updateLevel(
+    String id,
+    Map<String, dynamic> data,
+  );
 
   Future<Either<Failure, void>> adjustUserPoints({
     required String userId,
@@ -38,13 +44,16 @@ abstract class LoyaltyRepository {
     required String reason,
   });
 
-  Future<Either<Failure, PaginatedResult<PointsTransactionEntity>>> getPointsTransactionsPage({
-    int page = 1,
-    int pageSize = 20,
-  });
+  Future<Either<Failure, PaginatedResult<PointsTransactionEntity>>>
+  getPointsTransactionsPage({int page = 1, int pageSize = 20});
 
   Future<Either<Failure, List<RedemptionOptionEntity>>> getRedemptionOptions();
-  Future<Either<Failure, void>> createRedemptionOption(RedemptionOptionEntity option);
-  Future<Either<Failure, void>> updateRedemptionOption(String id, Map<String, dynamic> data);
+  Future<Either<Failure, void>> createRedemptionOption(
+    RedemptionOptionEntity option,
+  );
+  Future<Either<Failure, void>> updateRedemptionOption(
+    String id,
+    Map<String, dynamic> data,
+  );
   Future<Either<Failure, void>> deleteRedemptionOption(String id);
 }

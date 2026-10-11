@@ -154,7 +154,10 @@ class NewBookingAlertDialog extends StatelessWidget {
                         ),
                         if (hasExtras) ...[
                           SizedBox(height: 10.h),
-                          const Divider(color: AppColors.borderDefault, height: 1),
+                          const Divider(
+                            color: AppColors.borderDefault,
+                            height: 1,
+                          ),
                           SizedBox(height: 8.h),
                           BookingProductsPreview(
                             booking: booking,

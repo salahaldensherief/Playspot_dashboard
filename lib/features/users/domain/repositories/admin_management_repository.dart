@@ -10,8 +10,12 @@ abstract class AdminManagementRepository {
     required String loungeName,
     String? city,
   });
-  
+
   Future<Either<Failure, List<UserEntity>>> getAdmins();
   Future<Either<Failure, void>> deleteAdmin(String adminId);
-  Future<Either<Failure, void>> updateAdmin(String adminId, {String? name, String? email});
+  Future<Either<Failure, void>> updateAdmin(
+    String adminId, {
+    String? name,
+    String? email,
+  });
 }

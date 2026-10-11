@@ -29,8 +29,13 @@ class CategoryRemoteSourceImpl implements CategoryRemoteSource {
 
   @override
   Future<List<CategoryModel>> getCategories() async {
-    final response = await _supabase.from('categories').select().order('name_en');
-    return (response as List).map((json) => CategoryModel.fromJson(json)).toList();
+    final response = await _supabase
+        .from('categories')
+        .select()
+        .order('name_en');
+    return (response as List)
+        .map((json) => CategoryModel.fromJson(json))
+        .toList();
   }
 
   @override
@@ -40,7 +45,10 @@ class CategoryRemoteSourceImpl implements CategoryRemoteSource {
 
   @override
   Future<void> updateCategory(CategoryModel category) async {
-    await _supabase.from('categories').update(category.toJson()).eq('id', category.id);
+    await _supabase
+        .from('categories')
+        .update(category.toJson())
+        .eq('id', category.id);
   }
 
   @override
@@ -73,12 +81,19 @@ class CategoryRemoteSourceImpl implements CategoryRemoteSource {
   // Activity Types Implementation
   @override
   Future<List<ActivityTypeModel>> getActivityTypes() async {
-    final response = await _supabase.from('activity_types').select().order('sort_order');
-    return (response as List).map((json) => ActivityTypeModel.fromJson(json)).toList();
+    final response = await _supabase
+        .from('activity_types')
+        .select()
+        .order('sort_order');
+    return (response as List)
+        .map((json) => ActivityTypeModel.fromJson(json))
+        .toList();
   }
 
   @override
-  Future<ActivityTypeModel> addActivityType(ActivityTypeModel activityType) async {
+  Future<ActivityTypeModel> addActivityType(
+    ActivityTypeModel activityType,
+  ) async {
     final response = await _supabase
         .from('activity_types')
         .insert(activityType.toJson())

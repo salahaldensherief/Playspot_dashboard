@@ -18,7 +18,10 @@ class LoyaltyLevelModel extends LoyaltyLevelEntity {
       nameEn: json['name_en']?.toString() ?? '',
       minPoints: (json['min_points'] as num?)?.toInt() ?? 0,
       multiplier: (json['multiplier'] as num?)?.toDouble() ?? 1.0,
-      userCount: (json['user_count'] as num?)?.toInt() ?? (json['users_count'] as num?)?.toInt() ?? 0,
+      userCount:
+          (json['user_count'] as num?)?.toInt() ??
+          (json['users_count'] as num?)?.toInt() ??
+          0,
       colorHex: json['color_hex']?.toString() ?? '#3B82F6',
     );
   }

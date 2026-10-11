@@ -68,39 +68,46 @@ void main() {
     expect(cubit.state, const PricingState());
   });
 
-  test('loadPricingRules emits [loading, success] when usecase succeeds', () async {
-    const loungeId = 'lounge-1';
-    final params = GetPricingRulesParams(loungeId: loungeId);
+  test(
+    'loadPricingRules emits [loading, success] when usecase succeeds',
+    () async {
+      const loungeId = 'lounge-1';
+      final params = GetPricingRulesParams(loungeId: loungeId);
 
-    when(() => mockGetRules(params)).thenAnswer((_) async => Right([tRule]));
+      when(() => mockGetRules(params)).thenAnswer((_) async => Right([tRule]));
 
-    final expectedStates = [
-      const PricingState(status: PricingStatus.loading),
-      PricingState(status: PricingStatus.success, rules: [tRule]),
-    ];
+      final expectedStates = [
+        const PricingState(status: PricingStatus.loading),
+        PricingState(status: PricingStatus.success, rules: [tRule]),
+      ];
 
-    expectLater(cubit.stream, emitsInOrder(expectedStates));
+      expectLater(cubit.stream, emitsInOrder(expectedStates));
 
-    await cubit.loadPricingRules(loungeId: loungeId);
-  });
+      await cubit.loadPricingRules(loungeId: loungeId);
+    },
+  );
 
-  test('loadPricingRules emits [loading, failure] when usecase fails', () async {
-    const loungeId = 'lounge-1';
-    final params = GetPricingRulesParams(loungeId: loungeId);
+  test(
+    'loadPricingRules emits [loading, failure] when usecase fails',
+    () async {
+      const loungeId = 'lounge-1';
+      final params = GetPricingRulesParams(loungeId: loungeId);
 
-    when(() => mockGetRules(params))
-        .thenAnswer((_) async => const Left(ServerFailure('Error loading rules')));
+      when(() => mockGetRules(params)).thenAnswer(
+        (_) async => const Left(ServerFailure('Error loading rules')),
+      );
 
-    final expectedStates = [
-      const PricingState(status: PricingStatus.loading),
-      const PricingState(
-        status: PricingStatus.failure,
-        errorMessage: 'Error loading rules',
-      ),
-    ];
+      final expectedStates = [
+        const PricingState(status: PricingStatus.loading),
+        const PricingState(
+          status: PricingStatus.failure,
+          errorMessage: 'Error loading rules',
+        ),
+      ];
 
-    expectLater(cubit.stream, emitsInOrder(expectedStates));
+      expectLater(cubit.stream, emitsInOrder(expectedStates));
 
-    await cubit.loadPricingRules(loungeId: loungeId);
-  });
+      await cubit.loadPricingRules(loungeId: loungeId);
+    },
+  );
 }

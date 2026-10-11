@@ -42,7 +42,11 @@ class PricingQuoteModel extends PricingQuoteEntity {
     List<PricingSegmentModel> parsedSegments = [];
     if (json['segments'] is List) {
       parsedSegments = (json['segments'] as List)
-          .map((e) => PricingSegmentModel.fromJson(Map<String, dynamic>.from(e as Map)))
+          .map(
+            (e) => PricingSegmentModel.fromJson(
+              Map<String, dynamic>.from(e as Map),
+            ),
+          )
           .toList();
     }
 

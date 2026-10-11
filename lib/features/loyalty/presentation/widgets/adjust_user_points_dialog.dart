@@ -14,10 +14,7 @@ import '../../../../core/di/di.dart';
 class AdjustUserPointsDialog extends StatefulWidget {
   final Function(String userId, int pointsDelta, String reason) onAdjust;
 
-  const AdjustUserPointsDialog({
-    super.key,
-    required this.onAdjust,
-  });
+  const AdjustUserPointsDialog({super.key, required this.onAdjust});
 
   @override
   State<AdjustUserPointsDialog> createState() => _AdjustUserPointsDialogState();
@@ -71,7 +68,10 @@ class _AdjustUserPointsDialogState extends State<AdjustUserPointsDialog> {
     final selectedId = _selectedUserId;
     if (selectedId == null || selectedId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppStrings.selectUser), backgroundColor: AppColors.danger),
+        SnackBar(
+          content: Text(AppStrings.selectUser),
+          backgroundColor: AppColors.danger,
+        ),
       );
       return;
     }
@@ -84,7 +84,10 @@ class _AdjustUserPointsDialogState extends State<AdjustUserPointsDialog> {
       Navigator.pop(context);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppStrings.pointsUpdatedSuccess), backgroundColor: AppColors.success),
+        SnackBar(
+          content: Text(AppStrings.pointsUpdatedSuccess),
+          backgroundColor: AppColors.success,
+        ),
       );
     }
   }
@@ -100,8 +103,13 @@ class _AdjustUserPointsDialogState extends State<AdjustUserPointsDialog> {
       }
     }
 
-    final currentPoints = selectedUser != null ? ((selectedUser['points_balance'] as num?)?.toInt() ?? 0) : 0;
-    final userIds = _users.map((u) => u['id']?.toString() ?? '').where((id) => id.isNotEmpty).toList();
+    final currentPoints = selectedUser != null
+        ? ((selectedUser['points_balance'] as num?)?.toInt() ?? 0)
+        : 0;
+    final userIds = _users
+        .map((u) => u['id']?.toString() ?? '')
+        .where((id) => id.isNotEmpty)
+        .toList();
 
     return AppDialog(
       title: AppStrings.adjustUserPoints,
@@ -114,87 +122,102 @@ class _AdjustUserPointsDialogState extends State<AdjustUserPointsDialog> {
           onPressed: () => Navigator.pop(context),
         ),
         SizedBox(width: 12.w),
-        AppButton(
-          text: AppStrings.saveChanges,
-          onPressed: _submit,
-        ),
+        AppButton(text: AppStrings.saveChanges, onPressed: _submit),
       ],
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AppText.body(AppStrings.superAdminOnlyPoints, fontSize: 12.sp, color: AppColors.warning),
+            AppText.body(
+              AppStrings.superAdminOnlyPoints,
+              fontSize: 12.sp,
+              color: AppColors.warning,
+            ),
             SizedBox(height: 16.h),
 
-              // User Selector
-              if (_isLoadingUsers)
-                const Center(child: CircularProgressIndicator(color: AppColors.neonBlue))
-              else
-                CustomDropdown<String>(
-                  label: AppStrings.selectUser,
-                  value: _selectedUserId,
-                  items: userIds,
-                  itemLabel: (id) {
-                    for (final u in _users) {
-                      if (u['id']?.toString() == id) {
-                        final name = u['full_name']?.toString() ?? 'User';
-                        final email = u['email']?.toString() ?? '';
-                        final pts = (u['points_balance'] as num?)?.toInt() ?? 0;
-                        return '$name ($email) - $pts ${AppStrings.pointsUnit}';
-                      }
+            // User Selector
+            if (_isLoadingUsers)
+              const Center(
+                child: CircularProgressIndicator(color: AppColors.neonBlue),
+              )
+            else
+              CustomDropdown<String>(
+                label: AppStrings.selectUser,
+                value: _selectedUserId,
+                items: userIds,
+                itemLabel: (id) {
+                  for (final u in _users) {
+                    if (u['id']?.toString() == id) {
+                      final name = u['full_name']?.toString() ?? 'User';
+                      final email = u['email']?.toString() ?? '';
+                      final pts = (u['points_balance'] as num?)?.toInt() ?? 0;
+                      return '$name ($email) - $pts ${AppStrings.pointsUnit}';
                     }
-                    return id;
-                  },
-                  onChanged: (val) {
-                    setState(() => _selectedUserId = val);
-                  },
-                ),
-
-              if (_selectedUserId != null && _selectedUserId!.isNotEmpty) ...[
-                SizedBox(height: 12.h),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                  decoration: BoxDecoration(
-                    color: AppColors.neonBlue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      AppText.body(AppStrings.pointsBalance, fontSize: 12.sp, color: AppColors.textSecondary),
-                      AppText.body('$currentPoints ${AppStrings.pointsUnit}', fontWeight: FontWeight.bold, color: AppColors.neonBlue),
-                    ],
-                  ),
-                ),
-              ],
-              SizedBox(height: 16.h),
-
-              // Points Delta (+ or -)
-              AppTextField(
-                label: AppStrings.pointsDelta,
-                controller: _pointsDeltaController,
-                hintText: AppStrings.pointsDeltaHint,
-                keyboardType: const TextInputType.numberWithOptions(signed: true),
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty) return AppStrings.fieldRequired;
-                  if (int.tryParse(val.trim()) == null) return AppStrings.invalidNumber;
-                  return null;
+                  }
+                  return id;
+                },
+                onChanged: (val) {
+                  setState(() => _selectedUserId = val);
                 },
               ),
-              SizedBox(height: 16.h),
 
-              // Reason
-              AppTextField(
-                label: AppStrings.reasonOrNote,
-                controller: _reasonController,
-                hintText: AppStrings.reasonHint,
-                maxLines: 2,
-                validator: (val) => val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
+            if (_selectedUserId != null && _selectedUserId!.isNotEmpty) ...[
+              SizedBox(height: 12.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: AppColors.neonBlue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    AppText.body(
+                      AppStrings.pointsBalance,
+                      fontSize: 12.sp,
+                      color: AppColors.textSecondary,
+                    ),
+                    AppText.body(
+                      '$currentPoints ${AppStrings.pointsUnit}',
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.neonBlue,
+                    ),
+                  ],
+                ),
               ),
             ],
-          ),
+            SizedBox(height: 16.h),
+
+            // Points Delta (+ or -)
+            AppTextField(
+              label: AppStrings.pointsDelta,
+              controller: _pointsDeltaController,
+              hintText: AppStrings.pointsDeltaHint,
+              keyboardType: const TextInputType.numberWithOptions(signed: true),
+              validator: (val) {
+                if (val == null || val.trim().isEmpty)
+                  return AppStrings.fieldRequired;
+                if (int.tryParse(val.trim()) == null)
+                  return AppStrings.invalidNumber;
+                return null;
+              },
+            ),
+            SizedBox(height: 16.h),
+
+            // Reason
+            AppTextField(
+              label: AppStrings.reasonOrNote,
+              controller: _reasonController,
+              hintText: AppStrings.reasonHint,
+              maxLines: 2,
+              validator: (val) => val == null || val.trim().isEmpty
+                  ? AppStrings.fieldRequired
+                  : null,
+            ),
+          ],
         ),
+      ),
     );
   }
 }

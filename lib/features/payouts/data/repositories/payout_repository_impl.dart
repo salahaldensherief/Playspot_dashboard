@@ -10,7 +10,8 @@ class PayoutRepositoryImpl implements PayoutRepository {
   PayoutRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<Either<Failure, List<PendingPayoutOverview>>> getPendingPayoutsOverview() async {
+  Future<Either<Failure, List<PendingPayoutOverview>>>
+  getPendingPayoutsOverview() async {
     try {
       final overviews = await remoteDataSource.getPendingPayoutsOverview();
       return Right(overviews);
@@ -20,9 +21,15 @@ class PayoutRepositoryImpl implements PayoutRepository {
   }
 
   @override
-  Future<Either<Failure, List<PayoutEntity>>> getAllPayouts({int page = 1, int pageSize = 50}) async {
+  Future<Either<Failure, List<PayoutEntity>>> getAllPayouts({
+    int page = 1,
+    int pageSize = 50,
+  }) async {
     try {
-      final payouts = await remoteDataSource.getAllPayouts(page: page, pageSize: pageSize);
+      final payouts = await remoteDataSource.getAllPayouts(
+        page: page,
+        pageSize: pageSize,
+      );
       return Right(payouts);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -100,10 +107,7 @@ class PayoutRepositoryImpl implements PayoutRepository {
     String? notes,
   }) async {
     try {
-      await remoteDataSource.markPayoutPaid(
-        payoutId: payoutId,
-        notes: notes,
-      );
+      await remoteDataSource.markPayoutPaid(payoutId: payoutId, notes: notes);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -159,7 +163,9 @@ class PayoutRepositoryImpl implements PayoutRepository {
     required String payoutId,
   }) async {
     try {
-      final details = await remoteDataSource.getPayoutDetails(payoutId: payoutId);
+      final details = await remoteDataSource.getPayoutDetails(
+        payoutId: payoutId,
+      );
       return Right(details);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -167,9 +173,17 @@ class PayoutRepositoryImpl implements PayoutRepository {
   }
 
   @override
-  Future<Either<Failure, List<PayoutEntity>>> getPayoutsByLounge(String loungeId, {int page = 1, int pageSize = 50}) async {
+  Future<Either<Failure, List<PayoutEntity>>> getPayoutsByLounge(
+    String loungeId, {
+    int page = 1,
+    int pageSize = 50,
+  }) async {
     try {
-      final payouts = await remoteDataSource.getPayoutsByLounge(loungeId, page: page, pageSize: pageSize);
+      final payouts = await remoteDataSource.getPayoutsByLounge(
+        loungeId,
+        page: page,
+        pageSize: pageSize,
+      );
       return Right(payouts);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

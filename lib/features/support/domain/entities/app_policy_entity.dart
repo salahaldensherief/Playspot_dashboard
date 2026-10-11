@@ -2,7 +2,8 @@ import 'package:equatable/equatable.dart';
 
 class AppPolicyEntity extends Equatable {
   final String id;
-  final String policyType; // 'terms_of_service', 'privacy_policy', 'refund_policy'
+  final String
+  policyType; // 'terms_of_service', 'privacy_policy', 'refund_policy'
   final String titleAr;
   final String titleEn;
   final String contentAr;
@@ -23,13 +24,13 @@ class AppPolicyEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        policyType,
-        titleAr,
-        titleEn,
-        contentAr,
-        contentEn,
-        isPublished,
-        updatedAt,
-      ];
+    id,
+    policyType,
+    titleAr,
+    titleEn,
+    contentAr,
+    contentEn,
+    isPublished,
+    updatedAt,
+  ];
 }

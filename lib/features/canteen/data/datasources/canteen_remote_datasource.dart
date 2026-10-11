@@ -16,7 +16,11 @@ abstract class CanteenRemoteDataSource {
 
   Future<void> deleteUpsellRule(String id);
 
-  Future<List<UpsellConversionModel>> getUpsellConversions({required String loungeId});
+  Future<List<UpsellConversionModel>> getUpsellConversions({
+    required String loungeId,
+  });
 
-  Future<List<LowStockAlertModel>> getLowStockAlerts({required String loungeId});
+  Future<List<LowStockAlertModel>> getLowStockAlerts({
+    required String loungeId,
+  });
 }

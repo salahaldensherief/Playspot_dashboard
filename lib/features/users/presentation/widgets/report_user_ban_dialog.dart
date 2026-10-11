@@ -95,15 +95,15 @@ class _ReportUserBanDialogState extends State<ReportUserBanDialog> {
                   ? null
                   : () {
                       context.read<ModerationCubit>().createBanRequest(
-                            loungeId: widget.loungeId,
-                            userId: widget.userId,
-                            bookingId: widget.bookingId,
-                            reason: _selectedReason,
-                            evidenceNotes:
-                                _evidenceController.text.trim().isNotEmpty
-                                    ? _evidenceController.text.trim()
-                                    : null,
-                          );
+                        loungeId: widget.loungeId,
+                        userId: widget.userId,
+                        bookingId: widget.bookingId,
+                        reason: _selectedReason,
+                        evidenceNotes:
+                            _evidenceController.text.trim().isNotEmpty
+                            ? _evidenceController.text.trim()
+                            : null,
+                      );
                     },
             ),
           ],

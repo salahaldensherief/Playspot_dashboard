@@ -25,9 +25,13 @@ class RoomsDataTable extends StatelessWidget {
     final user = context.watch<LoginCubit>().state.user;
     final permissions = context.watch<PermissionsCubit>();
     final loungeId = user?.loungeId ?? '';
-    final bool canEdit = user != null && permissions.hasPermission(
-      'rooms_manage', userRole: user.role.name, userId: user.id,
-    );
+    final bool canEdit =
+        user != null &&
+        permissions.hasPermission(
+          'rooms_manage',
+          userRole: user.role.name,
+          userId: user.id,
+        );
     final roomCubit = context.read<RoomCubit>();
     final categoryCubit = context.read<CategoryCubit>();
 
@@ -63,8 +67,12 @@ class RoomsDataTable extends StatelessWidget {
                     children: [
                       Text(
                         context.locale.languageCode == 'ar'
-                      ? (room.nameAr.isNotEmpty ? room.nameAr : room.nameEn)
-                      : (room.nameEn.isNotEmpty ? room.nameEn : room.nameAr),
+                            ? (room.nameAr.isNotEmpty
+                                  ? room.nameAr
+                                  : room.nameEn)
+                            : (room.nameEn.isNotEmpty
+                                  ? room.nameEn
+                                  : room.nameAr),
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
@@ -121,8 +129,12 @@ class RoomsDataTable extends StatelessWidget {
                     Switch(
                       value: room.status == RoomStatusEnum.available,
                       activeThumbColor: AppColors.neonBlue,
-                      onChanged: room.status == RoomStatusEnum.occupied ? null : (_) =>
-                          roomCubit.toggleRoomStatus(room.id, room.status),
+                      onChanged: room.status == RoomStatusEnum.occupied
+                          ? null
+                          : (_) => roomCubit.toggleRoomStatus(
+                              room.id,
+                              room.status,
+                            ),
                     ),
                   ),
                 if (canEdit)
@@ -258,8 +270,9 @@ class RoomsDataTable extends StatelessWidget {
                     Switch(
                       value: isAvailable,
                       activeThumbColor: AppColors.neonBlue,
-                      onChanged: isOccupied ? null : (_) =>
-                          cubit.toggleRoomStatus(room.id, room.status),
+                      onChanged: isOccupied
+                          ? null
+                          : (_) => cubit.toggleRoomStatus(room.id, room.status),
                     ),
                   ],
                 ),
@@ -328,10 +341,10 @@ class RoomsDataTable extends StatelessWidget {
           BlocProvider.value(value: permissionsCubit),
         ],
         child: RoomDialog(
-        loungeId: loungeId,
-        room: room,
-        categoryCubit: categoryCubit,
-        onSave: (updatedRoom) => cubit.updateRoom(updatedRoom),
+          loungeId: loungeId,
+          room: room,
+          categoryCubit: categoryCubit,
+          onSave: (updatedRoom) => cubit.updateRoom(updatedRoom),
         ),
       ),
     );

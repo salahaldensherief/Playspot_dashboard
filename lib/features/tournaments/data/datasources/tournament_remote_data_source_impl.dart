@@ -121,8 +121,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
                       tournament.registrationDeadline)
                   .toUtc()
                   .toIso8601String(),
-          'p_payment_deadline_minutes':
-              tournament.paymentDeadlineMinutes,
+          'p_payment_deadline_minutes': tournament.paymentDeadlineMinutes,
           'p_check_in_opens_at': tournament.checkInOpensAt
               ?.toUtc()
               .toIso8601String(),
@@ -184,10 +183,8 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
         'p_tournament_id': tournament.id,
         'p_title_ar': tournament.titleAr ?? tournament.title,
         'p_title_en': tournament.titleEn ?? tournament.title,
-        'p_description_ar':
-            tournament.descriptionAr ?? tournament.rules ?? '',
-        'p_description_en':
-            tournament.descriptionEn ?? tournament.rules ?? '',
+        'p_description_ar': tournament.descriptionAr ?? tournament.rules ?? '',
+        'p_description_en': tournament.descriptionEn ?? tournament.rules ?? '',
         'p_game_name': tournament.gameTitle,
         'p_max_participants': tournament.maxPlayers,
         'p_entry_fee': tournament.entryFee,
@@ -196,12 +193,10 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
                 .toUtc()
                 .toIso8601String(),
         'p_registration_closes_at':
-            (tournament.registrationClosesAt ??
-                    tournament.registrationDeadline)
+            (tournament.registrationClosesAt ?? tournament.registrationDeadline)
                 .toUtc()
                 .toIso8601String(),
-        'p_payment_deadline_minutes':
-            tournament.paymentDeadlineMinutes,
+        'p_payment_deadline_minutes': tournament.paymentDeadlineMinutes,
         'p_check_in_opens_at': tournament.checkInOpensAt
             ?.toUtc()
             .toIso8601String(),

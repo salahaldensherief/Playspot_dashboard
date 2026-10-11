@@ -6,7 +6,7 @@ class ShiftRealtimeSubscriptionManager {
   RealtimeChannel? _realtimeChannel;
 
   ShiftRealtimeSubscriptionManager([SupabaseClient? client])
-      : client = client ?? Supabase.instance.client;
+    : client = client ?? Supabase.instance.client;
 
   void subscribe({
     required String loungeId,
@@ -29,7 +29,9 @@ class ShiftRealtimeSubscriptionManager {
               value: loungeId,
             ),
             callback: (payload) {
-              debugPrint('⚡ [Realtime] Shift event received: ${payload.eventType}');
+              debugPrint(
+                '⚡ [Realtime] Shift event received: ${payload.eventType}',
+              );
               onOverviewChanged();
               onShiftChanged();
             },
@@ -39,7 +41,9 @@ class ShiftRealtimeSubscriptionManager {
             schema: 'public',
             table: 'shift_payments',
             callback: (payload) {
-              debugPrint('⚡ [Realtime] Shift payment event received: ${payload.eventType}');
+              debugPrint(
+                '⚡ [Realtime] Shift payment event received: ${payload.eventType}',
+              );
               onOverviewChanged();
             },
           )
@@ -48,7 +52,9 @@ class ShiftRealtimeSubscriptionManager {
             schema: 'public',
             table: 'shift_expenses',
             callback: (payload) {
-              debugPrint('⚡ [Realtime] Shift expense event received: ${payload.eventType}');
+              debugPrint(
+                '⚡ [Realtime] Shift expense event received: ${payload.eventType}',
+              );
               onOverviewChanged();
             },
           )

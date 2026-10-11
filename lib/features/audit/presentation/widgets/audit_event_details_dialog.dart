@@ -52,9 +52,7 @@ class AuditEventDetailsDialog extends StatelessWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              SeverityChip(severity: event.severity),
-            ],
+            children: [SeverityChip(severity: event.severity)],
           ),
           SizedBox(height: 8.h),
 
@@ -83,11 +81,18 @@ class AuditEventDetailsDialog extends StatelessWidget {
                 SizedBox(height: 8.h),
                 Row(
                   children: [
-                    Icon(Icons.key_rounded, size: 16.r, color: AppColors.textSecondary),
+                    Icon(
+                      Icons.key_rounded,
+                      size: 16.r,
+                      color: AppColors.textSecondary,
+                    ),
                     SizedBox(width: 8.w),
                     Text(
                       '${AppStrings.eventId}: ',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12.sp,
+                      ),
                     ),
                     Expanded(
                       child: Text(
@@ -110,7 +115,11 @@ class AuditEventDetailsDialog extends StatelessWidget {
                           padding: EdgeInsets.all(4.r),
                           child: Row(
                             children: [
-                              Icon(Icons.copy_rounded, size: 14.r, color: AppColors.neonBlue),
+                              Icon(
+                                Icons.copy_rounded,
+                                size: 14.r,
+                                color: AppColors.neonBlue,
+                              ),
                               SizedBox(width: 4.w),
                               Text(
                                 AppStrings.copyEventId,
@@ -145,7 +154,9 @@ class AuditEventDetailsDialog extends StatelessWidget {
           Text(
             hasReason ? reason : AppStrings.noReasonProvided,
             style: TextStyle(
-              color: hasReason ? AppColors.textPrimary : AppColors.textSecondary,
+              color: hasReason
+                  ? AppColors.textPrimary
+                  : AppColors.textSecondary,
               fontSize: 12.sp,
             ),
           ),
@@ -201,7 +212,11 @@ class AuditEventDetailsDialog extends StatelessWidget {
                             ),
                           ),
                         ),
-                        Icon(Icons.arrow_forward_rounded, size: 14.r, color: AppColors.textSecondary),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 14.r,
+                          color: AppColors.textSecondary,
+                        ),
                         SizedBox(width: 4.w),
                         Expanded(
                           flex: 3,
@@ -242,7 +257,11 @@ class AuditEventDetailsDialog extends StatelessWidget {
         ),
         Text(
           value,
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 12.sp,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         if (subtitle != null && subtitle.isNotEmpty) ...[
           SizedBox(width: 6.w),

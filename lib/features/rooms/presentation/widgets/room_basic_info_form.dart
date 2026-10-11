@@ -96,10 +96,7 @@ class RoomBasicInfoForm extends StatelessWidget {
           descEnField,
           SizedBox(height: 16.h),
           singleRateField,
-          if (supportsMultiRate) ...[
-            SizedBox(height: 16.h),
-            multiRateField,
-          ],
+          if (supportsMultiRate) ...[SizedBox(height: 16.h), multiRateField],
         ],
       );
     }

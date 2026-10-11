@@ -17,16 +17,14 @@ import 'shift_payments_tab.dart';
 class ShiftDetailsModal extends StatefulWidget {
   final ShiftEntity shift;
 
-  const ShiftDetailsModal({
-    super.key,
-    required this.shift,
-  });
+  const ShiftDetailsModal({super.key, required this.shift});
 
   @override
   State<ShiftDetailsModal> createState() => _ShiftDetailsModalState();
 }
 
-class _ShiftDetailsModalState extends State<ShiftDetailsModal> with SingleTickerProviderStateMixin {
+class _ShiftDetailsModalState extends State<ShiftDetailsModal>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -67,11 +65,26 @@ class _ShiftDetailsModalState extends State<ShiftDetailsModal> with SingleTicker
               unselectedLabelColor: AppColors.textSecondary,
               isScrollable: true,
               tabs: [
-                Tab(icon: const Icon(Icons.analytics_outlined), text: AppStrings.financialSummaryTab),
-                Tab(icon: const Icon(Icons.receipt_long_outlined), text: AppStrings.expensesAndDropsTab),
-                Tab(icon: const Icon(Icons.payments_outlined), text: AppStrings.paymentsTab),
-                Tab(icon: const Icon(Icons.bookmark_border_rounded), text: AppStrings.linkedBookingsTab),
-                Tab(icon: const Icon(Icons.history_edu_rounded), text: AppStrings.auditLogTab),
+                Tab(
+                  icon: const Icon(Icons.analytics_outlined),
+                  text: AppStrings.financialSummaryTab,
+                ),
+                Tab(
+                  icon: const Icon(Icons.receipt_long_outlined),
+                  text: AppStrings.expensesAndDropsTab,
+                ),
+                Tab(
+                  icon: const Icon(Icons.payments_outlined),
+                  text: AppStrings.paymentsTab,
+                ),
+                Tab(
+                  icon: const Icon(Icons.bookmark_border_rounded),
+                  text: AppStrings.linkedBookingsTab,
+                ),
+                Tab(
+                  icon: const Icon(Icons.history_edu_rounded),
+                  text: AppStrings.auditLogTab,
+                ),
               ],
             ),
             SizedBox(height: 16.h),

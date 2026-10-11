@@ -3,7 +3,8 @@ import '../models/permission_item_model.dart';
 class DefaultRolePermissionsCatalog {
   static List<PermissionItemModel> getDefaultPermissionsForRole(String role) {
     final cleanRole = role.toLowerCase().trim();
-    final isManager = cleanRole == 'manager' ||
+    final isManager =
+        cleanRole == 'manager' ||
         cleanRole == 'lounge_admin' ||
         cleanRole == 'admin' ||
         cleanRole == 'owner' ||

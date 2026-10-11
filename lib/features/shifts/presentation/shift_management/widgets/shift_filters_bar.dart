@@ -8,12 +8,10 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/utils/debouncer.dart';
 
 class ShiftFiltersBar extends StatefulWidget {
-  final Function(String period, String status, String searchQuery) onFilterChanged;
+  final Function(String period, String status, String searchQuery)
+  onFilterChanged;
 
-  const ShiftFiltersBar({
-    super.key,
-    required this.onFilterChanged,
-  });
+  const ShiftFiltersBar({super.key, required this.onFilterChanged});
 
   @override
   State<ShiftFiltersBar> createState() => _ShiftFiltersBarState();
@@ -21,7 +19,8 @@ class ShiftFiltersBar extends StatefulWidget {
 
 class _ShiftFiltersBarState extends State<ShiftFiltersBar> {
   String _selectedPeriod = 'all'; // 'today', 'week', 'month', 'all'
-  String _selectedStatus = 'all'; // 'all', 'open', 'closed', 'approved', 'unapproved'
+  String _selectedStatus =
+      'all'; // 'all', 'open', 'closed', 'approved', 'unapproved'
   final TextEditingController _searchController = TextEditingController();
   final _searchDebouncer = Debouncer(delay: const Duration(milliseconds: 400));
 
@@ -33,7 +32,11 @@ class _ShiftFiltersBarState extends State<ShiftFiltersBar> {
   }
 
   void _notifyParent() {
-    widget.onFilterChanged(_selectedPeriod, _selectedStatus, _searchController.text.trim());
+    widget.onFilterChanged(
+      _selectedPeriod,
+      _selectedStatus,
+      _searchController.text.trim(),
+    );
   }
 
   @override
@@ -56,7 +59,11 @@ class _ShiftFiltersBarState extends State<ShiftFiltersBar> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText.body(AppStrings.periodFilter, fontSize: 11.sp, color: AppColors.textSecondary),
+              AppText.body(
+                AppStrings.periodFilter,
+                fontSize: 11.sp,
+                color: AppColors.textSecondary,
+              ),
               SizedBox(height: 6.h),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -80,7 +87,11 @@ class _ShiftFiltersBarState extends State<ShiftFiltersBar> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText.body(AppStrings.shiftStatusFilter, fontSize: 11.sp, color: AppColors.textSecondary),
+              AppText.body(
+                AppStrings.shiftStatusFilter,
+                fontSize: 11.sp,
+                color: AppColors.textSecondary,
+              ),
               SizedBox(height: 6.h),
               Container(
                 height: 38.h,
@@ -94,14 +105,36 @@ class _ShiftFiltersBarState extends State<ShiftFiltersBar> {
                   child: DropdownButton<String>(
                     value: _selectedStatus,
                     dropdownColor: AppColors.cardBackground,
-                    style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
-                    icon: Icon(Icons.arrow_drop_down, color: AppColors.textSecondary, size: 20.r),
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 13.sp,
+                    ),
+                    icon: Icon(
+                      Icons.arrow_drop_down,
+                      color: AppColors.textSecondary,
+                      size: 20.r,
+                    ),
                     items: [
-                      DropdownMenuItem(value: 'all', child: Text(AppStrings.allStatuses)),
-                      DropdownMenuItem(value: 'open', child: Text(AppStrings.open)),
-                      DropdownMenuItem(value: 'closed', child: Text(AppStrings.close)),
-                      DropdownMenuItem(value: 'approved', child: Text(AppStrings.approved)),
-                      DropdownMenuItem(value: 'unapproved', child: Text(AppStrings.unapproved)),
+                      DropdownMenuItem(
+                        value: 'all',
+                        child: Text(AppStrings.allStatuses),
+                      ),
+                      DropdownMenuItem(
+                        value: 'open',
+                        child: Text(AppStrings.open),
+                      ),
+                      DropdownMenuItem(
+                        value: 'closed',
+                        child: Text(AppStrings.close),
+                      ),
+                      DropdownMenuItem(
+                        value: 'approved',
+                        child: Text(AppStrings.approved),
+                      ),
+                      DropdownMenuItem(
+                        value: 'unapproved',
+                        child: Text(AppStrings.unapproved),
+                      ),
                     ],
                     onChanged: (val) {
                       if (val != null) {
@@ -121,13 +154,20 @@ class _ShiftFiltersBarState extends State<ShiftFiltersBar> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppText.body(AppStrings.searchCashier, fontSize: 11.sp, color: AppColors.textSecondary),
+                AppText.body(
+                  AppStrings.searchCashier,
+                  fontSize: 11.sp,
+                  color: AppColors.textSecondary,
+                ),
                 SizedBox(height: 6.h),
                 AppTextField(
                   controller: _searchController,
                   hintText: AppStrings.cashierNameHint,
                   prefixIcon: Icons.search,
-                  contentPadding: EdgeInsets.symmetric(vertical: 0.h, horizontal: 10.w),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 0.h,
+                    horizontal: 10.w,
+                  ),
                   onChanged: (_) => _searchDebouncer.run(_notifyParent),
                 ),
               ],
@@ -141,11 +181,19 @@ class _ShiftFiltersBarState extends State<ShiftFiltersBar> {
   Widget _buildPeriodChip(String label, String value) {
     final bool isSelected = _selectedPeriod == value;
     return ChoiceChip(
-      label: Text(label, style: TextStyle(color: isSelected ? AppColors.textPrimary : AppColors.textPrimary, fontSize: 12.sp)),
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? AppColors.textPrimary : AppColors.textPrimary,
+          fontSize: 12.sp,
+        ),
+      ),
       selected: isSelected,
       selectedColor: AppColors.neonBlue,
       backgroundColor: AppColors.mutedBackground,
-      side: BorderSide(color: isSelected ? AppColors.neonBlue : AppColors.borderDefault),
+      side: BorderSide(
+        color: isSelected ? AppColors.neonBlue : AppColors.borderDefault,
+      ),
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 0.h),
       onSelected: (selected) {
         if (selected) {

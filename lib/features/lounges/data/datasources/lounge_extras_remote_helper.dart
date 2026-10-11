@@ -48,10 +48,7 @@ class LoungeExtrasRemoteHelper {
   Future<void> toggleExtraStock(String extraId, bool isOutOfStock) async {
     final response = await client.rpc(
       'set_lounge_extra_availability',
-      params: {
-        'p_extra_id': extraId,
-        'p_is_available': !isOutOfStock,
-      },
+      params: {'p_extra_id': extraId, 'p_is_available': !isOutOfStock},
     );
     if (response is! Map ||
         response['success'] != true ||

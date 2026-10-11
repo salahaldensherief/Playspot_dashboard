@@ -51,13 +51,13 @@ class PricingState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        rules,
-        groupBy,
-        conflictingRules,
-        liveQuote,
-        isSaving,
-        errorMessage,
-        successMessage,
-      ];
+    status,
+    rules,
+    groupBy,
+    conflictingRules,
+    liveQuote,
+    isSaving,
+    errorMessage,
+    successMessage,
+  ];
 }

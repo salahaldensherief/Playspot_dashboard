@@ -223,7 +223,10 @@ class _PromoDialogState extends State<PromoDialog> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 24.w,
+                    vertical: 16.h,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -236,7 +239,10 @@ class _PromoDialogState extends State<PromoDialog> {
                       ),
                       IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                        icon: const Icon(
+                          Icons.close,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -256,202 +262,229 @@ class _PromoDialogState extends State<PromoDialog> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Wrap(
-                      spacing: 32.w,
-                      runSpacing: 24.h,
-                      children: [
-                        SizedBox(
-                          width: isCompact ? contentWidth : (contentWidth - 32.w) * 2 / 3,
-                          child: PromoFormSection(
-                            titleArController: _titleArController,
-                            titleEnController: _titleEnController,
-                            expirationDateController: _expirationDateController,
-                            selectedDeepLink: _selectedDeepLink,
-                            onDeepLinkChanged: (v) => setState(
-                              () => _selectedDeepLink = v ?? 'Specific Room',
-                            ),
-                            expiresAt: _expiresAt,
-                            onDateChanged: (v) => setState(() {
-                              _expiresAt = v;
-                              _expirationDateController.text = v
-                                  .toLocal()
-                                  .toString()
-                                  .split(' ')[0];
-                            }),
-                            selectedTag: _selectedTag,
-                            onTagChanged: (v) =>
-                                setState(() => _selectedTag = v),
-                            isRoomSpecific: _isRoomSpecific,
-                            onRoomSpecificChanged: (v) => setState(() {
-                              _isRoomSpecific = v;
-                              if (!v) {
-                                _selectedRoomId = null;
-                              } else if (_selectedRoomId == null &&
-                                  roomState.rooms.isNotEmpty) {
-                                _selectedRoomId = roomState.rooms.first.id;
-                              }
-                            }),
-                            selectedRoomId: _selectedRoomId,
-                            onRoomChanged: (v) =>
-                                setState(() => _selectedRoomId = v),
-                            targetAudience: _targetAudience,
-                            onTargetAudienceChanged: (v) =>
-                                setState(() => _targetAudience = v),
-                            availableRooms: roomState.rooms,
-                            discountType: _discountType,
-                            onDiscountTypeChanged: (value) =>
-                                setState(() => _discountType = value),
-                            discountValueController: _discountValueController,
-                          ),
-                        ),
-                        SizedBox(
-                          width: isCompact ? contentWidth : (contentWidth - 32.w) / 3,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                AppStrings.promoPoster,
-                                style: TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 16.h),
-                              GestureDetector(
-                                onTap: _pickImage,
-                                child: Container(
-                                  height: 300.h,
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.mutedBackground,
-                                    borderRadius: BorderRadius.circular(12.r),
-                                    border: Border.all(
-                                      color: AppColors.borderDefault,
+                              spacing: 32.w,
+                              runSpacing: 24.h,
+                              children: [
+                                SizedBox(
+                                  width: isCompact
+                                      ? contentWidth
+                                      : (contentWidth - 32.w) * 2 / 3,
+                                  child: PromoFormSection(
+                                    titleArController: _titleArController,
+                                    titleEnController: _titleEnController,
+                                    expirationDateController:
+                                        _expirationDateController,
+                                    selectedDeepLink: _selectedDeepLink,
+                                    onDeepLinkChanged: (v) => setState(
+                                      () => _selectedDeepLink =
+                                          v ?? 'Specific Room',
                                     ),
-                                    image: (_selectedImageBytes != null)
-                                        ? DecorationImage(
-                                            image: MemoryImage(
-                                              _selectedImageBytes!,
-                                            ),
-                                            fit: BoxFit.cover,
-                                          )
-                                        : (_currentImageUrl != null &&
-                                                _currentImageUrl!
-                                                    .trim()
-                                                    .isNotEmpty &&
-                                                AppCachedImage.provider(
-                                                      _currentImageUrl,
-                                                    ) !=
-                                                    null)
-                                            ? DecorationImage(
-                                                image: AppCachedImage.provider(
-                                                  _currentImageUrl,
-                                                ) as ImageProvider,
-                                                fit: BoxFit.cover,
-                                              )
-                                            : null,
+                                    expiresAt: _expiresAt,
+                                    onDateChanged: (v) => setState(() {
+                                      _expiresAt = v;
+                                      _expirationDateController.text = v
+                                          .toLocal()
+                                          .toString()
+                                          .split(' ')[0];
+                                    }),
+                                    selectedTag: _selectedTag,
+                                    onTagChanged: (v) =>
+                                        setState(() => _selectedTag = v),
+                                    isRoomSpecific: _isRoomSpecific,
+                                    onRoomSpecificChanged: (v) => setState(() {
+                                      _isRoomSpecific = v;
+                                      if (!v) {
+                                        _selectedRoomId = null;
+                                      } else if (_selectedRoomId == null &&
+                                          roomState.rooms.isNotEmpty) {
+                                        _selectedRoomId =
+                                            roomState.rooms.first.id;
+                                      }
+                                    }),
+                                    selectedRoomId: _selectedRoomId,
+                                    onRoomChanged: (v) =>
+                                        setState(() => _selectedRoomId = v),
+                                    targetAudience: _targetAudience,
+                                    onTargetAudienceChanged: (v) =>
+                                        setState(() => _targetAudience = v),
+                                    availableRooms: roomState.rooms,
+                                    discountType: _discountType,
+                                    onDiscountTypeChanged: (value) =>
+                                        setState(() => _discountType = value),
+                                    discountValueController:
+                                        _discountValueController,
                                   ),
-                                  child:
-                                      (_selectedImageBytes == null &&
-                                          _currentImageUrl == null)
-                                      ? Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons
-                                                  .add_photo_alternate_outlined,
-                                              size: 48.r,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                            SizedBox(height: 8.h),
-                                            Text(
-                                              AppStrings.uploadPoster,
-                                              style: TextStyle(
-                                                color: AppColors.textSecondary,
-                                                fontSize: 12.sp,
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                      : Align(
-                                          alignment: Alignment.topRight,
-                                          child: IconButton(
-                                            onPressed: () => setState(() {
-                                              _selectedImageBytes = null;
-                                              _currentImageUrl = null;
-                                            }),
-                                            icon: Container(
-                                              padding: EdgeInsets.all(4.r),
-                                              decoration: const BoxDecoration(
-                                                color: Colors.black54,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: const Icon(
-                                                Icons.close,
-                                                color: AppColors.textPrimary,
-                                                size: 16,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
                                 ),
-                              ),
-                              if (_selectedImageBytes != null ||
-                                  _currentImageUrl != null) ...[
-                                SizedBox(height: 12.h),
-                                AppButton(
-                                  text: AppStrings.changePoster,
-                                  onPressed: _pickImage,
-                                  variant: AppButtonVariant.outlined,
-                                  height: 36.h,
+                                SizedBox(
+                                  width: isCompact
+                                      ? contentWidth
+                                      : (contentWidth - 32.w) / 3,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        AppStrings.promoPoster,
+                                        style: TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(height: 16.h),
+                                      GestureDetector(
+                                        onTap: _pickImage,
+                                        child: Container(
+                                          height: 300.h,
+                                          width: double.infinity,
+                                          decoration: BoxDecoration(
+                                            color: AppColors.mutedBackground,
+                                            borderRadius: BorderRadius.circular(
+                                              12.r,
+                                            ),
+                                            border: Border.all(
+                                              color: AppColors.borderDefault,
+                                            ),
+                                            image: (_selectedImageBytes != null)
+                                                ? DecorationImage(
+                                                    image: MemoryImage(
+                                                      _selectedImageBytes!,
+                                                    ),
+                                                    fit: BoxFit.cover,
+                                                  )
+                                                : (_currentImageUrl != null &&
+                                                      _currentImageUrl!
+                                                          .trim()
+                                                          .isNotEmpty &&
+                                                      AppCachedImage.provider(
+                                                            _currentImageUrl,
+                                                          ) !=
+                                                          null)
+                                                ? DecorationImage(
+                                                    image:
+                                                        AppCachedImage.provider(
+                                                              _currentImageUrl,
+                                                            )
+                                                            as ImageProvider,
+                                                    fit: BoxFit.cover,
+                                                  )
+                                                : null,
+                                          ),
+                                          child:
+                                              (_selectedImageBytes == null &&
+                                                  _currentImageUrl == null)
+                                              ? Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(
+                                                      Icons
+                                                          .add_photo_alternate_outlined,
+                                                      size: 48.r,
+                                                      color: AppColors
+                                                          .textSecondary,
+                                                    ),
+                                                    SizedBox(height: 8.h),
+                                                    Text(
+                                                      AppStrings.uploadPoster,
+                                                      style: TextStyle(
+                                                        color: AppColors
+                                                            .textSecondary,
+                                                        fontSize: 12.sp,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                )
+                                              : Align(
+                                                  alignment: Alignment.topRight,
+                                                  child: IconButton(
+                                                    onPressed: () => setState(
+                                                      () {
+                                                        _selectedImageBytes =
+                                                            null;
+                                                        _currentImageUrl = null;
+                                                      },
+                                                    ),
+                                                    icon: Container(
+                                                      padding: EdgeInsets.all(
+                                                        4.r,
+                                                      ),
+                                                      decoration:
+                                                          const BoxDecoration(
+                                                            color:
+                                                                Colors.black54,
+                                                            shape:
+                                                                BoxShape.circle,
+                                                          ),
+                                                      child: const Icon(
+                                                        Icons.close,
+                                                        color: AppColors
+                                                            .textPrimary,
+                                                        size: 16,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                        ),
+                                      ),
+                                      if (_selectedImageBytes != null ||
+                                          _currentImageUrl != null) ...[
+                                        SizedBox(height: 12.h),
+                                        AppButton(
+                                          text: AppStrings.changePoster,
+                                          onPressed: _pickImage,
+                                          variant: AppButtonVariant.outlined,
+                                          height: 36.h,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
                                 ),
                               ],
-                            ],
-                          ),
+                            ),
+                            SizedBox(height: 24.h),
+                            DesignStyleSection(
+                              colorTemplates: _colorTemplates,
+                              selectedTemplate: _selectedTemplate,
+                              onTemplateSelected: (index) =>
+                                  setState(() => _selectedTemplate = index),
+                              selectedIcon: _selectedIcon,
+                              onIconChanged: (v) =>
+                                  setState(() => _selectedIcon = v ?? 'Flash'),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                    SizedBox(height: 24.h),
-                    DesignStyleSection(
-                      colorTemplates: _colorTemplates,
-                      selectedTemplate: _selectedTemplate,
-                      onTemplateSelected: (index) =>
-                          setState(() => _selectedTemplate = index),
-                      selectedIcon: _selectedIcon,
-                      onIconChanged: (v) =>
-                          setState(() => _selectedIcon = v ?? 'Flash'),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                const Divider(height: 1, color: AppColors.divider),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 24.w,
+                    vertical: 16.h,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      AppButton(
+                        text: AppStrings.cancel,
+                        variant: AppButtonVariant.outlined,
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      SizedBox(width: 16.w),
+                      AppButton(
+                        text: AppStrings.saveChanges,
+                        onPressed: _isUploading ? null : _submit,
+                        isLoading: _isUploading,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-        const Divider(height: 1, color: AppColors.divider),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              AppButton(
-                text: AppStrings.cancel,
-                variant: AppButtonVariant.outlined,
-                onPressed: () => Navigator.pop(context),
-              ),
-              SizedBox(width: 16.w),
-              AppButton(
-                text: AppStrings.saveChanges,
-                onPressed: _isUploading ? null : _submit,
-                isLoading: _isUploading,
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  ),
-);
+        );
       },
     );
   }

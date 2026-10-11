@@ -61,17 +61,17 @@ class AnnouncementEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        targetAudience,
-        targetLoungeId,
-        targetLoungeName,
-        titleAr,
-        titleEn,
-        bodyAr,
-        bodyEn,
-        type,
-        isActive,
-        createdBy,
-        createdAt,
-      ];
+    id,
+    targetAudience,
+    targetLoungeId,
+    targetLoungeName,
+    titleAr,
+    titleEn,
+    bodyAr,
+    bodyEn,
+    type,
+    isActive,
+    createdBy,
+    createdAt,
+  ];
 }

@@ -39,10 +39,19 @@ class AppEmptyStateWidget extends StatelessWidget {
               child: Icon(icon, color: AppColors.neonBlue, size: 48.r),
             ),
             SizedBox(height: 16.h),
-            AppText.heading(title, fontSize: 18.sp, textAlign: TextAlign.center),
+            AppText.heading(
+              title,
+              fontSize: 18.sp,
+              textAlign: TextAlign.center,
+            ),
             if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
               SizedBox(height: 6.h),
-              AppText.body(subtitle!, fontSize: 13.sp, color: AppColors.textSecondary, textAlign: TextAlign.center),
+              AppText.body(
+                subtitle!,
+                fontSize: 13.sp,
+                color: AppColors.textSecondary,
+                textAlign: TextAlign.center,
+              ),
             ],
             if (actionText != null && onActionTextPressed != null) ...[
               SizedBox(height: 20.h),

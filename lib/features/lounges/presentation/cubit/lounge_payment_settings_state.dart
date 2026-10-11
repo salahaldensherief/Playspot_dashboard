@@ -1,7 +1,14 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/lounge_payment_settings.dart';
 
-enum LoungePaymentSettingsStatus { initial, loading, loaded, saving, success, failure }
+enum LoungePaymentSettingsStatus {
+  initial,
+  loading,
+  loaded,
+  saving,
+  success,
+  failure,
+}
 
 class LoungePaymentSettingsState extends Equatable {
   final LoungePaymentSettingsStatus status;

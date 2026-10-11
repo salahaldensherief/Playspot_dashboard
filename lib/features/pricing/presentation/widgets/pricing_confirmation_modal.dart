@@ -9,10 +9,7 @@ import '../../../../art_core/widgets/app_dialog.dart';
 class PricingConfirmationModal extends StatelessWidget {
   final VoidCallback onConfirm;
 
-  const PricingConfirmationModal({
-    super.key,
-    required this.onConfirm,
-  });
+  const PricingConfirmationModal({super.key, required this.onConfirm});
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +38,11 @@ class PricingConfirmationModal extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline_rounded,
-                  size: 28.r, color: AppColors.neonBlue),
+              Icon(
+                Icons.info_outline_rounded,
+                size: 28.r,
+                color: AppColors.neonBlue,
+              ),
               SizedBox(width: 12.w),
               Expanded(
                 child: Text(
@@ -66,8 +66,11 @@ class PricingConfirmationModal extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.shield_outlined,
-                    size: 20.r, color: AppColors.success),
+                Icon(
+                  Icons.shield_outlined,
+                  size: 20.r,
+                  color: AppColors.success,
+                ),
                 SizedBox(width: 8.w),
                 Expanded(
                   child: Text(

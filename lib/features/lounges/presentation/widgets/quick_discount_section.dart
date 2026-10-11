@@ -82,7 +82,8 @@ class _QuickDiscountSectionState extends State<QuickDiscountSection> {
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _discountExpiresAt ?? DateTime.now().add(const Duration(days: 7)),
+      initialDate:
+          _discountExpiresAt ?? DateTime.now().add(const Duration(days: 7)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
       builder: (context, child) {
@@ -102,7 +103,9 @@ class _QuickDiscountSectionState extends State<QuickDiscountSection> {
     if (picked != null && mounted) {
       setState(() {
         _discountExpiresAt = picked;
-        _discountExpirationController.text = picked.toLocal().toString().split(' ')[0];
+        _discountExpirationController.text = picked.toLocal().toString().split(
+          ' ',
+        )[0];
       });
     }
   }
@@ -132,25 +135,39 @@ class _QuickDiscountSectionState extends State<QuickDiscountSection> {
       await context.read<LoungeCubit>().updateLoungeDiscount(
         loungeId: lounge.id,
         hasDiscount: _hasDiscount,
-        discountPercentage:
-            _hasDiscount ? (int.tryParse(_discountPercentageController.text) ?? 0) : 0,
+        discountPercentage: _hasDiscount
+            ? (int.tryParse(_discountPercentageController.text) ?? 0)
+            : 0,
         titleAr: _hasDiscount ? _discountTitleArController.text.trim() : '',
         titleEn: _hasDiscount ? _discountTitleEnController.text.trim() : '',
         expiresAt: _hasDiscount ? _discountExpiresAt : null,
-        vodafoneCashNumber: vodafoneCash.isNotEmpty ? vodafoneCash : lounge.vodafoneCashNumber,
-        instapayAccount: instapay.isNotEmpty ? instapay : lounge.instapayAccount,
+        vodafoneCashNumber: vodafoneCash.isNotEmpty
+            ? vodafoneCash
+            : lounge.vodafoneCashNumber,
+        instapayAccount: instapay.isNotEmpty
+            ? instapay
+            : lounge.instapayAccount,
       );
 
       if (mounted) {
         final updatedLoungeInState = lounge.copyWith(
           hasDiscount: _hasDiscount,
-          discountPercentage:
-              _hasDiscount ? (int.tryParse(_discountPercentageController.text) ?? 0) : 0,
-          discountTitleAr: _hasDiscount ? _discountTitleArController.text.trim() : '',
-          discountTitleEn: _hasDiscount ? _discountTitleEnController.text.trim() : '',
+          discountPercentage: _hasDiscount
+              ? (int.tryParse(_discountPercentageController.text) ?? 0)
+              : 0,
+          discountTitleAr: _hasDiscount
+              ? _discountTitleArController.text.trim()
+              : '',
+          discountTitleEn: _hasDiscount
+              ? _discountTitleEnController.text.trim()
+              : '',
           discountExpiresAt: _hasDiscount ? _discountExpiresAt : null,
-          vodafoneCashNumber: vodafoneCash.isNotEmpty ? vodafoneCash : lounge.vodafoneCashNumber,
-          instapayAccount: instapay.isNotEmpty ? instapay : lounge.instapayAccount,
+          vodafoneCashNumber: vodafoneCash.isNotEmpty
+              ? vodafoneCash
+              : lounge.vodafoneCashNumber,
+          instapayAccount: instapay.isNotEmpty
+              ? instapay
+              : lounge.instapayAccount,
         );
         context.read<LoginCubit>().updateUserLounge(updatedLoungeInState);
 
@@ -160,12 +177,18 @@ class _QuickDiscountSectionState extends State<QuickDiscountSection> {
             backgroundColor: AppColors.success,
           ),
         );
-        await context.read<LoginCubit>().refreshUserLounge(lounge.id, forceRefresh: true);
+        await context.read<LoginCubit>().refreshUserLounge(
+          lounge.id,
+          forceRefresh: true,
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.operationError(e.toString())), backgroundColor: AppColors.danger),
+          SnackBar(
+            content: Text(AppStrings.operationError(e.toString())),
+            backgroundColor: AppColors.danger,
+          ),
         );
       }
     } finally {
@@ -248,7 +271,10 @@ class _QuickDiscountSectionState extends State<QuickDiscountSection> {
                     readOnly: true,
                     onTap: _selectDate,
                     hint: AppStrings.hintDateFormat,
-                    suffixIcon: const Icon(Icons.calendar_today_outlined, size: 20),
+                    suffixIcon: const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 20,
+                    ),
                   ),
                 ),
               ],

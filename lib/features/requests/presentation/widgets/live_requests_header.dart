@@ -30,16 +30,15 @@ class LiveRequestsHeader extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                unreadCount > 0 ? Icons.notifications_active_rounded : Icons.notifications_none_rounded,
+                unreadCount > 0
+                    ? Icons.notifications_active_rounded
+                    : Icons.notifications_none_rounded,
                 color: AppColors.neonBlue,
                 size: 20.r,
               ),
             ),
             SizedBox(width: 10.w),
-            AppText.heading(
-              AppStrings.requestsFeed,
-              fontSize: 16.sp,
-            ),
+            AppText.heading(AppStrings.requestsFeed, fontSize: 16.sp),
             if (unreadCount > 0) ...[
               SizedBox(width: 8.w),
               Container(

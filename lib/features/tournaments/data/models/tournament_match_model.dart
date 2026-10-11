@@ -30,12 +30,16 @@ class TournamentMatchModel extends TournamentMatchEntity {
     String? roomNameVal;
 
     if (json['player1'] != null && json['player1'] is Map) {
-      p1Name = json['player1']['user_name'] as String? ?? json['player1']['full_name'] as String?;
+      p1Name =
+          json['player1']['user_name'] as String? ??
+          json['player1']['full_name'] as String?;
     } else if (json['p1_profile'] != null && json['p1_profile'] is Map) {
       p1Name = json['p1_profile']['full_name'] as String?;
     }
     if (json['player2'] != null && json['player2'] is Map) {
-      p2Name = json['player2']['user_name'] as String? ?? json['player2']['full_name'] as String?;
+      p2Name =
+          json['player2']['user_name'] as String? ??
+          json['player2']['full_name'] as String?;
     } else if (json['p2_profile'] != null && json['p2_profile'] is Map) {
       p2Name = json['p2_profile']['full_name'] as String?;
     }

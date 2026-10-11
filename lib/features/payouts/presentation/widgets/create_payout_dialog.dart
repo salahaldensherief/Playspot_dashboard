@@ -106,7 +106,10 @@ class _CreatePayoutDialogState extends State<CreatePayoutDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppTextField(label: AppStrings.periodStart, controller: _startController),
+          AppTextField(
+            label: AppStrings.periodStart,
+            controller: _startController,
+          ),
           SizedBox(height: 16.h),
           AppTextField(label: AppStrings.periodEnd, controller: _endController),
           if (_errorMessage != null) ...[

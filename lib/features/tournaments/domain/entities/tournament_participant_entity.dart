@@ -111,8 +111,10 @@ class TournamentParticipantEntity extends Equatable {
     required this.registeredAt,
   });
 
-  bool get isPaymentApproved => paymentStatus == ParticipantPaymentStatus.approved;
-  bool get isPaymentPending => paymentStatus == ParticipantPaymentStatus.pending;
+  bool get isPaymentApproved =>
+      paymentStatus == ParticipantPaymentStatus.approved;
+  bool get isPaymentPending =>
+      paymentStatus == ParticipantPaymentStatus.pending;
   bool get isWaitlist => participantStatus == ParticipantStatus.waitlist;
   bool get isWithdrawn => participantStatus == ParticipantStatus.withdrawn;
   bool get isExpired => participantStatus == ParticipantStatus.expired;
@@ -154,19 +156,19 @@ class TournamentParticipantEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        tournamentId,
-        userId,
-        userName,
-        userPhone,
-        userEmail,
-        paymentStatus,
-        participantStatus,
-        receiptPath,
-        signedReceiptUrl,
-        rejectionReason,
-        isCheckedIn,
-        checkedInAt,
-        registeredAt,
-      ];
+    id,
+    tournamentId,
+    userId,
+    userName,
+    userPhone,
+    userEmail,
+    paymentStatus,
+    participantStatus,
+    receiptPath,
+    signedReceiptUrl,
+    rejectionReason,
+    isCheckedIn,
+    checkedInAt,
+    registeredAt,
+  ];
 }

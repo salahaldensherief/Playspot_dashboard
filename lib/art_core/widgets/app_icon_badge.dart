@@ -38,11 +38,7 @@ class AppIconBadge extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.28)),
       ),
       child: Center(
-        child: Icon(
-          icon,
-          size: glyphSize,
-          color: color,
-        ),
+        child: Icon(icon, size: glyphSize, color: color),
       ),
     );
 
@@ -58,10 +54,7 @@ class AppIconBadge extends StatelessWidget {
     }
 
     if (tooltip != null && tooltip!.trim().isNotEmpty) {
-      badge = Tooltip(
-        message: tooltip!,
-        child: badge,
-      );
+      badge = Tooltip(message: tooltip!, child: badge);
     }
 
     return badge;

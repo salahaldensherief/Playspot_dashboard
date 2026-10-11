@@ -51,9 +51,7 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
     final user = context.read<LoginCubit>().state.user;
     final bookingCubit = context.read<BookingCubit>();
     final bookings = bookingCubit.state.bookings;
-    final currentBookingList = bookings.where(
-      (b) => b.id == widget.bookingId,
-    );
+    final currentBookingList = bookings.where((b) => b.id == widget.bookingId);
 
     if (currentBookingList.isNotEmpty) {
       final b = currentBookingList.first;
@@ -73,8 +71,8 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
     final foundRoomList = availableRooms.where((r) => r.id == targetRoomId);
     final roomName = foundRoomList.isNotEmpty
         ? (foundRoomList.first.nameEn.isNotEmpty
-            ? foundRoomList.first.nameEn
-            : foundRoomList.first.nameAr)
+              ? foundRoomList.first.nameEn
+              : foundRoomList.first.nameAr)
         : '';
 
     bookingCubit.swapRoom(
@@ -126,9 +124,7 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
             return Padding(
               padding: EdgeInsets.symmetric(vertical: 16.h),
               child: const Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.neonBlue,
-                ),
+                child: CircularProgressIndicator(color: AppColors.neonBlue),
               ),
             );
           }
@@ -153,12 +149,8 @@ class _SwapRoomDialogState extends State<SwapRoomDialog> {
                 value: _selectedRoomId,
                 items: availableRooms.map((r) => r.id).toList(),
                 itemLabel: (id) {
-                  final found = availableRooms.firstWhere(
-                    (r) => r.id == id,
-                  );
-                  return found.nameEn.isNotEmpty
-                      ? found.nameEn
-                      : found.nameAr;
+                  final found = availableRooms.firstWhere((r) => r.id == id);
+                  return found.nameEn.isNotEmpty ? found.nameEn : found.nameAr;
                 },
                 onChanged: (val) => setState(() => _selectedRoomId = val),
               ),

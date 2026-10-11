@@ -153,7 +153,9 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                         AppText.body(
                           'current_price_label'.tr(
                             args: [
-                              (widget.currentPrice.toStringAsFixed(0)).toString(),
+                              (widget.currentPrice.toStringAsFixed(
+                                0,
+                              )).toString(),
                               (AppStrings.egp).toString(),
                             ],
                           ),
@@ -165,8 +167,10 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon:
-                        const Icon(Icons.close, color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppColors.textSecondary,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -181,177 +185,189 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                 controller: _scrollController,
                 child: SingleChildScrollView(
                   controller: _scrollController,
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 20.r, vertical: 16.r),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 20.r,
+                    vertical: 16.r,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Discount Type Toggle Tabs
-            Container(
-              padding: EdgeInsets.all(3.r),
-              decoration: BoxDecoration(
-                color: AppColors.mutedBackground,
-                borderRadius: BorderRadius.circular(10.r),
-                border: Border.all(color: AppColors.borderDefault),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => setState(() => _isPercentage = true),
-                      borderRadius: BorderRadius.circular(8.r),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 8.h),
+                      Container(
+                        padding: EdgeInsets.all(3.r),
                         decoration: BoxDecoration(
-                          color: _isPercentage
-                              ? AppColors.neonBlue
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8.r),
+                          color: AppColors.mutedBackground,
+                          borderRadius: BorderRadius.circular(10.r),
+                          border: Border.all(color: AppColors.borderDefault),
                         ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'discount_percentage_label'.tr(),
-                          style: TextStyle(
-                            color: _isPercentage
-                                ? Colors.black
-                                : AppColors.textSecondary,
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => setState(() => _isPercentage = false),
-                      borderRadius: BorderRadius.circular(8.r),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 8.h),
-                        decoration: BoxDecoration(
-                          color: !_isPercentage
-                              ? AppColors.neonBlue
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'discount_fixed_egp_label'.tr(),
-                          style: TextStyle(
-                            color: !_isPercentage
-                                ? Colors.black
-                                : AppColors.textSecondary,
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 16.h),
-
-            // Value Input Field
-            AppTextField(
-              controller: _valueController,
-              label: _isPercentage
-                  ? AppStrings.discountPercentageInput
-                  : AppStrings.discountAmountInput,
-              hintText: _isPercentage
-                  ? AppStrings.discountPercentageHint
-                  : AppStrings.discountAmountHint,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
-              ],
-              onChanged: (_) => setState(() {}),
-              suffix: Icon(
-                _isPercentage ? Icons.percent : Icons.payments_outlined,
-                color: AppColors.neonBlue,
-                size: 18.r,
-              ),
-            ),
-            SizedBox(height: 12.h),
-
-            // Reason Input Field
-            AppTextField(
-              controller: _reasonController,
-              label: AppStrings.discountReasonRequiredLabel,
-              hintText: AppStrings.roomDiscountReasonHint,
-            ),
-            SizedBox(height: 16.h),
-
-            // Calculation Summary Card
-            Container(
-              padding: EdgeInsets.all(12.r),
-              decoration: BoxDecoration(
-                color: AppColors.mutedBackground.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(10.r),
-                border: Border.all(color: AppColors.borderDefault),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppText.body(
-                        'discount_summary_label'.tr(
-                          args: [
-                            (_calculatedDiscountAmount.toStringAsFixed(
-                              0,
-                            )).toString(),
-                            (AppStrings.egp).toString(),
-                            (_calculatedDiscountPercentage.toStringAsFixed(
-                              0,
-                            )).toString(),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () =>
+                                    setState(() => _isPercentage = true),
+                                borderRadius: BorderRadius.circular(8.r),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                                  decoration: BoxDecoration(
+                                    color: _isPercentage
+                                        ? AppColors.neonBlue
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    'discount_percentage_label'.tr(),
+                                    style: TextStyle(
+                                      color: _isPercentage
+                                          ? Colors.black
+                                          : AppColors.textSecondary,
+                                      fontSize: 11.sp,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () =>
+                                    setState(() => _isPercentage = false),
+                                borderRadius: BorderRadius.circular(8.r),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                                  decoration: BoxDecoration(
+                                    color: !_isPercentage
+                                        ? AppColors.neonBlue
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    'discount_fixed_egp_label'.tr(),
+                                    style: TextStyle(
+                                      color: !_isPercentage
+                                          ? Colors.black
+                                          : AppColors.textSecondary,
+                                      fontSize: 11.sp,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
-                        fontSize: 11.sp,
-                        color: AppColors.warning,
-                        fontWeight: FontWeight.w600,
                       ),
-                      SizedBox(height: 2.h),
-                      AppText.body(
-                        'price_before_discount_label'.tr(
-                          args: [
-                            (widget.currentPrice.toStringAsFixed(0)).toString(),
-                            (AppStrings.egp).toString(),
+                      SizedBox(height: 16.h),
+
+                      // Value Input Field
+                      AppTextField(
+                        controller: _valueController,
+                        label: _isPercentage
+                            ? AppStrings.discountPercentageInput
+                            : AppStrings.discountAmountInput,
+                        hintText: _isPercentage
+                            ? AppStrings.discountPercentageHint
+                            : AppStrings.discountAmountHint,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d+\.?\d*'),
+                          ),
+                        ],
+                        onChanged: (_) => setState(() {}),
+                        suffix: Icon(
+                          _isPercentage
+                              ? Icons.percent
+                              : Icons.payments_outlined,
+                          color: AppColors.neonBlue,
+                          size: 18.r,
+                        ),
+                      ),
+                      SizedBox(height: 12.h),
+
+                      // Reason Input Field
+                      AppTextField(
+                        controller: _reasonController,
+                        label: AppStrings.discountReasonRequiredLabel,
+                        hintText: AppStrings.roomDiscountReasonHint,
+                      ),
+                      SizedBox(height: 16.h),
+
+                      // Calculation Summary Card
+                      Container(
+                        padding: EdgeInsets.all(12.r),
+                        decoration: BoxDecoration(
+                          color: AppColors.mutedBackground.withValues(
+                            alpha: 0.6,
+                          ),
+                          borderRadius: BorderRadius.circular(10.r),
+                          border: Border.all(color: AppColors.borderDefault),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                AppText.body(
+                                  'discount_summary_label'.tr(
+                                    args: [
+                                      (_calculatedDiscountAmount
+                                              .toStringAsFixed(0))
+                                          .toString(),
+                                      (AppStrings.egp).toString(),
+                                      (_calculatedDiscountPercentage
+                                              .toStringAsFixed(0))
+                                          .toString(),
+                                    ],
+                                  ),
+                                  fontSize: 11.sp,
+                                  color: AppColors.warning,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                SizedBox(height: 2.h),
+                                AppText.body(
+                                  'price_before_discount_label'.tr(
+                                    args: [
+                                      (widget.currentPrice.toStringAsFixed(
+                                        0,
+                                      )).toString(),
+                                      (AppStrings.egp).toString(),
+                                    ],
+                                  ),
+                                  fontSize: 10.sp,
+                                  color: AppColors.textMuted,
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                AppText.body(
+                                  'final_net_total_label'.tr(),
+                                  fontSize: 10.sp,
+                                  color: AppColors.textMuted,
+                                ),
+                                AppText.subHeading(
+                                  '${_finalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
+                                  fontSize: 15.sp,
+                                  color: AppColors.neonGreen,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ],
+                            ),
                           ],
                         ),
-                        fontSize: 10.sp,
-                        color: AppColors.textMuted,
                       ),
                     ],
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      AppText.body(
-                        'final_net_total_label'.tr(),
-                        fontSize: 10.sp,
-                        color: AppColors.textMuted,
-                      ),
-                      AppText.subHeading(
-                        '${_finalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
-                        fontSize: 15.sp,
-                        color: AppColors.neonGreen,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
-          ],
-        ),
-      ),
-    ),
-  ),
             const Divider(height: 1, color: AppColors.divider),
             // Action Buttons
             Padding(

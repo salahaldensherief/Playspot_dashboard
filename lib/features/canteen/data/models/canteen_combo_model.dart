@@ -53,8 +53,12 @@ class CanteenComboModel extends CanteenComboEntity {
       daysOfWeek: parsedDays,
       availableFrom: json['available_from']?.toString(),
       availableTo: json['available_to']?.toString(),
-      validFrom: rawValidFrom != null ? DateTime.tryParse(rawValidFrom.toString()) : null,
-      validTo: rawValidTo != null ? DateTime.tryParse(rawValidTo.toString()) : null,
+      validFrom: rawValidFrom != null
+          ? DateTime.tryParse(rawValidFrom.toString())
+          : null,
+      validTo: rawValidTo != null
+          ? DateTime.tryParse(rawValidTo.toString())
+          : null,
       isActive: json['is_active'] as bool? ?? true,
       sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
       items: parsedItems,

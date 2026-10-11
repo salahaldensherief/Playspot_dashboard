@@ -34,7 +34,10 @@ class ExtrasGrid extends StatelessWidget {
         }
         if (state.status == ExtrasStatus.failure) {
           return Center(
-            child: AppText.body(state.errorMessage ?? AppStrings.error, color: AppColors.danger),
+            child: AppText.body(
+              state.errorMessage ?? AppStrings.error,
+              color: AppColors.danger,
+            ),
           );
         }
         if (state.status == ExtrasStatus.success) {
@@ -51,7 +54,8 @@ class ExtrasGrid extends StatelessWidget {
               childAspectRatio: childAspectRatio,
             ),
             itemCount: state.extras.length,
-            itemBuilder: (context, index) => ExtraCard(extra: state.extras[index]),
+            itemBuilder: (context, index) =>
+                ExtraCard(extra: state.extras[index]),
           );
         }
         return const SizedBox.shrink();
@@ -64,7 +68,11 @@ class ExtrasGrid extends StatelessWidget {
       child: Column(
         children: [
           SizedBox(height: 60.h),
-          Icon(Icons.restaurant_menu, color: AppColors.textSecondary, size: 64.r),
+          Icon(
+            Icons.restaurant_menu,
+            color: AppColors.textSecondary,
+            size: 64.r,
+          ),
           SizedBox(height: 16.h),
           AppText.body(AppStrings.noItemsAdded, fontSize: 18.sp),
         ],

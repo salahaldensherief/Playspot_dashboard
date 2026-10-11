@@ -22,14 +22,19 @@ class GetActiveLoungeRequestsPageParams extends Equatable {
 }
 
 class GetActiveLoungeRequestsPageUseCase
-    implements UseCase<PaginatedResult<ClientRequestEntity>, GetActiveLoungeRequestsPageParams> {
+    implements
+        UseCase<
+          PaginatedResult<ClientRequestEntity>,
+          GetActiveLoungeRequestsPageParams
+        > {
   final ClientRequestsRepository repository;
 
   GetActiveLoungeRequestsPageUseCase(this.repository);
 
   @override
   Future<Either<Failure, PaginatedResult<ClientRequestEntity>>> call(
-      GetActiveLoungeRequestsPageParams params) {
+    GetActiveLoungeRequestsPageParams params,
+  ) {
     return repository.getActiveLoungeRequestsPage(
       loungeId: params.loungeId,
       page: params.page,

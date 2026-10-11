@@ -15,7 +15,8 @@ class PayoutDetailsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
     final payout = details['payout'] as Map<String, dynamic>? ?? {};
-    final reconciliation = details['reconciliation'] as Map<String, dynamic>? ?? {};
+    final reconciliation =
+        details['reconciliation'] as Map<String, dynamic>? ?? {};
 
     return AppDialog(
       title: AppStrings.payoutDetailsAndReconciliation,
@@ -34,7 +35,10 @@ class PayoutDetailsDialog extends StatelessWidget {
         children: [
           Text(
             '${AppStrings.status}: ${payout['status'] ?? '-'}',
-            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           Text(
             '${AppStrings.totalAmount}: \$${payout['total_amount'] ?? payout['amount'] ?? '0.00'}',
@@ -52,13 +56,28 @@ class PayoutDetailsDialog extends StatelessWidget {
           SizedBox(height: 16.h),
           Text(
             AppStrings.reconciliationSummary,
-            style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
           SizedBox(height: 8.h),
-          Text('${AppStrings.totalPayments} ${reconciliation['payment_count'] ?? 0}', style: const TextStyle(color: AppColors.textSecondary)),
-          Text('${AppStrings.completedCount} ${reconciliation['completed_count'] ?? 0}', style: const TextStyle(color: AppColors.textSecondary)),
-          Text('${AppStrings.calculatedNet} \$${reconciliation['calculated_net'] ?? 0}', style: const TextStyle(color: AppColors.textSecondary)),
-          Text('${AppStrings.difference} \$${reconciliation['difference'] ?? 0}', style: const TextStyle(color: AppColors.textSecondary)),
+          Text(
+            '${AppStrings.totalPayments} ${reconciliation['payment_count'] ?? 0}',
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+          Text(
+            '${AppStrings.completedCount} ${reconciliation['completed_count'] ?? 0}',
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+          Text(
+            '${AppStrings.calculatedNet} \$${reconciliation['calculated_net'] ?? 0}',
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+          Text(
+            '${AppStrings.difference} \$${reconciliation['difference'] ?? 0}',
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
         ],
       ),
     );

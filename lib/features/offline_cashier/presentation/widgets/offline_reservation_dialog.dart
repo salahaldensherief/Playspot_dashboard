@@ -102,7 +102,9 @@ class _OfflineReservationDialogState extends State<OfflineReservationDialog> {
               labelText: 'offline_workspace.customer'.tr(),
               filled: true,
               fillColor: AppColors.scaffoldBackground,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
             ),
           ),
           SizedBox(height: 12.h),
@@ -115,7 +117,9 @@ class _OfflineReservationDialogState extends State<OfflineReservationDialog> {
               labelText: 'offline_workspace.phone'.tr(),
               filled: true,
               fillColor: AppColors.scaffoldBackground,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
             ),
           ),
           SizedBox(height: 12.h),
@@ -127,7 +131,9 @@ class _OfflineReservationDialogState extends State<OfflineReservationDialog> {
               labelText: 'offline_workspace.room'.tr(),
               filled: true,
               fillColor: AppColors.scaffoldBackground,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
             ),
             items: rooms.entries
                 .where(
@@ -145,9 +151,7 @@ class _OfflineReservationDialogState extends State<OfflineReservationDialog> {
                   ),
                 )
                 .toList(),
-            onChanged: busy
-                ? null
-                : (value) => setState(() => room = value),
+            onChanged: busy ? null : (value) => setState(() => room = value),
           ),
           SizedBox(height: 16.h),
           DropdownButtonFormField<String>(
@@ -158,7 +162,9 @@ class _OfflineReservationDialogState extends State<OfflineReservationDialog> {
               labelText: 'offline_workspace.mode'.tr(),
               filled: true,
               fillColor: AppColors.scaffoldBackground,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
             ),
             items: ['single', 'multi']
                 .map(
@@ -181,16 +187,16 @@ class _OfflineReservationDialogState extends State<OfflineReservationDialog> {
               labelText: 'offline_workspace.duration'.tr(),
               filled: true,
               fillColor: AppColors.scaffoldBackground,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
             ),
             items: [30, 60, 90, 120, 180, 240]
                 .map(
                   (value) => DropdownMenuItem(
                     value: value,
                     child: Text(
-                      'offline_workspace.minutes'.tr(
-                        args: [value.toString()],
-                      ),
+                      'offline_workspace.minutes'.tr(args: [value.toString()]),
                     ),
                   ),
                 )

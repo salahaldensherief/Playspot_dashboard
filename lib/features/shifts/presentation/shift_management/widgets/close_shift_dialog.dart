@@ -69,10 +69,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
           children: [
             Text(
               AppStrings.confirmCashInstruction,
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14.sp,
-              ),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
             ),
             SizedBox(height: 24.h),
             AppTextField(

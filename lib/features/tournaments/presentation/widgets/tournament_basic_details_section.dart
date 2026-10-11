@@ -32,7 +32,8 @@ class TournamentBasicDetailsSection extends StatelessWidget {
         AppTextField(
           controller: titleController,
           label: AppStrings.tournamentTitle,
-          validator: (v) => v == null || v.trim().isEmpty ? AppStrings.fieldRequired : null,
+          validator: (v) =>
+              v == null || v.trim().isEmpty ? AppStrings.fieldRequired : null,
         ),
         SizedBox(height: 16.h),
         Row(
@@ -41,7 +42,9 @@ class TournamentBasicDetailsSection extends StatelessWidget {
               child: AppTextField(
                 controller: gameTitleController,
                 label: AppStrings.gameTitle,
-                validator: (v) => v == null || v.trim().isEmpty ? AppStrings.fieldRequired : null,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? AppStrings.fieldRequired
+                    : null,
               ),
             ),
             SizedBox(width: 16.w),
@@ -51,7 +54,10 @@ class TournamentBasicDetailsSection extends StatelessWidget {
                 children: [
                   Text(
                     AppStrings.treeSize,
-                    style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14.sp,
+                    ),
                   ),
                   SizedBox(height: 8.h),
                   DropdownButtonFormField<int>(
@@ -63,7 +69,9 @@ class TournamentBasicDetailsSection extends StatelessWidget {
                       fillColor: AppColors.mutedBackground,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.r),
-                        borderSide: const BorderSide(color: AppColors.borderDefault),
+                        borderSide: const BorderSide(
+                          color: AppColors.borderDefault,
+                        ),
                       ),
                     ),
                     items: const [
@@ -86,7 +94,9 @@ class TournamentBasicDetailsSection extends StatelessWidget {
                 controller: entryFeeController,
                 label: AppStrings.entryFee,
                 keyboardType: TextInputType.number,
-                validator: (v) => v == null || v.trim().isEmpty ? AppStrings.fieldRequired : null,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? AppStrings.fieldRequired
+                    : null,
               ),
             ),
             SizedBox(width: 16.w),
@@ -95,7 +105,9 @@ class TournamentBasicDetailsSection extends StatelessWidget {
                 controller: prizePoolController,
                 label: AppStrings.prizePool,
                 keyboardType: TextInputType.number,
-                validator: (v) => v == null || v.trim().isEmpty ? AppStrings.fieldRequired : null,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? AppStrings.fieldRequired
+                    : null,
               ),
             ),
           ],

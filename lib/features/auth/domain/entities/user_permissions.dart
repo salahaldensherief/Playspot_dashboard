@@ -11,7 +11,7 @@ class UserPermissions {
   const UserPermissions(this.role, {this.userId});
 
   // --- Role Groups ---
-  
+
   bool get isSuperAdmin => role == UserRole.superAdmin;
   bool get isOwner => role == UserRole.owner;
   bool get isManager => role == UserRole.manager;
@@ -27,8 +27,11 @@ class UserPermissions {
   /// Evaluates dynamic permission via PermissionsCubit if registered
   bool can(String key) {
     if (!GetIt.I.isRegistered<PermissionsCubit>()) return false;
-    return GetIt.I<PermissionsCubit>().hasPermission(key,
-      userRole: role.name, userId: userId);
+    return GetIt.I<PermissionsCubit>().hasPermission(
+      key,
+      userRole: role.name,
+      userId: userId,
+    );
   }
 
   // --- Feature Permissions ---
@@ -49,7 +52,11 @@ class UserPermissions {
   bool get canViewReviews => can('reviews_view');
 
   /// Who can manage the lounge's setup (Rooms, Extras, etc.)?
-  bool get canEditSetup => can('rooms_view') || can('menu_view') || can('rooms_manage') || can('menu_manage_items');
+  bool get canEditSetup =>
+      can('rooms_view') ||
+      can('menu_view') ||
+      can('rooms_manage') ||
+      can('menu_manage_items');
 
   /// Who can create and manage marketing campaigns/promotions?
   bool get canManageMarketing => can('marketing_manage');
@@ -72,9 +79,9 @@ class UserPermissions {
 
   /// Who is forced to open/close shifts to operate the system?
   bool get needsShift => isCashier;
-  
+
   // --- UI Helpers ---
-  
+
   /// Should the shift banner be visible for this user?
   bool get shouldShowShiftBanner => !isSuperAdmin;
 }

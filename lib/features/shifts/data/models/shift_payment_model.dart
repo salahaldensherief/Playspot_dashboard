@@ -22,10 +22,13 @@ class ShiftPaymentModel extends ShiftPaymentEntity {
       id: (json['id'] ?? '').toString(),
       shiftId: (json['shift_id'] ?? '').toString(),
       amount: parseDouble(json['amount'] ?? json['total_amount']),
-      paymentMethod: (json['payment_method'] ?? json['method'] ?? 'cash').toString(),
+      paymentMethod: (json['payment_method'] ?? json['method'] ?? 'cash')
+          .toString(),
       category: (json['category'] ?? json['type'] ?? 'play_time').toString(),
       bookingId: json['booking_id']?.toString(),
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
     );
   }
 

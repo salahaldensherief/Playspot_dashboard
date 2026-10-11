@@ -51,7 +51,11 @@ class StaffDetailsDialog extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AppText.subHeading(staff.name, fontSize: 16.sp, maxLines: 1),
+                    AppText.subHeading(
+                      staff.name,
+                      fontSize: 16.sp,
+                      maxLines: 1,
+                    ),
                     SizedBox(height: 4.h),
                     _buildRoleBadge(staff.role),
                   ],
@@ -68,11 +72,7 @@ class StaffDetailsDialog extends StatelessWidget {
             AppStrings.contactLabel,
           ),
           SizedBox(height: 12.h),
-          _buildInfoRow(
-            Icons.email_outlined,
-            AppStrings.email,
-            staff.email,
-          ),
+          _buildInfoRow(Icons.email_outlined, AppStrings.email, staff.email),
           _buildInfoRow(
             Icons.phone_android_outlined,
             AppStrings.staffPhone,
@@ -118,10 +118,7 @@ class StaffDetailsDialog extends StatelessWidget {
           const Divider(color: AppColors.borderDefault),
           SizedBox(height: 8.h),
 
-          _buildSectionTitle(
-            Icons.history_outlined,
-            AppStrings.shiftHistory,
-          ),
+          _buildSectionTitle(Icons.history_outlined, AppStrings.shiftHistory),
           SizedBox(height: 8.h),
           AppText.body(
             '${AppStrings.memberSince} ${DateFormat('MMM yyyy').format(staff.createdAt)}',

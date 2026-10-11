@@ -28,31 +28,37 @@ void main() {
     createdAt: DateTime(2026, 3, 30),
   );
 
-  test('should return list of PricingRuleEntity when repository call is successful', () async {
-    when(() => mockRepository.getPricingRules(loungeId: tParams.loungeId))
-        .thenAnswer((_) async => Right([tRule]));
+  test(
+    'should return list of PricingRuleEntity when repository call is successful',
+    () async {
+      when(
+        () => mockRepository.getPricingRules(loungeId: tParams.loungeId),
+      ).thenAnswer((_) async => Right([tRule]));
 
-    final result = await usecase(tParams);
+      final result = await usecase(tParams);
 
-    expect(result.isRight(), true);
-    result.fold(
-      (failure) => fail('Should have succeeded'),
-      (rules) {
+      expect(result.isRight(), true);
+      result.fold((failure) => fail('Should have succeeded'), (rules) {
         expect(rules.length, 1);
         expect(rules.first.id, 'rule-1');
-      },
-    );
-    verify(() => mockRepository.getPricingRules(loungeId: tParams.loungeId)).called(1);
-  });
+      });
+      verify(
+        () => mockRepository.getPricingRules(loungeId: tParams.loungeId),
+      ).called(1);
+    },
+  );
 
   test('should return ServerFailure when repository call fails', () async {
     const tFailure = ServerFailure('Database query error');
-    when(() => mockRepository.getPricingRules(loungeId: tParams.loungeId))
-        .thenAnswer((_) async => const Left(tFailure));
+    when(
+      () => mockRepository.getPricingRules(loungeId: tParams.loungeId),
+    ).thenAnswer((_) async => const Left(tFailure));
 
     final result = await usecase(tParams);
 
     expect(result, const Left(tFailure));
-    verify(() => mockRepository.getPricingRules(loungeId: tParams.loungeId)).called(1);
+    verify(
+      () => mockRepository.getPricingRules(loungeId: tParams.loungeId),
+    ).called(1);
   });
 }

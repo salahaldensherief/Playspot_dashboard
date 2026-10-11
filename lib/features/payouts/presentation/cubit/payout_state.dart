@@ -56,32 +56,36 @@ class PayoutState extends Equatable {
       pendingOverviews: pendingOverviews ?? this.pendingOverviews,
       allPayouts: allPayouts ?? this.allPayouts,
       loungePayouts: loungePayouts ?? this.loungePayouts,
-      selectedPayoutDetails: selectedPayoutDetails ?? this.selectedPayoutDetails,
+      selectedPayoutDetails:
+          selectedPayoutDetails ?? this.selectedPayoutDetails,
       errorMessage: errorMessage,
       successMessage: successMessage,
       allPayoutsNextPage: allPayoutsNextPage ?? this.allPayoutsNextPage,
       allPayoutsHasMore: allPayoutsHasMore ?? this.allPayoutsHasMore,
-      allPayoutsLoadingMore: allPayoutsLoadingMore ?? this.allPayoutsLoadingMore,
-      loungePayoutsNextPage: loungePayoutsNextPage ?? this.loungePayoutsNextPage,
+      allPayoutsLoadingMore:
+          allPayoutsLoadingMore ?? this.allPayoutsLoadingMore,
+      loungePayoutsNextPage:
+          loungePayoutsNextPage ?? this.loungePayoutsNextPage,
       loungePayoutsHasMore: loungePayoutsHasMore ?? this.loungePayoutsHasMore,
-      loungePayoutsLoadingMore: loungePayoutsLoadingMore ?? this.loungePayoutsLoadingMore,
+      loungePayoutsLoadingMore:
+          loungePayoutsLoadingMore ?? this.loungePayoutsLoadingMore,
     );
   }
 
   @override
   List<Object?> get props => [
-        status,
-        pendingOverviews,
-        allPayouts,
-        loungePayouts,
-        selectedPayoutDetails,
-        errorMessage,
-        successMessage,
-        allPayoutsNextPage,
-        allPayoutsHasMore,
-        allPayoutsLoadingMore,
-        loungePayoutsNextPage,
-        loungePayoutsHasMore,
-        loungePayoutsLoadingMore,
-      ];
+    status,
+    pendingOverviews,
+    allPayouts,
+    loungePayouts,
+    selectedPayoutDetails,
+    errorMessage,
+    successMessage,
+    allPayoutsNextPage,
+    allPayoutsHasMore,
+    allPayoutsLoadingMore,
+    loungePayoutsNextPage,
+    loungePayoutsHasMore,
+    loungePayoutsLoadingMore,
+  ];
 }

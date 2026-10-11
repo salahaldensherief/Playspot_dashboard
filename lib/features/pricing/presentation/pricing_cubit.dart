@@ -34,12 +34,8 @@ class PricingCubit extends Cubit<PricingState> {
           errorMessage: failure.message,
         ),
       ),
-      (rules) => emit(
-        state.copyWith(
-          status: PricingStatus.success,
-          rules: rules,
-        ),
-      ),
+      (rules) =>
+          emit(state.copyWith(status: PricingStatus.success, rules: rules)),
     );
   }
 
@@ -63,28 +59,15 @@ class PricingCubit extends Cubit<PricingState> {
       CheckPricingRuleConflictsParams(rule: rule),
     );
 
-    final conflicts = conflictResult.fold<List<PricingRuleEntity>>(
-      (failure) {
-        emit(
-          state.copyWith(
-            isSaving: false,
-            errorMessage: failure.message,
-          ),
-        );
-        return const [];
-      },
-      (value) => value,
-    );
+    final conflicts = conflictResult.fold<List<PricingRuleEntity>>((failure) {
+      emit(state.copyWith(isSaving: false, errorMessage: failure.message));
+      return const [];
+    }, (value) => value);
 
     if (state.errorMessage != null) return false;
 
     if (conflicts.isNotEmpty) {
-      emit(
-        state.copyWith(
-          isSaving: false,
-          conflictingRules: conflicts,
-        ),
-      );
+      emit(state.copyWith(isSaving: false, conflictingRules: conflicts));
       return false;
     }
 

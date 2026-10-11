@@ -55,15 +55,19 @@ class UpsellRuleModel extends UpsellRuleEntity {
     return UpsellRuleModel(
       id: (json['id'] ?? '').toString(),
       loungeId: (json['lounge_id'] ?? '').toString(),
-      triggerType: (json['trigger_type'] ?? 'session_minutes_elapsed').toString(),
+      triggerType: (json['trigger_type'] ?? 'session_minutes_elapsed')
+          .toString(),
       triggerParams: params,
       suggestExtraId: json['suggest_extra_id']?.toString(),
       suggestComboId: json['suggest_combo_id']?.toString(),
       discountPercent: (json['discount_percent'] as num?)?.toDouble(),
-      maxImpressionsPerBooking: (json['max_impressions_per_booking'] as num?)?.toInt() ?? 2,
+      maxImpressionsPerBooking:
+          (json['max_impressions_per_booking'] as num?)?.toInt() ?? 2,
       priority: (json['priority'] as num?)?.toInt() ?? 100,
       isActive: json['is_active'] as bool? ?? true,
-      createdAt: rawCreatedAt != null ? DateTime.tryParse(rawCreatedAt.toString()) : null,
+      createdAt: rawCreatedAt != null
+          ? DateTime.tryParse(rawCreatedAt.toString())
+          : null,
       suggestedNameAr: nameAr,
       suggestedNameEn: nameEn,
       suggestedPrice: price,
