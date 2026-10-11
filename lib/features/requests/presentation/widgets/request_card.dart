@@ -322,7 +322,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
       children: [
         SizedBox(height: 10.h),
         AppText.body(
-          'attached_payment_receipt_label'.tr(),
+          AppStrings.attachedPaymentReceiptLabel,
           fontSize: 11.sp,
           color: AppColors.neonBlue,
           fontWeight: FontWeight.bold,
@@ -346,7 +346,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           AppText.heading(
-                            'payment_transfer_receipt'.tr(),
+                            AppStrings.paymentTransferReceipt,
                             fontSize: 16.sp,
                             color: Colors.white,
                           ),
@@ -418,7 +418,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                           ),
                           SizedBox(width: 4.w),
                           AppText.body(
-                            'zoom_payment_receipt'.tr(),
+                            AppStrings.zoomPaymentReceipt,
                             fontSize: 10.sp,
                             color: Colors.white,
                           ),

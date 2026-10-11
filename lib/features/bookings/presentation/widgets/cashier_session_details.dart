@@ -3,6 +3,8 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../../../art_core/theme/operations_tokens.dart';
 import '../../../../art_core/widgets/operations_section.dart';
 import '../../../requests/domain/entities/client_request_entity.dart';
+import '../../domain/entities/booking.dart';
+import 'booking_card_actions.dart';
 import 'session_operations_summary.dart';
 import 'session_financial_summary.dart';
 import 'cashier_session_header.dart';
@@ -22,6 +24,7 @@ class CashierSessionDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
+    final booking = summary.booking;
     return Container(
       decoration: OperationsTokens.panel,
       padding: const EdgeInsets.all(OperationsTokens.padding),
@@ -29,24 +32,34 @@ class CashierSessionDetails extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           CashierSessionHeader(
-            roomName: summary.booking.roomName,
+            roomName: booking.roomName,
             onManage: onManage,
           ),
           const Divider(),
           OperationsSection(
             title: 'cashier.sessionSection'.tr(),
-            child: SessionCustomerFacts(booking: summary.booking),
+            child: SessionCustomerFacts(booking: booking),
           ),
           const Divider(),
           OperationsSection(
             title: 'cashier.paymentSection'.tr(),
-            child: SessionFinancialSummary(booking: summary.booking),
+            child: SessionFinancialSummary(booking: booking),
           ),
           const Divider(),
           OperationsSection(
             title: 'cashier.activitySection'.tr(),
             child: SessionActivityFacts(summary: summary, requests: requests),
           ),
+          if (booking.status != BookingStatus.inProgress) ...[
+            const Divider(),
+            BookingCardActions(
+              booking: booking,
+              isPaid: booking.paymentStatus == PaymentStatus.paid,
+              isPending: booking.status == BookingStatus.pending,
+              isCanStartSession: booking.status == BookingStatus.upcoming,
+              onOpenDetails: () {},
+            ),
+          ],
         ],
       ),
     );
