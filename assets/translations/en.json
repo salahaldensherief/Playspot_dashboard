@@ -1998,5 +1998,7 @@
   "bonus_points": "Bonus Points",
   "new_reward": "New Reward",
   "profile_access_load_failed": "We could not verify your account. Your session is saved. Retry to continue.",
-  "shift_financials_withheld": "Reconciliation data withheld by permissions"
+  "shift_financials_withheld": "Reconciliation data withheld by permissions",
+"staff_creation_unconfirmed": "Staff creation is not confirmed. Retry with the same details.",
+"staff_creation_retry_original_details": "Retry using the original staff details to recover the account without creating another one."
 }

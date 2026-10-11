@@ -1998,5 +1998,7 @@
   "bonus_points": "نقاط مكافأة",
   "new_reward": "جائزة جديدة",
   "profile_access_load_failed": "تعذر التحقق من حسابك. جلسة الدخول محفوظة. أعد المحاولة للمتابعة.",
-  "shift_financials_withheld": "بيانات التسوية محجوبة حسب الصلاحيات"
+  "shift_financials_withheld": "بيانات التسوية محجوبة حسب الصلاحيات",
+"staff_creation_unconfirmed": "إنشاء الموظف لم يتأكد. أعد المحاولة بنفس البيانات.",
+"staff_creation_retry_original_details": "أعد المحاولة ببيانات الموظف الأصلية لاسترجاع العملية بدون إنشاء حساب آخر."
 }
