@@ -152,15 +152,22 @@ class BookingRepositoryImpl implements BookingRepository {
         date: booking.date,
         startTime: booking.startTime,
         endTime: booking.endTime,
+        durationMinutes: booking.durationMinutes,
         status: booking.status,
         paymentStatus: booking.paymentStatus,
         totalPrice: booking.totalPrice,
+        addonsPrice: booking.addonsPrice,
         voucherDiscount: booking.voucherDiscount,
         voucherCode: booking.voucherCode,
+        discountAmount: booking.discountAmount,
+        discountPercentage: booking.discountPercentage,
+        discountReason: booking.discountReason,
         extras: booking.extras,
         lat: booking.lat,
         lng: booking.lng,
         shiftId: booking.shiftId,
+        playMode: booking.playMode,
+        roomPrice: booking.roomPrice,
         paymentMethod: booking.paymentMethod,
         senderWalletPhone: booking.senderWalletPhone,
       );
@@ -267,6 +274,20 @@ class BookingRepositoryImpl implements BookingRepository {
       return Left(ServerFailure(_mapBookingErrorMessage(e.message)));
     } catch (e) {
       return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> extendBookingSession(String bookingId, int additionalMinutes) async {
+    try {
+      await remoteDataSource.extendBookingSession(bookingId, additionalMinutes);
+      return const Right(null);
+    } on PostgrestException catch (e) {
+      return Left(ServerFailure(e.message.contains('BOOKING_EXTENSION_CONFLICT')
+          ? 'booking_extension_conflict'
+          : 'booking_extension_failed'));
+    } catch (_) {
+      return const Left(ServerFailure('booking_extension_failed'));
     }
   }
 

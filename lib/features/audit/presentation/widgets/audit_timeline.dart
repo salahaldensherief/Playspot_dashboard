@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
+import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_section_header.dart';
 import '../../../../core/di/di.dart';
 import '../../../auth/presentation/login/login_cubit.dart';
@@ -131,21 +132,16 @@ class _AuditTimelineState extends State<AuditTimeline> {
               child: Column(
                 children: [
                   Text(
-                    _error!.tr(),
+                    (_error ?? '').tr(),
                     style: TextStyle(color: AppColors.danger, fontSize: 12.sp),
                   ),
                   SizedBox(height: 6.h),
-                  TextButton.icon(
+                  AppButton(
+                    text: AppStrings.retry,
+                    icon: Icons.refresh,
+                    variant: AppButtonVariant.text,
+                    foregroundColor: AppColors.neonBlue,
                     onPressed: _fetchTimeline,
-                    icon: Icon(
-                      Icons.refresh,
-                      size: 16.r,
-                      color: AppColors.neonBlue,
-                    ),
-                    label: Text(
-                      AppStrings.retry,
-                      style: const TextStyle(color: AppColors.neonBlue),
-                    ),
                   ),
                 ],
               ),

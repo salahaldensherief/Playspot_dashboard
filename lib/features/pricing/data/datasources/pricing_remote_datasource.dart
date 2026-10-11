@@ -37,20 +37,22 @@ class PricingRemoteDataSourceImpl implements PricingRemoteDataSource {
   PricingRemoteDataSourceImpl(this.supabase);
 
   @override
-  Future<List<PricingRuleModel>> getPricingRules({required String loungeId}) async {
-    try {
-      final response = await supabase
-          .from('pricing_rules')
-          .select('*')
-          .eq('lounge_id', loungeId)
-          .order('created_at', ascending: false);
+  Future<List<PricingRuleModel>> getPricingRules({
+    required String loungeId,
+  }) async {
+    final response = await supabase
+        .from('pricing_rules')
+        .select('*')
+        .eq('lounge_id', loungeId)
+        .order('created_at', ascending: false);
 
-      return (response as List)
-          .map((e) => PricingRuleModel.fromJson(Map<String, dynamic>.from(e as Map)))
-          .toList();
-    } catch (_) {
-      return [];
-    }
+    return (response as List)
+        .map(
+          (e) => PricingRuleModel.fromJson(
+            Map<String, dynamic>.from(e as Map),
+          ),
+        )
+        .toList();
   }
 
   @override
@@ -78,43 +80,26 @@ class PricingRemoteDataSourceImpl implements PricingRemoteDataSource {
 
   @override
   Future<List<PricingRuleModel>> checkRuleConflicts(PricingRuleModel rule) async {
-    try {
-      final response = await supabase.rpc(
-        'check_pricing_rule_conflicts',
-        params: {
-          'p_lounge_id': rule.loungeId,
-          if (rule.spaceTypeId != null) 'p_space_type_id': rule.spaceTypeId,
-          if (rule.roomId != null) 'p_room_id': rule.roomId,
-          'p_start_time': rule.startTime,
-          'p_end_time': rule.endTime,
-          'p_days': rule.daysOfWeek,
-          if (rule.id.isNotEmpty) 'p_exclude_rule_id': rule.id,
-        },
-      );
-      if (response is List) {
-        return response
-            .map((e) => PricingRuleModel.fromJson(Map<String, dynamic>.from(e as Map)))
-            .toList();
-      }
-    } catch (_) {
-      // Fallback local conflict check against table if RPC not present
-      final allRules = await getPricingRules(loungeId: rule.loungeId);
-      final conflicts = allRules.where((existing) {
-        if (rule.id.isNotEmpty && existing.id == rule.id) return false;
-        if (!existing.isActive) return false;
-
-        final daysOverlap =
-            existing.daysOfWeek.any((day) => rule.daysOfWeek.contains(day));
-        if (!daysOverlap) return false;
-
-        final timeOverlap = (rule.startTime.compareTo(existing.endTime) < 0) &&
-            (rule.endTime.compareTo(existing.startTime) > 0);
-        return timeOverlap;
-      }).toList();
-
-      return conflicts;
+    final response = await supabase.rpc(
+      'check_pricing_rule_conflicts_v2',
+      params: {
+        'p_lounge_id': rule.loungeId,
+        if (rule.spaceTypeId != null) 'p_space_type_id': rule.spaceTypeId,
+        if (rule.roomId != null) 'p_room_id': rule.roomId,
+        'p_start_time': rule.startTime,
+        'p_end_time': rule.endTime,
+        'p_days': rule.daysOfWeek,
+        if (rule.id.isNotEmpty) 'p_exclude_rule_id': rule.id,
+        'p_start_date': rule.startDate?.toIso8601String().split('T').first,
+        'p_end_date': rule.endDate?.toIso8601String().split('T').first,
+      },
+    );
+    if (response is! List) {
+      throw const FormatException('Invalid pricing conflict response');
     }
-    return [];
+    return response
+        .map((e) => PricingRuleModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
   }
 
   @override
@@ -127,34 +112,23 @@ class PricingRemoteDataSourceImpl implements PricingRemoteDataSource {
     int extraControllers = 0,
     String? couponCode,
   }) async {
-    try {
-      final response = await supabase.rpc(
-        'quote_booking_price',
-        params: {
-          'p_room_id': roomId,
-          'p_date': date,
-          'p_start': startTime,
-          'p_end': endTime,
-          'p_play_mode': playMode,
-          'p_extra_controllers': extraControllers,
-          'p_coupon_code':
-              (couponCode != null && couponCode.isNotEmpty) ? couponCode : null,
-        },
-      );
-      if (response is Map) {
-        return PricingQuoteModel.fromJson(Map<String, dynamic>.from(response));
-      }
-    } catch (_) {
-      // Safe fallback quote
-    }
-
-    return const PricingQuoteModel(
-      segments: [],
-      roomSubtotal: 0.0,
-      extraControllersAmount: 0.0,
-      discountAmount: 0.0,
-      total: 0.0,
+    final response = await supabase.rpc(
+      'quote_booking_price',
+      params: {
+        'p_room_id': roomId,
+        'p_date': date,
+        'p_start': startTime,
+        'p_end': endTime,
+        'p_play_mode': playMode,
+        'p_extra_controllers': extraControllers,
+        'p_coupon_code':
+            (couponCode != null && couponCode.isNotEmpty) ? couponCode : null,
+      },
     );
+    if (response is! Map) {
+      throw const FormatException('Invalid pricing quote response');
+    }
+    return PricingQuoteModel.fromJson(Map<String, dynamic>.from(response));
   }
 
   @override
@@ -170,26 +144,32 @@ class PricingRemoteDataSourceImpl implements PricingRemoteDataSource {
           'p_date': date,
         },
       );
-      if (response is List) {
-        return response.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      if (response is! List) {
+        throw const FormatException('Invalid priced slots response');
       }
-    } catch (_) {}
-    return [];
+      final rows =
+          response.length == 1 && response.first is List
+          ? response.first as List
+          : response;
+      return rows
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+    } catch (_) {
+      rethrow;
+    }
   }
 
   @override
   Future<Map<String, dynamic>> getLoungePriceRange({
     required String loungeId,
   }) async {
-    try {
-      final response = await supabase.rpc(
-        'get_lounge_price_range',
-        params: {'p_lounge_id': loungeId},
-      );
-      if (response is Map) {
-        return Map<String, dynamic>.from(response);
-      }
-    } catch (_) {}
-    return {'min_hourly_rate': 0, 'max_hourly_rate': 0, 'currency': 'EGP'};
+    final response = await supabase.rpc(
+      'get_lounge_price_range',
+      params: {'p_lounge_id': loungeId},
+    );
+    if (response is! Map) {
+      throw const FormatException('Invalid lounge price range response');
+    }
+    return Map<String, dynamic>.from(response);
   }
 }

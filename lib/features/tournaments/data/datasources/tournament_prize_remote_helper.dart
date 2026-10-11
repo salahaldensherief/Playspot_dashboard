@@ -1,51 +1,44 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import '../models/tournament_prize_model.dart';
+import '../models/tournament_prize_reward_model.dart';
 
 class TournamentPrizeRemoteHelper {
   final SupabaseClient client;
 
   const TournamentPrizeRemoteHelper(this.client);
 
-  Future<void> saveTournamentPrizes(String tournamentId, List<TournamentPrizeModel> prizes) async {
-    try {
-      await client.from('tournament_prizes').delete().eq('tournament_id', tournamentId);
-      for (final prizeModel in prizes) {
-        final prizeData = {
-          'tournament_id': tournamentId,
-          'placement': prizeModel.placement,
-        };
-        final insertedPrize = await client
-            .from('tournament_prizes')
-            .insert(prizeData)
-            .select('id')
-            .single();
+  Future<void> saveTournamentPrizes(
+    String tournamentId,
+    List<TournamentPrizeModel> prizes,
+  ) async {
+    final payload = prizes.map((prize) {
+      return {
+        'placement': prize.placement,
+        'rewards': prize.rewards.map((reward) {
+          final model = TournamentPrizeRewardModel.fromEntity(reward);
+          final json = model.toJson();
+          return {
+            'reward_type': json['reward_type'],
+            if (json['title_ar'] != null) 'title_ar': json['title_ar'],
+            if (json['title_en'] != null) 'title_en': json['title_en'],
+            if (json['description_ar'] != null)
+              'description_ar': json['description_ar'],
+            if (json['description_en'] != null)
+              'description_en': json['description_en'],
+            if (json['amount'] != null) 'amount': json['amount'],
+            if (json['currency'] != null) 'currency': json['currency'],
+            if (json['metadata'] != null) 'metadata': json['metadata'],
+          };
+        }).toList(),
+      };
+    }).toList();
 
-        final prizeId = insertedPrize['id']?.toString();
-        if (prizeId != null && prizeModel.rewards.isNotEmpty) {
-          final rewardsData = prizeModel.rewards.map((rewardModel) {
-            return {
-              'prize_id': prizeId,
-              'type': rewardModel.type.toDbString(),
-              if (rewardModel.title != null && rewardModel.title!.isNotEmpty) 'title': rewardModel.title,
-              if (rewardModel.titleAr != null && rewardModel.titleAr!.isNotEmpty) 'title_ar': rewardModel.titleAr,
-              if (rewardModel.titleEn != null && rewardModel.titleEn!.isNotEmpty) 'title_en': rewardModel.titleEn,
-              if (rewardModel.description != null && rewardModel.description!.isNotEmpty) 'description': rewardModel.description,
-              if (rewardModel.descriptionAr != null && rewardModel.descriptionAr!.isNotEmpty) 'description_ar': rewardModel.descriptionAr,
-              if (rewardModel.descriptionEn != null && rewardModel.descriptionEn!.isNotEmpty) 'description_en': rewardModel.descriptionEn,
-              if (rewardModel.value != null) 'value': rewardModel.value,
-              if (rewardModel.currency != null && rewardModel.currency!.isNotEmpty) 'currency': rewardModel.currency,
-              if (rewardModel.metadata != null) 'metadata': rewardModel.metadata,
-              if (rewardModel.deliveryStatus != null) 'delivery_status': rewardModel.deliveryStatus,
-            };
-          }).toList();
-
-          await client.from('tournament_prize_rewards').insert(rewardsData);
-        }
-      }
-    } catch (e) {
-      AppLogger.warning('saveTournamentPrizes error', e);
-      rethrow;
-    }
+    await client.rpc(
+      'save_tournament_prizes',
+      params: {
+        'p_tournament_id': tournamentId,
+        'p_prizes': payload,
+      },
+    );
   }
 }

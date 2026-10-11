@@ -388,10 +388,19 @@ class ShiftCubit extends Cubit<ShiftState> {
 
     if (isClosed) return;
     result.fold(
-      (failure) => debugPrint(
-        '🔴 [ShiftCubit] Cashier performance failed: ${failure.message}',
+      (failure) => emit(
+        state.copyWith(
+          status: ShiftStatus.error,
+          errorMessage: failure.message,
+        ),
       ),
-      (list) => emit(state.copyWith(cashierPerformances: list)),
+      (list) => emit(
+        state.copyWith(
+          status: ShiftStatus.active,
+          clearErrorMessage: true,
+          cashierPerformances: list,
+        ),
+      ),
     );
   }
 
@@ -407,10 +416,19 @@ class ShiftCubit extends Cubit<ShiftState> {
 
     if (isClosed) return;
     result.fold(
-      (failure) => debugPrint(
-        '🔴 [ShiftCubit] Lounge comparison failed: ${failure.message}',
+      (failure) => emit(
+        state.copyWith(
+          status: ShiftStatus.error,
+          errorMessage: failure.message,
+        ),
       ),
-      (list) => emit(state.copyWith(loungeComparisons: list)),
+      (list) => emit(
+        state.copyWith(
+          status: ShiftStatus.active,
+          clearErrorMessage: true,
+          loungeComparisons: list,
+        ),
+      ),
     );
   }
 

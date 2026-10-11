@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_state.dart';
@@ -119,33 +120,23 @@ class StationControlRequestsSection extends StatelessWidget {
                         ),
                       ),
                       SizedBox(width: 8.w),
-                      ElevatedButton(
+                      AppButton(
+                        text: AppStrings.done,
+                        variant: AppButtonVariant.primary,
+                        backgroundColor: AppColors.success,
+                        foregroundColor: Colors.black,
+                        height: 32.h,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10.w,
+                          vertical: 4.h,
+                        ),
+                        fontSize: 11.sp,
                         onPressed: () {
                           context.read<ClientRequestsCubit>().markAsAttended(
                             req.id,
                             isCanteenOrder: req.isCanteenOrder,
                           );
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.success,
-                          foregroundColor: Colors.black,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10.w,
-                            vertical: 6.h,
-                          ),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6.r),
-                          ),
-                        ),
-                        child: Text(
-                          AppStrings.done,
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
                       ),
                     ],
                   ),

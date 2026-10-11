@@ -7,12 +7,10 @@ import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_dialog.dart';
 
 class PricingConfirmationModal extends StatelessWidget {
-  final int affectedRoomsCount;
   final VoidCallback onConfirm;
 
   const PricingConfirmationModal({
     super.key,
-    required this.affectedRoomsCount,
     required this.onConfirm,
   });
 
@@ -48,7 +46,7 @@ class PricingConfirmationModal extends StatelessWidget {
               SizedBox(width: 12.w),
               Expanded(
                 child: Text(
-                  AppStrings.affectedRoomsNotice(affectedRoomsCount),
+                  AppStrings.pricingFutureScopeNotice,
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14.sp,

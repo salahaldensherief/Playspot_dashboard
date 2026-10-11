@@ -211,32 +211,16 @@ class _ApproveExtensionDialog extends StatefulWidget {
 }
 
 class _ApproveExtensionDialogState extends State<_ApproveExtensionDialog> {
-  final _costController = TextEditingController(text: '0.0');
-
-  @override
-  void dispose() {
-    _costController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
     return AlertDialog(
       backgroundColor: AppColors.cardBackground,
       title: AppText.subHeading(AppStrings.approveRequest, fontSize: 16.sp),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AppText.body(AppStrings.pricePerHour, fontSize: 13.sp),
-          SizedBox(height: 10.h),
-          AppTextField(
-            controller: _costController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            labelText: AppStrings.amount,
-          ),
-        ],
+      content: AppText.body(
+        'extension_price_calculated_server'.tr(),
+        fontSize: 13.sp,
+        color: AppColors.textSecondary,
       ),
       actions: [
         AppButton(
@@ -249,11 +233,9 @@ class _ApproveExtensionDialogState extends State<_ApproveExtensionDialog> {
           variant: AppButtonVariant.primary,
           onPressed: () async {
             Navigator.of(context).pop();
-            final cost = double.tryParse(_costController.text) ?? 0.0;
             final success = await widget.dashboardCubit.reviewExtensionRequest(
               bookingId: widget.bookingId,
               isApproved: true,
-              additionalCost: cost,
             );
             if (success && widget.parentContext.mounted) {
               widget.requestsCubit.markAsAttended(widget.request.id);
@@ -332,7 +314,9 @@ class _RejectExtensionDialogState extends State<_RejectExtensionDialog> {
             final success = await widget.dashboardCubit.reviewExtensionRequest(
               bookingId: widget.bookingId,
               isApproved: false,
-              additionalCost: 0,
+              reason: _reasonController.text.trim().isEmpty
+                  ? null
+                  : _reasonController.text.trim(),
             );
             if (success && widget.parentContext.mounted) {
               widget.requestsCubit.markAsAttended(widget.request.id);

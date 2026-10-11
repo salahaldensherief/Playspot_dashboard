@@ -21,12 +21,15 @@ class AdminManagementState extends Equatable {
     List<UserEntity>? admins,
     UserEntity? lastCreatedAdmin,
     String? errorMessage,
+    bool clearErrorMessage = false,
   }) {
     return AdminManagementState(
       status: status ?? this.status,
       admins: admins ?? this.admins,
       lastCreatedAdmin: lastCreatedAdmin ?? this.lastCreatedAdmin,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: clearErrorMessage
+          ? null
+          : errorMessage ?? this.errorMessage,
     );
   }
 

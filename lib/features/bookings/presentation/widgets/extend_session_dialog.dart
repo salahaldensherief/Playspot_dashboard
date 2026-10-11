@@ -78,14 +78,18 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
         loungeId: widget.booking.loungeId,
         forceRefresh: true,
       );
-    } else {
-      await bookingCubit.extendBookingDuration(
-        widget.booking.id,
-        _selectedMinutes,
-      );
     }
 
     if (!mounted) return;
+
+    if (!success) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('booking_extension_failed'.tr()),
+          backgroundColor: AppColors.danger),
+      );
+      return;
+    }
 
     Navigator.of(context).pop();
 

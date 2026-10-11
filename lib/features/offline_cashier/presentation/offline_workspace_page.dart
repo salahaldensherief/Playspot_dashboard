@@ -140,7 +140,9 @@ class _OfflineWorkspacePageState extends State<OfflineWorkspacePage> {
                     ),
                     AppButton(
                       text: 'offline_workspace.resume'.tr(),
-                      onPressed: state.busy || !state.prepared
+                      onPressed:
+                          state.busy ||
+                              state.status != OfflineWorkspaceStatus.ready
                           ? null
                           : () => _confirm(
                               'offline_workspace.resume',

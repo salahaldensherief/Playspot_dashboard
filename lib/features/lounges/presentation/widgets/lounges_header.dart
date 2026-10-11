@@ -1,8 +1,6 @@
-import 'package:easy_localization/easy_localization.dart';
-import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
-import 'package:play_spot_dashboard/features/lounges/presentation/owner_provisioning_message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
@@ -15,17 +13,63 @@ class LoungesHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Static AppStrings getters need an inherited locale dependency so a
-    // language change refreshes the labels even without a Cubit emission.
-    context.locale;
-    return AppAdaptivePageHeader(
-      title: AppStrings.lounges,
-      subtitle: AppStrings.loungesHeaderSubtitle,
-      primaryAction: AppButton(
-        text: AppStrings.createLoungeAndOwner,
-        icon: Icons.add,
-        onPressed: () => _showAddLoungeDialog(context),
-      ),
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 900 || textScale > 1.3;
+
+        final title = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppStrings.lounges,
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 32.sp,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Orbitron',
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              AppStrings.loungesHeaderSubtitle,
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14.sp,
+              ),
+            ),
+          ],
+        );
+
+        final action = AppButton(
+          text: AppStrings.createLoungeAndOwner,
+          icon: Icons.add,
+          onPressed: () => _showAddLoungeDialog(context),
+        );
+
+        if (compact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              title,
+              SizedBox(height: 16.h),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: action,
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: title),
+            SizedBox(width: 20.w),
+            Flexible(child: action),
+          ],
+        );
+      },
     );
   }
 
@@ -45,7 +89,7 @@ class LoungesHeader extends StatelessWidget {
           if (state.status == LoungeStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(ownerProvisioningMessage(state.errorMessage)),
+                content: Text(state.errorMessage ?? 'Error'),
                 backgroundColor: AppColors.danger,
               ),
             );
@@ -64,7 +108,7 @@ class LoungesHeader extends StatelessWidget {
                   String? ownerPhone,
                   String? ownerPassword,
                 }) async {
-                  return cubit.createLoungeWithOwner(
+                  return await cubit.createLoungeWithOwner(
                     loungeName: loungeName,
                     address: address,
                     phone: phone,

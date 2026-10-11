@@ -49,7 +49,12 @@ void main() {
             };
           }
           return http.Response(
-            jsonEncode(body),
+            jsonEncode(
+              request.url.path.endsWith('/rpc/get_visible_shifts') &&
+                      status == 200
+                  ? [body]
+                  : body,
+            ),
             status,
             headers: {'content-type': 'application/json'},
             request: request,
@@ -89,7 +94,9 @@ void main() {
         expect(result.id, 'shift');
         expect(result.status, 'closed');
       }
-      final writes = calls.where((r) => r.method == 'POST').toList();
+      final writes = calls
+          .where((r) => r.url.path.endsWith('/rpc/blind_close_shift'))
+          .toList();
       if (['denied', 'missing-scope', 'missing-cashier'].contains(mode)) {
         expect(writes, isEmpty);
       } else {
@@ -101,9 +108,11 @@ void main() {
           'p_notes': null,
         });
       }
-      for (final read in calls.where((r) => r.method == 'GET')) {
-        expect(read.url.queryParameters['id'], 'eq.shift');
-        expect(read.url.queryParameters['lounge_id'], 'eq.venue');
+      for (final read in calls.where(
+        (r) => r.url.path.endsWith('/rpc/get_visible_shifts'),
+      )) {
+        expect(jsonDecode(read.body)['p_shift_id'], 'shift');
+        expect(jsonDecode(read.body)['p_lounge_id'], 'venue');
       }
     });
   }

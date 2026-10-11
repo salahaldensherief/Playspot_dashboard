@@ -14,6 +14,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+
 import '../../domain/entities/shift_entity.dart';
 import '../shift_management/shift_cubit.dart';
 import '../shift_management/shift_state.dart';
@@ -217,11 +218,17 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                   ),
                 ),
               ),
-              _moneyCell(shift.startingCash, AppColors.textPrimary),
-              _moneyCell(shift.cashRevenue ?? 0, AppColors.success),
-              _moneyCell(shift.digitalRevenue ?? 0, AppColors.warning),
-              _moneyCell(shift.expensesTotal ?? 0, AppColors.danger),
-              _moneyCell(shift.calculatedExpectedCash, AppColors.neonBlue),
+              _moneyCell(
+                shift.financialsVisible ? shift.startingCash : null,
+                AppColors.textPrimary,
+              ),
+              _moneyCell(shift.cashRevenue, AppColors.success),
+              _moneyCell(shift.digitalRevenue, AppColors.warning),
+              _moneyCell(shift.expensesTotal, AppColors.danger),
+              _moneyCell(
+                shift.financialsVisible ? shift.calculatedExpectedCash : null,
+                AppColors.neonBlue,
+              ),
               DataCell(
                 Text(
                   shift.actualCash != null
@@ -231,7 +238,7 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                 ),
               ),
               DataCell(
-                shift.status == 'closed'
+                shift.status == 'closed' && shift.financialsVisible
                     ? Text(
                         '${discrepancy.toStringAsFixed(0)} ${AppStrings.egp}',
                         style: TextStyle(
@@ -277,10 +284,12 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
     );
   }
 
-  DataCell _moneyCell(double amount, Color color) {
+  DataCell _moneyCell(double? amount, Color color) {
     return DataCell(
       Text(
-        '${amount.toStringAsFixed(0)} ${AppStrings.egp}',
+        amount == null
+            ? AppStrings.shiftFinancialsWithheld
+            : '${amount.toStringAsFixed(0)} ${AppStrings.egp}',
         style: TextStyle(color: color),
       ),
     );
@@ -319,15 +328,15 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
             style: const TextStyle(color: AppColors.textSecondary),
           ),
           Divider(height: 20.h, color: AppColors.borderDefault),
-          _shiftValue(AppStrings.cashRevenueTitle, shift.cashRevenue ?? 0),
+          _shiftValue(AppStrings.cashRevenueTitle, shift.cashRevenue),
+          _shiftValue(AppStrings.digitalRevenueTitle, shift.digitalRevenue),
+          _shiftValue(AppStrings.expensesAndDrops, shift.expensesTotal),
           _shiftValue(
-            AppStrings.digitalRevenueTitle,
-            shift.digitalRevenue ?? 0,
+            AppStrings.expectedCash,
+            shift.financialsVisible ? shift.calculatedExpectedCash : null,
           ),
-          _shiftValue(AppStrings.expensesAndDrops, shift.expensesTotal ?? 0),
-          _shiftValue(AppStrings.expectedCash, shift.calculatedExpectedCash),
           _shiftValue(AppStrings.actualCash, shift.actualCash),
-          if (shift.status == 'closed')
+          if (shift.status == 'closed' && shift.financialsVisible)
             _shiftValue(
               AppStrings.discrepancy,
               discrepancy,
@@ -410,7 +419,7 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
   }
 
   void _showApproveDialog(BuildContext context, ShiftEntity shift) {
-    final notesController = TextEditingController();
+    var notes = '';
     final user = context.read<LoginCubit>().state.user;
     final cubit = context.read<ShiftCubit>();
 
@@ -438,14 +447,16 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
               ),
               AppText.body(
                 AppStrings.cashDiscrepancyLabel(
-                  '${shift.calculatedDiscrepancy.toStringAsFixed(2)} ${AppStrings.egp}',
+                  shift.financialsVisible
+                      ? '${shift.calculatedDiscrepancy.toStringAsFixed(2)} ${AppStrings.egp}'
+                      : AppStrings.shiftFinancialsWithheld,
                 ),
               ),
               SizedBox(height: 16.h),
               AppTextField(
                 label: AppStrings.managerNotes,
                 hintText: AppStrings.managerNotesPrompt,
-                controller: notesController,
+                onChanged: (value) => notes = value,
                 maxLines: 3,
               ),
               SizedBox(height: 24.h),
@@ -464,9 +475,7 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                       cubit.approveShift(
                         shift.id,
                         user?.id ?? '',
-                        notesController.text.trim().isEmpty
-                            ? null
-                            : notesController.text.trim(),
+                        notes.trim().isEmpty ? null : notes.trim(),
                         loungeId: user?.isStaff == true ? user?.loungeId : null,
                       );
                       Navigator.pop(dialogContext);

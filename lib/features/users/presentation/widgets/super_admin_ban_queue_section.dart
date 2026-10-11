@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
+
 import '../cubit/moderation_cubit.dart';
 import '../cubit/moderation_state.dart';
 import 'moderation_reason_label.dart';
@@ -32,14 +33,14 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
     String title,
     Function(String notes) onSubmit,
   ) {
-    final controller = TextEditingController();
+    var notes = '';
     showDialog(
       context: context,
       builder: (_) => AppDialog(
         title: title,
         width: 440.w,
         child: AppTextField(
-          controller: controller,
+          onChanged: (value) => notes = value,
           maxLines: 3,
           hintText: AppStrings.adminNotesHint,
         ),
@@ -55,7 +56,7 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
             variant: AppButtonVariant.danger,
             onPressed: () {
               Navigator.pop(context);
-              onSubmit(controller.text.trim());
+              onSubmit(notes.trim());
             },
           ),
         ],

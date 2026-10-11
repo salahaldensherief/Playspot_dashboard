@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
 import 'package:play_spot_dashboard/art_core/widgets/section_container.dart';
@@ -69,32 +70,24 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
       final confirmed = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: AppColors.cardBackground,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.r),
-          ),
-          title: Row(
-            children: [
-              Icon(
-                Icons.campaign_outlined,
-                color: AppColors.warning,
-                size: 28.r,
-              ),
-              SizedBox(width: 10.w),
-              Expanded(
-                child: Text(
-                  'announcement_send_confirmation_title'.tr(),
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
+        builder: (ctx) => AppDialog(
+          title: 'announcement_send_confirmation_title'.tr(),
+          icon: Icons.campaign_outlined,
+          width: 500.w,
+          actions: [
+            AppButton(
+              text: 'cancel'.tr(),
+              variant: AppButtonVariant.outlined,
+              onPressed: () => Navigator.of(ctx).pop(false),
+            ),
+            SizedBox(width: 12.w),
+            AppButton(
+              text: 'confirm_announcement_send'.tr(),
+              variant: AppButtonVariant.gradient,
+              onPressed: () => Navigator.of(ctx).pop(true),
+            ),
+          ],
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -139,28 +132,6 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(
-                'cancel'.tr(),
-                style: TextStyle(color: AppColors.textMuted),
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.neonBlue,
-              ),
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text(
-                'confirm_announcement_send'.tr(),
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
         ),
       );
 

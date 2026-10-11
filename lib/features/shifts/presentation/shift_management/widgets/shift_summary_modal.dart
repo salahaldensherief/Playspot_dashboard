@@ -24,10 +24,7 @@ class ShiftSummaryModal extends StatelessWidget {
       icon: Icons.receipt_long_outlined,
       maxWidth: 440.w,
       actions: [
-        AppButton(
-          text: AppStrings.logoutAfterClose,
-          onPressed: onFinish,
-        ),
+        AppButton(text: AppStrings.logoutAfterClose, onPressed: onFinish),
       ],
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -38,32 +35,36 @@ class ShiftSummaryModal extends StatelessWidget {
             DateFormat('yyyy-MM-dd hh:mm a').format(shift.startTime),
           ),
           const Divider(color: AppColors.borderDefault),
-          _buildRow(
-            AppStrings.startingCash,
-            '${shift.startingCash.toStringAsFixed(2)} ${AppStrings.egp}',
-          ),
-          _buildRow(
-            AppStrings.cashRevenue,
-            '${shift.cashRevenue?.toStringAsFixed(2)} ${AppStrings.egp}',
-          ),
-          _buildRow(
-            AppStrings.digitalRevenue,
-            '${shift.digitalRevenue?.toStringAsFixed(2)} ${AppStrings.egp}',
-            isInfo: true,
-          ),
-          const Divider(color: AppColors.borderDefault),
-          _buildRow(
-            AppStrings.expectedCash,
-            '${shift.expectedCash?.toStringAsFixed(2)} ${AppStrings.egp}',
-            isBold: true,
-          ),
+          if (shift.financialsVisible) ...[
+            _buildRow(
+              AppStrings.startingCash,
+              '${shift.startingCash.toStringAsFixed(2)} ${AppStrings.egp}',
+            ),
+            _buildRow(
+              AppStrings.cashRevenue,
+              '${shift.cashRevenue?.toStringAsFixed(2)} ${AppStrings.egp}',
+            ),
+            _buildRow(
+              AppStrings.digitalRevenue,
+              '${shift.digitalRevenue?.toStringAsFixed(2)} ${AppStrings.egp}',
+              isInfo: true,
+            ),
+            const Divider(color: AppColors.borderDefault),
+            _buildRow(
+              AppStrings.expectedCash,
+              '${shift.expectedCash?.toStringAsFixed(2)} ${AppStrings.egp}',
+              isBold: true,
+            ),
+          ] else
+            Text(AppStrings.shiftFinancialsWithheld),
           _buildRow(
             AppStrings.actualCash,
             '${shift.actualCash?.toStringAsFixed(2)} ${AppStrings.egp}',
             isBold: true,
           ),
           const Divider(color: AppColors.borderDefault),
-          _buildDiscrepancyRow(shift.discrepancy ?? 0),
+          if (shift.financialsVisible && shift.discrepancy != null)
+            _buildDiscrepancyRow(shift.discrepancy!),
         ],
       ),
     );

@@ -49,6 +49,7 @@ abstract class BookingRepository {
   });
   Future<Either<Failure, void>> swapRoom(String bookingId, String newRoomId, String actionBy);
   Future<Either<Failure, void>> startBookingSession(String bookingId);
+  Future<Either<Failure, void>> extendBookingSession(String bookingId, int additionalMinutes);
   Future<Either<Failure, Map<String, dynamic>>> startOpenTimeSession({
     required String roomId,
     String? customerName,

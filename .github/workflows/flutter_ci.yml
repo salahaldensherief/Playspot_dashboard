@@ -35,7 +35,7 @@ jobs:
         if: github.event_name == 'pull_request'
         shell: bash
         run: |
-          sql_files=$(git diff --name-only "${{ github.event.pull_request.base.sha }}"...HEAD -- 'supabase/*.sql')
+          sql_files=$(git diff --name-only --diff-filter=ACMRT "${{ github.event.pull_request.base.sha }}"...HEAD -- 'supabase/*.sql')
           if [ -n "$sql_files" ]; then
             echo "Dashboard SQL files are legacy reference only."
             echo "Create production migrations in the playspot_V2 repository under supabase/migrations/."
@@ -66,8 +66,8 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Verify owner Auth provisioning boundary
-        run: node --test supabase/functions/create-lounge-owner/handler.test.mjs supabase/functions/update-user-location/handler.test.mjs
+      - name: Verify Edge authorization and partial failure contracts
+        run: node --test supabase/functions/*/*.test.mjs
 
       - name: Verify release build
         run: flutter build web --release

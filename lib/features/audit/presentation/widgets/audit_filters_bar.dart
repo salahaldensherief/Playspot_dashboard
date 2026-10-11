@@ -291,26 +291,17 @@ class _AuditFiltersBarState extends State<AuditFiltersBar> {
           ),
 
           // Period Date Range Picker
-          OutlinedButton.icon(
+          AppButton(
+            text: (widget.startDate != null && widget.endDate != null)
+                ? '${widget.startDate?.day}/${widget.startDate?.month} - ${widget.endDate?.day}/${widget.endDate?.month}'
+                : AppStrings.period,
+            icon: Icons.date_range_rounded,
+            variant: AppButtonVariant.outlined,
+            foregroundColor: AppColors.textPrimary,
+            backgroundColor: AppColors.mutedBackground,
+            height: 38.h,
+            fontSize: 12.sp,
             onPressed: () => _pickDateRange(context),
-            icon: Icon(
-              Icons.date_range_rounded,
-              size: 16.r,
-              color: AppColors.neonBlue,
-            ),
-            label: Text(
-              widget.startDate != null && widget.endDate != null
-                  ? '${widget.startDate!.day}/${widget.startDate!.month} - ${widget.endDate!.day}/${widget.endDate!.month}'
-                  : AppStrings.period,
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp),
-            ),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppColors.borderDefault),
-              backgroundColor: AppColors.mutedBackground,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6.r),
-              ),
-            ),
           ),
 
           // Reset Filters Button

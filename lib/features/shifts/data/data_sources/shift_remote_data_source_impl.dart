@@ -27,18 +27,19 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
     int limit = 50,
     int offset = 0,
   }) async {
-    var query = _supabase
-        .from('shifts')
-        .select('*, profiles:cashier_id(full_name)');
-
-    if (loungeId != null && loungeId.isNotEmpty) {
-      query = query.eq('lounge_id', loungeId);
-    }
-
-    final response = await query
-        .order('start_time', ascending: false)
-        .range(offset, offset + limit - 1);
-    return (response as List).map((json) => ShiftModel.fromJson(json)).toList();
+    final response = await _supabase.rpc(
+      'get_visible_shifts',
+      params: {
+        'p_lounge_id': loungeId?.isNotEmpty == true ? loungeId : null,
+        'p_limit': limit,
+        'p_offset': offset,
+      },
+    );
+    return (response as List)
+        .map(
+          (json) => ShiftModel.fromJson(Map<String, dynamic>.from(json as Map)),
+        )
+        .toList();
   }
 
   @override
@@ -86,24 +87,18 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
         return null;
       }
 
-      var query = _supabase
-          .from('shifts')
-          .select('*, profiles:cashier_id(full_name)')
-          .eq('status', 'open')
-          .isFilter('closed_at', null);
-
-      if (loungeId.isNotEmpty) {
-        query = query.eq('lounge_id', loungeId);
-      } else {
-        query = query.eq('cashier_id', userId);
-      }
-
-      final response = await query
-          .order('start_time', ascending: false)
-          .limit(1)
-          .maybeSingle();
-
-      if (response == null) return null;
+      final rows =
+          await _supabase.rpc(
+                'get_visible_shifts',
+                params: {
+                  'p_lounge_id': loungeId.isEmpty ? null : loungeId,
+                  'p_active_only': true,
+                  'p_limit': 1,
+                },
+              )
+              as List;
+      if (rows.isEmpty) return null;
+      final response = Map<String, dynamic>.from(rows.single as Map);
       var model = ShiftModel.fromJson(response);
 
       if ((model.cashierName == null ||
@@ -121,6 +116,7 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
             final name = profileRes['full_name'].toString().trim();
             if (name.isNotEmpty) {
               model = ShiftModel(
+                financialsVisible: model.financialsVisible,
                 id: model.id,
                 loungeId: model.loungeId,
                 cashierId: model.cashierId,
@@ -211,12 +207,20 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
     if (loungeId == null || loungeId.trim().isEmpty) {
       throw ArgumentError('Closing a shift requires lounge scope');
     }
-    final shift = await _supabase
-        .from('shifts')
-        .select('id,lounge_id,cashier_id,starting_cash,start_time')
-        .eq('id', shiftId)
-        .eq('lounge_id', loungeId)
-        .single();
+    final shiftRows =
+        await _supabase.rpc(
+              'get_visible_shifts',
+              params: {
+                'p_lounge_id': loungeId,
+                'p_shift_id': shiftId,
+                'p_limit': 1,
+              },
+            )
+            as List;
+    if (shiftRows.length != 1) {
+      throw const FormatException('Shift is unavailable');
+    }
+    final shift = Map<String, dynamic>.from(shiftRows.single as Map);
     final cashierId = shift['cashier_id'];
     if (cashierId is! String || cashierId.isEmpty) {
       throw const FormatException('Shift cashier identity is missing');
@@ -239,15 +243,20 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
           map['status'] != 'closed') {
         throw const FormatException('Unconfirmed shift closure');
       }
-      final refreshed = await _supabase
-          .from('shifts')
-          .select('*, profiles:cashier_id(full_name)')
-          .eq('id', shiftId)
-          .eq('lounge_id', loungeId)
-          .maybeSingle();
-
-      if (refreshed != null) {
-        return ShiftModel.fromJson(refreshed);
+      final refreshed =
+          await _supabase.rpc(
+                'get_visible_shifts',
+                params: {
+                  'p_lounge_id': loungeId,
+                  'p_shift_id': shiftId,
+                  'p_limit': 1,
+                },
+              )
+              as List;
+      if (refreshed.length == 1) {
+        return ShiftModel.fromJson(
+          Map<String, dynamic>.from(refreshed.single as Map),
+        );
       }
 
       return ShiftModel.fromJson({...shift, ...map});

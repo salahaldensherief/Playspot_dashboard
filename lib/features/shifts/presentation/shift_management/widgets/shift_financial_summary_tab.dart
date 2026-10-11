@@ -9,10 +9,7 @@ import '../../../domain/entities/shift_entity.dart';
 class ShiftFinancialSummaryTab extends StatelessWidget {
   final ShiftEntity shift;
 
-  const ShiftFinancialSummaryTab({
-    super.key,
-    required this.shift,
-  });
+  const ShiftFinancialSummaryTab({super.key, required this.shift});
 
   Widget _buildSummaryItem(String label, String value, Color color) {
     return Container(
@@ -28,7 +25,12 @@ class ShiftFinancialSummaryTab extends StatelessWidget {
         children: [
           AppText.body(label, color: AppColors.textSecondary, fontSize: 11.sp),
           SizedBox(height: 4.h),
-          AppText.body(value, color: color, fontWeight: FontWeight.bold, fontSize: 14.sp),
+          AppText.body(
+            value,
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 14.sp,
+          ),
         ],
       ),
     );
@@ -36,6 +38,9 @@ class ShiftFinancialSummaryTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!shift.financialsVisible) {
+      return Text(AppStrings.shiftFinancialsWithheld);
+    }
     EasyLocalization.of(context);
     final discrepancy = shift.calculatedDiscrepancy;
     final isHealthy = discrepancy >= 0;
@@ -52,23 +57,60 @@ class ShiftFinancialSummaryTab extends StatelessWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             children: [
-              _buildSummaryItem(AppStrings.startingCash, '${shift.startingCash.toStringAsFixed(2)} ${AppStrings.egp}', AppColors.textPrimary),
-              _buildSummaryItem(AppStrings.cashRevenueTitle, '${(shift.cashRevenue ?? 0).toStringAsFixed(2)} ${AppStrings.egp}', AppColors.success),
-              _buildSummaryItem(AppStrings.digitalRevenueTitle, '${(shift.digitalRevenue ?? 0).toStringAsFixed(2)} ${AppStrings.egp}', AppColors.warning),
-              _buildSummaryItem(AppStrings.totalSales, '${shift.totalRevenue.toStringAsFixed(2)} ${AppStrings.egp}', AppColors.neonBlue),
-              _buildSummaryItem(AppStrings.expensesAndDrops, '${(shift.expensesTotal ?? 0).toStringAsFixed(2)} ${AppStrings.egp}', AppColors.danger),
-              _buildSummaryItem(AppStrings.expectedCashDrawer, '${shift.calculatedExpectedCash.toStringAsFixed(2)} ${AppStrings.egp}', AppColors.neonBlue),
-              _buildSummaryItem(AppStrings.actualCashCounted, shift.actualCash != null ? '${shift.actualCash!.toStringAsFixed(2)} ${AppStrings.egp}' : AppStrings.notClosedYet, AppColors.textPrimary),
-              _buildSummaryItem(AppStrings.financialDiscrepancy, '${discrepancy.toStringAsFixed(2)} ${AppStrings.egp}', isHealthy ? AppColors.success : AppColors.danger),
+              _buildSummaryItem(
+                AppStrings.startingCash,
+                '${shift.startingCash.toStringAsFixed(2)} ${AppStrings.egp}',
+                AppColors.textPrimary,
+              ),
+              _buildSummaryItem(
+                AppStrings.cashRevenueTitle,
+                '${(shift.cashRevenue ?? 0).toStringAsFixed(2)} ${AppStrings.egp}',
+                AppColors.success,
+              ),
+              _buildSummaryItem(
+                AppStrings.digitalRevenueTitle,
+                '${(shift.digitalRevenue ?? 0).toStringAsFixed(2)} ${AppStrings.egp}',
+                AppColors.warning,
+              ),
+              _buildSummaryItem(
+                AppStrings.totalSales,
+                '${shift.totalRevenue.toStringAsFixed(2)} ${AppStrings.egp}',
+                AppColors.neonBlue,
+              ),
+              _buildSummaryItem(
+                AppStrings.expensesAndDrops,
+                '${(shift.expensesTotal ?? 0).toStringAsFixed(2)} ${AppStrings.egp}',
+                AppColors.danger,
+              ),
+              _buildSummaryItem(
+                AppStrings.expectedCashDrawer,
+                '${shift.calculatedExpectedCash.toStringAsFixed(2)} ${AppStrings.egp}',
+                AppColors.neonBlue,
+              ),
+              _buildSummaryItem(
+                AppStrings.actualCashCounted,
+                shift.actualCash != null
+                    ? '${shift.actualCash!.toStringAsFixed(2)} ${AppStrings.egp}'
+                    : AppStrings.notClosedYet,
+                AppColors.textPrimary,
+              ),
+              _buildSummaryItem(
+                AppStrings.financialDiscrepancy,
+                '${discrepancy.toStringAsFixed(2)} ${AppStrings.egp}',
+                isHealthy ? AppColors.success : AppColors.danger,
+              ),
             ],
           ),
           SizedBox(height: 20.h),
           Container(
             padding: EdgeInsets.all(16.r),
             decoration: BoxDecoration(
-              color: (isHealthy ? AppColors.success : AppColors.danger).withValues(alpha: 0.1),
+              color: (isHealthy ? AppColors.success : AppColors.danger)
+                  .withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: isHealthy ? AppColors.success : AppColors.danger),
+              border: Border.all(
+                color: isHealthy ? AppColors.success : AppColors.danger,
+              ),
             ),
             child: Row(
               children: [
@@ -83,13 +125,17 @@ class ShiftFinancialSummaryTab extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AppText.body(
-                        isHealthy ? AppStrings.healthyFinancialStatus : AppStrings.deficitWarningStatus,
+                        isHealthy
+                            ? AppStrings.healthyFinancialStatus
+                            : AppStrings.deficitWarningStatus,
                         fontWeight: FontWeight.bold,
                         color: isHealthy ? AppColors.success : AppColors.danger,
                       ),
                       SizedBox(height: 2.h),
                       AppText.body(
-                        AppStrings.discrepancyValue('${discrepancy.toStringAsFixed(2)} ${AppStrings.egp}'),
+                        AppStrings.discrepancyValue(
+                          '${discrepancy.toStringAsFixed(2)} ${AppStrings.egp}',
+                        ),
                         fontSize: 12.sp,
                         color: AppColors.textSecondary,
                       ),
@@ -101,7 +147,10 @@ class ShiftFinancialSummaryTab extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           if (shift.notes != null && shift.notes!.isNotEmpty) ...[
-            AppText.body(AppStrings.cashierNotesTitle, fontWeight: FontWeight.bold),
+            AppText.body(
+              AppStrings.cashierNotesTitle,
+              fontWeight: FontWeight.bold,
+            ),
             SizedBox(height: 4.h),
             Container(
               width: double.infinity,
@@ -115,7 +164,10 @@ class ShiftFinancialSummaryTab extends StatelessWidget {
             SizedBox(height: 12.h),
           ],
           if (shift.managerNotes != null && shift.managerNotes!.isNotEmpty) ...[
-            AppText.body(AppStrings.approvedManagerNotesTitle, fontWeight: FontWeight.bold),
+            AppText.body(
+              AppStrings.approvedManagerNotesTitle,
+              fontWeight: FontWeight.bold,
+            ),
             SizedBox(height: 4.h),
             Container(
               width: double.infinity,
@@ -124,7 +176,10 @@ class ShiftFinancialSummaryTab extends StatelessWidget {
                 color: AppColors.mutedBackground,
                 borderRadius: BorderRadius.circular(8.r),
               ),
-              child: AppText.body(shift.managerNotes!, color: AppColors.textSecondary),
+              child: AppText.body(
+                shift.managerNotes!,
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ],

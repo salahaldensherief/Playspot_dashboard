@@ -13,6 +13,7 @@ class MarketingCubit extends Cubit<MarketingState> {
   final CreatePromotionUseCase _createPromotionUseCase;
   final UpdatePromotionUseCase _updatePromotionUseCase;
   final DeletePromotionUseCase _deletePromotionUseCase;
+  final ResharePromotionUseCase _resharePromotionUseCase;
   final UploadPromoPosterUseCase _uploadPromoPosterUseCase;
   final GetNotificationsUseCase _getNotificationsUseCase;
   final GetNotificationsPageUseCase _getNotificationsPageUseCase;
@@ -23,6 +24,7 @@ class MarketingCubit extends Cubit<MarketingState> {
     required CreatePromotionUseCase createPromotionUseCase,
     required UpdatePromotionUseCase updatePromotionUseCase,
     required DeletePromotionUseCase deletePromotionUseCase,
+    required ResharePromotionUseCase resharePromotionUseCase,
     required UploadPromoPosterUseCase uploadPromoPosterUseCase,
     required GetNotificationsUseCase getNotificationsUseCase,
     required GetNotificationsPageUseCase getNotificationsPageUseCase,
@@ -31,6 +33,7 @@ class MarketingCubit extends Cubit<MarketingState> {
        _createPromotionUseCase = createPromotionUseCase,
        _updatePromotionUseCase = updatePromotionUseCase,
        _deletePromotionUseCase = deletePromotionUseCase,
+       _resharePromotionUseCase = resharePromotionUseCase,
        _uploadPromoPosterUseCase = uploadPromoPosterUseCase,
        _getNotificationsUseCase = getNotificationsUseCase,
        _getNotificationsPageUseCase = getNotificationsPageUseCase,
@@ -91,6 +94,32 @@ class MarketingCubit extends Cubit<MarketingState> {
     } finally {
       _deleting.remove(id);
     }
+  }
+
+  Future<void> resharePromotion(String id, {String? loungeId}) async {
+    if (id.trim().isEmpty) return;
+    emit(state.copyWith(status: MarketingStatus.loading));
+    final result = await _resharePromotionUseCase(id.trim());
+    if (isClosed) return;
+    await result.fold<Future<void>>(
+      (failure) async {
+        emit(
+          state.copyWith(
+            status: MarketingStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
+      },
+      (_) async {
+        emit(
+          state.copyWith(
+            status: MarketingStatus.actionSuccess,
+            actionMessageKey: 'promo_reshared_success',
+          ),
+        );
+        await loadPromotions(loungeId: loungeId);
+      },
+    );
   }
 
   Future<bool> createPromotion(PromoEntity promo) async {

@@ -21,5 +21,19 @@ class OnboardingRoomPayload {
     'controllers_count': room.controllersCount,
     'screen_size': room.screenSize,
     if (room.spaceTypeId?.isNotEmpty == true) 'space_type_id': room.spaceTypeId,
+    'activity_ids': room.activityIds,
+    'resource_type': room.resourceType,
+    'requires_screen': room.requiresScreen,
+    'requires_controllers': room.requiresControllers,
+    'pricing_model': room.pricingModel,
+    'open_time_enabled': room.openTimeEnabled,
+    'open_time_pricing_mode': room.openTimePricingMode,
+    'open_time_custom_hourly_rate': room.openTimeCustomHourlyRate,
+    'open_time_price_multiplier': room.openTimePriceMultiplier,
+    'open_time_minimum_minutes': room.openTimeMinimumMinutes,
+    'open_time_rounding_minutes': room.openTimeRoundingMinutes,
+    'open_time_max_minutes': room.openTimeMaxMinutes,
+    'open_time_buffer_before_booking_minutes':
+        room.openTimeBufferBeforeBookingMinutes,
   };
 }

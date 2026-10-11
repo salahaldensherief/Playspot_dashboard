@@ -49,7 +49,7 @@ class CanteenItemExtractor {
           itemMap['name_ar'] = nestedNameAr ?? resolvedNested;
           itemMap['name_en'] = nestedNameEn ?? resolvedNested;
         }
-        itemMap['price'] = extraObj['price'] ?? extraObj['unit_price'] ?? itemMap['price'] ?? itemMap['unit_price'];
+        itemMap['price'] = itemMap['unit_price'] ?? itemMap['price'] ?? extraObj['unit_price'] ?? extraObj['price'];
       }
 
       final String? nameAr = itemMap['name_ar']?.toString().trim();

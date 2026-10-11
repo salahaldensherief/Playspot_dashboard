@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.8";
 import { GoogleAuth } from "npm:google-auth-library@9.15.1";
+import { isAnnouncementCallerAuthorized } from './authorization.js';
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -17,30 +18,24 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const privateKey = FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n");
 
 async function isCallerAdmin(req: Request): Promise<boolean> {
-  const authHeader = req.headers.get("Authorization");
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    const token = authHeader.replace("Bearer ", "").trim();
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (!error && user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (profile && (profile.role === "super_admin" || profile.role === "admin" || profile.role === "owner")) {
-        return true;
-      }
-    }
-  }
-
-  const apikey = req.headers.get("apikey");
-  if (apikey) {
-    const { data: key } = await supabase.rpc("internal_get_edge_function_key");
-    if (key && apikey === key) return true;
-  }
-
-  return false;
+  return isAnnouncementCallerAuthorized(req, {
+    authenticate: async (authorization: string) => {
+      const { data, error } = await supabase.auth.getUser(authorization.replace(/^Bearer\s+/i, ''));
+      return error ? null : data.user;
+    },
+    authorize: async (authorization: string) => {
+      const caller = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!, {
+        auth: { persistSession: false, autoRefreshToken: false },
+        global: { headers: { Authorization: authorization } },
+      });
+      const { data, error } = await caller.rpc('is_super_admin');
+      return !error && data === true;
+    },
+    expectedKey: async () => {
+      const { data, error } = await supabase.rpc('internal_get_edge_function_key');
+      return error ? null : data;
+    },
+  });
 }
 
 Deno.serve(async (req: Request) => {

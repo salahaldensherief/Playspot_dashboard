@@ -24,6 +24,10 @@ class RoomEntity extends Equatable {
   final List<String> featuresEn;
   final int controllersCount;
   final String screenSize;
+  final String resourceType;
+  final bool requiresScreen;
+  final bool requiresControllers;
+  final String pricingModel;
   final RoomStatusEnum status;
   final bool hasOffer;
   final String? offerTitle;
@@ -72,6 +76,10 @@ class RoomEntity extends Equatable {
     required this.featuresEn,
     this.controllersCount = 2,
     this.screenSize = '43"',
+    this.resourceType = 'console',
+    this.requiresScreen = true,
+    this.requiresControllers = true,
+    this.pricingModel = 'single_multi_hour',
     this.status = RoomStatusEnum.available,
     this.hasOffer = false,
     this.offerTitle,
@@ -112,6 +120,10 @@ class RoomEntity extends Equatable {
     featuresEn,
     controllersCount,
     screenSize,
+    resourceType,
+    requiresScreen,
+    requiresControllers,
+    pricingModel,
     status,
     hasOffer,
     offerTitle,

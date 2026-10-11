@@ -410,58 +410,31 @@ class _BookingDetailsCustomerCardState
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              OutlinedButton.icon(
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(
-                                    color: AppColors.warning,
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 10.w,
-                                    vertical: 4.h,
-                                  ),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
+                              AppButton(
+                                text: AppStrings.issueWarningBtn,
+                                icon: Icons.warning_amber_rounded,
+                                variant: AppButtonVariant.outlined,
+                                foregroundColor: AppColors.warning,
+                                height: 32.h,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 10.w,
+                                  vertical: 4.h,
                                 ),
-                                icon: Icon(
-                                  Icons.warning_amber_rounded,
-                                  size: 14.r,
-                                  color: AppColors.warning,
-                                ),
-                                label: Text(
-                                  AppStrings.issueWarningBtn,
-                                  style: TextStyle(
-                                    fontSize: 11.sp,
-                                    color: AppColors.warning,
-                                  ),
-                                ),
+                                fontSize: 11.sp,
                                 onPressed: () =>
                                     _showWarningIssueDialog(context),
                               ),
                               SizedBox(width: 8.w),
-                              ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.danger,
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 10.w,
-                                    vertical: 4.h,
-                                  ),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
+                              AppButton(
+                                text: AppStrings.requestBanBtn,
+                                icon: Icons.gavel_rounded,
+                                variant: AppButtonVariant.danger,
+                                height: 32.h,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 10.w,
+                                  vertical: 4.h,
                                 ),
-                                icon: Icon(
-                                  Icons.gavel_rounded,
-                                  size: 14.r,
-                                  color: AppColors.textPrimary,
-                                ),
-                                label: Text(
-                                  AppStrings.requestBanBtn,
-                                  style: TextStyle(
-                                    fontSize: 11.sp,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
+                                fontSize: 11.sp,
                                 onPressed: () => _openBanReportDialog(context),
                               ),
                             ],

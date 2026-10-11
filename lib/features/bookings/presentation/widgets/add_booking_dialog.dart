@@ -18,7 +18,6 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_b
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_booking_room_selector.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_booking_schedule_picker.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_booking_summary_card.dart';
-import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_booking_voucher_section.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 
@@ -44,8 +43,8 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
   final _phoneController = TextEditingController();
   final _scrollController = ScrollController();
 
-  String? _appliedVoucherCode;
-  double _voucherDiscount = 0.0;
+  final String? _appliedVoucherCode = null;
+  final double _voucherDiscount = 0.0;
 
   RoomEntity? _selectedRoom;
   DateTime _selectedDate = DateTime.now();
@@ -73,13 +72,6 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
   void _onExtrasChanged(List<Map<String, dynamic>> extras) {
     setState(() {
       _selectedExtras = extras;
-    });
-  }
-
-  void _onVoucherChanged(({String? code, double discount}) voucher) {
-    setState(() {
-      _appliedVoucherCode = voucher.code;
-      _voucherDiscount = voucher.discount;
     });
   }
 
@@ -367,11 +359,6 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
                               isImmediate: _startSessionImmediately,
                               onChanged: (val) =>
                                   setState(() => _startSessionImmediately = val),
-                            ),
-                          if (!widget.quickMode) SizedBox(height: 20.h),
-                          if (!widget.quickMode)
-                            AddBookingVoucherSection(
-                              onVoucherChanged: _onVoucherChanged,
                             ),
                           if (!widget.quickMode) SizedBox(height: 20.h),
                           if (_selectedRoom != null)

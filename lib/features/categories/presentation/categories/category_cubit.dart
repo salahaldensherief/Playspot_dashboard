@@ -25,6 +25,8 @@ class CategoryCubit extends Cubit<CategoryState> {
 
   final GetActivityTypesUseCase _getActivityTypesUseCase;
   final AddActivityTypeUseCase _addActivityTypeUseCase;
+  final UpdateActivityTypeUseCase _updateActivityTypeUseCase;
+  final DeleteActivityTypeUseCase _deleteActivityTypeUseCase;
 
   CategoryCubit({
     required GetCategoriesUseCase getCategoriesUseCase,
@@ -37,6 +39,8 @@ class CategoryCubit extends Cubit<CategoryState> {
     required DeleteCityUseCase deleteCityUseCase,
     required GetActivityTypesUseCase getActivityTypesUseCase,
     required AddActivityTypeUseCase addActivityTypeUseCase,
+    required UpdateActivityTypeUseCase updateActivityTypeUseCase,
+    required DeleteActivityTypeUseCase deleteActivityTypeUseCase,
   })  : _getCategoriesUseCase = getCategoriesUseCase,
         _addCategoryUseCase = addCategoryUseCase,
         _updateCategoryUseCase = updateCategoryUseCase,
@@ -47,6 +51,8 @@ class CategoryCubit extends Cubit<CategoryState> {
         _deleteCityUseCase = deleteCityUseCase,
         _getActivityTypesUseCase = getActivityTypesUseCase,
         _addActivityTypeUseCase = addActivityTypeUseCase,
+        _updateActivityTypeUseCase = updateActivityTypeUseCase,
+        _deleteActivityTypeUseCase = deleteActivityTypeUseCase,
         super(CategoryState.init());
 
   Future<void> loadCategories({bool forceRefresh = false}) async {
@@ -106,6 +112,54 @@ class CategoryCubit extends Cubit<CategoryState> {
       (activity) {
         loadCategories();
         return activity;
+      },
+    );
+  }
+
+  Future<ActivityTypeEntity?> saveActivityType(
+    ActivityTypeEntity activityType,
+  ) async {
+    emit(state.copyWith(status: CategoryStatus.loading, errorMessage: null));
+    final result = activityType.id.isEmpty
+        ? await _addActivityTypeUseCase(activityType)
+        : await _updateActivityTypeUseCase(activityType);
+
+    if (isClosed) return null;
+
+    return result.fold(
+      (failure) {
+        emit(
+          state.copyWith(
+            status: CategoryStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
+        return null;
+      },
+      (saved) {
+        loadCategories(forceRefresh: true);
+        return saved;
+      },
+    );
+  }
+
+  Future<bool> deleteActivityType(String id) async {
+    emit(state.copyWith(status: CategoryStatus.loading, errorMessage: null));
+    final result = await _deleteActivityTypeUseCase(id);
+    if (isClosed) return false;
+    return result.fold(
+      (failure) {
+        emit(
+          state.copyWith(
+            status: CategoryStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
+        return false;
+      },
+      (_) {
+        loadCategories(forceRefresh: true);
+        return true;
       },
     );
   }

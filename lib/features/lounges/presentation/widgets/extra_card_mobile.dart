@@ -127,6 +127,8 @@ class ExtraCardMobile extends StatelessWidget {
                           builder: (ctx) => ExtraDialog(
                             loungeId: loungeId,
                             extra: extra,
+                            onSave: (updatedExtra) => context.read<ExtrasCubit>()
+                                .updateExtra(updatedExtra),
                           ),
                         );
                       },

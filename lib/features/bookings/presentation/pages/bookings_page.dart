@@ -1,6 +1,9 @@
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/router/router_keys.dart';
 import '../../../../art_core/widgets/app_button.dart';
+import '../widgets/online_booking_status.dart';
+
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,7 +26,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booki
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/bookings_cockpit_tabs.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/bookings_collapsible_occupancy.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/bookings_requests_sidebar.dart';
-import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_ticker.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_clock_host.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/extras_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/widgets/lounge_discount_banner.dart';
@@ -44,7 +47,6 @@ class BookingsPage extends StatefulWidget {
 class _BookingsPageState extends State<BookingsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late SessionTickerNotifier _sessionTickerNotifier;
   late ScrollController _mainScrollController;
 
   int _selectedTabIndex = 0;
@@ -56,7 +58,6 @@ class _BookingsPageState extends State<BookingsPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _sessionTickerNotifier = SessionTickerNotifier();
     _mainScrollController = ScrollController();
 
     _tabController.addListener(() {
@@ -76,7 +77,6 @@ class _BookingsPageState extends State<BookingsPage>
   @override
   void dispose() {
     _tabController.dispose();
-    _sessionTickerNotifier.dispose();
     _mainScrollController.dispose();
     super.dispose();
   }
@@ -194,8 +194,7 @@ class _BookingsPageState extends State<BookingsPage>
     final userLounge = loginState.userLounge;
     final isDesktop = AppBreakpoints.isDesktop(context);
 
-    return SessionTickerScope(
-      ticker: _sessionTickerNotifier,
+    return SessionClockHost(
       child: Scaffold(
         backgroundColor: AppColors.scaffoldBackground,
         endDrawer: !isDesktop
@@ -263,6 +262,9 @@ class _BookingsPageState extends State<BookingsPage>
                           ),
                         ),
 
+                        SliverToBoxAdapter(
+                          child: OnlineBookingStatus(loungeId: loungeId),
+                        ),
                         SliverToBoxAdapter(
                           child: LoungeDiscountBanner(lounge: userLounge),
                         ),

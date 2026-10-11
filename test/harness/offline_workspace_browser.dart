@@ -1,10 +1,12 @@
 // Isolated browser harness. Never targets a hosted project or real account.
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/offline_cashier_di.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/presentation/offline_workspace_cubit.dart';
 import 'package:play_spot_dashboard/features/offline_cashier/presentation/offline_workspace_page.dart';
@@ -29,10 +31,23 @@ Future<void> main() async {
     throw StateError('Synthetic localhost only');
   }
   final client = SupabaseClient(url, 'synthetic-public-key');
-  await client.auth.signInWithPassword(
-    email: 'fixture@example.invalid',
-    password: 'synthetic-test-only',
-  );
+  final preferences = await SharedPreferences.getInstance();
+  final saved = preferences.getString('cashier_fixture_session');
+  final savedActor = saved == null
+      ? null
+      : (jsonDecode(saved) as Map)['user']['id'];
+  if (savedActor == const String.fromEnvironment('FIXTURE_ACTOR')) {
+    await client.auth.setInitialSession(saved!);
+  } else {
+    await client.auth.signInWithPassword(
+      email: 'fixture@example.invalid',
+      password: 'synthetic-test-only',
+    );
+    await preferences.setString(
+      'cashier_fixture_session',
+      jsonEncode(client.auth.currentSession!.toJson()),
+    );
+  }
   debugPrint('Fixture stage: local storage');
   final di = GetIt.instance;
   di.registerSingleton<SupabaseClient>(client);

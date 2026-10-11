@@ -1,5 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import '../marketing_message.dart';
+import '../promotion_access.dart';
+import '../../../auth/domain/entities/user_entity.dart';
+import '../../../permissions/presentation/cubit/permissions_cubit.dart';
+import '../../../../core/utils/permission_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -24,7 +28,7 @@ class MarketingView extends StatefulWidget {
 }
 
 class _MarketingViewState extends State<MarketingView> {
-  String _selectedFilterStatus = 'All'; // 'All', 'Active', 'Expired'
+  String _selectedFilterStatus = 'Active'; // All, Active, Expired, Archived
   String _selectedFilterTag = 'All';
 
   @override
@@ -49,8 +53,15 @@ class _MarketingViewState extends State<MarketingView> {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    final user = context.read<LoginCubit>().state.user;
+    final user = context.select((LoginCubit cubit) => cubit.state.user);
     final isSuperAdmin = user?.isSuperAdmin ?? false;
+    context.select((PermissionsCubit cubit) => cubit.state);
+    final hasMarketingPermission = context.hasPermission('marketing_manage');
+    final canCreate = canManagePromotion(
+      user: user,
+      promotionLoungeId: user?.loungeId,
+      hasMarketingPermission: hasMarketingPermission,
+    );
     final marketingCubit = context.read<MarketingCubit>();
 
     return BlocListener<MarketingCubit, MarketingState>(
@@ -92,37 +103,50 @@ class _MarketingViewState extends State<MarketingView> {
                       variant: AppButtonVariant.outlined,
                     )
                   : null,
-              primaryAction: AppButton(
-                text: AppStrings.createPromotion,
-                onPressed: () => _showEditPromoDialog(
-                  context,
-                  marketingCubit,
-                  PromoEntity(
-                    id: '',
-                    titleAr: '',
-                    titleEn: '',
-                    tagAr: '',
-                    tagEn: '',
-                    hexColors: const [],
-                    iconKey: 'Flash',
-                    loungeId: user?.loungeId,
-                  ),
-                ),
-                icon: Icons.add,
-              ),
+              primaryAction: canCreate
+                  ? AppButton(
+                      text: AppStrings.createPromotion,
+                      onPressed: () => _showEditPromoDialog(
+                        context,
+                        marketingCubit,
+                        PromoEntity(
+                          id: '',
+                          titleAr: '',
+                          titleEn: '',
+                          tagAr: '',
+                          tagEn: '',
+                          hexColors: const [],
+                          iconKey: 'Flash',
+                          loungeId: user?.loungeId,
+                        ),
+                      ),
+                      icon: Icons.add,
+                    )
+                  : null,
             ),
             SizedBox(height: 24.h),
 
             // Main Promotions Dashboard Content
-            Expanded(child: _buildPromotionsContent(marketingCubit)),
+            Expanded(
+              child: _buildPromotionsContent(
+                marketingCubit,
+                user: user,
+                hasMarketingPermission: hasMarketingPermission,
+                canCreate: canCreate,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPromotionsContent(MarketingCubit cubit) {
-    final user = context.read<LoginCubit>().state.user;
+  Widget _buildPromotionsContent(
+    MarketingCubit cubit, {
+    required UserEntity? user,
+    required bool hasMarketingPermission,
+    required bool canCreate,
+  }) {
     final loungeId = user?.loungeId;
 
     return BlocBuilder<MarketingCubit, MarketingState>(
@@ -162,12 +186,23 @@ class _MarketingViewState extends State<MarketingView> {
         // Filter by Status (Active / Expired)
         if (_selectedFilterStatus == 'Active') {
           promos = promos
-              .where((p) => p.expiresAt == null || p.expiresAt!.isAfter(now))
+              .where(
+                (p) =>
+                    p.isActive &&
+                    (p.expiresAt == null || p.expiresAt!.isAfter(now)),
+              )
               .toList();
         } else if (_selectedFilterStatus == 'Expired') {
           promos = promos
-              .where((p) => p.expiresAt != null && p.expiresAt!.isBefore(now))
+              .where(
+                (p) =>
+                    p.isActive &&
+                    p.expiresAt != null &&
+                    p.expiresAt!.isBefore(now),
+              )
               .toList();
+        } else if (_selectedFilterStatus == 'Archived') {
+          promos = promos.where((p) => !p.isActive).toList();
         }
 
         // Filter by Tag
@@ -205,6 +240,11 @@ class _MarketingViewState extends State<MarketingView> {
                       _buildStatusChip(AppStrings.active, 'Active'),
                       SizedBox(width: 8.w),
                       _buildStatusChip(AppStrings.timeExpired, 'Expired'),
+                      SizedBox(width: 8.w),
+                      _buildStatusChip(
+                        AppStrings.archivedPromotions,
+                        'Archived',
+                      ),
                     ],
                   ),
                 ),
@@ -255,7 +295,8 @@ class _MarketingViewState extends State<MarketingView> {
                         ),
                       ),
                       SizedBox(height: 16.h),
-                      AppButton(
+                      if (canCreate)
+                        AppButton(
                         text: AppStrings.createPromotion,
                         onPressed: () => _showEditPromoDialog(
                           context,
@@ -290,15 +331,30 @@ class _MarketingViewState extends State<MarketingView> {
                   itemCount: promos.length,
                   itemBuilder: (context, index) {
                     final promo = promos[index];
+                    final canManage = canManagePromotion(
+                      user: user,
+                      promotionLoungeId: promo.loungeId,
+                      hasMarketingPermission: hasMarketingPermission,
+                    );
                     return PromoCard(
                       promo: promo,
-                      onEdit: () => _showEditPromoDialog(context, cubit, promo),
-                      onDelete: () => _confirmDelete(
-                        context,
-                        cubit,
-                        promo,
-                        loungeId: loungeId,
-                      ),
+                      onEdit: canManage && promo.isActive
+                          ? () => _showEditPromoDialog(context, cubit, promo)
+                          : null,
+                      onDelete: canManage && promo.isActive
+                          ? () => _confirmDelete(
+                              context,
+                              cubit,
+                              promo,
+                              loungeId: loungeId,
+                            )
+                          : null,
+                      onReshare: canManage
+                          ? () => cubit.resharePromotion(
+                              promo.id,
+                              loungeId: loungeId,
+                            )
+                          : null,
                     );
                   },
                 ),
@@ -369,14 +425,14 @@ class _MarketingViewState extends State<MarketingView> {
           borderRadius: BorderRadius.circular(16.r),
         ),
         title: Text(
-          AppStrings.deleteConfirmation,
+          AppStrings.archivePromotion,
           style: const TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
-          '${AppStrings.deleteWarning} "$title"؟',
+          '${AppStrings.archivePromotion}: "$title"؟',
           style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
@@ -386,7 +442,7 @@ class _MarketingViewState extends State<MarketingView> {
             onPressed: () => Navigator.pop(diagContext),
           ),
           AppButton(
-            text: AppStrings.delete,
+            text: AppStrings.archivePromotion,
             variant: AppButtonVariant.danger,
             onPressed: () {
               cubit.deletePromotion(promo.id, loungeId: loungeId);

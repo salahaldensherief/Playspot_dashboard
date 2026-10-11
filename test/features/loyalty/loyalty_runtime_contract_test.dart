@@ -63,7 +63,7 @@ void main() {
               'total_referral_points': 0,
             };
           }
-        } else if (path.endsWith('/referrals')) {
+        } else if (path.endsWith('/get_loyalty_referrals')) {
           if (referralsFail) {
             status = 403;
             body = {'code': '42501', 'message': 'permission denied'};
@@ -76,17 +76,19 @@ void main() {
                 'status': 'completed',
                 'reward_claimed': true,
                 'created_at': '2026-10-02T10:00:00Z',
+                'referrer': {
+                  'id': 'u1',
+                  'full_name': 'Fixture customer',
+                  'email': 'fixture@example.invalid',
+                },
+                'referred': {
+                  'id': 'u2',
+                  'full_name': 'Invited customer',
+                  'email': 'invited@example.invalid',
+                },
               },
             ];
           }
-        } else if (path.endsWith('/profiles')) {
-          body = [
-            {
-              'id': 'u1',
-              'full_name': 'Fixture customer',
-              'email': 'fixture@example.invalid',
-            },
-          ];
         } else if (path.endsWith('/loyalty_missions')) {
           body = request.method == 'PATCH'
               ? {'id': 'mission-1'}
@@ -146,14 +148,10 @@ void main() {
       expect(referral.inviterPoints, isNull);
       expect(referral.inviteePoints, isNull);
       expect(
-        requests.first.url.queryParameters['select'],
-        'id,referrer_id,referred_id,status,reward_claimed,created_at',
+        requests.single.url.path,
+        '/rest/v1/rpc/get_loyalty_referrals',
       );
-      expect(
-        requests.first.url.queryParameters['or'],
-        '(referrer_id.eq.u1,referred_id.eq.u1)',
-      );
-      expect(requests.last.url.path, '/rest/v1/profiles');
+      expect(jsonDecode(requests.single.body)['p_user_query'], 'u1');
     },
   );
   test(

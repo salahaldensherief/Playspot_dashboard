@@ -74,6 +74,10 @@ class LoyaltyState extends Equatable {
     String? selectedReferralStatus,
     String? selectedUserId,
     String? errorMessage,
+    bool clearStartDate = false,
+    bool clearEndDate = false,
+    bool clearSelectedLevelId = false,
+    bool clearSelectedUserId = false,
   }) {
     return LoyaltyState(
       status: status ?? this.status,
@@ -88,12 +92,16 @@ class LoyaltyState extends Equatable {
       pointsPageSize: pointsPageSize ?? this.pointsPageSize,
       totalPointsCount: totalPointsCount ?? this.totalPointsCount,
       activeTab: activeTab ?? this.activeTab,
-      startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
-      selectedLevelId: selectedLevelId ?? this.selectedLevelId,
+      startDate: clearStartDate ? null : (startDate ?? this.startDate),
+      endDate: clearEndDate ? null : (endDate ?? this.endDate),
+      selectedLevelId: clearSelectedLevelId
+          ? null
+          : (selectedLevelId ?? this.selectedLevelId),
       selectedReferralStatus:
           selectedReferralStatus ?? this.selectedReferralStatus,
-      selectedUserId: selectedUserId ?? this.selectedUserId,
+      selectedUserId: clearSelectedUserId
+          ? null
+          : (selectedUserId ?? this.selectedUserId),
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }

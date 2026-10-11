@@ -19,7 +19,7 @@ import '../../domain/entities/extra_entity.dart';
 class ExtraDialog extends StatefulWidget {
   final String loungeId;
   final ExtraEntity? extra;
-  final Function(ExtraEntity)? onSave;
+  final Future<bool> Function(ExtraEntity)? onSave;
 
   const ExtraDialog({
     super.key,
@@ -91,7 +91,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isUploading || !_formKey.currentState!.validate()) return;
 
     setState(() {
       _isUploading = true;
@@ -123,9 +123,10 @@ class _ExtraDialogState extends State<ExtraDialog> {
       }
     }
 
+    if (!mounted) return;
     final stockQty = int.tryParse(_stockQuantityController.text) ?? 0;
     final isOutOfStock =
-        (_trackStock && stockQty <= 0) || (widget.extra?.isOutOfStock ?? false);
+        _trackStock ? stockQty <= 0 : (widget.extra?.isOutOfStock ?? false);
 
     final extra = ExtraEntity(
       id: widget.extra?.id ?? const Uuid().v4(),
@@ -140,14 +141,19 @@ class _ExtraDialogState extends State<ExtraDialog> {
       trackStock: _trackStock,
       stockQuantity: stockQty,
       minStockAlert: int.tryParse(_minStockAlertController.text) ?? 5,
+      costPrice: widget.extra?.costPrice,
     );
 
-    if (widget.onSave != null) {
-      widget.onSave!(extra);
-    }
-
-    if (mounted) {
-      Navigator.pop(context);
+    try {
+      final saved = await widget.onSave?.call(extra) ?? false;
+      if (mounted && saved) Navigator.pop(context);
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('${AppStrings.error}: $error'),
+        backgroundColor: AppColors.danger,
+      ));
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
     }
   }
 

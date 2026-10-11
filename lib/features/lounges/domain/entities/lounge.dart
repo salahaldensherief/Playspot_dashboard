@@ -10,6 +10,7 @@ class Lounge extends Equatable {
   final double pricePerHour;
   final bool isOpen;
   final String? location;
+  final String? contactPhone;
   final String? city;
   final String? cityId;
   final int? totalReviews;
@@ -49,6 +50,7 @@ class Lounge extends Equatable {
     this.pricePerHour = 0.0,
     this.isOpen = true,
     this.location,
+    this.contactPhone,
     this.city,
     this.cityId,
     this.totalReviews,
@@ -118,6 +120,7 @@ class Lounge extends Equatable {
     pricePerHour,
     isOpen,
     location,
+    contactPhone,
     city,
     cityId,
     totalReviews,
@@ -158,6 +161,7 @@ class Lounge extends Equatable {
     double? pricePerHour,
     bool? isOpen,
     String? location,
+    String? contactPhone,
     String? city,
     String? cityId,
     int? totalReviews,
@@ -197,6 +201,7 @@ class Lounge extends Equatable {
       pricePerHour: pricePerHour ?? this.pricePerHour,
       isOpen: isOpen ?? this.isOpen,
       location: location ?? this.location,
+      contactPhone: contactPhone ?? this.contactPhone,
       city: city ?? this.city,
       cityId: cityId ?? this.cityId,
       totalReviews: totalReviews ?? this.totalReviews,

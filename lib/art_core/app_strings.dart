@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 
 class AppStrings {
+  static String get shiftFinancialsWithheld => 'shift_financials_withheld'.tr();
   static String get playMode => 'play_mode'.tr();
   static String get noBookingExtras => 'no_booking_extras'.tr();
   static String get appName => 'app_name'.tr();
@@ -132,6 +133,18 @@ class AppStrings {
   // Room Management
   static String get addNew => 'add_new'.tr();
   static String get addNewActivity => 'add_new_activity'.tr();
+  static String get editActivity => 'edit_activity'.tr();
+  static String get activityKey => 'activity_key'.tr();
+  static String get activityLabel => 'activity_label'.tr();
+  static String get activityCategory => 'activity_category'.tr();
+  static String get activityPricingModel => 'activity_pricing_model'.tr();
+  static String get activityIconKey => 'activity_icon_key'.tr();
+  static String get sortOrder => 'sort_order'.tr();
+  static String get requiresScreen => 'requires_screen'.tr();
+  static String get requiresControllers => 'requires_controllers'.tr();
+  static String get roomActivities => 'room_activities'.tr();
+  static String get selectRoomActivityError =>
+      'select_room_activity_error'.tr();
   static String get addNewRoom => 'add_new_room'.tr();
   static String get manageRoomsDesc => 'manage_rooms_desc'.tr();
   static String get roomName => 'room_name'.tr();
@@ -361,6 +374,10 @@ class AppStrings {
   static String get changePoster => 'change_poster'.tr();
   static String get promoPoster => 'promo_poster'.tr();
   static String get promoPublishedSuccess => 'promo_published_success'.tr();
+  static String get promoArchived => 'promo_archived'.tr();
+  static String get archivePromotion => 'archive_promotion'.tr();
+  static String get resharePromotion => 'reshare_promotion'.tr();
+  static String get archivedPromotions => 'archived_promotions'.tr();
   static String get promoPublishError => 'promo_publish_error'.tr();
   static String get noPromotions => 'no_promotions'.tr();
   static String get noTournaments => 'no_tournaments'.tr();
@@ -905,6 +922,7 @@ class AppStrings {
   static String get transferReference => 'transfer_reference'.tr();
   static String get paidAt => 'paid_at'.tr();
   static String get add => 'add'.tr();
+  static String get permissions => 'permissions'.tr();
   static String get errorLoadingPermissions => 'error_loading_permissions'.tr();
   static String get unauthorizedAccessMsg =>
       'عذراً، لا تملك الصلاحية الكافية للوصول لهذه الشاشة';
@@ -983,6 +1001,7 @@ class AppStrings {
   static String get process => 'process'.tr();
   static String get pay => 'pay'.tr();
   static String get fail => 'fail'.tr();
+  static String get markFailed => 'mark_failed'.tr();
   static String get resolve => 'resolve'.tr();
   static String get completePayoutPayment => 'complete_payout_payment'.tr();
   static String get completePayment => 'complete_payment'.tr();
@@ -1603,6 +1622,8 @@ class AppStrings {
       'affected_rooms_notice'.tr(namedArgs: {'count': count.toString()});
   static String get existingBookingsUnaffected =>
       'existing_bookings_unaffected'.tr();
+  static String get pricingFutureScopeNotice =>
+      'pricing_future_scope_notice'.tr();
   static String get activeStatus => 'active_status'.tr();
   static String get scheduledStatus => 'scheduled_status'.tr();
   static String get expiredStatus => 'expired_status'.tr();

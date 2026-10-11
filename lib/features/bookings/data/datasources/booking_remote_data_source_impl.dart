@@ -62,7 +62,13 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     if (response is! List) {
       throw const FormatException('Invalid priced slots response');
     }
-    return response
+
+    final rows =
+        response.length == 1 && response.first is List
+        ? response.first as List
+        : response;
+
+    return rows
         .map((row) => Map<String, dynamic>.from(row as Map))
         .toList();
   }
@@ -407,7 +413,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       params: {
         'p_booking_id': bookingId,
         'p_new_room_id': newRoomId,
-        'p_action_by': actionBy,
+        'p_actor_id': actionBy,
       },
     );
   }
@@ -427,6 +433,20 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     );
     if (response is! Map || response['success'] != true) {
       throw const FormatException('Invalid session start response');
+    }
+  }
+
+  @override
+  Future<void> extendBookingSession(String bookingId, int additionalMinutes) async {
+    final response = await client.rpc(
+      'extend_booking_session',
+      params: {
+        'p_booking_id': bookingId,
+        'p_additional_minutes': additionalMinutes,
+      },
+    );
+    if (response is! Map || response['success'] != true) {
+      throw const FormatException('Invalid session extension response');
     }
   }
 

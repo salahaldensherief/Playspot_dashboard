@@ -39,7 +39,7 @@ class LoginCubit extends Cubit<LoginState> {
   Future<void> checkInitialAuth({BuildContext? context}) async {
     final generation = ++_authGeneration;
     AppLogger.info('LoginCubit: checking initial auth');
-    emit(state.copyWith(status: LoginStatus.checking));
+    emit(state.copyWith(status: LoginStatus.checking, errorMessage: null));
     final result = await getCurrentUserUseCase(NoParams());
     if (isClosed || generation != _authGeneration) return;
     result.fold(
@@ -47,7 +47,12 @@ class LoginCubit extends Cubit<LoginState> {
         AppLogger.error(
           'LoginCubit: initial auth check failed: ${failure.message}',
         );
-        emit(state.copyWith(status: LoginStatus.unauthenticated));
+        emit(
+          state.copyWith(
+            status: LoginStatus.profileFailure,
+            errorMessage: 'profile_access_load_failed',
+          ),
+        );
       },
       (user) async {
         AppLogger.info('LoginCubit: user role: ${user?.role}');
@@ -55,6 +60,7 @@ class LoginCubit extends Cubit<LoginState> {
           emit(
             state.copyWith(
               status: LoginStatus.authenticated,
+              errorMessage: null,
               user: user,
               clearUserLounge: true,
               loungeLoadError: null,
@@ -69,7 +75,7 @@ class LoginCubit extends Cubit<LoginState> {
             _handleLoungeAdminAuth(user, context: context);
           }
         } else {
-          emit(state.copyWith(status: LoginStatus.unauthenticated));
+          emit(const LoginState(status: LoginStatus.unauthenticated));
         }
       },
     );
@@ -159,8 +165,9 @@ class LoginCubit extends Cubit<LoginState> {
 
   Future<void> reloadLoungeAccess() async {
     final user = state.user;
-    if (isClosed || user == null || !user.isStaff || state.isLoadingLounge)
+    if (isClosed || user == null || !user.isStaff || state.isLoadingLounge) {
       return;
+    }
     emit(state.copyWith(isLoadingLounge: true, loungeLoadError: null));
     await _handleLoungeAdminAuth(user);
   }
@@ -173,13 +180,28 @@ class LoginCubit extends Cubit<LoginState> {
     if (isClosed || generation != _authGeneration || state.user?.id != actor) {
       return;
     }
-    result.fold((_) => null, (user) {
-      if (user != null) {
-        emit(
-          state.copyWith(user: user, isSetupCompleted: user.isSetupCompleted),
-        );
-      }
-    });
+    result.fold(
+      (_) => emit(
+        state.copyWith(
+          status: LoginStatus.profileFailure,
+          errorMessage: 'profile_access_load_failed',
+        ),
+      ),
+      (user) {
+        if (user != null) {
+          emit(
+            state.copyWith(
+              status: LoginStatus.authenticated,
+              user: user,
+              isSetupCompleted: user.isSetupCompleted,
+              errorMessage: null,
+            ),
+          );
+        } else {
+          emit(const LoginState(status: LoginStatus.unauthenticated));
+        }
+      },
+    );
   }
 
   void updateUser(UserEntity user) {

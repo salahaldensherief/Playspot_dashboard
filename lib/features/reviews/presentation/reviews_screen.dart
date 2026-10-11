@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../art_core/app_strings.dart';
+import '../../../art_core/layouts/dashboard_layout.dart';
 import '../../../art_core/theme/app_colors.dart';
+import '../../../art_core/widgets/app_adaptive_page_header.dart';
 import '../../../art_core/widgets/app_button.dart';
 import '../../../art_core/widgets/app_text.dart';
+import '../../../art_core/widgets/shimmer_loading.dart';
 import '../../../core/responsive/responsive.dart';
 import '../../auth/presentation/login/login_cubit.dart';
 import '../../auth/presentation/login/login_state.dart';
@@ -50,85 +53,65 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
           context.read<ReviewsCubit>().startWatchingReviews(loungeId: loungeId);
         }
       },
-      child: Scaffold(
-        backgroundColor: AppColors.scaffoldBackground,
-        body: SingleChildScrollView(
-          padding: EdgeInsets.all(24.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              SizedBox(height: 24.h),
-              BlocBuilder<ReviewsCubit, ReviewsState>(
-                buildWhen: (prev, curr) =>
-                    prev.status != curr.status ||
-                    prev.reviews != curr.reviews ||
-                    prev.page != curr.page,
-                builder: (context, state) {
-                  if (state.status == ReviewsStatus.loading &&
-                      state.reviews.isEmpty) {
-                    return _buildLoadingWidget();
-                  }
-
-                  if (state.status == ReviewsStatus.failure &&
-                      state.reviews.isEmpty) {
-                    return _buildErrorWidget(context, state.errorMessage);
-                  }
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ReviewsRatingOverviewCard(state: state),
-                      SizedBox(height: 24.h),
-                      if (state.reviews.isEmpty)
-                        _buildEmptyState()
-                      else ...[
-                        _buildReviewsGridOrList(context, state.reviews),
-                        ReviewsPaginationFooter(state: state),
-                      ],
-                    ],
-                  );
-                },
+      child: DashboardLayout(
+        title: AppStrings.loungeReviews,
+        activeRoute: 'Reviews',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppAdaptivePageHeader(
+              title: AppStrings.loungeReviews,
+              subtitle: AppStrings.averageRating,
+              primaryAction: AppButton(
+                text: AppStrings.refresh,
+                icon: Icons.refresh_rounded,
+                variant: AppButtonVariant.outlined,
+                height: 38.h,
+                onPressed: _triggerReviewsFetch,
               ),
-            ],
-          ),
+            ),
+            SizedBox(height: 20.h),
+            BlocBuilder<ReviewsCubit, ReviewsState>(
+              buildWhen: (prev, curr) =>
+                  prev.status != curr.status ||
+                  prev.reviews != curr.reviews ||
+                  prev.page != curr.page,
+              builder: (context, state) {
+                if (state.status == ReviewsStatus.loading &&
+                    state.reviews.isEmpty) {
+                  return _buildLoadingWidget();
+                }
+
+                if (state.status == ReviewsStatus.failure &&
+                    state.reviews.isEmpty) {
+                  return _buildErrorWidget(context, state.errorMessage);
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ReviewsRatingOverviewCard(state: state),
+                    SizedBox(height: 24.h),
+                    if (state.reviews.isEmpty)
+                      _buildEmptyState()
+                    else ...[
+                      _buildReviewsGridOrList(context, state.reviews),
+                      ReviewsPaginationFooter(state: state),
+                    ],
+                  ],
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppText.heading(
-              AppStrings.loungeReviews,
-              fontSize: 22.sp,
-              color: AppColors.textPrimary,
-            ),
-            SizedBox(height: 4.h),
-            AppText.body(
-              AppStrings.averageRating,
-              fontSize: 12.sp,
-              color: AppColors.textSecondary,
-            ),
-          ],
-        ),
-        IconButton(
-          onPressed: _triggerReviewsFetch,
-          tooltip: 'refresh'.tr(),
-          icon:
-              Icon(Icons.refresh_rounded, color: AppColors.neonBlue, size: 22.r),
-        ),
-      ],
-    );
-  }
-
   Widget _buildReviewsGridOrList(
-      BuildContext context, List<LoungeReviewEntity> reviews) {
+    BuildContext context,
+    List<LoungeReviewEntity> reviews,
+  ) {
     if (Responsive.isDesktop(context)) {
       return GridView.builder(
         shrinkWrap: true,
@@ -158,17 +141,12 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
   }
 
   Widget _buildLoadingWidget() {
-    return Container(
-      padding: EdgeInsets.all(40.r),
-      child: Center(
-        child: Column(
-          children: [
-            const CircularProgressIndicator(color: AppColors.neonBlue),
-            SizedBox(height: 16.h),
-            AppText.body('loading'.tr(), color: AppColors.textSecondary),
-          ],
-        ),
-      ),
+    return Column(
+      children: [
+        const CardShimmer(),
+        SizedBox(height: 16.h),
+        const GridShimmer(itemCount: 4, aspectRatio: 2.2),
+      ],
     );
   }
 
@@ -213,8 +191,11 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
       ),
       child: Column(
         children: [
-          Icon(Icons.rate_review_outlined,
-              size: 48.r, color: AppColors.textMuted),
+          Icon(
+            Icons.rate_review_outlined,
+            size: 48.r,
+            color: AppColors.textMuted,
+          ),
           SizedBox(height: 12.h),
           AppText.subHeading(
             AppStrings.noReviewsYet,

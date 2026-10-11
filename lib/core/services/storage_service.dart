@@ -69,7 +69,7 @@ class StorageServiceImpl implements StorageService {
     final path = '$tournamentId/banner.$extension';
 
     return _strategy.uploadWithFallback(
-      buckets: ['tournament-assets', 'promotion-assets'],
+      buckets: ['tournament-assets'],
       path: path,
       fileBytes: fileBytes,
       fileOptions: const FileOptions(cacheControl: '3600', upsert: true),

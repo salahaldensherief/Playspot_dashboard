@@ -1,5 +1,5 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -8,7 +8,6 @@ import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
-import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import '../../domain/entities/lounge.dart';
 import '../cubit/lounge_cubit.dart';
 import '../cubit/lounge_state.dart';
@@ -19,7 +18,6 @@ class LoungesDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.locale; // Rebuild localized labels when the locale changes.
     return BlocConsumer<LoungeCubit, LoungeState>(
       listenWhen: (previous, current) =>
           previous.status != current.status &&
@@ -28,7 +26,7 @@ class LoungesDataTable extends StatelessWidget {
         if (state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.errorMessage!),
+              content: Text(state.errorMessage ?? ''),
               backgroundColor: AppColors.danger,
             ),
           );
@@ -38,6 +36,7 @@ class LoungesDataTable extends StatelessWidget {
           previous.status != current.status ||
           previous.lounges != current.lounges,
       builder: (context, state) {
+        context.locale;
         if (state.status == LoungeStatus.loading && state.lounges.isEmpty) {
           return const TableShimmer(columns: 6);
         }
@@ -64,28 +63,17 @@ class LoungesDataTable extends StatelessWidget {
           );
         }
 
-        if (Responsive.isMobile(context)) {
-          return Column(
-            children: lounges
-                .map(
-                  (lounge) => Padding(
-                    padding: EdgeInsets.only(bottom: 16.h),
-                    child: _buildLoungeCard(context, lounge),
-                  ),
-                )
-                .toList(),
-          );
-        }
-
         return DataTableWidget(
           columns: [
             AppStrings.loungeName,
             AppStrings.loungeOwnerAdmin,
             AppStrings.location,
-            AppStrings.pricePerHour,
+            AppStrings.roomPricePerHour,
             AppStrings.status,
             AppStrings.actions,
           ],
+          mobileCardBuilder: (context, index) =>
+              _buildLoungeCard(context, lounges[index]),
           rows: lounges
               .map(
                 (lounge) => DataRow(
@@ -103,10 +91,10 @@ class LoungesDataTable extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '${lounge.availableRooms ?? '—'} ${AppStrings.rooms}',
+                            '${lounge.availableRooms ?? 0} ${AppStrings.rooms}',
                             style: TextStyle(
                               color: AppColors.textSecondary,
-                              fontSize: 14,
+                              fontSize: 11.sp,
                             ),
                           ),
                         ],
@@ -127,7 +115,7 @@ class LoungesDataTable extends StatelessWidget {
                             lounge.ownerEmail ?? '-',
                             style: TextStyle(
                               color: AppColors.textSecondary,
-                              fontSize: 14,
+                              fontSize: 11.sp,
                             ),
                           ),
                         ],
@@ -135,22 +123,20 @@ class LoungesDataTable extends StatelessWidget {
                     ),
                     DataCell(
                       Text(
-                        lounge.city ??
-                            lounge.location ??
-                            AppStrings.notAvailable,
+                        lounge.city ?? lounge.location ?? 'N/A',
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     ),
                     DataCell(
                       Text(
-                        _priceLabel(lounge),
+                        AppStrings.pricedPerRoom,
                         style: const TextStyle(color: AppColors.textPrimary),
                       ),
                     ),
                     DataCell(
                       lounge.status == 'pending'
                           ? StatusBadge.warning(AppStrings.pending)
-                          : lounge.isActive && lounge.status == 'active'
+                          : lounge.isOpen
                           ? StatusBadge.success(AppStrings.active)
                           : StatusBadge.danger(AppStrings.inactive),
                     ),
@@ -202,30 +188,30 @@ class LoungesDataTable extends StatelessWidget {
             children: [
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      lounge.name,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    lounge.name,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
                     ),
-                    Text(
-                      '${lounge.availableRooms ?? '—'} ${AppStrings.rooms}',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                      ),
+                  ),
+                  Text(
+                    '${lounge.availableRooms ?? 0} ${AppStrings.rooms}',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12.sp,
                     ),
-                  ],
+                  ),
+                ],
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               lounge.status == 'pending'
                   ? StatusBadge.warning(AppStrings.pending)
-                  : lounge.isActive && lounge.status == 'active'
+                  : lounge.isOpen
                   ? StatusBadge.success(AppStrings.active)
                   : StatusBadge.danger(AppStrings.inactive),
             ],
@@ -240,13 +226,13 @@ class LoungesDataTable extends StatelessWidget {
           _buildInfoRow(
             Icons.location_on_outlined,
             AppStrings.location,
-            lounge.city ?? lounge.location ?? AppStrings.notAvailable,
+            lounge.city ?? lounge.location ?? 'N/A',
           ),
           SizedBox(height: 8.h),
           _buildInfoRow(
             Icons.payments_outlined,
-            AppStrings.pricePerHour,
-            _priceLabel(lounge),
+            AppStrings.pricedPerRoom,
+            '—',
           ),
           const Divider(height: 24, color: AppColors.divider),
           Row(
@@ -276,33 +262,26 @@ class LoungesDataTable extends StatelessWidget {
     );
   }
 
-  String _priceLabel(Lounge lounge) => lounge.pricePerHour > 0
-      ? '${lounge.pricePerHour.toStringAsFixed(2)} ${AppStrings.egp}'
-      : AppStrings.pricedPerRoom;
-
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       children: [
         Icon(icon, size: 16.r, color: AppColors.textSecondary),
         SizedBox(width: 8.w),
-        Expanded(
-          child: Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: '$label: ',
-                  style: const TextStyle(color: AppColors.textSecondary),
-                ),
-                TextSpan(
-                  text: value,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-            style: const TextStyle(fontSize: 14, height: 1.4),
+        Flexible(
+          child: Text(
+          '$label:',
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+          ),
+        ),
+        SizedBox(width: 4.w),
+        Flexible(
+          child: Text(
+          value,
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w500,
+          ),
           ),
         ),
       ],
@@ -319,13 +298,14 @@ class LoungesDataTable extends StatelessWidget {
           if (state.status == LoungeStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.errorMessage ?? AppStrings.error),
+                content: Text(state.errorMessage ?? 'Error'),
                 backgroundColor: AppColors.danger,
               ),
             );
           }
         },
         builder: (context, state) {
+        context.locale;
           return EditLoungeDialog(
             lounge: lounge,
             isLoading: state.status == LoungeStatus.loading,

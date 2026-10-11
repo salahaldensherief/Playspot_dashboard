@@ -21,11 +21,12 @@ class TournamentPrizeRewardModel extends TournamentPrizeRewardEntity {
 
   factory TournamentPrizeRewardModel.fromJson(Map<String, dynamic> json) {
     double? parsedValue;
-    if (json['value'] != null) {
-      if (json['value'] is num) {
-        parsedValue = (json['value'] as num).toDouble();
-      } else if (json['value'] is String) {
-        parsedValue = double.tryParse(json['value'] as String);
+    final rawValue = json['amount'] ?? json['value'];
+    if (rawValue != null) {
+      if (rawValue is num) {
+        parsedValue = rawValue.toDouble();
+      } else if (rawValue is String) {
+        parsedValue = double.tryParse(rawValue);
       }
     }
 
@@ -37,7 +38,9 @@ class TournamentPrizeRewardModel extends TournamentPrizeRewardEntity {
     return TournamentPrizeRewardModel(
       id: json['id'] as String? ?? '',
       prizeId: json['prize_id'] as String? ?? '',
-      type: TournamentPrizeType.fromString(json['type'] as String?),
+      type: TournamentPrizeType.fromString(
+        (json['reward_type'] ?? json['type'])?.toString(),
+      ),
       title: json['title'] as String?,
       titleAr: json['title_ar'] as String?,
       titleEn: json['title_en'] as String?,
@@ -47,7 +50,10 @@ class TournamentPrizeRewardModel extends TournamentPrizeRewardEntity {
       value: parsedValue,
       currency: json['currency'] as String?,
       metadata: meta,
-      deliveryStatus: json['delivery_status'] as String? ?? json['status'] as String? ?? 'pending',
+      deliveryStatus:
+          json['delivery_status'] as String? ??
+          json['status'] as String? ??
+          ((json['is_delivered'] == true) ? 'delivered' : 'pending'),
       deliveredAt: json['delivered_at'] != null
           ? DateTime.tryParse(json['delivered_at'].toString())
           : (json['delivery_time'] != null

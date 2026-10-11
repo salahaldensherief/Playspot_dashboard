@@ -14,6 +14,10 @@ class ShiftKpiCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (shifts.any((s) => !s.financialsVisible) ||
+        activeShift?.financialsVisible == false) {
+      return Text(AppStrings.shiftFinancialsWithheld);
+    }
     EasyLocalization.of(context);
     double totalRev = 0.0;
     double totalCash = 0.0;

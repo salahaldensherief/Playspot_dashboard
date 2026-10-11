@@ -228,8 +228,16 @@ class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository
             name: a.name,
             label: a.label,
             sortOrder: a.sortOrder,
+            category: a.category,
+            iconName: a.iconName,
+            pricingModel: a.pricingModel,
+            requiresScreen: a.requiresScreen,
+            requiresControllers: a.requiresControllers,
           )).toList();
-          _localCacheService.setJson(cacheKey, models.map((m) => m.toJson()).toList());
+          _localCacheService.setJson(
+            cacheKey,
+            models.map((m) => m.toCacheJson()).toList(),
+          );
         },
       );
       return result;
@@ -254,19 +262,64 @@ class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository
         name: a.name,
         label: a.label,
         sortOrder: a.sortOrder,
+        category: a.category,
+        iconName: a.iconName,
+        pricingModel: a.pricingModel,
+        requiresScreen: a.requiresScreen,
+        requiresControllers: a.requiresControllers,
       )).toList();
-      await _localCacheService.setJson(cacheKey, models.map((m) => m.toJson()).toList());
+      await _localCacheService.setJson(
+        cacheKey,
+        models.map((m) => m.toCacheJson()).toList(),
+      );
     } catch (_) {}
   }
 
+  ActivityTypeModel _activityModel(ActivityTypeEntity activityType) {
+    return ActivityTypeModel(
+      id: activityType.id,
+      name: activityType.name,
+      label: activityType.label,
+      sortOrder: activityType.sortOrder,
+      category: activityType.category,
+      iconName: activityType.iconName,
+      pricingModel: activityType.pricingModel,
+      requiresScreen: activityType.requiresScreen,
+      requiresControllers: activityType.requiresControllers,
+    );
+  }
+
   @override
-  Future<Either<Failure, ActivityTypeEntity>> addActivityType(ActivityTypeEntity activityType) async {
-    final result = await callRepository(() => _remoteSource.addActivityType(ActivityTypeModel(
-          id: activityType.id,
-          name: activityType.name,
-          label: activityType.label,
-          sortOrder: activityType.sortOrder,
-        )));
+  Future<Either<Failure, ActivityTypeEntity>> addActivityType(
+    ActivityTypeEntity activityType,
+  ) async {
+    final result = await callRepository(
+      () => _remoteSource.addActivityType(_activityModel(activityType)),
+    );
+    if (result.isRight()) {
+      await _localCacheService.remove('cache_activity_types');
+    }
+    return result;
+  }
+
+  @override
+  Future<Either<Failure, ActivityTypeEntity>> updateActivityType(
+    ActivityTypeEntity activityType,
+  ) async {
+    final result = await callRepository(
+      () => _remoteSource.updateActivityType(_activityModel(activityType)),
+    );
+    if (result.isRight()) {
+      await _localCacheService.remove('cache_activity_types');
+    }
+    return result;
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteActivityType(String id) async {
+    final result = await callRepository(
+      () => _remoteSource.deleteActivityType(id),
+    );
     if (result.isRight()) {
       await _localCacheService.remove('cache_activity_types');
     }

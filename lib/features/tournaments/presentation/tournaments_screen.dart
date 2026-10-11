@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../../../art_core/app_strings.dart';
 import '../../../art_core/layouts/dashboard_layout.dart';
 import '../../../art_core/theme/app_colors.dart';
@@ -68,9 +69,9 @@ class _TournamentsScreenState extends State<TournamentsScreen>
       context: context,
       builder: (ctx) => TournamentFormDialog(
         loungeId: activeLoungeId,
-        onSubmit: (entity) {
-          context.read<TournamentCubit>().createTournament(entity);
-        },
+        onSubmit: (entity, bytes, name) => context
+            .read<TournamentCubit>()
+            .createTournament(entity, bannerBytes: bytes, bannerName: name),
       ),
     );
   }
@@ -80,9 +81,9 @@ class _TournamentsScreenState extends State<TournamentsScreen>
       context: context,
       builder: (ctx) => TournamentFormDialog(
         tournament: tournament,
-        onSubmit: (entity) {
-          context.read<TournamentCubit>().updateTournament(entity);
-        },
+        onSubmit: (entity, bytes, name) => context
+            .read<TournamentCubit>()
+            .updateTournament(entity, bannerBytes: bytes, bannerName: name),
       ),
     );
   }
@@ -103,7 +104,7 @@ class _TournamentsScreenState extends State<TournamentsScreen>
   }
 
   void _confirmCancel(TournamentEntity tournament) async {
-    final reasonController = TextEditingController();
+    var reason = '';
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AppDialog(
@@ -119,7 +120,7 @@ class _TournamentsScreenState extends State<TournamentsScreen>
             ),
             SizedBox(height: 16.h),
             AppTextField(
-              controller: reasonController,
+              onChanged: (value) => reason = value,
               hintText: AppStrings.reasonOrNote,
             ),
           ],
@@ -135,7 +136,7 @@ class _TournamentsScreenState extends State<TournamentsScreen>
             text: AppStrings.cancelTournament,
             variant: AppButtonVariant.danger,
             onPressed: () {
-              if (reasonController.text.trim().isEmpty) return;
+              if (reason.trim().isEmpty) return;
               Navigator.pop(ctx, true);
             },
           ),
@@ -146,7 +147,7 @@ class _TournamentsScreenState extends State<TournamentsScreen>
     if (confirmed == true && mounted) {
       context.read<TournamentCubit>().cancelTournament(
         tournament.id,
-        reasonController.text.trim(),
+        reason.trim(),
       );
     }
   }

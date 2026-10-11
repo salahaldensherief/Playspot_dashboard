@@ -16,7 +16,7 @@ class SessionOperationsRemoteHelper {
     );
 
     try {
-      await supabaseClient.rpc(
+      final response = await supabaseClient.rpc(
         'extend_booking_session',
         params: {
           'p_booking_id': bookingId,
@@ -24,6 +24,9 @@ class SessionOperationsRemoteHelper {
           'p_additional_cost': null,
         },
       );
+      if (response is! Map || response['success'] != true) {
+        throw const FormatException('Invalid session extension response');
+      }
       debugPrint(
         '🟢 [SessionOperationsRemoteHelper] Session extension RPC succeeded',
       );

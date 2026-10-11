@@ -173,11 +173,11 @@ class LoyaltyCubit extends Cubit<LoyaltyState> {
   Future<void> clearFilters() async {
     emit(
       state.copyWith(
-        startDate: null,
-        endDate: null,
-        selectedLevelId: null,
         selectedReferralStatus: 'all',
-        selectedUserId: null,
+        clearStartDate: true,
+        clearEndDate: true,
+        clearSelectedLevelId: true,
+        clearSelectedUserId: true,
       ),
     );
     await loadLoyaltyData();

@@ -10,8 +10,17 @@ class PromoCard extends StatelessWidget {
   final PromoEntity promo;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final VoidCallback? onReshare;
 
-  const PromoCard({super.key, required this.promo, this.onEdit, this.onDelete});
+  const PromoCard({
+    super.key,
+    required this.promo,
+    this.onEdit,
+    this.onDelete,
+    this.onReshare,
+  });
+
+  bool get isArchived => !promo.isActive;
 
   bool get isExpired {
     if (promo.expiresAt == null) return false;
@@ -33,7 +42,9 @@ class PromoCard extends StatelessWidget {
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: isExpired
+          color: isArchived
+              ? AppColors.textMuted.withAlpha(128)
+              : isExpired
               ? AppColors.danger.withAlpha(128)
               : AppColors.neonBlue.withAlpha(77),
         ),
@@ -64,20 +75,30 @@ class PromoCard extends StatelessWidget {
                         vertical: 4.h,
                       ),
                       decoration: BoxDecoration(
-                        color: isExpired
+                        color: isArchived
+                            ? AppColors.textMuted.withAlpha(51)
+                            : isExpired
                             ? AppColors.danger.withAlpha(51)
                             : AppColors.success.withAlpha(51),
                         borderRadius: BorderRadius.circular(4.r),
                         border: Border.all(
-                          color: isExpired
+                          color: isArchived
+                              ? AppColors.textMuted
+                              : isExpired
                               ? AppColors.danger
                               : AppColors.success,
                         ),
                       ),
                       child: Text(
-                        isExpired ? AppStrings.timeExpired : AppStrings.active,
+                        isArchived
+                            ? AppStrings.promoArchived
+                            : isExpired
+                            ? AppStrings.timeExpired
+                            : AppStrings.active,
                         style: TextStyle(
-                          color: isExpired
+                          color: isArchived
+                              ? AppColors.textMuted
+                              : isExpired
                               ? AppColors.danger
                               : AppColors.success,
                           fontSize: 11.sp,
@@ -144,21 +165,33 @@ class PromoCard extends StatelessWidget {
             end: 12.r,
             child: Row(
               children: [
-                if (onEdit != null)
+                if (!isArchived && onEdit != null)
                   _CircleActionButton(
                     icon: Icons.edit_outlined,
                     onPressed: onEdit,
                     color: AppColors.textPrimary,
                     tooltip: AppStrings.edit,
                   ),
-                if (onEdit != null && onDelete != null) SizedBox(width: 8.w),
-                if (onDelete != null)
+                if (!isArchived && onEdit != null && onDelete != null)
+                  SizedBox(width: 8.w),
+                if (!isArchived && onDelete != null)
                   _CircleActionButton(
-                    icon: Icons.delete_outline,
+                    icon: Icons.archive_outlined,
                     onPressed: onDelete,
                     color: AppColors.danger,
-                    tooltip: AppStrings.delete,
+                    tooltip: AppStrings.archivePromotion,
                   ),
+                if (onReshare != null) ...[
+                  if ((!isArchived && onDelete != null) ||
+                      (!isArchived && onEdit != null))
+                    SizedBox(width: 8.w),
+                  _CircleActionButton(
+                    icon: Icons.repeat_rounded,
+                    onPressed: onReshare,
+                    color: AppColors.neonBlue,
+                    tooltip: AppStrings.resharePromotion,
+                  ),
+                ],
               ],
             ),
           ),

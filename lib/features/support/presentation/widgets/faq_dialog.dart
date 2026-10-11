@@ -5,6 +5,7 @@ import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_dialog.dart';
+import '../../../../art_core/widgets/app_text_field.dart';
 import '../../domain/entities/faq_entity.dart';
 
 class FaqDialog extends StatefulWidget {
@@ -72,7 +73,7 @@ class _FaqDialogState extends State<FaqDialog> {
           text: isEdit ? AppStrings.saveChanges : AppStrings.addFaq,
           variant: AppButtonVariant.gradient,
           onPressed: () {
-            if (_formKey.currentState!.validate()) {
+            if (_formKey.currentState?.validate() ?? false) {
               final newFaq = FaqEntity(
                 id: widget.faq?.id ?? '',
                 questionAr: _qArController.text.trim(),
@@ -96,20 +97,47 @@ class _FaqDialogState extends State<FaqDialog> {
           children: [
             _buildSectionHeader(AppStrings.arabicLanguage),
             SizedBox(height: 8.h),
-            _buildTextField(_qArController, AppStrings.questionAr, AppStrings.questionArHint),
+            AppTextField(
+              controller: _qArController,
+              label: AppStrings.questionAr,
+              hintText: AppStrings.questionArHint,
+              validator: (value) => (value == null || value.trim().isEmpty) ? AppStrings.fieldRequired : null,
+            ),
             SizedBox(height: 12.h),
-            _buildTextField(_aArController, AppStrings.answerAr, AppStrings.answerArHint, maxLines: 3),
+            AppTextField(
+              controller: _aArController,
+              label: AppStrings.answerAr,
+              hintText: AppStrings.answerArHint,
+              maxLines: 3,
+              validator: (value) => (value == null || value.trim().isEmpty) ? AppStrings.fieldRequired : null,
+            ),
             SizedBox(height: 20.h),
             _buildSectionHeader(AppStrings.englishLanguage),
             SizedBox(height: 8.h),
-            _buildTextField(_qEnController, AppStrings.questionEn, AppStrings.questionEnHint),
+            AppTextField(
+              controller: _qEnController,
+              label: AppStrings.questionEn,
+              hintText: AppStrings.questionEnHint,
+              validator: (value) => (value == null || value.trim().isEmpty) ? AppStrings.fieldRequired : null,
+            ),
             SizedBox(height: 12.h),
-            _buildTextField(_aEnController, AppStrings.answerEn, AppStrings.answerEnHint, maxLines: 3),
+            AppTextField(
+              controller: _aEnController,
+              label: AppStrings.answerEn,
+              hintText: AppStrings.answerEnHint,
+              maxLines: 3,
+              validator: (value) => (value == null || value.trim().isEmpty) ? AppStrings.fieldRequired : null,
+            ),
             SizedBox(height: 20.h),
             Row(
               children: [
                 Expanded(
-                  child: _buildTextField(_orderController, AppStrings.sortOrderPriority, '0', isNumber: true),
+                  child: AppTextField(
+                    controller: _orderController,
+                    label: AppStrings.sortOrderPriority,
+                    hintText: '0',
+                    keyboardType: TextInputType.number,
+                  ),
                 ),
                 SizedBox(width: 16.w),
                 Expanded(
@@ -141,41 +169,6 @@ class _FaqDialogState extends State<FaqDialog> {
     return Text(
       title,
       style: TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold, fontSize: 14.sp),
-    );
-  }
-
-  Widget _buildTextField(
-    TextEditingController controller,
-    String label,
-    String hint, {
-    int maxLines = 1,
-    bool isNumber = false,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
-        SizedBox(height: 6.h),
-        TextFormField(
-          controller: controller,
-          maxLines: maxLines,
-          keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
-            filled: true,
-            fillColor: AppColors.scaffoldBackground,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-          ),
-          validator: (value) {
-            if (!isNumber && (value == null || value.trim().isEmpty)) {
-              return AppStrings.fieldRequired;
-            }
-            return null;
-          },
-        ),
-      ],
     );
   }
 }

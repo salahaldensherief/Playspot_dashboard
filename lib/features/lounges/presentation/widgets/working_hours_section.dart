@@ -1,4 +1,3 @@
-import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
@@ -20,35 +19,42 @@ class WorkingHoursSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    EasyLocalization.of(context);
+    final isCompact = MediaQuery.sizeOf(context).width < 600;
+
+    final opensAtField = AppTextField(
+      label: AppStrings.opensAt,
+      controller: opensAtController,
+      hintText: AppStrings.timeHint,
+      prefixIcon: Icons.access_time,
+      readOnly: true,
+      onTap: onOpensAtTap,
+    );
+
+    final closesAtField = AppTextField(
+      label: AppStrings.closesAt,
+      controller: closesAtController,
+      hintText: AppStrings.timeHint,
+      prefixIcon: Icons.access_time,
+      readOnly: true,
+      onTap: onClosesAtTap,
+    );
+
     return SectionContainer(
       title: AppStrings.schedule,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: AppTextField(
-                label: AppStrings.opensAt,
-                controller: opensAtController,
-                hintText: AppStrings.timeHint,
-                prefixIcon: Icons.access_time,
-                readOnly: true,
-                onTap: onOpensAtTap,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: AppTextField(
-                label: AppStrings.closesAt,
-                controller: closesAtController,
-                hintText: AppStrings.timeHint,
-                prefixIcon: Icons.access_time,
-                readOnly: true,
-                onTap: onClosesAtTap,
-              ),
-            ),
-          ],
-        ),
+        if (isCompact) ...[
+          opensAtField,
+          const SizedBox(height: 16),
+          closesAtField,
+        ] else ...[
+          Row(
+            children: [
+              Expanded(child: opensAtField),
+              const SizedBox(width: 16),
+              Expanded(child: closesAtField),
+            ],
+          ),
+        ],
       ],
     );
   }

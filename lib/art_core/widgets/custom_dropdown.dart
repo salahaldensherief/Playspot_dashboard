@@ -7,7 +7,7 @@ class CustomDropdown<T> extends StatelessWidget {
   final T? value;
   final List<T> items;
   final String Function(T) itemLabel;
-  final Function(T?) onChanged;
+  final ValueChanged<T?>? onChanged;
   final String? Function(T?)? validator;
 
   const CustomDropdown({

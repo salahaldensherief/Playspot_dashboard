@@ -18,6 +18,8 @@ abstract class CategoryRemoteSource {
   // Activity Types
   Future<List<ActivityTypeModel>> getActivityTypes();
   Future<ActivityTypeModel> addActivityType(ActivityTypeModel activityType);
+  Future<ActivityTypeModel> updateActivityType(ActivityTypeModel activityType);
+  Future<void> deleteActivityType(String id);
 }
 
 class CategoryRemoteSourceImpl implements CategoryRemoteSource {
@@ -77,7 +79,29 @@ class CategoryRemoteSourceImpl implements CategoryRemoteSource {
 
   @override
   Future<ActivityTypeModel> addActivityType(ActivityTypeModel activityType) async {
-    final response = await _supabase.from('activity_types').insert(activityType.toJson()).select().single();
+    final response = await _supabase
+        .from('activity_types')
+        .insert(activityType.toJson())
+        .select()
+        .single();
     return ActivityTypeModel.fromJson(response);
+  }
+
+  @override
+  Future<ActivityTypeModel> updateActivityType(
+    ActivityTypeModel activityType,
+  ) async {
+    final response = await _supabase
+        .from('activity_types')
+        .update(activityType.toJson())
+        .eq('id', activityType.id)
+        .select()
+        .single();
+    return ActivityTypeModel.fromJson(response);
+  }
+
+  @override
+  Future<void> deleteActivityType(String id) async {
+    await _supabase.from('activity_types').delete().eq('id', id);
   }
 }

@@ -20,6 +20,7 @@ class LoungeCacheHelper {
       pricePerHour: l.pricePerHour,
       isOpen: l.isOpen,
       location: l.location,
+      contactPhone: l.contactPhone,
       city: l.city,
       cityId: l.cityId,
       totalReviews: l.totalReviews,
@@ -56,7 +57,10 @@ class LoungeCacheHelper {
     if (cached is List && cached.isNotEmpty) {
       try {
         final list = cached
-            .map((item) => LoungeModel.fromJson(Map<String, dynamic>.from(item as Map)))
+            .map(
+              (item) =>
+                  LoungeModel.fromJson(Map<String, dynamic>.from(item as Map)),
+            )
             .where((e) => e.status != 'deleted')
             .map((e) => e as Lounge)
             .toList();

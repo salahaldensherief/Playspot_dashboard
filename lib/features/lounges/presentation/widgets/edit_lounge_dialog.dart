@@ -30,12 +30,13 @@ class EditLoungeDialog extends StatefulWidget {
 
 class _EditLoungeDialogState extends State<EditLoungeDialog> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late TextEditingController _nameController;
+  late TextEditingController _contactPhoneController;
   late TextEditingController _cityController;
   late TextEditingController _vodafoneCashController;
   late TextEditingController _instapayController;
-  
+
   Uint8List? _loungeImageBytes;
   String? _loungeImageName;
   bool _isOpen = true;
@@ -46,15 +47,23 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.lounge.name);
+    _contactPhoneController = TextEditingController(
+      text: widget.lounge.contactPhone ?? '',
+    );
     _cityController = TextEditingController(text: widget.lounge.city);
-    _vodafoneCashController = TextEditingController(text: widget.lounge.vodafoneCashNumber ?? '');
-    _instapayController = TextEditingController(text: widget.lounge.instapayAccount ?? '');
+    _vodafoneCashController = TextEditingController(
+      text: widget.lounge.vodafoneCashNumber ?? '',
+    );
+    _instapayController = TextEditingController(
+      text: widget.lounge.instapayAccount ?? '',
+    );
     _isOpen = widget.lounge.isOpen;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _contactPhoneController.dispose();
     _cityController.dispose();
     _vodafoneCashController.dispose();
     _instapayController.dispose();
@@ -62,47 +71,60 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
   }
 
   Future<void> _submit() async {
-    if (_vodafoneCashController.text.trim().isEmpty && _instapayController.text.trim().isEmpty) {
+    if (_isLocalUploading || widget.isLoading || widget.onSave == null) return;
+    if (_vodafoneCashController.text.trim().isEmpty &&
+        _instapayController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppStrings.paymentMethodsRequiredError), backgroundColor: AppColors.danger),
+        SnackBar(
+          content: Text(AppStrings.paymentMethodsRequiredError),
+          backgroundColor: AppColors.danger,
+        ),
       );
       return;
     }
 
     if (_formKey.currentState!.validate()) {
       setState(() => _isLocalUploading = true);
-      
+
       try {
         String imageUrl = widget.lounge.imageUrl;
         if (_loungeImageBytes != null && _loungeImageName != null) {
           imageUrl = await sl<StorageService>().uploadLoungeImage(
-            _loungeImageBytes!, 
-            _loungeImageName!, 
-            widget.lounge.id
+            _loungeImageBytes!,
+            _loungeImageName!,
+            widget.lounge.id,
           );
         }
 
         if (mounted) {
           final updatedLounge = widget.lounge.copyWith(
             name: _nameController.text,
+            contactPhone: _contactPhoneController.text.trim(),
             imageUrl: imageUrl,
             city: _cityController.text,
             isOpen: _isOpen,
-            vodafoneCashNumber: _vodafoneCashController.text.trim().isEmpty ? null : _vodafoneCashController.text.trim(),
-            instapayAccount: _instapayController.text.trim().isEmpty ? null : _instapayController.text.trim(),
+            vodafoneCashNumber: _vodafoneCashController.text.trim().isEmpty
+                ? null
+                : _vodafoneCashController.text.trim(),
+            instapayAccount: _instapayController.text.trim().isEmpty
+                ? null
+                : _instapayController.text.trim(),
           );
 
           final onSave = widget.onSave;
           if (onSave != null) {
             await onSave(updatedLounge);
           }
-          
+
           if (mounted) Navigator.pop(context);
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${AppStrings.error}: $e'), backgroundColor: AppColors.danger),
+            SnackBar(
+              content: Text('${AppStrings.error}: $e'),
+              backgroundColor: AppColors.danger,
+            ),
           );
         }
       } finally {
@@ -137,6 +159,7 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
           children: [
             LoungeInfoForm(
               nameController: _nameController,
+              contactPhoneController: _contactPhoneController,
               cityController: _cityController,
               onImageSelected: (bytes, name) {
                 _loungeImageBytes = bytes;
@@ -158,13 +181,29 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.payment_rounded, color: AppColors.neonBlue),
+                      const Icon(
+                        Icons.payment_rounded,
+                        color: AppColors.neonBlue,
+                      ),
                       SizedBox(width: 8.w),
-                      Text(AppStrings.paymentMethodsTitle, style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                      Text(
+                        AppStrings.paymentMethodsTitle,
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                   SizedBox(height: 8.h),
-                  Text(AppStrings.paymentMethodsHint, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                  Text(
+                    AppStrings.paymentMethodsHint,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12.sp,
+                    ),
+                  ),
                   SizedBox(height: 16.h),
                   AppTextField(
                     controller: _vodafoneCashController,
@@ -207,11 +246,19 @@ class _EditLoungeDialogState extends State<EditLoungeDialog> {
               children: [
                 Text(
                   AppStrings.status,
-                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
-                  _isOpen ? AppStrings.usersCanBookNow : AppStrings.loungeIsClosed,
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                  _isOpen
+                      ? AppStrings.usersCanBookNow
+                      : AppStrings.loungeIsClosed,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12.sp,
+                  ),
                 ),
               ],
             ),

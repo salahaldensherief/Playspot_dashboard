@@ -1,5 +1,8 @@
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
+
+import 'session_time_builder.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -18,17 +21,11 @@ import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit
 class RoomOccupancyActiveSection extends StatefulWidget {
   final Booking activeBooking;
   final RoomEntity room;
-  final Duration remaining;
-  final bool isExpired;
-  final String formattedRemaining;
 
   const RoomOccupancyActiveSection({
     super.key,
     required this.activeBooking,
     required this.room,
-    required this.remaining,
-    required this.isExpired,
-    required this.formattedRemaining,
   });
 
   @override
@@ -45,8 +42,6 @@ class _RoomOccupancyActiveSectionState
     EasyLocalization.of(context);
     final activeBooking = widget.activeBooking;
     final room = widget.room;
-    final isExpired = widget.isExpired;
-    final formattedRemaining = widget.formattedRemaining;
     final phone = activeBooking.userPhone;
     final isOpenTime = activeBooking.isOpenEnded;
 
@@ -132,57 +127,73 @@ class _RoomOccupancyActiveSectionState
         ),
         SizedBox(height: 10.h),
 
-        // Remaining Time Bar
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-          decoration: BoxDecoration(
-            color: isExpired
-                ? AppColors.danger.withValues(alpha: 0.15)
-                : AppColors.neonBlue.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(
-              color: isExpired
-                  ? AppColors.danger
-                  : AppColors.neonBlue.withValues(alpha: 0.3),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
+        SessionTimeBuilder(
+          builder: (context, now) {
+            final remaining = activeBooking.remainingDuration(now);
+            final isExpired = activeBooking.isSessionExpired(now);
+            final seconds = remaining.inSeconds.abs();
+            final hours = (seconds ~/ 3600).toString().padLeft(2, '0');
+            final minutes = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
+            final secs = (seconds % 60).toString().padLeft(2, '0');
+            final formattedRemaining = seconds >= 3600
+                ? '$hours:$minutes:$secs'
+                : '$minutes:$secs';
+            return Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: isExpired
+                    ? AppColors.danger.withValues(alpha: 0.15)
+                    : AppColors.neonBlue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(
+                  color: isExpired
+                      ? AppColors.danger
+                      : AppColors.neonBlue.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(
-                    isOpenTime
-                        ? Icons.all_inclusive_rounded
-                        : (isExpired ? Icons.timer_off : Icons.timer),
-                    size: 16.r,
-                    color: isExpired ? AppColors.danger : AppColors.neonBlue,
+                  Row(
+                    children: [
+                      Icon(
+                        isOpenTime
+                            ? Icons.all_inclusive_rounded
+                            : (isExpired ? Icons.timer_off : Icons.timer),
+                        size: 16.r,
+                        color: isExpired
+                            ? AppColors.danger
+                            : AppColors.neonBlue,
+                      ),
+                      SizedBox(width: 6.w),
+                      AppText.body(
+                        isOpenTime
+                            ? AppStrings.duration
+                            : (isExpired
+                                  ? AppStrings.timeExpired
+                                  : AppStrings.remainingTime),
+                        fontSize: 11.sp,
+                        color: isExpired
+                            ? AppColors.danger
+                            : AppColors.textSecondary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 6.w),
-                  AppText.body(
+                  AppText.subHeading(
                     isOpenTime
-                        ? AppStrings.duration
+                        ? formattedRemaining
                         : (isExpired
-                              ? AppStrings.timeExpired
-                              : AppStrings.remainingTime),
-                    fontSize: 11.sp,
-                    color: isExpired
-                        ? AppColors.danger
-                        : AppColors.textSecondary,
+                              ? '-$formattedRemaining'
+                              : formattedRemaining),
+                    fontSize: 14.sp,
+                    color: isExpired ? AppColors.danger : AppColors.neonBlue,
                     fontWeight: FontWeight.bold,
                   ),
                 ],
               ),
-              AppText.subHeading(
-                isOpenTime
-                    ? formattedRemaining
-                    : (isExpired ? '-$formattedRemaining' : formattedRemaining),
-                fontSize: 14.sp,
-                color: isExpired ? AppColors.danger : AppColors.neonBlue,
-                fontWeight: FontWeight.bold,
-              ),
-            ],
-          ),
+            );
+          },
         ),
         RoomOccupancyRequestsBadge(booking: activeBooking, room: room),
         SizedBox(height: 10.h),

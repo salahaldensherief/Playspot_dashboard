@@ -155,37 +155,10 @@ class LoungeQueryRemoteHelper {
   }
 
   Future<void> deleteLounge(String id) async {
-    try {
-      await client.from('lounges').update({'status': 'deleted'}).eq('id', id);
-      AppLogger.info('deleteLounge soft delete succeeded for id: $id');
-      return;
-    } catch (e) {
-      AppLogger.warning(
-        'deleteLounge soft delete direct update failed ($e), attempting RPC delete...',
-      );
-    }
-
-    try {
-      await client.rpc('delete_lounge_admin', params: {'p_lounge_id': id});
-      AppLogger.info(
-        'deleteLounge delete_lounge_admin RPC succeeded for id: $id',
-      );
-      return;
-    } catch (_) {}
-
-    try {
-      await client.rpc(
-        'super_admin_delete_lounge',
-        params: {'p_lounge_id': id},
-      );
-      AppLogger.info(
-        'deleteLounge super_admin_delete_lounge RPC succeeded for id: $id',
-      );
-      return;
-    } catch (e) {
-      AppLogger.error('deleteLounge soft delete failed: $e');
-      rethrow;
-    }
+    // Keep historical bookings/payments. RLS remains the authority, and single()
+    // rejects a missing or inaccessible row rather than reporting false success.
+    await client.from('lounges').update({'status': 'deleted'}).eq('id', id)
+        .select('id').single();
   }
 
   Future<List<LoungeModel>> getOwnerBranches(String ownerId) async {

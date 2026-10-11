@@ -38,17 +38,27 @@ class ModerationRemoteDataSourceImpl implements ModerationRemoteDataSource {
     String? evidenceNotes,
   }) async {
     try {
-      final payload = {
-        'lounge_id': loungeId,
-        'user_id': userId,
-        if (bookingId != null && bookingId.isNotEmpty) 'booking_id': bookingId,
-        'reason': reason,
-        if (evidenceNotes != null && evidenceNotes.isNotEmpty)
-          'evidence_notes': evidenceNotes,
-        'status': 'pending',
-      };
-
-      await client.from('user_ban_requests').insert(payload);
+      final response = await client.rpc(
+        'create_user_ban_request',
+        params: {
+          'p_lounge_id': loungeId,
+          'p_user_id': userId,
+          'p_booking_id':
+              (bookingId != null && bookingId.trim().isNotEmpty)
+              ? bookingId.trim()
+              : null,
+          'p_reason': reason,
+          'p_evidence_notes':
+              (evidenceNotes != null && evidenceNotes.trim().isNotEmpty)
+              ? evidenceNotes.trim()
+              : null,
+        },
+      );
+      if (response is! Map ||
+          response['success'] != true ||
+          response['request_id'] == null) {
+        throw const FormatException('Invalid moderation request response');
+      }
       debugPrint('🟢 [MODERATION] Ban request created successfully');
     } catch (e) {
       _logFailure('createBanRequest', e);

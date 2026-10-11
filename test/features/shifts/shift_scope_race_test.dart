@@ -113,6 +113,58 @@ void main() {
     await old;
     expect(cubit.state, ShiftState.initial());
   });
+
+  for (final report in ['cashier', 'lounges']) {
+    test(
+      '$report report failure is visible and a successful retry clears it',
+      () async {
+        if (report == 'cashier') {
+          when(
+            () => repository.getCashierPerformance(
+              loungeId: any(named: 'loungeId'),
+              startDate: any(named: 'startDate'),
+              endDate: any(named: 'endDate'),
+            ),
+          ).thenAnswer(
+            (_) async => const Left(ServerFailure('fixture report failure')),
+          );
+          await cubit.getCashierPerformance();
+        } else {
+          when(
+            () => repository.getLoungeComparison(
+              startDate: any(named: 'startDate'),
+              endDate: any(named: 'endDate'),
+            ),
+          ).thenAnswer(
+            (_) async => const Left(ServerFailure('fixture report failure')),
+          );
+          await cubit.getLoungeComparison();
+        }
+        expect(cubit.state.status, ShiftStatus.error);
+        expect(cubit.state.errorMessage, 'fixture report failure');
+        if (report == 'cashier') {
+          when(
+            () => repository.getCashierPerformance(
+              loungeId: any(named: 'loungeId'),
+              startDate: any(named: 'startDate'),
+              endDate: any(named: 'endDate'),
+            ),
+          ).thenAnswer((_) async => const Right([]));
+          await cubit.getCashierPerformance();
+        } else {
+          when(
+            () => repository.getLoungeComparison(
+              startDate: any(named: 'startDate'),
+              endDate: any(named: 'endDate'),
+            ),
+          ).thenAnswer((_) async => const Right([]));
+          await cubit.getLoungeComparison();
+        }
+        expect(cubit.state.status, ShiftStatus.active);
+        expect(cubit.state.errorMessage, isNull);
+      },
+    );
+  }
   test('late open shift denial cannot overwrite a new lounge', () async {
     await cubit.checkActiveShift('old');
     final delayed = Completer<Either<Failure, void>>();
