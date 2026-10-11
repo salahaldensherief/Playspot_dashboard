@@ -1,3 +1,4 @@
+import '../../../../../core/services/lounge_staff_provisioner.dart';
 import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/staff_model.dart';
@@ -127,17 +128,14 @@ class StaffRemoteSourceImpl implements StaffRemoteSource {
     }
 
     AppLogger.info('Adding staff member via create-lounge-staff Edge Function');
-    await _supabase.functions.invoke(
-      'create-lounge-staff',
-      body: {
-        'full_name': params.name.trim(),
-        'email': params.email.trim().toLowerCase(),
-        'phone': params.phone.trim(),
-        'password': params.password,
-        'role': roleClean,
-        'lounge_id': params.loungeId.trim(),
-      },
-    );
+    await LoungeStaffProvisioner(_supabase).create({
+      'full_name': params.name.trim(),
+      'email': params.email.trim().toLowerCase(),
+      'phone': params.phone.trim(),
+      'password': params.password,
+      'role': roleClean,
+      'lounge_id': params.loungeId.trim(),
+    });
     AppLogger.info('create-lounge-staff Edge Function executed successfully');
   }
 

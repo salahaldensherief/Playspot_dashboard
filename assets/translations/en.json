@@ -2011,5 +2011,7 @@
   "payout_no_positive_balance": "No positive payout balance remains after deducting lounge commissions.",
   "payout_custody_required": "Review undocumented payment recipients before creating a payout.",
   "payout_reconciliation_required": "Settlement requires reconciliation. Review payments and evidence before approving or paying it.",
-  "payout_transfer_evidence_required": "The transfer method and actual transfer reference are required before confirming payment."
+  "payout_transfer_evidence_required": "The transfer method and actual transfer reference are required before confirming payment.",
+  "staff_creation_unconfirmed": "Staff creation is not confirmed. Retry with the same details.",
+  "staff_creation_retry_original_details": "Retry using the original staff details to recover the account without creating another one."
 }
