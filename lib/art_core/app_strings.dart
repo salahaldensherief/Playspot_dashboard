@@ -1,6 +1,26 @@
 import 'package:easy_localization/easy_localization.dart';
 
 class AppStrings {
+  static String get paymentFundsReview => 'payment_funds_review'.tr();
+  static String get paymentFundsReviewHelp => 'payment_funds_review_help'.tr();
+  static String get reviewFundsHolder => 'review_funds_holder'.tr();
+  static String get fundsHolder => 'funds_holder'.tr();
+  static String get fundsReceivedByPlatform =>
+      'funds_received_by_platform'.tr();
+  static String get fundsReceivedByLounge => 'funds_received_by_lounge'.tr();
+  static String get selectFundsHolder => 'select_funds_holder'.tr();
+  static String get fundsEvidenceReference => 'funds_evidence_reference'.tr();
+  static String get fundsEvidenceRequired => 'funds_evidence_required'.tr();
+  static String get fundsCustodyImmutableHelp =>
+      'funds_custody_immutable_help'.tr();
+  static String get payoutNoPositiveBalance =>
+      'payout_no_positive_balance'.tr();
+  static String get payoutCustodyRequired => 'payout_custody_required'.tr();
+  static String get payoutReconciliationRequired =>
+      'payout_reconciliation_required'.tr();
+  static String get payoutTransferEvidenceRequired =>
+      'payout_transfer_evidence_required'.tr();
+
   static String get shiftFinancialsWithheld => 'shift_financials_withheld'.tr();
   static String get playMode => 'play_mode'.tr();
   static String get noBookingExtras => 'no_booking_extras'.tr();

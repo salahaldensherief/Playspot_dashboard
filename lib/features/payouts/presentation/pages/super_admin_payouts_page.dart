@@ -17,6 +17,7 @@ import '../widgets/payout_details_dialog.dart';
 import '../widgets/payout_reason_dialog.dart';
 import '../widgets/pending_payouts_tab.dart';
 import '../widgets/resolve_payout_review_dialog.dart';
+import '../widgets/payment_funds_review_dialog.dart';
 
 class SuperAdminPayoutsPage extends StatefulWidget {
   const SuperAdminPayoutsPage({super.key});
@@ -250,6 +251,15 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
               variant: AppButtonVariant.outlined,
               height: 38.h,
               onPressed: _fetchData,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          AppButton(
+            text: AppStrings.paymentFundsReview,
+            icon: Icons.fact_check_outlined,
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => PaymentFundsReviewDialog(onChanged: _fetchData),
             ),
           ),
           SizedBox(height: 16.h),
