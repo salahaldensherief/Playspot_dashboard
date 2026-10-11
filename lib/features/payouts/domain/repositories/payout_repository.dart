@@ -1,8 +1,17 @@
 import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
 import '../entities/payout_entity.dart';
+import '../entities/payment_funds_review.dart';
 
 abstract class PayoutRepository {
+  Future<Either<Failure, List<PaymentFundsReview>>> getPaymentFundsReview({
+    int offset = 0,
+  });
+  Future<Either<Failure, void>> recordPaymentFundsCustody({
+    required String paymentId,
+    required PaymentFundsHolder holder,
+    required String evidenceReference,
+  });
   Future<Either<Failure, List<PendingPayoutOverview>>>
   getPendingPayoutsOverview();
   Future<Either<Failure, List<PayoutEntity>>> getAllPayouts({

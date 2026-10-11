@@ -1,6 +1,8 @@
 import 'package:dartz/dartz.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
 import '../../domain/entities/payout_entity.dart';
+import '../../domain/entities/payment_funds_review.dart';
 import '../../domain/repositories/payout_repository.dart';
 import '../datasources/payout_remote_data_source.dart';
 
@@ -9,6 +11,52 @@ class PayoutRepositoryImpl implements PayoutRepository {
 
   PayoutRepositoryImpl(this.remoteDataSource);
 
+  Failure _payoutFailure(Object error) {
+    final message = error.toString();
+    if (message.contains('PAYMENT_FUNDS_CUSTODY_REQUIRED')) {
+      return ServerFailure(AppStrings.payoutCustodyRequired);
+    }
+    if (message.contains('PAYOUT_TRANSFER_EVIDENCE_REQUIRED')) {
+      return ServerFailure(AppStrings.payoutTransferEvidenceRequired);
+    }
+    if (message.contains('RECONCILIATION') ||
+        message.contains('PAYOUT_PAYMENT_EVIDENCE_CHANGED')) {
+      return ServerFailure(AppStrings.payoutReconciliationRequired);
+    }
+    return ServerFailure(message);
+  }
+
+  @override
+  Future<Either<Failure, List<PaymentFundsReview>>> getPaymentFundsReview({
+    int offset = 0,
+  }) async {
+    try {
+      return Right(
+        await remoteDataSource.getPaymentFundsReview(offset: offset),
+      );
+    } catch (error) {
+      return Left(_payoutFailure(error));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> recordPaymentFundsCustody({
+    required String paymentId,
+    required PaymentFundsHolder holder,
+    required String evidenceReference,
+  }) async {
+    try {
+      await remoteDataSource.recordPaymentFundsCustody(
+        paymentId: paymentId,
+        holder: holder,
+        evidenceReference: evidenceReference,
+      );
+      return const Right(null);
+    } catch (error) {
+      return Left(_payoutFailure(error));
+    }
+  }
+
   @override
   Future<Either<Failure, List<PendingPayoutOverview>>>
   getPendingPayoutsOverview() async {
@@ -16,7 +64,7 @@ class PayoutRepositoryImpl implements PayoutRepository {
       final overviews = await remoteDataSource.getPendingPayoutsOverview();
       return Right(overviews);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_payoutFailure(e));
     }
   }
 
@@ -32,7 +80,7 @@ class PayoutRepositoryImpl implements PayoutRepository {
       );
       return Right(payouts);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_payoutFailure(e));
     }
   }
 
@@ -48,9 +96,12 @@ class PayoutRepositoryImpl implements PayoutRepository {
         periodStart: periodStart,
         periodEnd: periodEnd,
       );
+      if (result['success'] != true) {
+        return Left(ServerFailure(AppStrings.payoutNoPositiveBalance));
+      }
       return Right(result);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_payoutFailure(e));
     }
   }
 
@@ -63,7 +114,7 @@ class PayoutRepositoryImpl implements PayoutRepository {
       await remoteDataSource.approvePayout(payoutId: payoutId, notes: notes);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_payoutFailure(e));
     }
   }
 
@@ -75,7 +126,7 @@ class PayoutRepositoryImpl implements PayoutRepository {
       await remoteDataSource.startPayoutProcessing(payoutId: payoutId);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_payoutFailure(e));
     }
   }
 
@@ -97,7 +148,7 @@ class PayoutRepositoryImpl implements PayoutRepository {
       );
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_payoutFailure(e));
     }
   }
 
@@ -110,7 +161,7 @@ class PayoutRepositoryImpl implements PayoutRepository {
       await remoteDataSource.markPayoutPaid(payoutId: payoutId, notes: notes);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_payoutFailure(e));
     }
   }
 
@@ -123,7 +174,7 @@ class PayoutRepositoryImpl implements PayoutRepository {
       await remoteDataSource.failPayout(payoutId: payoutId, reason: reason);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_payoutFailure(e));
     }
   }
 
@@ -136,7 +187,7 @@ class PayoutRepositoryImpl implements PayoutRepository {
       await remoteDataSource.cancelPayout(payoutId: payoutId, reason: reason);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_payoutFailure(e));
     }
   }
 
@@ -154,7 +205,7 @@ class PayoutRepositoryImpl implements PayoutRepository {
       );
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_payoutFailure(e));
     }
   }
 
@@ -168,7 +219,7 @@ class PayoutRepositoryImpl implements PayoutRepository {
       );
       return Right(details);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_payoutFailure(e));
     }
   }
 
@@ -186,7 +237,7 @@ class PayoutRepositoryImpl implements PayoutRepository {
       );
       return Right(payouts);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_payoutFailure(e));
     }
   }
 }

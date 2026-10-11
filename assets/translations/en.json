@@ -1976,7 +1976,6 @@
     "kind_addItems": "Product sale",
     "kind_collectCash": "Cash collection"
   },
-  "new_support_ticket": "New Support Ticket",
   "issue_category_general": "General",
   "issue_category_booking": "Booking",
   "issue_category_payment": "Payment",
@@ -1999,6 +1998,20 @@
   "new_reward": "New Reward",
   "profile_access_load_failed": "We could not verify your account. Your session is saved. Retry to continue.",
   "shift_financials_withheld": "Reconciliation data withheld by permissions",
-"staff_creation_unconfirmed": "Staff creation is not confirmed. Retry with the same details.",
-"staff_creation_retry_original_details": "Retry using the original staff details to recover the account without creating another one."
+  "payment_funds_review": "Review payment funds recipient",
+  "payment_funds_review_help": "Settlement uses who received each payment. Check the account statement before recording the recipient; the payment method alone is not evidence.",
+  "review_funds_holder": "Record funds recipient",
+  "funds_holder": "Funds recipient",
+  "funds_received_by_platform": "Received by the platform",
+  "funds_received_by_lounge": "Received by the lounge",
+  "select_funds_holder": "Select the recipient after checking evidence",
+  "funds_evidence_reference": "Account statement or receipt reference",
+  "funds_evidence_required": "A receipt evidence reference is required",
+  "funds_custody_immutable_help": "Check the evidence carefully: the recorded recipient cannot be changed from this screen.",
+  "payout_no_positive_balance": "No positive payout balance remains after deducting lounge commissions.",
+  "payout_custody_required": "Review undocumented payment recipients before creating a payout.",
+  "payout_reconciliation_required": "Settlement requires reconciliation. Review payments and evidence before approving or paying it.",
+  "payout_transfer_evidence_required": "The transfer method and actual transfer reference are required before confirming payment.",
+  "staff_creation_unconfirmed": "Staff creation is not confirmed. Retry with the same details.",
+  "staff_creation_retry_original_details": "Retry using the original staff details to recover the account without creating another one."
 }

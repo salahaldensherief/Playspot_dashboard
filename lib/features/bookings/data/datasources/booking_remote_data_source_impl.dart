@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:play_spot_dashboard/core/constants/app_constants.dart';
 import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_mutation_helper.dart';
-import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_query_helper.dart';
 import 'package:play_spot_dashboard/features/bookings/data/models/booking_model.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/customer_cancellation_summary.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -10,11 +8,9 @@ import 'booking_remote_data_source.dart';
 
 class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   final SupabaseClient client;
-  late final BookingQueryHelper _queryHelper;
   late final BookingMutationHelper _mutationHelper;
 
   BookingRemoteDataSourceImpl(this.client) {
-    _queryHelper = BookingQueryHelper(client);
     _mutationHelper = BookingMutationHelper(
       client: client,
       consumeVoucher: consumeVoucherByCode,
@@ -177,29 +173,19 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         ? loungeId.trim()
         : null;
 
-    try {
-      final response = await client.rpc(
-        'get_all_bookings_admin',
-        params: {
-          'p_lounge_id': cleanLoungeId,
-          'p_status': status,
-          'p_limit': limit,
-          'p_offset': offset,
-        },
-      );
+    final response = await client.rpc(
+      'get_all_bookings_admin',
+      params: {
+        'p_lounge_id': cleanLoungeId,
+        'p_status': status,
+        'p_limit': limit,
+        'p_offset': offset,
+      },
+    );
 
-      return (response as List).map((json) {
-        return BookingModel.fromJson(Map<String, dynamic>.from(json));
-      }).toList();
-    } catch (e) {
-      debugPrint('${AppConstants.bookingFetchAlert}$e');
-      return _queryHelper.fetchSafeSelect(
-        loungeId: cleanLoungeId,
-        status: status,
-        limit: limit,
-        offset: offset,
-      );
-    }
+    return (response as List).map((json) {
+      return BookingModel.fromJson(Map<String, dynamic>.from(json));
+    }).toList();
   }
 
   @override

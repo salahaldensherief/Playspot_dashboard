@@ -17,6 +17,16 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const privateKey = FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n");
 
 // ---------------------------------------------------------------------------
+// Reuse the credential client so google-auth-library retains its token and
+// refreshes it near expiry, grouping concurrent refresh requests.
+const firebaseAuth = new GoogleAuth({
+  credentials: {
+    client_email: FIREBASE_CLIENT_EMAIL,
+    private_key: privateKey,
+  },
+  scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
+});
+
 // Caller authentication.
 // This function runs with verify_jwt = false because it is called by the database
 // (handle_notification_webhook -> net.http_post) which sends a shared secret in the
@@ -245,15 +255,7 @@ Deno.serve(async (req: Request) => {
       if (/^[a-zA-Z0-9_.-]+$/.test(key)) data[key] = stringifyDataValue(value);
     }
 
-    const auth = new GoogleAuth({
-      credentials: {
-        client_email: FIREBASE_CLIENT_EMAIL,
-        private_key: privateKey,
-      },
-      scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
-    });
-
-    const client = await auth.getClient();
+    const client = await firebaseAuth.getClient();
     const accessTokenResponse = await client.getAccessToken();
     const accessToken = accessTokenResponse.token;
 

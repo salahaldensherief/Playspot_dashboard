@@ -74,7 +74,7 @@ class _CreatePayoutDialogState extends State<CreatePayoutDialog> {
           messenger.showSnackBar(
             SnackBar(
               content: Text(
-                '${AppStrings.payoutCreatedSuccess} \$${result['amount']} (${result['payment_count']} ${AppStrings.paymentsCount})',
+                '${AppStrings.payoutCreatedSuccess} ${result['amount']} ${AppStrings.egp} (${result['payment_count']} ${AppStrings.paymentsCount})',
               ),
             ),
           );

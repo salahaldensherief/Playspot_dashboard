@@ -1,7 +1,15 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/payout_model.dart';
+import '../models/payment_funds_review_model.dart';
+import '../../domain/entities/payment_funds_review.dart';
 
 abstract class PayoutRemoteDataSource {
+  Future<List<PaymentFundsReviewModel>> getPaymentFundsReview({int offset = 0});
+  Future<void> recordPaymentFundsCustody({
+    required String paymentId,
+    required PaymentFundsHolder holder,
+    required String evidenceReference,
+  });
   Future<List<PendingPayoutOverviewModel>> getPendingPayoutsOverview();
   Future<List<PayoutModel>> getAllPayouts({int page = 1, int pageSize = 50});
   Future<Map<String, dynamic>> createPayout({
@@ -38,6 +46,42 @@ class PayoutRemoteDataSourceImpl implements PayoutRemoteDataSource {
   final SupabaseClient _supabase;
 
   PayoutRemoteDataSourceImpl(this._supabase);
+
+  @override
+  Future<List<PaymentFundsReviewModel>> getPaymentFundsReview({
+    int offset = 0,
+  }) async {
+    final response = await _supabase.rpc(
+      'get_payment_funds_review',
+      params: {'p_limit': 50, 'p_offset': offset},
+    );
+    return (response as List)
+        .map(
+          (row) => PaymentFundsReviewModel.fromJson(
+            Map<String, dynamic>.from(row as Map),
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<void> recordPaymentFundsCustody({
+    required String paymentId,
+    required PaymentFundsHolder holder,
+    required String evidenceReference,
+  }) async {
+    final response = await _supabase.rpc(
+      'record_payment_funds_custody',
+      params: {
+        'p_payment_id': paymentId,
+        'p_funds_holder': holder.name,
+        'p_evidence_reference': evidenceReference.trim(),
+      },
+    );
+    if (response is! Map || response['success'] != true) {
+      throw const FormatException('Payment custody acknowledgement missing');
+    }
+  }
 
   @override
   Future<List<PendingPayoutOverviewModel>> getPendingPayoutsOverview() async {
