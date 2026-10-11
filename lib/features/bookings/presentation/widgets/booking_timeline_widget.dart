@@ -51,7 +51,7 @@ class BookingTimelineWidget extends StatelessWidget {
                 child: _buildTimelineStep(
                   title: AppStrings.bookingCreated,
                   subtitle: booking.createdAt != null
-                      ? _formatDateTime(booking.createdAt!)
+                      ? _formatDateTime(booking.createdAt ?? DateTime.now())
                       : '--:--',
                   isDone: true,
                   isActive: false,
@@ -68,7 +68,7 @@ class BookingTimelineWidget extends StatelessWidget {
                   child: _buildTimelineStep(
                     title: AppStrings.bookingCancelledTimeline,
                     subtitle: booking.cancelledAt != null
-                        ? _formatDateTime(booking.cancelledAt!)
+                        ? _formatDateTime(booking.cancelledAt ?? DateTime.now())
                         : (booking.cancellationReason ?? AppStrings.cancelled),
                     isDone: true,
                     isActive: false,
@@ -81,7 +81,7 @@ class BookingTimelineWidget extends StatelessWidget {
                   child: _buildTimelineStep(
                     title: AppStrings.sessionStarted,
                     subtitle: booking.checkedInAt != null
-                        ? _formatDateTime(booking.checkedInAt!)
+                        ? _formatDateTime(booking.checkedInAt ?? DateTime.now())
                         : (isInProgress ? AppStrings.inProgress : '--:--'),
                     isDone: hasCheckedIn,
                     isActive: isInProgress,

@@ -11,12 +11,14 @@ import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.da
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_status_badge.dart';
+import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
 import 'package:play_spot_dashboard/features/audit/presentation/widgets/audit_timeline.dart';
 import 'booking_details_action_panel.dart';
 import 'booking_details_customer_card.dart';
 import 'booking_details_financial_summary.dart';
 import 'booking_receipt_card.dart';
 import 'booking_specifications_card.dart';
+import 'booking_timeline_widget.dart';
 
 class BookingDetailsDialog extends StatefulWidget {
   final Booking booking;
@@ -182,11 +184,18 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
         width: isDesktopOrTablet
             ? math.min(900.w, screenSize.width - 32)
             : double.infinity,
-        constraints: BoxConstraints(
-          maxHeight: screenSize.height * 0.9,
-        ),
+        constraints: BoxConstraints(maxHeight: screenSize.height * 0.9),
         padding: EdgeInsets.all(20.r),
         child: BlocBuilder<BookingCubit, BookingState>(
+          buildWhen: (prev, curr) {
+            final prevBooking = prev.bookings
+                .where((b) => b.id == widget.booking.id)
+                .firstOrNull;
+            final currBooking = curr.bookings
+                .where((b) => b.id == widget.booking.id)
+                .firstOrNull;
+            return prevBooking != currBooking || prev.status != curr.status;
+          },
           builder: (context, state) {
             final activeBookingList = state.bookings
                 .where((b) => b.id == widget.booking.id)
@@ -195,6 +204,9 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                 ? activeBookingList.first
                 : widget.booking;
             final isLoading = state.status == BookingStatusState.loading;
+            final canViewAudit =
+                context.hasPermission('audit.view') ||
+                context.hasPermission('audit_view');
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,16 +233,24 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                                         booking: currentBooking,
                                       ),
                                       SizedBox(height: 12.h),
-                                      AuditTimeline(
-                                        entityType: 'booking',
-                                        entityId: currentBooking.id,
+                                      BookingTimelineWidget(
+                                        booking: currentBooking,
                                       ),
+                                      if (canViewAudit) ...[
+                                        SizedBox(height: 12.h),
+                                        AuditTimeline(
+                                          entityType: 'booking',
+                                          entityId: currentBooking.id,
+                                        ),
+                                      ],
                                       SizedBox(height: 12.h),
                                       BookingSpecificationsCard(
                                         booking: currentBooking,
                                       ),
                                       SizedBox(height: 12.h),
-                                      BookingReceiptCard(booking: currentBooking),
+                                      BookingReceiptCard(
+                                        booking: currentBooking,
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -279,10 +299,14 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                                   booking: currentBooking,
                                 ),
                                 SizedBox(height: 12.h),
-                                AuditTimeline(
-                                  entityType: 'booking',
-                                  entityId: currentBooking.id,
-                                ),
+                                BookingTimelineWidget(booking: currentBooking),
+                                if (canViewAudit) ...[
+                                  SizedBox(height: 12.h),
+                                  AuditTimeline(
+                                    entityType: 'booking',
+                                    entityId: currentBooking.id,
+                                  ),
+                                ],
                                 SizedBox(height: 12.h),
                                 BookingSpecificationsCard(
                                   booking: currentBooking,

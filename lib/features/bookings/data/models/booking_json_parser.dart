@@ -41,40 +41,52 @@ class BookingJsonParser {
       final String? nameAr = map['name_ar']?.toString().trim();
       final String? nameEn = map['name_en']?.toString().trim();
       final String? nameDefault = map['name']?.toString().trim();
-      final String? rawTitle = (map['title'] ??
-              map['item_name'] ??
-              map['extra_name'] ??
-              map['product_name'])
-          ?.toString()
-          .trim();
+      final String? rawTitle =
+          (map['title'] ??
+                  map['item_name'] ??
+                  map['extra_name'] ??
+                  map['product_name'])
+              ?.toString()
+              .trim();
 
-      final resolvedName = (nameAr != null && nameAr.isNotEmpty && nameAr != 'null')
+      final resolvedName =
+          (nameAr != null && nameAr.isNotEmpty && nameAr != 'null')
           ? nameAr
           : ((nameEn != null && nameEn.isNotEmpty && nameEn != 'null')
-              ? nameEn
-              : ((nameDefault != null &&
-                      nameDefault.isNotEmpty &&
-                      nameDefault != 'null' &&
-                      nameDefault != 'canteen_order')
-                  ? nameDefault
-                  : ((rawTitle != null && rawTitle.isNotEmpty && rawTitle != 'null')
-                      ? rawTitle
-                      : 'صنف')));
+                ? nameEn
+                : ((nameDefault != null &&
+                          nameDefault.isNotEmpty &&
+                          nameDefault != 'null' &&
+                          nameDefault != 'canteen_order')
+                      ? nameDefault
+                      : ((rawTitle != null &&
+                                rawTitle.isNotEmpty &&
+                                rawTitle != 'null')
+                            ? rawTitle
+                            : 'صنف')));
 
-      final qty = (map['quantity'] ?? map['qty'] ?? map['count'] as num?)?.toInt() ?? 1;
-      final unitPrice = (map['unit_price'] ?? map['price'] ?? map['item_price'] as num?)
+      final qty =
+          (map['quantity'] ?? map['qty'] ?? map['count'] as num?)?.toInt() ?? 1;
+      final unitPrice =
+          (map['unit_price'] ?? map['price'] ?? map['item_price'] as num?)
               ?.toDouble() ??
           0.0;
       final givenTotal =
-          (map['total_price'] ?? map['total'] ?? map['amount'] as num?)?.toDouble();
+          (map['total_price'] ?? map['total'] ?? map['amount'] as num?)
+              ?.toDouble();
       final totalPrice = givenTotal ?? (unitPrice * qty);
 
       itemsList.add({
         'id': (map['id'] ?? map['extra_id'] ?? map['product_id'])?.toString(),
-        'extra_id': (map['extra_id'] ?? map['product_id'] ?? map['id'])?.toString(),
+        'extra_id': (map['extra_id'] ?? map['product_id'] ?? map['id'])
+            ?.toString(),
         'name': resolvedName,
-        'name_ar': (nameAr != null && nameAr.isNotEmpty) ? nameAr : resolvedName,
-        'name_en': (nameEn != null && nameEn.isNotEmpty) ? nameEn : resolvedName,
+        'name_ar': (nameAr != null && nameAr.isNotEmpty)
+            ? nameAr
+            : resolvedName,
+        'name_en': (nameEn != null && nameEn.isNotEmpty)
+            ? nameEn
+            : resolvedName,
         'quantity': qty,
         'qty': qty,
         'unit_price': unitPrice,
@@ -85,7 +97,8 @@ class BookingJsonParser {
       });
     }
 
-    dynamic rawExtras = json['items'] ??
+    dynamic rawExtras =
+        json['items'] ??
         json['booking_items'] ??
         json['extras'] ??
         json['canteen_items'] ??
@@ -143,7 +156,11 @@ class BookingJsonParser {
     final shortKey = isLat ? 'lat' : 'lng';
     final coordIndex = isLat ? 1 : 0;
 
-    final val = json[key] ?? json[shortKey] ?? loungeData?[key] ?? loungeData?[shortKey];
+    final val =
+        json[key] ??
+        json[shortKey] ??
+        loungeData?[key] ??
+        loungeData?[shortKey];
     if (val != null) return parseDouble(val);
 
     final locPoint = json['location_point'] ?? loungeData?['location_point'];
@@ -153,8 +170,10 @@ class BookingJsonParser {
       return parseDouble((locPoint['coordinates'] as List)[coordIndex]);
     }
     if (locPoint is String) {
-      final match = RegExp(r'POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)', caseSensitive: false)
-          .firstMatch(locPoint);
+      final match = RegExp(
+        r'POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)',
+        caseSensitive: false,
+      ).firstMatch(locPoint);
       if (match != null) {
         final groupIdx = isLat ? 2 : 1;
         return double.tryParse(match.group(groupIdx) ?? '');
@@ -164,7 +183,8 @@ class BookingJsonParser {
   }
 
   static String? parseReceiptUrl(Map<String, dynamic> json) {
-    dynamic val = json['receipt_url'] ??
+    dynamic val =
+        json['receipt_url'] ??
         json['out_receipt_url'] ??
         json['receipt_path'] ??
         json['out_receipt_path'] ??
@@ -183,7 +203,8 @@ class BookingJsonParser {
         json['transfer_receipt'];
 
     if (val == null && json['metadata'] is Map) {
-      val = json['metadata']['receipt_url'] ??
+      val =
+          json['metadata']['receipt_url'] ??
           json['metadata']['receipt_path'] ??
           json['metadata']['receipt'] ??
           json['metadata']['payment_receipt'] ??
@@ -191,7 +212,8 @@ class BookingJsonParser {
     }
 
     if (val == null && json['bookings'] is Map) {
-      val = json['bookings']['receipt_url'] ??
+      val =
+          json['bookings']['receipt_url'] ??
           json['bookings']['receipt_path'] ??
           json['bookings']['receipt'] ??
           json['bookings']['payment_receipt'];

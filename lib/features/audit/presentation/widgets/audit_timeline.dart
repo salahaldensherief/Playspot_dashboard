@@ -33,6 +33,7 @@ class AuditTimeline extends StatefulWidget {
 class _AuditTimelineState extends State<AuditTimeline> {
   int _fetchGeneration = 0;
   bool _isLoading = true;
+  bool _isPermissionDenied = false;
   List<AuditLogEntity> _logs = [];
   String? _error;
 
@@ -56,6 +57,7 @@ class _AuditTimelineState extends State<AuditTimeline> {
     final generation = ++_fetchGeneration;
     setState(() {
       _isLoading = true;
+      _isPermissionDenied = false;
       _error = null;
       _logs = [];
     });
@@ -77,12 +79,22 @@ class _AuditTimelineState extends State<AuditTimeline> {
     if (!mounted || generation != _fetchGeneration) return;
 
     result.fold(
-      (failure) => setState(() {
-        _isLoading = false;
-        _error = failure.message;
-      }),
+      (failure) {
+        final raw = failure.message.toLowerCase();
+        final isDenied =
+            raw.contains('permission') ||
+            raw.contains('denied') ||
+            raw.contains('authorized') ||
+            raw.contains('42501');
+        setState(() {
+          _isLoading = false;
+          _isPermissionDenied = isDenied;
+          _error = isDenied ? null : failure.message;
+        });
+      },
       (logs) => setState(() {
         _isLoading = false;
+        _isPermissionDenied = false;
         _logs = logs;
       }),
     );
@@ -94,6 +106,9 @@ class _AuditTimelineState extends State<AuditTimeline> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isPermissionDenied) {
+      return const SizedBox.shrink();
+    }
     EasyLocalization.of(context);
     return Container(
       padding: EdgeInsets.all(16.r),

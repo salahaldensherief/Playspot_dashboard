@@ -13,8 +13,10 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booki
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_card_schedule_box.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_countdown_timer.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_details_dialog.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_next_session_notice.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_products_preview.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_session_progress.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_session_requests_badge.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_discount_dialog.dart';
 
 import '../../../auth/presentation/login/login_cubit.dart';
@@ -207,70 +209,80 @@ class _BookingCardState extends State<BookingCard> {
                     shortId: shortId,
                   ),
 
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 12.h),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 2) Customer
-                        BookingCardCustomerRow(booking: booking),
-                        SizedBox(height: 12.h),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 12.h),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 2) Customer
+                            BookingCardCustomerRow(booking: booking),
+                            SizedBox(height: 12.h),
 
-                        // 3) When + where
-                        BookingCardScheduleBox(
-                          booking: booking,
-                          accent: accent,
-                          isOverdue: isOverdue,
+                            // 3) When + where
+                            BookingCardScheduleBox(
+                              booking: booking,
+                              accent: accent,
+                              isOverdue: isOverdue,
+                            ),
+
+                            // 4) Live state / countdown
+                            if (isCanStartSession && !isInProgress) ...[
+                              SizedBox(height: 8.h),
+                              BookingCountdownTimer(
+                                booking: booking,
+                                gracePeriodMinutes: graceMinutes,
+                              ),
+                            ],
+                            if (isInProgress) ...[
+                              SizedBox(height: 8.h),
+                              BookingSessionProgress(booking: booking),
+                            ],
+
+                            // 5) Requests & next booking notice
+                            LiveSessionRequestsBadge(booking: booking),
+                            BookingNextSessionNotice(booking: booking),
+
+                            // 6) Canteen & extras
+                            BookingProductsPreview(booking: booking),
+
+                            SizedBox(height: 12.h),
+                            Container(
+                              height: 1,
+                              color: AppColors.borderDefault.withValues(
+                                alpha: 0.6,
+                              ),
+                            ),
+                            SizedBox(height: 10.h),
+
+                            // 7) Money
+                            BookingCardFinancialRow(
+                              booking: booking,
+                              isPaid: isPaid,
+                              onShowDiscount: () =>
+                                  _showDiscountDialog(context),
+                            ),
+                            SizedBox(height: 12.h),
+
+                            // 8) Actions
+                            BookingCardActions(
+                              booking: booking,
+                              isPaid: isPaid,
+                              isPending: isPending,
+                              isCanStartSession: isCanStartSession,
+                              onOpenDetails: () => _openDetailsDialog(context),
+                              onApprove: widget.onApprove,
+                              onStartSession: widget.onStartSession,
+                              onConfirmPayment: widget.onConfirmPayment,
+                              onReject: widget.onReject,
+                              onNoShow: widget.onNoShow,
+                            ),
+                          ],
                         ),
-
-                        // 4) Live state
-                        if (booking.isCashPayment &&
-                            isCanStartSession &&
-                            !isInProgress) ...[
-                          SizedBox(height: 8.h),
-                          BookingCountdownTimer(
-                            booking: booking,
-                            gracePeriodMinutes: graceMinutes,
-                          ),
-                        ],
-                        if (isInProgress) ...[
-                          SizedBox(height: 8.h),
-                          BookingSessionProgress(booking: booking),
-                        ],
-
-                        // 5) Canteen & extras
-                        BookingProductsPreview(booking: booking),
-
-                        SizedBox(height: 12.h),
-                        Container(
-                          height: 1,
-                          color: AppColors.borderDefault.withValues(alpha: 0.6),
-                        ),
-                        SizedBox(height: 10.h),
-
-                        // 6) Money
-                        BookingCardFinancialRow(
-                          booking: booking,
-                          isPaid: isPaid,
-                          onShowDiscount: () => _showDiscountDialog(context),
-                        ),
-                        SizedBox(height: 12.h),
-
-                        // 7) Actions
-                        BookingCardActions(
-                          booking: booking,
-                          isPaid: isPaid,
-                          isPending: isPending,
-                          isCanStartSession: isCanStartSession,
-                          onOpenDetails: () => _openDetailsDialog(context),
-                          onApprove: widget.onApprove,
-                          onStartSession: widget.onStartSession,
-                          onConfirmPayment: widget.onConfirmPayment,
-                          onReject: widget.onReject,
-                          onNoShow: widget.onNoShow,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ],

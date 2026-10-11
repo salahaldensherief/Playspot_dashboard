@@ -85,7 +85,8 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
     final room = widget.room;
 
     return AppDialog(
-      title: '${AppStrings.startOpenTime} - ${room.nameAr.isNotEmpty ? room.nameAr : room.nameEn}',
+      title:
+          '${AppStrings.startOpenTime} - ${room.nameAr.isNotEmpty ? room.nameAr : room.nameEn}',
       icon: Icons.timer_outlined,
       width: 460.w,
       actions: [
@@ -128,10 +129,7 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
           SizedBox(height: 14.h),
           SegmentedButton<String>(
             segments: [
-              ButtonSegment(
-                value: 'single',
-                label: Text(AppStrings.single),
-              ),
+              ButtonSegment(value: 'single', label: Text(AppStrings.single)),
               ButtonSegment(value: 'multi', label: Text(AppStrings.multi)),
             ],
             selected: {_playMode},
@@ -142,10 +140,7 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
           SizedBox(height: 12.h),
           Text(
             AppStrings.openTimeDialogNotice,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12.sp,
-            ),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
           ),
         ],
       ),

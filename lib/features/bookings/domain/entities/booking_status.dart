@@ -1,4 +1,12 @@
-enum BookingStatus { pending, pendingVerification, upcoming, completed, cancelled, rejected, inProgress }
+enum BookingStatus {
+  pending,
+  pendingVerification,
+  upcoming,
+  completed,
+  cancelled,
+  rejected,
+  inProgress,
+}
 
 extension BookingStatusX on BookingStatus {
   String toDbString() {

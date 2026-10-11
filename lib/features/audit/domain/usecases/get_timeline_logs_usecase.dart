@@ -26,7 +26,9 @@ class GetTimelineLogsUsecase {
 
   GetTimelineLogsUsecase(this.repository);
 
-  Future<Either<Failure, List<AuditLogEntity>>> call(GetTimelineLogsParams params) {
+  Future<Either<Failure, List<AuditLogEntity>>> call(
+    GetTimelineLogsParams params,
+  ) {
     return repository.getTimelineLogs(params);
   }
 }

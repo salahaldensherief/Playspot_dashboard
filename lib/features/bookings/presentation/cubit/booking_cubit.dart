@@ -212,7 +212,7 @@ class BookingCubit extends Cubit<BookingState>
           final targetLoungeId = watchedEntityId == 'all'
               ? null
               : watchedEntityId;
-          startWatchingBookings(loungeId: targetLoungeId);
+          startWatchingBookings(loungeId: targetLoungeId, forceRefresh: true);
         }
         return true;
       },
@@ -430,23 +430,31 @@ class BookingCubit extends Cubit<BookingState>
     if (foundIndex == -1 || !_pendingExtensions.add(id)) return false;
 
     try {
-      final result = await repository.extendBookingSession(id, additionalMinutes);
+      final result = await repository.extendBookingSession(
+        id,
+        additionalMinutes,
+      );
       if (isClosed) return false;
-      return result.fold<bool>((failure) {
-        emit(state.copyWith(
-          status: BookingStatusState.failure,
-          errorMessage: failure.message.tr(),
-        ));
-        return false;
-      }, (_) {
-        if (watchedEntityId != null) {
-        final targetLoungeId = watchedEntityId == 'all'
-            ? null
-            : watchedEntityId;
-          startWatchingBookings(loungeId: targetLoungeId, forceRefresh: true);
-        }
-        return true;
-      });
+      return result.fold<bool>(
+        (failure) {
+          emit(
+            state.copyWith(
+              status: BookingStatusState.failure,
+              errorMessage: failure.message.tr(),
+            ),
+          );
+          return false;
+        },
+        (_) {
+          if (watchedEntityId != null) {
+            final targetLoungeId = watchedEntityId == 'all'
+                ? null
+                : watchedEntityId;
+            startWatchingBookings(loungeId: targetLoungeId, forceRefresh: true);
+          }
+          return true;
+        },
+      );
     } finally {
       _pendingExtensions.remove(id);
     }

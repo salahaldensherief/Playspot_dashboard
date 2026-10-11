@@ -48,7 +48,12 @@ class BookingDetailsActionPanel extends StatelessWidget {
             variant: AppButtonVariant.primary,
             backgroundColor: AppColors.success,
             height: 40.h,
-            onPressed: () => cubit.approveBooking(booking.id),
+            onPressed: () async {
+              final success = await cubit.approveBooking(booking.id);
+              if (success && context.mounted) {
+                Navigator.of(context, rootNavigator: false).pop();
+              }
+            },
           ),
         if ((isUpcoming || isInProgress) && !isUnpaid)
           AppButton(

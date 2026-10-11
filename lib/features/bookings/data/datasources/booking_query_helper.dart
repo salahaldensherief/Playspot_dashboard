@@ -38,7 +38,9 @@ class BookingQueryHelper {
           .map((json) => BookingModel.fromJson(Map<String, dynamic>.from(json)))
           .toList();
     } catch (e2) {
-      debugPrint('⚠️ [BookingQueryHelper] Join query failed ($e2), attempting plain select fallback...');
+      debugPrint(
+        '⚠️ [BookingQueryHelper] Join query failed ($e2), attempting plain select fallback...',
+      );
       try {
         var query = client.from('bookings').select();
         if (loungeId != null && loungeId.isNotEmpty) {
@@ -52,7 +54,9 @@ class BookingQueryHelper {
             .range(offset, offset + limit - 1);
 
         return (response as List)
-            .map((json) => BookingModel.fromJson(Map<String, dynamic>.from(json)))
+            .map(
+              (json) => BookingModel.fromJson(Map<String, dynamic>.from(json)),
+            )
             .toList();
       } catch (e3) {
         debugPrint('${AppConstants.criticalFallbackError}$e3');

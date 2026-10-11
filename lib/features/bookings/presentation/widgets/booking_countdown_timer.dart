@@ -67,7 +67,37 @@ class BookingCountdownTimer extends StatelessWidget {
         ),
       );
     } else {
-      // Past start time - grace period tracking
+      if (!booking.isCashPayment) {
+        return Container(
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+          decoration: BoxDecoration(
+            color: AppColors.success.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(6.r),
+            border: Border.all(color: AppColors.success.withValues(alpha: 0.4)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.play_circle_outline_rounded,
+                color: AppColors.success,
+                size: 12.r,
+              ),
+              SizedBox(width: 4.w),
+              Text(
+                'start_session_now'.tr(),
+                style: TextStyle(
+                  color: AppColors.success,
+                  fontSize: 10.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      // Past start time - grace period tracking for cash bookings
       final elapsed = now.difference(start);
       final elapsedMins = elapsed.inMinutes;
       final graceLimit = gracePeriodMinutes;

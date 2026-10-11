@@ -63,14 +63,11 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       throw const FormatException('Invalid priced slots response');
     }
 
-    final rows =
-        response.length == 1 && response.first is List
+    final rows = response.length == 1 && response.first is List
         ? response.first as List
         : response;
 
-    return rows
-        .map((row) => Map<String, dynamic>.from(row as Map))
-        .toList();
+    return rows.map((row) => Map<String, dynamic>.from(row as Map)).toList();
   }
 
   @override
@@ -437,7 +434,10 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
 
   @override
-  Future<void> extendBookingSession(String bookingId, int additionalMinutes) async {
+  Future<void> extendBookingSession(
+    String bookingId,
+    int additionalMinutes,
+  ) async {
     final response = await client.rpc(
       'extend_booking_session',
       params: {

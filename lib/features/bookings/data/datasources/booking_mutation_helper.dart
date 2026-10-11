@@ -35,10 +35,7 @@ class BookingMutationHelper {
           ? rawQuantity.toInt()
           : int.tryParse(rawQuantity.toString()) ?? 1;
 
-      return {
-        'extra_id': extraId,
-        'quantity': quantity,
-      };
+      return {'extra_id': extraId, 'quantity': quantity};
     }).toList();
 
     final response = await client.rpc(

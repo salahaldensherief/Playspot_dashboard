@@ -372,7 +372,6 @@ class _BookingsPageState extends State<BookingsPage>
                 child: BookingsActiveGrid(
                   bookings: filtered,
                   isTableView: _isTableView,
-                  prioritizeOperations: _selectedTabIndex == 0,
                   onShowDetails: (b) => _showBookingDetails(context, b),
                   onApprove: (id) =>
                       context.read<BookingCubit>().approveBooking(id),

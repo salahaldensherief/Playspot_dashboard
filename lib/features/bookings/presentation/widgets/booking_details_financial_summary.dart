@@ -54,16 +54,22 @@ class BookingDetailsFinancialSummary extends StatelessWidget {
       final p = (item['price'] ?? item['unit_price'] ?? 0.0) as num;
       extrasTotal += (q * p).toDouble();
     }
-    if (extrasTotal == 0.0 &&
-        booking.addonsPrice != null &&
-        booking.addonsPrice! > 0) {
-      extrasTotal = booking.addonsPrice!;
+    final addonsPrice = booking.addonsPrice ?? 0.0;
+    if (extrasTotal == 0.0 && addonsPrice > 0) {
+      extrasTotal = addonsPrice;
     }
-    final roomBasePrice = (booking.totalPrice - extrasTotal).clamp(
-      0.0,
-      double.infinity,
-    );
+
+    final totalDiscount =
+        (booking.discountAmount ?? 0.0) + (booking.voucherDiscount ?? 0.0);
+
+    final roomBasePrice =
+        booking.roomPrice ??
+        (booking.totalPrice + totalDiscount - extrasTotal).clamp(
+          0.0,
+          double.infinity,
+        );
     final hasExtras = extrasTotal > 0 || booking.extras.isNotEmpty;
+    final hasDiscount = totalDiscount > 0;
 
     return Container(
       padding: EdgeInsets.all(16.r),
@@ -99,10 +105,10 @@ class BookingDetailsFinancialSummary extends StatelessWidget {
             '${extrasTotal.toStringAsFixed(0)} ${AppStrings.egp}',
             color: hasExtras ? AppColors.warning : null,
           ),
-          if (booking.discountAmount != null && booking.discountAmount! > 0)
+          if (hasDiscount)
             _buildBillRow(
               AppStrings.discount,
-              '-${booking.discountAmount!.toStringAsFixed(0)} ${AppStrings.egp}',
+              '-${totalDiscount.toStringAsFixed(0)} ${AppStrings.egp}',
               color: AppColors.danger,
             ),
           const Divider(color: AppColors.borderDefault),

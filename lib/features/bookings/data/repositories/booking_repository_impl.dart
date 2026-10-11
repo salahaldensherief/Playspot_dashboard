@@ -278,14 +278,21 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> extendBookingSession(String bookingId, int additionalMinutes) async {
+  Future<Either<Failure, void>> extendBookingSession(
+    String bookingId,
+    int additionalMinutes,
+  ) async {
     try {
       await remoteDataSource.extendBookingSession(bookingId, additionalMinutes);
       return const Right(null);
     } on PostgrestException catch (e) {
-      return Left(ServerFailure(e.message.contains('BOOKING_EXTENSION_CONFLICT')
-          ? 'booking_extension_conflict'
-          : 'booking_extension_failed'));
+      return Left(
+        ServerFailure(
+          e.message.contains('BOOKING_EXTENSION_CONFLICT')
+              ? 'booking_extension_conflict'
+              : 'booking_extension_failed',
+        ),
+      );
     } catch (_) {
       return const Left(ServerFailure('booking_extension_failed'));
     }
@@ -402,6 +409,14 @@ class BookingRepositoryImpl implements BookingRepository {
     }
     if (clean.contains('open_time_max_exceeded')) {
       return 'الجلسة تجاوزت الحد الأقصى للوقت المفتوح. راجع سياسة الصالة قبل الإغلاق.';
+    }
+    if (clean.contains('no_open_shift')) {
+      return 'لا توجد وردية مفتوحة حالياً، يرجى فتح وردية أولاً.';
+    }
+    if (clean.contains('cash_booking_approval_required') ||
+        clean.contains('only authorized lounge staff') ||
+        clean.contains('user is not authorized for this lounge')) {
+      return 'ليس لديك صلاحية لتنفيذ هذا الإجراء على هذا الحجز.';
     }
     return message.replaceFirst('Exception: ', '');
   }

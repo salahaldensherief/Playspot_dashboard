@@ -13,7 +13,9 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booki
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_session_card_actions.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_session_card_header.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_session_requests_badge.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_next_session_notice.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_session_timer_box.dart';
+
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_discount_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_time_builder.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_time_selector.dart';
@@ -224,10 +226,12 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
                               ),
                             ),
                             LiveSessionRequestsBadge(booking: booking),
+                            BookingNextSessionNotice(booking: booking),
                             BookingProductsPreview(
                               booking: booking,
                               maxVisibleItems: 2,
                             ),
+
                             SizedBox(height: 12.h),
                             Container(
                               height: 1,

@@ -33,18 +33,18 @@ class GetAuditLogsParams extends Equatable {
 
   @override
   List<Object?> get props => [
-        loungeId,
-        entityType,
-        entityId,
-        userId,
-        severity,
-        bookingId,
-        startDate,
-        endDate,
-        lastId,
-        lastCreatedAt,
-        limit,
-      ];
+    loungeId,
+    entityType,
+    entityId,
+    userId,
+    severity,
+    bookingId,
+    startDate,
+    endDate,
+    lastId,
+    lastCreatedAt,
+    limit,
+  ];
 }
 
 class GetAuditLogsUsecase {
@@ -52,7 +52,9 @@ class GetAuditLogsUsecase {
 
   GetAuditLogsUsecase(this.repository);
 
-  Future<Either<Failure, AuditLogPaginatedResult>> call(GetAuditLogsParams params) {
+  Future<Either<Failure, AuditLogPaginatedResult>> call(
+    GetAuditLogsParams params,
+  ) {
     return repository.getAuditLogs(params);
   }
 }

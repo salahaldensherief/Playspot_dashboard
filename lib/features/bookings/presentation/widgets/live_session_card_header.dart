@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_info_chip.dart';
 
 class LiveSessionCardHeader extends StatelessWidget {
   final Booking booking;
@@ -42,7 +43,16 @@ class LiveSessionCardHeader extends StatelessWidget {
                     maxLines: 1,
                   ),
                 ),
+                if (booking.playMode != null &&
+                    booking.playMode!.trim().isNotEmpty) ...[
+                  SizedBox(width: 6.w),
+                  BookingInfoChip(
+                    label: booking.playMode!.tr(),
+                    color: AppColors.neonBlue,
+                  ),
+                ],
                 SizedBox(width: 6.w),
+
                 Tooltip(
                   message: AppStrings.swapRoom,
                   child: InkWell(

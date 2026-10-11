@@ -253,7 +253,9 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
                               Row(
                                 children: [
                                   IconButton(
-                                    icon: const Icon(Icons.remove_circle_outline),
+                                    icon: const Icon(
+                                      Icons.remove_circle_outline,
+                                    ),
                                     color: qty > 0
                                         ? AppColors.danger
                                         : AppColors.textMuted,

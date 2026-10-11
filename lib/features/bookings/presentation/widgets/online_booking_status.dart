@@ -42,11 +42,17 @@ class _OnlineBookingStatusState extends State<OnlineBookingStatus> {
     try {
       final data = widget.loader != null
           ? await widget.loader!(loungeId)
-          : Map<String, dynamic>.from(await sl<SupabaseClient>().rpc(
-              'get_lounge_operating_status', params: {'p_lounge_id': loungeId}));
-      if (mounted && loungeId == widget.loungeId) setState(() => _status = data);
+          : Map<String, dynamic>.from(
+              await sl<SupabaseClient>().rpc(
+                'get_lounge_operating_status',
+                params: {'p_lounge_id': loungeId},
+              ),
+            );
+      if (mounted && loungeId == widget.loungeId)
+        setState(() => _status = data);
     } catch (_) {
-      if (mounted && loungeId == widget.loungeId) setState(() => _status = null);
+      if (mounted && loungeId == widget.loungeId)
+        setState(() => _status = null);
     } finally {
       _loading = false;
     }
@@ -65,25 +71,42 @@ class _OnlineBookingStatusState extends State<OnlineBookingStatus> {
     final color = available ? Colors.greenAccent : Colors.amber;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(children: [
-        Icon(available ? Icons.cloud_done : Icons.cloud_off, color: color, size: 18),
-        const SizedBox(width: 8),
-        Expanded(child: Text(
-          (_status == null ? 'online_booking_status_unknown' : available
-              ? 'online_booking_status_ready' : paused
-              ? 'online_booking_status_paused' : 'online_booking_status_closed').tr(),
-          style: TextStyle(color: color, fontSize: 13),
-        )),
-        if (paused) TextButton(
-          onPressed: () async {
-            await context.push(RouterKeys.loungeAdminOffline);
-            if (mounted) await _refresh();
-          },
-          child: Text('offline_workspace.resume'.tr()),
-        ),
-        IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh),
-          tooltip: 'refresh'.tr()),
-      ]),
+      child: Row(
+        children: [
+          Icon(
+            available ? Icons.cloud_done : Icons.cloud_off,
+            color: color,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              (_status == null
+                      ? 'online_booking_status_unknown'
+                      : available
+                      ? 'online_booking_status_ready'
+                      : paused
+                      ? 'online_booking_status_paused'
+                      : 'online_booking_status_closed')
+                  .tr(),
+              style: TextStyle(color: color, fontSize: 13),
+            ),
+          ),
+          if (paused)
+            TextButton(
+              onPressed: () async {
+                await context.push(RouterKeys.loungeAdminOffline);
+                if (mounted) await _refresh();
+              },
+              child: Text('offline_workspace.resume'.tr()),
+            ),
+          IconButton(
+            onPressed: _refresh,
+            icon: const Icon(Icons.refresh),
+            tooltip: 'refresh'.tr(),
+          ),
+        ],
+      ),
     );
   }
 }
