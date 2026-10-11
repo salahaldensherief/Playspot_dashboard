@@ -293,6 +293,7 @@ class AppStrings {
     final label = 'currency_egp'.tr();
     return label == 'currency_egp' ? 'EGP' : label;
   }
+
   static String get upcoming {
     final val = 'upcoming'.tr();
     return (val.isNotEmpty && val != 'upcoming') ? val : 'قادم';
@@ -1716,7 +1717,6 @@ class AppStrings {
   static String get discountReasonRequiredLabel =>
       'discount_reason_required_label'.tr();
   static String get roomDiscountReasonHint => 'room_discount_reason_hint'.tr();
-  static String get bookingVoucherDiscount => 'booking_voucher_discount'.tr();
   static String get bookingVoucherInvalid => 'booking_voucher_invalid'.tr();
   static String get bookingVoucherUnavailable =>
       'booking_voucher_unavailable'.tr();
@@ -1729,12 +1729,12 @@ class AppStrings {
   static String get issueTypePayment => 'issue_type_payment'.tr();
   static String get issueTypeTechnical => 'issue_type_technical'.tr();
 
-  static String get newSupportTicket => 'new_support_ticket'.tr();
   static String get issueCategoryGeneral => 'issue_category_general'.tr();
   static String get issueCategoryBooking => 'issue_category_booking'.tr();
   static String get issueCategoryPayment => 'issue_category_payment'.tr();
   static String get issueCategoryTechnical => 'issue_category_technical'.tr();
-  static String get supportContactSettingsSaved => 'support_contact_settings_saved'.tr();
+  static String get supportContactSettingsSaved =>
+      'support_contact_settings_saved'.tr();
   static String get supportPolicySaved => 'support_policy_saved'.tr();
   static String get faqSavedSuccess => 'faq_saved_success'.tr();
   static String get faqDeletedSuccess => 'faq_deleted_success'.tr();
