@@ -1976,7 +1976,6 @@
     "kind_addItems": "بيع منتجات",
     "kind_collectCash": "تحصيل نقدي"
   },
-  "new_support_ticket": "تذكرة دعم جديدة",
   "issue_category_general": "عام",
   "issue_category_booking": "حجز",
   "issue_category_payment": "دفع",
@@ -1999,6 +1998,20 @@
   "new_reward": "جائزة جديدة",
   "profile_access_load_failed": "تعذر التحقق من حسابك. جلسة الدخول محفوظة. أعد المحاولة للمتابعة.",
   "shift_financials_withheld": "بيانات التسوية محجوبة حسب الصلاحيات",
-"staff_creation_unconfirmed": "إنشاء الموظف لم يتأكد. أعد المحاولة بنفس البيانات.",
-"staff_creation_retry_original_details": "أعد المحاولة ببيانات الموظف الأصلية لاسترجاع العملية بدون إنشاء حساب آخر."
+  "payment_funds_review": "مراجعة جهة استلام المدفوعات",
+  "payment_funds_review_help": "التسوية تستخدم جهة استلام الفلوس لكل عملية. راجع كشف الحساب قبل تحديد الجهة؛ وسيلة الدفع وحدها لا تثبتها.",
+  "review_funds_holder": "توثيق جهة الاستلام",
+  "funds_holder": "جهة استلام الفلوس",
+  "funds_received_by_platform": "استلمتها المنصة",
+  "funds_received_by_lounge": "استلمتها الصالة",
+  "select_funds_holder": "اختر جهة الاستلام بعد مراجعة الإثبات",
+  "funds_evidence_reference": "مرجع كشف الحساب أو إثبات الاستلام",
+  "funds_evidence_required": "مرجع إثبات الاستلام مطلوب",
+  "funds_custody_immutable_help": "راجع الإثبات جيدًا: جهة الاستلام المسجلة لا يمكن تغييرها من هذه الشاشة.",
+  "payout_no_positive_balance": "لا يوجد صافي مبلغ مستحق للسحب بعد خصم عمولات الصالة.",
+  "payout_custody_required": "راجع جهة استلام المدفوعات غير الموثقة قبل إنشاء السحب.",
+  "payout_reconciliation_required": "بيانات التسوية تحتاج مطابقة. راجع العمليات والإثباتات قبل اعتماد أو دفع السحب.",
+  "payout_transfer_evidence_required": "وسيلة التحويل ومرجع التحويل الفعلي مطلوبان قبل تأكيد الدفع.",
+  "staff_creation_unconfirmed": "إنشاء الموظف لم يتأكد. أعد المحاولة بنفس البيانات.",
+  "staff_creation_retry_original_details": "أعد المحاولة ببيانات الموظف الأصلية لاسترجاع العملية بدون إنشاء حساب آخر."
 }
