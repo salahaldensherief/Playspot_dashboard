@@ -31,6 +31,7 @@ class CanteenRemoteDataSourceImpl implements CanteenRemoteDataSource {
           )
         ''')
         .eq('lounge_id', loungeId)
+        .isFilter('deleted_at', null)
         .order('sort_order', ascending: true)
         .order('created_at', ascending: false);
 
@@ -65,10 +66,7 @@ class CanteenRemoteDataSourceImpl implements CanteenRemoteDataSource {
 
   @override
   Future<void> deleteCombo(String id) async {
-    await supabase
-        .from('canteen_combos')
-        .update({'is_active': false})
-        .eq('id', id);
+    await _archive('combo', id);
   }
 
   @override
@@ -95,6 +93,7 @@ class CanteenRemoteDataSourceImpl implements CanteenRemoteDataSource {
           )
         ''')
         .eq('lounge_id', loungeId)
+        .isFilter('deleted_at', null)
         .order('priority', ascending: false)
         .order('created_at', ascending: false);
 
@@ -148,10 +147,20 @@ class CanteenRemoteDataSourceImpl implements CanteenRemoteDataSource {
 
   @override
   Future<void> deleteUpsellRule(String id) async {
-    await supabase
-        .from('upsell_rules')
-        .update({'is_active': false})
-        .eq('id', id);
+    await _archive('upsell_rule', id);
+  }
+
+  Future<void> _archive(String kind, String id) async {
+    final response = await supabase.rpc(
+      'archive_canteen_catalogue_item',
+      params: {'p_kind': kind, 'p_id': id},
+    );
+    if (response is! Map ||
+        response['success'] != true ||
+        response['id'] != id ||
+        response['kind'] != kind) {
+      throw const FormatException('Invalid catalogue archive response');
+    }
   }
 
   @override

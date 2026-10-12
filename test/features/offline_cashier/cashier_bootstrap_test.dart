@@ -1,3 +1,4 @@
+import 'package:play_spot_dashboard/features/offline_cashier/presentation/offline_workspace_state.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -133,6 +134,49 @@ void main() {
       expect(persisted['next_sequence'], 1);
       expect(persisted['bootstrap']['protocol_version'], 2);
       expect(persisted['outbox'], isEmpty);
+    },
+  );
+
+  test(
+    'fresh bootstrap supersedes old sync overlays and preserves command receipts',
+    () async {
+      await install(snapshot());
+      await harness.journal.mutate((state) {
+        state['next_sequence'] = 2;
+        state['receipts'] = {
+          'operation': {'booking_id': bookingId, 'sequence': 1},
+        };
+        state['acknowledgements'] = {
+          'operation': {'status': 'applied'},
+        };
+        state['server_bookings'] = {
+          bookingId: {
+            'last_sequence': 1,
+            'status': 'upcoming',
+            'paid_minor': 3000,
+            'payment_status': 'partial',
+          },
+        };
+      });
+      final response = snapshot();
+      response['authority']['last_applied_sequence'] = 1;
+      response['bookings'][bookingId]['status'] = 'completed';
+      response['bookings'][bookingId]['paid_minor'] = 10000;
+      response['bookings'][bookingId]['payment_status'] = 'paid';
+      await install(response);
+      await harness.journal.close();
+      await harness.reopen();
+      final state = await harness.journal.read();
+      final visible = OfflineWorkspaceState(
+        snapshot: state,
+      ).visibleBookings[bookingId];
+      expect(visible['status'], 'completed');
+      expect(visible['payment_status'], 'paid');
+      expect(visible['paid_minor'], 10000);
+      expect(state['server_bookings'], isNull);
+      expect(state['receipts']['operation']['sequence'], 1);
+      expect(state['acknowledgements']['operation']['status'], 'applied');
+      expect(state['next_sequence'], 2);
     },
   );
 

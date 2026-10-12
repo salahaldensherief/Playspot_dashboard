@@ -48,11 +48,13 @@ class _OnlineBookingStatusState extends State<OnlineBookingStatus> {
                 params: {'p_lounge_id': loungeId},
               ),
             );
-      if (mounted && loungeId == widget.loungeId)
+      if (mounted && loungeId == widget.loungeId) {
         setState(() => _status = data);
+      }
     } catch (_) {
-      if (mounted && loungeId == widget.loungeId)
+      if (mounted && loungeId == widget.loungeId) {
         setState(() => _status = null);
+      }
     } finally {
       _loading = false;
     }

@@ -84,11 +84,12 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
         .eq('id', id)
         .select('id')
         .maybeSingle();
-    if (updated == null)
+    if (updated == null) {
       throw const PostgrestException(
         message: 'Mission was not updated',
         code: 'P0002',
       );
+    }
   }
 
   @override

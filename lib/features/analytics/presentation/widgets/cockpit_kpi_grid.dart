@@ -147,8 +147,9 @@ class _LoungeOwnerKpiGrid extends StatelessWidget {
 
                 final now = DateTime.now();
                 final int endingSoonCount = bookings.where((b) {
-                  if (b.status != BookingStatus.inProgress || b.isOpenEnded)
+                  if (b.status != BookingStatus.inProgress || b.isOpenEnded) {
                     return false;
+                  }
                   final remaining = b.remainingDuration(now);
                   return remaining > Duration.zero &&
                       remaining <= const Duration(minutes: 15);

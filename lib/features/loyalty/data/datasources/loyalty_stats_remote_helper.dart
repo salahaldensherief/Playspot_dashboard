@@ -28,8 +28,9 @@ class LoyaltyStatsRemoteHelper {
           'p_user_query': userId.trim(),
       },
     );
-    if (response is! Map)
+    if (response is! Map) {
       throw const FormatException('Invalid loyalty aggregate response');
+    }
     // Only the server can supply complete aggregates. A missing contract is an error.
     return LoyaltyStatsModel.fromJson(Map<String, dynamic>.from(response));
   }

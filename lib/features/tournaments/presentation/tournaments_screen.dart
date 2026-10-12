@@ -110,21 +110,6 @@ class _TournamentsScreenState extends State<TournamentsScreen>
       builder: (ctx) => AppDialog(
         title: AppStrings.cancelTournament,
         width: 440.w,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${AppStrings.cancelTournament} "${tournament.title}"؟',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
-            ),
-            SizedBox(height: 16.h),
-            AppTextField(
-              onChanged: (value) => reason = value,
-              hintText: AppStrings.reasonOrNote,
-            ),
-          ],
-        ),
         actions: [
           AppButton(
             text: AppStrings.cancel,
@@ -141,6 +126,21 @@ class _TournamentsScreenState extends State<TournamentsScreen>
             },
           ),
         ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${AppStrings.cancelTournament} "${tournament.title}"؟',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+            ),
+            SizedBox(height: 16.h),
+            AppTextField(
+              onChanged: (value) => reason = value,
+              hintText: AppStrings.reasonOrNote,
+            ),
+          ],
+        ),
       ),
     );
 

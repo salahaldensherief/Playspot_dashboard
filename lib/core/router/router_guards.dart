@@ -114,7 +114,10 @@ class RouterGuards {
         !permissionCubit.hasLoadedAccess(
           permissionRole,
           user.id,
-          user.loungeId,
+          permissionCubit.accessLoungeIdFor(
+            user.id,
+            fallbackLoungeId: user.loungeId,
+          ),
         )) {
       return state.matchedLocation == RouterKeys.accessLoading
           ? null

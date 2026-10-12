@@ -101,8 +101,9 @@ class RevenueChart extends StatelessWidget {
                         ? (state.revenueChart.length / 5).ceilToDouble()
                         : 1,
                     getTitlesWidget: (value, meta) {
-                      if (value != value.roundToDouble())
+                      if (value != value.roundToDouble()) {
                         return const SizedBox.shrink();
+                      }
                       final index = value.toInt();
                       if (index >= 0 &&
                           index < state.revenueChart.length &&

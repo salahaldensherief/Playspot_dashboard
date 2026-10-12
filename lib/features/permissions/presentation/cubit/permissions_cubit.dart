@@ -33,13 +33,14 @@ class PermissionsCubit extends Cubit<PermissionsState> {
     if (next == _activeLoungeId) return;
     _activeLoungeId = next;
     _userRequest++;
-    if (!isClosed)
+    if (!isClosed) {
       emit(
         state.copyWith(
           userPermissions: const {},
           accessStatus: PermissionsStatus.initial,
         ),
       );
+    }
   }
 
   Future<void> ensureUserPermissions(
@@ -49,8 +50,9 @@ class PermissionsCubit extends Cubit<PermissionsState> {
   }) async {
     if (hasAccessIdentity(role, userId ?? '', loungeId) &&
         (state.accessStatus == PermissionsStatus.loading ||
-            state.accessStatus == PermissionsStatus.success))
+            state.accessStatus == PermissionsStatus.success)) {
       return;
+    }
     await loadUserPermissions(role, loungeId: loungeId, userId: userId);
   }
 
@@ -232,6 +234,9 @@ class PermissionsCubit extends Cubit<PermissionsState> {
     }
   }
 
+  String? accessLoungeIdFor(String userId, {String? fallbackLoungeId}) =>
+      state.userId == userId ? _activeLoungeId : fallbackLoungeId?.trim();
+
   bool hasAccessIdentity(String role, String userId, String? loungeId) =>
       state.userRole == _normalizeRole(role) &&
       state.userId == userId &&
@@ -244,8 +249,9 @@ class PermissionsCubit extends Cubit<PermissionsState> {
   bool hasPermission(String key, {String? userRole, String? userId}) {
     final role = _normalizeRole(userRole ?? state.userRole ?? '');
     if (key.isEmpty || role.isEmpty || role != state.userRole) return false;
-    if (userId == null || userId.trim().isEmpty || userId != state.userId)
+    if (userId == null || userId.trim().isEmpty || userId != state.userId) {
       return false;
+    }
     return state.userPermissions[PermissionKey.canonical(key)] == true;
   }
 }

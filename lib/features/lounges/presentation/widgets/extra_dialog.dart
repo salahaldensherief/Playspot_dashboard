@@ -149,13 +149,14 @@ class _ExtraDialogState extends State<ExtraDialog> {
       final saved = await widget.onSave?.call(extra) ?? false;
       if (mounted && saved) Navigator.pop(context);
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${AppStrings.error}: $error'),
             backgroundColor: AppColors.danger,
           ),
         );
+      }
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }
@@ -276,8 +277,9 @@ class _ExtraDialogState extends State<ExtraDialog> {
                             }
                           },
                           onChanged: (val) {
-                            if (val != null)
+                            if (val != null) {
                               setState(() => _selectedCategory = val);
+                            }
                           },
                         ),
                         SizedBox(height: 20.h),

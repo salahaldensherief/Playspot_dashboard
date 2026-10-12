@@ -193,13 +193,15 @@ void main() {
             holdMinutes: 10,
           ),
         );
-        if (scenario == 'disposed')
+        if (scenario == 'disposed') {
           await tester.pumpWidget(const SizedBox.shrink());
+        }
         delayed.complete(const Left(ServerFailure('Slot unavailable')));
         await tester.pump();
         noCreate();
-        if (scenario == 'denied')
+        if (scenario == 'denied') {
           expect(find.text('Slot unavailable'), findsOneWidget);
+        }
         expect(tester.takeException(), isNull);
       },
     );

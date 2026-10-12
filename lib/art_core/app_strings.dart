@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 
 class AppStrings {
+  static String get pricingRuleSaved => 'pricing_rule_saved'.tr();
+  static String get pricingRuleDeleted => 'pricing_rule_deleted'.tr();
   static String get paymentFundsReview => 'payment_funds_review'.tr();
   static String get paymentFundsReviewHelp => 'payment_funds_review_help'.tr();
   static String get reviewFundsHolder => 'review_funds_holder'.tr();
@@ -696,8 +698,7 @@ class AppStrings {
 
   static String get attachedPaymentReceiptLabel =>
       'attached_payment_receipt_label'.tr();
-  static String get paymentTransferReceipt =>
-      'payment_transfer_receipt'.tr();
+  static String get paymentTransferReceipt => 'payment_transfer_receipt'.tr();
   static String get zoomPaymentReceipt => 'zoom_payment_receipt'.tr();
   static String get requestApproved => 'request_approved'.tr();
   static String get requestRejected => 'request_rejected'.tr();

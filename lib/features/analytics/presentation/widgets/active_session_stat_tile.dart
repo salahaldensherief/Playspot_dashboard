@@ -10,6 +10,7 @@ class ActiveSessionStatTile extends StatelessWidget {
   final Color color;
 
   const ActiveSessionStatTile({
+    super.key,
     required this.title,
     required this.value,
     required this.icon,

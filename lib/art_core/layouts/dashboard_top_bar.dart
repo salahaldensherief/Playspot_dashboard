@@ -54,7 +54,7 @@ class DashboardTopBar extends StatelessWidget implements PreferredSizeWidget {
                           ),
                           onPressed: () => Scaffold.of(context).openDrawer(),
                         ),
-                      if (leading != null) leading!,
+                      ?leading,
                       Expanded(
                         child: Text(
                           title,

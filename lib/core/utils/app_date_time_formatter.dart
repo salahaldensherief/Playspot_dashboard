@@ -13,8 +13,9 @@ class AppDateTimeFormatter {
 
   /// Format raw time string like "14:30:00" to 12-hour format ("02:30 PM")
   static String formatTimeString(String? timeStr, {String fallback = '--:--'}) {
-    if (timeStr == null || timeStr.trim().isEmpty || timeStr == 'null')
+    if (timeStr == null || timeStr.trim().isEmpty || timeStr == 'null') {
       return fallback;
+    }
     try {
       final clean = timeStr.trim();
       final parts = clean.split(':');

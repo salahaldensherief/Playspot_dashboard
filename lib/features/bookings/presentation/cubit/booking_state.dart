@@ -108,10 +108,12 @@ class BookingState extends Equatable {
     bool requireCompleted = false,
     bool allowCancelled = false,
   }) {
-    if (requireCompleted && booking.status != BookingStatus.completed)
+    if (requireCompleted && booking.status != BookingStatus.completed) {
       return false;
-    if (!allowCancelled && booking.status == BookingStatus.cancelled)
+    }
+    if (!allowCancelled && booking.status == BookingStatus.cancelled) {
       return false;
+    }
 
     final now = DateTime.now();
     int thresholdHour = 5;

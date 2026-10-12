@@ -96,10 +96,12 @@ void main() {
       await login();
       var fail = true;
       respond = (request) async {
-        if (request.url.path.endsWith('/platform_super_admins'))
+        if (request.url.path.endsWith('/platform_super_admins')) {
           return json([]);
-        if (fail)
+        }
+        if (fail) {
           return json({'message': 'synthetic denied', 'code': '42501'}, 403);
+        }
         return json({'id': actor, 'role': 'owner'});
       };
       final source = AuthRemoteDataSourceImpl(client);

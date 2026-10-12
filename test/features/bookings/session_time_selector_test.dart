@@ -20,7 +20,7 @@ void main() {
             clock: () => now,
             child: ValueListenableBuilder<String>(
               valueListenable: label,
-              builder: (_, value, __) => SessionTimeSelector<bool>(
+              builder: (_, value, _) => SessionTimeSelector<bool>(
                 select: (time) => !time.isBefore(deadline),
                 builder: (_, expired) => Column(
                   children: [

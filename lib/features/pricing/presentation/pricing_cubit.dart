@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../art_core/app_strings.dart';
 import '../domain/entities/pricing_rule_entity.dart';
 import '../domain/usecases/check_pricing_rule_conflicts_usecase.dart';
 import '../domain/usecases/delete_pricing_rule_usecase.dart';
@@ -22,11 +26,17 @@ class PricingCubit extends Cubit<PricingState> {
     required this.quoteBookingPriceUseCase,
   }) : super(const PricingState());
 
+  int _loadGeneration = 0;
+  int _quoteGeneration = 0;
+
   Future<void> loadPricingRules({required String loungeId}) async {
+    if (isClosed) return;
+    final generation = ++_loadGeneration;
     emit(state.copyWith(status: PricingStatus.loading));
     final result = await getPricingRulesUseCase(
       GetPricingRulesParams(loungeId: loungeId),
     );
+    if (isClosed || generation != _loadGeneration) return;
     result.fold(
       (failure) => emit(
         state.copyWith(
@@ -40,6 +50,7 @@ class PricingCubit extends Cubit<PricingState> {
   }
 
   void changeGroupBy(PricingGroupBy groupBy) {
+    if (isClosed) return;
     emit(state.copyWith(groupBy: groupBy));
   }
 
@@ -47,6 +58,7 @@ class PricingCubit extends Cubit<PricingState> {
     PricingRuleEntity rule, {
     required String loungeId,
   }) async {
+    if (isClosed || state.isSaving) return false;
     emit(
       state.copyWith(
         isSaving: true,
@@ -59,6 +71,7 @@ class PricingCubit extends Cubit<PricingState> {
       CheckPricingRuleConflictsParams(rule: rule),
     );
 
+    if (isClosed) return false;
     final conflicts = conflictResult.fold<List<PricingRuleEntity>>((failure) {
       emit(state.copyWith(isSaving: false, errorMessage: failure.message));
       return const [];
@@ -74,6 +87,7 @@ class PricingCubit extends Cubit<PricingState> {
     final result = await savePricingRuleUseCase(
       SavePricingRuleParams(rule: rule),
     );
+    if (isClosed) return false;
     return result.fold(
       (failure) {
         emit(state.copyWith(isSaving: false, errorMessage: failure.message));
@@ -83,24 +97,26 @@ class PricingCubit extends Cubit<PricingState> {
         emit(
           state.copyWith(
             isSaving: false,
-            successMessage: 'تم حفظ قاعدة التسعير بنجاح',
+            successMessage: AppStrings.pricingRuleSaved,
           ),
         );
-        loadPricingRules(loungeId: loungeId);
+        unawaited(loadPricingRules(loungeId: loungeId));
         return true;
       },
     );
   }
 
   Future<void> deleteRule(String id, {required String loungeId}) async {
+    if (isClosed) return;
     final result = await deletePricingRuleUseCase(
       DeletePricingRuleParams(id: id),
     );
+    if (isClosed) return;
     result.fold(
       (failure) => emit(state.copyWith(errorMessage: failure.message)),
       (_) {
-        emit(state.copyWith(successMessage: 'تم حذف قاعدة التسعير'));
-        loadPricingRules(loungeId: loungeId);
+        emit(state.copyWith(successMessage: AppStrings.pricingRuleDeleted));
+        unawaited(loadPricingRules(loungeId: loungeId));
       },
     );
   }
@@ -112,6 +128,8 @@ class PricingCubit extends Cubit<PricingState> {
     required String endTime,
     String playMode = 'single',
   }) async {
+    if (isClosed) return;
+    final generation = ++_quoteGeneration;
     final result = await quoteBookingPriceUseCase(
       QuoteBookingPriceParams(
         roomId: roomId,
@@ -121,6 +139,7 @@ class PricingCubit extends Cubit<PricingState> {
         playMode: playMode,
       ),
     );
+    if (isClosed || generation != _quoteGeneration) return;
     result.fold(
       (_) => emit(state.copyWith(liveQuote: null)),
       (quote) => emit(state.copyWith(liveQuote: quote)),
@@ -128,10 +147,12 @@ class PricingCubit extends Cubit<PricingState> {
   }
 
   void setConflictingRules(List<PricingRuleEntity> conflicts) {
+    if (isClosed) return;
     emit(state.copyWith(conflictingRules: conflicts));
   }
 
   void clearConflictingRules() {
+    if (isClosed) return;
     emit(state.copyWith(conflictingRules: const []));
   }
 }

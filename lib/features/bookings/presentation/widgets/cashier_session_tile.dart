@@ -192,7 +192,8 @@ class CashierSessionTile extends StatelessWidget {
                     ),
 
                     // Quick Action Controls & Alert Badge Bar
-                    if (booking.status == BookingStatus.pendingVerification) ...[
+                    if (booking.status ==
+                        BookingStatus.pendingVerification) ...[
                       SizedBox(height: 8.h),
                       InkWell(
                         onTap: () {
@@ -238,7 +239,8 @@ class CashierSessionTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                    ] else if (booking.status == BookingStatus.upcoming && isPaid) ...[
+                    ] else if (booking.status == BookingStatus.upcoming &&
+                        isPaid) ...[
                       SizedBox(height: 8.h),
                       SizedBox(
                         width: double.infinity,
@@ -263,10 +265,14 @@ class CashierSessionTile extends StatelessWidget {
                               child: Container(
                                 padding: EdgeInsets.symmetric(vertical: 4.h),
                                 decoration: BoxDecoration(
-                                  color: AppColors.success.withValues(alpha: 0.15),
+                                  color: AppColors.success.withValues(
+                                    alpha: 0.15,
+                                  ),
                                   borderRadius: BorderRadius.circular(6.r),
                                   border: Border.all(
-                                    color: AppColors.success.withValues(alpha: 0.4),
+                                    color: AppColors.success.withValues(
+                                      alpha: 0.4,
+                                    ),
                                   ),
                                 ),
                                 alignment: Alignment.center,
@@ -291,10 +297,14 @@ class CashierSessionTile extends StatelessWidget {
                               child: Container(
                                 padding: EdgeInsets.symmetric(vertical: 4.h),
                                 decoration: BoxDecoration(
-                                  color: AppColors.danger.withValues(alpha: 0.15),
+                                  color: AppColors.danger.withValues(
+                                    alpha: 0.15,
+                                  ),
                                   borderRadius: BorderRadius.circular(6.r),
                                   border: Border.all(
-                                    color: AppColors.danger.withValues(alpha: 0.4),
+                                    color: AppColors.danger.withValues(
+                                      alpha: 0.4,
+                                    ),
                                   ),
                                 ),
                                 alignment: Alignment.center,

@@ -39,11 +39,6 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
       builder: (_) => AppDialog(
         title: title,
         width: 440.w,
-        child: AppTextField(
-          onChanged: (value) => notes = value,
-          maxLines: 3,
-          hintText: AppStrings.adminNotesHint,
-        ),
         actions: [
           AppButton(
             text: AppStrings.cancel,
@@ -60,6 +55,11 @@ class _SuperAdminBanQueueSectionState extends State<SuperAdminBanQueueSection> {
             },
           ),
         ],
+        child: AppTextField(
+          onChanged: (value) => notes = value,
+          maxLines: 3,
+          hintText: AppStrings.adminNotesHint,
+        ),
       ),
     );
   }

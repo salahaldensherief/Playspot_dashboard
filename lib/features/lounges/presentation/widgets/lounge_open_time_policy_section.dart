@@ -104,8 +104,9 @@ class LoungeOpenTimePolicySection extends StatelessWidget {
                     enabled: canEdit,
                     prefixIcon: Icons.hourglass_bottom_rounded,
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty)
+                      if (value == null || value.trim().isEmpty) {
                         return AppStrings.invalidNumberError;
+                      }
                       final parsed = int.tryParse(value.trim());
                       if (parsed == null || parsed < 15 || parsed > 240) {
                         return AppStrings.invalidNumberError;
@@ -124,8 +125,9 @@ class LoungeOpenTimePolicySection extends StatelessWidget {
                     enabled: canEdit,
                     prefixIcon: Icons.update_rounded,
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty)
+                      if (value == null || value.trim().isEmpty) {
                         return AppStrings.invalidNumberError;
+                      }
                       final parsed = int.tryParse(value.trim());
                       if (![5, 10, 15, 30, 60].contains(parsed)) {
                         return AppStrings.invalidNumberError;
@@ -145,8 +147,9 @@ class LoungeOpenTimePolicySection extends StatelessWidget {
               enabled: canEdit,
               prefixIcon: Icons.timer_off_outlined,
               validator: (value) {
-                if (value == null || value.trim().isEmpty)
+                if (value == null || value.trim().isEmpty) {
                   return AppStrings.invalidNumberError;
+                }
                 final parsed = int.tryParse(value.trim());
                 final minimum = int.tryParse(minMinutesController.text.trim());
                 if (parsed == null ||

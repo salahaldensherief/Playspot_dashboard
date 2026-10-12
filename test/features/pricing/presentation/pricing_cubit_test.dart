@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:play_spot_dashboard/features/pricing/domain/entities/pricing_quote_entity.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -50,8 +52,8 @@ void main() {
     );
   });
 
-  tearDown(() {
-    cubit.close();
+  tearDown(() async {
+    if (!cubit.isClosed) await cubit.close();
   });
 
   final tRule = PricingRuleEntity(
@@ -110,4 +112,113 @@ void main() {
       await cubit.loadPricingRules(loungeId: loungeId);
     },
   );
+  const quoteParams = QuoteBookingPriceParams(
+    roomId: 'room',
+    date: '2026-10-12',
+    startTime: '12:00',
+    endTime: '13:00',
+  );
+  const quote = PricingQuoteEntity(
+    segments: [],
+    roomSubtotal: 100,
+    extraControllersAmount: 0,
+    discountAmount: 0,
+    total: 100,
+  );
+  Future<void> fetchQuote() => cubit.fetchLiveQuote(
+    roomId: quoteParams.roomId,
+    date: quoteParams.date,
+    startTime: quoteParams.startTime,
+    endTime: quoteParams.endTime,
+  );
+
+  test('late rule-load success cannot emit after close', () async {
+    final pending = Completer<Either<Failure, List<PricingRuleEntity>>>();
+    when(
+      () => mockGetRules(const GetPricingRulesParams(loungeId: 'lounge-1')),
+    ).thenAnswer((_) => pending.future);
+    final request = cubit.loadPricingRules(loungeId: 'lounge-1');
+    await cubit.close();
+    pending.complete(Right([tRule]));
+    await request;
+  });
+  test('conflict response after close never starts saving', () async {
+    final pending = Completer<Either<Failure, List<PricingRuleEntity>>>();
+    when(
+      () => mockCheckConflicts(CheckPricingRuleConflictsParams(rule: tRule)),
+    ).thenAnswer((_) => pending.future);
+    final request = cubit.saveRule(tRule, loungeId: 'lounge-1');
+    await cubit.close();
+    pending.complete(const Right([]));
+    expect(await request, false);
+    verifyNever(() => mockSaveRule(SavePricingRuleParams(rule: tRule)));
+  });
+  test('save response after close never reloads the page', () async {
+    final pending = Completer<Either<Failure, PricingRuleEntity>>();
+    final started = Completer<void>();
+    when(
+      () => mockCheckConflicts(CheckPricingRuleConflictsParams(rule: tRule)),
+    ).thenAnswer((_) async => const Right([]));
+    when(() => mockSaveRule(SavePricingRuleParams(rule: tRule))).thenAnswer((
+      _,
+    ) {
+      started.complete();
+      return pending.future;
+    });
+    final request = cubit.saveRule(tRule, loungeId: 'lounge-1');
+    await started.future;
+    await cubit.close();
+    pending.complete(Right(tRule));
+    expect(await request, false);
+    verifyNever(
+      () => mockGetRules(const GetPricingRulesParams(loungeId: 'lounge-1')),
+    );
+  });
+  test('delete failure arriving after close is ignored', () async {
+    final pending = Completer<Either<Failure, void>>();
+    when(
+      () => mockDeleteRule(const DeletePricingRuleParams(id: 'rule-1')),
+    ).thenAnswer((_) => pending.future);
+    final request = cubit.deleteRule('rule-1', loungeId: 'lounge-1');
+    await cubit.close();
+    pending.complete(const Left(ServerFailure('Fixture failure')));
+    await request;
+  });
+  test('quote response after close is ignored', () async {
+    final pending = Completer<Either<Failure, PricingQuoteEntity>>();
+    when(() => mockQuotePrice(quoteParams)).thenAnswer((_) => pending.future);
+    final request = fetchQuote();
+    await cubit.close();
+    pending.complete(const Right(quote));
+    await request;
+  });
+  test(
+    'newer branch load supersedes a slow response from the previous branch',
+    () async {
+      final old = Completer<Either<Failure, List<PricingRuleEntity>>>();
+      when(
+        () => mockGetRules(const GetPricingRulesParams(loungeId: 'a')),
+      ).thenAnswer((_) => old.future);
+      when(
+        () => mockGetRules(const GetPricingRulesParams(loungeId: 'b')),
+      ).thenAnswer((_) async => const Right([]));
+      final first = cubit.loadPricingRules(loungeId: 'a');
+      await cubit.loadPricingRules(loungeId: 'b');
+      old.complete(Right([tRule]));
+      await first;
+      expect(cubit.state.rules, isEmpty);
+    },
+  );
+  test('failed live quote clears a previous successful preview', () async {
+    when(
+      () => mockQuotePrice(quoteParams),
+    ).thenAnswer((_) async => const Right(quote));
+    await fetchQuote();
+    expect(cubit.state.liveQuote, quote);
+    when(
+      () => mockQuotePrice(quoteParams),
+    ).thenAnswer((_) async => const Left(ServerFailure('Fixture outage')));
+    await fetchQuote();
+    expect(cubit.state.liveQuote, isNull);
+  });
 }

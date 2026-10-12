@@ -135,8 +135,9 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
               label: AppStrings.rewardPoints,
               keyboardType: TextInputType.number,
               validator: (val) {
-                if (val == null || val.trim().isEmpty)
+                if (val == null || val.trim().isEmpty) {
                   return AppStrings.fieldRequired;
+                }
                 if (int.tryParse(val) == null) return AppStrings.invalidNumber;
                 return null;
               },

@@ -31,18 +31,22 @@ class _AccessLoadingPageState extends State<AccessLoadingPage> {
     final user = auth.user;
     if (user == null) return;
     final permissions = context.read<PermissionsCubit>();
+    final loungeId = permissions.accessLoungeIdFor(
+      user.id,
+      fallbackLoungeId: user.loungeId,
+    );
     final rawRole = user.rawRole?.trim();
     final role = (rawRole == null || rawRole.isEmpty)
         ? user.role.name
         : rawRole;
-    if (permissions.hasLoadedAccess(role, user.id, user.loungeId)) return;
-    if (permissions.hasAccessIdentity(role, user.id, user.loungeId) &&
+    if (permissions.hasLoadedAccess(role, user.id, loungeId)) return;
+    if (permissions.hasAccessIdentity(role, user.id, loungeId) &&
         permissions.state.accessStatus == PermissionsStatus.loading) {
       return;
     }
     permissions.ensureUserPermissions(
       role,
-      loungeId: user.loungeId,
+      loungeId: loungeId,
       userId: user.id,
     );
   }
@@ -58,45 +62,52 @@ class _AccessLoadingPageState extends State<AccessLoadingPage> {
         profileFailed ||
         loungeFailed ||
         access.accessStatus == PermissionsStatus.failure;
-    return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (!failed) const CircularProgressIndicator(),
-              const SizedBox(height: 16),
-              Text(
-                (profileFailed
-                        ? 'profile_access_load_failed'
-                        : failed
-                        ? 'venue_access_load_failed'
-                        : 'loading_venue_access')
-                    .tr(),
-                textAlign: TextAlign.center,
-              ),
-              if (failed)
-                TextButton.icon(
-                  onPressed: () {
-                    if (profileFailed) {
-                      context.read<LoginCubit>().checkInitialAuth();
-                      return;
-                    }
-                    if (loungeFailed) {
-                      context.read<LoginCubit>().reloadLoungeAccess();
-                    }
-                    _loadPermissions();
-                  },
-                  icon: const Icon(Icons.refresh),
-                  label: Text(AppStrings.retry),
+    return BlocListener<LoginCubit, LoginState>(
+      listenWhen: (previous, current) =>
+          previous.status != current.status ||
+          previous.user != current.user ||
+          previous.userLounge != current.userLounge,
+      listener: (_, _) => _loadPermissions(),
+      child: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!failed) const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(
+                  (profileFailed
+                          ? 'profile_access_load_failed'
+                          : failed
+                          ? 'venue_access_load_failed'
+                          : 'loading_venue_access')
+                      .tr(),
+                  textAlign: TextAlign.center,
                 ),
-              if (profileFailed)
-                TextButton(
-                  onPressed: () => context.read<LoginCubit>().logout(),
-                  child: Text(AppStrings.logout),
-                ),
-            ],
+                if (failed)
+                  TextButton.icon(
+                    onPressed: () {
+                      if (profileFailed) {
+                        context.read<LoginCubit>().checkInitialAuth();
+                        return;
+                      }
+                      if (loungeFailed) {
+                        context.read<LoginCubit>().reloadLoungeAccess();
+                      }
+                      _loadPermissions();
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: Text(AppStrings.retry),
+                  ),
+                if (profileFailed)
+                  TextButton(
+                    onPressed: () => context.read<LoginCubit>().logout(),
+                    child: Text(AppStrings.logout),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

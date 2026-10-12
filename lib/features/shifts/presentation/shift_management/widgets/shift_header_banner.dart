@@ -247,8 +247,9 @@ class ShiftHeaderBanner extends StatelessWidget {
             await shiftCubit.openShift(loungeId, startingCash);
             if (diagContext.mounted &&
                 shiftCubit.state.activeShift != null &&
-                shiftCubit.state.status != ShiftStatus.error)
+                shiftCubit.state.status != ShiftStatus.error) {
               Navigator.pop(diagContext);
+            }
           },
         ),
       ),

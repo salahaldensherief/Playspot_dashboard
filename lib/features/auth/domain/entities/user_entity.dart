@@ -71,15 +71,19 @@ class UserEntity extends Equatable {
 
   String? getDisplayCityName({String? languageCode}) {
     if (languageCode == 'en') {
-      if (cityNameEn != null && cityNameEn!.trim().isNotEmpty)
+      if (cityNameEn != null && cityNameEn!.trim().isNotEmpty) {
         return cityNameEn!.trim();
-      if (cityNameAr != null && cityNameAr!.trim().isNotEmpty)
+      }
+      if (cityNameAr != null && cityNameAr!.trim().isNotEmpty) {
         return cityNameAr!.trim();
+      }
     } else {
-      if (cityNameAr != null && cityNameAr!.trim().isNotEmpty)
+      if (cityNameAr != null && cityNameAr!.trim().isNotEmpty) {
         return cityNameAr!.trim();
-      if (cityNameEn != null && cityNameEn!.trim().isNotEmpty)
+      }
+      if (cityNameEn != null && cityNameEn!.trim().isNotEmpty) {
         return cityNameEn!.trim();
+      }
     }
     return null;
   }
