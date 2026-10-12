@@ -13,6 +13,8 @@ import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_status_badge.dart';
 import 'package:play_spot_dashboard/features/audit/presentation/widgets/audit_timeline.dart';
 import 'booking_details_action_panel.dart';
+import '../../../../art_core/di/provider_scope.dart';
+import '../../../analytics/presentation/dashboard_cubit.dart';
 import 'booking_details_customer_card.dart';
 import 'booking_details_financial_summary.dart';
 import 'booking_receipt_card.dart';
@@ -20,7 +22,7 @@ import 'booking_specifications_card.dart';
 
 class BookingDetailsDialog extends StatefulWidget {
   final Booking booking;
-  final Function(
+  final Future<bool> Function(
     double discountAmount,
     double discountPercentage,
     String? reason,
@@ -35,6 +37,24 @@ class BookingDetailsDialog extends StatefulWidget {
     this.onCancel,
   });
 
+  static Future<void> show(BuildContext context, {required Booking booking}) {
+    final bookings = context.read<BookingCubit>();
+    final login = context.read<LoginCubit>();
+    final dashboard = context.read<DashboardCubit?>();
+    return showDialog<void>(
+      context: context,
+      useRootNavigator: false,
+      builder: (_) => MultiBlocProviderScope(
+        providers: [
+          BlocProvider.value(value: bookings),
+          BlocProvider.value(value: login),
+          if (dashboard != null) BlocProvider.value(value: dashboard),
+        ],
+        child: BookingDetailsDialog(booking: booking),
+      ),
+    );
+  }
+
   @override
   State<BookingDetailsDialog> createState() => _BookingDetailsDialogState();
 }
@@ -46,6 +66,7 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
   final _rightScrollController = ScrollController();
   final _mobileScrollController = ScrollController();
   final bool _isPercentage = false;
+  bool _isConfirmingPayment = false;
 
   @override
   void dispose() {
@@ -59,7 +80,10 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
 
   double get _discountValue => double.tryParse(_discountController.text) ?? 0.0;
 
-  void _handleConfirmPayment(BuildContext context, Booking activeBooking) {
+  Future<void> _handleConfirmPayment(
+    Booking activeBooking,
+  ) async {
+    if (_isConfirmingPayment) return;
     final user = context.read<LoginCubit>().state.user;
     final isCashier = user?.isCashier == true;
     final discount = _discountValue;
@@ -93,21 +117,45 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
         ? (activeBooking.totalPrice * discount / 100)
         : discount;
 
-    if (widget.onConfirmPayment != null) {
-      widget.onConfirmPayment?.call(
-        calculatedDiscountAmount,
-        percent,
-        _reasonController.text.trim(),
-      );
-    } else {
-      context.read<BookingCubit>().confirmCashPayment(
-        activeBooking.id,
-        discountAmount: calculatedDiscountAmount,
-        discountPercentage: percent,
-        discountReason: _reasonController.text.trim(),
-      );
+    final cubit = context.read<BookingCubit>();
+    setState(() => _isConfirmingPayment = true);
+    try {
+      final confirm = widget.onConfirmPayment;
+      final success = confirm != null
+          ? await confirm(
+              calculatedDiscountAmount,
+              percent,
+              _reasonController.text.trim(),
+            )
+          : await cubit.confirmCashPayment(
+              activeBooking.id,
+              discountAmount: calculatedDiscountAmount,
+              discountPercentage: percent,
+              discountReason: _reasonController.text.trim(),
+            );
+      if (!mounted) return;
+      if (success) {
+        Navigator.of(context, rootNavigator: false).pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(cubit.state.errorMessage ?? AppStrings.actionFailed),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppStrings.actionFailed),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isConfirmingPayment = false);
     }
-    Navigator.of(context, rootNavigator: false).pop();
   }
 
   Widget _buildHeader(BuildContext context, Booking booking) {
@@ -256,12 +304,10 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                                   SizedBox(height: 12.h),
                                   BookingDetailsActionPanel(
                                     booking: currentBooking,
-                                    isLoading: isLoading,
+                                    isLoading:
+                                        isLoading || _isConfirmingPayment,
                                     onConfirmCashPayment: () =>
-                                        _handleConfirmPayment(
-                                          context,
-                                          currentBooking,
-                                        ),
+                                        _handleConfirmPayment(currentBooking),
                                   ),
                                 ],
                               ),
@@ -296,12 +342,9 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                                 SizedBox(height: 16.h),
                                 BookingDetailsActionPanel(
                                   booking: currentBooking,
-                                  isLoading: isLoading,
+                                  isLoading: isLoading || _isConfirmingPayment,
                                   onConfirmCashPayment: () =>
-                                      _handleConfirmPayment(
-                                        context,
-                                        currentBooking,
-                                      ),
+                                      _handleConfirmPayment(currentBooking),
                                 ),
                               ],
                             ),

@@ -377,6 +377,12 @@ class BookingRepositoryImpl implements BookingRepository {
 
   String _mapBookingErrorMessage(String message) {
     final clean = message.toLowerCase();
+    if (clean.contains('no_open_shift')) return 'booking_requires_open_shift';
+    if (clean.contains('payment_required_before_session_start'))
+      return 'booking_payment_required_before_start';
+    if (clean.contains('booking_not_startable') ||
+        clean.contains('not startable from current status'))
+      return 'booking_not_startable';
     if (clean.contains('room_has_active_session')) {
       return 'room_has_active_session';
     }
@@ -385,30 +391,30 @@ class BookingRepositoryImpl implements BookingRepository {
     }
     if (clean.contains('cash payment is disabled') ||
         clean.contains('cash is disabled')) {
-      return 'الدفع الكاش غير متاح في هذه الصالة.';
+      return 'booking_cash_unavailable';
     }
     if (clean.contains('first booking must use') ||
         clean.contains('first_booking') ||
         clean.contains('first booking')) {
-      return 'أول حجز يجب تأكيده بتحويل مسبق.';
+      return 'booking_first_visit_requires_prepayment';
     }
     if (clean.contains('sender_wallet_phone is required') ||
         clean.contains('sender_wallet_phone')) {
-      return 'يجب إدخال رقم المحفظة الذي تم التحويل منه.';
+      return 'booking_sender_wallet_required';
     }
     if (clean.contains('23p01') ||
         clean.contains('bookings_room_booking_period_excl') ||
         clean.contains('exclusion')) {
-      return 'الوقت المحدد تم حجزه بالفعل، يرجى اختيار وقت آخر.';
+      return 'booking_time_unavailable';
     }
     if (clean.contains('open_time_disabled')) {
-      return 'الوقت المفتوح غير مفعل لهذه الغرفة.';
+      return 'booking_open_time_disabled';
     }
     if (clean.contains('next_booking_too_soon')) {
-      return 'يوجد حجز قريب جدًا، لا يمكن بدء وقت مفتوح الآن.';
+      return 'booking_next_booking_too_soon';
     }
     if (clean.contains('open_time_max_exceeded')) {
-      return 'الجلسة تجاوزت الحد الأقصى للوقت المفتوح. راجع سياسة الصالة قبل الإغلاق.';
+      return 'booking_open_time_limit_exceeded';
     }
     return message.replaceFirst('Exception: ', '');
   }

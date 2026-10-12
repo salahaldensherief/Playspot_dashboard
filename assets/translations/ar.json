@@ -2015,5 +2015,16 @@
   "staff_creation_unconfirmed": "إنشاء الموظف لم يتأكد. أعد المحاولة بنفس البيانات.",
   "staff_creation_retry_original_details": "أعد المحاولة ببيانات الموظف الأصلية لاسترجاع العملية بدون إنشاء حساب آخر.",
   "pricing_rule_saved": "تم حفظ قاعدة التسعير بنجاح",
-  "pricing_rule_deleted": "تم حذف قاعدة التسعير"
+  "pricing_rule_deleted": "تم حذف قاعدة التسعير",
+  "cancel_booking_confirmation": "هل تريد إلغاء هذا الحجز؟",
+  "booking_requires_open_shift": "افتح شيفت للصالة قبل تحصيل الدفع أو بدء الجلسة.",
+  "booking_payment_required_before_start": "حصّل المبلغ المتبقي قبل بدء الجلسة.",
+  "booking_not_startable": "لا يمكن بدء الحجز بحالته الحالية. حدّث بيانات الحجز وحاول مرة أخرى.",
+  "booking_cash_unavailable": "الدفع الكاش غير متاح في هذه الصالة.",
+  "booking_first_visit_requires_prepayment": "أول حجز يجب تأكيده بتحويل مسبق.",
+  "booking_sender_wallet_required": "يجب إدخال رقم المحفظة الذي تم التحويل منه.",
+  "booking_time_unavailable": "الوقت المحدد تم حجزه بالفعل، يرجى اختيار وقت آخر.",
+  "booking_open_time_disabled": "الوقت المفتوح غير مفعل لهذه الغرفة.",
+  "booking_next_booking_too_soon": "يوجد حجز قريب جدًا، لا يمكن بدء وقت مفتوح الآن.",
+  "booking_open_time_limit_exceeded": "الجلسة تجاوزت الحد الأقصى للوقت المفتوح. راجع سياسة الصالة قبل الإغلاق."
 }

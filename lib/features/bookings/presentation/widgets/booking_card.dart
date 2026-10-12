@@ -54,7 +54,7 @@ class _BookingCardState extends State<BookingCard> {
       builder: (_) => BookingDetailsDialog(
         booking: widget.booking,
         onConfirmPayment: (amount, percent, reason) {
-          context.read<BookingCubit>().confirmCashPayment(
+          return context.read<BookingCubit>().confirmCashPayment(
             widget.booking.id,
             discountAmount: amount,
             discountPercentage: percent,

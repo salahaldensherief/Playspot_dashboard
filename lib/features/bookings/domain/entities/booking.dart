@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'booking_status.dart';
 import 'payment_enums.dart';
+import '../services/booking_schedule.dart';
 
 export 'booking_status.dart';
 export 'payment_enums.dart';
@@ -297,18 +298,7 @@ class Booking extends Equatable {
   }
 
   /// Calculates the exact start [DateTime] combining [date] and [startTime].
-  DateTime? get startDateTime {
-    if (startTime.trim().isEmpty) return null;
-    try {
-      final parts = startTime.trim().split(':');
-      if (parts.length >= 2) {
-        final hour = int.tryParse(parts[0]) ?? 0;
-        final minute = int.tryParse(parts[1]) ?? 0;
-        return DateTime(date.year, date.month, date.day, hour, minute);
-      }
-    } catch (_) {}
-    return null;
-  }
+  DateTime? get startDateTime => BookingSchedule.startAt(date, startTime);
 
   /// Calculates the exact end [DateTime].
   /// Prefers calculating [startDateTime] + [durationMinutes] when available,

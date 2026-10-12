@@ -138,6 +138,20 @@ class _SessionControlActionsState extends State<SessionControlActions> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (_error != null) Text(_error ?? '', style: OperationsTokens.value),
+        if (booking.status == BookingStatus.upcoming &&
+            (booking.paymentStatus == PaymentStatus.paid ||
+                booking.isOpenEnded))
+          StartSessionButton(
+            bookingId: booking.id,
+            bookingDate: booking.date,
+            startTime: booking.startTime,
+            enabled: !_busy && _allowed('sessions_control'),
+            height: 48,
+            onSuccess: () => context.read<BookingCubit>().startWatchingBookings(
+              loungeId: booking.loungeId,
+              forceRefresh: true,
+            ),
+          ),
         if (running && !booking.isOpenEnded) _extensions(booking),
         if (running) ...[
           const SizedBox(height: OperationsTokens.gap),

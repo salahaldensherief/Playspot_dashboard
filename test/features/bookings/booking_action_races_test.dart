@@ -13,6 +13,7 @@ import 'package:play_spot_dashboard/features/bookings/domain/usecases/start_book
 import 'package:play_spot_dashboard/features/bookings/domain/usecases/update_booking_status.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/usecases/watch_bookings.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
 
 class _Repository extends Mock implements BookingRepository {}
 
@@ -187,6 +188,18 @@ void main() {
       await action;
       await seed([booking('one', payment: PaymentStatus.paid)]);
       expect(cubit.state.bookings.single.paymentStatus, PaymentStatus.paid);
+    },
+  );
+  test(
+    'failed session action keeps loaded bookings usable with a visible error',
+    () async {
+      await seed([booking('one')]);
+      when(
+        () => repository.approveBooking('one'),
+      ).thenAnswer((_) async => const Left(ServerFailure('not_authorized')));
+      expect(await cubit.approveBooking('one'), isFalse);
+      expect(cubit.state.status, BookingStatusState.success);
+      expect(cubit.state.errorMessage, isNotNull);
     },
   );
 }

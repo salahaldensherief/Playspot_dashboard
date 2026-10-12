@@ -163,7 +163,7 @@ class _BookingsPageState extends State<BookingsPage>
       builder: (_) => BookingDetailsDialog(
         booking: booking,
         onConfirmPayment: (amount, percent, reason) {
-          cubit.confirmCashPayment(
+          return cubit.confirmCashPayment(
             booking.id,
             shiftId: activeShiftId,
             discountAmount: amount,
@@ -217,9 +217,10 @@ class _BookingsPageState extends State<BookingsPage>
               ),
               BlocListener<BookingCubit, BookingState>(
                 listenWhen: (previous, current) =>
-                    previous.status != current.status,
+                    previous.status != current.status ||
+                    previous.errorMessage != current.errorMessage,
                 listener: (context, state) {
-                  if (state.status == BookingStatusState.failure) {
+                  if (state.errorMessage != null) {
                     final errMsg =
                         state.errorMessage ?? AppStrings.actionFailed;
                     if (!context.mounted) return;

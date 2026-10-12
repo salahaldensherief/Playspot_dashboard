@@ -63,14 +63,21 @@ class BookingCubit extends Cubit<BookingState>
       return;
     }
 
-    ++_scopeVersion;
+    final scopeChanged = watchedEntityId != entityId;
+    if (scopeChanged) ++_scopeVersion;
     ++_pageVersion;
     _isFirstLoad = true;
     _knownBookingIds.clear();
-    _scheduler.resetAlerts();
+    if (scopeChanged) _scheduler.resetAlerts();
     _scheduler.start();
 
-    emit(state.copyWith(status: BookingStatusState.loading));
+    emit(
+      state.copyWith(
+        status: BookingStatusState.loading,
+        bookings: scopeChanged ? const [] : state.bookings,
+        clearLatestNewBooking: true,
+      ),
+    );
 
     startWatch<List<Booking>>(
       entityId: entityId,
@@ -200,6 +207,7 @@ class BookingCubit extends Cubit<BookingState>
   }) async {
     if (isClosed || !_pendingActions.add(bookingId)) return false;
     final scopeVersion = _scopeVersion;
+    if (state.errorMessage != null) emit(state.copyWith());
     try {
       final result = await action();
       if (isClosed || scopeVersion != _scopeVersion) return false;
@@ -208,7 +216,9 @@ class BookingCubit extends Cubit<BookingState>
           AppLogger.warning('$actionName failed');
           emit(
             state.copyWith(
-              status: BookingStatusState.failure,
+              status: state.bookings.isEmpty
+                  ? BookingStatusState.failure
+                  : state.status,
               errorMessage: failure.message.tr(),
             ),
           );

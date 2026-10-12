@@ -24,13 +24,14 @@ extension PermissionExtension on BuildContext {
   /// This is a presentation guard only; backend RPC/RLS authorization remains
   /// authoritative for every sensitive read or mutation.
   bool hasPermission(String key) {
-    final user = read<LoginCubit>().state.user;
+    final user = read<LoginCubit?>()?.state.user;
     if (user == null || key.trim().isEmpty) return false;
 
-    return read<PermissionsCubit>().hasPermission(
-      key,
-      userRole: _permissionRole(user),
-      userId: user.id,
-    );
+    return read<PermissionsCubit?>()?.hasPermission(
+          key,
+          userRole: _permissionRole(user),
+          userId: user.id,
+        ) ??
+        false;
   }
 }
