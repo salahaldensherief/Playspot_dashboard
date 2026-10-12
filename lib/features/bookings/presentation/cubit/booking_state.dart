@@ -25,6 +25,21 @@ class BookingState extends Equatable {
     this.latestNewBooking,
   });
 
+  List<Booking> withSupplementalBookings(
+    List<Booking> supplemental, {
+    String? loungeId,
+  }) {
+    final scoped = loungeId != null && loungeId != 'all';
+    return List<Booking>.unmodifiable(
+      {
+        for (final booking in supplemental)
+          if (!scoped || booking.loungeId == loungeId) booking.id: booking,
+        for (final booking in bookings)
+          if (!scoped || booking.loungeId == loungeId) booking.id: booking,
+      }.values,
+    );
+  }
+
   bool get hasNextPage => page * pageSize < totalCount;
   bool get hasPreviousPage => page > 1;
   int get totalPages => pageSize > 0 ? (totalCount / pageSize).ceil() : 0;

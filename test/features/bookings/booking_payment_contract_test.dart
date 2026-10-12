@@ -160,4 +160,31 @@ void main() {
 
     await client.dispose();
   });
+  test('session start cannot acknowledge another booking as success', () async {
+    final client = SupabaseClient(
+      'https://example.invalid',
+      'fixture',
+      httpClient: MockClient((request) async {
+        return http.Response(
+          jsonEncode(
+            request.url.path.endsWith('/bookings')
+                ? {'is_open_time': false}
+                : {
+                    'success': true,
+                    'booking_id': 'other',
+                    'status': 'in_progress',
+                  },
+          ),
+          200,
+          headers: {'content-type': 'application/json'},
+          request: request,
+        );
+      }),
+    );
+    addTearDown(client.dispose);
+    await expectLater(
+      BookingRemoteDataSourceImpl(client).startBookingSession('requested'),
+      throwsA(isA<FormatException>()),
+    );
+  });
 }

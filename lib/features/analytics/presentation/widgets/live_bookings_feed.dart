@@ -23,12 +23,13 @@ class LiveBookingsFeed extends StatelessWidget {
       builder: (context, live) => BlocBuilder<BookingCubit, BookingState>(
         buildWhen: (previous, current) =>
             previous.bookings != current.bookings ||
-            previous.status != current.status,
+            previous.status != current.status ||
+            previous.errorMessage != current.errorMessage,
         builder: (context, state) {
-          final bookings = {
-            ...{for (final item in state.bookings) item.id: item},
-            ...{for (final item in live) item.id: item},
-          }.values.toList();
+          final bookings = state.withSupplementalBookings(
+            live,
+            loungeId: context.read<BookingCubit>().watchedEntityId,
+          );
           return Container(
             decoration: OperationsTokens.panel,
             padding: const EdgeInsets.all(OperationsTokens.padding),
@@ -44,6 +45,9 @@ class LiveBookingsFeed extends StatelessWidget {
                       state.status == BookingStatusState.loading,
                 ),
                 const SizedBox(height: OperationsTokens.gap),
+                if (state.status != BookingStatusState.failure &&
+                    state.errorMessage != null)
+                  Text(state.errorMessage ?? ''),
                 if (state.status == BookingStatusState.loading &&
                     bookings.isEmpty)
                   const CashierSessionsLoading()

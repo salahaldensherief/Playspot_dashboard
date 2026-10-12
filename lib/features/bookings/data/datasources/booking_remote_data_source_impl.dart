@@ -414,7 +414,10 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
           : 'start_booking_session',
       params: {'p_booking_id': bookingId},
     );
-    if (response is! Map || response['success'] != true) {
+    if (response is! Map ||
+        response['success'] != true ||
+        response['booking_id'] != bookingId ||
+        response['status'] != 'in_progress') {
       throw const FormatException('Invalid session start response');
     }
   }

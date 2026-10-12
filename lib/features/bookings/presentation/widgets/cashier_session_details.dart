@@ -5,6 +5,7 @@ import '../../../../art_core/widgets/operations_section.dart';
 import '../../../requests/domain/entities/client_request_entity.dart';
 import '../../domain/entities/booking.dart';
 import 'booking_card_actions.dart';
+import 'booking_details_dialog.dart';
 import 'session_operations_summary.dart';
 import 'session_financial_summary.dart';
 import 'cashier_session_header.dart';
@@ -54,7 +55,9 @@ class CashierSessionDetails extends StatelessWidget {
               isPaid: booking.paymentStatus == PaymentStatus.paid,
               isPending: booking.status == BookingStatus.pending,
               isCanStartSession: booking.status == BookingStatus.upcoming,
-              onOpenDetails: () {},
+              onOpenDetails:
+                  onManage ??
+                  () => BookingDetailsDialog.show(context, booking: booking),
             ),
           ],
         ],

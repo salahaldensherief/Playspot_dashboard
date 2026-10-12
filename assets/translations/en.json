@@ -2015,5 +2015,16 @@
   "staff_creation_unconfirmed": "Staff creation is not confirmed. Retry with the same details.",
   "staff_creation_retry_original_details": "Retry using the original staff details to recover the account without creating another one.",
   "pricing_rule_saved": "Pricing rule saved",
-  "pricing_rule_deleted": "Pricing rule deleted"
+  "pricing_rule_deleted": "Pricing rule deleted",
+  "cancel_booking_confirmation": "Cancel this booking?",
+  "booking_requires_open_shift": "Open a shift for this lounge before collecting payment or starting the session.",
+  "booking_payment_required_before_start": "Collect the remaining payment before starting this session.",
+  "booking_not_startable": "This booking cannot be started in its current state. Refresh the booking and try again.",
+  "booking_cash_unavailable": "Cash payment is unavailable for this lounge.",
+  "booking_first_visit_requires_prepayment": "The first booking requires prepaid confirmation.",
+  "booking_sender_wallet_required": "Enter the wallet number used for the transfer.",
+  "booking_time_unavailable": "This time has already been booked. Choose another time.",
+  "booking_open_time_disabled": "Open-time sessions are disabled for this room.",
+  "booking_next_booking_too_soon": "Another booking starts too soon to start an open-time session.",
+  "booking_open_time_limit_exceeded": "This session exceeded the open-time limit. Review the lounge policy before closing."
 }
