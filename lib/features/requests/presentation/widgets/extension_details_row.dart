@@ -18,9 +18,10 @@ class ExtensionDetailsRow extends StatelessWidget {
         ? metadata.items.first
         : <String, dynamic>{};
 
-    final int requestedMinutes = (firstMetadataItem['requested_minutes'] ??
-            firstMetadataItem['minutes'] as num?)
-        ?.toInt() ??
+    final int requestedMinutes =
+        (firstMetadataItem['requested_minutes'] ??
+                firstMetadataItem['minutes'] as num?)
+            ?.toInt() ??
         30;
 
     final int currentDuration =
@@ -37,7 +38,11 @@ class ExtensionDetailsRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(Icons.add_circle_outline, size: 14.r, color: AppColors.neonBlue),
+              Icon(
+                Icons.add_circle_outline,
+                size: 14.r,
+                color: AppColors.neonBlue,
+              ),
               SizedBox(width: 4.w),
               AppText.subHeading(
                 '+$requestedMinutes ${AppStrings.minutesUnit}',

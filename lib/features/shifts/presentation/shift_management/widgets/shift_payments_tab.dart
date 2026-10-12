@@ -22,9 +22,16 @@ class ShiftPaymentsTab extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.payments_outlined, size: 48.r, color: AppColors.textSecondary),
+                Icon(
+                  Icons.payments_outlined,
+                  size: 48.r,
+                  color: AppColors.textSecondary,
+                ),
                 SizedBox(height: 12.h),
-                AppText.body(AppStrings.noPaymentsRecorded, color: AppColors.textSecondary),
+                AppText.body(
+                  AppStrings.noPaymentsRecorded,
+                  color: AppColors.textSecondary,
+                ),
               ],
             ),
           );
@@ -32,24 +39,37 @@ class ShiftPaymentsTab extends StatelessWidget {
 
         return ListView.separated(
           itemCount: state.payments.length,
-          separatorBuilder: (context, index) => Divider(color: AppColors.borderDefault, height: 1.h),
+          separatorBuilder: (context, index) =>
+              Divider(color: AppColors.borderDefault, height: 1.h),
           itemBuilder: (context, index) {
             final item = state.payments[index];
             final isCash = item.isCash;
 
             return ListTile(
               leading: CircleAvatar(
-                backgroundColor: (isCash ? AppColors.success : AppColors.warning).withValues(alpha: 0.15),
+                backgroundColor:
+                    (isCash ? AppColors.success : AppColors.warning).withValues(
+                      alpha: 0.15,
+                    ),
                 child: Icon(
                   isCash ? Icons.money : Icons.credit_card,
                   color: isCash ? AppColors.success : AppColors.warning,
                   size: 20.r,
                 ),
               ),
-              title: Text(AppStrings.paymentItem(item.category), style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+              title: Text(
+                AppStrings.paymentItem(item.category),
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               subtitle: Text(
                 '${AppStrings.paymentMethodLabel(item.paymentMethod.toUpperCase())} | ${DateFormat('hh:mm a').format(item.createdAt)}',
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
               ),
               trailing: Text(
                 '${item.amount.toStringAsFixed(2)} ${AppStrings.egp}',

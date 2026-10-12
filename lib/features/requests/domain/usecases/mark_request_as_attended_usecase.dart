@@ -17,7 +17,8 @@ class MarkRequestAttendedParams extends Equatable {
   List<Object?> get props => [requestId, isCanteenOrder];
 }
 
-class MarkRequestAsAttendedUseCase implements UseCase<void, MarkRequestAttendedParams> {
+class MarkRequestAsAttendedUseCase
+    implements UseCase<void, MarkRequestAttendedParams> {
   final ClientRequestsRepository repository;
 
   MarkRequestAsAttendedUseCase(this.repository);

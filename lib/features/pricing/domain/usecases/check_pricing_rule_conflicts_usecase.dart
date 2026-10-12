@@ -16,10 +16,7 @@ class CheckPricingRuleConflictsParams extends Equatable {
 
 class CheckPricingRuleConflictsUseCase
     implements
-        UseCase<
-          List<PricingRuleEntity>,
-          CheckPricingRuleConflictsParams
-        > {
+        UseCase<List<PricingRuleEntity>, CheckPricingRuleConflictsParams> {
   final PricingRepository repository;
 
   CheckPricingRuleConflictsUseCase(this.repository);

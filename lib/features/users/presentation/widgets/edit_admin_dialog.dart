@@ -44,10 +44,7 @@ class _EditAdminDialogState extends State<EditAdminDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      widget.onSave?.call(
-        _nameController.text,
-        _emailController.text,
-      );
+      widget.onSave?.call(_nameController.text, _emailController.text);
     }
   }
 
@@ -78,14 +75,17 @@ class _EditAdminDialogState extends State<EditAdminDialog> {
             AppTextField(
               label: AppStrings.fullName,
               controller: _nameController,
-              validator: (val) => val == null || val.isEmpty ? AppStrings.fieldRequired : null,
+              validator: (val) =>
+                  val == null || val.isEmpty ? AppStrings.fieldRequired : null,
             ),
             SizedBox(height: 16.h),
             AppTextField(
               label: AppStrings.email,
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              validator: (val) => val == null || !val.contains('@') ? AppStrings.invalidEmail : null,
+              validator: (val) => val == null || !val.contains('@')
+                  ? AppStrings.invalidEmail
+                  : null,
             ),
           ],
         ),

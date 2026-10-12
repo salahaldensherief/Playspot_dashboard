@@ -48,7 +48,9 @@ class PayoutModel extends PayoutEntity {
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'].toString())
           : DateTime.now(),
-      paidAt: json['paid_at'] != null ? DateTime.parse(json['paid_at'].toString()) : null,
+      paidAt: json['paid_at'] != null
+          ? DateTime.parse(json['paid_at'].toString())
+          : null,
       transferReference: json['transfer_reference']?.toString(),
       transferMethod: json['transfer_method']?.toString(),
       paymentCount: parseInt(json['payment_count']),
@@ -80,8 +82,12 @@ class PendingPayoutOverviewModel extends PendingPayoutOverview {
     return PendingPayoutOverviewModel(
       loungeId: (json['lounge_id'] ?? '').toString(),
       loungeName: (json['lounge_name'] ?? 'Lounge').toString(),
-      pendingAmount: parseDouble(json['pending_amount'] ?? json['total_amount'] ?? json['amount']),
-      pendingPaymentsCount: parseInt(json['pending_payments_count'] ?? json['count']),
+      pendingAmount: parseDouble(
+        json['pending_amount'] ?? json['total_amount'] ?? json['amount'],
+      ),
+      pendingPaymentsCount: parseInt(
+        json['pending_payments_count'] ?? json['count'],
+      ),
     );
   }
 }

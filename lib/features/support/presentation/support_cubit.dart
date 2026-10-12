@@ -44,14 +44,15 @@ class SupportCubit extends Cubit<SupportState> {
     emit(state.copyWith(status: SupportStatus.loading));
     final result = await getAppSettingsUseCase();
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: SupportStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (settings) => emit(state.copyWith(
-        status: SupportStatus.success,
-        settings: settings,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: SupportStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (settings) => emit(
+        state.copyWith(status: SupportStatus.success, settings: settings),
+      ),
     );
   }
 
@@ -59,15 +60,19 @@ class SupportCubit extends Cubit<SupportState> {
     emit(state.copyWith(actionStatus: SupportStatus.loading));
     final result = await updateAppSettingsUseCase(newSettings);
     result.fold(
-      (failure) => emit(state.copyWith(
-        actionStatus: SupportStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (_) => emit(state.copyWith(
-        actionStatus: SupportStatus.success,
-        settings: newSettings,
-        successMessage: AppStrings.supportContactSettingsSaved,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          actionStatus: SupportStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (_) => emit(
+        state.copyWith(
+          actionStatus: SupportStatus.success,
+          settings: newSettings,
+          successMessage: AppStrings.supportContactSettingsSaved,
+        ),
+      ),
     );
   }
 
@@ -75,14 +80,15 @@ class SupportCubit extends Cubit<SupportState> {
     emit(state.copyWith(status: SupportStatus.loading));
     final result = await getPoliciesUseCase();
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: SupportStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (policies) => emit(state.copyWith(
-        status: SupportStatus.success,
-        policies: policies,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: SupportStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (policies) => emit(
+        state.copyWith(status: SupportStatus.success, policies: policies),
+      ),
     );
   }
 
@@ -90,20 +96,26 @@ class SupportCubit extends Cubit<SupportState> {
     emit(state.copyWith(actionStatus: SupportStatus.loading));
     final result = await updatePolicyUseCase(policy);
     result.fold(
-      (failure) => emit(state.copyWith(
-        actionStatus: SupportStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          actionStatus: SupportStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) {
-        final updatedList = state.policies.map((p) => p.policyType == policy.policyType ? policy : p).toList();
+        final updatedList = state.policies
+            .map((p) => p.policyType == policy.policyType ? policy : p)
+            .toList();
         if (!updatedList.any((p) => p.policyType == policy.policyType)) {
           updatedList.add(policy);
         }
-        emit(state.copyWith(
-          actionStatus: SupportStatus.success,
-          policies: updatedList,
-          successMessage: AppStrings.supportPolicySaved,
-        ));
+        emit(
+          state.copyWith(
+            actionStatus: SupportStatus.success,
+            policies: updatedList,
+            successMessage: AppStrings.supportPolicySaved,
+          ),
+        );
       },
     );
   }
@@ -112,14 +124,13 @@ class SupportCubit extends Cubit<SupportState> {
     emit(state.copyWith(status: SupportStatus.loading));
     final result = await getFaqsUseCase();
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: SupportStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (faqs) => emit(state.copyWith(
-        status: SupportStatus.success,
-        faqs: faqs,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: SupportStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (faqs) => emit(state.copyWith(status: SupportStatus.success, faqs: faqs)),
     );
   }
 
@@ -127,15 +138,19 @@ class SupportCubit extends Cubit<SupportState> {
     emit(state.copyWith(actionStatus: SupportStatus.loading));
     final result = await saveFaqUseCase(faq);
     result.fold(
-      (failure) => emit(state.copyWith(
-        actionStatus: SupportStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          actionStatus: SupportStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) {
-        emit(state.copyWith(
-          actionStatus: SupportStatus.success,
-          successMessage: AppStrings.faqSavedSuccess,
-        ));
+        emit(
+          state.copyWith(
+            actionStatus: SupportStatus.success,
+            successMessage: AppStrings.faqSavedSuccess,
+          ),
+        );
         loadFaqs();
       },
     );
@@ -145,15 +160,19 @@ class SupportCubit extends Cubit<SupportState> {
     emit(state.copyWith(actionStatus: SupportStatus.loading));
     final result = await deleteFaqUseCase(id);
     result.fold(
-      (failure) => emit(state.copyWith(
-        actionStatus: SupportStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          actionStatus: SupportStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) {
-        emit(state.copyWith(
-          actionStatus: SupportStatus.success,
-          successMessage: AppStrings.faqDeletedSuccess,
-        ));
+        emit(
+          state.copyWith(
+            actionStatus: SupportStatus.success,
+            successMessage: AppStrings.faqDeletedSuccess,
+          ),
+        );
         loadFaqs();
       },
     );
@@ -161,17 +180,19 @@ class SupportCubit extends Cubit<SupportState> {
 
   Future<void> loadTickets({String? statusFilter}) async {
     final filter = statusFilter ?? state.activeTicketFilter;
-    emit(state.copyWith(status: SupportStatus.loading, activeTicketFilter: filter));
+    emit(
+      state.copyWith(status: SupportStatus.loading, activeTicketFilter: filter),
+    );
     final result = await getSupportTicketsUseCase(statusFilter: filter);
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: SupportStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (tickets) => emit(state.copyWith(
-        status: SupportStatus.success,
-        tickets: tickets,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: SupportStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (tickets) =>
+          emit(state.copyWith(status: SupportStatus.success, tickets: tickets)),
     );
   }
 
@@ -186,17 +207,21 @@ class SupportCubit extends Cubit<SupportState> {
     );
     return result.fold(
       (failure) {
-        emit(state.copyWith(
-        actionStatus: SupportStatus.failure,
-        errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            actionStatus: SupportStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
         return false;
       },
       (_) {
-        emit(state.copyWith(
-          actionStatus: SupportStatus.success,
-          successMessage: AppStrings.ticketSubmittedSuccess,
-        ));
+        emit(
+          state.copyWith(
+            actionStatus: SupportStatus.success,
+            successMessage: AppStrings.ticketSubmittedSuccess,
+          ),
+        );
         loadTickets();
         return true;
       },
@@ -215,15 +240,19 @@ class SupportCubit extends Cubit<SupportState> {
       adminNotes: adminNotes,
     );
     result.fold(
-      (failure) => emit(state.copyWith(
-        actionStatus: SupportStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          actionStatus: SupportStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) {
-        emit(state.copyWith(
-          actionStatus: SupportStatus.success,
-          successMessage: 'تم تحديث حالة التذكرة بنجاح',
-        ));
+        emit(
+          state.copyWith(
+            actionStatus: SupportStatus.success,
+            successMessage: 'تم تحديث حالة التذكرة بنجاح',
+          ),
+        );
         loadTickets();
       },
     );

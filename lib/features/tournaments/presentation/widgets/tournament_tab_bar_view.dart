@@ -54,21 +54,28 @@ class TournamentTabBarView extends StatelessWidget {
             if (partState.status == TournamentParticipantsStatus.failure &&
                 partState.participants.isEmpty) {
               return Center(
-                child: Text(partState.errorMessage ?? 'Failed to load participants'),
+                child: Text(
+                  partState.errorMessage ?? 'Failed to load participants',
+                ),
               );
             }
             return TournamentParticipantsTable(
               participants: partState.participants,
-              onApprovePayment: (p) =>
-                  context.read<TournamentParticipantsCubit>().approvePayment(p.id),
-              onRejectPayment: (p, reason) =>
-                  context.read<TournamentParticipantsCubit>().rejectPayment(p.id, reason),
-              onRecordCash: (p) =>
-                  context.read<TournamentParticipantsCubit>().recordCashPayment(p.id),
-              onCheckIn: (p) =>
-                  context.read<TournamentParticipantsCubit>().checkInParticipant(p.id),
-              onWithdraw: (p) =>
-                  context.read<TournamentParticipantsCubit>().withdrawParticipant(p.id),
+              onApprovePayment: (p) => context
+                  .read<TournamentParticipantsCubit>()
+                  .approvePayment(p.id),
+              onRejectPayment: (p, reason) => context
+                  .read<TournamentParticipantsCubit>()
+                  .rejectPayment(p.id, reason),
+              onRecordCash: (p) => context
+                  .read<TournamentParticipantsCubit>()
+                  .recordCashPayment(p.id),
+              onCheckIn: (p) => context
+                  .read<TournamentParticipantsCubit>()
+                  .checkInParticipant(p.id),
+              onWithdraw: (p) => context
+                  .read<TournamentParticipantsCubit>()
+                  .withdrawParticipant(p.id),
             );
           },
         ),
@@ -80,12 +87,17 @@ class TournamentTabBarView extends StatelessWidget {
                     matches: matchState.matches,
                     onDrawBracket: () {
                       if (selected != null) {
-                        context.read<TournamentMatchesCubit>().drawBracket(selected!.id);
+                        context.read<TournamentMatchesCubit>().drawBracket(
+                          selected!.id,
+                        );
                       }
                     },
                     onStartMatch: (m) {
                       if (selected != null) {
-                        context.read<TournamentMatchesCubit>().startMatch(m.id, selected!.id);
+                        context.read<TournamentMatchesCubit>().startMatch(
+                          m.id,
+                          selected!.id,
+                        );
                       }
                     },
                   )
@@ -101,23 +113,26 @@ class TournamentTabBarView extends StatelessWidget {
                   context: context,
                   builder: (ctx) => DisputeResolutionDialog(
                     match: m,
-                    onResolve: ({
-                      required winnerId,
-                      required p1Score,
-                      required p2Score,
-                      required resolutionNotes,
-                    }) {
-                      if (selected != null) {
-                        context.read<TournamentMatchesCubit>().resolveDispute(
-                              m.id,
-                              selected!.id,
-                              winnerId: winnerId,
-                              p1Score: p1Score,
-                              p2Score: p2Score,
-                              resolutionNotes: resolutionNotes,
-                            );
-                      }
-                    },
+                    onResolve:
+                        ({
+                          required winnerId,
+                          required p1Score,
+                          required p2Score,
+                          required resolutionNotes,
+                        }) {
+                          if (selected != null) {
+                            context
+                                .read<TournamentMatchesCubit>()
+                                .resolveDispute(
+                                  m.id,
+                                  selected!.id,
+                                  winnerId: winnerId,
+                                  p1Score: p1Score,
+                                  p2Score: p2Score,
+                                  resolutionNotes: resolutionNotes,
+                                );
+                          }
+                        },
                   ),
                 );
               },

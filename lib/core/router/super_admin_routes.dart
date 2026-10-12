@@ -58,12 +58,8 @@ List<RouteBase> getSuperAdminRoutes() {
       pageBuilder: (context, state) => NoTransitionPage(
         child: MultiBlocProviderScope(
           providers: [
-            BlocProvider(
-              create: (_) => sl<AdminManagementCubit>(),
-            ),
-            BlocProvider(
-              create: (_) => sl<LoungeCubit>(),
-            ),
+            BlocProvider(create: (_) => sl<AdminManagementCubit>()),
+            BlocProvider(create: (_) => sl<LoungeCubit>()),
           ],
           child: const users.UsersPage(),
         ),
@@ -120,9 +116,7 @@ List<RouteBase> getSuperAdminRoutes() {
         child: MultiBlocProviderScope(
           providers: [
             BlocProvider(create: (_) => sl<TournamentCubit>()),
-            BlocProvider(
-              create: (_) => sl<TournamentParticipantsCubit>(),
-            ),
+            BlocProvider(create: (_) => sl<TournamentParticipantsCubit>()),
             BlocProvider(create: (_) => sl<TournamentMatchesCubit>()),
           ],
           child: const tournaments.TournamentsScreen(),

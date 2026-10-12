@@ -68,25 +68,26 @@ class CanteenComboEntity extends Equatable {
     return (margin / price) * 100.0;
   }
 
-  double get savings => (separateItemsTotal > price) ? (separateItemsTotal - price) : 0.0;
+  double get savings =>
+      (separateItemsTotal > price) ? (separateItemsTotal - price) : 0.0;
 
   @override
   List<Object?> get props => [
-        id,
-        loungeId,
-        nameAr,
-        nameEn,
-        descriptionAr,
-        descriptionEn,
-        imageUrl,
-        price,
-        daysOfWeek,
-        availableFrom,
-        availableTo,
-        validFrom,
-        validTo,
-        isActive,
-        sortOrder,
-        items,
-      ];
+    id,
+    loungeId,
+    nameAr,
+    nameEn,
+    descriptionAr,
+    descriptionEn,
+    imageUrl,
+    price,
+    daysOfWeek,
+    availableFrom,
+    availableTo,
+    validFrom,
+    validTo,
+    isActive,
+    sortOrder,
+    items,
+  ];
 }

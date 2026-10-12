@@ -33,10 +33,7 @@ class LoungesHeader extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               AppStrings.loungesHeaderSubtitle,
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14.sp,
-              ),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
             ),
           ],
         );
@@ -53,10 +50,7 @@ class LoungesHeader extends StatelessWidget {
             children: [
               title,
               SizedBox(height: 16.h),
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: action,
-              ),
+              Align(alignment: AlignmentDirectional.centerStart, child: action),
             ],
           );
         }

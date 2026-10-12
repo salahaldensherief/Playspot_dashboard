@@ -18,7 +18,8 @@ class UpsellConversionModel extends UpsellConversionEntity {
       triggerType: json['trigger_type']?.toString(),
       impressions: (json['impressions'] as num?)?.toInt() ?? 0,
       conversions: (json['conversions'] as num?)?.toInt() ?? 0,
-      conversionRatePercent: (json['conversion_rate_percent'] as num?)?.toDouble() ?? 0.0,
+      conversionRatePercent:
+          (json['conversion_rate_percent'] as num?)?.toDouble() ?? 0.0,
       revenueGenerated: (json['revenue_generated'] as num?)?.toDouble() ?? 0.0,
     );
   }

@@ -33,54 +33,81 @@ class LoyaltyDataTable extends StatelessWidget {
         AppStrings.status,
         AppStrings.actions,
       ],
-      rows: options.map((opt) => DataRow(
-        cells: [
-          DataCell(
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AppText.body(opt.titleEn, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-                AppText.body(opt.titleAr, color: AppColors.textSecondary, fontSize: 11.sp),
-              ],
-            ),
-          ),
-          DataCell(AppText.body(opt.pointsCost.toString())),
-          DataCell(
-            AppText.body(
-              opt.rewardType == 'discount_fixed' 
-                ? "${opt.rewardValue.toStringAsFixed(0)} ${AppStrings.egp} Off" 
-                : "Free Hour",
-              color: AppColors.neonBlue,
-            )
-          ),
-          DataCell(
-            opt.isActive ? StatusBadge.success(AppStrings.active.toUpperCase()) : StatusBadge.danger(AppStrings.inactive.toUpperCase())
-          ),
-          DataCell(
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20),
-                  onPressed: () => onEdit(opt),
-                ),
-                IconButton(
-                  icon: Icon(
-                    opt.isActive ? Icons.visibility_off_outlined : Icons.visibility_outlined, 
-                    color: opt.isActive ? AppColors.warning : AppColors.success, 
-                    size: 20
+      rows: options
+          .map(
+            (opt) => DataRow(
+              cells: [
+                DataCell(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AppText.body(
+                        opt.titleEn,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      AppText.body(
+                        opt.titleAr,
+                        color: AppColors.textSecondary,
+                        fontSize: 11.sp,
+                      ),
+                    ],
                   ),
-                  onPressed: () => cubit.toggleOptionStatus(opt.id, !opt.isActive),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: AppColors.danger, size: 20),
-                  onPressed: () => _confirmDelete(context, opt),
+                DataCell(AppText.body(opt.pointsCost.toString())),
+                DataCell(
+                  AppText.body(
+                    opt.rewardType == 'discount_fixed'
+                        ? "${opt.rewardValue.toStringAsFixed(0)} ${AppStrings.egp} Off"
+                        : "Free Hour",
+                    color: AppColors.neonBlue,
+                  ),
+                ),
+                DataCell(
+                  opt.isActive
+                      ? StatusBadge.success(AppStrings.active.toUpperCase())
+                      : StatusBadge.danger(AppStrings.inactive.toUpperCase()),
+                ),
+                DataCell(
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.edit_outlined,
+                          color: AppColors.textSecondary,
+                          size: 20,
+                        ),
+                        onPressed: () => onEdit(opt),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          opt.isActive
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          color: opt.isActive
+                              ? AppColors.warning
+                              : AppColors.success,
+                          size: 20,
+                        ),
+                        onPressed: () =>
+                            cubit.toggleOptionStatus(opt.id, !opt.isActive),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: AppColors.danger,
+                          size: 20,
+                        ),
+                        onPressed: () => _confirmDelete(context, opt),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
-      )).toList(),
+          )
+          .toList(),
     );
   }
 
@@ -89,7 +116,10 @@ class LoyaltyDataTable extends StatelessWidget {
       context: context,
       builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        title: Text(AppStrings.deleteConfirmation, style: const TextStyle(color: AppColors.textPrimary)),
+        title: Text(
+          AppStrings.deleteConfirmation,
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
         content: Text('${AppStrings.deleteWarning} "${option.titleEn}"?'),
         actions: [
           AppButton(

@@ -71,7 +71,9 @@ class _OfflineSaleDialogState extends State<OfflineSaleDialog> {
     EasyLocalization.of(context);
     final products = widget.cubit.state.snapshot['products'] as Map? ?? {};
     return AppDialog(
-      title: (widget.cash ? 'offline_workspace.cash' : 'offline_workspace.order').tr(),
+      title:
+          (widget.cash ? 'offline_workspace.cash' : 'offline_workspace.order')
+              .tr(),
       icon: widget.cash ? Icons.payments_outlined : Icons.shopping_bag_outlined,
       width: 480.w,
       actions: [
@@ -101,7 +103,9 @@ class _OfflineSaleDialogState extends State<OfflineSaleDialog> {
                 labelText: 'offline_workspace.amount'.tr(),
                 filled: true,
                 fillColor: AppColors.scaffoldBackground,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
               ),
             )
           else ...[
@@ -113,7 +117,9 @@ class _OfflineSaleDialogState extends State<OfflineSaleDialog> {
                 labelText: 'offline_workspace.product'.tr(),
                 filled: true,
                 fillColor: AppColors.scaffoldBackground,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
               ),
               items: products.entries
                   .where(
@@ -142,16 +148,15 @@ class _OfflineSaleDialogState extends State<OfflineSaleDialog> {
                 labelText: 'offline_workspace.quantity'.tr(),
                 filled: true,
                 fillColor: AppColors.scaffoldBackground,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
               ),
               items: List.generate(
                 10,
-                (i) =>
-                    DropdownMenuItem(value: i + 1, child: Text('${i + 1}')),
+                (i) => DropdownMenuItem(value: i + 1, child: Text('${i + 1}')),
               ),
-              onChanged: busy
-                  ? null
-                  : (v) => setState(() => quantity = v ?? 1),
+              onChanged: busy ? null : (v) => setState(() => quantity = v ?? 1),
             ),
           ],
           if (error != null) ...[

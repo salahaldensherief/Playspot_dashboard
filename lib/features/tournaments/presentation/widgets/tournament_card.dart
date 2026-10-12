@@ -30,11 +30,15 @@ class TournamentCard extends StatelessWidget {
     EasyLocalization.of(context);
     final t = tournament;
     return Card(
-      color: isSelected ? AppColors.neonBlue.withAlpha(15) : AppColors.cardBackground,
+      color: isSelected
+          ? AppColors.neonBlue.withAlpha(15)
+          : AppColors.cardBackground,
       margin: EdgeInsets.only(bottom: 12.h),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10.r),
-        side: BorderSide(color: isSelected ? AppColors.neonBlue : AppColors.borderDefault),
+        side: BorderSide(
+          color: isSelected ? AppColors.neonBlue : AppColors.borderDefault,
+        ),
       ),
       child: ListTile(
         contentPadding: EdgeInsets.all(16.r),
@@ -71,38 +75,48 @@ class TournamentCard extends StatelessWidget {
                 spacing: 8.w,
                 runSpacing: 4.h,
                 children: t.prizes.map((p) {
-                  final rewardsSummary = p.rewards.map((r) {
-                    final icon = r.isTrophy
-                        ? '🏆'
-                        : r.isCash
+                  final rewardsSummary = p.rewards
+                      .map((r) {
+                        final icon = r.isTrophy
+                            ? '🏆'
+                            : r.isCash
                             ? '💵 ${r.value ?? ""} ${r.currency ?? "EGP"}'
                             : r.isPoints
-                                ? '⭐ ${r.value ?? ""} pts'
-                                : r.isVoucher
-                                    ? '🎟️ ${r.value ?? ""}%'
-                                    : '🎁';
-                    final title = r.titleAr ?? r.title ?? icon;
-                    return '$title ($icon)';
-                  }).join(' + ');
+                            ? '⭐ ${r.value ?? ""} pts'
+                            : r.isVoucher
+                            ? '🎟️ ${r.value ?? ""}%'
+                            : '🎁';
+                        final title = r.titleAr ?? r.title ?? icon;
+                        return '$title ($icon)';
+                      })
+                      .join(' + ');
 
                   final placementLabel = p.placement == 1
                       ? '🥇'
                       : p.placement == 2
-                          ? '🥈'
-                          : p.placement == 3
-                              ? '🥉'
-                              : '#${p.placement}';
+                      ? '🥈'
+                      : p.placement == 3
+                      ? '🥉'
+                      : '#${p.placement}';
 
                   return Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 4.h,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.mutedBackground,
                       borderRadius: BorderRadius.circular(6.r),
-                      border: Border.all(color: AppColors.borderDefault.withAlpha(80)),
+                      border: Border.all(
+                        color: AppColors.borderDefault.withAlpha(80),
+                      ),
                     ),
                     child: Text(
                       '$placementLabel $rewardsSummary',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp),
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 12.sp,
+                      ),
                     ),
                   );
                 }).toList(),

@@ -23,7 +23,9 @@ class RequestCustomerTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.mutedBackground,
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: AppColors.borderDefault.withValues(alpha: 0.6)),
+        border: Border.all(
+          color: AppColors.borderDefault.withValues(alpha: 0.6),
+        ),
       ),
       child: Row(
         children: [

@@ -13,11 +13,7 @@ class EditTaskDialog extends StatefulWidget {
   final LoyaltyTaskEntity task;
   final ValueChanged<LoyaltyTaskEntity> onSave;
 
-  const EditTaskDialog({
-    super.key,
-    required this.task,
-    required this.onSave,
-  });
+  const EditTaskDialog({super.key, required this.task, required this.onSave});
 
   @override
   State<EditTaskDialog> createState() => _EditTaskDialogState();
@@ -37,9 +33,15 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
     super.initState();
     _titleArController = TextEditingController(text: widget.task.titleAr);
     _titleEnController = TextEditingController(text: widget.task.titleEn);
-    _descriptionArController = TextEditingController(text: widget.task.descriptionAr);
-    _descriptionEnController = TextEditingController(text: widget.task.descriptionEn);
-    _pointsController = TextEditingController(text: '${widget.task.pointsReward}');
+    _descriptionArController = TextEditingController(
+      text: widget.task.descriptionAr,
+    );
+    _descriptionEnController = TextEditingController(
+      text: widget.task.descriptionEn,
+    );
+    _pointsController = TextEditingController(
+      text: '${widget.task.pointsReward}',
+    );
     _isActive = widget.task.isActive;
   }
 
@@ -55,7 +57,8 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
 
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
-      final points = int.tryParse(_pointsController.text) ?? widget.task.pointsReward;
+      final points =
+          int.tryParse(_pointsController.text) ?? widget.task.pointsReward;
 
       final updated = LoyaltyTaskEntity(
         id: widget.task.id,
@@ -87,10 +90,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
           onPressed: () => Navigator.pop(context),
         ),
         SizedBox(width: 12.w),
-        AppButton(
-          text: AppStrings.saveChanges,
-          onPressed: _submit,
-        ),
+        AppButton(text: AppStrings.saveChanges, onPressed: _submit),
       ],
       child: Form(
         key: _formKey,
@@ -101,13 +101,17 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
             AppTextField(
               controller: _titleArController,
               label: AppStrings.taskNameAr,
-              validator: (val) => val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
+              validator: (val) => val == null || val.trim().isEmpty
+                  ? AppStrings.fieldRequired
+                  : null,
             ),
             SizedBox(height: 12.h),
             AppTextField(
               controller: _titleEnController,
               label: AppStrings.taskNameEn,
-              validator: (val) => val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
+              validator: (val) => val == null || val.trim().isEmpty
+                  ? AppStrings.fieldRequired
+                  : null,
             ),
             SizedBox(height: 12.h),
 
@@ -131,7 +135,8 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
               label: AppStrings.rewardPoints,
               keyboardType: TextInputType.number,
               validator: (val) {
-                if (val == null || val.trim().isEmpty) return AppStrings.fieldRequired;
+                if (val == null || val.trim().isEmpty)
+                  return AppStrings.fieldRequired;
                 if (int.tryParse(val) == null) return AppStrings.invalidNumber;
                 return null;
               },
@@ -143,7 +148,11 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
               value: _isActive,
               activeThumbColor: AppColors.neonBlue,
               title: AppText.body(AppStrings.taskStatus),
-              subtitle: AppText.body(_isActive ? AppStrings.active : AppStrings.inactive, fontSize: 12.sp, color: AppColors.textSecondary),
+              subtitle: AppText.body(
+                _isActive ? AppStrings.active : AppStrings.inactive,
+                fontSize: 12.sp,
+                color: AppColors.textSecondary,
+              ),
               onChanged: (val) => setState(() => _isActive = val),
             ),
           ],

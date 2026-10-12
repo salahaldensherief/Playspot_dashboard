@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/domain/entities/client_request_entity.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
@@ -280,12 +281,18 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                     });
                   return;
                 }
-              } catch (_) {}
+              } catch (e) {
+                AppLogger.warning(
+                  'Receipt signed URL generation failed for $bucket/$p: $e',
+                );
+              }
             }
           }
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.warning('Receipt image loading error: $e');
+    }
     if (mounted) setState(() => _isLoading = false);
   }
 
@@ -315,7 +322,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
       children: [
         SizedBox(height: 10.h),
         AppText.body(
-          'attached_payment_receipt_label'.tr(),
+          AppStrings.attachedPaymentReceiptLabel,
           fontSize: 11.sp,
           color: AppColors.neonBlue,
           fontWeight: FontWeight.bold,
@@ -339,7 +346,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           AppText.heading(
-                            'payment_transfer_receipt'.tr(),
+                            AppStrings.paymentTransferReceipt,
                             fontSize: 16.sp,
                             color: Colors.white,
                           ),
@@ -411,7 +418,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                           ),
                           SizedBox(width: 4.w),
                           AppText.body(
-                            'zoom_payment_receipt'.tr(),
+                            AppStrings.zoomPaymentReceipt,
                             fontSize: 10.sp,
                             color: Colors.white,
                           ),

@@ -6,7 +6,7 @@ class LoungeStatsCubit extends Cubit<LoungeStatsState> {
   final GetLoungeOwnerStatsUseCase getLoungeOwnerStatsUseCase;
 
   LoungeStatsCubit(this.getLoungeOwnerStatsUseCase)
-      : super(const LoungeStatsState());
+    : super(const LoungeStatsState());
 
   Future<void> fetchStats(String? loungeId) async {
     if (loungeId == null || loungeId.isEmpty) return;
@@ -18,14 +18,14 @@ class LoungeStatsCubit extends Cubit<LoungeStatsState> {
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: LoungeStatsStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (stats) => emit(state.copyWith(
-        status: LoungeStatsStatus.success,
-        stats: stats,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: LoungeStatsStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (stats) =>
+          emit(state.copyWith(status: LoungeStatsStatus.success, stats: stats)),
     );
   }
 }

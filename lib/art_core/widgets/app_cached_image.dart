@@ -42,7 +42,11 @@ class AppCachedImage extends StatelessWidget {
   });
 
   /// Helper to return a CachedNetworkImageProvider for CircleAvatar / DecorationImage
-  static ImageProvider? provider(String? url, {int? maxCacheWidth = 400, int? maxCacheHeight = 400}) {
+  static ImageProvider? provider(
+    String? url, {
+    int? maxCacheWidth = 400,
+    int? maxCacheHeight = 400,
+  }) {
     if (url == null || url.trim().isEmpty) return null;
     return CachedNetworkImageProvider(
       url.trim(),

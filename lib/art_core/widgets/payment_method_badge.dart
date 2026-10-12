@@ -23,7 +23,8 @@ class PaymentMethodBadge extends StatelessWidget {
     bool compact = false,
   }) {
     final cleanMethod = method?.trim().toLowerCase() ?? '';
-    final isCashMethod = cleanMethod == 'cash' ||
+    final isCashMethod =
+        cleanMethod == 'cash' ||
         cleanMethod == 'cash_payment' ||
         cleanMethod == 'cod';
     return PaymentMethodBadge(
@@ -47,7 +48,9 @@ class PaymentMethodBadge extends StatelessWidget {
       badgeColor = AppColors.warning;
       badgeIcon = Icons.payments_outlined;
       label = AppStrings.paymentMethodCash;
-    } else if (clean == 'manual_transfer' || clean == 'wallet' || clean.contains('wallet')) {
+    } else if (clean == 'manual_transfer' ||
+        clean == 'wallet' ||
+        clean.contains('wallet')) {
       badgeColor = AppColors.neonBlue;
       badgeIcon = Icons.account_balance_wallet_outlined;
       label = AppStrings.paymentMethodWallet;
@@ -55,7 +58,9 @@ class PaymentMethodBadge extends StatelessWidget {
       badgeColor = AppColors.neonPurple;
       badgeIcon = Icons.send_to_mobile_rounded;
       label = AppStrings.paymentMethodInstapay;
-    } else if (clean == 'card' || clean == 'credit_card' || clean == 'debit_card') {
+    } else if (clean == 'card' ||
+        clean == 'credit_card' ||
+        clean == 'debit_card') {
       badgeColor = AppColors.success;
       badgeIcon = Icons.credit_card_outlined;
       label = AppStrings.paymentMethodCard;

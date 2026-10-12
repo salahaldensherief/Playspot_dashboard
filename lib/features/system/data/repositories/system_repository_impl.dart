@@ -41,7 +41,9 @@ class SystemRepositoryImpl implements SystemRepository {
         expectedEndTime: expectedEndTime,
       );
 
-      await remoteDataSource.updateAppStatus(AppStatusModel.fromEntity(updated));
+      await remoteDataSource.updateAppStatus(
+        AppStatusModel.fromEntity(updated),
+      );
       return const Right(null);
     } on PostgrestException catch (e) {
       return Left(ServerFailure(e.message));
@@ -51,7 +53,9 @@ class SystemRepositoryImpl implements SystemRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateAppVersions(AppStatusEntity appStatus) async {
+  Future<Either<Failure, void>> updateAppVersions(
+    AppStatusEntity appStatus,
+  ) async {
     try {
       final model = AppStatusModel.fromEntity(appStatus);
       await remoteDataSource.updateAppStatus(model);
@@ -76,7 +80,9 @@ class SystemRepositoryImpl implements SystemRepository {
   }
 
   @override
-  Future<Either<Failure, void>> createAnnouncement(AnnouncementEntity announcement) async {
+  Future<Either<Failure, void>> createAnnouncement(
+    AnnouncementEntity announcement,
+  ) async {
     try {
       final model = AnnouncementModel.fromEntity(announcement);
       await remoteDataSource.createAnnouncement(model);

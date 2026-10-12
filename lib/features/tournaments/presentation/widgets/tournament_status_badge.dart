@@ -8,10 +8,7 @@ import '../../domain/entities/tournament_entity.dart';
 class TournamentStatusBadge extends StatelessWidget {
   final TournamentStatus status;
 
-  const TournamentStatusBadge({
-    super.key,
-    required this.status,
-  });
+  const TournamentStatusBadge({super.key, required this.status});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +17,10 @@ class TournamentStatusBadge extends StatelessWidget {
       case TournamentStatus.published:
         return StatusBadge(text: AppStrings.active, color: AppColors.success);
       case TournamentStatus.inProgress:
-        return StatusBadge(text: AppStrings.inProgress, color: AppColors.neonBlue);
+        return StatusBadge(
+          text: AppStrings.inProgress,
+          color: AppColors.neonBlue,
+        );
       case TournamentStatus.completed:
         return StatusBadge(text: AppStrings.completed, color: Colors.blue);
       case TournamentStatus.cancelled:

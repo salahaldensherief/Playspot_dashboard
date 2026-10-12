@@ -71,7 +71,9 @@ class TournamentSelectorBar extends StatelessWidget {
                   );
                 }).toList(),
                 onChanged: (id) {
-                  final found = tournaments.where((t) => t.id == id).firstOrNull;
+                  final found = tournaments
+                      .where((t) => t.id == id)
+                      .firstOrNull;
                   if (found != null) {
                     onSelect(found);
                   }
@@ -105,7 +107,10 @@ class TournamentSelectorBar extends StatelessWidget {
                   text: AppStrings.deleteDraft,
                   variant: AppButtonVariant.danger,
                   fontSize: 12.sp,
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 4.h,
+                  ),
                   onPressed: onDeleteDraft,
                 )
               else
@@ -113,7 +118,10 @@ class TournamentSelectorBar extends StatelessWidget {
                   text: AppStrings.cancelTournament,
                   variant: AppButtonVariant.danger,
                   fontSize: 12.sp,
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 4.h,
+                  ),
                   onPressed: onCancel,
                 ),
             ] else if (!selected!.isCancelled) ...[
@@ -130,7 +138,10 @@ class TournamentSelectorBar extends StatelessWidget {
                   text: AppStrings.completeBooking,
                   backgroundColor: AppColors.neonBlue,
                   fontSize: 12.sp,
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 4.h,
+                  ),
                   onPressed: onAwardPrizes,
                 ),
               ],

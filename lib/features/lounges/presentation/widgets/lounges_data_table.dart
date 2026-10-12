@@ -188,24 +188,24 @@ class LoungesDataTable extends StatelessWidget {
             children: [
               Expanded(
                 child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    lounge.name,
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lounge.name,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  Text(
-                    '${lounge.availableRooms ?? 0} ${AppStrings.rooms}',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12.sp,
+                    Text(
+                      '${lounge.availableRooms ?? 0} ${AppStrings.rooms}',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12.sp,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
                 ),
               ),
               const SizedBox(width: 8),
@@ -229,11 +229,7 @@ class LoungesDataTable extends StatelessWidget {
             lounge.city ?? lounge.location ?? 'N/A',
           ),
           SizedBox(height: 8.h),
-          _buildInfoRow(
-            Icons.payments_outlined,
-            AppStrings.pricedPerRoom,
-            '—',
-          ),
+          _buildInfoRow(Icons.payments_outlined, AppStrings.pricedPerRoom, '—'),
           const Divider(height: 24, color: AppColors.divider),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -269,19 +265,19 @@ class LoungesDataTable extends StatelessWidget {
         SizedBox(width: 8.w),
         Flexible(
           child: Text(
-          '$label:',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+            '$label:',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
           ),
         ),
         SizedBox(width: 4.w),
         Flexible(
           child: Text(
-          value,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w500,
-          ),
+            value,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],
@@ -305,7 +301,7 @@ class LoungesDataTable extends StatelessWidget {
           }
         },
         builder: (context, state) {
-        context.locale;
+          context.locale;
           return EditLoungeDialog(
             lounge: lounge,
             isLoading: state.status == LoungeStatus.loading,

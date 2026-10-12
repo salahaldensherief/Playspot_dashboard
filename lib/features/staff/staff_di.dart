@@ -19,9 +19,7 @@ void initStaffDI(GetIt sl) {
 
   // Repositories
   if (!sl.isRegistered<StaffRepository>()) {
-    sl.registerLazySingleton<StaffRepository>(
-      () => StaffRepositoryImpl(sl()),
-    );
+    sl.registerLazySingleton<StaffRepository>(() => StaffRepositoryImpl(sl()));
   }
 
   // Use Cases

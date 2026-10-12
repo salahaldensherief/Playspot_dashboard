@@ -174,6 +174,4 @@ class TournamentParticipantRemoteHelper {
       params: {'p_tournament_id': tournamentId},
     );
   }
-
-
 }

@@ -57,8 +57,8 @@ class TournamentPrizeRewardModel extends TournamentPrizeRewardEntity {
       deliveredAt: json['delivered_at'] != null
           ? DateTime.tryParse(json['delivered_at'].toString())
           : (json['delivery_time'] != null
-              ? DateTime.tryParse(json['delivery_time'].toString())
-              : null),
+                ? DateTime.tryParse(json['delivery_time'].toString())
+                : null),
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
@@ -68,7 +68,8 @@ class TournamentPrizeRewardModel extends TournamentPrizeRewardEntity {
   Map<String, dynamic> toJson() {
     return {
       if (id.isNotEmpty && !id.startsWith('temp_')) 'id': id,
-      if (prizeId.isNotEmpty && !prizeId.startsWith('temp_')) 'prize_id': prizeId,
+      if (prizeId.isNotEmpty && !prizeId.startsWith('temp_'))
+        'prize_id': prizeId,
       'reward_type': type.toDbString(),
       if (titleAr != null) 'title_ar': titleAr,
       if (titleEn != null) 'title_en': titleEn,
@@ -82,7 +83,9 @@ class TournamentPrizeRewardModel extends TournamentPrizeRewardEntity {
     };
   }
 
-  factory TournamentPrizeRewardModel.fromEntity(TournamentPrizeRewardEntity entity) {
+  factory TournamentPrizeRewardModel.fromEntity(
+    TournamentPrizeRewardEntity entity,
+  ) {
     return TournamentPrizeRewardModel(
       id: entity.id,
       prizeId: entity.prizeId,

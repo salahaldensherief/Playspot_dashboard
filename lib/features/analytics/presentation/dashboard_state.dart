@@ -1,7 +1,12 @@
 import 'package:equatable/equatable.dart';
 import '../../bookings/domain/entities/booking.dart';
 
-enum FeatureStatus { initial, loading, success, failure;
+enum FeatureStatus {
+  initial,
+  loading,
+  success,
+  failure;
+
   bool get isInitial => this == FeatureStatus.initial;
   bool get isLoading => this == FeatureStatus.loading;
   bool get isSuccess => this == FeatureStatus.success;
@@ -11,7 +16,7 @@ enum FeatureStatus { initial, loading, success, failure;
 class DashboardState extends Equatable {
   final FeatureStatus status;
   final String? errorMessage;
-  
+
   // Lounge Stats
   final double totalRevenue;
   final int activeSessions;
@@ -22,7 +27,7 @@ class DashboardState extends Equatable {
   // Active Sessions Live Monitoring
   final List<Booking> activeSessionsList;
   final Map<String, dynamic> activeSessionsStats;
-  
+
   // Super Admin Overview
   final int totalLounges;
   final int activeLounges;
@@ -34,7 +39,7 @@ class DashboardState extends Equatable {
   final int cancelledBookings;
   final double pendingRevenue;
   final double totalPlatformCommission;
-  
+
   // Trends (Percentages)
   final double revenueTrend;
   final double bookingsTrend;
@@ -120,7 +125,8 @@ class DashboardState extends Equatable {
     completedBookings: completedBookings ?? this.completedBookings,
     cancelledBookings: cancelledBookings ?? this.cancelledBookings,
     pendingRevenue: pendingRevenue ?? this.pendingRevenue,
-    totalPlatformCommission: totalPlatformCommission ?? this.totalPlatformCommission,
+    totalPlatformCommission:
+        totalPlatformCommission ?? this.totalPlatformCommission,
     revenueTrend: revenueTrend ?? this.revenueTrend,
     bookingsTrend: bookingsTrend ?? this.bookingsTrend,
     occupancyTrend: occupancyTrend ?? this.occupancyTrend,
@@ -131,7 +137,7 @@ class DashboardState extends Equatable {
 
   @override
   List<Object?> get props => [
-    status, 
+    status,
     errorMessage,
     totalRevenue,
     activeSessions,

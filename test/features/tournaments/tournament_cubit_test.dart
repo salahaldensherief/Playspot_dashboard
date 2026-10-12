@@ -52,7 +52,9 @@ void main() {
     mockRepository = MockTournamentRepository();
     mockLocationService = MockLocationService();
     mockStorageService = MockStorageService();
-    when(() => mockLocationService.getCurrentPosition()).thenAnswer((_) async => null);
+    when(
+      () => mockLocationService.getCurrentPosition(),
+    ).thenAnswer((_) async => null);
 
     cubit = TournamentCubit(
       getTournamentsUseCase: GetTournamentsUseCase(mockRepository),
@@ -61,11 +63,15 @@ void main() {
       saveTournamentPrizesUseCase: SaveTournamentPrizesUseCase(mockRepository),
       publishTournamentUseCase: PublishTournamentUseCase(mockRepository),
       cancelTournamentUseCase: CancelTournamentUseCase(mockRepository),
-      deleteDraftTournamentUseCase: DeleteDraftTournamentUseCase(mockRepository),
+      deleteDraftTournamentUseCase: DeleteDraftTournamentUseCase(
+        mockRepository,
+      ),
       deleteTournamentUseCase: DeleteTournamentUseCase(mockRepository),
       completeTournamentUseCase: CompleteTournamentUseCase(mockRepository),
       awardPrizesUseCase: AwardPrizesUseCase(mockRepository),
-      getTournamentAuditLogsUseCase: GetTournamentAuditLogsUseCase(mockRepository),
+      getTournamentAuditLogsUseCase: GetTournamentAuditLogsUseCase(
+        mockRepository,
+      ),
       watchDisputedMatchesUseCase: WatchDisputedMatchesUseCase(mockRepository),
       locationService: mockLocationService,
       storageService: mockStorageService,
@@ -81,22 +87,40 @@ void main() {
   });
 
   test('loadTournaments emits success state with loaded list', () async {
-    when(() => mockRepository.getTournaments(loungeId: any(named: 'loungeId'), status: any(named: 'status')))
-        .thenAnswer((_) async => Right([tTournament]));
-    when(() => mockRepository.getParticipants(any())).thenAnswer((_) async => const Right([]));
-    when(() => mockRepository.getMatches(any())).thenAnswer((_) async => const Right([]));
-    when(() => mockRepository.getAuditLogs(any())).thenAnswer((_) async => const Right([]));
-    when(() => mockRepository.getTournamentAuditLogsPage(
-          tournamentId: any(named: 'tournamentId'),
-          page: any(named: 'page'),
-          pageSize: any(named: 'pageSize'),
-        )).thenAnswer((_) async => Right(PaginatedResult<TournamentAuditLogEntity>(
+    when(
+      () => mockRepository.getTournaments(
+        loungeId: any(named: 'loungeId'),
+        status: any(named: 'status'),
+      ),
+    ).thenAnswer((_) async => Right([tTournament]));
+    when(
+      () => mockRepository.getParticipants(any()),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockRepository.getMatches(any()),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockRepository.getAuditLogs(any()),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockRepository.getTournamentAuditLogsPage(
+        tournamentId: any(named: 'tournamentId'),
+        page: any(named: 'page'),
+        pageSize: any(named: 'pageSize'),
+      ),
+    ).thenAnswer(
+      (_) async => Right(
+        PaginatedResult<TournamentAuditLogEntity>(
           items: const [],
           totalCount: 0,
           page: 1,
           pageSize: 20,
-        )));
-    when(() => mockRepository.watchDisputedMatches(any())).thenAnswer((_) => const Stream.empty());
+        ),
+      ),
+    );
+    when(
+      () => mockRepository.watchDisputedMatches(any()),
+    ).thenAnswer((_) => const Stream.empty());
 
     await cubit.loadTournaments();
 
@@ -105,22 +129,37 @@ void main() {
   });
 
   test('createTournament emits actionSuccess on success', () async {
-    when(() => mockRepository.createTournament(any()))
-        .thenAnswer((_) async => Right(tTournament));
-    when(() => mockRepository.getParticipants(any())).thenAnswer((_) async => const Right([]));
-    when(() => mockRepository.getMatches(any())).thenAnswer((_) async => const Right([]));
-    when(() => mockRepository.getAuditLogs(any())).thenAnswer((_) async => const Right([]));
-    when(() => mockRepository.getTournamentAuditLogsPage(
-          tournamentId: any(named: 'tournamentId'),
-          page: any(named: 'page'),
-          pageSize: any(named: 'pageSize'),
-        )).thenAnswer((_) async => Right(PaginatedResult<TournamentAuditLogEntity>(
+    when(
+      () => mockRepository.createTournament(any()),
+    ).thenAnswer((_) async => Right(tTournament));
+    when(
+      () => mockRepository.getParticipants(any()),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockRepository.getMatches(any()),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockRepository.getAuditLogs(any()),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockRepository.getTournamentAuditLogsPage(
+        tournamentId: any(named: 'tournamentId'),
+        page: any(named: 'page'),
+        pageSize: any(named: 'pageSize'),
+      ),
+    ).thenAnswer(
+      (_) async => Right(
+        PaginatedResult<TournamentAuditLogEntity>(
           items: const [],
           totalCount: 0,
           page: 1,
           pageSize: 20,
-        )));
-    when(() => mockRepository.watchDisputedMatches(any())).thenAnswer((_) => const Stream.empty());
+        ),
+      ),
+    );
+    when(
+      () => mockRepository.watchDisputedMatches(any()),
+    ).thenAnswer((_) => const Stream.empty());
 
     await cubit.createTournament(tTournament);
 
@@ -128,61 +167,101 @@ void main() {
     expect(cubit.state.tournaments, contains(tTournament));
   });
 
-  test('create stores draft before uploading and uses the server tournament id', () async {
-    final events = <String>[];
-    final draft = tTournament.copyWith(id: 'server-id');
-    when(() => mockRepository.createTournament(any())).thenAnswer((_) async {
-      events.add('create');
-      return Right(draft);
-    });
-    when(() => mockStorageService.uploadTournamentBanner(any(), any(), any()))
-        .thenAnswer((invocation) async {
-      events.add('upload');
-      expect(invocation.positionalArguments[2], 'server-id');
-      return 'https://example.com/banner.png';
-    });
-    when(() => mockRepository.updateTournament(any())).thenAnswer((invocation) async {
-      events.add('update');
-      final entity = invocation.positionalArguments.first as TournamentEntity;
-      expect(entity.id, 'server-id');
-      expect(entity.bannerUrl, 'https://example.com/banner.png');
-      return Right(entity);
-    });
-    when(() => mockRepository.getTournamentAuditLogsPage(
-      tournamentId: any(named: 'tournamentId'), page: any(named: 'page'),
-      pageSize: any(named: 'pageSize'),
-    )).thenAnswer((_) async => Right(PaginatedResult<TournamentAuditLogEntity>(
-      items: const [], totalCount: 0, page: 1, pageSize: 20,
-    )));
-    when(() => mockRepository.watchDisputedMatches(any()))
-        .thenAnswer((_) => const Stream.empty());
-    expect(await cubit.createTournament(tTournament,
-      bannerBytes: Uint8List.fromList([1]), bannerName: 'banner.png'), isTrue);
-    expect(events, ['create', 'upload', 'update']);
-    expect(cubit.state.status, TournamentCubitStatus.actionSuccess);
-  });
+  test(
+    'create stores draft before uploading and uses the server tournament id',
+    () async {
+      final events = <String>[];
+      final draft = tTournament.copyWith(id: 'server-id');
+      when(() => mockRepository.createTournament(any())).thenAnswer((_) async {
+        events.add('create');
+        return Right(draft);
+      });
+      when(
+        () => mockStorageService.uploadTournamentBanner(any(), any(), any()),
+      ).thenAnswer((invocation) async {
+        events.add('upload');
+        expect(invocation.positionalArguments[2], 'server-id');
+        return 'https://example.com/banner.png';
+      });
+      when(() => mockRepository.updateTournament(any())).thenAnswer((
+        invocation,
+      ) async {
+        events.add('update');
+        final entity = invocation.positionalArguments.first as TournamentEntity;
+        expect(entity.id, 'server-id');
+        expect(entity.bannerUrl, 'https://example.com/banner.png');
+        return Right(entity);
+      });
+      when(
+        () => mockRepository.getTournamentAuditLogsPage(
+          tournamentId: any(named: 'tournamentId'),
+          page: any(named: 'page'),
+          pageSize: any(named: 'pageSize'),
+        ),
+      ).thenAnswer(
+        (_) async => Right(
+          PaginatedResult<TournamentAuditLogEntity>(
+            items: const [],
+            totalCount: 0,
+            page: 1,
+            pageSize: 20,
+          ),
+        ),
+      );
+      when(
+        () => mockRepository.watchDisputedMatches(any()),
+      ).thenAnswer((_) => const Stream.empty());
+      expect(
+        await cubit.createTournament(
+          tTournament,
+          bannerBytes: Uint8List.fromList([1]),
+          bannerName: 'banner.png',
+        ),
+        isTrue,
+      );
+      expect(events, ['create', 'upload', 'update']);
+      expect(cubit.state.status, TournamentCubitStatus.actionSuccess);
+    },
+  );
 
-  test('failed banner retains a single editable draft rather than retrying creation', () async {
-    final draft = tTournament.copyWith(id: 'server-id');
-    when(() => mockRepository.createTournament(any())).thenAnswer((_) async => Right(draft));
-    when(() => mockStorageService.uploadTournamentBanner(any(), any(), any()))
-        .thenThrow(Exception('permission denied'));
-    expect(await cubit.createTournament(tTournament,
-      bannerBytes: Uint8List.fromList([1]), bannerName: 'banner.png'), isTrue);
-    expect(cubit.state.tournaments, [draft]);
-    expect(cubit.state.selectedTournament, draft);
-    expect(cubit.state.status, TournamentCubitStatus.failure);
-    expect(cubit.state.errorMessage, contains('مسودة'));
-    verifyNever(() => mockRepository.updateTournament(any()));
-  });
+  test(
+    'failed banner retains a single editable draft rather than retrying creation',
+    () async {
+      final draft = tTournament.copyWith(id: 'server-id');
+      when(
+        () => mockRepository.createTournament(any()),
+      ).thenAnswer((_) async => Right(draft));
+      when(
+        () => mockStorageService.uploadTournamentBanner(any(), any(), any()),
+      ).thenThrow(Exception('permission denied'));
+      expect(
+        await cubit.createTournament(
+          tTournament,
+          bannerBytes: Uint8List.fromList([1]),
+          bannerName: 'banner.png',
+        ),
+        isTrue,
+      );
+      expect(cubit.state.tournaments, [draft]);
+      expect(cubit.state.selectedTournament, draft);
+      expect(cubit.state.status, TournamentCubitStatus.failure);
+      expect(cubit.state.errorMessage, contains('مسودة'));
+      verifyNever(() => mockRepository.updateTournament(any()));
+    },
+  );
 
   test('deleteDraftTournament handles failure correctly', () async {
-    when(() => mockRepository.deleteDraftTournament(any()))
-        .thenAnswer((_) async => const Left(ServerFailure('Cannot delete draft with participants')));
+    when(() => mockRepository.deleteDraftTournament(any())).thenAnswer(
+      (_) async =>
+          const Left(ServerFailure('Cannot delete draft with participants')),
+    );
 
     await cubit.deleteDraftTournament('t-1');
 
     expect(cubit.state.status, equals(TournamentCubitStatus.failure));
-    expect(cubit.state.errorMessage, equals('Cannot delete draft with participants'));
+    expect(
+      cubit.state.errorMessage,
+      equals('Cannot delete draft with participants'),
+    );
   });
 }

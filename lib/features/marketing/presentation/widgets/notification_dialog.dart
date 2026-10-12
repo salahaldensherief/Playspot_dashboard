@@ -38,15 +38,17 @@ class _NotificationDialogState extends State<NotificationDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      widget.onSend(NotificationEntity(
-        id: const Uuid().v4(),
-        titleAr: _titleArController.text,
-        titleEn: _titleEnController.text,
-        bodyAr: _bodyArController.text,
-        bodyEn: _bodyEnController.text,
-        type: _selectedType,
-        createdAt: DateTime.now(),
-      ));
+      widget.onSend(
+        NotificationEntity(
+          id: const Uuid().v4(),
+          titleAr: _titleArController.text,
+          titleEn: _titleEnController.text,
+          bodyAr: _bodyArController.text,
+          bodyEn: _bodyEnController.text,
+          type: _selectedType,
+          createdAt: DateTime.now(),
+        ),
+      );
       Navigator.pop(context);
     }
   }

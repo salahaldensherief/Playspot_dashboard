@@ -7,24 +7,22 @@ void main() {
   Widget buildTestableWidget(Widget child) {
     return ScreenUtilInit(
       designSize: const Size(1920, 1080),
-      builder: (context, _) => MaterialApp(
-        home: Scaffold(body: child),
-      ),
+      builder: (context, _) => MaterialApp(home: Scaffold(body: child)),
     );
   }
 
   testWidgets('PaymentMethodBadge renders cash icon and text', (tester) async {
     await tester.pumpWidget(
-      buildTestableWidget(
-        const PaymentMethodBadge(isCash: true),
-      ),
+      buildTestableWidget(const PaymentMethodBadge(isCash: true)),
     );
 
     expect(find.byType(PaymentMethodBadge), findsOneWidget);
     expect(find.byIcon(Icons.payments_outlined), findsOneWidget);
   });
 
-  testWidgets('PaymentMethodBadge renders wallet icon and text', (tester) async {
+  testWidgets('PaymentMethodBadge renders wallet icon and text', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       buildTestableWidget(
         PaymentMethodBadge.fromBookingPaymentMethod('manual_transfer'),

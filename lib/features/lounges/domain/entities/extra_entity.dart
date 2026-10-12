@@ -37,19 +37,19 @@ class ExtraEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        loungeId,
-        nameAr,
-        nameEn,
-        name,
-        price,
-        category,
-        iconKey,
-        isOutOfStock,
-        imageUrl,
-        stockQuantity,
-        trackStock,
-        minStockAlert,
-        costPrice,
-      ];
+    id,
+    loungeId,
+    nameAr,
+    nameEn,
+    name,
+    price,
+    category,
+    iconKey,
+    isOutOfStock,
+    imageUrl,
+    stockQuantity,
+    trackStock,
+    minStockAlert,
+    costPrice,
+  ];
 }

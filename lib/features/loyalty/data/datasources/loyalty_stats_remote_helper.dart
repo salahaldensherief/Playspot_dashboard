@@ -59,9 +59,8 @@ class LoyaltyStatsRemoteHelper {
 
     return response
         .map(
-          (item) => ReferralModel.fromJson(
-            Map<String, dynamic>.from(item as Map),
-          ),
+          (item) =>
+              ReferralModel.fromJson(Map<String, dynamic>.from(item as Map)),
         )
         .toList();
   }

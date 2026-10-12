@@ -54,10 +54,7 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
         children: [
           Text(
             'customer_name_label'.tr(args: [userName]),
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12.sp,
-            ),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
           ),
           SizedBox(height: 12.h),
           if (history.isEmpty)
@@ -202,9 +199,7 @@ class CustomerCancellationHistoryDialog extends StatelessWidget {
                             borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: Text(
-                            'cancellation_reason_label'.tr(
-                              args: [reason],
-                            ),
+                            'cancellation_reason_label'.tr(args: [reason]),
                             style: TextStyle(
                               color: AppColors.warning,
                               fontSize: 11.sp,

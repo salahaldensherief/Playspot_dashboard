@@ -33,7 +33,12 @@ class UserBanRequestModel extends UserBanRequest {
       createdAt: json['created_at'] != null
           ? (DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now())
           : DateTime.now(),
-      userName: (json['user_name'] ?? json['user_full_name'] ?? profileData?['full_name'] ?? profileData?['name'])?.toString(),
+      userName:
+          (json['user_name'] ??
+                  json['user_full_name'] ??
+                  profileData?['full_name'] ??
+                  profileData?['name'])
+              ?.toString(),
       userPhone: (json['user_phone'] ?? profileData?['phone'])?.toString(),
       userEmail: (json['user_email'] ?? profileData?['email'])?.toString(),
       loungeName: (json['lounge_name'] ?? loungeData?['name'])?.toString(),
@@ -46,9 +51,11 @@ class UserBanRequestModel extends UserBanRequest {
       'user_id': userId,
       if (bookingId != null && bookingId!.isNotEmpty) 'booking_id': bookingId,
       'reason': reason,
-      if (evidenceNotes != null && evidenceNotes!.isNotEmpty) 'evidence_notes': evidenceNotes,
+      if (evidenceNotes != null && evidenceNotes!.isNotEmpty)
+        'evidence_notes': evidenceNotes,
       'status': status.toDbString(),
-      if (adminNotes != null && adminNotes!.isNotEmpty) 'admin_notes': adminNotes,
+      if (adminNotes != null && adminNotes!.isNotEmpty)
+        'admin_notes': adminNotes,
     };
   }
 }

@@ -93,19 +93,13 @@ class RoomSpecsForm extends StatelessWidget {
         if (isCompact) ...[
           statusDropdown,
           SizedBox(height: 16.h),
-          if (requiresControllers) ...[
-            extraPriceField,
-            SizedBox(height: 16.h),
-          ],
+          if (requiresControllers) ...[extraPriceField, SizedBox(height: 16.h)],
           capacityField,
           if (requiresControllers) ...[
             SizedBox(height: 16.h),
             controllersField,
           ],
-          if (requiresScreen) ...[
-            SizedBox(height: 16.h),
-            screenSizeField,
-          ],
+          if (requiresScreen) ...[SizedBox(height: 16.h), screenSizeField],
         ] else ...[
           Row(
             children: [

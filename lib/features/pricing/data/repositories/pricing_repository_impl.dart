@@ -142,7 +142,9 @@ class PricingRepositoryImpl implements PricingRepository {
     required String loungeId,
   }) async {
     try {
-      final range = await remoteDataSource.getLoungePriceRange(loungeId: loungeId);
+      final range = await remoteDataSource.getLoungePriceRange(
+        loungeId: loungeId,
+      );
       return Right(range);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

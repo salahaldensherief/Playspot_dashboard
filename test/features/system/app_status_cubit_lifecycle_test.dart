@@ -42,8 +42,9 @@ void main() {
       ).thenReturn(channel);
       when(() => channel.subscribe()).thenReturn(channel);
       final removal = Completer<String>();
-      when(() => client.removeChannel(channel))
-          .thenAnswer((_) => removal.future);
+      when(
+        () => client.removeChannel(channel),
+      ).thenAnswer((_) => removal.future);
       final cubit = AppStatusCubit(
         getAppStatusUseCase: getStatus,
         supabaseClient: client,

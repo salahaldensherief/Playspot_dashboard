@@ -17,7 +17,8 @@ class UsersStatsGrid extends StatelessWidget {
     EasyLocalization.of(context);
     return BlocBuilder<AdminManagementCubit, AdminManagementState>(
       buildWhen: (previous, current) =>
-          previous.status != current.status || previous.admins != current.admins,
+          previous.status != current.status ||
+          previous.admins != current.admins,
       builder: (context, state) {
         final totalUsers = state.admins.length;
         final totalReferrals = state.admins.fold<int>(

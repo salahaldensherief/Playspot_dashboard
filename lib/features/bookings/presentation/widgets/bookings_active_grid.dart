@@ -64,7 +64,7 @@ class BookingsActiveGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 420.w,
-        mainAxisExtent: 515.h,
+        mainAxisExtent: 520.h,
         crossAxisSpacing: 14.r,
         mainAxisSpacing: 14.r,
       ),

@@ -8,7 +8,10 @@ class GetRolePermissionsUseCase {
 
   GetRolePermissionsUseCase(this.repository);
 
-  Future<Either<Failure, List<PermissionItemEntity>>> call(String role, {String? loungeId}) async {
+  Future<Either<Failure, List<PermissionItemEntity>>> call(
+    String role, {
+    String? loungeId,
+  }) async {
     return await repository.getRolePermissions(role, loungeId: loungeId);
   }
 }

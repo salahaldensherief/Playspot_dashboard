@@ -42,7 +42,11 @@ class LiveRequestsFilterBar extends StatelessWidget {
             label: AppStrings.callStaff,
             filter: RequestFilter.callStaff,
             currentFilter: currentFilter,
-            count: requests.where((r) => r.type == ClientRequestType.callStaff && !r.isAttended).length,
+            count: requests
+                .where(
+                  (r) => r.type == ClientRequestType.callStaff && !r.isAttended,
+                )
+                .length,
             onSelected: cubit.setFilter,
           ),
           SizedBox(width: 8.w),
@@ -50,7 +54,9 @@ class LiveRequestsFilterBar extends StatelessWidget {
             label: AppStrings.canteenOrder,
             filter: RequestFilter.canteenOrders,
             currentFilter: currentFilter,
-            count: requests.where((r) => r.isCanteenOrder && !r.isAttended).length,
+            count: requests
+                .where((r) => r.isCanteenOrder && !r.isAttended)
+                .length,
             onSelected: cubit.setFilter,
           ),
           SizedBox(width: 8.w),

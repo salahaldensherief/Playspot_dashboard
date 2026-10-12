@@ -33,12 +33,9 @@ class CachedRepositoryDecorator<T> {
 
     final result = await fetchFromNetwork();
 
-    result.fold(
-      (_) => null,
-      (data) {
-        _cache[key] = CacheEntry(data, DateTime.now());
-      },
-    );
+    result.fold((_) => null, (data) {
+      _cache[key] = CacheEntry(data, DateTime.now());
+    });
 
     return result;
   }

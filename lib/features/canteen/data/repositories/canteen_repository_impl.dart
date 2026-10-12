@@ -135,7 +135,9 @@ class CanteenRepositoryImpl implements CanteenRepository {
     required String loungeId,
   }) async {
     try {
-      final conversions = await remoteDataSource.getUpsellConversions(loungeId: loungeId);
+      final conversions = await remoteDataSource.getUpsellConversions(
+        loungeId: loungeId,
+      );
       return Right(conversions);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -147,7 +149,9 @@ class CanteenRepositoryImpl implements CanteenRepository {
     required String loungeId,
   }) async {
     try {
-      final alerts = await remoteDataSource.getLowStockAlerts(loungeId: loungeId);
+      final alerts = await remoteDataSource.getLowStockAlerts(
+        loungeId: loungeId,
+      );
       return Right(alerts);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

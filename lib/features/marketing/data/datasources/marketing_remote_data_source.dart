@@ -189,19 +189,13 @@ class MarketingRemoteDataSourceImpl implements MarketingRemoteDataSource {
 
     final targetUserId = notification.userId?.trim();
     if (targetUserId == null || targetUserId.isEmpty) {
-      await _supabase.rpc(
-        'send_broadcast_notification',
-        params: params,
-      );
+      await _supabase.rpc('send_broadcast_notification', params: params);
       return;
     }
 
     await _supabase.rpc(
       'send_user_notification',
-      params: {
-        'p_user_id': targetUserId,
-        ...params,
-      },
+      params: {'p_user_id': targetUserId, ...params},
     );
   }
 

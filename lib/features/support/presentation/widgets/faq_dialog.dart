@@ -12,11 +12,7 @@ class FaqDialog extends StatefulWidget {
   final FaqEntity? faq;
   final ValueChanged<FaqEntity> onSave;
 
-  const FaqDialog({
-    super.key,
-    this.faq,
-    required this.onSave,
-  });
+  const FaqDialog({super.key, this.faq, required this.onSave});
 
   @override
   State<FaqDialog> createState() => _FaqDialogState();
@@ -39,7 +35,9 @@ class _FaqDialogState extends State<FaqDialog> {
     _aArController = TextEditingController(text: widget.faq?.answerAr ?? '');
     _qEnController = TextEditingController(text: widget.faq?.questionEn ?? '');
     _aEnController = TextEditingController(text: widget.faq?.answerEn ?? '');
-    _orderController = TextEditingController(text: (widget.faq?.sortOrder ?? 0).toString());
+    _orderController = TextEditingController(
+      text: (widget.faq?.sortOrder ?? 0).toString(),
+    );
     _isActive = widget.faq?.isActive ?? true;
   }
 
@@ -101,7 +99,9 @@ class _FaqDialogState extends State<FaqDialog> {
               controller: _qArController,
               label: AppStrings.questionAr,
               hintText: AppStrings.questionArHint,
-              validator: (value) => (value == null || value.trim().isEmpty) ? AppStrings.fieldRequired : null,
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? AppStrings.fieldRequired
+                  : null,
             ),
             SizedBox(height: 12.h),
             AppTextField(
@@ -109,7 +109,9 @@ class _FaqDialogState extends State<FaqDialog> {
               label: AppStrings.answerAr,
               hintText: AppStrings.answerArHint,
               maxLines: 3,
-              validator: (value) => (value == null || value.trim().isEmpty) ? AppStrings.fieldRequired : null,
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? AppStrings.fieldRequired
+                  : null,
             ),
             SizedBox(height: 20.h),
             _buildSectionHeader(AppStrings.englishLanguage),
@@ -118,7 +120,9 @@ class _FaqDialogState extends State<FaqDialog> {
               controller: _qEnController,
               label: AppStrings.questionEn,
               hintText: AppStrings.questionEnHint,
-              validator: (value) => (value == null || value.trim().isEmpty) ? AppStrings.fieldRequired : null,
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? AppStrings.fieldRequired
+                  : null,
             ),
             SizedBox(height: 12.h),
             AppTextField(
@@ -126,7 +130,9 @@ class _FaqDialogState extends State<FaqDialog> {
               label: AppStrings.answerEn,
               hintText: AppStrings.answerEnHint,
               maxLines: 3,
-              validator: (value) => (value == null || value.trim().isEmpty) ? AppStrings.fieldRequired : null,
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? AppStrings.fieldRequired
+                  : null,
             ),
             SizedBox(height: 20.h),
             Row(
@@ -144,7 +150,13 @@ class _FaqDialogState extends State<FaqDialog> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(AppStrings.activeFaq, style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp)),
+                      Text(
+                        AppStrings.activeFaq,
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 13.sp,
+                        ),
+                      ),
                       Switch(
                         value: _isActive,
                         activeTrackColor: AppColors.neonBlue,
@@ -168,7 +180,11 @@ class _FaqDialogState extends State<FaqDialog> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold, fontSize: 14.sp),
+      style: TextStyle(
+        color: AppColors.neonBlue,
+        fontWeight: FontWeight.bold,
+        fontSize: 14.sp,
+      ),
     );
   }
 }

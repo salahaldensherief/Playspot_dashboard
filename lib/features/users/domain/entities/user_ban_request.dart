@@ -86,18 +86,18 @@ class UserBanRequest extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        loungeId,
-        userId,
-        bookingId,
-        reason,
-        evidenceNotes,
-        status,
-        adminNotes,
-        createdAt,
-        userName,
-        userPhone,
-        userEmail,
-        loungeName,
-      ];
+    id,
+    loungeId,
+    userId,
+    bookingId,
+    reason,
+    evidenceNotes,
+    status,
+    adminNotes,
+    createdAt,
+    userName,
+    userPhone,
+    userEmail,
+    loungeName,
+  ];
 }

@@ -278,14 +278,21 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> extendBookingSession(String bookingId, int additionalMinutes) async {
+  Future<Either<Failure, void>> extendBookingSession(
+    String bookingId,
+    int additionalMinutes,
+  ) async {
     try {
       await remoteDataSource.extendBookingSession(bookingId, additionalMinutes);
       return const Right(null);
     } on PostgrestException catch (e) {
-      return Left(ServerFailure(e.message.contains('BOOKING_EXTENSION_CONFLICT')
-          ? 'booking_extension_conflict'
-          : 'booking_extension_failed'));
+      return Left(
+        ServerFailure(
+          e.message.contains('BOOKING_EXTENSION_CONFLICT')
+              ? 'booking_extension_conflict'
+              : 'booking_extension_failed',
+        ),
+      );
     } catch (_) {
       return const Left(ServerFailure('booking_extension_failed'));
     }

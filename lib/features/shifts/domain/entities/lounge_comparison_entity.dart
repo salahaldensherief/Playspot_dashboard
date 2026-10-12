@@ -25,14 +25,14 @@ class LoungeComparisonEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        loungeId,
-        loungeName,
-        shiftCount,
-        openShiftCount,
-        totalSales,
-        totalExpenses,
-        totalDifference,
-        averageShiftSales,
-        pendingApprovalCount,
-      ];
+    loungeId,
+    loungeName,
+    shiftCount,
+    openShiftCount,
+    totalSales,
+    totalExpenses,
+    totalDifference,
+    averageShiftSales,
+    pendingApprovalCount,
+  ];
 }

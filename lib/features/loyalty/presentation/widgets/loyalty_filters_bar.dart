@@ -22,7 +22,9 @@ class LoyaltyFiltersBar extends StatefulWidget {
 
 class _LoyaltyFiltersBarState extends State<LoyaltyFiltersBar> {
   final TextEditingController _userSearchController = TextEditingController();
-  final _userSearchDebouncer = Debouncer(delay: const Duration(milliseconds: 400));
+  final _userSearchDebouncer = Debouncer(
+    delay: const Duration(milliseconds: 400),
+  );
 
   @override
   void dispose() {
@@ -75,7 +77,8 @@ class _LoyaltyFiltersBarState extends State<LoyaltyFiltersBar> {
   @override
   Widget build(BuildContext context) {
     final loyaltyCubit = context.read<LoyaltyCubit>();
-    final isSuperAdmin = context.watch<LoginCubit>().state.user?.isSuperAdmin ?? false;
+    final isSuperAdmin =
+        context.watch<LoginCubit>().state.user?.isSuperAdmin ?? false;
 
     return BlocBuilder<LoyaltyCubit, LoyaltyState>(
       builder: (context, state) {
@@ -88,13 +91,15 @@ class _LoyaltyFiltersBarState extends State<LoyaltyFiltersBar> {
         final levelItems = ['all', ...state.levels.map((l) => l.id)];
         final statusItems = ['all', 'completed', 'pending'];
 
-        final selectedLevel = (state.selectedLevelId != null &&
+        final selectedLevel =
+            (state.selectedLevelId != null &&
                 state.selectedLevelId!.isNotEmpty &&
                 levelItems.contains(state.selectedLevelId))
             ? state.selectedLevelId!
             : 'all';
 
-        final selectedStatus = (state.selectedReferralStatus != null &&
+        final selectedStatus =
+            (state.selectedReferralStatus != null &&
                 state.selectedReferralStatus!.isNotEmpty &&
                 statusItems.contains(state.selectedReferralStatus))
             ? state.selectedReferralStatus!
@@ -152,7 +157,9 @@ class _LoyaltyFiltersBarState extends State<LoyaltyFiltersBar> {
                     return AppStrings.all;
                   },
                   onChanged: (val) {
-                    loyaltyCubit.updateFilters(levelId: val == 'all' ? '' : val);
+                    loyaltyCubit.updateFilters(
+                      levelId: val == 'all' ? '' : val,
+                    );
                   },
                 ),
               ),
@@ -198,7 +205,10 @@ class _LoyaltyFiltersBarState extends State<LoyaltyFiltersBar> {
                   _userSearchController.clear();
                   loyaltyCubit.clearFilters();
                 },
-                icon: const Icon(Icons.filter_alt_off_outlined, color: AppColors.danger),
+                icon: const Icon(
+                  Icons.filter_alt_off_outlined,
+                  color: AppColors.danger,
+                ),
                 tooltip: AppStrings.resetFilters,
               ),
 
@@ -208,7 +218,8 @@ class _LoyaltyFiltersBarState extends State<LoyaltyFiltersBar> {
                   text: AppStrings.adjustUserPoints,
                   icon: Icons.edit_attributes_outlined,
                   variant: AppButtonVariant.gradient,
-                  onPressed: () => _showAdjustPointsDialog(context, loyaltyCubit),
+                  onPressed: () =>
+                      _showAdjustPointsDialog(context, loyaltyCubit),
                 ),
             ],
           ),

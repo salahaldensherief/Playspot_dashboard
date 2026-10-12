@@ -32,7 +32,11 @@ class AddBookingCustomerFields extends StatelessWidget {
             480 * MediaQuery.textScalerOf(context).scale(1)) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [name, SizedBox(height: 16.h), phone],
+            children: [
+              name,
+              SizedBox(height: 16.h),
+              phone,
+            ],
           );
         }
         return Row(

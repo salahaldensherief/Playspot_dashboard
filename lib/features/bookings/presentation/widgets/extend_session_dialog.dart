@@ -85,8 +85,10 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
     if (!success) {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('booking_extension_failed'.tr()),
-          backgroundColor: AppColors.danger),
+        SnackBar(
+          content: Text('booking_extension_failed'.tr()),
+          backgroundColor: AppColors.danger,
+        ),
       );
       return;
     }

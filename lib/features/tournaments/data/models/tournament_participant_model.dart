@@ -40,9 +40,14 @@ class TournamentParticipantModel extends TournamentParticipantEntity {
       userName: userNameVal,
       userPhone: phoneVal,
       userEmail: emailVal,
-      paymentStatus: ParticipantPaymentStatus.fromString(json['payment_status'] as String?),
-      participantStatus: ParticipantStatus.fromString(json['registration_status'] as String? ?? json['status'] as String?),
-      receiptPath: json['receipt_path'] as String? ?? json['receipt_url'] as String?,
+      paymentStatus: ParticipantPaymentStatus.fromString(
+        json['payment_status'] as String?,
+      ),
+      participantStatus: ParticipantStatus.fromString(
+        json['registration_status'] as String? ?? json['status'] as String?,
+      ),
+      receiptPath:
+          json['receipt_path'] as String? ?? json['receipt_url'] as String?,
       signedReceiptUrl: json['signed_receipt_url'] as String?,
       rejectionReason: json['rejection_reason'] as String?,
       isCheckedIn: json['is_checked_in'] as bool? ?? false,
@@ -50,10 +55,12 @@ class TournamentParticipantModel extends TournamentParticipantEntity {
           ? DateTime.tryParse(json['checked_in_at'].toString())
           : null,
       registeredAt: json['registered_at'] != null
-          ? DateTime.tryParse(json['registered_at'].toString()) ?? DateTime.now()
+          ? DateTime.tryParse(json['registered_at'].toString()) ??
+                DateTime.now()
           : (json['created_at'] != null
-              ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
-              : DateTime.now()),
+                ? DateTime.tryParse(json['created_at'].toString()) ??
+                      DateTime.now()
+                : DateTime.now()),
     );
   }
 

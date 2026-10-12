@@ -124,7 +124,10 @@ class _CashierSessionsWorkspaceState extends State<CashierSessionsWorkspace> {
               item.status == BookingStatus.upcoming),
     );
     return current.isEmpty
-        ? Text('cashier.empty'.tr())
+        ? AppEmptyStateWidget(
+            icon: Icons.sports_esports_outlined,
+            title: AppStrings.noActiveBookings,
+          )
         : _details(current.first);
   }
 
@@ -141,7 +144,20 @@ class _CashierSessionsWorkspaceState extends State<CashierSessionsWorkspace> {
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
     final active = _ordered;
-    if (active.isEmpty) return Text('cashier.empty'.tr());
+    if (active.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.borderDefault),
+        ),
+        child: AppEmptyStateWidget(
+          icon: Icons.sports_esports_outlined,
+          title: AppStrings.noActiveBookings,
+        ),
+      );
+    }
     final matching = active.where((b) => b.id == _selectedId);
     final selected = matching.isEmpty ? active.first : matching.first;
     return LayoutBuilder(

@@ -11,10 +11,7 @@ import 'audit_logs_modal.dart';
 class TournamentAuditLogsTab extends StatelessWidget {
   final List<TournamentAuditLogEntity> auditLogs;
 
-  const TournamentAuditLogsTab({
-    super.key,
-    required this.auditLogs,
-  });
+  const TournamentAuditLogsTab({super.key, required this.auditLogs});
 
   @override
   Widget build(BuildContext context) {
@@ -55,11 +52,17 @@ class TournamentAuditLogsTab extends StatelessWidget {
               return ListTile(
                 title: Text(
                   log.actionType,
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14.sp,
+                  ),
                 ),
                 subtitle: Text(
                   log.performedByName ?? log.performedBy,
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12.sp,
+                  ),
                 ),
               );
             },

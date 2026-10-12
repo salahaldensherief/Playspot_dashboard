@@ -11,12 +11,16 @@ class ClientRequestsRepositoryImpl implements ClientRequestsRepository {
   ClientRequestsRepositoryImpl(this.remoteDataSource);
 
   @override
-  Stream<List<ClientRequestEntity>> watchClientRequests({required String loungeId}) {
+  Stream<List<ClientRequestEntity>> watchClientRequests({
+    required String loungeId,
+  }) {
     return remoteDataSource.watchClientRequests(loungeId: loungeId);
   }
 
   @override
-  Future<Either<Failure, List<ClientRequestEntity>>> getClientRequests({required String loungeId}) async {
+  Future<Either<Failure, List<ClientRequestEntity>>> getClientRequests({
+    required String loungeId,
+  }) async {
     try {
       final list = await remoteDataSource.getClientRequests(loungeId: loungeId);
       return Right(list);
@@ -26,7 +30,8 @@ class ClientRequestsRepositoryImpl implements ClientRequestsRepository {
   }
 
   @override
-  Future<Either<Failure, PaginatedResult<ClientRequestEntity>>> getActiveLoungeRequestsPage({
+  Future<Either<Failure, PaginatedResult<ClientRequestEntity>>>
+  getActiveLoungeRequestsPage({
     required String loungeId,
     int page = 1,
     int pageSize = 20,

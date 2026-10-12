@@ -8,13 +8,13 @@ void main() {
   Widget buildTestableWidget(Widget child) {
     return ScreenUtilInit(
       designSize: const Size(1920, 1080),
-      builder: (context, _) => MaterialApp(
-        home: Scaffold(body: child),
-      ),
+      builder: (context, _) => MaterialApp(home: Scaffold(body: child)),
     );
   }
 
-  testWidgets('BookingStatusBadge renders for inProgress status', (tester) async {
+  testWidgets('BookingStatusBadge renders for inProgress status', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       buildTestableWidget(
         const BookingStatusBadge(status: BookingStatus.inProgress),
@@ -24,7 +24,9 @@ void main() {
     expect(find.byType(BookingStatusBadge), findsOneWidget);
   });
 
-  testWidgets('BookingStatusBadge handles client cancelled badge', (tester) async {
+  testWidgets('BookingStatusBadge handles client cancelled badge', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       buildTestableWidget(
         const BookingStatusBadge(

@@ -49,7 +49,9 @@ class DashboardTimeRangeSelector extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.neonBlue.withValues(alpha: 0.15) : Colors.transparent,
+          color: isSelected
+              ? AppColors.neonBlue.withValues(alpha: 0.15)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(8.r),
           border: Border.all(
             color: isSelected ? AppColors.neonBlue : Colors.transparent,

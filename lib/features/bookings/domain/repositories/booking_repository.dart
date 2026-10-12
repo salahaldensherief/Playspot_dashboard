@@ -16,12 +16,16 @@ abstract class BookingRepository {
     int page = 1,
     int pageSize = 20,
   });
-  Future<Either<Failure, CustomerCancellationSummary>> getBookingCancellationSummary({
+  Future<Either<Failure, CustomerCancellationSummary>>
+  getBookingCancellationSummary({
     required String loungeId,
     required String userId,
   });
   Stream<List<Booking>> watchBookings({String? loungeId});
-  Future<Either<Failure, void>> updateBookingStatus(String id, BookingStatus status);
+  Future<Either<Failure, void>> updateBookingStatus(
+    String id,
+    BookingStatus status,
+  );
   Future<Either<Failure, void>> approveBooking(String id);
   Future<Either<Failure, void>> confirmCashPayment(
     String bookingId, {
@@ -31,8 +35,13 @@ abstract class BookingRepository {
     String? discountReason,
   });
   Future<Either<Failure, void>> createBooking(Booking booking);
-  Future<Either<Failure, Map<String, dynamic>>> validateVoucherByCode(String voucherCode);
-  Future<Either<Failure, void>> consumeVoucherByCode(String voucherCode, String bookingId);
+  Future<Either<Failure, Map<String, dynamic>>> validateVoucherByCode(
+    String voucherCode,
+  );
+  Future<Either<Failure, void>> consumeVoucherByCode(
+    String voucherCode,
+    String bookingId,
+  );
   Future<Either<Failure, Map<String, dynamic>>> calculateBookingTotal({
     required String roomId,
     required double durationHours,
@@ -47,17 +56,33 @@ abstract class BookingRepository {
     String? userId,
     int holdMinutes = 10,
   });
-  Future<Either<Failure, void>> swapRoom(String bookingId, String newRoomId, String actionBy);
+  Future<Either<Failure, void>> swapRoom(
+    String bookingId,
+    String newRoomId,
+    String actionBy,
+  );
   Future<Either<Failure, void>> startBookingSession(String bookingId);
-  Future<Either<Failure, void>> extendBookingSession(String bookingId, int additionalMinutes);
+  Future<Either<Failure, void>> extendBookingSession(
+    String bookingId,
+    int additionalMinutes,
+  );
   Future<Either<Failure, Map<String, dynamic>>> startOpenTimeSession({
     required String roomId,
     String? customerName,
     String? customerPhone,
     String playMode = 'single',
   });
-  Future<Either<Failure, Map<String, dynamic>>> completeOpenTimeSession(String bookingId);
+  Future<Either<Failure, Map<String, dynamic>>> completeOpenTimeSession(
+    String bookingId,
+  );
   Future<Either<Failure, void>> autoCancelExpiredBookings();
-  Future<Either<Failure, void>> approveManualBooking(String bookingId, String actionBy);
-  Future<Either<Failure, void>> rejectManualBooking(String bookingId, String reason, String actionBy);
+  Future<Either<Failure, void>> approveManualBooking(
+    String bookingId,
+    String actionBy,
+  );
+  Future<Either<Failure, void>> rejectManualBooking(
+    String bookingId,
+    String reason,
+    String actionBy,
+  );
 }

@@ -147,10 +147,7 @@ void main() {
       expect(referral.rewardIssued, isTrue);
       expect(referral.inviterPoints, isNull);
       expect(referral.inviteePoints, isNull);
-      expect(
-        requests.single.url.path,
-        '/rest/v1/rpc/get_loyalty_referrals',
-      );
+      expect(requests.single.url.path, '/rest/v1/rpc/get_loyalty_referrals');
       expect(jsonDecode(requests.single.body)['p_user_query'], 'u1');
     },
   );

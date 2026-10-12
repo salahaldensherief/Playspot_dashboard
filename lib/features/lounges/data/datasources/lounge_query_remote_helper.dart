@@ -157,8 +157,12 @@ class LoungeQueryRemoteHelper {
   Future<void> deleteLounge(String id) async {
     // Keep historical bookings/payments. RLS remains the authority, and single()
     // rejects a missing or inaccessible row rather than reporting false success.
-    await client.from('lounges').update({'status': 'deleted'}).eq('id', id)
-        .select('id').single();
+    await client
+        .from('lounges')
+        .update({'status': 'deleted'})
+        .eq('id', id)
+        .select('id')
+        .single();
   }
 
   Future<List<LoungeModel>> getOwnerBranches(String ownerId) async {

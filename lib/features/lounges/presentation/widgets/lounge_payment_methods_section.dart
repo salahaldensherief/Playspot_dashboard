@@ -45,10 +45,7 @@ class LoungePaymentMethodsSection extends StatelessWidget {
           SizedBox(height: 8.h),
           Text(
             AppStrings.paymentMethodsHint,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12.sp,
-            ),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
           ),
           SizedBox(height: 16.h),
           AppTextField(

@@ -16,7 +16,5 @@ void initRoomsDI(GetIt sl) {
   );
 
   // Cubits
-  sl.registerFactory<RoomCubit>(
-    () => RoomCubit(sl()),
-  );
+  sl.registerFactory<RoomCubit>(() => RoomCubit(sl()));
 }

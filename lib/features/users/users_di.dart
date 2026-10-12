@@ -39,7 +39,5 @@ void initUsersDI(GetIt sl) {
       updateAdminUseCase: sl(),
     ),
   );
-  sl.registerFactory<ModerationCubit>(
-    () => ModerationCubit(dataSource: sl()),
-  );
+  sl.registerFactory<ModerationCubit>(() => ModerationCubit(dataSource: sl()));
 }

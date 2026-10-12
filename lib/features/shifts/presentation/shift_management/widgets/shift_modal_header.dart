@@ -10,15 +10,14 @@ import '../../../domain/entities/shift_entity.dart';
 class ShiftModalHeader extends StatelessWidget {
   final ShiftEntity shift;
 
-  const ShiftModalHeader({
-    super.key,
-    required this.shift,
-  });
+  const ShiftModalHeader({super.key, required this.shift});
 
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    final formattedStart = DateFormat('yyyy-MM-dd hh:mm a').format(shift.startTime);
+    final formattedStart = DateFormat(
+      'yyyy-MM-dd hh:mm a',
+    ).format(shift.startTime);
     final formattedEnd = shift.endTime != null
         ? DateFormat('yyyy-MM-dd hh:mm a').format(shift.endTime!)
         : AppStrings.currentShiftOngoing;
@@ -31,7 +30,11 @@ class ShiftModalHeader extends StatelessWidget {
             color: AppColors.neonBlue.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.query_stats_rounded, color: AppColors.neonBlue, size: 24.r),
+          child: Icon(
+            Icons.query_stats_rounded,
+            color: AppColors.neonBlue,
+            size: 24.r,
+          ),
         ),
         SizedBox(width: 12.w),
         Expanded(
@@ -40,18 +43,25 @@ class ShiftModalHeader extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  AppText.heading(AppStrings.shiftDetailsTitle(shift.id), fontSize: 18.sp),
+                  AppText.heading(
+                    AppStrings.shiftDetailsTitle(shift.id),
+                    fontSize: 18.sp,
+                  ),
                   SizedBox(width: 12.w),
                   shift.status == 'open'
                       ? StatusBadge.info(AppStrings.open)
                       : shift.isApproved
-                          ? StatusBadge.success(AppStrings.approved)
-                          : StatusBadge.warning(AppStrings.pendingApproval),
+                      ? StatusBadge.success(AppStrings.approved)
+                      : StatusBadge.warning(AppStrings.pendingApproval),
                 ],
               ),
               SizedBox(height: 4.h),
               AppText.body(
-                AppStrings.shiftFromTo(shift.cashierName ?? AppStrings.system, formattedStart, formattedEnd),
+                AppStrings.shiftFromTo(
+                  shift.cashierName ?? AppStrings.system,
+                  formattedStart,
+                  formattedEnd,
+                ),
                 color: AppColors.textSecondary,
                 fontSize: 12.sp,
               ),

@@ -28,7 +28,11 @@ class TournamentDisputesTab extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.check_circle_outline, size: 48, color: AppColors.success),
+                const Icon(
+                  Icons.check_circle_outline,
+                  size: 48,
+                  color: AppColors.success,
+                ),
                 SizedBox(height: 12.h),
                 Text(
                   AppStrings.disputesRoom,

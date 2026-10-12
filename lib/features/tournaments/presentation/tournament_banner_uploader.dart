@@ -14,7 +14,11 @@ class TournamentBannerUploader {
   }) async {
     if (bytes == null || name == null) return null;
     try {
-      return await storageService.uploadTournamentBanner(bytes, name, tournamentId);
+      return await storageService.uploadTournamentBanner(
+        bytes,
+        name,
+        tournamentId,
+      );
     } catch (e) {
       AppLogger.error('Banner upload failed: $e');
       rethrow;

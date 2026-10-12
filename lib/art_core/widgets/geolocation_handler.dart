@@ -25,7 +25,9 @@ class _GeolocationHandlerState extends State<GeolocationHandler> {
 
   void _checkAndCapture() {
     final authState = context.read<LoginCubit>().state;
-    if (authState.user?.isStaff == true && authState.userLounge != null && !authState.locationCaptured) {
+    if (authState.user?.isStaff == true &&
+        authState.userLounge != null &&
+        !authState.locationCaptured) {
       _captureLocation();
     }
   }
@@ -34,17 +36,22 @@ class _GeolocationHandlerState extends State<GeolocationHandler> {
     final loginCubit = context.read<LoginCubit>();
     final authState = loginCubit.state;
     final lounge = authState.userLounge;
-    
+
     if (lounge == null || authState.locationCaptured) return;
 
     try {
       final locationService = sl<LocationService>();
       final position = await locationService.getCurrentPosition();
-      
+
       if (position != null && mounted) {
-        final cityName = await locationService.getCityFromPosition(position, context);
-        final safeCity = (cityName != null && cityName.trim().isNotEmpty) ? cityName.trim() : lounge.city;
-        
+        final cityName = await locationService.getCityFromPosition(
+          position,
+          context,
+        );
+        final safeCity = (cityName != null && cityName.trim().isNotEmpty)
+            ? cityName.trim()
+            : lounge.city;
+
         await sl<LoungeRepository>().updateLounge(
           lounge.copyWith(
             lat: position.latitude,
@@ -52,10 +59,12 @@ class _GeolocationHandlerState extends State<GeolocationHandler> {
             city: safeCity,
           ),
         );
-        
+
         // Mark as captured in global state to prevent loops
         loginCubit.markLocationCaptured();
-        debugPrint('${AppConstants.locationCaptureSuccess}${position.latitude}, ${position.longitude}, $safeCity');
+        debugPrint(
+          '${AppConstants.locationCaptureSuccess}${position.latitude}, ${position.longitude}, $safeCity',
+        );
       }
     } catch (e) {
       debugPrint('${AppConstants.locationCaptureError}$e');
@@ -65,9 +74,13 @@ class _GeolocationHandlerState extends State<GeolocationHandler> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<LoginCubit, LoginState>(
-      listenWhen: (prev, curr) => prev.locationCaptured != curr.locationCaptured || prev.userLounge != curr.userLounge,
+      listenWhen: (prev, curr) =>
+          prev.locationCaptured != curr.locationCaptured ||
+          prev.userLounge != curr.userLounge,
       listener: (context, state) {
-        if (state.user?.isStaff == true && state.userLounge != null && !state.locationCaptured) {
+        if (state.user?.isStaff == true &&
+            state.userLounge != null &&
+            !state.locationCaptured) {
           _captureLocation();
         }
       },

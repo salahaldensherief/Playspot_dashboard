@@ -146,18 +146,6 @@ class BookingModel extends Booking {
         paymentStatus = PaymentStatus.unpaid;
     }
 
-    final String paymentMethodStr =
-        (json['payment_method'] ?? json['out_payment_method'] ?? 'cash')
-            .toString()
-            .toLowerCase();
-    final bool isCash = paymentMethodStr == 'cash' || paymentMethodStr.isEmpty;
-
-    if (isCash &&
-        paymentStatus != PaymentStatus.paid &&
-        (status == BookingStatus.upcoming || statusStr == 'upcoming')) {
-      status = BookingStatus.pending;
-    }
-
     final double? addonsPrice = json['addons_price'] != null
         ? BookingJsonParser.parseDouble(json['addons_price'])
         : (json['out_addons_price'] != null

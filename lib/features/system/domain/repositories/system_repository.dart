@@ -5,7 +5,7 @@ import '../entities/announcement_entity.dart';
 
 abstract class SystemRepository {
   Future<Either<Failure, AppStatusEntity>> getAppStatus();
-  
+
   Future<Either<Failure, void>> updateMaintenanceMode({
     required bool isMaintenanceMode,
     required String maintenanceMessageAr,
@@ -17,7 +17,9 @@ abstract class SystemRepository {
 
   Future<Either<Failure, List<AnnouncementEntity>>> getAnnouncements();
 
-  Future<Either<Failure, void>> createAnnouncement(AnnouncementEntity announcement);
+  Future<Either<Failure, void>> createAnnouncement(
+    AnnouncementEntity announcement,
+  );
 
   Future<Either<Failure, void>> deactivateAnnouncement(String id);
 }

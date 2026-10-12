@@ -11,14 +11,18 @@ import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Set the Bloc observer for the entire app
   Bloc.observer = AppBlocObserver();
 
   // Catch uncaught Flutter framework errors
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    AppLogger.error('Flutter Framework Error: ${details.exception}', details.exception, details.stack);
+    AppLogger.error(
+      'Flutter Framework Error: ${details.exception}',
+      details.exception,
+      details.stack,
+    );
   };
 
   // Catch uncaught asynchronous platform errors
@@ -26,7 +30,7 @@ void main() async {
     AppLogger.error('Uncaught Async Error: $error', error, stack);
     return true; // Prevents process crash
   };
-  
+
   // Removes the '#' from the URL to make it look like a standard website
   usePathUrlStrategy();
 

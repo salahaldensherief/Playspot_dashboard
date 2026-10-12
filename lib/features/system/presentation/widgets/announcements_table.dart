@@ -55,11 +55,18 @@ class AnnouncementsTable extends StatelessWidget {
             alignment: Alignment.center,
             child: Column(
               children: [
-                Icon(Icons.campaign_outlined, color: AppColors.textMuted, size: 48.r),
+                Icon(
+                  Icons.campaign_outlined,
+                  color: AppColors.textMuted,
+                  size: 48.r,
+                ),
                 SizedBox(height: 12.h),
                 Text(
                   AppStrings.noAnnouncementsFound,
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14.sp,
+                  ),
                 ),
               ],
             ),
@@ -75,7 +82,9 @@ class AnnouncementsTable extends StatelessWidget {
               AppStrings.actions,
             ],
             rows: announcements.map((announcement) {
-              final formattedDate = intl.DateFormat('yyyy/MM/dd - hh:mm a').format(announcement.createdAt);
+              final formattedDate = intl.DateFormat(
+                'yyyy/MM/dd - hh:mm a',
+              ).format(announcement.createdAt);
 
               return DataRow(
                 cells: [
@@ -124,7 +133,10 @@ class AnnouncementsTable extends StatelessWidget {
                   DataCell(
                     Text(
                       formattedDate,
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12.sp,
+                      ),
                     ),
                   ),
                   DataCell(
@@ -134,12 +146,18 @@ class AnnouncementsTable extends StatelessWidget {
                             variant: AppButtonVariant.outlined,
                             foregroundColor: AppColors.danger,
                             fontSize: 11.sp,
-                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10.w,
+                              vertical: 4.h,
+                            ),
                             onPressed: () => onDeactivate(announcement.id),
                           )
                         : Text(
                             AppStrings.completed,
-                            style: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
+                            style: TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 12.sp,
+                            ),
                           ),
                   ),
                 ],

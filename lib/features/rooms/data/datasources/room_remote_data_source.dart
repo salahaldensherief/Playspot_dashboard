@@ -107,10 +107,7 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
   Future<void> _saveRoom(RoomModel room) async {
     final response = await _supabase.rpc(
       'save_lounge_room_v2',
-      params: {
-        'p_room': room.toJson(),
-        'p_activity_ids': room.activityIds,
-      },
+      params: {'p_room': room.toJson(), 'p_activity_ids': room.activityIds},
     );
     if (response is! Map ||
         response['success'] != true ||

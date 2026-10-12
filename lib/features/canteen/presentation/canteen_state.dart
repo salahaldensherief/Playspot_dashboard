@@ -55,12 +55,12 @@ class CanteenState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        combos,
-        upsellRules,
-        conversions,
-        lowStockAlerts,
-        errorMessage,
-        isSaving,
-      ];
+    status,
+    combos,
+    upsellRules,
+    conversions,
+    lowStockAlerts,
+    errorMessage,
+    isSaving,
+  ];
 }

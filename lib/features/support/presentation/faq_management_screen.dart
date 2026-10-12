@@ -64,14 +64,16 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
           prev.successMessage != curr.successMessage ||
           prev.errorMessage != curr.errorMessage,
       listener: (context, state) {
-        if (state.actionStatus == SupportStatus.success && state.successMessage != null) {
+        if (state.actionStatus == SupportStatus.success &&
+            state.successMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.successMessage ?? ''),
               backgroundColor: AppColors.success,
             ),
           );
-        } else if (state.actionStatus == SupportStatus.failure && state.errorMessage != null) {
+        } else if (state.actionStatus == SupportStatus.failure &&
+            state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage ?? ''),
@@ -100,7 +102,9 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
                 ),
                 SizedBox(height: 24.h),
                 if (state.status == SupportStatus.loading && state.faqs.isEmpty)
-                  const Center(child: CircularProgressIndicator(color: AppColors.neonBlue))
+                  const Center(
+                    child: CircularProgressIndicator(color: AppColors.neonBlue),
+                  )
                 else if (state.faqs.isEmpty)
                   SectionContainer(
                     title: AppStrings.faqTable,
@@ -110,11 +114,18 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
                           padding: EdgeInsets.all(32.r),
                           child: Column(
                             children: [
-                              Icon(Icons.help_outline, color: AppColors.textMuted, size: 48.r),
+                              Icon(
+                                Icons.help_outline,
+                                color: AppColors.textMuted,
+                                size: 48.r,
+                              ),
                               SizedBox(height: 12.h),
                               Text(
                                 AppStrings.noDataFound,
-                                style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp),
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 16.sp,
+                                ),
                               ),
                             ],
                           ),
@@ -129,7 +140,10 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8.r),
                         child: Table(
-                          border: TableBorder.all(color: AppColors.borderDefault, width: 1),
+                          border: TableBorder.all(
+                            color: AppColors.borderDefault,
+                            width: 1,
+                          ),
                           columnWidths: const {
                             0: FlexColumnWidth(3.0),
                             1: FlexColumnWidth(3.0),
@@ -139,7 +153,9 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
                           },
                           children: [
                             TableRow(
-                              decoration: const BoxDecoration(color: AppColors.scaffoldBackground),
+                              decoration: const BoxDecoration(
+                                color: AppColors.scaffoldBackground,
+                              ),
                               children: [
                                 _buildHeaderCell(AppStrings.questionAr),
                                 _buildHeaderCell(AppStrings.questionEn),
@@ -155,26 +171,40 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
                                   _buildDataCell(faq.questionEn),
                                   _buildDataCell(faq.sortOrder.toString()),
                                   TableCell(
-                                    verticalAlignment: TableCellVerticalAlignment.middle,
+                                    verticalAlignment:
+                                        TableCellVerticalAlignment.middle,
                                     child: Padding(
                                       padding: EdgeInsets.all(8.r),
                                       child: faq.isActive
-                                          ? StatusBadge.success(AppStrings.active)
-                                          : StatusBadge.neutral(AppStrings.inactive),
+                                          ? StatusBadge.success(
+                                              AppStrings.active,
+                                            )
+                                          : StatusBadge.neutral(
+                                              AppStrings.inactive,
+                                            ),
                                     ),
                                   ),
                                   TableCell(
-                                    verticalAlignment: TableCellVerticalAlignment.middle,
+                                    verticalAlignment:
+                                        TableCellVerticalAlignment.middle,
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         IconButton(
-                                          icon: const Icon(Icons.edit_outlined, color: AppColors.neonBlue),
+                                          icon: const Icon(
+                                            Icons.edit_outlined,
+                                            color: AppColors.neonBlue,
+                                          ),
                                           onPressed: () => _openFaqDialog(faq),
                                         ),
                                         IconButton(
-                                          icon: const Icon(Icons.delete_outline, color: AppColors.danger),
-                                          onPressed: () => _confirmDelete(faq.id),
+                                          icon: const Icon(
+                                            Icons.delete_outline,
+                                            color: AppColors.danger,
+                                          ),
+                                          onPressed: () =>
+                                              _confirmDelete(faq.id),
                                         ),
                                       ],
                                     ),
@@ -200,7 +230,11 @@ class _FaqManagementScreenState extends State<FaqManagementScreen> {
       padding: EdgeInsets.all(12.r),
       child: Text(
         text,
-        style: TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold, fontSize: 13.sp),
+        style: TextStyle(
+          color: AppColors.neonBlue,
+          fontWeight: FontWeight.bold,
+          fontSize: 13.sp,
+        ),
       ),
     );
   }

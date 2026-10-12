@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import 'package:play_spot_dashboard/features/system/domain/entities/app_status_entity.dart';
 import 'package:play_spot_dashboard/features/system/domain/usecases/get_app_status_usecase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -59,7 +60,9 @@ class AppStatusCubit extends Cubit<AppStatusCubitState> {
             callback: (_) => checkAppStatus(),
           )
           .subscribe();
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.warning('AppStatus Realtime subscription failed: $e');
+    }
 
     // Backup polling every 60 seconds
     _pollingTimer = Timer.periodic(const Duration(seconds: 60), (_) {

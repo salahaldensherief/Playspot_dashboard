@@ -158,12 +158,16 @@ class _RoomDialogState extends State<RoomDialog> {
               .where((type) => type.id == selectedSpaceTypeId)
               .firstOrNull;
           if (selectedSpaceType == null) {
-            throw StateError('Selected room space type is no longer available.');
+            throw StateError(
+              'Selected room space type is no longer available.',
+            );
           }
 
           final isOpenArea = selectedSpaceType.categoryKey == 'open_area';
-          final activityTypes =
-              context.read<CategoryCubit>().state.activityTypes;
+          final activityTypes = context
+              .read<CategoryCubit>()
+              .state
+              .activityTypes;
           final selectedActivities = activityTypes
               .where((activity) => _selectedActivityIds.contains(activity.id))
               .toList();
@@ -233,13 +237,16 @@ class _RoomDialogState extends State<RoomDialog> {
             offerTag: widget.room?.offerTag,
             activePromotionId: widget.room?.activePromotionId,
             openTimeEnabled: widget.room?.openTimeEnabled ?? false,
-            openTimePricingMode: widget.room?.openTimePricingMode ?? 'same_hourly',
+            openTimePricingMode:
+                widget.room?.openTimePricingMode ?? 'same_hourly',
             openTimeCustomHourlyRate: widget.room?.openTimeCustomHourlyRate,
-            openTimePriceMultiplier: widget.room?.openTimePriceMultiplier ?? 1.0,
+            openTimePriceMultiplier:
+                widget.room?.openTimePriceMultiplier ?? 1.0,
             openTimeMinimumMinutes: widget.room?.openTimeMinimumMinutes ?? 30,
             openTimeRoundingMinutes: widget.room?.openTimeRoundingMinutes ?? 15,
             openTimeMaxMinutes: widget.room?.openTimeMaxMinutes,
-            openTimeBufferBeforeBookingMinutes: widget.room?.openTimeBufferBeforeBookingMinutes ?? 15,
+            openTimeBufferBeforeBookingMinutes:
+                widget.room?.openTimeBufferBeforeBookingMinutes ?? 15,
           );
 
           final saved = await widget.onSave?.call(room) ?? false;
@@ -269,7 +276,8 @@ class _RoomDialogState extends State<RoomDialog> {
         .where((type) => type.id == _selectedSpaceTypeId)
         .firstOrNull;
     final effectiveSpaceTypeId =
-        selectedSpaceType?.id ?? (spaceTypes.isNotEmpty ? spaceTypes.first.id : null);
+        selectedSpaceType?.id ??
+        (spaceTypes.isNotEmpty ? spaceTypes.first.id : null);
     final effectiveSpaceType =
         selectedSpaceType ?? (spaceTypes.isNotEmpty ? spaceTypes.first : null);
     final isOpenArea = effectiveSpaceType?.categoryKey == 'open_area';
@@ -317,10 +325,12 @@ class _RoomDialogState extends State<RoomDialog> {
                     label: AppStrings.spaceType,
                     value: effectiveSpaceTypeId,
                     items: spaceTypes.map((type) => type.id).toList(),
-                    itemLabel: (id) => spaceTypes
-                        .where((type) => type.id == id)
-                        .map((type) => type.label)
-                        .firstOrNull ?? id,
+                    itemLabel: (id) =>
+                        spaceTypes
+                            .where((type) => type.id == id)
+                            .map((type) => type.label)
+                            .firstOrNull ??
+                        id,
                     onChanged: (v) => setState(() => _selectedSpaceTypeId = v),
                   )
                 else
@@ -344,7 +354,9 @@ class _RoomDialogState extends State<RoomDialog> {
                     spacing: 8.w,
                     runSpacing: 8.h,
                     children: activityTypes.map((activity) {
-                      final selected = _selectedActivityIds.contains(activity.id);
+                      final selected = _selectedActivityIds.contains(
+                        activity.id,
+                      );
                       return FilterChip(
                         label: Text(activity.label),
                         selected: selected,
@@ -441,7 +453,11 @@ class _RoomDialogState extends State<RoomDialog> {
                 ),
                 if (widget.room != null) ...[
                   SizedBox(height: 24.h),
-                  AuditTimeline(entityType: 'room', entityId: widget.room!.id, loungeId: widget.loungeId),
+                  AuditTimeline(
+                    entityType: 'room',
+                    entityId: widget.room!.id,
+                    loungeId: widget.loungeId,
+                  ),
                 ],
                 SizedBox(height: 32.h),
                 _buildActions(),

@@ -9,10 +9,7 @@ import '../../../domain/entities/cashier_performance_entity.dart';
 class CashierPerformanceWidget extends StatelessWidget {
   final List<CashierPerformanceEntity> performances;
 
-  const CashierPerformanceWidget({
-    super.key,
-    required this.performances,
-  });
+  const CashierPerformanceWidget({super.key, required this.performances});
 
   @override
   Widget build(BuildContext context) {
@@ -28,9 +25,16 @@ class CashierPerformanceWidget extends StatelessWidget {
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.badge_outlined, size: 40.r, color: AppColors.textSecondary),
+              Icon(
+                Icons.badge_outlined,
+                size: 40.r,
+                color: AppColors.textSecondary,
+              ),
               SizedBox(height: 8.h),
-              AppText.body(AppStrings.noDataFound, color: AppColors.textSecondary),
+              AppText.body(
+                AppStrings.noDataFound,
+                color: AppColors.textSecondary,
+              ),
             ],
           ),
         ),
@@ -49,46 +53,195 @@ class CashierPerformanceWidget extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.person_pin_rounded, color: AppColors.neonBlue, size: 22.r),
+              Icon(
+                Icons.person_pin_rounded,
+                color: AppColors.neonBlue,
+                size: 22.r,
+              ),
               SizedBox(width: 8.w),
-              AppText.heading(AppStrings.cashierPerformanceTitle, fontSize: 16.sp),
+              AppText.heading(
+                AppStrings.cashierPerformanceTitle,
+                fontSize: 16.sp,
+              ),
             ],
           ),
           SizedBox(height: 16.h),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
-              headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
+              headingRowColor: WidgetStateProperty.all(
+                AppColors.mutedBackground,
+              ),
               columnSpacing: 16.w,
               columns: [
-                DataColumn(label: Text(AppStrings.cashier, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.cashierShiftCountCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.cashierClosedCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.cashierApprovedCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.cashierTotalSalesCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.cashierCashSalesCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.cashierDigitalSalesCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.cashierExpensesCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.cashierDiscrepancyCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.cashierAvgSalesCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
+                DataColumn(
+                  label: Text(
+                    AppStrings.cashier,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.cashierShiftCountCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.cashierClosedCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.cashierApprovedCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.cashierTotalSalesCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.cashierCashSalesCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.cashierDigitalSalesCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.cashierExpensesCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.cashierDiscrepancyCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.cashierAvgSalesCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
               ],
               rows: performances.map((p) {
                 final isHealthy = p.totalDifference >= 0;
-                return DataRow(cells: [
-                  DataCell(Text(p.cashierName, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold))),
-                  DataCell(Text(p.shiftCount.toString(), style: const TextStyle(color: AppColors.textPrimary))),
-                  DataCell(Text(p.closedShiftCount.toString(), style: const TextStyle(color: AppColors.textSecondary))),
-                  DataCell(Text(p.approvedShiftCount.toString(), style: const TextStyle(color: AppColors.success))),
-                  DataCell(Text('${p.totalSales.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold))),
-                  DataCell(Text('${p.cashSales.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.success))),
-                  DataCell(Text('${p.digitalSales.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.warning))),
-                  DataCell(Text('${p.totalExpenses.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.danger))),
-                  DataCell(Text(
-                    '${p.totalDifference.toStringAsFixed(0)} ${AppStrings.egp}',
-                    style: TextStyle(color: isHealthy ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold),
-                  )),
-                  DataCell(Text('${p.averageShiftSales.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.textPrimary))),
-                ]);
+                return DataRow(
+                  cells: [
+                    DataCell(
+                      Text(
+                        p.cashierName,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        p.shiftCount.toString(),
+                        style: const TextStyle(color: AppColors.textPrimary),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        p.closedShiftCount.toString(),
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        p.approvedShiftCount.toString(),
+                        style: const TextStyle(color: AppColors.success),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        '${p.totalSales.toStringAsFixed(0)} ${AppStrings.egp}',
+                        style: const TextStyle(
+                          color: AppColors.neonBlue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        '${p.cashSales.toStringAsFixed(0)} ${AppStrings.egp}',
+                        style: const TextStyle(color: AppColors.success),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        '${p.digitalSales.toStringAsFixed(0)} ${AppStrings.egp}',
+                        style: const TextStyle(color: AppColors.warning),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        '${p.totalExpenses.toStringAsFixed(0)} ${AppStrings.egp}',
+                        style: const TextStyle(color: AppColors.danger),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        '${p.totalDifference.toStringAsFixed(0)} ${AppStrings.egp}',
+                        style: TextStyle(
+                          color: isHealthy
+                              ? AppColors.success
+                              : AppColors.danger,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        '${p.averageShiftSales.toStringAsFixed(0)} ${AppStrings.egp}',
+                        style: const TextStyle(color: AppColors.textPrimary),
+                      ),
+                    ),
+                  ],
+                );
               }).toList(),
             ),
           ),

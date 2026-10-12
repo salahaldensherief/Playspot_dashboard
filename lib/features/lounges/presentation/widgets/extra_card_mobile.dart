@@ -26,8 +26,8 @@ class ExtraCardMobile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    final isOut = extra.isOutOfStock ||
-        (extra.trackStock && extra.stockQuantity <= 0);
+    final isOut =
+        extra.isOutOfStock || (extra.trackStock && extra.stockQuantity <= 0);
 
     return Container(
       decoration: BoxDecoration(
@@ -53,10 +53,7 @@ class ExtraCardMobile extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12.r),
               child: extra.imageUrl != null && extra.imageUrl!.trim().isNotEmpty
-                  ? AppCachedImage(
-                      imageUrl: extra.imageUrl,
-                      fit: BoxFit.cover,
-                    )
+                  ? AppCachedImage(imageUrl: extra.imageUrl, fit: BoxFit.cover)
                   : Center(
                       child: Icon(
                         Icons.restaurant_menu_outlined,
@@ -107,9 +104,11 @@ class ExtraCardMobile extends StatelessWidget {
                     value: !extra.isOutOfStock,
                     activeThumbColor: AppColors.neonBlue,
                     onChanged: (val) {
-                      context
-                          .read<ExtrasCubit>()
-                          .toggleStock(extra.id, !val, loungeId);
+                      context.read<ExtrasCubit>().toggleStock(
+                        extra.id,
+                        !val,
+                        loungeId,
+                      );
                     },
                   ),
                 ),
@@ -127,7 +126,8 @@ class ExtraCardMobile extends StatelessWidget {
                           builder: (ctx) => ExtraDialog(
                             loungeId: loungeId,
                             extra: extra,
-                            onSave: (updatedExtra) => context.read<ExtrasCubit>()
+                            onSave: (updatedExtra) => context
+                                .read<ExtrasCubit>()
                                 .updateExtra(updatedExtra),
                           ),
                         );
@@ -157,8 +157,10 @@ class ExtraCardMobile extends StatelessWidget {
       useRootNavigator: false,
       builder: (dialogCtx) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        title: Text(AppStrings.deleteConfirmation,
-            style: const TextStyle(color: AppColors.textPrimary)),
+        title: Text(
+          AppStrings.deleteConfirmation,
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
         content: Text('${AppStrings.deleteWarning} "${extra.name}"?'),
         actions: [
           AppButton(

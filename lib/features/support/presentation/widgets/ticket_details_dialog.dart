@@ -35,7 +35,9 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
   void initState() {
     super.initState();
     _selectedStatus = widget.ticket.status;
-    _notesController = TextEditingController(text: widget.ticket.adminNotes ?? '');
+    _notesController = TextEditingController(
+      text: widget.ticket.adminNotes ?? '',
+    );
   }
 
   @override
@@ -67,7 +69,10 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
           text: AppStrings.updateStatus,
           variant: AppButtonVariant.gradient,
           onPressed: () {
-            widget.onStatusChanged(_selectedStatus, _notesController.text.trim());
+            widget.onStatusChanged(
+              _selectedStatus,
+              _notesController.text.trim(),
+            );
             Navigator.pop(context);
           },
         ),
@@ -75,16 +80,43 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildInfoRow(AppStrings.fullName, widget.ticket.userName, Icons.person_outline),
-          _buildInfoRow(AppStrings.phoneNumber, widget.ticket.userPhone, Icons.phone_outlined),
-          _buildInfoRow(AppStrings.issueType, widget.ticket.issueType, Icons.category_outlined),
-          _buildInfoRow(AppStrings.sentDate, _formatDate(widget.ticket.createdAt), Icons.calendar_today_outlined),
+          _buildInfoRow(
+            AppStrings.fullName,
+            widget.ticket.userName,
+            Icons.person_outline,
+          ),
+          _buildInfoRow(
+            AppStrings.phoneNumber,
+            widget.ticket.userPhone,
+            Icons.phone_outlined,
+          ),
+          _buildInfoRow(
+            AppStrings.issueType,
+            widget.ticket.issueType,
+            Icons.category_outlined,
+          ),
+          _buildInfoRow(
+            AppStrings.sentDate,
+            _formatDate(widget.ticket.createdAt),
+            Icons.calendar_today_outlined,
+          ),
           if (widget.ticket.resolvedAt != null)
-            _buildInfoRow(AppStrings.resolvedDate, _formatDate(widget.ticket.resolvedAt), Icons.check_circle_outline),
+            _buildInfoRow(
+              AppStrings.resolvedDate,
+              _formatDate(widget.ticket.resolvedAt),
+              Icons.check_circle_outline,
+            ),
           SizedBox(height: 16.h),
           const Divider(color: AppColors.borderDefault),
           SizedBox(height: 12.h),
-          Text(AppStrings.ticketMessageText, style: TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold, fontSize: 14.sp)),
+          Text(
+            AppStrings.ticketMessageText,
+            style: TextStyle(
+              color: AppColors.neonBlue,
+              fontWeight: FontWeight.bold,
+              fontSize: 14.sp,
+            ),
+          ),
           SizedBox(height: 6.h),
           Container(
             width: double.infinity,
@@ -96,13 +128,24 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
             ),
             child: Text(
               widget.ticket.message,
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp, height: 1.4),
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 13.sp,
+                height: 1.4,
+              ),
             ),
           ),
           SizedBox(height: 20.h),
           const Divider(color: AppColors.borderDefault),
           SizedBox(height: 12.h),
-          Text(AppStrings.updateTicketStatus, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp)),
+          Text(
+            AppStrings.updateTicketStatus,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 14.sp,
+            ),
+          ),
           SizedBox(height: 8.h),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w),
@@ -134,7 +177,10 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
             ),
           ),
           SizedBox(height: 16.h),
-          Text(AppStrings.adminNotes, style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
+          Text(
+            AppStrings.adminNotes,
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+          ),
           SizedBox(height: 6.h),
           TextField(
             controller: _notesController,
@@ -145,7 +191,9 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
               hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
               filled: true,
               fillColor: AppColors.mutedBackground,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
             ),
           ),
         ],
@@ -160,9 +208,19 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
         children: [
           Icon(icon, color: AppColors.textSecondary, size: 16.r),
           SizedBox(width: 8.w),
-          Text('$label:', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
+          Text(
+            '$label:',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+          ),
           SizedBox(width: 4.w),
-          Text(value, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13.sp)),
+          Text(
+            value,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 13.sp,
+            ),
+          ),
         ],
       ),
     );

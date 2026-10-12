@@ -34,7 +34,9 @@ class ClientRequestModel extends ClientRequestEntity {
     return ClientRequestParser.parseCanteenOrder(json);
   }
 
-  factory ClientRequestModel.fromBookingExtensionJson(Map<String, dynamic> json) {
+  factory ClientRequestModel.fromBookingExtensionJson(
+    Map<String, dynamic> json,
+  ) {
     return ClientRequestParser.parseBookingExtension(json);
   }
 

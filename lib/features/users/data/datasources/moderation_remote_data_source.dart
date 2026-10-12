@@ -43,8 +43,7 @@ class ModerationRemoteDataSourceImpl implements ModerationRemoteDataSource {
         params: {
           'p_lounge_id': loungeId,
           'p_user_id': userId,
-          'p_booking_id':
-              (bookingId != null && bookingId.trim().isNotEmpty)
+          'p_booking_id': (bookingId != null && bookingId.trim().isNotEmpty)
               ? bookingId.trim()
               : null,
           'p_reason': reason,

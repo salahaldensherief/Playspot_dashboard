@@ -182,9 +182,7 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
         width: isDesktopOrTablet
             ? math.min(900.w, screenSize.width - 32)
             : double.infinity,
-        constraints: BoxConstraints(
-          maxHeight: screenSize.height * 0.9,
-        ),
+        constraints: BoxConstraints(maxHeight: screenSize.height * 0.9),
         padding: EdgeInsets.all(20.r),
         child: BlocBuilder<BookingCubit, BookingState>(
           builder: (context, state) {
@@ -230,7 +228,9 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
                                         booking: currentBooking,
                                       ),
                                       SizedBox(height: 12.h),
-                                      BookingReceiptCard(booking: currentBooking),
+                                      BookingReceiptCard(
+                                        booking: currentBooking,
+                                      ),
                                     ],
                                   ),
                                 ),

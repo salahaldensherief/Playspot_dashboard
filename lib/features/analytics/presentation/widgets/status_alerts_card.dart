@@ -35,7 +35,11 @@ class StatusAlertsCard extends StatelessWidget {
           children: [
             Text(
               AppStrings.systemHealth,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             SizedBox(height: 8.h),
             AlertItem(

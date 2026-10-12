@@ -8,11 +8,8 @@ class ShimmerLoading extends StatelessWidget {
   final double? height;
   final ShapeBorder shapeBorder;
 
-  const ShimmerLoading.rectangular({
-    super.key,
-    this.width,
-    this.height,
-  }) : shapeBorder = const RoundedRectangleBorder();
+  const ShimmerLoading.rectangular({super.key, this.width, this.height})
+    : shapeBorder = const RoundedRectangleBorder();
 
   const ShimmerLoading.circular({
     super.key,
@@ -27,8 +24,8 @@ class ShimmerLoading extends StatelessWidget {
     this.height,
     double borderRadius = 12,
   }) : shapeBorder = RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
-        );
+         borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
+       );
 
   @override
   Widget build(BuildContext context) {
@@ -51,11 +48,7 @@ class TableShimmer extends StatelessWidget {
   final int rows;
   final int columns;
 
-  const TableShimmer({
-    super.key,
-    this.rows = 5,
-    this.columns = 4,
-  });
+  const TableShimmer({super.key, this.rows = 5, this.columns = 4});
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +67,10 @@ class TableShimmer extends StatelessWidget {
               columns,
               (index) => Expanded(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 8.w,
+                    vertical: 12.h,
+                  ),
                   child: ShimmerLoading.rectangular(height: 20.h),
                 ),
               ),
@@ -108,11 +104,7 @@ class GridShimmer extends StatelessWidget {
   final int itemCount;
   final double aspectRatio;
 
-  const GridShimmer({
-    super.key,
-    this.itemCount = 6,
-    this.aspectRatio = 1.0,
-  });
+  const GridShimmer({super.key, this.itemCount = 6, this.aspectRatio = 1.0});
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +119,7 @@ class GridShimmer extends StatelessWidget {
         mainAxisSpacing: 16.r,
       ),
       itemCount: itemCount,
-      itemBuilder: (context, index) =>  ShimmerLoading.rounded(
+      itemBuilder: (context, index) => ShimmerLoading.rounded(
         height: double.infinity,
         width: double.infinity,
       ),

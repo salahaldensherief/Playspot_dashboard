@@ -75,14 +75,16 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
         if (state.settings != null) {
           _populateFields(state.settings!);
         }
-        if (state.actionStatus == SupportStatus.success && state.successMessage != null) {
+        if (state.actionStatus == SupportStatus.success &&
+            state.successMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.successMessage!),
               backgroundColor: AppColors.success,
             ),
           );
-        } else if (state.actionStatus == SupportStatus.failure && state.errorMessage != null) {
+        } else if (state.actionStatus == SupportStatus.failure &&
+            state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage!),
@@ -101,7 +103,11 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.contact_support_outlined, color: AppColors.neonBlue, size: 28.r),
+                    Icon(
+                      Icons.contact_support_outlined,
+                      color: AppColors.neonBlue,
+                      size: 28.r,
+                    ),
                     SizedBox(width: 12.w),
                     Text(
                       AppStrings.supportAndPaymentSettings,
@@ -122,8 +128,11 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
                   ),
                 ),
                 SizedBox(height: 24.h),
-                if (state.status == SupportStatus.loading && state.settings == null)
-                  const Center(child: CircularProgressIndicator(color: AppColors.neonBlue))
+                if (state.status == SupportStatus.loading &&
+                    state.settings == null)
+                  const Center(
+                    child: CircularProgressIndicator(color: AppColors.neonBlue),
+                  )
                 else
                   SectionContainer(
                     title: AppStrings.supportContactDetails,
@@ -166,17 +175,25 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
                                 text: AppStrings.saveChanges,
                                 variant: AppButtonVariant.gradient,
                                 icon: Icons.save,
-                                isLoading: state.actionStatus == SupportStatus.loading,
+                                isLoading:
+                                    state.actionStatus == SupportStatus.loading,
                                 onPressed: () {
                                   if (_formKey.currentState!.validate()) {
                                     final updatedSettings = AppSettingsEntity(
                                       id: _existingId,
-                                      whatsappPhone: _whatsappController.text.trim(),
-                                      supportPhone: _phoneController.text.trim(),
-                                      supportEmail: _emailController.text.trim(),
-                                      vodafoneCashNumber: _vodafoneController.text.trim(),
+                                      whatsappPhone: _whatsappController.text
+                                          .trim(),
+                                      supportPhone: _phoneController.text
+                                          .trim(),
+                                      supportEmail: _emailController.text
+                                          .trim(),
+                                      vodafoneCashNumber: _vodafoneController
+                                          .text
+                                          .trim(),
                                     );
-                                    context.read<SupportCubit>().saveAppSettings(updatedSettings);
+                                    context
+                                        .read<SupportCubit>()
+                                        .saveAppSettings(updatedSettings);
                                   }
                                 },
                               ),

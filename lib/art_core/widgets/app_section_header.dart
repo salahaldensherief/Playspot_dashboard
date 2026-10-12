@@ -37,11 +37,7 @@ class AppSectionHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (icon != null) ...[
-            AppIconBadge(
-              icon: icon!,
-              color: effectiveColor,
-              size: 36.r,
-            ),
+            AppIconBadge(icon: icon!, color: effectiveColor, size: 36.r),
             SizedBox(width: 10.w),
           ],
           Expanded(
@@ -97,10 +93,7 @@ class AppSectionHeader extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing != null) ...[
-            SizedBox(width: 10.w),
-            trailing!,
-          ],
+          if (trailing != null) ...[SizedBox(width: 10.w), trailing!],
         ],
       ),
     );

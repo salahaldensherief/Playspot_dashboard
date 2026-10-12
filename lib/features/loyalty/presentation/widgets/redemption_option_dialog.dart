@@ -33,10 +33,18 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
     super.initState();
     _titleArController = TextEditingController(text: widget.option?.titleAr);
     _titleEnController = TextEditingController(text: widget.option?.titleEn);
-    _descArController = TextEditingController(text: widget.option?.descriptionAr);
-    _descEnController = TextEditingController(text: widget.option?.descriptionEn);
-    _pointsCostController = TextEditingController(text: widget.option?.pointsCost.toString() ?? '');
-    _rewardValueController = TextEditingController(text: widget.option?.rewardValue.toString() ?? '');
+    _descArController = TextEditingController(
+      text: widget.option?.descriptionAr,
+    );
+    _descEnController = TextEditingController(
+      text: widget.option?.descriptionEn,
+    );
+    _pointsCostController = TextEditingController(
+      text: widget.option?.pointsCost.toString() ?? '',
+    );
+    _rewardValueController = TextEditingController(
+      text: widget.option?.rewardValue.toString() ?? '',
+    );
     _rewardType = widget.option?.rewardType ?? 'discount_fixed';
   }
 
@@ -53,19 +61,21 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
 
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
-      widget.onSave(RedemptionOptionEntity(
-        id: widget.option?.id ?? '',
-        titleAr: _titleArController.text.trim(),
-        titleEn: _titleEnController.text.trim(),
-        descriptionAr: _descArController.text.trim(),
-        descriptionEn: _descEnController.text.trim(),
-        pointsCost: int.tryParse(_pointsCostController.text.trim()) ?? 0,
-        rewardType: _rewardType,
-        rewardValue: _rewardType == 'discount_fixed'
-            ? (double.tryParse(_rewardValueController.text.trim()) ?? 0.0)
-            : 0.0,
-        isActive: widget.option?.isActive ?? true,
-      ));
+      widget.onSave(
+        RedemptionOptionEntity(
+          id: widget.option?.id ?? '',
+          titleAr: _titleArController.text.trim(),
+          titleEn: _titleEnController.text.trim(),
+          descriptionAr: _descArController.text.trim(),
+          descriptionEn: _descEnController.text.trim(),
+          pointsCost: int.tryParse(_pointsCostController.text.trim()) ?? 0,
+          rewardType: _rewardType,
+          rewardValue: _rewardType == 'discount_fixed'
+              ? (double.tryParse(_rewardValueController.text.trim()) ?? 0.0)
+              : 0.0,
+          isActive: widget.option?.isActive ?? true,
+        ),
+      );
       Navigator.pop(context);
     }
   }
@@ -74,7 +84,9 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
     return AppDialog(
-      title: widget.option == null ? AppStrings.addReward : AppStrings.editReward,
+      title: widget.option == null
+          ? AppStrings.addReward
+          : AppStrings.editReward,
       icon: Icons.card_giftcard_rounded,
       width: 600.w,
       actions: [
@@ -84,10 +96,7 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
           onPressed: () => Navigator.pop(context),
         ),
         SizedBox(width: 12.w),
-        AppButton(
-          text: AppStrings.saveChanges,
-          onPressed: _submit,
-        ),
+        AppButton(text: AppStrings.saveChanges, onPressed: _submit),
       ],
       child: Form(
         key: _formKey,
@@ -100,7 +109,9 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
                   child: AppTextField(
                     controller: _titleArController,
                     label: AppStrings.nameAr,
-                    validator: (v) => v?.trim().isEmpty == true ? AppStrings.fieldRequired : null,
+                    validator: (v) => v?.trim().isEmpty == true
+                        ? AppStrings.fieldRequired
+                        : null,
                   ),
                 ),
                 SizedBox(width: 16.w),
@@ -108,7 +119,9 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
                   child: AppTextField(
                     controller: _titleEnController,
                     label: AppStrings.nameEn,
-                    validator: (v) => v?.trim().isEmpty == true ? AppStrings.fieldRequired : null,
+                    validator: (v) => v?.trim().isEmpty == true
+                        ? AppStrings.fieldRequired
+                        : null,
                   ),
                 ),
               ],
@@ -134,9 +147,11 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
                     label: AppStrings.pointsCost,
                     keyboardType: TextInputType.number,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return AppStrings.fieldRequired;
+                      if (v == null || v.trim().isEmpty)
+                        return AppStrings.fieldRequired;
                       final val = int.tryParse(v.trim());
-                      if (val == null || val <= 0) return AppStrings.invalidNumber;
+                      if (val == null || val <= 0)
+                        return AppStrings.invalidNumber;
                       return null;
                     },
                   ),
@@ -162,14 +177,18 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
                             value: 'discount_fixed',
                             child: Text(
                               AppStrings.directDiscount,
-                              style: const TextStyle(color: AppColors.textPrimary),
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                              ),
                             ),
                           ),
                           DropdownMenuItem(
                             value: 'free_hour',
                             child: Text(
                               AppStrings.playHours,
-                              style: const TextStyle(color: AppColors.textPrimary),
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                              ),
                             ),
                           ),
                         ],
@@ -198,7 +217,8 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
                 label: AppStrings.rewardValue,
                 keyboardType: TextInputType.number,
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return AppStrings.fieldRequired;
+                  if (v == null || v.trim().isEmpty)
+                    return AppStrings.fieldRequired;
                   final val = double.tryParse(v.trim());
                   if (val == null || val < 0) return AppStrings.invalidNumber;
                   return null;

@@ -110,13 +110,19 @@ class AppTextField extends StatelessWidget {
               color: AppColors.textSecondary,
               fontSize: fontSize ?? 14.sp,
             ),
-            prefixIcon: prefixWidget ??
+            prefixIcon:
+                prefixWidget ??
                 (prefixIcon != null
-                    ? Icon(prefixIcon, color: AppColors.textSecondary, size: 20.r)
+                    ? Icon(
+                        prefixIcon,
+                        color: AppColors.textSecondary,
+                        size: 20.r,
+                      )
                     : null),
             suffixIcon: suffix,
             filled: true,
-            fillColor: fillColor ??
+            fillColor:
+                fillColor ??
                 (enabled
                     ? AppColors.mutedBackground
                     : AppColors.cardBackground.withAlpha(128)),
@@ -138,11 +144,9 @@ class AppTextField extends StatelessWidget {
               borderRadius: BorderRadius.circular(8.r),
               borderSide: const BorderSide(color: AppColors.neonBlue),
             ),
-            contentPadding: contentPadding ??
-                EdgeInsets.symmetric(
-                  horizontal: 16.w,
-                  vertical: 14.h,
-                ),
+            contentPadding:
+                contentPadding ??
+                EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
           ),
         ),
       ],

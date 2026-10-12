@@ -119,103 +119,103 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
       child: Form(
         key: _formKey,
         child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // --- Section 1: Lounge Details ---
-              AppText.subHeading(
-                "1. ${AppStrings.loungeDetails}",
-                fontSize: 16.sp,
-                color: AppColors.neonPurple,
-              ),
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppTextField(
-                      label: AppStrings.loungeName,
-                      hintText: AppStrings.loungeNameHint,
-                      controller: _nameController,
-                      validator: AppValidator.validateRequired,
-                    ),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // --- Section 1: Lounge Details ---
+            AppText.subHeading(
+              "1. ${AppStrings.loungeDetails}",
+              fontSize: 16.sp,
+              color: AppColors.neonPurple,
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.loungeName,
+                    hintText: AppStrings.loungeNameHint,
+                    controller: _nameController,
+                    validator: AppValidator.validateRequired,
                   ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: AppTextField(
-                      label: AppStrings.contactPhone,
-                      hintText: AppStrings.loungePhoneHint,
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                    ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.contactPhone,
+                    hintText: AppStrings.loungePhoneHint,
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
 
-              SizedBox(height: 16.h),
-              AppTextField(
-                label: AppStrings.address,
-                hintText: AppStrings.addressHint,
-                controller: _addressController,
-              ),
-              SizedBox(height: 28.h),
-              const Divider(color: AppColors.divider),
-              SizedBox(height: 20.h),
+            SizedBox(height: 16.h),
+            AppTextField(
+              label: AppStrings.address,
+              hintText: AppStrings.addressHint,
+              controller: _addressController,
+            ),
+            SizedBox(height: 28.h),
+            const Divider(color: AppColors.divider),
+            SizedBox(height: 20.h),
 
-              // --- Section 2: Owner Details ---
-              AppText.subHeading(
-                "2. ${AppStrings.ownerDetails}",
-                fontSize: 16.sp,
-                color: AppColors.neonBlue,
-              ),
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppTextField(
-                      label: AppStrings.ownerName,
-                      hintText: AppStrings.ownerNameHint,
-                      controller: _ownerNameController,
-                      validator: AppValidator.validateRequired,
-                    ),
+            // --- Section 2: Owner Details ---
+            AppText.subHeading(
+              "2. ${AppStrings.ownerDetails}",
+              fontSize: 16.sp,
+              color: AppColors.neonBlue,
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.ownerName,
+                    hintText: AppStrings.ownerNameHint,
+                    controller: _ownerNameController,
+                    validator: AppValidator.validateRequired,
                   ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: AppTextField(
-                      label: AppStrings.ownerEmail,
-                      hintText: AppStrings.emailHint,
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      validator: AppValidator.validateEmail,
-                    ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.ownerEmail,
+                    hintText: AppStrings.emailHint,
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: AppValidator.validateEmail,
                   ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppTextField(
-                      label: AppStrings.ownerPhone,
-                      hintText: AppStrings.ownerPhoneHint,
-                      controller: _ownerPhoneController,
-                      keyboardType: TextInputType.phone,
-                    ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.ownerPhone,
+                    hintText: AppStrings.ownerPhoneHint,
+                    controller: _ownerPhoneController,
+                    keyboardType: TextInputType.phone,
                   ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: AppTextField(
-                      label: AppStrings.ownerPassword,
-                      hintText: AppStrings.passwordHint,
-                      controller: _passwordController,
-                      isPassword: true,
-                      validator: (value) =>
-                          AppValidator.validatePassword(value, minLength: 8),
-                    ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.ownerPassword,
+                    hintText: AppStrings.passwordHint,
+                    controller: _passwordController,
+                    isPassword: true,
+                    validator: (value) =>
+                        AppValidator.validatePassword(value, minLength: 8),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
+      ),
     );
   }
 }

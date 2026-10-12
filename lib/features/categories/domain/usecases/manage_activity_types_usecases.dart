@@ -4,7 +4,8 @@ import '../../../../core/usecases/base_usecase.dart';
 import '../entities/activity_type_entity.dart';
 import '../repositories/category_repository.dart';
 
-class GetActivityTypesUseCase implements UseCase<List<ActivityTypeEntity>, bool> {
+class GetActivityTypesUseCase
+    implements UseCase<List<ActivityTypeEntity>, bool> {
   final CategoryRepository repository;
 
   GetActivityTypesUseCase(this.repository);
@@ -15,17 +16,19 @@ class GetActivityTypesUseCase implements UseCase<List<ActivityTypeEntity>, bool>
   }
 }
 
-class AddActivityTypeUseCase implements UseCase<ActivityTypeEntity, ActivityTypeEntity> {
+class AddActivityTypeUseCase
+    implements UseCase<ActivityTypeEntity, ActivityTypeEntity> {
   final CategoryRepository repository;
 
   AddActivityTypeUseCase(this.repository);
 
   @override
-  Future<Either<Failure, ActivityTypeEntity>> call(ActivityTypeEntity activityType) {
+  Future<Either<Failure, ActivityTypeEntity>> call(
+    ActivityTypeEntity activityType,
+  ) {
     return repository.addActivityType(activityType);
   }
 }
-
 
 class UpdateActivityTypeUseCase
     implements UseCase<ActivityTypeEntity, ActivityTypeEntity> {

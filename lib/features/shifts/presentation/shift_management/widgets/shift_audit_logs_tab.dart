@@ -13,10 +13,7 @@ class ShiftAuditLogsTab extends StatelessWidget {
     }
 
     return SingleChildScrollView(
-      child: AuditTimeline(
-        entityType: 'shift',
-        entityId: shiftId!,
-      ),
+      child: AuditTimeline(entityType: 'shift', entityId: shiftId!),
     );
   }
 }

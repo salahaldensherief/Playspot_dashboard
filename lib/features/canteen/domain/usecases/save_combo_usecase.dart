@@ -11,9 +11,7 @@ class SaveComboUseCase
   SaveComboUseCase(this.repository);
 
   @override
-  Future<Either<Failure, CanteenComboEntity>> call(
-    CanteenComboEntity combo,
-  ) {
+  Future<Either<Failure, CanteenComboEntity>> call(CanteenComboEntity combo) {
     return repository.saveCombo(combo);
   }
 }

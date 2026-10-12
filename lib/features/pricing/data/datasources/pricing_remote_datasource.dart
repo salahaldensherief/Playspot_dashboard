@@ -26,9 +26,7 @@ abstract class PricingRemoteDataSource {
     required String date,
   });
 
-  Future<Map<String, dynamic>> getLoungePriceRange({
-    required String loungeId,
-  });
+  Future<Map<String, dynamic>> getLoungePriceRange({required String loungeId});
 }
 
 class PricingRemoteDataSourceImpl implements PricingRemoteDataSource {
@@ -48,9 +46,7 @@ class PricingRemoteDataSourceImpl implements PricingRemoteDataSource {
 
     return (response as List)
         .map(
-          (e) => PricingRuleModel.fromJson(
-            Map<String, dynamic>.from(e as Map),
-          ),
+          (e) => PricingRuleModel.fromJson(Map<String, dynamic>.from(e as Map)),
         )
         .toList();
   }
@@ -67,8 +63,11 @@ class PricingRemoteDataSourceImpl implements PricingRemoteDataSource {
           .single();
       return PricingRuleModel.fromJson(Map<String, dynamic>.from(response));
     } else {
-      final response =
-          await supabase.from('pricing_rules').insert(payload).select().single();
+      final response = await supabase
+          .from('pricing_rules')
+          .insert(payload)
+          .select()
+          .single();
       return PricingRuleModel.fromJson(Map<String, dynamic>.from(response));
     }
   }
@@ -79,7 +78,9 @@ class PricingRemoteDataSourceImpl implements PricingRemoteDataSource {
   }
 
   @override
-  Future<List<PricingRuleModel>> checkRuleConflicts(PricingRuleModel rule) async {
+  Future<List<PricingRuleModel>> checkRuleConflicts(
+    PricingRuleModel rule,
+  ) async {
     final response = await supabase.rpc(
       'check_pricing_rule_conflicts_v2',
       params: {
@@ -98,7 +99,9 @@ class PricingRemoteDataSourceImpl implements PricingRemoteDataSource {
       throw const FormatException('Invalid pricing conflict response');
     }
     return response
-        .map((e) => PricingRuleModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map(
+          (e) => PricingRuleModel.fromJson(Map<String, dynamic>.from(e as Map)),
+        )
         .toList();
   }
 
@@ -121,8 +124,9 @@ class PricingRemoteDataSourceImpl implements PricingRemoteDataSource {
         'p_end': endTime,
         'p_play_mode': playMode,
         'p_extra_controllers': extraControllers,
-        'p_coupon_code':
-            (couponCode != null && couponCode.isNotEmpty) ? couponCode : null,
+        'p_coupon_code': (couponCode != null && couponCode.isNotEmpty)
+            ? couponCode
+            : null,
       },
     );
     if (response is! Map) {
@@ -139,21 +143,15 @@ class PricingRemoteDataSourceImpl implements PricingRemoteDataSource {
     try {
       final response = await supabase.rpc(
         'get_room_slots_with_prices',
-        params: {
-          'p_room_id': roomId,
-          'p_date': date,
-        },
+        params: {'p_room_id': roomId, 'p_date': date},
       );
       if (response is! List) {
         throw const FormatException('Invalid priced slots response');
       }
-      final rows =
-          response.length == 1 && response.first is List
+      final rows = response.length == 1 && response.first is List
           ? response.first as List
           : response;
-      return rows
-          .map((e) => Map<String, dynamic>.from(e as Map))
-          .toList();
+      return rows.map((e) => Map<String, dynamic>.from(e as Map)).toList();
     } catch (_) {
       rethrow;
     }

@@ -157,7 +157,11 @@ class _TournamentPrizesDialogState extends State<TournamentPrizesDialog> {
     });
   }
 
-  void _updateReward(int placementIndex, int rewardIndex, TournamentPrizeRewardEntity updatedReward) {
+  void _updateReward(
+    int placementIndex,
+    int rewardIndex,
+    TournamentPrizeRewardEntity updatedReward,
+  ) {
     setState(() {
       final prize = _prizes[placementIndex];
       final updatedRewards = [...prize.rewards];
@@ -214,7 +218,10 @@ class _TournamentPrizesDialogState extends State<TournamentPrizesDialog> {
                   icon: Icons.add_circle_outline,
                   variant: AppButtonVariant.outlined,
                   fontSize: 12.sp,
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 6.h,
+                  ),
                   onPressed: _addPlacement,
                 ),
               ],

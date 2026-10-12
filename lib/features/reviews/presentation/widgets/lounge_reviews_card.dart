@@ -84,7 +84,10 @@ class LoungeReviewsCard extends StatelessWidget {
                   children: [
                     // Score Hero Box
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 10.h,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.starRating.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12.r),
@@ -124,10 +127,7 @@ class LoungeReviewsCard extends StatelessWidget {
                           SizedBox(height: 6.h),
                           Row(
                             children: [
-                              StarRatingBar(
-                                rating: avgRating,
-                                size: 20.r,
-                              ),
+                              StarRatingBar(rating: avgRating, size: 20.r),
                               SizedBox(width: 8.w),
                               AppText.body(
                                 '(${avgRating.toStringAsFixed(1)})',
@@ -193,8 +193,11 @@ class LoungeReviewsCard extends StatelessWidget {
   }
 
   Widget _buildReviewTile(BuildContext context, LoungeReviewEntity review) {
-    final String dateFormatted = DateFormat('yyyy-MM-dd • hh:mm a').format(review.createdAt);
-    final String initial = (review.userName != null && review.userName?.isNotEmpty == true)
+    final String dateFormatted = DateFormat(
+      'yyyy-MM-dd • hh:mm a',
+    ).format(review.createdAt);
+    final String initial =
+        (review.userName != null && review.userName?.isNotEmpty == true)
         ? (review.userName ?? 'A')[0].toUpperCase()
         : 'A';
 
@@ -248,10 +251,7 @@ class LoungeReviewsCard extends StatelessWidget {
                 // Star Rating Indicator
                 Row(
                   children: [
-                    StarRatingBar(
-                      rating: review.rating,
-                      size: 14.r,
-                    ),
+                    StarRatingBar(rating: review.rating, size: 14.r),
                     SizedBox(width: 6.w),
                     AppText.body(
                       '${review.rating.toStringAsFixed(1)} / 5.0',
@@ -263,7 +263,8 @@ class LoungeReviewsCard extends StatelessWidget {
                 ),
 
                 // Review Comment / Feedback
-                if (review.comment != null && review.comment?.trim().isNotEmpty == true) ...[
+                if (review.comment != null &&
+                    review.comment?.trim().isNotEmpty == true) ...[
                   SizedBox(height: 6.h),
                   Container(
                     width: double.infinity,

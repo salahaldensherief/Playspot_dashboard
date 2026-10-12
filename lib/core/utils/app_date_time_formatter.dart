@@ -13,7 +13,8 @@ class AppDateTimeFormatter {
 
   /// Format raw time string like "14:30:00" to 12-hour format ("02:30 PM")
   static String formatTimeString(String? timeStr, {String fallback = '--:--'}) {
-    if (timeStr == null || timeStr.trim().isEmpty || timeStr == 'null') return fallback;
+    if (timeStr == null || timeStr.trim().isEmpty || timeStr == 'null')
+      return fallback;
     try {
       final clean = timeStr.trim();
       final parts = clean.split(':');
@@ -29,7 +30,11 @@ class AppDateTimeFormatter {
   }
 
   /// Format full date (e.g. "2026-09-27")
-  static String formatDate(DateTime? dateTime, {String pattern = 'yyyy-MM-dd', String fallback = '--'}) {
+  static String formatDate(
+    DateTime? dateTime, {
+    String pattern = 'yyyy-MM-dd',
+    String fallback = '--',
+  }) {
     if (dateTime == null) return fallback;
     return DateFormat(pattern).format(dateTime.toLocal());
   }
@@ -47,13 +52,19 @@ class AppDateTimeFormatter {
   }
 
   /// Format date and time with slash separators (e.g. "2026/09/27 - 09:30 AM")
-  static String formatDateTimeSlash(DateTime? dateTime, {String fallback = '--'}) {
+  static String formatDateTimeSlash(
+    DateTime? dateTime, {
+    String fallback = '--',
+  }) {
     if (dateTime == null) return fallback;
     return DateFormat('yyyy/MM/dd - hh:mm a').format(dateTime.toLocal());
   }
 
   /// Format full date time with seconds (e.g. "2026/09/27 09:30:15 AM")
-  static String formatDateTimeWithSeconds(DateTime? dateTime, {String fallback = '--'}) {
+  static String formatDateTimeWithSeconds(
+    DateTime? dateTime, {
+    String fallback = '--',
+  }) {
     if (dateTime == null) return fallback;
     return DateFormat('yyyy/MM/dd hh:mm:ss a').format(dateTime.toLocal());
   }
@@ -65,15 +76,26 @@ class AppDateTimeFormatter {
   }
 
   /// Format day of week, date and time (e.g. "Sun, Sep 27, 2026 09:30 AM")
-  static String formatFullHeaderDate(DateTime? dateTime, {String fallback = '--'}) {
+  static String formatFullHeaderDate(
+    DateTime? dateTime, {
+    String fallback = '--',
+  }) {
     if (dateTime == null) return fallback;
     return DateFormat('EEE, MMM dd, yyyy • hh:mm a').format(dateTime.toLocal());
   }
 }
 
 extension DateTimeFormatExtension on DateTime {
-  String toTimeStr({String fallback = '--:--'}) => AppDateTimeFormatter.formatTime(this, fallback: fallback);
-  String toDateStr({String pattern = 'yyyy-MM-dd', String fallback = '--'}) => AppDateTimeFormatter.formatDate(this, pattern: pattern, fallback: fallback);
-  String toDateTimeStr({String fallback = '--'}) => AppDateTimeFormatter.formatDateTime(this, fallback: fallback);
-  String toDateTimeSlashStr({String fallback = '--'}) => AppDateTimeFormatter.formatDateTimeSlash(this, fallback: fallback);
+  String toTimeStr({String fallback = '--:--'}) =>
+      AppDateTimeFormatter.formatTime(this, fallback: fallback);
+  String toDateStr({String pattern = 'yyyy-MM-dd', String fallback = '--'}) =>
+      AppDateTimeFormatter.formatDate(
+        this,
+        pattern: pattern,
+        fallback: fallback,
+      );
+  String toDateTimeStr({String fallback = '--'}) =>
+      AppDateTimeFormatter.formatDateTime(this, fallback: fallback);
+  String toDateTimeSlashStr({String fallback = '--'}) =>
+      AppDateTimeFormatter.formatDateTimeSlash(this, fallback: fallback);
 }

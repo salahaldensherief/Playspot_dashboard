@@ -666,6 +666,7 @@ class AppStrings {
   static String get extendTime => 'extend_time'.tr();
   static String get timeExpired => 'time_expired'.tr();
   static String get remainingTime => 'remaining_time'.tr();
+  static String get elapsedTime => 'cashier.elapsed'.tr();
   static String get confirmEndSession => 'confirm_end_session'.tr();
   static String get confirmEndSessionMessage =>
       'confirm_end_session_message'.tr();
@@ -694,6 +695,12 @@ class AppStrings {
   static String get clientRequestedExtras => 'client_requested_extras'.tr();
   static String get approveRequest => 'approve_request'.tr();
   static String get rejectRequest => 'reject_request'.tr();
+
+  static String get attachedPaymentReceiptLabel =>
+      'attached_payment_receipt_label'.tr();
+  static String get paymentTransferReceipt =>
+      'payment_transfer_receipt'.tr();
+  static String get zoomPaymentReceipt => 'zoom_payment_receipt'.tr();
   static String get requestApproved => 'request_approved'.tr();
   static String get requestRejected => 'request_rejected'.tr();
   static String get totalActiveExtras => 'total_active_extras'.tr();

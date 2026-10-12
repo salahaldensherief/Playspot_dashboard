@@ -17,24 +17,27 @@ class TournamentAuditLogModel extends TournamentAuditLogEntity {
       adminName = json['profiles']['full_name'] as String?;
     }
 
-    final rawAction = (json['action_type'] ??
-            json['action'] ??
-            json['event_type'] ??
-            json['event'] ??
-            json['type'] ??
-            '')
-        .toString()
-        .trim();
+    final rawAction =
+        (json['action_type'] ??
+                json['action'] ??
+                json['event_type'] ??
+                json['event'] ??
+                json['type'] ??
+                '')
+            .toString()
+            .trim();
 
-    final rawPerformedBy = (json['performed_by'] ??
-            json['user_id'] ??
-            json['created_by'] ??
-            json['admin_id'] ??
-            '')
-        .toString()
-        .trim();
+    final rawPerformedBy =
+        (json['performed_by'] ??
+                json['user_id'] ??
+                json['created_by'] ??
+                json['admin_id'] ??
+                '')
+            .toString()
+            .trim();
 
-    final rawName = adminName ??
+    final rawName =
+        adminName ??
         json['performed_by_name']?.toString() ??
         json['user_name']?.toString() ??
         json['full_name']?.toString() ??
@@ -57,8 +60,10 @@ class TournamentAuditLogModel extends TournamentAuditLogEntity {
       performedByName: (rawName != null && rawName.trim().isNotEmpty)
           ? rawName.trim()
           : (rawPerformedBy.isNotEmpty
-              ? (rawPerformedBy.length > 8 ? rawPerformedBy.substring(0, 8) : rawPerformedBy)
-              : 'النظام'),
+                ? (rawPerformedBy.length > 8
+                      ? rawPerformedBy.substring(0, 8)
+                      : rawPerformedBy)
+                : 'النظام'),
       details: detailsMap,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()

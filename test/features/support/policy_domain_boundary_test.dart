@@ -53,10 +53,10 @@ void main() {
               (policy) => policy.policyType == 'terms_of_service',
               orElse: () => fallback,
             );
-          expect(policy.id, models.first.id);
-          expect(policy.policyType, models.first.policyType);
-          expect(policy.titleAr, models.first.titleAr);
-          expect(policy.titleEn, models.first.titleEn);
+            expect(policy.id, models.first.id);
+            expect(policy.policyType, models.first.policyType);
+            expect(policy.titleAr, models.first.titleAr);
+            expect(policy.titleEn, models.first.titleEn);
             expect(policy.isPublished, isFalse);
             expect(policy.updatedAt, DateTime.utc(2026, 10, 2));
             expect(policy.contentAr, 'المحتوى العربي');

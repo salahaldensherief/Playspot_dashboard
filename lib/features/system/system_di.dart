@@ -18,9 +18,7 @@ void initSystemDI(GetIt sl) {
   );
 
   // Repository
-  sl.registerLazySingleton<SystemRepository>(
-    () => SystemRepositoryImpl(sl()),
-  );
+  sl.registerLazySingleton<SystemRepository>(() => SystemRepositoryImpl(sl()));
 
   // Use Cases
   sl.registerLazySingleton(() => GetAppStatusUseCase(sl()));
@@ -32,10 +30,9 @@ void initSystemDI(GetIt sl) {
 
   // Cubit
   sl.registerLazySingleton<AppStatusCubit>(
-    () => AppStatusCubit(
-      getAppStatusUseCase: sl(),
-      supabaseClient: sl(),
-    )..initAppStatusWatch(),
+    () =>
+        AppStatusCubit(getAppStatusUseCase: sl(), supabaseClient: sl())
+          ..initAppStatusWatch(),
   );
 
   sl.registerFactory<SystemSettingsCubit>(

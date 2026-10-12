@@ -71,7 +71,9 @@ class _KycInspectionDialogState extends State<KycInspectionDialog> {
                     controller: _scrollController,
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        final details = KycSnapshotDetails(request: widget.request);
+                        final details = KycSnapshotDetails(
+                          request: widget.request,
+                        );
                         final documents = _documents(context);
                         if (constraints.maxWidth < 700) {
                           return Column(

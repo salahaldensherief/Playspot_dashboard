@@ -20,9 +20,11 @@ class BookingTrendsChart extends StatelessWidget {
 
         final spots = <FlSpot>[];
         double maxY = 10;
-        
+
         for (int i = 0; i < state.revenueChart.length; i++) {
-          final val = (state.revenueChart[i]['bookings_count'] as num?)?.toDouble() ?? 0.0;
+          final val =
+              (state.revenueChart[i]['bookings_count'] as num?)?.toDouble() ??
+              0.0;
           spots.add(FlSpot(i.toDouble(), val));
           if (val > maxY) maxY = val;
         }

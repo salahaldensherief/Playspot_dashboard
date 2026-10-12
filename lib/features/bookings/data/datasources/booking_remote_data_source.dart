@@ -62,9 +62,7 @@ abstract class BookingRemoteDataSource {
     required String date,
   });
 
-  Future<Map<String, dynamic>> getLoungePriceRange({
-    required String loungeId,
-  });
+  Future<Map<String, dynamic>> getLoungePriceRange({required String loungeId});
 
   Future<Map<String, dynamic>> verifyAndHoldSlot({
     required String roomId,
@@ -92,7 +90,11 @@ abstract class BookingRemoteDataSource {
 
   Future<void> approveManualBooking(String bookingId, String actionBy);
 
-  Future<void> rejectManualBooking(String bookingId, String reason, String actionBy);
+  Future<void> rejectManualBooking(
+    String bookingId,
+    String reason,
+    String actionBy,
+  );
 
   Future<List<Map<String, dynamic>>> getBookingItems(String bookingId);
 }

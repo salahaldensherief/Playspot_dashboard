@@ -24,15 +24,25 @@ class LiveBookingItem extends StatelessWidget {
         CircleAvatar(
           radius: 20.r,
           backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
-          child: Icon(Icons.person_outline, color: AppColors.neonBlue, size: 20.r),
+          child: Icon(
+            Icons.person_outline,
+            color: AppColors.neonBlue,
+            size: 20.r,
+          ),
         ),
         SizedBox(width: 16.w),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText.subHeading(booking.userName ?? 'User ${booking.userId.substring(0, 5)}', fontSize: 14.sp),
-              AppText.body('${booking.roomName} • ${booking.startTime}', fontSize: 12.sp),
+              AppText.subHeading(
+                booking.userName ?? 'User ${booking.userId.substring(0, 5)}',
+                fontSize: 14.sp,
+              ),
+              AppText.body(
+                '${booking.roomName} • ${booking.startTime}',
+                fontSize: 12.sp,
+              ),
             ],
           ),
         ),
@@ -43,10 +53,10 @@ class LiveBookingItem extends StatelessWidget {
             borderRadius: BorderRadius.circular(4.r),
           ),
           child: AppText.body(
-            statusStr.toUpperCase(), 
-            color: _getStatusColor(statusStr), 
-            fontSize: 10.sp, 
-            fontWeight: FontWeight.bold
+            statusStr.toUpperCase(),
+            color: _getStatusColor(statusStr),
+            fontSize: 10.sp,
+            fontWeight: FontWeight.bold,
           ),
         ),
         SizedBox(width: 16.w),
@@ -57,11 +67,16 @@ class LiveBookingItem extends StatelessWidget {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'pending': return AppColors.warning;
-      case 'upcoming': return AppColors.neonBlue;
-      case 'completed': return AppColors.success;
-      case 'cancelled': return AppColors.danger;
-      default: return AppColors.neonBlue;
+      case 'pending':
+        return AppColors.warning;
+      case 'upcoming':
+        return AppColors.neonBlue;
+      case 'completed':
+        return AppColors.success;
+      case 'cancelled':
+        return AppColors.danger;
+      default:
+        return AppColors.neonBlue;
     }
   }
 
@@ -69,15 +84,18 @@ class LiveBookingItem extends StatelessWidget {
     if (booking.status == BookingStatus.pending) {
       return AppButton(
         text: AppStrings.approve,
-        onPressed: () => context.read<BookingCubit>().approveBooking(booking.id),
+        onPressed: () =>
+            context.read<BookingCubit>().approveBooking(booking.id),
         variant: AppButtonVariant.primary,
       );
     }
-    
-    if (booking.status == BookingStatus.upcoming && booking.paymentStatus == PaymentStatus.unpaid) {
+
+    if (booking.status == BookingStatus.upcoming &&
+        booking.paymentStatus == PaymentStatus.unpaid) {
       return AppButton(
         text: AppStrings.confirmCash,
-        onPressed: () => context.read<BookingCubit>().confirmCashPayment(booking.id),
+        onPressed: () =>
+            context.read<BookingCubit>().confirmCashPayment(booking.id),
         variant: AppButtonVariant.primary,
       );
     }

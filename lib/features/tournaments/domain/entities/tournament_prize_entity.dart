@@ -33,11 +33,5 @@ class TournamentPrizeEntity extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        id,
-        tournamentId,
-        placement,
-        rewards,
-        createdAt,
-      ];
+  List<Object?> get props => [id, tournamentId, placement, rewards, createdAt];
 }

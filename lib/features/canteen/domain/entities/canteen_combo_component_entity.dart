@@ -23,13 +23,13 @@ class CanteenComboComponentEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        comboId,
-        extraId,
-        quantity,
-        extraNameAr,
-        extraNameEn,
-        extraPrice,
-        extraCostPrice,
-        extraImageUrl,
-      ];
+    comboId,
+    extraId,
+    quantity,
+    extraNameAr,
+    extraNameEn,
+    extraPrice,
+    extraCostPrice,
+    extraImageUrl,
+  ];
 }

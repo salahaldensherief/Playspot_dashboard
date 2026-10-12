@@ -19,10 +19,7 @@ class DashboardSection {
 class DashboardSectionLayout extends StatelessWidget {
   final List<DashboardSection> sections;
 
-  const DashboardSectionLayout({
-    super.key,
-    required this.sections,
-  });
+  const DashboardSectionLayout({super.key, required this.sections});
 
   @override
   Widget build(BuildContext context) {
@@ -34,10 +31,12 @@ class DashboardSectionLayout extends StatelessWidget {
 
     if (!isDesktop && !isTablet) {
       final mobileItems = sortedSections
-          .map((s) => Padding(
-                padding: EdgeInsets.only(bottom: 16.h),
-                child: s.widget,
-              ))
+          .map(
+            (s) => Padding(
+              padding: EdgeInsets.only(bottom: 16.h),
+              child: s.widget,
+            ),
+          )
           .toList();
 
       return SliverList(
@@ -63,7 +62,8 @@ class DashboardSectionLayout extends StatelessWidget {
           ),
         );
         index++;
-      } else if (current.span == DashboardSpan.twoThirds || current.span == DashboardSpan.half) {
+      } else if (current.span == DashboardSpan.twoThirds ||
+          current.span == DashboardSpan.half) {
         // Collect consecutive split-screen pairs into unified left & right columns
         final List<Widget> leftWidgets = [];
         final List<Widget> rightWidgets = [];
@@ -87,7 +87,12 @@ class DashboardSectionLayout extends StatelessWidget {
         if (leftWidgets.isNotEmpty) {
           if (rightWidgets.isEmpty) {
             for (var w in leftWidgets) {
-              rows.add(Padding(padding: EdgeInsets.only(bottom: 16.h), child: w));
+              rows.add(
+                Padding(
+                  padding: EdgeInsets.only(bottom: 16.h),
+                  child: w,
+                ),
+              );
             }
           } else {
             rows.add(

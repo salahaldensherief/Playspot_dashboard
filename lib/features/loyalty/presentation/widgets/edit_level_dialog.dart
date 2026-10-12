@@ -11,11 +11,7 @@ class EditLevelDialog extends StatefulWidget {
   final LoyaltyLevelEntity level;
   final ValueChanged<LoyaltyLevelEntity> onSave;
 
-  const EditLevelDialog({
-    super.key,
-    required this.level,
-    required this.onSave,
-  });
+  const EditLevelDialog({super.key, required this.level, required this.onSave});
 
   @override
   State<EditLevelDialog> createState() => _EditLevelDialogState();
@@ -29,8 +25,12 @@ class _EditLevelDialogState extends State<EditLevelDialog> {
   @override
   void initState() {
     super.initState();
-    _minPointsController = TextEditingController(text: '${widget.level.minPoints}');
-    _multiplierController = TextEditingController(text: '${widget.level.multiplier}');
+    _minPointsController = TextEditingController(
+      text: '${widget.level.minPoints}',
+    );
+    _multiplierController = TextEditingController(
+      text: '${widget.level.multiplier}',
+    );
   }
 
   @override
@@ -42,8 +42,11 @@ class _EditLevelDialogState extends State<EditLevelDialog> {
 
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
-      final minPts = int.tryParse(_minPointsController.text) ?? widget.level.minPoints;
-      final mult = double.tryParse(_multiplierController.text) ?? widget.level.multiplier;
+      final minPts =
+          int.tryParse(_minPointsController.text) ?? widget.level.minPoints;
+      final mult =
+          double.tryParse(_multiplierController.text) ??
+          widget.level.multiplier;
 
       final updated = LoyaltyLevelEntity(
         id: widget.level.id,
@@ -74,10 +77,7 @@ class _EditLevelDialogState extends State<EditLevelDialog> {
           onPressed: () => Navigator.pop(context),
         ),
         SizedBox(width: 12.w),
-        AppButton(
-          text: AppStrings.saveChanges,
-          onPressed: _submit,
-        ),
+        AppButton(text: AppStrings.saveChanges, onPressed: _submit),
       ],
       child: Form(
         key: _formKey,
@@ -90,7 +90,8 @@ class _EditLevelDialogState extends State<EditLevelDialog> {
               label: AppStrings.minPoints,
               keyboardType: TextInputType.number,
               validator: (val) {
-                if (val == null || val.trim().isEmpty) return AppStrings.fieldRequired;
+                if (val == null || val.trim().isEmpty)
+                  return AppStrings.fieldRequired;
                 if (int.tryParse(val) == null) return AppStrings.invalidNumber;
                 return null;
               },
@@ -101,10 +102,14 @@ class _EditLevelDialogState extends State<EditLevelDialog> {
             AppTextField(
               controller: _multiplierController,
               label: AppStrings.levelMultiplier,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               validator: (val) {
-                if (val == null || val.trim().isEmpty) return AppStrings.fieldRequired;
-                if (double.tryParse(val) == null) return AppStrings.invalidNumber;
+                if (val == null || val.trim().isEmpty)
+                  return AppStrings.fieldRequired;
+                if (double.tryParse(val) == null)
+                  return AppStrings.invalidNumber;
                 return null;
               },
             ),

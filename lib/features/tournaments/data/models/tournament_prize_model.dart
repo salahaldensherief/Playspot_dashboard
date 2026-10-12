@@ -12,9 +12,14 @@ class TournamentPrizeModel extends TournamentPrizeEntity {
 
   factory TournamentPrizeModel.fromJson(Map<String, dynamic> json) {
     List<TournamentPrizeRewardModel> rewardsList = [];
-    if (json['tournament_prize_rewards'] != null && json['tournament_prize_rewards'] is List) {
+    if (json['tournament_prize_rewards'] != null &&
+        json['tournament_prize_rewards'] is List) {
       rewardsList = (json['tournament_prize_rewards'] as List)
-          .map((r) => TournamentPrizeRewardModel.fromJson(Map<String, dynamic>.from(r)))
+          .map(
+            (r) => TournamentPrizeRewardModel.fromJson(
+              Map<String, dynamic>.from(r),
+            ),
+          )
           .toList();
     }
 
@@ -32,7 +37,8 @@ class TournamentPrizeModel extends TournamentPrizeEntity {
   Map<String, dynamic> toJson() {
     return {
       if (id.isNotEmpty && !id.startsWith('temp_')) 'id': id,
-      if (tournamentId.isNotEmpty && !tournamentId.startsWith('temp_')) 'tournament_id': tournamentId,
+      if (tournamentId.isNotEmpty && !tournamentId.startsWith('temp_'))
+        'tournament_id': tournamentId,
       'placement': placement,
       'tournament_prize_rewards': rewards
           .map((r) => TournamentPrizeRewardModel.fromEntity(r).toJson())

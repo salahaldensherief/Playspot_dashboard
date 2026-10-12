@@ -14,9 +14,7 @@ void initAuditDI(GetIt sl) {
   );
 
   // Repository
-  sl.registerLazySingleton<AuditRepository>(
-    () => AuditRepositoryImpl(sl()),
-  );
+  sl.registerLazySingleton<AuditRepository>(() => AuditRepositoryImpl(sl()));
 
   // Use cases
   sl.registerLazySingleton(() => GetAuditLogsUsecase(sl()));
@@ -25,9 +23,7 @@ void initAuditDI(GetIt sl) {
 
   // Cubit
   sl.registerFactory(
-    () => AuditCubit(
-      getAuditLogsUsecase: sl(),
-      exportAuditLogsCsvUsecase: sl(),
-    ),
+    () =>
+        AuditCubit(getAuditLogsUsecase: sl(), exportAuditLogsCsvUsecase: sl()),
   );
 }

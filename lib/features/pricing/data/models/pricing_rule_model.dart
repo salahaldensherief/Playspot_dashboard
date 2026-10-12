@@ -54,9 +54,12 @@ class PricingRuleModel extends PricingRuleEntity {
       startDate: rawStartDate != null
           ? DateTime.tryParse(rawStartDate.toString())
           : null,
-      endDate: rawEndDate != null ? DateTime.tryParse(rawEndDate.toString()) : null,
+      endDate: rawEndDate != null
+          ? DateTime.tryParse(rawEndDate.toString())
+          : null,
       adjustmentType: (json['adjustment_type'] ?? 'multiplier').toString(),
-      adjustmentValue: (json['adjustment_value'] as num?)?.toDouble() ??
+      adjustmentValue:
+          (json['adjustment_value'] as num?)?.toDouble() ??
           (json['multiplier'] as num?)?.toDouble() ??
           1.0,
       isActive: json['is_active'] as bool? ?? true,

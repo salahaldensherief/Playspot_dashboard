@@ -22,8 +22,9 @@ class ReviewsRatingOverviewCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.starRating.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(16.r),
-            border:
-                Border.all(color: AppColors.starRating.withValues(alpha: 0.3)),
+            border: Border.all(
+              color: AppColors.starRating.withValues(alpha: 0.3),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -74,11 +75,17 @@ class ReviewsRatingOverviewCard extends StatelessWidget {
                 width: 40.w,
                 child: Row(
                   children: [
-                    AppText.body('$star',
-                        fontSize: 11.sp, color: AppColors.textSecondary),
+                    AppText.body(
+                      '$star',
+                      fontSize: 11.sp,
+                      color: AppColors.textSecondary,
+                    ),
                     SizedBox(width: 2.w),
-                    Icon(Icons.star_rounded,
-                        size: 12.r, color: AppColors.starRating),
+                    Icon(
+                      Icons.star_rounded,
+                      size: 12.r,
+                      color: AppColors.starRating,
+                    ),
                   ],
                 ),
               ),

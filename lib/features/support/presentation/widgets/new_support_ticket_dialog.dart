@@ -35,7 +35,10 @@ class _NewSupportTicketDialogState extends State<NewSupportTicketDialog> {
       if (mounted && success) Navigator.of(context).pop(true);
       if (mounted && !success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.actionFailed), backgroundColor: AppColors.danger),
+          SnackBar(
+            content: Text(AppStrings.actionFailed),
+            backgroundColor: AppColors.danger,
+          ),
         );
       }
     } finally {
@@ -73,15 +76,31 @@ class _NewSupportTicketDialogState extends State<NewSupportTicketDialog> {
               labelText: AppStrings.issueType,
               filled: true,
               fillColor: AppColors.scaffoldBackground,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
             ),
             items: [
-              DropdownMenuItem(value: 'general', child: Text(AppStrings.issueCategoryGeneral)),
-              DropdownMenuItem(value: 'booking', child: Text(AppStrings.issueCategoryBooking)),
-              DropdownMenuItem(value: 'payment', child: Text(AppStrings.issueCategoryPayment)),
-              DropdownMenuItem(value: 'technical', child: Text(AppStrings.issueCategoryTechnical)),
+              DropdownMenuItem(
+                value: 'general',
+                child: Text(AppStrings.issueCategoryGeneral),
+              ),
+              DropdownMenuItem(
+                value: 'booking',
+                child: Text(AppStrings.issueCategoryBooking),
+              ),
+              DropdownMenuItem(
+                value: 'payment',
+                child: Text(AppStrings.issueCategoryPayment),
+              ),
+              DropdownMenuItem(
+                value: 'technical',
+                child: Text(AppStrings.issueCategoryTechnical),
+              ),
             ],
-            onChanged: _submitting ? null : (value) => setState(() => _issueType = value ?? 'general'),
+            onChanged: _submitting
+                ? null
+                : (value) => setState(() => _issueType = value ?? 'general'),
           ),
           SizedBox(height: 16.h),
           TextField(
@@ -93,7 +112,9 @@ class _NewSupportTicketDialogState extends State<NewSupportTicketDialog> {
               labelText: AppStrings.message,
               filled: true,
               fillColor: AppColors.scaffoldBackground,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
             ),
           ),
         ],

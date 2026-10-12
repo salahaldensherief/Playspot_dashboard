@@ -55,14 +55,14 @@ class SupportState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        actionStatus,
-        settings,
-        policies,
-        faqs,
-        tickets,
-        activeTicketFilter,
-        errorMessage,
-        successMessage,
-      ];
+    status,
+    actionStatus,
+    settings,
+    policies,
+    faqs,
+    tickets,
+    activeTicketFilter,
+    errorMessage,
+    successMessage,
+  ];
 }

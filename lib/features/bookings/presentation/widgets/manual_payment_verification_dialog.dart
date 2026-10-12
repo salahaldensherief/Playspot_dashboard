@@ -239,9 +239,7 @@ class _ManualPaymentVerificationDialogState
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Container(
         width: dialogWidth,
-        constraints: BoxConstraints(
-          maxHeight: screenSize.height * 0.88,
-        ),
+        constraints: BoxConstraints(maxHeight: screenSize.height * 0.88),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
