@@ -15,7 +15,9 @@ class SessionTimeBuilder extends StatelessWidget {
       return SessionClockHost(child: SessionTimeBuilder(builder: builder));
     }
     final ticker = scope.notifier!;
-    if (!TickerMode.of(context)) return builder(context, ticker.now);
+    if (!TickerMode.valuesOf(context).enabled) {
+      return builder(context, ticker.now);
+    }
     return AnimatedBuilder(
       animation: ticker,
       builder: (context, child) => builder(context, ticker.now),

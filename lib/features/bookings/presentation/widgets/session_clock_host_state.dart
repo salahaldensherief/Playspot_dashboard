@@ -18,7 +18,7 @@ class _SessionClockHostState extends State<SessionClockHost>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _visible = TickerMode.of(context);
+    _visible = TickerMode.valuesOf(context).enabled;
     _hasParentClock =
         widget.clock == null &&
         context.getInheritedWidgetOfExactType<SessionTickerScope>() != null;
