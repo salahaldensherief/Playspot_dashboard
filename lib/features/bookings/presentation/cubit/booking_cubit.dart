@@ -203,7 +203,7 @@ class BookingCubit extends Cubit<BookingState>
     try {
       final result = await action();
       if (isClosed || scopeVersion != _scopeVersion) return false;
-      return result.fold(
+      return result.fold<bool>(
         (failure) {
           AppLogger.warning('$actionName failed');
           emit(
