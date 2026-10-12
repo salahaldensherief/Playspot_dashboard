@@ -30,8 +30,9 @@ class LoungeCubit extends Cubit<LoungeState> {
     if (!forceRefresh && state.status == LoungeStatus.loading) return;
     if (!forceRefresh &&
         state.status == LoungeStatus.success &&
-        state.lounges.isNotEmpty)
+        state.lounges.isNotEmpty) {
       return;
+    }
 
     emit(state.copyWith(status: LoungeStatus.loading, clearError: true));
     final result = (ownerId != null && ownerId.isNotEmpty)

@@ -698,8 +698,7 @@ class AppStrings {
 
   static String get attachedPaymentReceiptLabel =>
       'attached_payment_receipt_label'.tr();
-  static String get paymentTransferReceipt =>
-      'payment_transfer_receipt'.tr();
+  static String get paymentTransferReceipt => 'payment_transfer_receipt'.tr();
   static String get zoomPaymentReceipt => 'zoom_payment_receipt'.tr();
   static String get requestApproved => 'request_approved'.tr();
   static String get requestRejected => 'request_rejected'.tr();

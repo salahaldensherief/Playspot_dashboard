@@ -147,11 +147,13 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
                     label: AppStrings.pointsCost,
                     keyboardType: TextInputType.number,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty)
+                      if (v == null || v.trim().isEmpty) {
                         return AppStrings.fieldRequired;
+                      }
                       final val = int.tryParse(v.trim());
-                      if (val == null || val <= 0)
+                      if (val == null || val <= 0) {
                         return AppStrings.invalidNumber;
+                      }
                       return null;
                     },
                   ),
@@ -217,8 +219,9 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
                 label: AppStrings.rewardValue,
                 keyboardType: TextInputType.number,
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty)
+                  if (v == null || v.trim().isEmpty) {
                     return AppStrings.fieldRequired;
+                  }
                   final val = double.tryParse(v.trim());
                   if (val == null || val < 0) return AppStrings.invalidNumber;
                   return null;

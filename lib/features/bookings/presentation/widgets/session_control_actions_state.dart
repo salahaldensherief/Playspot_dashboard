@@ -7,8 +7,9 @@ class _SessionControlActionsState extends State<SessionControlActions> {
 
   bool _allowed(String capability) {
     if (context.read<LoginCubit?>() == null ||
-        context.read<PermissionsCubit?>() == null)
+        context.read<PermissionsCubit?>() == null) {
       return false;
+    }
     return context.hasPermission(capability);
   }
 
@@ -22,10 +23,12 @@ class _SessionControlActionsState extends State<SessionControlActions> {
       final bookings = context.read<BookingCubit>();
       final loungeId = widget.booking.loungeId;
       final success = await action();
-      if (success && mounted)
+      if (success && mounted) {
         bookings.startWatchingBookings(loungeId: loungeId, forceRefresh: true);
-      if (mounted)
+      }
+      if (mounted) {
         setState(() => _error = success ? null : 'cashier.actionFailed'.tr());
+      }
     } catch (_) {
       if (mounted) setState(() => _error = 'cashier.actionFailed'.tr());
     } finally {

@@ -334,8 +334,9 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
           await shiftCubit.openShift(loungeId, startingCash);
           if (diagContext.mounted &&
               shiftCubit.state.activeShift != null &&
-              shiftCubit.state.status != ShiftStatus.error)
+              shiftCubit.state.status != ShiftStatus.error) {
             Navigator.pop(diagContext);
+          }
         },
       ),
     );

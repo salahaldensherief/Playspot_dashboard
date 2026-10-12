@@ -64,8 +64,9 @@ class ShiftCubit extends Cubit<ShiftState> {
     final result = await getLoungeLiveShiftOverviewUseCase(loungeId);
     if (isClosed ||
         generation != _overviewGeneration ||
-        (_loungeScope != null && _loungeScope != loungeId))
+        (_loungeScope != null && _loungeScope != loungeId)) {
       return;
+    }
 
     result.fold(
       (failure) => emit(

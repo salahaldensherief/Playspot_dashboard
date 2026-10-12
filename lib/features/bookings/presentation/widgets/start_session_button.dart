@@ -92,8 +92,9 @@ class _StartSessionButtonState extends State<StartSessionButton> {
 
   bool get _isStartTimeReached {
     final start = _bookingStartTime;
-    if (start == null)
+    if (start == null) {
       return true; // Default to enabled if no date/time provided
+    }
     final now = DateTime.now();
     final earlyAllowedStart = start.subtract(const Duration(minutes: 15));
     return now.isAfter(earlyAllowedStart) ||

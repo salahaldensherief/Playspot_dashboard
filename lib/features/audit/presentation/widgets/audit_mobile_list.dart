@@ -2,7 +2,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'audit_labels.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../domain/entities/audit_log_entity.dart';
 import 'audit_event_details_dialog.dart';

@@ -357,13 +357,14 @@ class _CategoriesScreenState extends State<CategoriesScreen>
     return BlocBuilder<CategoryCubit, CategoryState>(
       builder: (context, state) {
         if (state.status.isLoading) return const TableShimmer(columns: 1);
-        if (state.cities.isEmpty)
+        if (state.cities.isEmpty) {
           return Center(
             child: Text(
               AppStrings.noCitiesFound,
               style: const TextStyle(color: AppColors.textSecondary),
             ),
           );
+        }
 
         return ListView.separated(
           itemCount: state.cities.length,

@@ -9,7 +9,11 @@ class LiveFeedHeader extends StatelessWidget {
   final int activeCount;
   final bool isLoading;
 
-  const LiveFeedHeader({required this.activeCount, required this.isLoading});
+  const LiveFeedHeader({
+    super.key,
+    required this.activeCount,
+    required this.isLoading,
+  });
 
   @override
   Widget build(BuildContext context) {

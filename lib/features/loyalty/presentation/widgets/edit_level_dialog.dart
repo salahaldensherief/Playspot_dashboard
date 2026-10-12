@@ -90,8 +90,9 @@ class _EditLevelDialogState extends State<EditLevelDialog> {
               label: AppStrings.minPoints,
               keyboardType: TextInputType.number,
               validator: (val) {
-                if (val == null || val.trim().isEmpty)
+                if (val == null || val.trim().isEmpty) {
                   return AppStrings.fieldRequired;
+                }
                 if (int.tryParse(val) == null) return AppStrings.invalidNumber;
                 return null;
               },
@@ -106,10 +107,12 @@ class _EditLevelDialogState extends State<EditLevelDialog> {
                 decimal: true,
               ),
               validator: (val) {
-                if (val == null || val.trim().isEmpty)
+                if (val == null || val.trim().isEmpty) {
                   return AppStrings.fieldRequired;
-                if (double.tryParse(val) == null)
+                }
+                if (double.tryParse(val) == null) {
                   return AppStrings.invalidNumber;
+                }
                 return null;
               },
             ),

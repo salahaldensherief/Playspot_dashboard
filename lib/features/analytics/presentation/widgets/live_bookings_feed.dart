@@ -55,11 +55,12 @@ class LiveBookingsFeed extends StatelessWidget {
                     onPressed: () {
                       final cubit = context.read<BookingCubit>();
                       final scope = cubit.watchedEntityId;
-                      if (scope != null)
+                      if (scope != null) {
                         cubit.startWatchingBookings(
                           loungeId: scope == 'all' ? null : scope,
                           forceRefresh: true,
                         );
+                      }
                     },
                   ),
                 ] else

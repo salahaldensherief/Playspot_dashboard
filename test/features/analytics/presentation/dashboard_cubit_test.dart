@@ -83,8 +83,9 @@ class FakeDashboardRepository implements DashboardRepository {
     String? customerPhone,
     String playMode = 'single',
   }) async {
-    if (shouldFail)
+    if (shouldFail) {
       return const Left(ServerFailure('Failed to start open time'));
+    }
     return const Right({'booking_id': 'b_open_1', 'status': 'in_progress'});
   }
 

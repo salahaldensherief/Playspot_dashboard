@@ -43,7 +43,7 @@ void main() {
           child: Builder(
             builder: (context) => ScreenUtilInit(
               designSize: const Size(1440, 1024),
-              builder: (_, __) => MaterialApp(
+              builder: (_, _) => MaterialApp(
                 locale: context.locale,
                 supportedLocales: context.supportedLocales,
                 localizationsDelegates: context.localizationDelegates,

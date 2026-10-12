@@ -196,10 +196,12 @@ class _AdjustUserPointsDialogState extends State<AdjustUserPointsDialog> {
               hintText: AppStrings.pointsDeltaHint,
               keyboardType: const TextInputType.numberWithOptions(signed: true),
               validator: (val) {
-                if (val == null || val.trim().isEmpty)
+                if (val == null || val.trim().isEmpty) {
                   return AppStrings.fieldRequired;
-                if (int.tryParse(val.trim()) == null)
+                }
+                if (int.tryParse(val.trim()) == null) {
                   return AppStrings.invalidNumber;
+                }
                 return null;
               },
             ),

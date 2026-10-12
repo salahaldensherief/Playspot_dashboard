@@ -71,8 +71,9 @@ class _DashboardShellState extends State<DashboardShell> {
       _permissionRole(user),
       user.id,
       loungeId,
-    ))
+    )) {
       return;
+    }
     await permissionsCubit.ensureUserPermissions(
       _permissionRole(user),
       loungeId: loungeId,

@@ -244,11 +244,12 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
         final rawPath = res['receipt_url'].toString().trim();
         if (rawPath.isNotEmpty && rawPath != 'null') {
           if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
-            if (mounted)
+            if (mounted) {
               setState(() {
                 _receiptUrl = rawPath;
                 _isLoading = false;
               });
+            }
             return;
           }
           final bucketsToTry = [
@@ -274,11 +275,12 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                     .from(bucket)
                     .createSignedUrl(p, 3600);
                 if (url.isNotEmpty && !url.contains('error')) {
-                  if (mounted)
+                  if (mounted) {
                     setState(() {
                       _receiptUrl = url;
                       _isLoading = false;
                     });
+                  }
                   return;
                 }
               } catch (e) {
@@ -314,8 +316,9 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
       );
     }
 
-    if (_receiptUrl == null || _receiptUrl!.isEmpty)
+    if (_receiptUrl == null || _receiptUrl!.isEmpty) {
       return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,7 +368,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                         child: Image.network(
                           _receiptUrl!,
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) =>
+                          errorBuilder: (_, _, _) =>
                               const Icon(Icons.broken_image, color: Colors.red),
                         ),
                       ),
@@ -392,7 +395,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                     child: Image.network(
                       _receiptUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Center(
+                      errorBuilder: (_, _, _) => const Center(
                         child: Icon(Icons.broken_image, color: Colors.red),
                       ),
                     ),

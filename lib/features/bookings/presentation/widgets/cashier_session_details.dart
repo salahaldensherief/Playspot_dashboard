@@ -31,10 +31,7 @@ class CashierSessionDetails extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          CashierSessionHeader(
-            roomName: booking.roomName,
-            onManage: onManage,
-          ),
+          CashierSessionHeader(roomName: booking.roomName, onManage: onManage),
           const Divider(),
           OperationsSection(
             title: 'cashier.sessionSection'.tr(),

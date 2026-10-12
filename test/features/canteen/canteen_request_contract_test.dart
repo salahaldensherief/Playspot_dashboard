@@ -62,8 +62,9 @@ void main() {
       await source.deleteCombo('combo');
       await source.deleteUpsellRule('rule');
       expect(requests.map((r) => r.method), ['POST', 'POST']);
-      for (final request in requests)
+      for (final request in requests) {
         expect(request.url.path, '/rest/v1/rpc/archive_canteen_catalogue_item');
+      }
       expect(jsonDecode(requests[0].body), {
         'p_kind': 'combo',
         'p_id': 'combo',

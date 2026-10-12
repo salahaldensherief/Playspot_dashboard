@@ -5,8 +5,9 @@ class _SessionRequestActionsState extends State<SessionRequestActions> {
   String? _error;
   bool get _allowed {
     if (context.read<LoginCubit?>() == null ||
-        context.read<PermissionsCubit?>() == null)
+        context.read<PermissionsCubit?>() == null) {
       return false;
+    }
     return context.hasPermission('sessions_control');
   }
 
