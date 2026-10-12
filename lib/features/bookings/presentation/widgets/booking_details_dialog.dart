@@ -80,9 +80,7 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
 
   double get _discountValue => double.tryParse(_discountController.text) ?? 0.0;
 
-  Future<void> _handleConfirmPayment(
-    Booking activeBooking,
-  ) async {
+  Future<void> _handleConfirmPayment(Booking activeBooking) async {
     if (_isConfirmingPayment) return;
     final user = context.read<LoginCubit>().state.user;
     final isCashier = user?.isCashier == true;
