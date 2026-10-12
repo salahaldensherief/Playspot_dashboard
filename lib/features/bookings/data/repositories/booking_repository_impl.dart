@@ -378,11 +378,13 @@ class BookingRepositoryImpl implements BookingRepository {
   String _mapBookingErrorMessage(String message) {
     final clean = message.toLowerCase();
     if (clean.contains('no_open_shift')) return 'booking_requires_open_shift';
-    if (clean.contains('payment_required_before_session_start'))
+    if (clean.contains('payment_required_before_session_start')) {
       return 'booking_payment_required_before_start';
+    }
     if (clean.contains('booking_not_startable') ||
-        clean.contains('not startable from current status'))
+        clean.contains('not startable from current status')) {
       return 'booking_not_startable';
+    }
     if (clean.contains('room_has_active_session')) {
       return 'room_has_active_session';
     }
