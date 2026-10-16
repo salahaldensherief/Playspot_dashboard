@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_empty_state_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
+import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
 import '../../../lounges/presentation/cubit/extras_cubit.dart';
 import '../canteen_cubit.dart';
 import '../canteen_state.dart';
@@ -37,6 +38,7 @@ class CanteenUpsellTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
+    final canManage = context.hasPermission('menu_manage_items');
     return BlocBuilder<CanteenCubit, CanteenState>(
       buildWhen: (prev, curr) =>
           prev.status != curr.status ||
@@ -132,11 +134,12 @@ class CanteenUpsellTab extends StatelessWidget {
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.bold,
                 ),
-                AppButton(
-                  text: AppStrings.addUpsellRule,
-                  icon: Icons.add,
-                  onPressed: () => _openAddModal(context),
-                ),
+                if (canManage)
+                  AppButton(
+                    text: AppStrings.addUpsellRule,
+                    icon: Icons.add,
+                    onPressed: () => _openAddModal(context),
+                  ),
               ],
             ),
             SizedBox(height: 16.h),
@@ -148,8 +151,10 @@ class CanteenUpsellTab extends StatelessWidget {
                   title: 'upsell_rules_empty_title'.tr(),
                   subtitle: 'upsell_rules_empty_description'.tr(),
                   icon: Icons.lightbulb_outline,
-                  actionText: AppStrings.addUpsellRule,
-                  onActionTextPressed: () => _openAddModal(context),
+                  actionText: canManage ? AppStrings.addUpsellRule : null,
+                  onActionTextPressed: canManage
+                      ? () => _openAddModal(context)
+                      : null,
                 ),
               )
             else
@@ -175,6 +180,7 @@ class CanteenUpsellTab extends StatelessWidget {
                       final extrasCubit = context.read<ExtrasCubit>();
 
                       return UpsellRuleCard(
+                        canManage: canManage,
                         rule: rule,
                         conversion: conv,
                         onToggleActive: (_) =>
