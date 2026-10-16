@@ -277,7 +277,20 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
       );
       return;
     }
-    final timeFormat = RegExp(r'^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?
+    final timeFormat = RegExp(r'^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$');
+    if (fromInput.isNotEmpty &&
+        (!timeFormat.hasMatch(fromInput) || !timeFormat.hasMatch(toInput))) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('combo_invalid_time_format'.tr()),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final price = double.tryParse(_priceController.text.trim()) ?? 0.0;
+    if (price <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppStrings.bundlePrice),
