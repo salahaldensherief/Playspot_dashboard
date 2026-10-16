@@ -16,6 +16,7 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState>
   final AudioService audioService;
 
   final Set<String> _knownRequestIds = {};
+  final Set<String> _pendingAttendanceIds = {};
   bool _isFirstLoad = true;
   int _requestGeneration = 0;
   int _scopeGeneration = 0;
@@ -131,6 +132,7 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState>
     cancelRealtimeSubscription();
     _isFirstLoad = true;
     _knownRequestIds.clear();
+    _pendingAttendanceIds.clear();
     audioService.stopUrgentAlertSound();
     if (!isClosed) emit(const ClientRequestsState());
   }
@@ -185,7 +187,7 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState>
     String requestId, {
     bool isCanteenOrder = false,
   }) async {
-    if (isClosed) return;
+    if (isClosed || _pendingAttendanceIds.contains(requestId)) return;
     final scope = _scopeGeneration;
     if (requestId.isEmpty || requestId.startsWith('notif_')) {
       AppLogger.debug(
@@ -207,15 +209,20 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState>
       return;
     }
 
-    final originalList = List<ClientRequestEntity>.from(state.requests);
+    ClientRequestEntity? originalRequest;
+    ClientRequestEntity? optimisticRequest;
 
     final updatedList = state.requests.map((r) {
       if (r.id == requestId) {
-        return r.copyWith(isAttended: true, isRead: true);
+        originalRequest = r;
+        final attended = r.copyWith(isAttended: true, isRead: true);
+        optimisticRequest = attended;
+        return attended;
       }
       return r;
     }).toList();
 
+    _pendingAttendanceIds.add(requestId);
     emit(state.copyWith(requests: updatedList));
 
     if (updatedList.where((r) => !r.isAttended).isEmpty) {
@@ -230,6 +237,7 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState>
     );
 
     if (isClosed || scope != _scopeGeneration) return;
+    _pendingAttendanceIds.remove(requestId);
 
     result.fold(
       (failure) {
@@ -240,7 +248,12 @@ class ClientRequestsCubit extends Cubit<ClientRequestsState>
           state.copyWith(
             status: ClientRequestsStatus.failure,
             errorMessage: failure.message,
-            requests: originalList,
+            requests: state.requests.map((request) {
+              final original = originalRequest;
+              return original != null && identical(request, optimisticRequest)
+                  ? original
+                  : request;
+            }).toList(),
           ),
         );
       },
