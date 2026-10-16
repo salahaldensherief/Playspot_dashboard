@@ -96,69 +96,11 @@ class SessionOperationsRemoteHelper {
         ? rawId.substring(4)
         : rawId;
     final uuidRegExp = RegExp(
-      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}
-  }
-
-  Future<void> handleClientRequestAction({
-    required String requestId,
-    required bool isCanteenOrder,
-    required bool approve,
-    String? bookingId,
-    int? extensionMinutes,
-    List<Map<String, dynamic>>? extraItems,
-    double? extraCost,
-  }) async {
-    if (bookingId != null && bookingId.isNotEmpty && approve) {
-      if (extensionMinutes != null && extensionMinutes > 0) {
-        await extendSession(
-          bookingId,
-          extensionMinutes,
-          additionalCost: extraCost,
-        );
-      }
-      if (extraItems != null && extraItems.isNotEmpty) {
-        await addExtrasToSession(bookingId, extraItems, extraCost ?? 0.0);
-      }
-    }
-
-    if (requestId.startsWith('ext_')) {
-      return;
-    }
-
-    final uuidRegExp = RegExp(
       r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
     );
-    final match = uuidRegExp.firstMatch(requestId);
-    if (match == null) {
-      throw ArgumentError.value(
-        requestId,
-        'requestId',
-        'Request id must contain a UUID',
-      );
-    }
-
-    final requestType = switch (requestId) {
-      final value when value.startsWith('canteen_') => 'canteen_order',
-      final value when value.startsWith('sc_') => 'service_call',
-      final value when value.startsWith('req_') => 'client_request',
-      _ when isCanteenOrder => 'canteen_order',
-      _ => throw ArgumentError.value(
-        requestId,
-        'requestId',
-        'Unsupported live-request identifier',
-      ),
-    };
-
-    await supabaseClient.rpc(
-      'resolve_live_request',
-      params: {'p_request_type': requestType, 'p_request_id': match.group(0)!},
-    );
-  }
-}
-,
-    );
-    if (!uuidRegExp.hasMatch(cleanBookingId)) {
-      throw FormatException('Invalid booking UUID for extension review');
+    final match = uuidRegExp.firstMatch(cleanBookingId);
+    if (match == null || match.group(0) != cleanBookingId) {
+      throw const FormatException('Invalid booking UUID for extension review');
     }
 
     final response = isApproved
