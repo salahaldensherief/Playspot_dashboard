@@ -2030,5 +2030,8 @@
   "tournament_refund_pending": "Refund pending",
   "tournament_payment_unknown": "Unknown payment status",
   "complete_tournament": "Complete tournament",
-  "award_tournament_prizes": "Award prizes"
+  "award_tournament_prizes": "Award prizes",
+  "combo_date_unlimited": "No date limit",
+  "combo_clear_date": "Clear date",
+  "combo_invalid_date_range": "The offer end date must be on or after the start date."
 }
