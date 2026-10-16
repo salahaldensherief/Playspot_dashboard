@@ -95,7 +95,7 @@ void main() {
         client.dispose();
       }
     }
-  }
+  });
 
   test('reject extension sends canonical booking ID and reason', () async {
     final calls = <http.Request>[];
