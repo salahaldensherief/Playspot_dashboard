@@ -181,40 +181,48 @@ class UpsellRuleCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildMetricColumn(
-                  AppStrings.impressionsCount,
-                  '$impressions',
-                  AppColors.textSecondary,
+                Expanded(
+                  child: _buildMetricColumn(
+                    AppStrings.impressionsCount,
+                    '$impressions',
+                    AppColors.textSecondary,
+                  ),
                 ),
                 Container(
                   width: 1.w,
                   height: 28.h,
                   color: AppColors.borderDefault,
                 ),
-                _buildMetricColumn(
-                  AppStrings.conversionsCount,
-                  '$conversionsCount',
-                  AppColors.success,
+                Expanded(
+                  child: _buildMetricColumn(
+                    AppStrings.conversionsCount,
+                    '$conversionsCount',
+                    AppColors.success,
+                  ),
                 ),
                 Container(
                   width: 1.w,
                   height: 28.h,
                   color: AppColors.borderDefault,
                 ),
-                _buildMetricColumn(
-                  AppStrings.conversionRate,
-                  '${conversionRate.toStringAsFixed(1)}%',
-                  AppColors.primary,
+                Expanded(
+                  child: _buildMetricColumn(
+                    AppStrings.conversionRate,
+                    '${conversionRate.toStringAsFixed(1)}%',
+                    AppColors.primary,
+                  ),
                 ),
                 Container(
                   width: 1.w,
                   height: 28.h,
                   color: AppColors.borderDefault,
                 ),
-                _buildMetricColumn(
-                  AppStrings.revenueGenerated,
-                  '${revenue.toStringAsFixed(0)} ${AppStrings.egp}',
-                  AppColors.warning,
+                Expanded(
+                  child: _buildMetricColumn(
+                    AppStrings.revenueGenerated,
+                    '${revenue.toStringAsFixed(0)} ${AppStrings.egp}',
+                    AppColors.warning,
+                  ),
                 ),
               ],
             ),
@@ -228,16 +236,20 @@ class UpsellRuleCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              AppText.body(
-                'upsell_priority_limits'.tr(
+              Expanded(
+                child: AppText.body(
+                  'upsell_priority_limits'.tr(
                   args: [
                     (AppStrings.priority).toString(),
                     (rule.priority).toString(),
                     (rule.maxImpressionsPerBooking).toString(),
                   ],
                 ),
-                fontSize: 11.sp,
-                color: AppColors.textMuted,
+                  fontSize: 11.sp,
+                  color: AppColors.textMuted,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               if (canManage)
                 Row(
@@ -280,13 +292,22 @@ class UpsellRuleCard extends StatelessWidget {
   Widget _buildMetricColumn(String label, String value, Color valueColor) {
     return Column(
       children: [
-        AppText.body(label, fontSize: 10.sp, color: AppColors.textMuted),
+        AppText.body(
+          label,
+          fontSize: 10.sp,
+          color: AppColors.textMuted,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+        ),
         SizedBox(height: 2.h),
         AppText.body(
           value,
           fontSize: 12.sp,
           color: valueColor,
           fontWeight: FontWeight.bold,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
