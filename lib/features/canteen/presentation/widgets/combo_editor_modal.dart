@@ -277,7 +277,7 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
       );
       return;
     }
-    final timeFormat = RegExp(r'^([01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d)?
+    final timeFormat = RegExp(r'^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppStrings.bundlePrice),
