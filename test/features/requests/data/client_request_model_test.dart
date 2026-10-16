@@ -82,6 +82,35 @@ void main() {
       expect(model.metadata.items.first['current_duration'], 120);
     });
 
+    test('extension RPC display id never replaces canonical booking id', () {
+      const bookingId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+      final model = ClientRequestModel.fromBookingExtensionJson({
+        'id': 'ext_$bookingId',
+        'booking_id': bookingId,
+        'lounge_id': 'lounge-01',
+        'requested_minutes': 30,
+        'status': 'pending',
+        'created_at': '2026-10-16T12:00:00Z',
+      });
+      expect(model.id, 'ext_$bookingId');
+      expect(model.bookingId, bookingId);
+      expect(model.metadata.bookingId, bookingId);
+      expect(model.metadata.items.single['requested_minutes'], 30);
+      expect(model.isAttended, isFalse);
+    });
+
+    test('legacy extension rows with only display id normalize safely', () {
+      const bookingId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+      final model = ClientRequestModel.fromBookingExtensionJson({
+        'id': 'ext_$bookingId',
+        'lounge_id': 'lounge-01',
+        'requested_extension_minutes': 45,
+        'created_at': '2026-10-16T12:00:00Z',
+      });
+      expect(model.bookingId, bookingId);
+      expect(model.metadata.bookingId, bookingId);
+    });
+
     test(
       'fromBookingItemJson handles bookings when returned as List or Map',
       () {

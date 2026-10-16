@@ -247,11 +247,19 @@ class ClientRequestParser {
 
     final String rawId = (json['id'] ?? '').toString();
     final String reqId = rawId.startsWith('ext_') ? rawId : 'ext_$rawId';
+    // The pending-extension RPC returns a display id (ext_<uuid>) AND
+    // the canonical booking_id. Never pass the display id to booking RPCs.
+    final String rawBookingId = (json['booking_id'] ?? '').toString();
+    final String bookingId = rawBookingId.isNotEmpty
+        ? (rawBookingId.startsWith('ext_')
+              ? rawBookingId.substring(4)
+              : rawBookingId)
+        : (rawId.startsWith('ext_') ? rawId.substring(4) : rawId);
 
     return ClientRequestModel(
       id: reqId,
       loungeId: (json['lounge_id'] ?? json['loungeId'] ?? '').toString(),
-      bookingId: json['id']?.toString(),
+      bookingId: bookingId,
       userId: json['user_id']?.toString(),
       userName: userName,
       userPhone: (json['user_phone'] ?? json['userPhone'] ?? json['phone'])
@@ -273,7 +281,7 @@ class ClientRequestParser {
                 ? DateTime.parse(json['created_at'].toString())
                 : DateTime.now()),
       metadata: NotificationMetadata(
-        bookingId: json['id']?.toString(),
+        bookingId: bookingId,
         roomId: (json['room_id'] ?? json['roomId'])?.toString(),
         roomName: roomName,
         userName: userName,
