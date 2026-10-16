@@ -2030,5 +2030,8 @@
   "tournament_refund_pending": "استرداد الرسوم قيد الانتظار",
   "tournament_payment_unknown": "حالة دفع غير معروفة",
   "complete_tournament": "إنهاء البطولة",
-  "award_tournament_prizes": "توزيع الجوائز"
+  "award_tournament_prizes": "توزيع الجوائز",
+  "combo_date_unlimited": "بدون حد زمني",
+  "combo_clear_date": "إزالة التاريخ",
+  "combo_invalid_date_range": "تاريخ نهاية العرض لازم يكون بعد أو مساوي لتاريخ البداية."
 }
