@@ -43,7 +43,7 @@ class TournamentMatchRemoteHelper {
           .order('round_number', ascending: true)
           .order('match_order', ascending: true);
 
-      return _matchesWithNames(response as List, tournamentId);
+      return await _matchesWithNames(response as List, tournamentId);
     } on PostgrestException catch (e) {
       // Older schemas may lack the embedded relationship. Permission and
       // transport failures are not evidence that the tournament is empty.
