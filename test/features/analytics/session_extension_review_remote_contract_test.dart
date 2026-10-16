@@ -9,62 +9,66 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 void main() {
   const bookingId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 
-  test('approve extension sends canonical booking UUID and requires success', () async {
-    final calls = <http.Request>[];
-    final client = SupabaseClient(
-      'https://example.invalid',
-      'fixture-public-key',
-      httpClient: MockClient((request) async {
-        calls.add(request);
-        return http.Response(
-          jsonEncode({'success': true, 'status': 'approved'}),
-          200,
-          request: request,
-          headers: {'content-type': 'application/json'},
-        );
-      }),
-    );
-    addTearDown(client.dispose);
-
-    await SessionOperationsRemoteHelper(client).reviewExtensionRequest(
-      bookingId: 'ext_$bookingId',
-      isApproved: true,
-    );
-    expect(calls, hasLength(1));
-    expect(calls.single.url.path, '/rest/v1/rpc/approve_booking_extension');
-    expect(jsonDecode(calls.single.body), {
-      'p_booking_id': bookingId,
-      'p_additional_cost': null,
-    });
-  });
-
-  test('malformed extension booking ID cannot return success without a call', () async {
-    final calls = <http.Request>[];
-    final client = SupabaseClient(
-      'https://example.invalid',
-      'fixture-public-key',
-      httpClient: MockClient((request) async {
-        calls.add(request);
-        return http.Response(
-          jsonEncode({'success': true}),
-          200,
-          headers: {'content-type': 'application/json'},
-        );
-      }),
-    );
-    addTearDown(client.dispose);
-
-    for (final invalid in ['not-a-booking', 'prefix_$bookingId-extra']) {
-      await expectLater(
-        SessionOperationsRemoteHelper(client).reviewExtensionRequest(
-          bookingId: invalid,
-          isApproved: true,
-        ),
-        throwsFormatException,
+  test(
+    'approve extension sends canonical booking UUID and requires success',
+    () async {
+      final calls = <http.Request>[];
+      final client = SupabaseClient(
+        'https://example.invalid',
+        'fixture-public-key',
+        httpClient: MockClient((request) async {
+          calls.add(request);
+          return http.Response(
+            jsonEncode({'success': true, 'status': 'approved'}),
+            200,
+            request: request,
+            headers: {'content-type': 'application/json'},
+          );
+        }),
       );
-    }
-    expect(calls, isEmpty);
-  });
+      addTearDown(client.dispose);
+
+      await SessionOperationsRemoteHelper(
+        client,
+      ).reviewExtensionRequest(bookingId: 'ext_$bookingId', isApproved: true);
+      expect(calls, hasLength(1));
+      expect(calls.single.url.path, '/rest/v1/rpc/approve_booking_extension');
+      expect(jsonDecode(calls.single.body), {
+        'p_booking_id': bookingId,
+        'p_additional_cost': null,
+      });
+    },
+  );
+
+  test(
+    'malformed extension booking ID cannot return success without a call',
+    () async {
+      final calls = <http.Request>[];
+      final client = SupabaseClient(
+        'https://example.invalid',
+        'fixture-public-key',
+        httpClient: MockClient((request) async {
+          calls.add(request);
+          return http.Response(
+            jsonEncode({'success': true}),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }),
+      );
+      addTearDown(client.dispose);
+
+      for (final invalid in ['not-a-booking', 'prefix_$bookingId-extra']) {
+        await expectLater(
+          SessionOperationsRemoteHelper(
+            client,
+          ).reviewExtensionRequest(bookingId: invalid, isApproved: true),
+          throwsFormatException,
+        );
+      }
+      expect(calls, isEmpty);
+    },
+  );
 
   test('rejected or missing backend acknowledgement is a failure', () async {
     for (final body in [
@@ -85,10 +89,9 @@ void main() {
       );
       try {
         await expectLater(
-          SessionOperationsRemoteHelper(client).reviewExtensionRequest(
-            bookingId: bookingId,
-            isApproved: true,
-          ),
+          SessionOperationsRemoteHelper(
+            client,
+          ).reviewExtensionRequest(bookingId: bookingId, isApproved: true),
           throwsFormatException,
         );
       } finally {
