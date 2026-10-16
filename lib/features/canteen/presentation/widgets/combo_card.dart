@@ -217,33 +217,33 @@ class ComboCard extends StatelessWidget {
           // Action Buttons Footer
           if (canManage)
             Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              IconButton(
-                icon: const Icon(
-                  Icons.edit_outlined,
-                  color: AppColors.textSecondary,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.edit_outlined,
+                    color: AppColors.textSecondary,
+                  ),
+                  tooltip: AppStrings.edit,
+                  onPressed: onEdit,
                 ),
-                tooltip: AppStrings.edit,
-                onPressed: onEdit,
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                tooltip: AppStrings.delete,
-                onPressed: () async {
-                  final confirmed = await AppDialog.confirm(
-                    context: context,
-                    title: AppStrings.delete,
-                    message: 'delete_combo_confirmation'.tr(),
-                    confirmColor: AppColors.error,
-                  );
-                  if (confirmed == true) {
-                    onDelete();
-                  }
-                },
-              ),
-            ],
-          ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                  tooltip: AppStrings.delete,
+                  onPressed: () async {
+                    final confirmed = await AppDialog.confirm(
+                      context: context,
+                      title: AppStrings.delete,
+                      message: 'delete_combo_confirmation'.tr(),
+                      confirmColor: AppColors.error,
+                    );
+                    if (confirmed == true) {
+                      onDelete();
+                    }
+                  },
+                ),
+              ],
+            ),
         ],
       ),
     );
