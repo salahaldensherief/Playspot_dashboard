@@ -189,10 +189,9 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
     });
   }
 
-  String _dateLabel(DateTime? value) =>
-      value == null
-          ? 'combo_date_unlimited'.tr()
-          : value.toIso8601String().split('T').first;
+  String _dateLabel(DateTime? value) => value == null
+      ? 'combo_date_unlimited'.tr()
+      : value.toIso8601String().split('T').first;
 
   Future<void> _selectValidityDate({required bool start}) async {
     final selected = await showDatePicker(
