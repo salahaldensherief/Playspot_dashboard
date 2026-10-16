@@ -95,10 +95,7 @@ void main() {
     expect(payload['valid_from'], '2026-10-16');
     expect(payload['valid_to'], '2026-10-18');
 
-    final restored = CanteenComboModel.fromJson({
-      ...payload,
-      'id': 'combo-1',
-    });
+    final restored = CanteenComboModel.fromJson({...payload, 'id': 'combo-1'});
     expect(restored.validFrom, DateTime(2026, 10, 16));
     expect(restored.validTo, DateTime(2026, 10, 18));
   });
