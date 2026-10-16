@@ -228,7 +228,10 @@ class ComboCard extends StatelessWidget {
                   onPressed: onEdit,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: AppColors.error,
+                  ),
                   tooltip: AppStrings.delete,
                   onPressed: () async {
                     final confirmed = await AppDialog.confirm(
