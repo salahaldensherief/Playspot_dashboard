@@ -7,10 +7,12 @@ import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/data_table_widget.dart';
 import '../../../../art_core/widgets/status_badge.dart';
 import '../../domain/entities/tournament_participant_entity.dart';
+import '../../domain/entities/tournament_entity.dart';
 import 'payment_receipt_dialog.dart';
 
 class TournamentParticipantsTable extends StatelessWidget {
   final List<TournamentParticipantEntity> participants;
+  final TournamentStatus? tournamentStatus;
   final Function(TournamentParticipantEntity) onApprovePayment;
   final Function(TournamentParticipantEntity, String reason) onRejectPayment;
   final Function(TournamentParticipantEntity) onRecordCash;
@@ -21,6 +23,7 @@ class TournamentParticipantsTable extends StatelessWidget {
   const TournamentParticipantsTable({
     super.key,
     required this.participants,
+    this.tournamentStatus,
     required this.onApprovePayment,
     required this.onRejectPayment,
     required this.onRecordCash,
@@ -324,14 +327,14 @@ class TournamentParticipantsTable extends StatelessWidget {
               ),
             ),
           ),
-        if (!p.isPaymentApproved)
+        if (p.canRecordCash)
           AppButton(
             text: AppStrings.cashPayment,
             fontSize: 12.sp,
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
             onPressed: () => onRecordCash(p),
           ),
-        if (p.isPaymentApproved && !p.isCheckedIn)
+        if (p.isPaymentApproved && p.isConfirmed && !p.isCheckedIn)
           AppButton(
             text: AppStrings.checkIn,
             backgroundColor: AppColors.success,
@@ -339,7 +342,17 @@ class TournamentParticipantsTable extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
             onPressed: () => onCheckIn(p),
           ),
-        if (onWithdraw != null && !p.isWithdrawn)
+        if (onWithdraw != null &&
+            p.canWithdraw &&
+            tournamentStatus != null &&
+            const {
+              TournamentStatus.draft,
+              TournamentStatus.published,
+              TournamentStatus.registrationOpen,
+              TournamentStatus.registrationClosed,
+              TournamentStatus.checkInOpen,
+              TournamentStatus.checkInClosed,
+            }.contains(tournamentStatus))
           AppButton(
             text: AppStrings.withdraw,
             variant: AppButtonVariant.danger,
@@ -361,6 +374,23 @@ class TournamentParticipantsTable extends StatelessWidget {
         return StatusBadge(text: AppStrings.pending, color: AppColors.warning);
       case ParticipantPaymentStatus.pending:
         return StatusBadge(text: AppStrings.pending, color: AppColors.warning);
+      case ParticipantPaymentStatus.unpaid:
+        return StatusBadge(text: AppStrings.unpaid, color: AppColors.warning);
+      case ParticipantPaymentStatus.refundPending:
+        return StatusBadge(
+          text: 'tournament_refund_pending'.tr(),
+          color: AppColors.warning,
+        );
+      case ParticipantPaymentStatus.cancelled:
+        return StatusBadge(
+          text: AppStrings.cancelled,
+          color: AppColors.textSecondary,
+        );
+      case ParticipantPaymentStatus.unknown:
+        return StatusBadge(
+          text: 'tournament_payment_unknown'.tr(),
+          color: AppColors.textSecondary,
+        );
     }
   }
 }

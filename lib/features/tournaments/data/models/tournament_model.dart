@@ -108,13 +108,24 @@ class TournamentModel extends TournamentEntity {
           ? DateTime.tryParse(json['check_in_closes_at'].toString())
           : null,
       tournamentStartsAt: startDateVal,
-      minPlayers: json['min_players'] as int? ?? 4,
+      minPlayers: json['min_players'] as int? ?? 2,
       maxPlayers: maxPlayersVal,
       rules: json['description_ar'] as String? ?? json['rules'] as String?,
       registeredCount:
           json['registered_count'] as int? ??
           (json['tournament_participants'] is List
-              ? (json['tournament_participants'] as List).length
+              ? (json['tournament_participants'] as List)
+                    .where(
+                      (p) =>
+                          p is Map &&
+                          (!p.containsKey('registration_status') ||
+                              const {
+                                'pending_payment',
+                                'confirmed',
+                                'checked_in',
+                              }.contains(p['registration_status'])),
+                    )
+                    .length
               : 0),
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())

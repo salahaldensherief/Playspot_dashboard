@@ -60,6 +60,7 @@ class TournamentTabBarView extends StatelessWidget {
               );
             }
             return TournamentParticipantsTable(
+              tournamentStatus: selected?.status,
               participants: partState.participants,
               onApprovePayment: (p) => context
                   .read<TournamentParticipantsCubit>()
@@ -85,6 +86,13 @@ class TournamentTabBarView extends StatelessWidget {
                 ? TournamentBracketView(
                     tournament: selected,
                     matches: matchState.matches,
+                    onRefresh: () {
+                      if (selected != null) {
+                        context.read<TournamentMatchesCubit>().loadMatches(
+                          selected!.id,
+                        );
+                      }
+                    },
                     onDrawBracket: () {
                       if (selected != null) {
                         context.read<TournamentMatchesCubit>().drawBracket(

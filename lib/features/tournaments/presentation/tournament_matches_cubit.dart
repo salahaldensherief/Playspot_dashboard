@@ -60,6 +60,9 @@ class TournamentMatchesCubit extends Cubit<TournamentMatchesState>
       entityId: tournamentId,
       stream: _watchDisputedMatchesUseCase(tournamentId),
       onData: (disputedList) {
+        final resolved = state.disputedMatches.any(
+          (old) => !disputedList.any((current) => current.id == old.id),
+        );
         final updatedAll = state.matches.map((m) {
           final found = disputedList.firstWhere(
             (d) => d.id == m.id,
@@ -71,9 +74,16 @@ class TournamentMatchesCubit extends Cubit<TournamentMatchesState>
         emit(
           state.copyWith(matches: updatedAll, disputedMatches: disputedList),
         );
+        if (resolved) loadMatches(tournamentId);
       },
       onError: (e) {
         AppLogger.error('watchDisputedMatches error: $e');
+        emit(
+          state.copyWith(
+            status: TournamentMatchesStatus.failure,
+            errorMessage: e.toString(),
+          ),
+        );
       },
     );
   }

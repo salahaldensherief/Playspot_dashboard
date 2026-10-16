@@ -39,7 +39,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
       var query = client.from('tournaments').select('''
         *,
         lounges(name),
-        tournament_participants(id),
+        tournament_participants(id, registration_status),
         tournament_prizes (
           id,
           tournament_id,

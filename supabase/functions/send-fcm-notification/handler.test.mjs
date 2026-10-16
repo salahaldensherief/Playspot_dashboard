@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 const source=stripTypeScriptTypes((await readFile(new URL('./index.ts',import.meta.url),'utf8'))
-  .replace(/^import .*;\n/gm,''));
+  .replace(/^import .*;\r?\n/gm,''));
 function fixture(overrides={}) {
   const calls={constructors:0,tokens:0,sends:[],updates:[]};let handler;
   const credential={getAccessToken:async()=>{calls.tokens++;return overrides.token?.()??{token:'fixture-token'};}};

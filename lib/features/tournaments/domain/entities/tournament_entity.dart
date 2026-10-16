@@ -141,10 +141,14 @@ class TournamentEntity extends Equatable {
   bool get isCancelled => status == TournamentStatus.cancelled;
 
   bool get canDeleteDraft => isDraft && registeredCount == 0;
+  // Presentation previews; the server also checks all historical participants.
+  bool get canEditDetails =>
+      (isDraft || isPublished || status == TournamentStatus.registrationOpen) &&
+      registeredCount == 0;
+  bool get canManagePrizes => !isInProgress && !isCompleted && !isCancelled;
+  bool get canCancel => !isCompleted && !isCancelled;
   bool get canDrawBracket =>
-      (isPublished ||
-          isDraft ||
-          status == TournamentStatus.registrationClosed ||
+      (status == TournamentStatus.registrationClosed ||
           status == TournamentStatus.checkInClosed) &&
       registeredCount >= minPlayers;
 

@@ -743,6 +743,8 @@ class AppStrings {
   static String get prizePool => 'prize_pool'.tr();
   static String get tournamentPrizes => 'tournament_prizes'.tr();
   static String get managePrizes => 'manage_prizes'.tr();
+  static String get completeTournament => 'complete_tournament'.tr();
+  static String get awardTournamentPrizes => 'award_tournament_prizes'.tr();
   static String get placement => 'placement'.tr();
   static String get firstPlace => 'first_place'.tr();
   static String get secondPlace => 'second_place'.tr();

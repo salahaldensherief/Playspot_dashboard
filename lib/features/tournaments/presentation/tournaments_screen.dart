@@ -13,7 +13,9 @@ import '../../auth/presentation/login/login_cubit.dart';
 import '../domain/entities/tournament_entity.dart';
 import 'tournament_cubit.dart';
 import 'tournament_matches_cubit.dart';
+import 'tournament_matches_state.dart';
 import 'tournament_participants_cubit.dart';
+import 'tournament_participants_state.dart';
 import 'tournament_state.dart';
 import 'widgets/tournament_disputes_alert_banner.dart';
 import 'widgets/tournament_form_dialog.dart';
@@ -54,11 +56,14 @@ class _TournamentsScreenState extends State<TournamentsScreen>
     super.dispose();
   }
 
-  void _refreshTournaments() {
+  void _refreshTournaments({bool requestLocation = true}) {
     final loungeId =
         context.read<LoginCubit>().state.userLounge?.id ??
         context.read<LoginCubit>().state.user?.loungeId;
-    context.read<TournamentCubit>().loadTournaments(loungeId: loungeId);
+    context.read<TournamentCubit>().loadTournaments(
+      loungeId: loungeId,
+      requestLocation: requestLocation,
+    );
   }
 
   void _openCreateDialog() {
@@ -77,6 +82,7 @@ class _TournamentsScreenState extends State<TournamentsScreen>
   }
 
   void _openEditDialog(TournamentEntity tournament) {
+    if (!tournament.canEditDetails) return;
     showDialog(
       context: context,
       builder: (ctx) => TournamentFormDialog(
@@ -89,6 +95,7 @@ class _TournamentsScreenState extends State<TournamentsScreen>
   }
 
   void _openPrizesDialog(TournamentEntity tournament) {
+    if (!tournament.canManagePrizes) return;
     showDialog(
       context: context,
       builder: (ctx) => TournamentPrizesDialog(
@@ -213,163 +220,216 @@ class _TournamentsScreenState extends State<TournamentsScreen>
 
   void _onSelectTournament(TournamentEntity found) {
     context.read<TournamentCubit>().selectTournament(found);
-    context.read<TournamentParticipantsCubit>().loadParticipants(found.id);
-    context.read<TournamentMatchesCubit>().loadMatches(found.id);
-    context.read<TournamentMatchesCubit>().startWatchingDisputes(found.id);
   }
 
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    return BlocConsumer<TournamentCubit, TournamentState>(
-      listenWhen: (prev, curr) => prev.status != curr.status,
-      listener: (context, state) {
-        if (state.status == TournamentCubitStatus.actionSuccess &&
-            state.successMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.successMessage!),
-              backgroundColor: AppColors.success,
-            ),
-          );
-        } else if (state.status == TournamentCubitStatus.failure &&
-            state.errorMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage!),
-              backgroundColor: AppColors.danger,
-            ),
-          );
-        }
-      },
-      buildWhen: (prev, curr) =>
-          prev.tournaments != curr.tournaments ||
-          prev.selectedTournament != curr.selectedTournament ||
-          prev.participants != curr.participants ||
-          prev.matches != curr.matches ||
-          prev.disputedMatches != curr.disputedMatches ||
-          prev.auditLogs != curr.auditLogs ||
-          prev.status != curr.status,
-      builder: (context, state) {
-        final selected = state.selectedTournament;
-        final disputedCount = state.disputedMatches.length;
-
-        return DashboardLayout(
-          title: AppStrings.tournaments,
-          activeRoute: '/super-admin/tournaments',
-          isScrollable: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TournamentHeaderBar(
-                onRefresh: _refreshTournaments,
-                onCreate: _openCreateDialog,
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<TournamentCubit, TournamentState>(
+          listenWhen: (previous, current) =>
+              current.selectedTournament != null &&
+              (previous.selectedTournament?.id !=
+                      current.selectedTournament?.id ||
+                  (previous.status == TournamentCubitStatus.loading &&
+                      current.status == TournamentCubitStatus.success)),
+          listener: (context, state) {
+            final id = state.selectedTournament!.id;
+            context.read<TournamentParticipantsCubit>().loadParticipants(id);
+            context.read<TournamentMatchesCubit>().loadMatches(id);
+            context.read<TournamentMatchesCubit>().startWatchingDisputes(id);
+          },
+        ),
+        BlocListener<TournamentMatchesCubit, TournamentMatchesState>(
+          listenWhen: (previous, current) =>
+              (current.status == TournamentMatchesStatus.actionSuccess &&
+                  previous.status != current.status) ||
+              (current.status == TournamentMatchesStatus.failure &&
+                  (previous.status != current.status ||
+                      previous.errorMessage != current.errorMessage)),
+          listener: (context, state) {
+            if (state.status == TournamentMatchesStatus.actionSuccess) {
+              _refreshTournaments(requestLocation: false);
+              return;
+            }
+            if (state.errorMessage != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.errorMessage!),
+                  backgroundColor: AppColors.danger,
+                ),
+              );
+            }
+          },
+        ),
+      ],
+      child: BlocConsumer<TournamentCubit, TournamentState>(
+        listenWhen: (prev, curr) => prev.status != curr.status,
+        listener: (context, state) {
+          if (state.status == TournamentCubitStatus.actionSuccess &&
+              state.successMessage != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.successMessage!),
+                backgroundColor: AppColors.success,
               ),
-              SizedBox(height: 12.h),
-              if (state.status == TournamentCubitStatus.loading) ...[
-                const LinearProgressIndicator(
-                  color: AppColors.neonBlue,
-                  backgroundColor: AppColors.mutedBackground,
+            );
+          } else if (state.status == TournamentCubitStatus.failure &&
+              state.errorMessage != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.errorMessage!),
+                backgroundColor: AppColors.danger,
+              ),
+            );
+          }
+        },
+        buildWhen: (prev, curr) =>
+            prev.tournaments != curr.tournaments ||
+            prev.selectedTournament != curr.selectedTournament ||
+            prev.participants != curr.participants ||
+            prev.matches != curr.matches ||
+            prev.disputedMatches != curr.disputedMatches ||
+            prev.auditLogs != curr.auditLogs ||
+            prev.status != curr.status,
+        builder: (context, state) {
+          final selected = state.selectedTournament;
+          final disputedCount = state.disputedMatches.length;
+
+          return DashboardLayout(
+            title: AppStrings.tournaments,
+            activeRoute: '/super-admin/tournaments',
+            isScrollable: false,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TournamentHeaderBar(
+                  onRefresh: _refreshTournaments,
+                  onCreate: _openCreateDialog,
                 ),
                 SizedBox(height: 12.h),
-              ],
-              TournamentDisputesAlertBanner(
-                disputedCount: disputedCount,
-                player1Name:
-                    state.disputedMatches.firstOrNull?.player1Name ?? 'P1',
-                player2Name:
-                    state.disputedMatches.firstOrNull?.player2Name ?? 'P2',
-                onResolve: () => _tabController.animateTo(3),
-              ),
-              if (disputedCount > 0) SizedBox(height: 12.h),
-              TournamentSelectorBar(
-                tournaments: state.tournaments,
-                selected: selected,
-                onSelect: _onSelectTournament,
-                onManagePrizes: () {
-                  if (selected != null) _openPrizesDialog(selected);
-                },
-                onPublish: () {
-                  if (selected != null) {
-                    context.read<TournamentCubit>().publishTournament(
-                      selected.id,
-                    );
-                  }
-                },
-                onDeleteDraft: () {
-                  if (selected != null) _confirmDeleteDraft(selected);
-                },
-                onCancel: () {
-                  if (selected != null) _confirmCancel(selected);
-                },
-                onAwardPrizes: () {
-                  if (selected != null) {
-                    context.read<TournamentCubit>().awardPrizes(selected.id);
-                  }
-                },
-              ),
-              if (state.tournaments.isNotEmpty) SizedBox(height: 14.h),
-              TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                indicatorColor: AppColors.neonBlue,
-                labelColor: AppColors.neonBlue,
-                unselectedLabelColor: AppColors.textSecondary,
-                tabs: [
-                  Tab(text: AppStrings.tournaments),
-                  Tab(
-                    text: '${AppStrings.users} (${state.participants.length})',
+                if (state.status == TournamentCubitStatus.loading) ...[
+                  const LinearProgressIndicator(
+                    color: AppColors.neonBlue,
+                    backgroundColor: AppColors.mutedBackground,
                   ),
-                  Tab(text: AppStrings.drawBracket),
-                  Tab(
-                    child: Row(
-                      children: [
-                        Text(AppStrings.disputesRoom),
-                        if (disputedCount > 0) ...[
-                          SizedBox(width: 6.w),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 6.w,
-                              vertical: 2.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.danger,
-                              borderRadius: BorderRadius.circular(10.r),
-                            ),
-                            child: Text(
-                              '$disputedCount',
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                  SizedBox(height: 12.h),
+                ],
+                TournamentDisputesAlertBanner(
+                  disputedCount: disputedCount,
+                  player1Name:
+                      state.disputedMatches.firstOrNull?.player1Name ?? 'P1',
+                  player2Name:
+                      state.disputedMatches.firstOrNull?.player2Name ?? 'P2',
+                  onResolve: () => _tabController.animateTo(3),
+                ),
+                if (disputedCount > 0) SizedBox(height: 12.h),
+                TournamentSelectorBar(
+                  tournaments: state.tournaments,
+                  selected: selected,
+                  onSelect: _onSelectTournament,
+                  onManagePrizes: () {
+                    if (selected != null) _openPrizesDialog(selected);
+                  },
+                  onPublish: () {
+                    if (selected != null) {
+                      context.read<TournamentCubit>().publishTournament(
+                        selected.id,
+                      );
+                    }
+                  },
+                  onDeleteDraft: () {
+                    if (selected != null) _confirmDeleteDraft(selected);
+                  },
+                  onCancel: () {
+                    if (selected != null) _confirmCancel(selected);
+                  },
+                  onAwardPrizes: () {
+                    if (selected != null) {
+                      context.read<TournamentCubit>().awardPrizes(selected.id);
+                    }
+                  },
+                  onComplete: () {
+                    if (selected != null) {
+                      context.read<TournamentCubit>().completeTournament(
+                        selected.id,
+                      );
+                    }
+                  },
+                ),
+                if (state.tournaments.isNotEmpty) SizedBox(height: 14.h),
+                TabBar(
+                  controller: _tabController,
+                  isScrollable: true,
+                  indicatorColor: AppColors.neonBlue,
+                  labelColor: AppColors.neonBlue,
+                  unselectedLabelColor: AppColors.textSecondary,
+                  tabs: [
+                    Tab(text: AppStrings.tournaments),
+                    Tab(
+                      child:
+                          BlocSelector<
+                            TournamentParticipantsCubit,
+                            TournamentParticipantsState,
+                            int
+                          >(
+                            selector: (state) => state.participants.length,
+                            builder: (context, count) =>
+                                Text('${AppStrings.users} ($count)'),
+                          ),
+                    ),
+                    Tab(text: AppStrings.drawBracket),
+                    Tab(
+                      child: Row(
+                        children: [
+                          Text(AppStrings.disputesRoom),
+                          if (disputedCount > 0) ...[
+                            SizedBox(width: 6.w),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 6.w,
+                                vertical: 2.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.danger,
+                                borderRadius: BorderRadius.circular(10.r),
+                              ),
+                              child: Text(
+                                '$disputedCount',
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
-                  Tab(
-                    text:
-                        '${AppStrings.auditTrail} (${state.auditLogs.length})',
-                  ),
-                ],
-              ),
-              SizedBox(height: 14.h),
-              Expanded(
-                child: TournamentTabBarView(
-                  tabController: _tabController,
-                  state: state,
-                  selected: selected,
-                  onManagePrizes: _openPrizesDialog,
-                  onEdit: _openEditDialog,
-                  onDelete: _confirmDelete,
+                    Tab(
+                      text:
+                          '${AppStrings.auditTrail} (${state.auditLogs.length})',
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-        );
-      },
+                SizedBox(height: 14.h),
+                Expanded(
+                  child: TournamentTabBarView(
+                    tabController: _tabController,
+                    state: state,
+                    selected: selected,
+                    onManagePrizes: _openPrizesDialog,
+                    onEdit: _openEditDialog,
+                    onDelete: _confirmDelete,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

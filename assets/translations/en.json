@@ -2026,5 +2026,9 @@
   "booking_time_unavailable": "This time has already been booked. Choose another time.",
   "booking_open_time_disabled": "Open-time sessions are disabled for this room.",
   "booking_next_booking_too_soon": "Another booking starts too soon to start an open-time session.",
-  "booking_open_time_limit_exceeded": "This session exceeded the open-time limit. Review the lounge policy before closing."
+  "booking_open_time_limit_exceeded": "This session exceeded the open-time limit. Review the lounge policy before closing.",
+  "tournament_refund_pending": "Refund pending",
+  "tournament_payment_unknown": "Unknown payment status",
+  "complete_tournament": "Complete tournament",
+  "award_tournament_prizes": "Award prizes"
 }

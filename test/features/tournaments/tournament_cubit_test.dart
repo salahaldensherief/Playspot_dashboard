@@ -86,6 +86,21 @@ void main() {
     expect(cubit.state, equals(const TournamentState()));
   });
 
+  test(
+    'publishing reflects the registration_open state returned by p_open true',
+    () async {
+      when(
+        () => mockRepository.publishTournament('t-1'),
+      ).thenAnswer((_) async => const Right(null));
+      cubit.emit(TournamentState(tournaments: [tTournament]));
+      await cubit.publishTournament('t-1');
+      expect(
+        cubit.state.tournaments.single.status,
+        TournamentStatus.registrationOpen,
+      );
+    },
+  );
+
   test('loadTournaments emits success state with loaded list', () async {
     when(
       () => mockRepository.getTournaments(

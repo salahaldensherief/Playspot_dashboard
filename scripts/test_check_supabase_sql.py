@@ -32,6 +32,14 @@ class LegacySqlPolicyTest(unittest.TestCase):
         self.sql.write_text('SELECT 2;\n')
         self.assertEqual(rejected_paths(self.root, ['supabase/reference.sql'], self.approved), ['supabase/reference.sql'])
 
+    def test_windows_line_endings_preserve_the_approved_reference(self):
+        self.sql.write_bytes(b'-- Approved reference only\r\nSELECT 1;\r\n')
+        self.assertEqual(rejected_paths(self.root, ['supabase/reference.sql'], self.approved), [])
+
+    def test_line_endings_do_not_hide_an_actual_sql_change(self):
+        self.sql.write_bytes(b'-- Approved reference only\r\nSELECT 2;\r\n')
+        self.assertEqual(rejected_paths(self.root, ['supabase/reference.sql'], self.approved), ['supabase/reference.sql'])
+
     def test_new_dashboard_sql_is_rejected(self):
         (self.root / 'supabase/new.sql').write_text('SELECT 1;\n')
         self.assertEqual(rejected_paths(self.root, ['supabase/new.sql'], self.approved), ['supabase/new.sql'])

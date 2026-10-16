@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../models/tournament_participant_model.dart';
+import 'tournament_roster_remote_helper.dart';
 
 class TournamentParticipantRemoteHelper {
   final SupabaseClient client;
@@ -22,37 +23,12 @@ class TournamentParticipantRemoteHelper {
           .toList();
       if (rawList.isEmpty) return [];
 
-      final userIds = rawList
-          .map((json) => json['user_id']?.toString())
-          .where((id) => id != null && id.trim().isNotEmpty)
-          .cast<String>()
-          .toSet()
-          .toList();
-
-      final Map<String, Map<String, dynamic>> profilesMap = {};
-      if (userIds.isNotEmpty) {
-        try {
-          final profilesResponse = await client
-              .from('profiles')
-              .select('id, full_name, phone, email, avatar_url')
-              .inFilter('id', userIds);
-
-          for (final p in profilesResponse as List) {
-            final pMap = Map<String, dynamic>.from(p as Map);
-            final pId = pMap['id']?.toString();
-            if (pId != null) {
-              profilesMap[pId] = pMap;
-            }
-          }
-        } catch (e) {
-          AppLogger.error('Profiles batch fetch failed for participants', e);
-        }
-      }
+      final names = await fetchTournamentParticipantNames(client, tournamentId);
 
       final list = rawList.map((json) {
-        final uId = json['user_id']?.toString();
-        if (uId != null && profilesMap.containsKey(uId)) {
-          json['profiles'] = profilesMap[uId];
+        final name = names[json['id']];
+        if (name != null) {
+          json['user_name'] = name;
         }
         return TournamentParticipantModel.fromJson(json);
       }).toList();
@@ -79,7 +55,7 @@ class TournamentParticipantRemoteHelper {
       return resultWithSignedUrls;
     } catch (e) {
       AppLogger.error('getParticipants error: $e', e);
-      return [];
+      rethrow;
     }
   }
 

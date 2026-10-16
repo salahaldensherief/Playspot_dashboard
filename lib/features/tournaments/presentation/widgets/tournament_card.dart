@@ -127,27 +127,32 @@ class TournamentCard extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppButton(
-              text: AppStrings.managePrizes,
-              icon: Icons.emoji_events_outlined,
-              variant: AppButtonVariant.outlined,
-              fontSize: 12.sp,
-              onPressed: onManagePrizes,
-            ),
+            if (t.canManagePrizes)
+              AppButton(
+                text: AppStrings.managePrizes,
+                icon: Icons.emoji_events_outlined,
+                variant: AppButtonVariant.outlined,
+                fontSize: 12.sp,
+                onPressed: onManagePrizes,
+              ),
             SizedBox(width: 8.w),
-            AppButton(
-              text: AppStrings.edit,
-              variant: AppButtonVariant.outlined,
-              fontSize: 12.sp,
-              onPressed: onEdit,
-            ),
+            if (t.canEditDetails)
+              AppButton(
+                text: AppStrings.edit,
+                variant: AppButtonVariant.outlined,
+                fontSize: 12.sp,
+                onPressed: onEdit,
+              ),
             SizedBox(width: 8.w),
-            AppButton(
-              text: AppStrings.deleteTournament,
-              variant: AppButtonVariant.danger,
-              fontSize: 12.sp,
-              onPressed: onDelete,
-            ),
+            if (t.canCancel)
+              AppButton(
+                text: t.canDeleteDraft
+                    ? AppStrings.deleteDraft
+                    : AppStrings.cancelTournament,
+                variant: AppButtonVariant.danger,
+                fontSize: 12.sp,
+                onPressed: onDelete,
+              ),
             SizedBox(width: 8.w),
             AppButton(
               text: AppStrings.viewAll,

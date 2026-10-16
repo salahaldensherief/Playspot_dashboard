@@ -1,29 +1,29 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import '../models/tournament_match_model.dart';
+import 'tournament_roster_remote_helper.dart';
 
 class TournamentMatchRemoteHelper {
   final SupabaseClient client;
-  RealtimeChannel? _disputesChannel;
+  final Set<RealtimeChannel> _disputesChannels = {};
+  int _watchSerial = 0;
 
   TournamentMatchRemoteHelper(this.client);
 
   Future<List<TournamentMatchModel>> drawBracket(String tournamentId) async {
-    try {
-      final response = await client.rpc(
-        'draw_tournament_bracket',
-        params: {'p_tournament_id': tournamentId},
-      );
-
-      if (response != null && response is List) {
-        return response.map((json) {
-          return TournamentMatchModel.fromJson(Map<String, dynamic>.from(json));
-        }).toList();
-      }
-    } catch (e) {
-      AppLogger.warning('draw_tournament_bracket RPC error', e);
+    final response = await client.rpc(
+      'draw_tournament_bracket',
+      params: {'p_tournament_id': tournamentId},
+    );
+    if (response is List) {
+      return response.map((json) {
+        return TournamentMatchModel.fromJson(Map<String, dynamic>.from(json));
+      }).toList();
+    }
+    // The deployed RPC returns the number of generated matches. Only fetch
+    // after an acknowledged draw; a rejected RPC must reach the caller.
+    if (response is! int || response < 0) {
+      throw const FormatException('Invalid tournament draw response');
     }
 
     return getMatches(tournamentId);
@@ -40,27 +40,47 @@ class TournamentMatchRemoteHelper {
             rooms(name)
           ''')
           .eq('tournament_id', tournamentId)
-          .order('round_number', ascending: true);
+          .order('round_number', ascending: true)
+          .order('match_order', ascending: true);
 
-      return (response as List).map((json) {
-        return TournamentMatchModel.fromJson(Map<String, dynamic>.from(json));
-      }).toList();
-    } catch (e) {
-      debugPrint('⚠️ [TOURNAMENTS_REMOTE] getMatches join query error: $e');
-      try {
-        final plainResponse = await client
-            .from('tournament_matches')
-            .select()
-            .eq('tournament_id', tournamentId)
-            .order('round_number', ascending: true);
-
-        return (plainResponse as List).map((json) {
-          return TournamentMatchModel.fromJson(Map<String, dynamic>.from(json));
-        }).toList();
-      } catch (_) {
-        return [];
+      return _matchesWithNames(response as List, tournamentId);
+    } on PostgrestException catch (e) {
+      // Older schemas may lack the embedded relationship. Permission and
+      // transport failures are not evidence that the tournament is empty.
+      if (e.code != 'PGRST200' && e.code != 'PGRST201') {
+        rethrow;
       }
+      final plainResponse = await client
+          .from('tournament_matches')
+          .select()
+          .eq('tournament_id', tournamentId)
+          .order('round_number', ascending: true)
+          .order('match_order', ascending: true);
+
+      return _matchesWithNames(plainResponse as List, tournamentId);
     }
+  }
+
+  Future<List<TournamentMatchModel>> _matchesWithNames(
+    List rows,
+    String tournamentId,
+  ) async {
+    final needsNames = rows.any(
+      (row) => row['player1_id'] != null || row['player2_id'] != null,
+    );
+    final names = needsNames
+        ? await fetchTournamentParticipantNames(client, tournamentId)
+        : <String, String>{};
+    return rows.map((row) {
+      final json = Map<String, dynamic>.from(row);
+      if (names[json['player1_id']] case final name?) {
+        json['player1_name'] = name;
+      }
+      if (names[json['player2_id']] case final name?) {
+        json['player2_name'] = name;
+      }
+      return TournamentMatchModel.fromJson(json);
+    }).toList();
   }
 
   Future<void> startMatch(String matchId, {String? roomId}) async {
@@ -94,26 +114,27 @@ class TournamentMatchRemoteHelper {
   }
 
   Stream<List<TournamentMatchModel>> watchDisputedMatches(String tournamentId) {
-    if (_disputesChannel != null) {
-      client.removeChannel(_disputesChannel!);
+    final controller = StreamController<List<TournamentMatchModel>>();
+    var revision = 0;
+    Future<void> refresh() async {
+      final requestRevision = ++revision;
+      try {
+        final matches = await getMatches(tournamentId);
+        if (!controller.isClosed && requestRevision == revision) {
+          controller.add(matches.where((m) => m.isDisputed).toList());
+        }
+      } catch (error, stack) {
+        if (!controller.isClosed && requestRevision == revision) {
+          controller.addError(error, stack);
+        }
+      }
     }
 
-    final controller = StreamController<List<TournamentMatchModel>>();
-
-    getMatches(tournamentId)
-        .then((allMatches) {
-          if (!controller.isClosed) {
-            controller.add(allMatches.where((m) => m.isDisputed).toList());
-          }
-        })
-        .catchError((err) {
-          if (!controller.isClosed) {
-            controller.addError(err);
-          }
-        });
-
-    _disputesChannel = client
-        .channel('public:tournament_matches:disputed:$tournamentId')
+    unawaited(refresh());
+    final channel = client
+        .channel(
+          'public:tournament_matches:disputed:$tournamentId:${_watchSerial++}',
+        )
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',
@@ -123,30 +144,19 @@ class TournamentMatchRemoteHelper {
             column: 'tournament_id',
             value: tournamentId,
           ),
-          callback: (payload) async {
-            try {
-              final newStatus = payload.newRecord['status'] as String?;
-              final oldStatus = payload.oldRecord['status'] as String?;
-
-              if (newStatus == 'disputed' || oldStatus == 'disputed') {
-                final freshMatches = await getMatches(tournamentId);
-                if (!controller.isClosed) {
-                  controller.add(
-                    freshMatches.where((m) => m.isDisputed).toList(),
-                  );
-                }
-              }
-            } catch (e) {
-              AppLogger.warning('Realtime update fetch error', e);
-            }
+          callback: (_) {
+            // With the default replica identity, oldRecord contains only the
+            // key. A resolved or deleted dispute still needs a fresh read.
+            unawaited(refresh());
           },
         )
         .subscribe();
+    _disputesChannels.add(channel);
 
     controller.onCancel = () {
-      if (_disputesChannel != null) {
-        client.removeChannel(_disputesChannel!);
-        _disputesChannel = null;
+      revision++;
+      if (_disputesChannels.remove(channel)) {
+        unawaited(client.removeChannel(channel));
       }
     };
 
@@ -154,9 +164,9 @@ class TournamentMatchRemoteHelper {
   }
 
   void dispose() {
-    if (_disputesChannel != null) {
-      client.removeChannel(_disputesChannel!);
-      _disputesChannel = null;
+    for (final channel in _disputesChannels) {
+      unawaited(client.removeChannel(channel));
     }
+    _disputesChannels.clear();
   }
 }

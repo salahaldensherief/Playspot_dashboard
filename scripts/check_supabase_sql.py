@@ -23,7 +23,7 @@ def rejected_paths(root, changed, approved=APPROVED_REFERENCE):
         except subprocess.CalledProcessError:
             rejected.append(path)
             continue
-        if (root / path).read_bytes() != reference:
+        if (root / path).read_bytes().replace(b'\r\n', b'\n') != reference.replace(b'\r\n', b'\n'):
             rejected.append(path)
     return rejected
 

@@ -37,18 +37,24 @@ class TournamentAuditManager {
 
   void startWatchingDisputes(
     String tournamentId,
-    void Function(List<TournamentMatchEntity>) onDisputesUpdated,
-  ) {
+    void Function(List<TournamentMatchEntity>) onDisputesUpdated, {
+    void Function(Object, StackTrace)? onError,
+  }) {
     if (_disposed) return;
     final generation = ++_watchGeneration;
     _disputesSubscription?.cancel();
-    _disputesSubscription = watchDisputedMatchesUseCase(tournamentId).listen((
-      matches,
-    ) {
-      if (!_disposed && generation == _watchGeneration) {
-        onDisputesUpdated(matches);
-      }
-    });
+    _disputesSubscription = watchDisputedMatchesUseCase(tournamentId).listen(
+      (matches) {
+        if (!_disposed && generation == _watchGeneration) {
+          onDisputesUpdated(matches);
+        }
+      },
+      onError: (Object error, StackTrace stack) {
+        if (!_disposed && generation == _watchGeneration) {
+          onError?.call(error, stack);
+        }
+      },
+    );
   }
 
   void dispose() {

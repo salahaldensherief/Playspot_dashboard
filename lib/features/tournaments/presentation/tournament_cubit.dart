@@ -310,7 +310,7 @@ class TournamentCubit extends Cubit<TournamentState> {
 
   Future<void> publishTournament(String id) => _updateTournamentStatus(
     tournamentId: id,
-    newStatus: TournamentStatus.published,
+    newStatus: TournamentStatus.registrationOpen,
     successMessage: 'تم نشر البطولة بنجاح',
     action: () => _publishTournamentUseCase(id),
   );
@@ -412,9 +412,20 @@ class TournamentCubit extends Cubit<TournamentState> {
   }
 
   void startWatchingDisputes(String tournamentId) {
-    _auditManager.startWatchingDisputes(tournamentId, (disputedList) {
-      emit(state.copyWith(disputedMatches: disputedList));
-    });
+    _auditManager.startWatchingDisputes(
+      tournamentId,
+      (disputedList) {
+        emit(state.copyWith(disputedMatches: disputedList));
+      },
+      onError: (error, stack) {
+        emit(
+          state.copyWith(
+            status: TournamentCubitStatus.failure,
+            errorMessage: error.toString(),
+          ),
+        );
+      },
+    );
   }
 
   @override
