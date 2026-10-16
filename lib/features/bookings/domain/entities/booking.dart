@@ -276,6 +276,14 @@ class Booking extends Equatable {
     return pm == 'cash' || pm.isEmpty;
   }
 
+  /// Starting play does not confirm collection. Transfers still need verification.
+  bool get canStartSession =>
+      status == BookingStatus.upcoming &&
+      paymentStatus != PaymentStatus.refunded &&
+      (paymentStatus == PaymentStatus.paid ||
+          isOpenTime ||
+          paymentMethod == 'cash');
+
   bool get isManualTransfer {
     final pm = (paymentMethod ?? '').toLowerCase().trim();
     return pm == 'manual_transfer' ||

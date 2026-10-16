@@ -237,9 +237,7 @@ class _AddBookingDialogState extends State<AddBookingDialog> {
         status: _startSessionImmediately
             ? BookingStatus.inProgress
             : BookingStatus.upcoming,
-        paymentStatus: _startSessionImmediately
-            ? PaymentStatus.paid
-            : PaymentStatus.unpaid,
+        paymentStatus: PaymentStatus.unpaid,
         totalPrice: calculation.grandTotal,
         voucherDiscount: calculation.voucherDiscount,
         voucherCode: _appliedVoucherCode,

@@ -239,8 +239,7 @@ class CashierSessionTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                    ] else if (booking.status == BookingStatus.upcoming &&
-                        isPaid) ...[
+                    ] else if (booking.canStartSession) ...[
                       SizedBox(height: 8.h),
                       SizedBox(
                         width: double.infinity,

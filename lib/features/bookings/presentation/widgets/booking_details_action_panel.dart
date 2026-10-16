@@ -137,7 +137,7 @@ class _BookingDetailsActionPanelState extends State<BookingDetailsActionPanel> {
                 ? () => _run(() => cubit.approveBooking(booking.id))
                 : null,
           ),
-        if (isUpcoming && (!isUnpaid || booking.isOpenTime))
+        if (booking.canStartSession)
           SessionTimeBuilder(
             builder: (context, now) => AppButton(
               text: 'start_session_now'.tr(),

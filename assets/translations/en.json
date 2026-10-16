@@ -1116,7 +1116,7 @@
   "owner_phone": "Owner Phone",
   "shift_revenue": "Shift Revenue",
   "start_session_immediately_title": "Start Session & Game Timer Immediately",
-  "start_session_immediately_sub": "Room status will switch to occupied and the game timer will start immediately",
+  "start_session_immediately_sub": "Mark the room occupied and start play immediately, without recording cash collection.",
   "not_available": "N/A",
   "open_ended": "Open-Ended",
   "new_booking_alert": "New Booking!",

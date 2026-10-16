@@ -115,20 +115,17 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
-  testWidgets(
-    'station controls expose the start action for a paid upcoming booking',
-    (tester) async {
-      await mount(
-        tester,
-        SessionControlActions(
-          booking: booking.copyWith(paymentStatus: PaymentStatus.paid),
-        ),
-        clock: () => DateTime(2030, 1, 10, 14),
-      );
-      expect(find.byType(StartSessionButton), findsOneWidget);
-      await tester.pumpWidget(const SizedBox.shrink());
-    },
-  );
+  testWidgets('station controls expose cash start before collection', (
+    tester,
+  ) async {
+    await mount(
+      tester,
+      SessionControlActions(booking: booking),
+      clock: () => DateTime(2030, 1, 10, 14),
+    );
+    expect(find.byType(StartSessionButton), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
   testWidgets(
     'start button follows the session clock without database events',
     (tester) async {
@@ -191,12 +188,13 @@ void main() {
     },
   );
   testWidgets(
-    'start dialog stays open until the server responds and on failure',
+    'unpaid cash start waits for the server without collecting and retains failures',
     (tester) async {
       final bookings = _Bookings(),
           login = _Login(),
           permissions = _Permissions();
       final pending = Completer<bool>();
+      var collections = 0;
       when(
         () => bookings.state,
       ).thenReturn(const BookingState(errorMessage: 'Fixture start failure'));
@@ -248,11 +246,9 @@ void main() {
                   child: SessionClockHost(
                     clock: () => DateTime(2030, 1, 10, 14),
                     child: BookingDetailsActionPanel(
-                      booking: booking.copyWith(
-                        paymentStatus: PaymentStatus.paid,
-                      ),
+                      booking: booking,
                       isLoading: false,
-                      onConfirmCashPayment: () {},
+                      onConfirmCashPayment: () => collections++,
                     ),
                   ),
                 ),
@@ -271,6 +267,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(BookingDetailsActionPanel), findsOneWidget);
       expect(find.text('Fixture start failure'), findsOneWidget);
+      expect(collections, 0);
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );

@@ -1111,7 +1111,7 @@
   "owner_phone": "رقم هاتف المالك",
   "shift_revenue": "إيراد الوردية",
   "start_session_immediately_title": "بدء الجلسة وعّد الوقت فوراً عند الحفظ",
-  "start_session_immediately_sub": "سيتم تحويل الغرفة لمشغولة وتشغيل حاسبة وقت اللعب والإضافات فوراً",
+  "start_session_immediately_sub": "ستصبح الغرفة مشغولة ويبدأ الوقت فورًا، دون تسجيل تحصيل نقدي.",
   "not_available": "غير متاح",
   "open_ended": "جلسة مفتوحة",
   "new_booking_alert": "حجز جديد!",

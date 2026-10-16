@@ -138,9 +138,7 @@ class _SessionControlActionsState extends State<SessionControlActions> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (_error != null) Text(_error ?? '', style: OperationsTokens.value),
-        if (booking.status == BookingStatus.upcoming &&
-            (booking.paymentStatus == PaymentStatus.paid ||
-                booking.isOpenEnded))
+        if (booking.canStartSession)
           StartSessionButton(
             bookingId: booking.id,
             bookingDate: booking.date,

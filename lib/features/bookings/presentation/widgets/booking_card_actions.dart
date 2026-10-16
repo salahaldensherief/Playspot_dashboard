@@ -175,8 +175,8 @@ class BookingCardActions extends StatelessWidget {
       );
     }
 
-    // 2. Approved but unpaid booking: collect payment before session start.
-    if (booking.status == BookingStatus.upcoming && !isPaid) {
+    // Unverified prepaid methods cannot start; cash can be settled after play.
+    if (booking.status == BookingStatus.upcoming && !booking.canStartSession) {
       return Row(
         children: [
           Expanded(
@@ -217,30 +217,43 @@ class BookingCardActions extends StatelessWidget {
       );
     }
 
-    // 3. Paid upcoming booking (Ready to start when time is reached).
-    if (booking.status == BookingStatus.upcoming && isPaid) {
-      return Row(
+    if (booking.canStartSession) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            flex: 3,
-            child: StartSessionButton(
-              bookingId: booking.id,
-              bookingDate: booking.date,
-              startTime: booking.startTime,
-              onSuccess: onStartSession,
-              height: h,
-            ),
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: StartSessionButton(
+                  bookingId: booking.id,
+                  bookingDate: booking.date,
+                  startTime: booking.startTime,
+                  onSuccess: onStartSession,
+                  height: h,
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                flex: 2,
+                child: AppButton(
+                  text: AppStrings.markNoShowAction,
+                  variant: AppButtonVariant.outlined,
+                  height: h,
+                  onPressed: () => _showNoShowConfirmDialog(context),
+                ),
+              ),
+            ],
           ),
-          SizedBox(width: 8.w),
-          Expanded(
-            flex: 2,
-            child: AppButton(
-              text: AppStrings.markNoShowAction,
+          if (!isPaid && booking.isCashPayment) ...[
+            SizedBox(height: 8.h),
+            AppButton(
+              text: AppStrings.confirmCash,
               variant: AppButtonVariant.outlined,
               height: h,
-              onPressed: () => _showNoShowConfirmDialog(context),
+              onPressed: onConfirmPayment ?? onOpenDetails,
             ),
-          ),
+          ],
         ],
       );
     }
