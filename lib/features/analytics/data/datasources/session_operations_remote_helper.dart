@@ -91,34 +91,90 @@ class SessionOperationsRemoteHelper {
     int? requestedMinutes,
     int? currentDurationMinutes,
   }) async {
+    final rawId = bookingId.trim();
+    final cleanBookingId = rawId.startsWith('ext_')
+        ? rawId.substring(4)
+        : rawId;
     final uuidRegExp = RegExp(
-      r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
-    );
-    final match = uuidRegExp.firstMatch(bookingId);
-    final cleanBookingId = match != null
-        ? match.group(0)!
-        : bookingId.replaceAll('ext_', '').trim();
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}
+  }
 
-    if (!uuidRegExp.hasMatch(cleanBookingId)) {
-      debugPrint(
-        '⚠️ [SESSION_OPERATIONS] Invalid booking UUID for extension request: $bookingId',
-      );
+  Future<void> handleClientRequestAction({
+    required String requestId,
+    required bool isCanteenOrder,
+    required bool approve,
+    String? bookingId,
+    int? extensionMinutes,
+    List<Map<String, dynamic>>? extraItems,
+    double? extraCost,
+  }) async {
+    if (bookingId != null && bookingId.isNotEmpty && approve) {
+      if (extensionMinutes != null && extensionMinutes > 0) {
+        await extendSession(
+          bookingId,
+          extensionMinutes,
+          additionalCost: extraCost,
+        );
+      }
+      if (extraItems != null && extraItems.isNotEmpty) {
+        await addExtrasToSession(bookingId, extraItems, extraCost ?? 0.0);
+      }
+    }
+
+    if (requestId.startsWith('ext_')) {
       return;
     }
 
-    if (isApproved) {
-      await supabaseClient.rpc(
-        'approve_booking_extension',
-        params: {'p_booking_id': cleanBookingId, 'p_additional_cost': null},
+    final uuidRegExp = RegExp(
+      r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
+    );
+    final match = uuidRegExp.firstMatch(requestId);
+    if (match == null) {
+      throw ArgumentError.value(
+        requestId,
+        'requestId',
+        'Request id must contain a UUID',
       );
-    } else {
-      await supabaseClient.rpc(
-        'reject_booking_extension',
-        params: {
-          'p_booking_id': cleanBookingId,
-          'p_reason': reason ?? 'لا يوجد وقت متاح بعد الحجز الحالي',
-        },
-      );
+    }
+
+    final requestType = switch (requestId) {
+      final value when value.startsWith('canteen_') => 'canteen_order',
+      final value when value.startsWith('sc_') => 'service_call',
+      final value when value.startsWith('req_') => 'client_request',
+      _ when isCanteenOrder => 'canteen_order',
+      _ => throw ArgumentError.value(
+        requestId,
+        'requestId',
+        'Unsupported live-request identifier',
+      ),
+    };
+
+    await supabaseClient.rpc(
+      'resolve_live_request',
+      params: {'p_request_type': requestType, 'p_request_id': match.group(0)!},
+    );
+  }
+}
+,
+    );
+    if (!uuidRegExp.hasMatch(cleanBookingId)) {
+      throw FormatException('Invalid booking UUID for extension review');
+    }
+
+    final response = isApproved
+        ? await supabaseClient.rpc(
+            'approve_booking_extension',
+            params: {'p_booking_id': cleanBookingId, 'p_additional_cost': null},
+          )
+        : await supabaseClient.rpc(
+            'reject_booking_extension',
+            params: {
+              'p_booking_id': cleanBookingId,
+              'p_reason': reason ?? 'لا يوجد وقت متاح بعد الحجز الحالي',
+            },
+          );
+    if (response is! Map || response['success'] != true) {
+      throw const FormatException('Extension review acknowledgement missing');
     }
   }
 
