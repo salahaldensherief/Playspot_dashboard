@@ -52,6 +52,7 @@ void main() {
           return http.Response(
             jsonEncode({'success': true}),
             200,
+            request: request,
             headers: {'content-type': 'application/json'},
           );
         }),
@@ -83,6 +84,7 @@ void main() {
           (request) async => http.Response(
             jsonEncode(body),
             200,
+            request: request,
             headers: {'content-type': 'application/json'},
           ),
         ),
@@ -110,6 +112,7 @@ void main() {
         return http.Response(
           jsonEncode({'success': true, 'status': 'rejected'}),
           200,
+          request: request,
           headers: {'content-type': 'application/json'},
         );
       }),
