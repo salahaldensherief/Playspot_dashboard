@@ -256,6 +256,569 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
       return;
     }
 
+    if (_selectedDays.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('combo_select_day_error'.tr()),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final fromInput = _availableFromController.text.trim();
+    final toInput = _availableToController.text.trim();
+    if (fromInput.isEmpty != toInput.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('combo_time_pair_required'.tr()),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    final timeFormat = RegExp(r'^([01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d)?
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.bundlePrice),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    if (_validFrom != null &&
+        _validTo != null &&
+        _validTo!.isBefore(_validFrom!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('combo_invalid_date_range'.tr()),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    final comboId = widget.initialCombo?.id ?? '';
+    final components = _items.map((item) {
+      final extra = _findExtra(item.extraId);
+      return CanteenComboComponentEntity(
+        comboId: comboId,
+        extraId: item.extraId,
+        quantity: item.quantity,
+        extraNameAr: extra?.nameAr,
+        extraNameEn: extra?.nameEn,
+        extraPrice: extra?.price,
+        extraCostPrice: extra?.costPrice,
+        extraImageUrl: extra?.imageUrl,
+      );
+    }).toList();
+
+    final fromTime = _availableFromController.text.trim().isNotEmpty
+        ? _availableFromController.text.trim()
+        : null;
+    final toTime = _availableToController.text.trim().isNotEmpty
+        ? _availableToController.text.trim()
+        : null;
+
+    final newCombo = CanteenComboEntity(
+      id: comboId,
+      loungeId: widget.loungeId,
+      nameAr: _nameArController.text.trim(),
+      nameEn: _nameEnController.text.trim().isNotEmpty
+          ? _nameEnController.text.trim()
+          : null,
+      descriptionAr: _descArController.text.trim().isNotEmpty
+          ? _descArController.text.trim()
+          : null,
+      descriptionEn: _descEnController.text.trim().isNotEmpty
+          ? _descEnController.text.trim()
+          : null,
+      imageUrl: _imageUrlController.text.trim().isNotEmpty
+          ? _imageUrlController.text.trim()
+          : null,
+      price: price,
+      daysOfWeek: _selectedDays.length == 7 ? null : _selectedDays,
+      availableFrom: fromTime,
+      availableTo: toTime,
+      validFrom: _validFrom,
+      validTo: _validTo,
+      isActive: _isActive,
+      sortOrder: widget.initialCombo?.sortOrder ?? 0,
+      items: components,
+    );
+
+    final success = await widget.onSave(newCombo);
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+
+    if (success) {
+      Navigator.of(context).pop(true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    EasyLocalization.of(context);
+    return AppDialog(
+      title: widget.initialCombo != null
+          ? AppStrings.editCombo
+          : AppStrings.addCombo,
+      width: 720.w,
+      actions: [
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.outlined,
+          onPressed: () => Navigator.pop(context),
+        ),
+        SizedBox(width: 12.w),
+        AppButton(
+          text: AppStrings.save,
+          isLoading: _isSaving,
+          onPressed: _isSaving ? null : _submit,
+        ),
+      ],
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Row 1: Names
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.comboNameAr,
+                    controller: _nameArController,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? AppStrings.required
+                        : null,
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.comboNameEn,
+                    controller: _nameEnController,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+
+            // Row 2: Price & Image URL
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    label: '${AppStrings.bundlePrice} (${AppStrings.egp})',
+                    controller: _priceController,
+                    keyboardType: TextInputType.number,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? AppStrings.required
+                        : null,
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.comboImageUrl,
+                    controller: _imageUrlController,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+
+            // Row 3: Descriptions
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.comboDescAr,
+                    controller: _descArController,
+                    maxLines: 2,
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.comboDescEn,
+                    controller: _descEnController,
+                    maxLines: 2,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 24.h),
+
+            // Combo Components Section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                AppText.subHeading(
+                  AppStrings.comboItemsSelector,
+                  fontSize: 16.sp,
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+                AppButton(
+                  text: AppStrings.addItemToCombo,
+                  icon: Icons.add,
+                  onPressed: _addItem,
+                ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+
+            if (_items.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(20.r),
+                decoration: BoxDecoration(
+                  color: AppColors.mutedBackground,
+                  borderRadius: BorderRadius.circular(10.r),
+                  border: Border.all(color: AppColors.borderDefault),
+                ),
+                child: Center(
+                  child: AppText.body(
+                    AppStrings.addItemToCombo,
+                    fontSize: 13.sp,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _items.length,
+                separatorBuilder: (context, index) => SizedBox(height: 8.h),
+                itemBuilder: (context, index) {
+                  final itemDraft = _items[index];
+                  final currentExtra = _findExtra(itemDraft.extraId);
+
+                  return Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 8.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.mutedBackground,
+                      borderRadius: BorderRadius.circular(10.r),
+                      border: Border.all(color: AppColors.borderDefault),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: DropdownButtonFormField<String>(
+                            initialValue:
+                                itemDraft.extraId.isNotEmpty &&
+                                    widget.availableExtras.any(
+                                      (e) => e.id == itemDraft.extraId,
+                                    )
+                                ? itemDraft.extraId
+                                : null,
+                            dropdownColor: AppColors.cardBackground,
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 13.sp,
+                            ),
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 10.w,
+                                vertical: 8.h,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.r),
+                                borderSide: BorderSide(
+                                  color: AppColors.borderDefault,
+                                ),
+                              ),
+                            ),
+                            items: widget.availableExtras.map((extra) {
+                              return DropdownMenuItem<String>(
+                                value: extra.id,
+                                child: Text(
+                                  '${extra.nameAr} (${extra.price.toStringAsFixed(0)} ${AppStrings.egp})',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() {
+                                  itemDraft.extraId = val;
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+
+                        // Quantity Stepper
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.remove_circle_outline,
+                                color: AppColors.textSecondary,
+                              ),
+                              onPressed: itemDraft.quantity > 1
+                                  ? () => setState(() => itemDraft.quantity--)
+                                  : null,
+                            ),
+                            AppText.body(
+                              '${itemDraft.quantity}',
+                              fontSize: 14.sp,
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.add_circle_outline,
+                                color: AppColors.primary,
+                              ),
+                              onPressed: () =>
+                                  setState(() => itemDraft.quantity++),
+                            ),
+                          ],
+                        ),
+                        SizedBox(width: 12.w),
+
+                        // Subtotal
+                        if (currentExtra != null)
+                          AppText.body(
+                            '${(currentExtra.price * itemDraft.quantity).toStringAsFixed(0)} ${AppStrings.egp}',
+                            fontSize: 12.sp,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+
+                        const Spacer(),
+
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: AppColors.error,
+                          ),
+                          onPressed: () => _removeItem(index),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            SizedBox(height: 20.h),
+
+            // Live Analytics & Financial Calculation Card
+            Container(
+              padding: EdgeInsets.all(14.r),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      AppText.body(
+                        AppStrings.separateItemsTotal,
+                        fontSize: 13.sp,
+                        color: AppColors.textSecondary,
+                      ),
+                      AppText.body(
+                        '${_separateItemsTotal.toStringAsFixed(0)} ${AppStrings.egp}',
+                        fontSize: 14.sp,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 6.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      AppText.body(
+                        AppStrings.bundlePrice,
+                        fontSize: 13.sp,
+                        color: AppColors.textSecondary,
+                      ),
+                      AppText.body(
+                        '${_bundlePrice.toStringAsFixed(0)} ${AppStrings.egp}',
+                        fontSize: 14.sp,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 6.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      AppText.body(
+                        AppStrings.savingsBadge,
+                        fontSize: 13.sp,
+                        color: AppColors.success,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 2.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6.r),
+                        ),
+                        child: AppText.body(
+                          '${_savings.toStringAsFixed(0)} ${AppStrings.egp}',
+                          fontSize: 12.sp,
+                          color: AppColors.success,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (_estimatedCostTotal > 0) ...[
+                    SizedBox(height: 6.h),
+                    Divider(color: AppColors.borderDefault, height: 1.h),
+                    SizedBox(height: 6.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        AppText.body(
+                          AppStrings.profitMargin,
+                          fontSize: 13.sp,
+                          color: AppColors.warning,
+                        ),
+                        AppText.body(
+                          '${(_profitMargin ?? 0).toStringAsFixed(0)} ${AppStrings.egp} (${(_profitMarginPercent ?? 0).toStringAsFixed(1)}%)',
+                          fontSize: 13.sp,
+                          color: AppColors.warning,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            SizedBox(height: 20.h),
+
+            // Days of Week Selection
+            AppText.subHeading(
+              AppStrings.availableDays,
+              fontSize: 14.sp,
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+            SizedBox(height: 8.h),
+            Wrap(
+              spacing: 8.w,
+              runSpacing: 8.h,
+              children: List.generate(7, (i) {
+                final isSelected = _selectedDays.contains(i);
+                return FilterChip(
+                  label: Text(_dayLabels[i]),
+                  selected: isSelected,
+                  selectedColor: AppColors.primary.withValues(alpha: 0.25),
+                  checkmarkColor: AppColors.primary,
+                  labelStyle: TextStyle(
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                    fontSize: 12.sp,
+                  ),
+                  onSelected: (selected) {
+                    setState(() {
+                      if (selected) {
+                        _selectedDays.add(i);
+                      } else {
+                        _selectedDays.remove(i);
+                      }
+                    });
+                  },
+                );
+              }),
+            ),
+            SizedBox(height: 16.h),
+
+            // Optional calendar validity window
+            AppText.subHeading(
+              'validity_period'.tr(),
+              fontSize: 14.sp,
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+            SizedBox(height: 8.h),
+            Row(
+              children: [
+                _buildValidityPicker(start: true),
+                SizedBox(width: 12.w),
+                _buildValidityPicker(start: false),
+              ],
+            ),
+            SizedBox(height: 16.h),
+
+            // Available Hours (Optional)
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    label: '${AppStrings.startTimeLabel} (14:00)',
+                    controller: _availableFromController,
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: AppTextField(
+                    label: '${AppStrings.endTimeLabel} (23:00)',
+                    controller: _availableToController,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+
+            // Active Switch
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: AppText.body(
+                AppStrings.activeStatus,
+                fontSize: 14.sp,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+              value: _isActive,
+              activeThumbColor: AppColors.primary,
+              onChanged: (val) => setState(() => _isActive = val),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+);
+    if (fromInput.isNotEmpty &&
+        (!timeFormat.hasMatch(fromInput) || !timeFormat.hasMatch(toInput))) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('combo_invalid_time_format'.tr()),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     final price = double.tryParse(_priceController.text.trim()) ?? 0.0;
     if (price <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
