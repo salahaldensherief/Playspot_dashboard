@@ -30,9 +30,7 @@ void main() {
             locale: context.locale,
             supportedLocales: context.supportedLocales,
             localizationsDelegates: context.localizationDelegates,
-            home: Scaffold(
-              body: SizedBox(width: 900, child: child),
-            ),
+            home: Scaffold(body: SizedBox(width: 900, child: child)),
           ),
         ),
       ),
@@ -40,7 +38,9 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('combo card is read-only without menu permission', (tester) async {
+  testWidgets('combo card is read-only without menu permission', (
+    tester,
+  ) async {
     await mount(
       tester,
       ComboCard(
@@ -63,7 +63,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('combo card exposes controls to permitted editor', (tester) async {
+  testWidgets('combo card exposes controls to permitted editor', (
+    tester,
+  ) async {
     await mount(
       tester,
       ComboCard(
@@ -85,7 +87,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('upsell rule card is read-only without menu permission', (tester) async {
+  testWidgets('upsell rule card is read-only without menu permission', (
+    tester,
+  ) async {
     await mount(
       tester,
       UpsellRuleCard(
