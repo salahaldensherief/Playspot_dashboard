@@ -239,12 +239,12 @@ class UpsellRuleCard extends StatelessWidget {
               Expanded(
                 child: AppText.body(
                   'upsell_priority_limits'.tr(
-                  args: [
-                    (AppStrings.priority).toString(),
-                    (rule.priority).toString(),
-                    (rule.maxImpressionsPerBooking).toString(),
-                  ],
-                ),
+                    args: [
+                      (AppStrings.priority).toString(),
+                      (rule.priority).toString(),
+                      (rule.maxImpressionsPerBooking).toString(),
+                    ],
+                  ),
                   fontSize: 11.sp,
                   color: AppColors.textMuted,
                   maxLines: 2,
