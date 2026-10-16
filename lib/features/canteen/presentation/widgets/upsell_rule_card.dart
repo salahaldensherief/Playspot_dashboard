@@ -10,6 +10,7 @@ import '../../domain/entities/upsell_rule_entity.dart';
 
 class UpsellRuleCard extends StatelessWidget {
   final UpsellRuleEntity rule;
+  final bool canManage;
   final UpsellConversionEntity? conversion;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -18,6 +19,7 @@ class UpsellRuleCard extends StatelessWidget {
   const UpsellRuleCard({
     super.key,
     required this.rule,
+    this.canManage = false,
     this.conversion,
     required this.onEdit,
     required this.onDelete,
@@ -108,7 +110,7 @@ class UpsellRuleCard extends StatelessWidget {
               Switch(
                 value: rule.isActive,
                 activeThumbColor: AppColors.primary,
-                onChanged: onToggleActive,
+                onChanged: canManage ? onToggleActive : null,
               ),
             ],
           ),
@@ -179,40 +181,48 @@ class UpsellRuleCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildMetricColumn(
-                  AppStrings.impressionsCount,
-                  '$impressions',
-                  AppColors.textSecondary,
+                Expanded(
+                  child: _buildMetricColumn(
+                    AppStrings.impressionsCount,
+                    '$impressions',
+                    AppColors.textSecondary,
+                  ),
                 ),
                 Container(
                   width: 1.w,
                   height: 28.h,
                   color: AppColors.borderDefault,
                 ),
-                _buildMetricColumn(
-                  AppStrings.conversionsCount,
-                  '$conversionsCount',
-                  AppColors.success,
+                Expanded(
+                  child: _buildMetricColumn(
+                    AppStrings.conversionsCount,
+                    '$conversionsCount',
+                    AppColors.success,
+                  ),
                 ),
                 Container(
                   width: 1.w,
                   height: 28.h,
                   color: AppColors.borderDefault,
                 ),
-                _buildMetricColumn(
-                  AppStrings.conversionRate,
-                  '${conversionRate.toStringAsFixed(1)}%',
-                  AppColors.primary,
+                Expanded(
+                  child: _buildMetricColumn(
+                    AppStrings.conversionRate,
+                    '${conversionRate.toStringAsFixed(1)}%',
+                    AppColors.primary,
+                  ),
                 ),
                 Container(
                   width: 1.w,
                   height: 28.h,
                   color: AppColors.borderDefault,
                 ),
-                _buildMetricColumn(
-                  AppStrings.revenueGenerated,
-                  '${revenue.toStringAsFixed(0)} ${AppStrings.egp}',
-                  AppColors.warning,
+                Expanded(
+                  child: _buildMetricColumn(
+                    AppStrings.revenueGenerated,
+                    '${revenue.toStringAsFixed(0)} ${AppStrings.egp}',
+                    AppColors.warning,
+                  ),
                 ),
               ],
             ),
@@ -226,47 +236,52 @@ class UpsellRuleCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              AppText.body(
-                'upsell_priority_limits'.tr(
-                  args: [
-                    (AppStrings.priority).toString(),
-                    (rule.priority).toString(),
-                    (rule.maxImpressionsPerBooking).toString(),
+              Expanded(
+                child: AppText.body(
+                  'upsell_priority_limits'.tr(
+                    args: [
+                      (AppStrings.priority).toString(),
+                      (rule.priority).toString(),
+                      (rule.maxImpressionsPerBooking).toString(),
+                    ],
+                  ),
+                  fontSize: 11.sp,
+                  color: AppColors.textMuted,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (canManage)
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.edit_outlined,
+                        color: AppColors.textSecondary,
+                      ),
+                      tooltip: AppStrings.edit,
+                      onPressed: onEdit,
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: AppColors.error,
+                      ),
+                      tooltip: AppStrings.delete,
+                      onPressed: () async {
+                        final confirmed = await AppDialog.confirm(
+                          context: context,
+                          title: AppStrings.delete,
+                          message: 'delete_upsell_rule_confirmation'.tr(),
+                          confirmColor: AppColors.error,
+                        );
+                        if (confirmed == true) {
+                          onDelete();
+                        }
+                      },
+                    ),
                   ],
                 ),
-                fontSize: 11.sp,
-                color: AppColors.textMuted,
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.edit_outlined,
-                      color: AppColors.textSecondary,
-                    ),
-                    tooltip: AppStrings.edit,
-                    onPressed: onEdit,
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.delete_outline,
-                      color: AppColors.error,
-                    ),
-                    tooltip: AppStrings.delete,
-                    onPressed: () async {
-                      final confirmed = await AppDialog.confirm(
-                        context: context,
-                        title: AppStrings.delete,
-                        message: 'delete_upsell_rule_confirmation'.tr(),
-                        confirmColor: AppColors.error,
-                      );
-                      if (confirmed == true) {
-                        onDelete();
-                      }
-                    },
-                  ),
-                ],
-              ),
             ],
           ),
         ],
@@ -277,13 +292,22 @@ class UpsellRuleCard extends StatelessWidget {
   Widget _buildMetricColumn(String label, String value, Color valueColor) {
     return Column(
       children: [
-        AppText.body(label, fontSize: 10.sp, color: AppColors.textMuted),
+        AppText.body(
+          label,
+          fontSize: 10.sp,
+          color: AppColors.textMuted,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+        ),
         SizedBox(height: 2.h),
         AppText.body(
           value,
           fontSize: 12.sp,
           color: valueColor,
           fontWeight: FontWeight.bold,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );

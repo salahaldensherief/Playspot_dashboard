@@ -10,6 +10,7 @@ import '../../domain/entities/canteen_combo_entity.dart';
 
 class ComboCard extends StatelessWidget {
   final CanteenComboEntity combo;
+  final bool canManage;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final ValueChanged<bool> onToggleActive;
@@ -17,6 +18,7 @@ class ComboCard extends StatelessWidget {
   const ComboCard({
     super.key,
     required this.combo,
+    this.canManage = false,
     required this.onEdit,
     required this.onDelete,
     required this.onToggleActive,
@@ -91,7 +93,7 @@ class ComboCard extends StatelessWidget {
                         Switch(
                           value: combo.isActive,
                           activeThumbColor: AppColors.primary,
-                          onChanged: onToggleActive,
+                          onChanged: canManage ? onToggleActive : null,
                         ),
                       ],
                     ),
@@ -213,34 +215,38 @@ class ComboCard extends StatelessWidget {
           SizedBox(height: 8.h),
 
           // Action Buttons Footer
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              IconButton(
-                icon: const Icon(
-                  Icons.edit_outlined,
-                  color: AppColors.textSecondary,
+          if (canManage)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.edit_outlined,
+                    color: AppColors.textSecondary,
+                  ),
+                  tooltip: AppStrings.edit,
+                  onPressed: onEdit,
                 ),
-                tooltip: AppStrings.edit,
-                onPressed: onEdit,
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                tooltip: AppStrings.delete,
-                onPressed: () async {
-                  final confirmed = await AppDialog.confirm(
-                    context: context,
-                    title: AppStrings.delete,
-                    message: 'delete_combo_confirmation'.tr(),
-                    confirmColor: AppColors.error,
-                  );
-                  if (confirmed == true) {
-                    onDelete();
-                  }
-                },
-              ),
-            ],
-          ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: AppColors.error,
+                  ),
+                  tooltip: AppStrings.delete,
+                  onPressed: () async {
+                    final confirmed = await AppDialog.confirm(
+                      context: context,
+                      title: AppStrings.delete,
+                      message: 'delete_combo_confirmation'.tr(),
+                      confirmColor: AppColors.error,
+                    );
+                    if (confirmed == true) {
+                      onDelete();
+                    }
+                  },
+                ),
+              ],
+            ),
         ],
       ),
     );
