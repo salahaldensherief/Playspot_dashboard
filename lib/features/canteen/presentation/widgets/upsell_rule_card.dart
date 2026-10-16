@@ -10,6 +10,7 @@ import '../../domain/entities/upsell_rule_entity.dart';
 
 class UpsellRuleCard extends StatelessWidget {
   final UpsellRuleEntity rule;
+  final bool canManage;
   final UpsellConversionEntity? conversion;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -18,6 +19,7 @@ class UpsellRuleCard extends StatelessWidget {
   const UpsellRuleCard({
     super.key,
     required this.rule,
+    this.canManage = false,
     this.conversion,
     required this.onEdit,
     required this.onDelete,
@@ -108,7 +110,7 @@ class UpsellRuleCard extends StatelessWidget {
               Switch(
                 value: rule.isActive,
                 activeThumbColor: AppColors.primary,
-                onChanged: onToggleActive,
+                onChanged: canManage ? onToggleActive : null,
               ),
             ],
           ),
@@ -237,11 +239,12 @@ class UpsellRuleCard extends StatelessWidget {
                 fontSize: 11.sp,
                 color: AppColors.textMuted,
               ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.edit_outlined,
+              if (canManage)
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.edit_outlined,
                       color: AppColors.textSecondary,
                     ),
                     tooltip: AppStrings.edit,
