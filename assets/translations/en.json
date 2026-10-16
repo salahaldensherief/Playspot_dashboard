@@ -2030,5 +2030,11 @@
   "tournament_refund_pending": "Refund pending",
   "tournament_payment_unknown": "Unknown payment status",
   "complete_tournament": "Complete tournament",
-  "award_tournament_prizes": "Award prizes"
+  "award_tournament_prizes": "Award prizes",
+  "combo_date_unlimited": "No date limit",
+  "combo_clear_date": "Clear date",
+  "combo_invalid_date_range": "The offer end date must be on or after the start date.",
+  "combo_select_day_error": "Select at least one available day for the combo.",
+  "combo_time_pair_required": "Set both start and end times, or leave both empty.",
+  "combo_invalid_time_format": "Enter times in HH:mm or HH:mm:ss format."
 }
