@@ -91,7 +91,7 @@ class _QuickDiscountSectionState extends State<QuickDiscountSection> {
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
               primary: AppColors.neonBlue,
-              onPrimary: AppColors.textPrimary,
+              onPrimary: AppColors.onPrimary,
               surface: AppColors.cardBackground,
               onSurface: AppColors.textPrimary,
             ),

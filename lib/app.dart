@@ -66,7 +66,9 @@ class _MyAppState extends State<MyApp> {
               theme: ThemeData(
                 scaffoldBackgroundColor: AppColors.scaffoldBackground,
                 colorScheme: ColorScheme.fromSeed(
-                  seedColor: AppColors.neonBlue,
+                  seedColor: AppColors.primary,
+                  primary: AppColors.primary,
+                  onPrimary: AppColors.onPrimary,
                   brightness: Brightness.dark,
                 ),
                 useMaterial3: true,

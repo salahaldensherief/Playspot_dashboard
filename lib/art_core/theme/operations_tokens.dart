@@ -3,7 +3,7 @@ import 'app_colors.dart';
 
 class OperationsTokens {
   // Quiet operations palette, scoped to the cashier workspace.
-  static const accent = Color(0xFF9CBCE0);
+  static const accent = AppColors.primary;
   static const surface = Color(0xFF171C26);
   static const surfaceRaised = Color(0xFF202734);
   static const selected = Color(0xFF25354A);

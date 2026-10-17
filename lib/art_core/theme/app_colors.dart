@@ -6,12 +6,13 @@ class AppColors {
   static const Color sidebarBackground = Color(0xFF1A1A24);
   static const Color mutedBackground = Color(0xFF1F1F2E);
 
-  static const Color neonBlue = Color(0xFF00D9FF); // primary accent
+  static const Color primary = Color(0xFF9CBCE0);
+  static const Color onPrimary = Color(0xFF101722);
+  static const Color neonBlue = primary; // legacy primary alias
   static const Color neonPurple = Color(0xFFA855F7); // secondary accent
-  static const Color neonCyan = Color(0xFF22D3EE);
+  static const Color neonCyan = primary;
   static const Color neonGreen = Color(0xFF10B981);
 
-  static const Color primary = neonBlue;
   static const Color secondary = neonPurple;
   static const Color accent = neonCyan;
   static const Color error = danger;
@@ -27,8 +28,8 @@ class AppColors {
   static const Color borderDefault = Color(0x1AFFFFFF); // 10% white
   static const Color divider = Color(0x1AFFFFFF);
 
-  static const Color sidebarActiveBorder = Color(0xFF00D9FF);
-  static const Color sidebarActiveBg = Color(0x1000D9FF);
+  static const Color sidebarActiveBorder = primary;
+  static const Color sidebarActiveBg = Color(0x109CBCE0);
 
   // Rating & Tier Colors
   static const Color starRating = Color(0xFFFFB800);
