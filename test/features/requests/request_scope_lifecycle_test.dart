@@ -44,6 +44,7 @@ void main() {
     repository = _Repository();
     audio = _Audio();
     when(() => audio.stopUrgentAlertSound()).thenAnswer((_) async {});
+    when(() => audio.playServiceCallSound()).thenAnswer((_) async {});
     cubit = ClientRequestsCubit(
       watchClientRequestsUseCase: WatchClientRequestsUseCase(repository),
       markRequestAsAttendedUseCase: MarkRequestAsAttendedUseCase(repository),
@@ -161,6 +162,63 @@ void main() {
       expect(a.hasListener, isFalse);
     },
   );
+  test('failed attendance preserves newer realtime requests', () async {
+    final stream = watch('a');
+    cubit.startWatchingRequests(loungeId: 'a');
+    stream.add([request('sc_first', 'a')]);
+    await Future<void>.delayed(Duration.zero);
+    final pending = Completer<Either<Failure, void>>();
+    when(
+      () => repository.markRequestAsAttended('sc_first', isCanteenOrder: false),
+    ).thenAnswer((_) => pending.future);
+    final attending = cubit.markAsAttended('sc_first');
+    stream.add([request('sc_new', 'a')]);
+    await Future<void>.delayed(Duration.zero);
+    pending.complete(const Left(ServerFailure('denied')));
+    await attending;
+    expect(cubit.state.requests.map((r) => r.id), ['sc_new']);
+    expect(cubit.state.status, ClientRequestsStatus.failure);
+  });
+
+  test('failed attendance does not undo another successful action', () async {
+    final stream = watch('a');
+    cubit.startWatchingRequests(loungeId: 'a');
+    stream.add([request('sc_first', 'a'), request('sc_second', 'a')]);
+    await Future<void>.delayed(Duration.zero);
+    final pending = Completer<Either<Failure, void>>();
+    when(
+      () => repository.markRequestAsAttended('sc_first', isCanteenOrder: false),
+    ).thenAnswer((_) => pending.future);
+    when(
+      () =>
+          repository.markRequestAsAttended('sc_second', isCanteenOrder: false),
+    ).thenAnswer((_) async => const Right(null));
+    final attending = cubit.markAsAttended('sc_first');
+    await cubit.markAsAttended('sc_second');
+    pending.complete(const Left(ServerFailure('denied')));
+    await attending;
+    expect(cubit.state.requests.first.isAttended, isFalse);
+    expect(cubit.state.requests.last.isAttended, isTrue);
+  });
+
+  test('repeated attendance while pending sends one mutation', () async {
+    final stream = watch('a');
+    cubit.startWatchingRequests(loungeId: 'a');
+    stream.add([request('sc_first', 'a')]);
+    await Future<void>.delayed(Duration.zero);
+    final pending = Completer<Either<Failure, void>>();
+    when(
+      () => repository.markRequestAsAttended('sc_first', isCanteenOrder: false),
+    ).thenAnswer((_) => pending.future);
+    final first = cubit.markAsAttended('sc_first');
+    final repeated = cubit.markAsAttended('sc_first');
+    pending.complete(const Right(null));
+    await Future.wait([first, repeated]);
+    verify(
+      () => repository.markRequestAsAttended('sc_first', isCanteenOrder: false),
+    ).called(1);
+  });
+
   test(
     'page completing after logout cannot repopulate private requests',
     () async {

@@ -197,10 +197,6 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     }
 
     if (id.startsWith('ext_')) {
-      if (_locallyAttendedIds.length > 300) {
-        _locallyAttendedIds.clear();
-      }
-      _locallyAttendedIds.add(id);
       return;
     }
 
