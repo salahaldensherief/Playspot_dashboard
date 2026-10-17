@@ -7,7 +7,9 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/domain/services/booking_schedule.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_time_builder.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/start_session_button.dart';
 import 'manual_payment_verification_dialog.dart';
 
@@ -218,43 +220,50 @@ class BookingCardActions extends StatelessWidget {
     }
 
     if (booking.canStartSession) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
+      return SessionTimeBuilder(
+        builder: (context, now) {
+          final isReady = BookingSchedule.canStart(booking.startDateTime, now);
+          return Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                flex: 3,
-                child: StartSessionButton(
-                  bookingId: booking.id,
-                  bookingDate: booking.date,
-                  startTime: booking.startTime,
-                  onSuccess: onStartSession,
-                  height: h,
-                ),
+              Row(
+                children: [
+                  if (isReady) ...[
+                    Expanded(
+                      flex: 3,
+                      child: StartSessionButton(
+                        bookingId: booking.id,
+                        bookingDate: booking.date,
+                        startTime: booking.startTime,
+                        onSuccess: onStartSession,
+                        height: h,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                  ],
+                  Expanded(
+                    flex: 2,
+                    child: AppButton(
+                      text: AppStrings.markNoShowAction,
+                      variant: AppButtonVariant.outlined,
+                      height: h,
+                      onPressed: () => _showNoShowConfirmDialog(context),
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(width: 8.w),
-              Expanded(
-                flex: 2,
-                child: AppButton(
-                  text: AppStrings.markNoShowAction,
+              if (!isPaid && booking.isCashPayment) ...[
+                SizedBox(height: 8.h),
+                AppButton(
+                  text: AppStrings.confirmCash,
                   variant: AppButtonVariant.outlined,
                   height: h,
-                  onPressed: () => _showNoShowConfirmDialog(context),
+                  onPressed: onConfirmPayment ?? onOpenDetails,
                 ),
-              ),
+              ],
             ],
-          ),
-          if (!isPaid && booking.isCashPayment) ...[
-            SizedBox(height: 8.h),
-            AppButton(
-              text: AppStrings.confirmCash,
-              variant: AppButtonVariant.outlined,
-              height: h,
-              onPressed: onConfirmPayment ?? onOpenDetails,
-            ),
-          ],
-        ],
+          );
+        },
       );
     }
 

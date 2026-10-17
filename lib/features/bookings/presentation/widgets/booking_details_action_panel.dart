@@ -139,16 +139,19 @@ class _BookingDetailsActionPanelState extends State<BookingDetailsActionPanel> {
           ),
         if (booking.canStartSession)
           SessionTimeBuilder(
-            builder: (context, now) => AppButton(
-              text: 'start_session_now'.tr(),
-              variant: AppButtonVariant.primary,
-              height: 40.h,
-              onPressed:
-                  context.hasPermission('sessions_control') &&
-                      BookingSchedule.canStart(booking.startDateTime, now)
-                  ? () => _run(() => cubit.startBookingSession(booking.id))
-                  : null,
-            ),
+            builder: (context, now) {
+              if (!BookingSchedule.canStart(booking.startDateTime, now)) {
+                return const SizedBox.shrink();
+              }
+              return AppButton(
+                text: 'start_session_now'.tr(),
+                variant: AppButtonVariant.primary,
+                height: 40.h,
+                onPressed: context.hasPermission('sessions_control')
+                    ? () => _run(() => cubit.startBookingSession(booking.id))
+                    : null,
+              );
+            },
           ),
         if (isInProgress)
           AppButton(

@@ -6,7 +6,9 @@ import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_text.dart';
 import '../../domain/entities/booking.dart';
+import '../../domain/services/booking_schedule.dart';
 import '../cubit/booking_cubit.dart';
+import 'session_time_builder.dart';
 import 'start_session_button.dart';
 import 'manual_payment_verification_dialog.dart';
 import 'session_live_clock.dart';
@@ -240,16 +242,25 @@ class CashierSessionTile extends StatelessWidget {
                         ),
                       ),
                     ] else if (booking.canStartSession) ...[
-                      SizedBox(height: 8.h),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 28.h,
-                        child: StartSessionButton(
-                          bookingId: booking.id,
-                          bookingDate: booking.date,
-                          startTime: booking.startTime,
-                          height: 28.h,
-                        ),
+                      SessionTimeBuilder(
+                        builder: (context, now) {
+                          if (!BookingSchedule.canStart(booking.startDateTime, now)) {
+                            return const SizedBox.shrink();
+                          }
+                          return Padding(
+                            padding: EdgeInsets.only(top: 8.h),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: 28.h,
+                              child: StartSessionButton(
+                                bookingId: booking.id,
+                                bookingDate: booking.date,
+                                startTime: booking.startTime,
+                                height: 28.h,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ] else if (booking.status == BookingStatus.pending) ...[
                       SizedBox(height: 8.h),

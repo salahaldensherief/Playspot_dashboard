@@ -161,32 +161,22 @@ class _StartSessionButtonState extends State<StartSessionButton> {
     context.select((LoginCubit? cubit) => cubit?.state.user);
     final permitted = context.hasPermission('sessions_control');
     final bool isReadyToStart = _isStartTimeReached;
-    final startDt = _bookingStartTime;
 
-    final String buttonText = isReadyToStart
-        ? AppStrings.startSession
-        : (startDt != null
-              ? AppStrings.startsAt.replaceFirst('{}', _format12Hour(startDt))
-              : AppStrings.startSession);
+    if (!isReadyToStart) {
+      return const SizedBox.shrink();
+    }
 
     return AppButton(
-      text: buttonText,
-      icon: isReadyToStart
-          ? Icons.play_arrow_rounded
-          : Icons.access_time_rounded,
+      text: AppStrings.startSession,
+      icon: Icons.play_arrow_rounded,
       isLoading: _isLoading,
       width: widget.width,
       height: widget.height ?? 32.h,
-      backgroundColor: isReadyToStart
-          ? AppColors.success
-          : AppColors.cardBackground,
-      foregroundColor: isReadyToStart
-          ? AppColors.textPrimary
-          : AppColors.textMuted,
+      backgroundColor: AppColors.success,
+      foregroundColor: AppColors.textPrimary,
       disabledBackgroundColor: AppColors.cardBackground,
       disabledForegroundColor: AppColors.textMuted,
-      onPressed:
-          (!permitted || !widget.enabled || !isReadyToStart || _isLoading)
+      onPressed: (!permitted || !widget.enabled || _isLoading)
           ? null
           : () => _handleStartSession(context),
     );

@@ -279,13 +279,14 @@ class ShiftHeaderBanner extends StatelessWidget {
           onConfirm: (actualCash, notes) async {
             Navigator.pop(diagContext);
             await shiftCubit.closeShift(shift.id, actualCash, notes, loungeId);
+            final closedShift = shiftCubit.state.lastClosedShift;
             if (context.mounted &&
-                shiftCubit.state.status == ShiftStatus.closed &&
-                shiftCubit.state.lastClosedShift?.id == shift.id) {
+                closedShift != null &&
+                closedShift.id == shift.id) {
               showDialog(
                 context: context,
                 builder: (_) => ShiftHandoverSummaryDialog(
-                  shift: shiftCubit.state.lastClosedShift!,
+                  shift: closedShift,
                 ),
               );
             }

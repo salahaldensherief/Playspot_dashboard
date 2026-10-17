@@ -441,11 +441,12 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
               user?.loungeId ?? '',
             );
             _refreshOverview();
-            if (context.mounted && shiftCubit.state.lastClosedShift != null) {
+            final closedShift = shiftCubit.state.lastClosedShift;
+            if (context.mounted && closedShift != null) {
               showDialog(
                 context: context,
                 builder: (_) => ShiftHandoverSummaryDialog(
-                  shift: shiftCubit.state.lastClosedShift!,
+                  shift: closedShift,
                 ),
               );
             }

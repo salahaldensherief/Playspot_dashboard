@@ -139,16 +139,23 @@ class _SessionControlActionsState extends State<SessionControlActions> {
       children: [
         if (_error != null) Text(_error ?? '', style: OperationsTokens.value),
         if (booking.canStartSession)
-          StartSessionButton(
-            bookingId: booking.id,
-            bookingDate: booking.date,
-            startTime: booking.startTime,
-            enabled: !_busy && _allowed('sessions_control'),
-            height: 48,
-            onSuccess: () => context.read<BookingCubit>().startWatchingBookings(
-              loungeId: booking.loungeId,
-              forceRefresh: true,
-            ),
+          SessionTimeBuilder(
+            builder: (context, now) {
+              if (!BookingSchedule.canStart(booking.startDateTime, now)) {
+                return const SizedBox.shrink();
+              }
+              return StartSessionButton(
+                bookingId: booking.id,
+                bookingDate: booking.date,
+                startTime: booking.startTime,
+                enabled: !_busy && _allowed('sessions_control'),
+                height: 48,
+                onSuccess: () => context.read<BookingCubit>().startWatchingBookings(
+                  loungeId: booking.loungeId,
+                  forceRefresh: true,
+                ),
+              );
+            },
           ),
         if (running && !booking.isOpenEnded) _extensions(booking),
         if (running) ...[
