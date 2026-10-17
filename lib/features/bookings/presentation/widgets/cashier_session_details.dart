@@ -11,6 +11,7 @@ import 'session_financial_summary.dart';
 import 'cashier_session_header.dart';
 import 'session_customer_facts.dart';
 import 'session_activity_facts.dart';
+import 'session_workflow_progress.dart';
 
 class CashierSessionDetails extends StatelessWidget {
   final SessionOperationsSummary summary;
@@ -28,6 +29,24 @@ class CashierSessionDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
     final booking = summary.booking;
+    final customer = OperationsSection(
+      title: 'cashier.sessionSection'.tr(),
+      child: SessionCustomerFacts(booking: booking),
+    );
+    final bill = Container(
+      decoration: OperationsTokens.panel.copyWith(
+        color: OperationsTokens.surfaceRaised,
+      ),
+      padding: const EdgeInsets.all(OperationsTokens.padding),
+      child: OperationsSection(
+        title: 'cashier.paymentSection'.tr(),
+        child: SessionFinancialSummary(booking: booking),
+      ),
+    );
+    final activity = OperationsSection(
+      title: 'cashier.activitySection'.tr(),
+      child: SessionActivityFacts(summary: summary, requests: requests),
+    );
     return Container(
       decoration: OperationsTokens.panel,
       padding: const EdgeInsets.all(OperationsTokens.padding),
@@ -35,20 +54,41 @@ class CashierSessionDetails extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           CashierSessionHeader(roomName: booking.roomName, onManage: onManage),
-          const Divider(),
-          OperationsSection(
-            title: 'cashier.sessionSection'.tr(),
-            child: SessionCustomerFacts(booking: booking),
-          ),
-          const Divider(),
-          OperationsSection(
-            title: 'cashier.paymentSection'.tr(),
-            child: SessionFinancialSummary(booking: booking),
-          ),
-          const Divider(),
-          OperationsSection(
-            title: 'cashier.activitySection'.tr(),
-            child: SessionActivityFacts(summary: summary, requests: requests),
+          const SizedBox(height: 16),
+          if (booking.status == BookingStatus.upcoming ||
+              booking.status == BookingStatus.inProgress ||
+              booking.status == BookingStatus.completed) ...[
+            SessionWorkflowProgress(booking: booking),
+            const SizedBox(height: 16),
+          ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth >= 760) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 6,
+                      child: Column(
+                        children: [customer, const Divider(), activity],
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(flex: 4, child: bill),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  customer,
+                  const SizedBox(height: 8),
+                  bill,
+                  const SizedBox(height: 8),
+                  activity,
+                ],
+              );
+            },
           ),
           if (showActions && booking.status != BookingStatus.inProgress) ...[
             const Divider(),

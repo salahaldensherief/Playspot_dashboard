@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
 class OperationsTokens {
+  // Quiet operations palette, scoped to the cashier workspace.
+  static const accent = Color(0xFF9CBCE0);
+  static const surface = Color(0xFF171C26);
+  static const surfaceRaised = Color(0xFF202734);
+  static const selected = Color(0xFF25354A);
+  static const border = Color(0xFF354052);
   static const gap = 12.0;
   static const valueFontSize = 16.0;
   static const padding = 16.0;
@@ -16,7 +22,7 @@ class OperationsTokens {
   static const sectionTitle = TextStyle(
     fontSize: 15,
     fontWeight: FontWeight.w700,
-    color: AppColors.neonCyan,
+    color: accent,
   );
   static const title = TextStyle(
     fontSize: 20,
@@ -30,8 +36,8 @@ class OperationsTokens {
     color: AppColors.textPrimary,
   );
   static const panel = BoxDecoration(
-    color: AppColors.cardBackground,
+    color: surface,
     borderRadius: BorderRadius.all(Radius.circular(radius)),
-    border: Border.fromBorderSide(BorderSide(color: AppColors.borderDefault)),
+    border: Border.fromBorderSide(BorderSide(color: border)),
   );
 }

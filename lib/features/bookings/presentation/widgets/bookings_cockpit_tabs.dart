@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import '../../../../art_core/theme/operations_tokens.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
@@ -70,17 +71,10 @@ class BookingsCockpitTabs extends StatelessWidget {
                       dividerColor: Colors.transparent,
                       indicator: BoxDecoration(
                         borderRadius: BorderRadius.circular(10.r),
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.neonBlue.withValues(alpha: 0.3),
-                            AppColors.neonPurple.withValues(alpha: 0.3),
-                          ],
-                        ),
-                        border: Border.all(
-                          color: AppColors.neonBlue.withValues(alpha: 0.5),
-                        ),
+                        color: OperationsTokens.selected,
+                        border: Border.all(color: OperationsTokens.border),
                       ),
-                      labelColor: AppColors.neonBlue,
+                      labelColor: OperationsTokens.accent,
                       unselectedLabelColor: AppColors.textSecondary,
                       labelStyle: TextStyle(
                         fontWeight: FontWeight.bold,

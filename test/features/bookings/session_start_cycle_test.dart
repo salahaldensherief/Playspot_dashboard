@@ -27,6 +27,10 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/sessi
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_clock_host.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/start_session_button.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_live_clock.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_workflow_progress.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_filter_bar.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
 import '../../support/local_translations_loader.dart';
 
 class _Login extends Mock implements LoginCubit {}
@@ -38,6 +42,8 @@ class _Dashboard extends Mock implements DashboardCubit {}
 class _Bookings extends Mock implements BookingCubit {}
 
 class _Requests extends Mock implements ClientRequestsCubit {}
+
+class _Rooms extends Mock implements RoomCubit {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -62,8 +68,9 @@ void main() {
     WidgetTester tester,
     Widget child, {
     DateTime Function()? clock,
+    Size viewport = const Size(1000, 1400),
   }) async {
-    tester.view.physicalSize = const Size(1000, 1400);
+    tester.view.physicalSize = viewport;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -95,6 +102,67 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets(
+    'completed unpaid session does not claim settlement before collection',
+    (tester) async {
+      await mount(
+        tester,
+        SessionWorkflowProgress(
+          booking: booking.copyWith(status: BookingStatus.completed),
+        ),
+      );
+      expect(find.text('cashier.stageSettlement'.tr()), findsOneWidget);
+      expect(find.byIcon(Icons.check_rounded), findsNWidgets(2));
+      await mount(
+        tester,
+        SessionWorkflowProgress(
+          booking: booking.copyWith(
+            status: BookingStatus.completed,
+            paymentStatus: PaymentStatus.paid,
+          ),
+        ),
+      );
+      expect(find.byIcon(Icons.check_rounded), findsNWidgets(3));
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+  testWidgets('compact filters retain search when collapsed and reopened', (
+    tester,
+  ) async {
+    final rooms = _Rooms();
+    when(() => rooms.state).thenReturn(const RoomState());
+    when(() => rooms.stream).thenAnswer((_) => const Stream<RoomState>.empty());
+    var query = '';
+    await mount(
+      tester,
+      BlocProvider<RoomCubit>.value(
+        value: rooms,
+        child: BookingFilterBar(
+          filterState: const BookingFilterState(),
+          onFilterChanged: (value) => query = value.searchQuery,
+          onResetFilters: () {},
+        ),
+      ),
+      viewport: const Size(360, 1000),
+    );
+    final toggle = find.text('cashier.filterOptions'.tr());
+    expect(find.byType(TextField), findsNothing);
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Orbit');
+    await tester.pump(const Duration(milliseconds: 450));
+    expect(query, 'Orbit');
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller?.text,
+      'Orbit',
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
   testWidgets(
     'due unstarted booking shows waiting status rather than a running clock',
     (tester) async {

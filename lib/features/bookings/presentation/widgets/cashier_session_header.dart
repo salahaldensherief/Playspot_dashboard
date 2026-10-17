@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/theme/operations_tokens.dart';
 import '../../../../art_core/widgets/app_button.dart';
 
@@ -40,7 +39,7 @@ class CashierSessionHeader extends StatelessWidget {
             text: 'cashier.manage'.tr(),
             onPressed: onManage,
             variant: AppButtonVariant.outlined,
-            foregroundColor: AppColors.neonCyan,
+            foregroundColor: OperationsTokens.accent,
             fontSize: OperationsTokens.value.fontSize,
             height: OperationsTokens.actionHeight,
             width: compact
