@@ -16,11 +16,13 @@ class CashierSessionDetails extends StatelessWidget {
   final SessionOperationsSummary summary;
   final List<ClientRequestEntity> requests;
   final VoidCallback? onManage;
+  final bool showActions;
   const CashierSessionDetails({
     super.key,
     required this.summary,
     required this.requests,
     this.onManage,
+    this.showActions = true,
   });
   @override
   Widget build(BuildContext context) {
@@ -48,7 +50,7 @@ class CashierSessionDetails extends StatelessWidget {
             title: 'cashier.activitySection'.tr(),
             child: SessionActivityFacts(summary: summary, requests: requests),
           ),
-          if (booking.status != BookingStatus.inProgress) ...[
+          if (showActions && booking.status != BookingStatus.inProgress) ...[
             const Divider(),
             BookingCardActions(
               booking: booking,

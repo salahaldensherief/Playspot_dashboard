@@ -62,7 +62,7 @@ class _StartSessionButtonState extends State<StartSessionButton> {
   void _startTimerIfNeeded() {
     _timer?.cancel();
     if (_bookingStartTime != null && !_isStartTimeReached) {
-      _timer = Timer.periodic(const Duration(seconds: 5), (_) {
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
         if (mounted) {
           setState(() {});
           if (_isStartTimeReached) {

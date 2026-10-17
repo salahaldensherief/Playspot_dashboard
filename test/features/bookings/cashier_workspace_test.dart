@@ -222,6 +222,36 @@ void main() {
     }
   }
 
+  for (final width in [360.0, 1440.0]) {
+    for (final locale in ['ar', 'en']) {
+      testWidgets('due unpaid cash booking awaits start $width $locale', (
+        tester,
+      ) async {
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await mount(
+          tester,
+          width,
+          locale,
+          1.6,
+          bookings: [
+            a.copyWith(status: BookingStatus.upcoming, paymentMethod: 'cash'),
+          ],
+        );
+        expect(find.text('cashier.awaitingStart'.tr()), findsWidgets);
+        expect(find.text('cashier.remaining'.tr()), findsNothing);
+        if (width <= 600) {
+          await tester.tap(find.text(a.roomName).first);
+          await tester.pumpAndSettle();
+        }
+        expect(find.text('cashier.scheduledStart'.tr()), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await screenshot(tester, 'cashier-due-${width.toInt()}-$locale');
+        await tester.pumpWidget(const SizedBox.shrink());
+      });
+    }
+  }
+
   CashierWorkspaceInteractionTests.register(mount, a, request);
 
   testWidgets('clock ticks rebuild leaves, not the cashier workspace', (

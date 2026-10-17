@@ -26,6 +26,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/sessi
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_operations_summary.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_clock_host.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/start_session_button.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_live_clock.dart';
 import '../../support/local_translations_loader.dart';
 
 class _Login extends Mock implements LoginCubit {}
@@ -95,6 +96,54 @@ void main() {
   }
 
   testWidgets(
+    'due unstarted booking shows waiting status rather than a running clock',
+    (tester) async {
+      await mount(
+        tester,
+        SessionLiveClock(booking: booking),
+        clock: () => DateTime(2030, 1, 10, 14, 5),
+      );
+      expect(find.text('cashier.awaitingStart'.tr()), findsOneWidget);
+      expect(find.text('cashier.remaining'.tr()), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+  testWidgets(
+    'cash collection is separate and absent for pending, refunded and transfer bookings',
+    (tester) async {
+      for (final sample in [
+        booking.copyWith(status: BookingStatus.pending),
+        booking.copyWith(paymentStatus: PaymentStatus.refunded),
+        booking.copyWith(paymentMethod: 'manual_transfer'),
+      ]) {
+        await mount(tester, SessionControlActions(booking: sample));
+        expect(find.text('cashier.collect'.tr()), findsNothing);
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
+      await mount(tester, SessionControlActions(booking: booking));
+      expect(find.text('cashier.controlsSection'.tr()), findsOneWidget);
+      expect(find.text('cashier.collectionSection'.tr()), findsOneWidget);
+      expect(find.text('cashier.postpaidHint'.tr()), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+  testWidgets(
+    'drawer details omit duplicate booking actions while the workspace retains them',
+    (tester) async {
+      await mount(
+        tester,
+        CashierSessionDetails(
+          summary: SessionOperationsSummary(booking, null),
+          requests: const [],
+          showActions: false,
+        ),
+      );
+      expect(find.byType(StartSessionButton), findsNothing);
+      expect(find.text(AppStrings.confirmCash), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+  testWidgets(
     'approved unpaid booking collect action reaches the payment flow',
     (tester) async {
       var calls = 0;
@@ -129,7 +178,7 @@ void main() {
   testWidgets(
     'start button follows the session clock without database events',
     (tester) async {
-      var now = DateTime(2030, 1, 10, 13, 40);
+      var now = DateTime(2030, 1, 10, 13, 59, 59);
       await mount(
         tester,
         StartSessionButton(
@@ -141,7 +190,7 @@ void main() {
       );
       expect(find.text(AppStrings.startSession), findsNothing);
       now = DateTime(2030, 1, 10, 14);
-      await tester.pump(const Duration(seconds: 5));
+      await tester.pump(const Duration(seconds: 1));
       expect(find.text(AppStrings.startSession), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
     },

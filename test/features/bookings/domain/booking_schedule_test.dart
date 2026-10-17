@@ -22,11 +22,11 @@ void main() {
       final start = BookingSchedule.startAt(date, '14:00:30');
       expect(start, DateTime(2030, 1, 10, 14, 0, 30));
       expect(
-        BookingSchedule.canStart(start, DateTime(2030, 1, 10, 13, 45, 29)),
+        BookingSchedule.canStart(start, DateTime(2030, 1, 10, 14, 0, 29)),
         isFalse,
       );
       expect(
-        BookingSchedule.canStart(start, DateTime(2030, 1, 10, 13, 45, 30)),
+        BookingSchedule.canStart(start, DateTime(2030, 1, 10, 14, 0, 30)),
         isTrue,
       );
     },

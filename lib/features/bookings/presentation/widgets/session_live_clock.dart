@@ -12,6 +12,17 @@ class SessionLiveClock extends StatelessWidget {
     EasyLocalization.of(context);
     final now = SessionTickerScope.nowOf(context);
     final start = booking.startDateTime;
+    if (booking.status != BookingStatus.inProgress) {
+      final waiting = booking.status == BookingStatus.upcoming;
+      if (!waiting || start == null || !now.isBefore(start)) {
+        return SessionFact(
+          label: 'cashier.sessionState'.tr(),
+          value: waiting
+              ? 'cashier.awaitingStart'.tr()
+              : booking.status.toDbString().tr(),
+        );
+      }
+    }
     final upcoming = start != null && now.isBefore(start);
     final duration = upcoming
         ? start.difference(now)
