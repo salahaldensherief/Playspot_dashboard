@@ -343,25 +343,9 @@ class Booking extends Equatable {
     return start.add(Duration(minutes: durationMinutes));
   }
 
-  /// Determines if the booking is currently active in real-time.
-  bool isBookingActive([DateTime? now]) {
-    if (status == BookingStatus.completed ||
-        status == BookingStatus.cancelled) {
-      return false;
-    }
-    if (status == BookingStatus.inProgress) {
-      return true;
-    }
-    if (isOpenEnded) return false;
-    final currentTime = now ?? DateTime.now();
-    final end = endDateTime;
-    final start = startDateTime;
-    if (end == null || start == null) return false;
-
-    return (currentTime.isAfter(start) ||
-            currentTime.isAtSameMomentAs(start)) &&
-        currentTime.isBefore(end);
-  }
+  /// Only a server-confirmed start occupies a resource. A scheduled time does
+  /// not start play, and overtime does not close a running session.
+  bool isBookingActive([DateTime? now]) => status == BookingStatus.inProgress;
 
   /// Checks if the session or cash hold has expired.
   /// For pending bookings, uses [expiresAt] as hold expiration if available.

@@ -27,8 +27,8 @@ class CashierSessionsSplitView extends StatelessWidget {
             );
       if (width <= 0 || height <= 0) return const SizedBox.shrink();
       final railWidth = AppBreakpoints.isDesktopWidth(width)
-          ? OperationsTokens.railWidth
-          : width * 0.4;
+          ? 300.0
+          : (width * 0.36).clamp(240.0, 300.0);
       return SizedBox(
         height: height,
         child: Row(

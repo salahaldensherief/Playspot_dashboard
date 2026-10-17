@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import '../../../../art_core/theme/operations_tokens.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
@@ -121,12 +122,12 @@ class _BookingFilterBarState extends State<BookingFilterBar> {
     EasyLocalization.of(context);
     final isNarrow = MediaQuery.sizeOf(context).width < 800;
 
-    return Container(
+    final panel = Container(
       padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: OperationsTokens.surface,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.borderDefault),
+        border: Border.all(color: OperationsTokens.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,6 +186,22 @@ class _BookingFilterBarState extends State<BookingFilterBar> {
           ],
         ],
       ),
+    );
+    if (!isNarrow) return panel;
+    return ExpansionTile(
+      maintainState: true,
+      collapsedBackgroundColor: OperationsTokens.surface,
+      backgroundColor: OperationsTokens.surface,
+      iconColor: OperationsTokens.accent,
+      collapsedIconColor: OperationsTokens.accent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      collapsedShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: OperationsTokens.border),
+      ),
+      leading: const Icon(Icons.tune_rounded, color: OperationsTokens.accent),
+      title: Text('cashier.filterOptions'.tr(), style: OperationsTokens.value),
+      children: [panel],
     );
   }
 

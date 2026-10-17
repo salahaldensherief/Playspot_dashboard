@@ -24,7 +24,10 @@ class SessionCustomerFacts extends StatelessWidget {
         label: 'cashier.playMode'.tr(),
         value: booking.playMode?.tr() ?? 'cashier.unspecified'.tr(),
       ),
-      SessionFact(label: 'cashier.start'.tr(), value: booking.startTime),
+      SessionFact(
+        label: 'cashier.scheduledStart'.tr(),
+        value: booking.startTime,
+      ),
       SessionLiveClock(booking: booking),
     ],
   );

@@ -192,12 +192,14 @@ class _BookingsPageState extends State<BookingsPage>
     final user = loginState.user;
     final loungeId = user?.loungeId ?? '';
     final userLounge = loginState.userLounge;
-    final isDesktop = AppBreakpoints.isDesktop(context);
+    // Reserve the permanent service feed for wide workstations. On smaller
+    // screens the alerts drawer leaves room for the session and its bill.
+    final showRequestsSidebar = MediaQuery.sizeOf(context).width >= 1920;
 
     return SessionClockHost(
       child: Scaffold(
         backgroundColor: AppColors.scaffoldBackground,
-        endDrawer: !isDesktop
+        endDrawer: !showRequestsSidebar
             ? BookingsRequestsSidebar(
                 isDrawer: true,
                 onCloseDrawer: () => Navigator.of(context).pop(),
@@ -304,7 +306,7 @@ class _BookingsPageState extends State<BookingsPage>
                             child: BookingsCockpitTabs(
                               tabController: _tabController,
                               userLounge: userLounge,
-                              isDesktop: isDesktop,
+                              isDesktop: showRequestsSidebar,
                               isTableView: _isTableView,
                               onToggleTableView: () =>
                                   setState(() => _isTableView = !_isTableView),
@@ -319,7 +321,7 @@ class _BookingsPageState extends State<BookingsPage>
                   ),
 
                   // Desktop Realtime Sidebar
-                  if (isDesktop) ...[
+                  if (showRequestsSidebar) ...[
                     SizedBox(width: 16.w),
                     const Expanded(flex: 3, child: BookingsRequestsSidebar()),
                   ],

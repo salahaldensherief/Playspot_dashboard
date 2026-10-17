@@ -35,6 +35,5 @@ class BookingSchedule {
   }
 
   static bool canStart(DateTime? start, DateTime now) =>
-      start != null &&
-      !now.isBefore(start.subtract(const Duration(minutes: 15)));
+      start != null && !now.isBefore(start);
 }

@@ -122,6 +122,7 @@ class StationControlDrawer extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       CashierSessionDetails(
+                        showActions: false,
                         summary: SessionOperationsSummary.fromBookings(
                           current,
                           state.bookings,

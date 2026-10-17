@@ -26,6 +26,11 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/sessi
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_operations_summary.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_clock_host.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/start_session_button.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_live_clock.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_workflow_progress.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_filter_bar.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
 import '../../support/local_translations_loader.dart';
 
 class _Login extends Mock implements LoginCubit {}
@@ -37,6 +42,8 @@ class _Dashboard extends Mock implements DashboardCubit {}
 class _Bookings extends Mock implements BookingCubit {}
 
 class _Requests extends Mock implements ClientRequestsCubit {}
+
+class _Rooms extends Mock implements RoomCubit {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -61,8 +68,9 @@ void main() {
     WidgetTester tester,
     Widget child, {
     DateTime Function()? clock,
+    Size viewport = const Size(1000, 1400),
   }) async {
-    tester.view.physicalSize = const Size(1000, 1400);
+    tester.view.physicalSize = viewport;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -94,6 +102,115 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets(
+    'completed unpaid session does not claim settlement before collection',
+    (tester) async {
+      await mount(
+        tester,
+        SessionWorkflowProgress(
+          booking: booking.copyWith(status: BookingStatus.completed),
+        ),
+      );
+      expect(find.text('cashier.stageSettlement'.tr()), findsOneWidget);
+      expect(find.byIcon(Icons.check_rounded), findsNWidgets(2));
+      await mount(
+        tester,
+        SessionWorkflowProgress(
+          booking: booking.copyWith(
+            status: BookingStatus.completed,
+            paymentStatus: PaymentStatus.paid,
+          ),
+        ),
+      );
+      expect(find.byIcon(Icons.check_rounded), findsNWidgets(3));
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+  testWidgets('compact filters retain search when collapsed and reopened', (
+    tester,
+  ) async {
+    final rooms = _Rooms();
+    when(() => rooms.state).thenReturn(const RoomState());
+    when(() => rooms.stream).thenAnswer((_) => const Stream<RoomState>.empty());
+    var query = '';
+    await mount(
+      tester,
+      BlocProvider<RoomCubit>.value(
+        value: rooms,
+        child: BookingFilterBar(
+          filterState: const BookingFilterState(),
+          onFilterChanged: (value) => query = value.searchQuery,
+          onResetFilters: () {},
+        ),
+      ),
+      viewport: const Size(360, 1000),
+    );
+    final toggle = find.text('cashier.filterOptions'.tr());
+    expect(find.byType(TextField), findsNothing);
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Orbit');
+    await tester.pump(const Duration(milliseconds: 450));
+    expect(query, 'Orbit');
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller?.text,
+      'Orbit',
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+  testWidgets(
+    'due unstarted booking shows waiting status rather than a running clock',
+    (tester) async {
+      await mount(
+        tester,
+        SessionLiveClock(booking: booking),
+        clock: () => DateTime(2030, 1, 10, 14, 5),
+      );
+      expect(find.text('cashier.awaitingStart'.tr()), findsOneWidget);
+      expect(find.text('cashier.remaining'.tr()), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+  testWidgets(
+    'cash collection is separate and absent for pending, refunded and transfer bookings',
+    (tester) async {
+      for (final sample in [
+        booking.copyWith(status: BookingStatus.pending),
+        booking.copyWith(paymentStatus: PaymentStatus.refunded),
+        booking.copyWith(paymentMethod: 'manual_transfer'),
+      ]) {
+        await mount(tester, SessionControlActions(booking: sample));
+        expect(find.text('cashier.collect'.tr()), findsNothing);
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
+      await mount(tester, SessionControlActions(booking: booking));
+      expect(find.text('cashier.controlsSection'.tr()), findsOneWidget);
+      expect(find.text('cashier.collectionSection'.tr()), findsOneWidget);
+      expect(find.text('cashier.postpaidHint'.tr()), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+  testWidgets(
+    'drawer details omit duplicate booking actions while the workspace retains them',
+    (tester) async {
+      await mount(
+        tester,
+        CashierSessionDetails(
+          summary: SessionOperationsSummary(booking, null),
+          requests: const [],
+          showActions: false,
+        ),
+      );
+      expect(find.byType(StartSessionButton), findsNothing);
+      expect(find.text(AppStrings.confirmCash), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
   testWidgets(
     'approved unpaid booking collect action reaches the payment flow',
     (tester) async {
@@ -129,7 +246,7 @@ void main() {
   testWidgets(
     'start button follows the session clock without database events',
     (tester) async {
-      var now = DateTime(2030, 1, 10, 13, 40);
+      var now = DateTime(2030, 1, 10, 13, 59, 59);
       await mount(
         tester,
         StartSessionButton(
@@ -141,7 +258,7 @@ void main() {
       );
       expect(find.text(AppStrings.startSession), findsNothing);
       now = DateTime(2030, 1, 10, 14);
-      await tester.pump(const Duration(seconds: 5));
+      await tester.pump(const Duration(seconds: 1));
       expect(find.text(AppStrings.startSession), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
     },

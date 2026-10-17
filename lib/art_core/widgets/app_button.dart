@@ -59,7 +59,9 @@ class AppButton extends StatelessWidget {
 
     final Color effectiveFg =
         foregroundColor ??
-        (isPrimary || isDanger || isGradient
+        (isPrimary && effectiveBg == AppColors.primary
+            ? AppColors.onPrimary
+            : isPrimary || isDanger || isGradient
             ? AppColors.textPrimary
             : isText
             ? AppColors.neonBlue

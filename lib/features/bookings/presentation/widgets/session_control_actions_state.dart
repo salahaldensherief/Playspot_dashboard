@@ -111,6 +111,7 @@ class _SessionControlActionsState extends State<SessionControlActions> {
     text: 'cashier.collect'.tr(),
     height: 48,
     isLoading: _busy,
+    variant: AppButtonVariant.outlined,
     onPressed: !_busy && _allowed('billing_checkout') ? _collect : null,
   );
   Widget _swapButton(Booking booking) => AppButton(
@@ -134,10 +135,25 @@ class _SessionControlActionsState extends State<SessionControlActions> {
     context.select((LoginCubit? cubit) => cubit?.state.user);
     final booking = widget.booking;
     final running = booking.status == BookingStatus.inProgress;
+    final canCollectCash =
+        booking.paymentMethod == 'cash' &&
+        booking.paymentStatus == PaymentStatus.unpaid &&
+        (booking.status == BookingStatus.upcoming ||
+            running ||
+            booking.status == BookingStatus.completed) &&
+        (!booking.isOpenEnded || !running);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (_error != null) Text(_error ?? '', style: OperationsTokens.value),
+        if (booking.canStartSession || running) ...[
+          Text('cashier.controlsSection'.tr(), style: OperationsTokens.value),
+          const SizedBox(height: OperationsTokens.gap),
+        ],
+        if (booking.canStartSession && booking.paymentMethod == 'cash') ...[
+          Text('cashier.postpaidHint'.tr(), style: OperationsTokens.label),
+          const SizedBox(height: OperationsTokens.gap),
+        ],
         if (booking.canStartSession)
           SessionTimeBuilder(
             builder: (context, now) {
@@ -162,14 +178,15 @@ class _SessionControlActionsState extends State<SessionControlActions> {
           const SizedBox(height: OperationsTokens.gap),
           _endButton(),
         ],
-        if (booking.paymentStatus != PaymentStatus.paid &&
-            (!booking.isOpenEnded || !running)) ...[
-          const SizedBox(height: OperationsTokens.gap),
-          _collectButton(),
-        ],
         if (running) ...[
           const SizedBox(height: OperationsTokens.gap),
           _swapButton(booking),
+        ],
+        if (canCollectCash) ...[
+          const Divider(height: OperationsTokens.padding * 2),
+          Text('cashier.collectionSection'.tr(), style: OperationsTokens.value),
+          const SizedBox(height: OperationsTokens.gap),
+          _collectButton(),
         ],
         const SizedBox(height: OperationsTokens.gap),
         Text('cashier.permissionNotice'.tr(), style: OperationsTokens.label),

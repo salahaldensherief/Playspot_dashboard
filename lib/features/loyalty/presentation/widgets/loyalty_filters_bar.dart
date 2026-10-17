@@ -44,7 +44,7 @@ class _LoyaltyFiltersBarState extends State<LoyaltyFiltersBar> {
           data: ThemeData.dark().copyWith(
             colorScheme: const ColorScheme.dark(
               primary: AppColors.neonBlue,
-              onPrimary: AppColors.textPrimary,
+              onPrimary: AppColors.onPrimary,
               surface: AppColors.cardBackground,
               onSurface: AppColors.textPrimary,
             ),
