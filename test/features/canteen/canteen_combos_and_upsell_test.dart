@@ -81,6 +81,25 @@ void main() {
     });
   });
 
+  test('combo validity dates remain date-only through the API payload', () {
+    final combo = CanteenComboModel(
+      id: '',
+      loungeId: 'lounge-1',
+      nameAr: 'عرض نهاية الأسبوع',
+      price: 75,
+      validFrom: DateTime(2026, 10, 16),
+      validTo: DateTime(2026, 10, 18),
+    );
+
+    final payload = combo.toJson();
+    expect(payload['valid_from'], '2026-10-16');
+    expect(payload['valid_to'], '2026-10-18');
+
+    final restored = CanteenComboModel.fromJson({...payload, 'id': 'combo-1'});
+    expect(restored.validFrom, DateTime(2026, 10, 16));
+    expect(restored.validTo, DateTime(2026, 10, 18));
+  });
+
   group('Canteen Combo Serialization', () {
     test('parses CanteenComboModel with nested items from JSON', () {
       final json = {
