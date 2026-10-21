@@ -17,26 +17,32 @@ class BridgeReadinessStep extends StatelessWidget {
   });
 
   static const _systemOptions = <String>[
-    'none', 'cloud', 'windowsLocal', 'otherLocal', 'unknown',
+    'none',
+    'cloud',
+    'windowsLocal',
+    'otherLocal',
+    'unknown',
   ];
   static const _yesNoUnknown = <String>['yes', 'no', 'unknown'];
   static const _reachabilityOptions = <String>[
-    'publicHttps', 'localNetwork', 'unknown',
+    'publicHttps',
+    'localNetwork',
+    'unknown',
   ];
 
-  bool get _hasSystem => answers['system'] != null &&
-      answers['system'] != 'none';
-  bool get _local => answers['system'] == 'windowsLocal' ||
-      answers['system'] == 'otherLocal';
+  bool get _hasSystem =>
+      answers['system'] != null && answers['system'] != 'none';
+  bool get _local =>
+      answers['system'] == 'windowsLocal' || answers['system'] == 'otherLocal';
   bool get _usesApi => answers['supportsApi'] == 'yes';
   bool get _wantsBooking => answers['wantsOnlineBooking'] != 'no';
   bool get _wantsControl => answers['wantsSessionControl'] == 'yes';
 
   bool? _yn(String name) => switch (answers[name]) {
-        'yes' => true,
-        'no' => false,
-        _ => null,
-      };
+    'yes' => true,
+    'no' => false,
+    _ => null,
+  };
 
   void _change(String name, String? value) {
     final next = Map<String, dynamic>.of(answers);
@@ -72,11 +78,17 @@ class BridgeReadinessStep extends StatelessWidget {
           labelText: 'bridge_step.questions.$field'.tr(),
           border: const OutlineInputBorder(),
         ),
-        items: options.map((value) => DropdownMenuItem(
-          value: value,
-          child: Text('bridge_step.options.$value'.tr(),
-            overflow: TextOverflow.ellipsis),
-        )).toList(),
+        items: options
+            .map(
+              (value) => DropdownMenuItem(
+                value: value,
+                child: Text(
+                  'bridge_step.options.$value'.tr(),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            )
+            .toList(),
         onChanged: (value) => _change(field, value),
       ),
     );
@@ -111,25 +123,27 @@ class BridgeReadinessStep extends StatelessWidget {
       'localNetwork' => ApiReachability.localNetwork,
       _ => ApiReachability.unknown,
     };
-    return const BridgeSetupPlanner().evaluate(BridgeSetupAnswers(
-      system: system,
-      vendorName: answers['vendorName']?.toString() ?? '',
-      vendorVersion: answers['vendorVersion']?.toString() ?? '',
-      integrationPermission: _yn('integrationPermission'),
-      supportsApi: _yn('supportsApi'),
-      hasApiDocumentation: _yn('hasApiDocumentation'),
-      apiReachability: reachability,
-      supportsLocalInterface: _yn('supportsLocalInterface'),
-      hasWindowsComputer: _yn('hasWindowsComputer'),
-      outboundInternetAvailable: _yn('outboundInternetAvailable'),
-      availabilityReadable: _yn('availabilityReadable'),
-      atomicFutureReservation: _yn('atomicFutureReservation'),
-      sessionCommandsAvailable: _yn('sessionCommandsAvailable'),
-      apiSessionCommandsAvailable: _yn('apiSessionCommandsAvailable'),
-      changeEventsAvailable: _yn('changeEventsAvailable'),
-      wantsOnlineBooking: _wantsBooking,
-      wantsSessionControl: _wantsControl,
-    ));
+    return const BridgeSetupPlanner().evaluate(
+      BridgeSetupAnswers(
+        system: system,
+        vendorName: answers['vendorName']?.toString() ?? '',
+        vendorVersion: answers['vendorVersion']?.toString() ?? '',
+        integrationPermission: _yn('integrationPermission'),
+        supportsApi: _yn('supportsApi'),
+        hasApiDocumentation: _yn('hasApiDocumentation'),
+        apiReachability: reachability,
+        supportsLocalInterface: _yn('supportsLocalInterface'),
+        hasWindowsComputer: _yn('hasWindowsComputer'),
+        outboundInternetAvailable: _yn('outboundInternetAvailable'),
+        availabilityReadable: _yn('availabilityReadable'),
+        atomicFutureReservation: _yn('atomicFutureReservation'),
+        sessionCommandsAvailable: _yn('sessionCommandsAvailable'),
+        apiSessionCommandsAvailable: _yn('apiSessionCommandsAvailable'),
+        changeEventsAvailable: _yn('changeEventsAvailable'),
+        wantsOnlineBooking: _wantsBooking,
+        wantsSessionControl: _wantsControl,
+      ),
+    );
   }
 
   @override
@@ -138,8 +152,10 @@ class BridgeReadinessStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('bridge_step.title'.tr(),
-          style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          'bridge_step.title'.tr(),
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: 8),
         Text('bridge_step.introduction'.tr()),
         const SizedBox(height: 16),
@@ -183,8 +199,10 @@ class BridgeReadinessStep extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('bridge_step.result_title'.tr(),
-                    style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    'bridge_step.result_title'.tr(),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 8),
                   Text('bridge_step.routes.${plan.route.name}'.tr()),
                   const SizedBox(height: 8),
@@ -197,8 +215,10 @@ class BridgeReadinessStep extends StatelessWidget {
                     ),
                   if (plan.blockerCodes.isNotEmpty) ...[
                     const Divider(),
-                    Text('bridge_step.blockers_title'.tr(),
-                      style: Theme.of(context).textTheme.titleSmall),
+                    Text(
+                      'bridge_step.blockers_title'.tr(),
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                     for (final code in plan.blockerCodes)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 6),
@@ -212,11 +232,15 @@ class BridgeReadinessStep extends StatelessWidget {
             ),
           ),
         const SizedBox(height: 12),
-        Text('bridge_step.no_secrets'.tr(),
-          style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          'bridge_step.no_secrets'.tr(),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
         const SizedBox(height: 8),
-        Text('bridge_step.local_draft_notice'.tr(),
-          style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          'bridge_step.local_draft_notice'.tr(),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
       ],
     );
   }
