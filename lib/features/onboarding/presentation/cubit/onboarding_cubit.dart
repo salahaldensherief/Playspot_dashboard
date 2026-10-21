@@ -105,13 +105,13 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   }
 
   void setStep(int step) {
-    if (step >= 0 && step <= 8) {
+    if (step >= 0 && step <= 9) {
       saveDraft(state.draft.copyWith(step: step));
     }
   }
 
   void nextStep() {
-    if (state.currentStep < 8) {
+    if (state.currentStep < 9) {
       setStep(state.currentStep + 1);
     }
   }

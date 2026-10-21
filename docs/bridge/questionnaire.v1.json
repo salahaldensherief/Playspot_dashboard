@@ -1,0 +1,496 @@
+{
+  "version": "1.0.0-preview",
+  "purpose": "Read-only integration readiness discovery; does not activate connectors",
+  "security": {
+    "neverAskFor": [
+      "API keys",
+      "passwords",
+      "service_role key",
+      "database credentials",
+      "Windows administrator password",
+      "remote desktop access code"
+    ],
+    "pairing": "Use one-time pairing and a separate approved provisioning channel after owner verification",
+    "activation": "Only backend staff-approved capability gate may enable booking/operations",
+    "executionState": "disabled until vendor certification and server approval",
+    "answerPersistence": "Browser-local onboarding draft only in preview; not submitted server-side"
+  },
+  "entryRole": "Owner or verified delegated lounge manager; staff can submit answers but cannot approve pairing",
+  "questions": [
+    {
+      "id": "system",
+      "kind": "select",
+      "required": true,
+      "ar": "الصالة بتستخدم برنامج إدارة حاليًا؟ موجود فين؟",
+      "en": "Where does your current management software run?",
+      "options": [
+        {
+          "value": "none",
+          "ar": "معندناش برنامج",
+          "en": "No system"
+        },
+        {
+          "value": "cloud",
+          "ar": "على الإنترنت (Cloud)",
+          "en": "Cloud"
+        },
+        {
+          "value": "windowsLocal",
+          "ar": "على كمبيوتر Windows بالصالة",
+          "en": "Windows PC in lounge"
+        },
+        {
+          "value": "otherLocal",
+          "ar": "على جهاز محلي تاني",
+          "en": "Other local device"
+        },
+        {
+          "value": "unknown",
+          "ar": "مش عارف",
+          "en": "Not sure"
+        }
+      ]
+    },
+    {
+      "id": "vendorName",
+      "kind": "text",
+      "required": true,
+      "ar": "اسم البرنامج إيه؟",
+      "en": "What is the software name?",
+      "visibleWhen": {
+        "system": [
+          "cloud",
+          "windowsLocal",
+          "otherLocal",
+          "unknown"
+        ]
+      },
+      "hint_ar": "اكتب الاسم اللي ظاهر في شاشة البرنامج؛ من غير باسورد"
+    },
+    {
+      "id": "vendorVersion",
+      "kind": "text",
+      "required": true,
+      "ar": "إصدار البرنامج؟",
+      "en": "Software version?",
+      "visibleWhen": {
+        "system": [
+          "cloud",
+          "windowsLocal",
+          "otherLocal",
+          "unknown"
+        ]
+      },
+      "hint_ar": "من About أو Help لو موجود"
+    },
+    {
+      "id": "integrationPermission",
+      "kind": "select",
+      "required": true,
+      "ar": "صاحب الصالة موافق نربط البرنامج؟ وهل الترخيص يسمح؟",
+      "en": "Has the owner and vendor permitted integration?",
+      "visibleWhen": {
+        "system": [
+          "cloud",
+          "windowsLocal",
+          "otherLocal",
+          "unknown"
+        ]
+      },
+      "options": [
+        {
+          "value": "yes",
+          "ar": "أيوه",
+          "en": "Yes"
+        },
+        {
+          "value": "no",
+          "ar": "لأ",
+          "en": "No"
+        },
+        {
+          "value": "unknown",
+          "ar": "مش عارف",
+          "en": "Not sure"
+        }
+      ]
+    },
+    {
+      "id": "wantsOnlineBooking",
+      "kind": "select",
+      "required": true,
+      "ar": "عايز الحجوزات من PlaySpot تدخل البرنامج القديم؟",
+      "en": "Should PlaySpot bookings reach the old system?",
+      "options": [
+        {
+          "value": "yes",
+          "ar": "أيوه",
+          "en": "Yes"
+        },
+        {
+          "value": "no",
+          "ar": "لأ، عرض فقط",
+          "en": "No, listing only"
+        }
+      ]
+    },
+    {
+      "id": "wantsSessionControl",
+      "kind": "select",
+      "required": true,
+      "ar": "عايز بدء وتمديد وإنهاء الجلسة من PlaySpot؟",
+      "en": "Do you need PlaySpot session controls?",
+      "options": [
+        {
+          "value": "yes",
+          "ar": "أيوه",
+          "en": "Yes"
+        },
+        {
+          "value": "no",
+          "ar": "لأ",
+          "en": "No"
+        },
+        {
+          "value": "unknown",
+          "ar": "مش عارف",
+          "en": "Not sure"
+        }
+      ]
+    },
+    {
+      "id": "supportsApi",
+      "kind": "select",
+      "required": true,
+      "ar": "البرنامج عنده API رسمية؟",
+      "en": "Is an official API available?",
+      "visibleWhen": {
+        "system": [
+          "cloud",
+          "windowsLocal",
+          "otherLocal",
+          "unknown"
+        ]
+      },
+      "options": [
+        {
+          "value": "yes",
+          "ar": "أيوه",
+          "en": "Yes"
+        },
+        {
+          "value": "no",
+          "ar": "لأ",
+          "en": "No"
+        },
+        {
+          "value": "unknown",
+          "ar": "مش عارف",
+          "en": "Not sure"
+        }
+      ]
+    },
+    {
+      "id": "hasApiDocumentation",
+      "kind": "select",
+      "required": false,
+      "ar": "معاك رابط توثيق الـ API؟",
+      "en": "Do you have API documentation?",
+      "visibleWhen": {
+        "supportsApi": [
+          "yes"
+        ]
+      },
+      "options": [
+        {
+          "value": "yes",
+          "ar": "أيوه",
+          "en": "Yes"
+        },
+        {
+          "value": "no",
+          "ar": "لأ",
+          "en": "No"
+        },
+        {
+          "value": "unknown",
+          "ar": "مش عارف",
+          "en": "Not sure"
+        }
+      ],
+      "hint_ar": "الرابط فقط؛ ممنوع تكتب API Key"
+    },
+    {
+      "id": "apiReachability",
+      "kind": "select",
+      "required": false,
+      "ar": "الـ API بتتفتح من الإنترنت ولا من شبكة الصالة بس؟",
+      "en": "Where is the API reachable?",
+      "visibleWhen": {
+        "supportsApi": [
+          "yes"
+        ]
+      },
+      "options": [
+        {
+          "value": "publicHttps",
+          "ar": "HTTPS خارجي",
+          "en": "Public HTTPS"
+        },
+        {
+          "value": "localNetwork",
+          "ar": "من داخل الصالة فقط",
+          "en": "Local network"
+        },
+        {
+          "value": "unknown",
+          "ar": "مش عارف",
+          "en": "Not sure"
+        }
+      ]
+    },
+    {
+      "id": "supportsLocalInterface",
+      "kind": "select",
+      "required": false,
+      "ar": "هل للبرنامج وسيلة تكامل محلية موثّقة ومسموح بيها؟",
+      "en": "Does the software have an approved local integration interface?",
+      "visibleWhen": {
+        "system": [
+          "windowsLocal",
+          "otherLocal"
+        ]
+      },
+      "options": [
+        {
+          "value": "yes",
+          "ar": "أيوه",
+          "en": "Yes"
+        },
+        {
+          "value": "no",
+          "ar": "لأ",
+          "en": "No"
+        },
+        {
+          "value": "unknown",
+          "ar": "مش عارف",
+          "en": "Not sure"
+        }
+      ]
+    },
+    {
+      "id": "hasWindowsComputer",
+      "kind": "select",
+      "required": false,
+      "ar": "هل فيه كمبيوتر Windows نقدر نثبت عليه Connector؟",
+      "en": "Is a suitable Windows computer available?",
+      "visibleWhen": {
+        "system": [
+          "windowsLocal",
+          "otherLocal"
+        ]
+      },
+      "options": [
+        {
+          "value": "yes",
+          "ar": "أيوه",
+          "en": "Yes"
+        },
+        {
+          "value": "no",
+          "ar": "لأ",
+          "en": "No"
+        },
+        {
+          "value": "unknown",
+          "ar": "مش عارف",
+          "en": "Not sure"
+        }
+      ]
+    },
+    {
+      "id": "outboundInternetAvailable",
+      "kind": "select",
+      "required": false,
+      "ar": "الكمبيوتر ده يقدر يفتح مواقع HTTPS على الإنترنت؟",
+      "en": "Does this PC have outbound HTTPS access?",
+      "visibleWhen": {
+        "hasWindowsComputer": [
+          "yes"
+        ]
+      },
+      "options": [
+        {
+          "value": "yes",
+          "ar": "أيوه",
+          "en": "Yes"
+        },
+        {
+          "value": "no",
+          "ar": "لأ",
+          "en": "No"
+        },
+        {
+          "value": "unknown",
+          "ar": "مش عارف",
+          "en": "Not sure"
+        }
+      ]
+    },
+    {
+      "id": "availabilityReadable",
+      "kind": "select",
+      "required": false,
+      "ar": "البرنامج يقدر يقول مين فاضي ومين مشغول؟",
+      "en": "Can the system expose availability?",
+      "visibleWhen": {
+        "system": [
+          "cloud",
+          "windowsLocal",
+          "otherLocal"
+        ]
+      },
+      "options": [
+        {
+          "value": "yes",
+          "ar": "أيوه",
+          "en": "Yes"
+        },
+        {
+          "value": "no",
+          "ar": "لأ",
+          "en": "No"
+        },
+        {
+          "value": "unknown",
+          "ar": "مش عارف",
+          "en": "Not sure"
+        }
+      ]
+    },
+    {
+      "id": "atomicFutureReservation",
+      "kind": "select",
+      "required": false,
+      "ar": "يقدر يحجز الروم للمستقبل ويمنع حجزين لنفس الوقت آليًا؟",
+      "en": "Can it atomically reserve future capacity?",
+      "visibleWhen": {
+        "wantsOnlineBooking": [
+          "yes"
+        ]
+      },
+      "options": [
+        {
+          "value": "yes",
+          "ar": "أيوه",
+          "en": "Yes"
+        },
+        {
+          "value": "no",
+          "ar": "لأ",
+          "en": "No"
+        },
+        {
+          "value": "unknown",
+          "ar": "مش عارف",
+          "en": "Not sure"
+        }
+      ],
+      "hint_ar": "لو مش متأكد اختار مش عارف؛ متخمنش"
+    },
+    {
+      "id": "sessionCommandsAvailable",
+      "kind": "select",
+      "required": false,
+      "ar": "الوسيلة المحلية تدعم Start/Extend/End؟",
+      "en": "Does the local interface support session commands?",
+      "visibleWhen": {
+        "wantsSessionControl": [
+          "yes"
+        ]
+      },
+      "options": [
+        {
+          "value": "yes",
+          "ar": "أيوه",
+          "en": "Yes"
+        },
+        {
+          "value": "no",
+          "ar": "لأ",
+          "en": "No"
+        },
+        {
+          "value": "unknown",
+          "ar": "مش عارف",
+          "en": "Not sure"
+        }
+      ]
+    },
+    {
+      "id": "apiSessionCommandsAvailable",
+      "kind": "select",
+      "required": false,
+      "ar": "الـ API نفسها تدعم Start/Extend/End؟",
+      "en": "Can the API perform session commands?",
+      "visibleWhen": {
+        "supportsApi": [
+          "yes"
+        ],
+        "wantsSessionControl": [
+          "yes"
+        ]
+      },
+      "options": [
+        {
+          "value": "yes",
+          "ar": "أيوه",
+          "en": "Yes"
+        },
+        {
+          "value": "no",
+          "ar": "لأ",
+          "en": "No"
+        },
+        {
+          "value": "unknown",
+          "ar": "مش عارف",
+          "en": "Not sure"
+        }
+      ]
+    },
+    {
+      "id": "changeEventsAvailable",
+      "kind": "select",
+      "required": false,
+      "ar": "البرنامج يقدر يبلغنا بتغيير الحالة تلقائيًا (Webhook/Event)؟",
+      "en": "Does the software provide events/webhooks?",
+      "visibleWhen": {
+        "system": [
+          "cloud",
+          "windowsLocal",
+          "otherLocal"
+        ]
+      },
+      "options": [
+        {
+          "value": "yes",
+          "ar": "أيوه",
+          "en": "Yes"
+        },
+        {
+          "value": "no",
+          "ar": "لأ",
+          "en": "No"
+        },
+        {
+          "value": "unknown",
+          "ar": "مش عارف",
+          "en": "Not sure"
+        }
+      ]
+    }
+  ],
+  "booleanAnswerRepresentation": "yes | no | unknown; map to bool true | false | null in domain"
+}

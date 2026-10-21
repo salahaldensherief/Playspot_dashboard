@@ -2042,5 +2042,84 @@
   "tournament_refund_pending": "Refund pending",
   "tournament_payment_unknown": "Unknown payment status",
   "complete_tournament": "Complete tournament",
-  "award_tournament_prizes": "Award prizes"
+  "award_tournament_prizes": "Award prizes",
+  "bridge_step": {
+    "title": "Connect an existing lounge system (optional)",
+    "introduction": "Answer using what you know. The result lists suggested integration routes and prerequisites; nothing is activated.",
+    "result_title": "Suggested setup based on your answers",
+    "blockers_title": "Confirm these items first",
+    "not_activated": "External booking and session controls remain disabled until PlaySpot technical review and a successful pilot.",
+    "no_secrets": "Never enter passwords, API keys, database credentials, or access codes here.",
+    "local_draft_notice": "Preview only: answers are saved in this browser's draft, not submitted automatically to the integration team.",
+    "questions": {
+      "system": "Does this lounge use management software? Where?",
+      "vendorName": "Software/vendor name",
+      "vendorVersion": "Software version",
+      "integrationPermission": "Do the owner and software vendor permit integration?",
+      "supportsApi": "Is a documented API available?",
+      "hasApiDocumentation": "Do you have official API documentation?",
+      "apiReachability": "Where is the API reachable?",
+      "supportsLocalInterface": "Is an approved local interface available?",
+      "hasWindowsComputer": "Is a suitable Windows PC available?",
+      "outboundInternetAvailable": "Can it reach outbound HTTPS?",
+      "wantsOnlineBooking": "Should PlaySpot bookings reach the old system?",
+      "wantsSessionControl": "Do you need session start/extend/end control?",
+      "availabilityReadable": "Can it expose room/device availability?",
+      "atomicFutureReservation": "Can it reserve future slots atomically?",
+      "sessionCommandsAvailable": "Does the local interface support session commands?",
+      "apiSessionCommandsAvailable": "Does the API support session commands?",
+      "changeEventsAvailable": "Does the system publish state-change events?"
+    },
+    "options": {
+      "none": "No existing software — use PlaySpot OS",
+      "cloud": "Online/cloud service",
+      "windowsLocal": "Windows PC at the lounge",
+      "otherLocal": "Other local device",
+      "unknown": "Not sure",
+      "yes": "Yes",
+      "no": "No",
+      "publicHttps": "Public HTTPS",
+      "localNetwork": "Lounge network only"
+    },
+    "routes": {
+      "playspotOs": "Use native PlaySpot operations",
+      "cloudApi": "Possible cloud API integration",
+      "localAgent": "Possible in-lounge Local Agent",
+      "hybrid": "Possible API + Local Agent",
+      "assessment": "Technical assessment required"
+    },
+    "readiness": {
+      "setupGuidance": "Initial setup guidance",
+      "evidenceRequired": "Further evidence and approval required",
+      "technicalPilotCandidate": "Technical pilot candidate only — not active"
+    },
+    "actions": {
+      "configure_playspot_os": "Configure room and device details in PlaySpot.",
+      "map_rooms": "Match real rooms and prices with PlaySpot.",
+      "staff_training": "Train staff on booking and shift workflows.",
+      "identify_vendor_version": "Record the exact software vendor and version.",
+      "list_rooms": "List each external station/room identifier.",
+      "request_api_sandbox_without_credentials_in_form": "Ask the vendor for an API sandbox; never paste credentials here.",
+      "validate_api_scopes_rate_limits_and_auth": "Integration team must verify scopes, rate limits and authentication.",
+      "install_signed_local_agent_after_approval": "Install the official signed connector on Windows only after approval.",
+      "pair_agent_with_one_time_code": "Use one-time pairing from the official PlaySpot UI.",
+      "contact_vendor_support": "Contact the vendor for a documented approved interface.",
+      "map_external_rooms_to_playspot_ids": "Map external station IDs to PlaySpot room IDs.",
+      "test_booking_collision_with_vendor": "Test concurrent booking conflicts in a sandbox.",
+      "test_start_extend_end_without_real_customer": "Test start/extend/end without real customer sessions.",
+      "reconcile_both_systems_after_disconnect": "Test both systems after a network disconnect.",
+      "review_by_playspot_integration_team": "Complete PlaySpot integration-team review."
+    },
+    "blockers": {
+      "identify_vendor_version": "Vendor or version is missing.",
+      "obtain_integration_permission": "Explicit owner and vendor permission is required.",
+      "verify_windows_and_outbound_https": "Verify a Windows host and outbound HTTPS.",
+      "no_verified_supported_interface": "No verified integration interface is available.",
+      "collect_official_api_documentation": "Obtain official API documentation.",
+      "confirm_api_reachability": "Confirm API network reachability.",
+      "verify_availability_read": "Availability reads are not confirmed.",
+      "no_atomic_reservation_manual_confirmation_only": "Atomic reservations are not confirmed; use manual booking confirmation.",
+      "session_commands_not_verified": "Session commands are not confirmed for the selected route."
+    }
+  }
 }
