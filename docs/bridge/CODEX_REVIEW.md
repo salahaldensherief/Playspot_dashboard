@@ -12,18 +12,19 @@ Dashboard files:
 - DONE: Unit tests authored for no system, documented API, missing atomic reservation, Windows Agent, offline host, no supported interface, Hybrid, missing permission, unsupported session controls.
 - DONE: Versioned question catalog (Arabic and English) with conditional display metadata, including explicit "unknown" answers; no credentials collected.
 - DONE: Highly simplified Arabic human setup guide for API, Windows and Hybrid, with explicit limitations and non-existent installer notices.
-- NOT DONE: Actual Flutter form wiring, persistence, UI localization/validation, onboarding step change, owner/staff delegation enforcement, backend migrations, Vendor Adapters, functioning Local Agent executable, credential vault/pairing, bookings, session dispatch, live tests, deployment.
-- NO CHANGE to production/demonstration Supabase DB. NO change to any existing 9-step onboarding flow, to avoid breaking onboarding before Codex reviews schema/API/UX.
+- PROTOTYPE IN BRANCH (UNVERIFIED): Flutter BridgeReadinessStep is wired as optional step 8 in the 10-step lounge onboarding flow, Arabic and English bridge_step translations exist, and answers are stored only as browser-local integrationAnswers on LoungeDraftParams. Its output is advisory and NOT submitted to Supabase. Review the diff carefully; these additions were present on this branch at PR inspection.
+- NOT DONE: Server-side answer persistence or approval, owner/staff delegation enforcement, backend migrations, vendor adapters, functioning Local Agent executable, credential vault/pairing, actual booking/session integrations, browser/widget tests, live tests, deployment.
+- NO CHANGE to production/demonstration Supabase DB. The DASHBOARD BRANCH changes onboarding from 9 to 10 steps, so Codex must audit step transitions, draft restore, previous/next, final submit, translations, existing users, and whether onboarding should instead occur after KYC.
 - NO FLUTTER ANALYZE or flutter test run in this workspace (Dart/Flutter SDK unavailable). CI/checks still required.
 
 ## CRITICAL REVIEW REQUEST
 1. Compare proposed architecture with current dev backend and production Supabase; do not trust filenames alone.
 2. Confirm mapping from JSON answers (string "true"/"false"/"unknown") into nullable Dart booleans; unknown must stay null, not false.
-3. Verify form conditional logic (multiple visibleWhen conditions are AND). No future answer may imply permissions or activation.
+3. Verify form conditional logic (multiple visibleWhen conditions are AND) and that yes/no/unknown map to true/false/null. JSON schema now aligns with widget option values. No answer may imply permissions or activation.
 4. Evaluate BridgeSetupPlanner logic for contradictions, particularly "API localNetwork requires Agent", "Hybrid requires separate session commands", and missing vendor permission. Add cases for missing API docs and unknown Windows OS.
 5. Never show a successful connection because "technicalPilotCandidate" was returned. UI says "needs engineering review".
 6. Use AppStrings / easy_localization and existing dashboard form widgets for AR/EN RTL/LTR, accessibility and draft safety; do not hardcode Arabic into production widget.
-7. Decide whether integration survey belongs in existing 9-step owner onboarding or as a post-KYC owner-only optional setup flow. DO NOT silently change existing step count.
+7. New prototype inserts the survey as onboarding step 8 and moves review to 9. Decide whether it should remain in initial onboarding or move to optional post-KYC owner-only flow, and test all old draft restore and step count paths.
 8. Implement a server-side draft/review record only after a reviewed migration in the MOBILE repo; never store vendor credentials in LoungeDraftParams or browser local cache.
 9. Enforce actor authorization and lounge scope in server RPCs; UI checks never enough. Cashiers may supply metadata but cannot approve pairing.
 10. Ensure Native PlaySpot, current booking RPC, holds, sessions, pricing, and cashier offline protocol remain backward compatible.
@@ -47,6 +48,6 @@ Dashboard files:
 ## Suggested next steps
 First: REVIEW architecture/unknowns with one real vendor API + one Windows POS vendor.
 Second: IMPLEMENT server-side integration state in source-of-truth migration (mobile repo) plus secure preview RPCs, tests.
-Third: WIRE the questionnaire UX and persistence after server contract approved.
+Third: AUDIT and stabilize the existing questionnaire UI prototype; implement server-side persistence only after server contract and permissions approved.
 Fourth: BUILD ONE real adapter and Local Agent proof of concept, not a universal magic connector.
 Fifth: PILOT + reconcile + rollback, then consider activation and marketing claims.
