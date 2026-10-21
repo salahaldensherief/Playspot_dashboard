@@ -141,43 +141,60 @@ class BookingCardActions extends StatelessWidget {
         );
       }
 
-      // Cash or standard pending booking
-      return Row(
+      // A pending cash booking can start when its time arrives. Starting it
+      // records attendance; collection stays a separate action.
+      return Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            flex: 3,
-            child: AppButton(
-              text: AppStrings.confirmBooking,
-              variant: AppButtonVariant.primary,
-              backgroundColor: AppColors.success,
-              icon: Icons.check_circle_outline_rounded,
+          if (booking.canStartSession) ...[
+            StartSessionButton(
+              bookingId: booking.id,
+              bookingDate: booking.date,
+              startTime: booking.startTime,
+              onSuccess: onStartSession,
               height: h,
-              onPressed: () {
-                if (onApprove != null) {
-                  onApprove!();
-                } else {
-                  context.read<BookingCubit>().approveBooking(booking.id);
-                }
-              },
+              width: double.infinity,
             ),
-          ),
-          SizedBox(width: 8.w),
-          Expanded(
-            flex: 2,
-            child: AppButton(
-              text: AppStrings.reject,
-              variant: AppButtonVariant.outlined,
-              foregroundColor: AppColors.danger,
-              icon: Icons.cancel_outlined,
-              height: h,
-              onPressed: () {
-                if (onReject != null) {
-                  onReject!();
-                } else {
-                  context.read<BookingCubit>().rejectBooking(booking.id);
-                }
-              },
-            ),
+            SizedBox(height: 8.h),
+          ],
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: AppButton(
+                  text: AppStrings.confirmBooking,
+                  variant: AppButtonVariant.primary,
+                  backgroundColor: AppColors.success,
+                  icon: Icons.check_circle_outline_rounded,
+                  height: h,
+                  onPressed: () {
+                    if (onApprove != null) {
+                      onApprove!();
+                    } else {
+                      context.read<BookingCubit>().approveBooking(booking.id);
+                    }
+                  },
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                flex: 2,
+                child: AppButton(
+                  text: AppStrings.reject,
+                  variant: AppButtonVariant.outlined,
+                  foregroundColor: AppColors.danger,
+                  icon: Icons.cancel_outlined,
+                  height: h,
+                  onPressed: () {
+                    if (onReject != null) {
+                      onReject!();
+                    } else {
+                      context.read<BookingCubit>().rejectBooking(booking.id);
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       );

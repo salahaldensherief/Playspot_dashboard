@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:play_spot_dashboard/core/responsive/app_breakpoints.dart';
 import '../theme/app_colors.dart';
 
 class DataTableWidget extends StatelessWidget {
@@ -16,25 +15,38 @@ class DataTableWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = AppBreakpoints.isMobile(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
+        if (availableWidth >= 1000 * scale || rows.isEmpty) {
+          return _DesktopDataTable(columns: columns, rows: rows);
+        }
 
-    final cardBuilder = mobileCardBuilder;
-    if (isMobile && rows.isNotEmpty) {
-      return ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: rows.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (context, index) => cardBuilder != null
-            ? cardBuilder(context, index)
-            : _buildDefaultMobileCard(context, index),
-      );
-    }
-
-    return _DesktopDataTable(columns: columns, rows: rows);
+        final twoColumns = availableWidth >= 680 * scale;
+        final cardWidth = twoColumns
+            ? (availableWidth - 12) / 2
+            : availableWidth;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            for (var index = 0; index < rows.length; index++)
+              SizedBox(
+                width: cardWidth,
+                child:
+                    mobileCardBuilder?.call(context, index) ??
+                    _buildDefaultCard(context, index),
+              ),
+          ],
+        );
+      },
+    );
   }
 
-  Widget _buildDefaultMobileCard(BuildContext context, int index) {
+  Widget _buildDefaultCard(BuildContext context, int index) {
     final row = rows[index];
     final cellCount = row.cells.length < columns.length
         ? row.cells.length

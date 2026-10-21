@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../art_core/theme/operations_tokens.dart';
+import '../../../../art_core/theme/app_colors.dart';
+import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/widgets/operations_section.dart';
 import '../../../requests/domain/entities/client_request_entity.dart';
 import '../../domain/entities/booking.dart';
@@ -29,9 +31,19 @@ class CashierSessionDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
     final booking = summary.booking;
-    final customer = OperationsSection(
-      title: 'cashier.sessionSection'.tr(),
-      child: SessionCustomerFacts(booking: booking),
+    final customerNotes = <String>{
+      for (final request in requests)
+        if (request.metadata.notes?.trim().isNotEmpty == true)
+          request.metadata.notes!.trim(),
+      for (final order in booking.canteenOrders)
+        if (order['note']?.toString().trim().isNotEmpty == true)
+          order['note'].toString().trim(),
+    };
+    final customer = _sectionCard(
+      OperationsSection(
+        title: 'cashier.sessionSection'.tr(),
+        child: SessionCustomerFacts(booking: booking),
+      ),
     );
     final bill = Container(
       decoration: OperationsTokens.panel.copyWith(
@@ -43,9 +55,11 @@ class CashierSessionDetails extends StatelessWidget {
         child: SessionFinancialSummary(booking: booking),
       ),
     );
-    final activity = OperationsSection(
-      title: 'cashier.activitySection'.tr(),
-      child: SessionActivityFacts(summary: summary, requests: requests),
+    final activity = _sectionCard(
+      OperationsSection(
+        title: 'cashier.activitySection'.tr(),
+        child: SessionActivityFacts(summary: summary, requests: requests),
+      ),
     );
     return Container(
       decoration: OperationsTokens.panel,
@@ -55,6 +69,56 @@ class CashierSessionDetails extends StatelessWidget {
         children: [
           CashierSessionHeader(roomName: booking.roomName, onManage: onManage),
           const SizedBox(height: 16),
+          if (customerNotes.isNotEmpty) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.warning.withValues(alpha: 0.28),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.sticky_note_2_outlined,
+                    size: 20,
+                    color: AppColors.warning,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings.notes,
+                          style: const TextStyle(
+                            color: AppColors.warning,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        for (final note in customerNotes)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              note,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           if (booking.status == BookingStatus.upcoming ||
               booking.status == BookingStatus.inProgress ||
               booking.status == BookingStatus.completed) ...[
@@ -70,7 +134,11 @@ class CashierSessionDetails extends StatelessWidget {
                     Expanded(
                       flex: 6,
                       child: Column(
-                        children: [customer, const Divider(), activity],
+                        children: [
+                          customer,
+                          const SizedBox(height: 12),
+                          activity,
+                        ],
                       ),
                     ),
                     const SizedBox(width: 20),
@@ -82,9 +150,9 @@ class CashierSessionDetails extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   customer,
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   bill,
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   activity,
                 ],
               );
@@ -106,4 +174,13 @@ class CashierSessionDetails extends StatelessWidget {
       ),
     );
   }
+
+  Widget _sectionCard(Widget child) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
+    decoration: OperationsTokens.panel.copyWith(
+      color: OperationsTokens.surfaceRaised,
+    ),
+    child: child,
+  );
 }

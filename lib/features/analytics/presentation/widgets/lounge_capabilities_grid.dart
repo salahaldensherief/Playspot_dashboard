@@ -4,7 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
-import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
 import 'planned_module_dialog.dart';
 
@@ -125,8 +124,6 @@ class LoungeCapabilitiesGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
     final modules = _getModules();
-    final isDesktop = context.isDesktop;
-    final isTablet = context.isTablet;
 
     return Container(
       width: double.infinity,
@@ -143,10 +140,12 @@ class LoungeCapabilitiesGrid extends StatelessWidget {
           SizedBox(height: 16.h),
           LayoutBuilder(
             builder: (context, constraints) {
-              final double crossAxisCount = isDesktop
+              final double crossAxisCount = constraints.maxWidth >= 1300
                   ? 5
-                  : isTablet
+                  : constraints.maxWidth >= 1000
                   ? 3
+                  : constraints.maxWidth >= 600
+                  ? 2
                   : (constraints.maxWidth > 400 ? 2 : 1);
               final double spacing = 12.w;
               final double itemWidth =

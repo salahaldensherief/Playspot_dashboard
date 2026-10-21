@@ -22,6 +22,8 @@ class Booking extends Equatable {
   final DateTime date;
   final String startTime;
   final String endTime;
+  final DateTime? scheduledStartUtc;
+  final DateTime? scheduledEndUtc;
   final int durationMinutes;
   final BookingStatus status;
   final PaymentStatus paymentStatus;
@@ -72,6 +74,8 @@ class Booking extends Equatable {
     required this.date,
     required this.startTime,
     required this.endTime,
+    this.scheduledStartUtc,
+    this.scheduledEndUtc,
     this.durationMinutes = 60,
     required this.status,
     this.paymentStatus = PaymentStatus.unpaid,
@@ -138,6 +142,8 @@ class Booking extends Equatable {
     date,
     startTime,
     endTime,
+    scheduledStartUtc,
+    scheduledEndUtc,
     durationMinutes,
     status,
     paymentStatus,
@@ -188,6 +194,8 @@ class Booking extends Equatable {
     DateTime? date,
     String? startTime,
     String? endTime,
+    DateTime? scheduledStartUtc,
+    DateTime? scheduledEndUtc,
     int? durationMinutes,
     BookingStatus? status,
     PaymentStatus? paymentStatus,
@@ -238,6 +246,8 @@ class Booking extends Equatable {
       date: date ?? this.date,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
+      scheduledStartUtc: scheduledStartUtc ?? this.scheduledStartUtc,
+      scheduledEndUtc: scheduledEndUtc ?? this.scheduledEndUtc,
       durationMinutes: durationMinutes ?? this.durationMinutes,
       status: status ?? this.status,
       paymentStatus: paymentStatus ?? this.paymentStatus,
@@ -283,7 +293,8 @@ class Booking extends Equatable {
 
   /// Starting play does not confirm collection. Transfers still need verification.
   bool get canStartSession =>
-      status == BookingStatus.upcoming &&
+      (status == BookingStatus.upcoming ||
+          (status == BookingStatus.pending && paymentMethod == 'cash')) &&
       paymentStatus != PaymentStatus.refunded &&
       (paymentStatus == PaymentStatus.paid ||
           isOpenTime ||
@@ -311,24 +322,21 @@ class Booking extends Equatable {
   }
 
   /// Calculates the exact start [DateTime] combining [date] and [startTime].
-  DateTime? get startDateTime => BookingSchedule.startAt(date, startTime);
+  DateTime? get startDateTime =>
+      scheduledStartUtc?.toLocal() ?? BookingSchedule.startAt(date, startTime);
 
   /// Calculates the exact end [DateTime].
-  /// Prefers calculating [startDateTime] + [durationMinutes] when available,
-  /// otherwise falls back to parsing [endTime].
+  /// Uses the server's booked end, which is updated after an extension.
   DateTime? get endDateTime {
+    if (scheduledEndUtc != null) return scheduledEndUtc!.toLocal();
     final start = startDateTime;
-
-    if (start != null && durationMinutes > 0) {
-      return start.add(Duration(minutes: durationMinutes));
-    }
 
     if (endTime.trim().isNotEmpty) {
       try {
         final cleanEndTime = endTime.trim();
         if (cleanEndTime.contains('T')) {
           final parsed = DateTime.tryParse(cleanEndTime);
-          if (parsed != null) return parsed;
+          if (parsed != null) return parsed.toLocal();
         }
         final parts = cleanEndTime.split(':');
         if (parts.length >= 2) {

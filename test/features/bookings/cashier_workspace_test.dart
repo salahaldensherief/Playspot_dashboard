@@ -9,6 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/cashier_sessions_workspace.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/cashier_session_details.dart';
@@ -16,6 +17,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/sessi
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_clock_host.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_ticker.dart';
 import 'package:play_spot_dashboard/features/requests/domain/entities/client_request_entity.dart';
+import 'package:play_spot_dashboard/features/requests/domain/entities/notification_metadata.dart';
 import '../../support/local_translations_loader.dart';
 import '../../support/cashier_workspace_interaction_tests.dart';
 
@@ -251,6 +253,60 @@ void main() {
       });
     }
   }
+
+  testWidgets('customer canteen note is visible in the selected session', (
+    tester,
+  ) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const note = 'بدون سكر من فضلك';
+    final notedBooking = a.copyWith(
+      canteenOrders: const [
+        {'id': 'order1', 'note': note},
+      ],
+    );
+    final canteenRequest = ClientRequestEntity(
+      id: 'canteen-request',
+      loungeId: 'l',
+      bookingId: 'a',
+      titleAr: 'طلب كانتين',
+      titleEn: 'Canteen order',
+      bodyAr: 'مشروب',
+      bodyEn: 'Drink',
+      type: ClientRequestType.canteenOrder,
+      createdAt: now,
+      metadata: const NotificationMetadata(notes: note),
+    );
+    await mount(
+      tester,
+      1440,
+      'ar',
+      1,
+      bookings: [notedBooking, b, next],
+      clientRequests: [canteenRequest],
+    );
+    expect(find.text(note), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await screenshot(tester, 'cashier-1440-ar-canteen-note');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('session rail labels operational priorities', (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await mount(tester, 1440, 'ar', 1, bookings: [
+      a,
+      b.copyWith(paymentStatus: PaymentStatus.paid),
+      a.copyWith(id: 'running', paymentStatus: PaymentStatus.paid),
+      next,
+    ]);
+    expect(find.text(AppStrings.needsAttention), findsOneWidget);
+    expect(find.text(AppStrings.openTimeSessions), findsOneWidget);
+    expect(find.text(AppStrings.runningSessions), findsOneWidget);
+    expect(find.text(AppStrings.upcomingSessions), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 
   CashierWorkspaceInteractionTests.register(mount, a, request);
 

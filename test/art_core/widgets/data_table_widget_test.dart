@@ -54,6 +54,43 @@ void main() {
     expect(selected, isTrue);
   });
 
+  testWidgets('uses two card columns when a tablet has room for them', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(900, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(24),
+            child: DataTableWidget(
+              columns: const ['Customer', 'Amount'],
+              rows: const [
+                DataRow(
+                  cells: [DataCell(Text('Salah')), DataCell(Text('150 EGP'))],
+                ),
+                DataRow(
+                  cells: [DataCell(Text('Nour')), DataCell(Text('200 EGP'))],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(DataTable), findsNothing);
+    expect(
+      tester.getTopLeft(find.text('Salah')).dy,
+      tester.getTopLeft(find.text('Nour')).dy,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'fills the available desktop width without selection checkboxes',
     (tester) async {

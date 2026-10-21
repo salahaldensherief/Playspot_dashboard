@@ -18,6 +18,8 @@ class BookingModel extends Booking {
     required super.date,
     required super.startTime,
     required super.endTime,
+    super.scheduledStartUtc,
+    super.scheduledEndUtc,
     super.durationMinutes = 60,
     required super.status,
     required super.paymentStatus,
@@ -191,6 +193,12 @@ class BookingModel extends Booking {
       startTime: (json['out_start_time'] ?? json['start_time'] ?? '')
           .toString(),
       endTime: (json['out_end_time'] ?? json['end_time'] ?? '').toString(),
+      scheduledStartUtc: DateTime.tryParse(
+        json['scheduled_start_utc']?.toString() ?? '',
+      ),
+      scheduledEndUtc: DateTime.tryParse(
+        json['scheduled_end_utc']?.toString() ?? '',
+      ),
       durationMinutes: BookingJsonParser.parseInt(
         json['duration_minutes'] ??
             (json['duration_hours'] != null

@@ -24,6 +24,10 @@ void main() {
     () {
       expect(sample.canStartSession, isTrue);
       expect(
+        sample.copyWith(status: BookingStatus.pending).canStartSession,
+        isTrue,
+      );
+      expect(
         sample.copyWith(paymentMethod: 'unknown').canStartSession,
         isFalse,
       );
@@ -112,4 +116,31 @@ void main() {
       });
     }
   }
+  testWidgets('pending cash booking exposes start without collecting cash', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1920, 1080);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(1920, 1080),
+        builder: (_, _) => MaterialApp(
+          home: Scaffold(
+            body: BookingCardActions(
+              booking: sample.copyWith(status: BookingStatus.pending),
+              isPaid: false,
+              isPending: true,
+              isCanStartSession: true,
+              onOpenDetails: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(StartSessionButton), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// KPI labels stay readable: extra text scale reduces the column count.
+/// Keep dashboard metrics wide enough to read on desktop and tablet.
 class DashboardKpiLayout extends StatelessWidget {
   const DashboardKpiLayout({super.key, required this.children});
   final List<Widget> children;
@@ -8,9 +8,13 @@ class DashboardKpiLayout extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
-      final columns = ((constraints.maxWidth + 12) / (176 * scale + 12))
+      final maxColumns = constraints.maxWidth >= 1600 ? 4 : 3;
+      final columns = ((constraints.maxWidth + 12) / (250 * scale + 12))
           .floor()
-          .clamp(1, children.isEmpty ? 1 : children.length.clamp(1, 6));
+          .clamp(
+            1,
+            children.isEmpty ? 1 : children.length.clamp(1, maxColumns),
+          );
       final width = (constraints.maxWidth - 12 * (columns - 1)) / columns;
       return Wrap(
         spacing: 12,

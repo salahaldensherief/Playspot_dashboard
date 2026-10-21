@@ -167,8 +167,12 @@ class _CashierSessionsWorkspaceState extends State<CashierSessionsWorkspace> {
             : MediaQuery.sizeOf(context).width;
         final mobile = AppBreakpoints.isMobileWidth(width);
         if (width <= 0) return const SizedBox.shrink();
+        final groups = LiveSessionsOperationsGroups.fromBookings(
+          widget.bookings,
+          now: _clock(),
+        );
         final rail = CashierSessionRail(
-          bookings: active,
+          groups: groups,
           selectedId: selected.id,
           isCompact: mobile,
           onSelect: (booking) => _select(booking, mobile),
