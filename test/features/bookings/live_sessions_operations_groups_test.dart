@@ -11,6 +11,7 @@ void main() {
     PaymentStatus paymentStatus = PaymentStatus.paid,
     int durationMinutes = 60,
     String startTime = '18:00',
+    String endTime = '19:00',
   }) {
     return Booking(
       id: id,
@@ -20,7 +21,7 @@ void main() {
       roomName: 'Room $id',
       date: DateTime(2026, 9, 29),
       startTime: startTime,
-      endTime: '19:00',
+      endTime: endTime,
       durationMinutes: durationMinutes,
       status: status,
       paymentStatus: paymentStatus,
@@ -39,6 +40,7 @@ void main() {
         id: 'ending',
         status: BookingStatus.inProgress,
         startTime: '17:05',
+        endTime: '18:05',
       ),
       booking(id: 'open', status: BookingStatus.inProgress, durationMinutes: 0),
       booking(
@@ -72,6 +74,7 @@ void main() {
       status: BookingStatus.inProgress,
       paymentStatus: PaymentStatus.unpaid,
       startTime: '17:05',
+      endTime: '18:05',
     );
     final open = booking(
       id: 'open',
@@ -109,6 +112,35 @@ void main() {
       ], now: now);
       expect(a.needsAttention.map((item) => item.id), ['first', 'second']);
       expect(a.needsAttention, b.needsAttention);
+    },
+  );
+
+  test(
+    'server end controls attention and upcoming reservations stay visible',
+    () {
+      final groups = LiveSessionsOperationsGroups.fromBookings([
+        booking(
+          id: 'ends-later',
+          status: BookingStatus.inProgress,
+          startTime: '17:05',
+          endTime: '19:00',
+        ),
+        booking(
+          id: 'ends-soon',
+          status: BookingStatus.inProgress,
+          startTime: '17:05',
+          endTime: '18:05',
+        ),
+        booking(
+          id: 'next',
+          status: BookingStatus.upcoming,
+          startTime: '18:20',
+          endTime: '19:20',
+        ),
+      ], now: now);
+      expect(groups.needsAttention.map((item) => item.id), ['ends-soon']);
+      expect(groups.running.map((item) => item.id), ['ends-later']);
+      expect(groups.upcoming.map((item) => item.id), ['next']);
     },
   );
 }

@@ -142,7 +142,8 @@ class _SessionControlActionsState extends State<SessionControlActions> {
     final running = booking.status == BookingStatus.inProgress;
     final canCollectCash =
         booking.paymentMethod == 'cash' &&
-        booking.paymentStatus == PaymentStatus.unpaid &&
+        (booking.paymentStatus == PaymentStatus.unpaid ||
+            booking.paymentStatus == PaymentStatus.partial) &&
         (booking.status == BookingStatus.upcoming ||
             running ||
             booking.status == BookingStatus.completed) &&

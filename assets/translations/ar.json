@@ -366,6 +366,7 @@
   "manager_override_required": "مطلوب موافقة المدير للخصومات التي تزيد عن 10%",
   "reason_required": "يجب إدخال سبب الخصم",
   "unpaid": "غير مدفوع",
+  "partial": "مدفوع جزئياً",
   "finished_today": "انتهى اليوم",
   "today": "اليوم",
   "daily_total": "إجمالي اليوم",
