@@ -11,7 +11,9 @@
       "remote desktop access code"
     ],
     "pairing": "Use one-time pairing and a separate approved provisioning channel after owner verification",
-    "activation": "Only backend staff-approved capability gate may enable booking/operations"
+    "activation": "Only backend staff-approved capability gate may enable booking/operations",
+    "executionState": "disabled until vendor certification and server approval",
+    "answerPersistence": "Browser-local onboarding draft only in preview; not submitted server-side"
   },
   "entryRole": "Owner or verified delegated lounge manager; staff can submit answers but cannot approve pairing",
   "questions": [
