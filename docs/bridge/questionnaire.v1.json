@@ -97,12 +97,12 @@
       },
       "options": [
         {
-          "value": "true",
+          "value": "yes",
           "ar": "أيوه",
           "en": "Yes"
         },
         {
-          "value": "false",
+          "value": "no",
           "ar": "لأ",
           "en": "No"
         },
@@ -121,12 +121,12 @@
       "en": "Should PlaySpot bookings reach the old system?",
       "options": [
         {
-          "value": "true",
+          "value": "yes",
           "ar": "أيوه",
           "en": "Yes"
         },
         {
-          "value": "false",
+          "value": "no",
           "ar": "لأ، عرض فقط",
           "en": "No, listing only"
         }
@@ -140,12 +140,12 @@
       "en": "Do you need PlaySpot session controls?",
       "options": [
         {
-          "value": "true",
+          "value": "yes",
           "ar": "أيوه",
           "en": "Yes"
         },
         {
-          "value": "false",
+          "value": "no",
           "ar": "لأ",
           "en": "No"
         },
@@ -172,12 +172,12 @@
       },
       "options": [
         {
-          "value": "true",
+          "value": "yes",
           "ar": "أيوه",
           "en": "Yes"
         },
         {
-          "value": "false",
+          "value": "no",
           "ar": "لأ",
           "en": "No"
         },
@@ -196,17 +196,17 @@
       "en": "Do you have API documentation?",
       "visibleWhen": {
         "supportsApi": [
-          "true"
+          "yes"
         ]
       },
       "options": [
         {
-          "value": "true",
+          "value": "yes",
           "ar": "أيوه",
           "en": "Yes"
         },
         {
-          "value": "false",
+          "value": "no",
           "ar": "لأ",
           "en": "No"
         },
@@ -226,7 +226,7 @@
       "en": "Where is the API reachable?",
       "visibleWhen": {
         "supportsApi": [
-          "true"
+          "yes"
         ]
       },
       "options": [
@@ -261,12 +261,12 @@
       },
       "options": [
         {
-          "value": "true",
+          "value": "yes",
           "ar": "أيوه",
           "en": "Yes"
         },
         {
-          "value": "false",
+          "value": "no",
           "ar": "لأ",
           "en": "No"
         },
@@ -291,12 +291,12 @@
       },
       "options": [
         {
-          "value": "true",
+          "value": "yes",
           "ar": "أيوه",
           "en": "Yes"
         },
         {
-          "value": "false",
+          "value": "no",
           "ar": "لأ",
           "en": "No"
         },
@@ -315,17 +315,17 @@
       "en": "Does this PC have outbound HTTPS access?",
       "visibleWhen": {
         "hasWindowsComputer": [
-          "true"
+          "yes"
         ]
       },
       "options": [
         {
-          "value": "true",
+          "value": "yes",
           "ar": "أيوه",
           "en": "Yes"
         },
         {
-          "value": "false",
+          "value": "no",
           "ar": "لأ",
           "en": "No"
         },
@@ -351,12 +351,12 @@
       },
       "options": [
         {
-          "value": "true",
+          "value": "yes",
           "ar": "أيوه",
           "en": "Yes"
         },
         {
-          "value": "false",
+          "value": "no",
           "ar": "لأ",
           "en": "No"
         },
@@ -375,17 +375,17 @@
       "en": "Can it atomically reserve future capacity?",
       "visibleWhen": {
         "wantsOnlineBooking": [
-          "true"
+          "yes"
         ]
       },
       "options": [
         {
-          "value": "true",
+          "value": "yes",
           "ar": "أيوه",
           "en": "Yes"
         },
         {
-          "value": "false",
+          "value": "no",
           "ar": "لأ",
           "en": "No"
         },
@@ -405,17 +405,17 @@
       "en": "Does the local interface support session commands?",
       "visibleWhen": {
         "wantsSessionControl": [
-          "true"
+          "yes"
         ]
       },
       "options": [
         {
-          "value": "true",
+          "value": "yes",
           "ar": "أيوه",
           "en": "Yes"
         },
         {
-          "value": "false",
+          "value": "no",
           "ar": "لأ",
           "en": "No"
         },
@@ -434,20 +434,20 @@
       "en": "Can the API perform session commands?",
       "visibleWhen": {
         "supportsApi": [
-          "true"
+          "yes"
         ],
         "wantsSessionControl": [
-          "true"
+          "yes"
         ]
       },
       "options": [
         {
-          "value": "true",
+          "value": "yes",
           "ar": "أيوه",
           "en": "Yes"
         },
         {
-          "value": "false",
+          "value": "no",
           "ar": "لأ",
           "en": "No"
         },
@@ -473,12 +473,12 @@
       },
       "options": [
         {
-          "value": "true",
+          "value": "yes",
           "ar": "أيوه",
           "en": "Yes"
         },
         {
-          "value": "false",
+          "value": "no",
           "ar": "لأ",
           "en": "No"
         },
@@ -489,5 +489,6 @@
         }
       ]
     }
-  ]
+  ],
+  "booleanAnswerRepresentation": "yes | no | unknown; map to bool true | false | null in domain"
 }
