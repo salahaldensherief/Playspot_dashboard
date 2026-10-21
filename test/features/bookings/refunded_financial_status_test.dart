@@ -47,9 +47,7 @@ void main() {
               locale: context.locale,
               supportedLocales: context.supportedLocales,
               localizationsDelegates: context.localizationDelegates,
-              home: Scaffold(
-                body: SingleChildScrollView(child: child),
-              ),
+              home: Scaffold(body: SingleChildScrollView(child: child)),
             ),
           ),
         ),
