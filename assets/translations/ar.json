@@ -367,6 +367,7 @@
   "reason_required": "يجب إدخال سبب الخصم",
   "unpaid": "غير مدفوع",
   "partial": "مدفوع جزئياً",
+  "refunded": "تم رد المبلغ",
   "finished_today": "انتهى اليوم",
   "today": "اليوم",
   "daily_total": "إجمالي اليوم",

@@ -368,6 +368,7 @@
   "reason_required": "Reason is required for discounts",
   "unpaid": "Unpaid",
   "partial": "Partially paid",
+  "refunded": "Refunded",
   "finished_today": "Finished Today",
   "today": "Today",
   "daily_total": "Daily Total",

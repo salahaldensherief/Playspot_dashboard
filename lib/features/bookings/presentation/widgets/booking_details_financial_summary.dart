@@ -84,9 +84,13 @@ class BookingDetailsFinancialSummary extends StatelessWidget {
                     ? AppStrings.paid
                     : booking.paymentStatus == PaymentStatus.partial
                     ? AppStrings.partial
+                    : booking.paymentStatus == PaymentStatus.refunded
+                    ? AppStrings.refunded
                     : AppStrings.unpaid,
                 color: booking.paymentStatus == PaymentStatus.paid
                     ? AppColors.success
+                    : booking.paymentStatus == PaymentStatus.refunded
+                    ? AppColors.danger
                     : AppColors.warning,
               ),
             ],

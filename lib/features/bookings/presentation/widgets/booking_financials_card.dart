@@ -97,7 +97,9 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
       0.0,
       double.infinity,
     );
-    final isPaid = widget.booking.paymentStatus == PaymentStatus.paid;
+    final canEditDiscount =
+        widget.booking.paymentStatus == PaymentStatus.unpaid ||
+        widget.booking.paymentStatus == PaymentStatus.partial;
 
     final voucherDiscount = widget.booking.voucherDiscount ?? 0.0;
     final manualDiscount = (_discountValue > 0)
@@ -212,7 +214,7 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
           ),
 
           // Discount Input Section (if unpaid and controllers provided)
-          if (!isPaid &&
+          if (canEditDiscount &&
               widget.discountController != null &&
               widget.reasonController != null)
             BookingFinancialsDiscountInput(
@@ -261,7 +263,7 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
       case PaymentStatus.paid:
         return StatusBadge.success(AppStrings.paid.toUpperCase());
       case PaymentStatus.refunded:
-        return StatusBadge.danger(AppStrings.payouts.toUpperCase());
+        return StatusBadge.danger(AppStrings.refunded.toUpperCase());
       case PaymentStatus.partial:
         return StatusBadge.warning(AppStrings.partial.toUpperCase());
       case PaymentStatus.unpaid:
