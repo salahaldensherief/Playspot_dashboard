@@ -106,6 +106,16 @@ extension _LoungeSetupSections on _LoungeSetupViewState {
           },
         );
       case 8:
+        return BridgeReadinessStep(
+          answers: cubit.state.draft.integrationAnswers,
+          onChanged: (answers) {
+            _reviewConfirmed = false;
+            cubit.saveDraft(cubit.state.draft.copyWith(
+              integrationAnswers: answers,
+            ));
+          },
+        );
+      case 9:
         return OnboardingReviewSummary(
           state: cubit.state,
           ownerName: admin?.name ?? '',
