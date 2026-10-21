@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.8";
 import { GoogleAuth } from "npm:google-auth-library@9.15.1";
-import { isAnnouncementCallerAuthorized } from './authorization.js';
+import { isAnnouncementCallerAuthorized, dispatchAuthorizedAnnouncement } from './authorization.js';
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -40,14 +40,7 @@ async function isCallerAdmin(req: Request): Promise<boolean> {
 
 Deno.serve(async (req: Request) => {
   try {
-    if (!(await isCallerAdmin(req))) {
-      return new Response(JSON.stringify({ error: "Unauthorized: Admin privileges required" }), {
-        status: 403,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    const payload = await req.json();
+    return await dispatchAuthorizedAnnouncement(req, isCallerAdmin, async (payload: any) => {
     const topic = payload?.topic ?? "all_users";
     const title = payload?.title ?? "تنبيه جديد من إدراة PlaySpot";
     const body = payload?.body ?? "";
@@ -104,6 +97,7 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({ success: true, messageId: fcmResult.name }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
+    });
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
