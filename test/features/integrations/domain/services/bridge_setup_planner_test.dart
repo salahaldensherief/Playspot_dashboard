@@ -172,4 +172,53 @@ void main() {
     expect(plan.blockerCodes, contains('session_commands_not_verified'));
     expect(plan.sessionControlAllowed, isFalse);
   });
+
+  test(
+    'local-only API can use a Windows connector independently of software host',
+    () {
+      final plan = planner.evaluate(
+        const BridgeSetupAnswers(
+          system: ExistingSystemType.cloud,
+          vendorName: 'Fixture',
+          vendorVersion: '1',
+          integrationPermission: true,
+          supportsApi: true,
+          hasApiDocumentation: true,
+          apiReachability: ApiReachability.localNetwork,
+          hasWindowsComputer: true,
+          outboundInternetAvailable: true,
+          availabilityReadable: true,
+          atomicFutureReservation: true,
+          wantsSessionControl: true,
+          apiSessionCommandsAvailable: true,
+        ),
+      );
+      expect(plan.route, BridgeRoute.localAgent);
+      expect(plan.blockerCodes, isEmpty);
+      expect(plan.instantBookingAllowed, isFalse);
+      expect(plan.sessionControlAllowed, isFalse);
+    },
+  );
+  test('missing docs and unknown Windows host cannot qualify for a pilot', () {
+    final plan = planner.evaluate(
+      const BridgeSetupAnswers(
+        system: ExistingSystemType.cloud,
+        vendorName: 'Fixture',
+        vendorVersion: '1',
+        integrationPermission: true,
+        supportsApi: true,
+        apiReachability: ApiReachability.localNetwork,
+        availabilityReadable: true,
+        atomicFutureReservation: true,
+      ),
+    );
+    expect(
+      plan.blockerCodes,
+      containsAll([
+        'verify_windows_and_outbound_https',
+        'collect_official_api_documentation',
+      ]),
+    );
+    expect(plan.readiness, BridgeReadiness.evidenceRequired);
+  });
 }

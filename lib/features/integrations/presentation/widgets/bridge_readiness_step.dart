@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import '../../domain/services/bridge_questionnaire.dart';
 import 'package:play_spot_dashboard/features/integrations/domain/services/bridge_setup_planner.dart';
 
 /// Advisory questionnaire in the existing onboarding sequence.
@@ -7,34 +8,16 @@ import 'package:play_spot_dashboard/features/integrations/domain/services/bridge
 /// Answers are saved only in the existing browser-local onboarding draft.
 /// They are NOT transmitted, and NO integration is activated by this widget.
 class BridgeReadinessStep extends StatelessWidget {
-  final Map<String, dynamic> answers;
+  final Map<String, dynamic> _answers;
+  Map<String, dynamic> get answers => BridgeQuestionnaire.normalize(_answers);
   final ValueChanged<Map<String, dynamic>> onChanged;
 
   const BridgeReadinessStep({
     super.key,
-    required this.answers,
+    required Map<String, dynamic> answers,
     required this.onChanged,
-  });
+  }) : _answers = answers;
 
-  static const _systemOptions = <String>[
-    'none',
-    'cloud',
-    'windowsLocal',
-    'otherLocal',
-    'unknown',
-  ];
-  static const _yesNoUnknown = <String>['yes', 'no', 'unknown'];
-  static const _reachabilityOptions = <String>[
-    'publicHttps',
-    'localNetwork',
-    'unknown',
-  ];
-
-  bool get _hasSystem =>
-      answers['system'] != null && answers['system'] != 'none';
-  bool get _local =>
-      answers['system'] == 'windowsLocal' || answers['system'] == 'otherLocal';
-  bool get _usesApi => answers['supportsApi'] == 'yes';
   bool get _wantsBooking => answers['wantsOnlineBooking'] != 'no';
   bool get _wantsControl => answers['wantsSessionControl'] == 'yes';
 
@@ -63,7 +46,7 @@ class BridgeReadinessStep extends StatelessWidget {
     } else {
       next[name] = value;
     }
-    onChanged(next);
+    onChanged(BridgeQuestionnaire.normalize(next));
   }
 
   Widget _choice(String field, List<String> options) {
@@ -71,8 +54,8 @@ class BridgeReadinessStep extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: DropdownButtonFormField<String>(
-        key: ValueKey('bridge_$field'),
-        value: options.contains(current) ? current : null,
+        key: ValueKey('bridge_${answers['system']}_${field}_${current ?? ''}'),
+        initialValue: options.contains(current) ? current : null,
         isExpanded: true,
         decoration: InputDecoration(
           labelText: 'bridge_step.questions.$field'.tr(),
@@ -98,7 +81,7 @@ class BridgeReadinessStep extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
-        key: ValueKey('bridge_$field'),
+        key: ValueKey('bridge_${answers['system']}_$field'),
         initialValue: answers[field]?.toString() ?? '',
         maxLength: 120,
         decoration: InputDecoration(
@@ -159,38 +142,12 @@ class BridgeReadinessStep extends StatelessWidget {
         const SizedBox(height: 8),
         Text('bridge_step.introduction'.tr()),
         const SizedBox(height: 16),
-        _choice('system', _systemOptions),
-        if (answers['system'] != null) ...[
-          if (_hasSystem) ...[
-            _text('vendorName'),
-            _text('vendorVersion'),
-            _choice('integrationPermission', _yesNoUnknown),
-            _choice('supportsApi', _yesNoUnknown),
-            if (_usesApi) ...[
-              _choice('hasApiDocumentation', _yesNoUnknown),
-              _choice('apiReachability', _reachabilityOptions),
-            ],
-            if (_local) ...[
-              _choice('supportsLocalInterface', _yesNoUnknown),
-              _choice('hasWindowsComputer', _yesNoUnknown),
-              if (answers['hasWindowsComputer'] == 'yes')
-                _choice('outboundInternetAvailable', _yesNoUnknown),
-            ],
-          ],
-          _choice('wantsOnlineBooking', ['yes', 'no']),
-          _choice('wantsSessionControl', _yesNoUnknown),
-          if (_hasSystem) ...[
-            _choice('availabilityReadable', _yesNoUnknown),
-            if (_wantsBooking)
-              _choice('atomicFutureReservation', _yesNoUnknown),
-            if (_wantsControl) ...[
-              if (_local) _choice('sessionCommandsAvailable', _yesNoUnknown),
-              if (_usesApi)
-                _choice('apiSessionCommandsAvailable', _yesNoUnknown),
-            ],
-            _choice('changeEventsAvailable', _yesNoUnknown),
-          ],
-        ],
+        for (final question in BridgeQuestionnaire.questions)
+          if (question.visible(answers))
+            if (question.options.isEmpty)
+              _text(question.id)
+            else
+              _choice(question.id, question.options),
         const SizedBox(height: 8),
         if (answers['system'] != null)
           Card(

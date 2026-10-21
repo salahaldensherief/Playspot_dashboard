@@ -114,9 +114,7 @@ class BridgeSetupPlanner {
         a.apiReachability == ApiReachability.localNetwork;
     final canReachCloudApi =
         apiDocumented && a.apiReachability == ApiReachability.publicHttps;
-    final canUseLocalAgent =
-        (localSupported || apiNeedsAgent) &&
-        a.system == ExistingSystemType.windowsLocal;
+    final canUseLocalAgent = (localSupported || apiNeedsAgent);
 
     BridgeRoute route;
     if (canReachCloudApi &&
@@ -171,7 +169,11 @@ class BridgeSetupPlanner {
       actions.add('test_start_extend_end_without_real_customer');
       final hasCommandChannel = switch (route) {
         BridgeRoute.cloudApi => a.apiSessionCommandsAvailable == true,
-        BridgeRoute.localAgent ||
+        BridgeRoute.localAgent =>
+          (localSupported && a.sessionCommandsAvailable == true) ||
+              (apiNeedsAgent &&
+                  apiDocumented &&
+                  a.apiSessionCommandsAvailable == true),
         BridgeRoute.hybrid => a.sessionCommandsAvailable == true,
         _ => false,
       };

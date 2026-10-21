@@ -1,4 +1,5 @@
 import '../../domain/entities/onboarding_venue_payload.dart';
+import '../../domain/entities/onboarding_steps.dart';
 import '../../domain/entities/onboarding_extra_payload.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -105,13 +106,13 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   }
 
   void setStep(int step) {
-    if (step >= 0 && step <= 9) {
+    if (step >= 0 && step < OnboardingSteps.ids().length) {
       saveDraft(state.draft.copyWith(step: step));
     }
   }
 
   void nextStep() {
-    if (state.currentStep < 9) {
+    if (state.currentStep < OnboardingSteps.ids().length - 1) {
       setStep(state.currentStep + 1);
     }
   }

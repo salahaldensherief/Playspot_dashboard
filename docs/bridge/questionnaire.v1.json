@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-preview",
+  "version": "1.0.1-preview",
   "purpose": "Read-only integration readiness discovery; does not activate connectors",
   "security": {
     "neverAskFor": [
@@ -20,28 +20,28 @@
     {
       "id": "system",
       "kind": "select",
-      "required": true,
+      "required": false,
       "ar": "الصالة بتستخدم برنامج إدارة حاليًا؟ موجود فين؟",
       "en": "Where does your current management software run?",
       "options": [
         {
           "value": "none",
-          "ar": "معندناش برنامج",
-          "en": "No system"
+          "ar": "مفيش برنامج — عايز PlaySpot OS",
+          "en": "No existing software — use PlaySpot OS"
         },
         {
           "value": "cloud",
-          "ar": "على الإنترنت (Cloud)",
-          "en": "Cloud"
+          "ar": "نظام أونلاين (Cloud)",
+          "en": "Online/cloud service"
         },
         {
           "value": "windowsLocal",
-          "ar": "على كمبيوتر Windows بالصالة",
-          "en": "Windows PC in lounge"
+          "ar": "برنامج على Windows داخل الصالة",
+          "en": "Windows PC at the lounge"
         },
         {
           "value": "otherLocal",
-          "ar": "على جهاز محلي تاني",
+          "ar": "جهاز محلي غير Windows",
           "en": "Other local device"
         },
         {
@@ -54,7 +54,7 @@
     {
       "id": "vendorName",
       "kind": "text",
-      "required": true,
+      "required": false,
       "ar": "اسم البرنامج إيه؟",
       "en": "What is the software name?",
       "visibleWhen": {
@@ -70,7 +70,7 @@
     {
       "id": "vendorVersion",
       "kind": "text",
-      "required": true,
+      "required": false,
       "ar": "إصدار البرنامج؟",
       "en": "Software version?",
       "visibleWhen": {
@@ -86,7 +86,7 @@
     {
       "id": "integrationPermission",
       "kind": "select",
-      "required": true,
+      "required": false,
       "ar": "صاحب الصالة موافق نربط البرنامج؟ وهل الترخيص يسمح؟",
       "en": "Has the owner and vendor permitted integration?",
       "visibleWhen": {
@@ -105,50 +105,7 @@
         },
         {
           "value": "no",
-          "ar": "لأ",
-          "en": "No"
-        },
-        {
-          "value": "unknown",
-          "ar": "مش عارف",
-          "en": "Not sure"
-        }
-      ]
-    },
-    {
-      "id": "wantsOnlineBooking",
-      "kind": "select",
-      "required": true,
-      "ar": "عايز الحجوزات من PlaySpot تدخل البرنامج القديم؟",
-      "en": "Should PlaySpot bookings reach the old system?",
-      "options": [
-        {
-          "value": "yes",
-          "ar": "أيوه",
-          "en": "Yes"
-        },
-        {
-          "value": "no",
-          "ar": "لأ، عرض فقط",
-          "en": "No, listing only"
-        }
-      ]
-    },
-    {
-      "id": "wantsSessionControl",
-      "kind": "select",
-      "required": true,
-      "ar": "عايز بدء وتمديد وإنهاء الجلسة من PlaySpot؟",
-      "en": "Do you need PlaySpot session controls?",
-      "options": [
-        {
-          "value": "yes",
-          "ar": "أيوه",
-          "en": "Yes"
-        },
-        {
-          "value": "no",
-          "ar": "لأ",
+          "ar": "لا",
           "en": "No"
         },
         {
@@ -161,7 +118,7 @@
     {
       "id": "supportsApi",
       "kind": "select",
-      "required": true,
+      "required": false,
       "ar": "البرنامج عنده API رسمية؟",
       "en": "Is an official API available?",
       "visibleWhen": {
@@ -180,7 +137,7 @@
         },
         {
           "value": "no",
-          "ar": "لأ",
+          "ar": "لا",
           "en": "No"
         },
         {
@@ -197,6 +154,12 @@
       "ar": "معاك رابط توثيق الـ API؟",
       "en": "Do you have API documentation?",
       "visibleWhen": {
+        "system": [
+          "cloud",
+          "windowsLocal",
+          "otherLocal",
+          "unknown"
+        ],
         "supportsApi": [
           "yes"
         ]
@@ -209,7 +172,7 @@
         },
         {
           "value": "no",
-          "ar": "لأ",
+          "ar": "لا",
           "en": "No"
         },
         {
@@ -227,6 +190,12 @@
       "ar": "الـ API بتتفتح من الإنترنت ولا من شبكة الصالة بس؟",
       "en": "Where is the API reachable?",
       "visibleWhen": {
+        "system": [
+          "cloud",
+          "windowsLocal",
+          "otherLocal",
+          "unknown"
+        ],
         "supportsApi": [
           "yes"
         ]
@@ -234,13 +203,13 @@
       "options": [
         {
           "value": "publicHttps",
-          "ar": "HTTPS خارجي",
+          "ar": "HTTPS من الإنترنت",
           "en": "Public HTTPS"
         },
         {
           "value": "localNetwork",
-          "ar": "من داخل الصالة فقط",
-          "en": "Local network"
+          "ar": "داخل شبكة الصالة فقط",
+          "en": "Lounge network only"
         },
         {
           "value": "unknown",
@@ -257,8 +226,10 @@
       "en": "Does the software have an approved local integration interface?",
       "visibleWhen": {
         "system": [
+          "cloud",
           "windowsLocal",
-          "otherLocal"
+          "otherLocal",
+          "unknown"
         ]
       },
       "options": [
@@ -269,7 +240,7 @@
         },
         {
           "value": "no",
-          "ar": "لأ",
+          "ar": "لا",
           "en": "No"
         },
         {
@@ -287,8 +258,10 @@
       "en": "Is a suitable Windows computer available?",
       "visibleWhen": {
         "system": [
+          "cloud",
           "windowsLocal",
-          "otherLocal"
+          "otherLocal",
+          "unknown"
         ]
       },
       "options": [
@@ -299,13 +272,34 @@
         },
         {
           "value": "no",
-          "ar": "لأ",
+          "ar": "لا",
           "en": "No"
         },
         {
           "value": "unknown",
           "ar": "مش عارف",
           "en": "Not sure"
+        }
+      ],
+      "visibleWhenAny": [
+        {
+          "system": [
+            "windowsLocal",
+            "otherLocal"
+          ]
+        },
+        {
+          "supportsLocalInterface": [
+            "yes"
+          ]
+        },
+        {
+          "supportsApi": [
+            "yes"
+          ],
+          "apiReachability": [
+            "localNetwork"
+          ]
         }
       ]
     },
@@ -316,6 +310,12 @@
       "ar": "الكمبيوتر ده يقدر يفتح مواقع HTTPS على الإنترنت؟",
       "en": "Does this PC have outbound HTTPS access?",
       "visibleWhen": {
+        "system": [
+          "cloud",
+          "windowsLocal",
+          "otherLocal",
+          "unknown"
+        ],
         "hasWindowsComputer": [
           "yes"
         ]
@@ -328,7 +328,7 @@
         },
         {
           "value": "no",
-          "ar": "لأ",
+          "ar": "لا",
           "en": "No"
         },
         {
@@ -337,6 +337,67 @@
           "en": "Not sure"
         }
       ]
+    },
+    {
+      "id": "wantsOnlineBooking",
+      "kind": "select",
+      "required": false,
+      "ar": "عايز الحجوزات من PlaySpot تدخل البرنامج القديم؟",
+      "en": "Should PlaySpot bookings reach the old system?",
+      "options": [
+        {
+          "value": "yes",
+          "ar": "أيوه",
+          "en": "Yes"
+        },
+        {
+          "value": "no",
+          "ar": "لا",
+          "en": "No"
+        }
+      ],
+      "visibleWhen": {
+        "system": [
+          "none",
+          "cloud",
+          "windowsLocal",
+          "otherLocal",
+          "unknown"
+        ]
+      }
+    },
+    {
+      "id": "wantsSessionControl",
+      "kind": "select",
+      "required": false,
+      "ar": "عايز بدء وتمديد وإنهاء الجلسة من PlaySpot؟",
+      "en": "Do you need PlaySpot session controls?",
+      "options": [
+        {
+          "value": "yes",
+          "ar": "أيوه",
+          "en": "Yes"
+        },
+        {
+          "value": "no",
+          "ar": "لا",
+          "en": "No"
+        },
+        {
+          "value": "unknown",
+          "ar": "مش عارف",
+          "en": "Not sure"
+        }
+      ],
+      "visibleWhen": {
+        "system": [
+          "none",
+          "cloud",
+          "windowsLocal",
+          "otherLocal",
+          "unknown"
+        ]
+      }
     },
     {
       "id": "availabilityReadable",
@@ -348,7 +409,8 @@
         "system": [
           "cloud",
           "windowsLocal",
-          "otherLocal"
+          "otherLocal",
+          "unknown"
         ]
       },
       "options": [
@@ -359,7 +421,7 @@
         },
         {
           "value": "no",
-          "ar": "لأ",
+          "ar": "لا",
           "en": "No"
         },
         {
@@ -376,6 +438,12 @@
       "ar": "يقدر يحجز الروم للمستقبل ويمنع حجزين لنفس الوقت آليًا؟",
       "en": "Can it atomically reserve future capacity?",
       "visibleWhen": {
+        "system": [
+          "cloud",
+          "windowsLocal",
+          "otherLocal",
+          "unknown"
+        ],
         "wantsOnlineBooking": [
           "yes"
         ]
@@ -388,7 +456,7 @@
         },
         {
           "value": "no",
-          "ar": "لأ",
+          "ar": "لا",
           "en": "No"
         },
         {
@@ -397,7 +465,10 @@
           "en": "Not sure"
         }
       ],
-      "hint_ar": "لو مش متأكد اختار مش عارف؛ متخمنش"
+      "hint_ar": "لو مش متأكد اختار مش عارف؛ متخمنش",
+      "visibleWhenDefaults": {
+        "wantsOnlineBooking": "yes"
+      }
     },
     {
       "id": "sessionCommandsAvailable",
@@ -406,7 +477,16 @@
       "ar": "الوسيلة المحلية تدعم Start/Extend/End؟",
       "en": "Does the local interface support session commands?",
       "visibleWhen": {
+        "system": [
+          "cloud",
+          "windowsLocal",
+          "otherLocal",
+          "unknown"
+        ],
         "wantsSessionControl": [
+          "yes"
+        ],
+        "supportsLocalInterface": [
           "yes"
         ]
       },
@@ -418,7 +498,7 @@
         },
         {
           "value": "no",
-          "ar": "لأ",
+          "ar": "لا",
           "en": "No"
         },
         {
@@ -435,10 +515,16 @@
       "ar": "الـ API نفسها تدعم Start/Extend/End؟",
       "en": "Can the API perform session commands?",
       "visibleWhen": {
-        "supportsApi": [
-          "yes"
+        "system": [
+          "cloud",
+          "windowsLocal",
+          "otherLocal",
+          "unknown"
         ],
         "wantsSessionControl": [
+          "yes"
+        ],
+        "supportsApi": [
           "yes"
         ]
       },
@@ -450,7 +536,7 @@
         },
         {
           "value": "no",
-          "ar": "لأ",
+          "ar": "لا",
           "en": "No"
         },
         {
@@ -470,7 +556,8 @@
         "system": [
           "cloud",
           "windowsLocal",
-          "otherLocal"
+          "otherLocal",
+          "unknown"
         ]
       },
       "options": [
@@ -481,7 +568,7 @@
         },
         {
           "value": "no",
-          "ar": "لأ",
+          "ar": "لا",
           "en": "No"
         },
         {

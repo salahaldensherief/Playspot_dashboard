@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'onboarding_steps.dart';
 
 class LoungeDraftParams extends Equatable {
   final int step;
@@ -91,6 +92,8 @@ class LoungeDraftParams extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
+    'stepId':
+        OnboardingSteps.ids()[step.clamp(0, OnboardingSteps.ids().length - 1)],
     'step': step,
     'integrationAnswers': integrationAnswers,
     'name': name,
@@ -114,7 +117,7 @@ class LoungeDraftParams extends Equatable {
 
   factory LoungeDraftParams.fromJson(Map<String, dynamic> json) {
     return LoungeDraftParams(
-      step: json['step'] as int? ?? 0,
+      step: OnboardingSteps.restore(json),
       integrationAnswers: json['integrationAnswers'] is Map
           ? Map<String, dynamic>.from(json['integrationAnswers'] as Map)
           : const {},

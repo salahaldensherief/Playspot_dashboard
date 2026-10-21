@@ -1,3 +1,5 @@
+> Review update, 21 October 2026: follow-up branch feature/bridge-security-review-20261021 fixes default-off preview gating, semantic draft restoration, generated conditional catalog, host routing and stale field handling. The checklist below is the ORIGINAL handoff, not the final test status. See REVIEW_20261021.md.
+
 # Codex review handoff — PlaySpot Bridge onboarding v1 (NOT SHIPPED)
 
 Related backend proposal in mobile repository: docs/bridge/ARCHITECTURE_PROPOSAL.md and docs/bridge/proposed_schema.sql on feature/bridge-backend-contract-20261021.

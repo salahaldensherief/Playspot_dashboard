@@ -57,6 +57,9 @@ jobs:
       - name: Run tests
         run: flutter test
 
+      - name: Verify opt-in Bridge preview and ten-step onboarding
+        run: flutter test --dart-define=PLAYSPOT_BRIDGE_PREVIEW=true test/features/integrations test/features/onboarding
+
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
