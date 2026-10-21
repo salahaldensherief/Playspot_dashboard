@@ -68,10 +68,7 @@ The following flagged construction/layout contexts were inspected. This is not c
 | `lib/features/canteen/presentation/widgets/canteen_combos_tab.dart` | shrink_wrap |
 | `lib/features/canteen/presentation/widgets/combo_editor_modal.dart` | shrink_wrap |
 | `lib/features/analytics/presentation/widgets/cockpit_kpi_grid.dart` | shrink_wrap |
-| `lib/features/analytics/presentation/widgets/pending_extensions_card.dart` | shrink_wrap |
-| `lib/features/analytics/presentation/widgets/dashboard_stats_grid.dart` | shrink_wrap |
 | `lib/features/analytics/presentation/widgets/top_lounges_card.dart` | shrink_wrap |
-| `lib/features/analytics/presentation/widgets/lounge_owner_analytics_grid.dart` | shrink_wrap |
 | `lib/features/pricing/presentation/widgets/pricing_grouped_rules_list.dart` | shrink_wrap |
 | `lib/features/shifts/presentation/shift_history/shift_history_screen.dart` | review_owner:notesController |
 | `lib/features/shifts/presentation/shift_management/widgets/admin_shift_monitoring_bar.dart` | timer_rebuild |
@@ -83,6 +80,8 @@ The following flagged construction/layout contexts were inspected. This is not c
 | `lib/features/onboarding/presentation/widgets/marketplace_step.dart` | shrink_wrap |
 
 ## Follow-up fixes
+
+The unreferenced legacy analytics widgets in the original inventory were removed during the dashboard cleanup on 2026-10-20. The baseline counts above remain historical.
 
 Three dialogs now store text through onChanged instead of constructing unowned TextEditingControllers. TextFormField owns/disposes its internal controller. SessionTimeSelector keeps static live-card content stable until warning/expiry phase or parent input changes; only the timer ticks each second. A regression counts builds across ticks, expiry and parent updates. Reviews reuse refreshingStream with the existing 10-second fallback poll, serializing fetches and suppressing late results after cancellation. Earlier targeted paths include booking/analytics/requests streams, tournament audit lifecycle and shared clock consumers.
 

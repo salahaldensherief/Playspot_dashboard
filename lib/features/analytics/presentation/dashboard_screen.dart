@@ -88,11 +88,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   );
                 },
               )
-            : LoungeOwnerDashboardView(
-                timeRange: _selectedTimeRange,
-                onTimeRangeChanged: (range) =>
-                    setState(() => _selectedTimeRange = range),
-              ),
+            : const LoungeOwnerDashboardView(),
       ),
     );
   }

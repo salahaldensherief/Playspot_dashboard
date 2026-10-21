@@ -217,6 +217,7 @@ class PromoFormSection extends StatelessWidget {
           children: [
             Expanded(
               child: AppTextField(
+                textLanguage: TextFieldLanguage.arabic,
                 controller: titleArController,
                 label: AppStrings.promoTitleAr,
                 hintText: AppStrings.promoTitleArHint,
@@ -226,6 +227,7 @@ class PromoFormSection extends StatelessWidget {
             SizedBox(width: 12.w),
             Expanded(
               child: AppTextField(
+                textLanguage: TextFieldLanguage.english,
                 controller: titleEnController,
                 label: AppStrings.promoTitleEn,
                 hintText: AppStrings.promoTitleEnHint,

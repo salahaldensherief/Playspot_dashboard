@@ -188,6 +188,7 @@ class NewBookingAlertDialog extends StatelessWidget {
                   child: AppButton(
                     text: AppStrings.confirmBooking,
                     variant: AppButtonVariant.primary,
+                    backgroundColor: AppColors.success,
                     icon: Icons.check_circle_rounded,
                     height: 44.h,
                     onPressed: () {

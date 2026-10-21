@@ -51,12 +51,14 @@ class CoreInfoSection extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         AppTextField(
+          textLanguage: TextFieldLanguage.arabic,
           label: AppStrings.descriptionArLabel,
           controller: descArController,
           hintText: AppStrings.descriptionArHint,
         ),
         const SizedBox(height: 16),
         AppTextField(
+          textLanguage: TextFieldLanguage.english,
           label: AppStrings.descriptionEnLabel,
           controller: descEnController,
           hintText: AppStrings.descriptionEnHint,

@@ -10,7 +10,9 @@ import 'package:play_spot_dashboard/art_core/widgets/app_multi_image_picker.dart
 
 class BasicInfoStep extends StatelessWidget {
   final TextEditingController nameController;
+  final TextEditingController nameEnController;
   final TextEditingController descriptionController;
+  final TextEditingController descriptionEnController;
   final TextEditingController contactPhoneController;
   final String? initialMainImageUrl;
   final Function(Uint8List? bytes, String? name) onMainImageSelected;
@@ -19,7 +21,9 @@ class BasicInfoStep extends StatelessWidget {
   const BasicInfoStep({
     super.key,
     required this.nameController,
+    required this.nameEnController,
     required this.descriptionController,
+    required this.descriptionEnController,
     required this.contactPhoneController,
     this.initialMainImageUrl,
     required this.onMainImageSelected,
@@ -41,16 +45,30 @@ class BasicInfoStep extends StatelessWidget {
         SizedBox(height: 20.h),
         AppTextField(
           fontSize: 16,
-          label: AppStrings.loungeName,
-          hintText: AppStrings.loungeNameHint,
+          label: AppStrings.nameAr,
           controller: nameController,
+          textLanguage: TextFieldLanguage.arabic,
         ),
         SizedBox(height: 20.h),
         AppTextField(
           fontSize: 16,
-          label: AppStrings.description,
-          hintText: AppStrings.descriptionHint,
+          label: AppStrings.nameEn,
+          controller: nameEnController,
+          textLanguage: TextFieldLanguage.english,
+        ),
+        SizedBox(height: 20.h),
+        AppTextField(
+          fontSize: 16,
+          label: AppStrings.descriptionArLabel,
           controller: descriptionController,
+          textLanguage: TextFieldLanguage.arabic,
+        ),
+        SizedBox(height: 20.h),
+        AppTextField(
+          fontSize: 16,
+          label: AppStrings.descriptionEnLabel,
+          controller: descriptionEnController,
+          textLanguage: TextFieldLanguage.english,
         ),
         SizedBox(height: 20.h),
         AppTextField(

@@ -289,6 +289,7 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
                 children: [
                   Expanded(
                     child: AppTextField(
+                      textLanguage: TextFieldLanguage.arabic,
                       label: AppStrings.announcementTitleAr,
                       hintText: AppStrings.announcementTitleArHint,
                       controller: _titleArController,
@@ -300,6 +301,7 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
                   SizedBox(width: 16.w),
                   Expanded(
                     child: AppTextField(
+                      textLanguage: TextFieldLanguage.english,
                       label: AppStrings.announcementTitleEn,
                       hintText: AppStrings.announcementTitleEnHint,
                       controller: _titleEnController,
@@ -316,6 +318,7 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
                 children: [
                   Expanded(
                     child: AppTextField(
+                      textLanguage: TextFieldLanguage.arabic,
                       label: AppStrings.announcementBodyAr,
                       hintText: AppStrings.announcementBodyArHint,
                       controller: _bodyArController,
@@ -328,6 +331,7 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
                   SizedBox(width: 16.w),
                   Expanded(
                     child: AppTextField(
+                      textLanguage: TextFieldLanguage.english,
                       label: AppStrings.announcementBodyEn,
                       hintText: AppStrings.announcementBodyEnHint,
                       controller: _bodyEnController,

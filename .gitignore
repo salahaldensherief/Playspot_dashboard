@@ -34,6 +34,7 @@ C:/
 .pub/
 /build/
 /coverage/
+/.artifacts/
 
 # Symbolication related
 app.*.symbols

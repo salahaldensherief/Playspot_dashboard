@@ -11,17 +11,19 @@ import '../dashboard_state.dart';
 class DashboardHeader extends StatelessWidget {
   final bool isSuperAdmin;
   final Future<void> Function()? onRefresh;
+  final Widget? trailing;
 
   const DashboardHeader({
     super.key,
     required this.isSuperAdmin,
     this.onRefresh,
+    this.trailing,
   });
 
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    return Row(
+    final header = Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -64,48 +66,74 @@ class DashboardHeader extends StatelessWidget {
           builder: (context, status) {
             final bool isLoading = status == FeatureStatus.loading;
 
-            return MouseRegion(
-              cursor: isLoading
-                  ? SystemMouseCursors.basic
-                  : SystemMouseCursors.click,
-              child: InkWell(
-                onTap: isLoading
-                    ? null
-                    : () {
-                        if (onRefresh != null) {
-                          onRefresh!();
-                        } else {
-                          context.read<DashboardCubit>().loadDashboardData();
-                        }
-                      },
-                borderRadius: BorderRadius.circular(10.r),
-                child: Container(
-                  padding: EdgeInsets.all(10.r),
-                  decoration: BoxDecoration(
-                    color: AppColors.cardBackground,
-                    borderRadius: BorderRadius.circular(10.r),
-                    border: Border.all(color: AppColors.borderDefault),
-                  ),
-                  child: isLoading
-                      ? SizedBox(
-                          width: 20.r,
-                          height: 20.r,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.neonBlue,
-                          ),
-                        )
-                      : Icon(
-                          Icons.refresh_rounded,
-                          color: AppColors.neonBlue,
-                          size: 22.r,
-                        ),
+            return IconButton(
+              tooltip: AppStrings.refreshData,
+              onPressed: isLoading
+                  ? null
+                  : () {
+                      final refresh = onRefresh;
+                      if (refresh != null) {
+                        refresh();
+                      } else {
+                        context.read<DashboardCubit>().loadDashboardData();
+                      }
+                    },
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.cardBackground,
+                minimumSize: const Size(48, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                  side: const BorderSide(color: AppColors.borderDefault),
                 ),
               ),
+              icon: isLoading
+                  ? SizedBox(
+                      width: 20.r,
+                      height: 20.r,
+                      child: const CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.neonBlue,
+                      ),
+                    )
+                  : Icon(
+                      Icons.refresh_rounded,
+                      color: AppColors.neonBlue,
+                      size: 22.r,
+                    ),
             );
           },
         ),
       ],
+    );
+
+    final trailingAction = trailing;
+    if (trailingAction == null) return header;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
+        if (constraints.maxWidth < 720 * textScale.clamp(1, 1.6)) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              header,
+              SizedBox(height: 16.h),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: trailingAction,
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: header),
+            SizedBox(width: 12.w),
+            trailingAction,
+          ],
+        );
+      },
     );
   }
 }

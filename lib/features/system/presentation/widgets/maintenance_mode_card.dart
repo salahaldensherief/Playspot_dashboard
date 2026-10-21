@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/section_container.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import '../../domain/entities/app_status_entity.dart';
 import 'stop_confirmation_dialog.dart';
 
@@ -117,6 +118,21 @@ class _MaintenanceModeCardState extends State<MaintenanceModeCard> {
   }
 
   void _submit() {
+    final languageError =
+        AppValidator.validateLanguage(
+          _msgArController.text,
+          TextFieldLanguage.arabic,
+        ) ??
+        AppValidator.validateLanguage(
+          _msgEnController.text,
+          TextFieldLanguage.english,
+        );
+    if (languageError != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(languageError)));
+      return;
+    }
     widget.onSave(
       isMaintenanceMode: _isMaintenanceMode,
       maintenanceMessageAr: _msgArController.text.trim(),
@@ -215,6 +231,7 @@ class _MaintenanceModeCardState extends State<MaintenanceModeCard> {
           children: [
             Expanded(
               child: AppTextField(
+                textLanguage: TextFieldLanguage.arabic,
                 label: AppStrings.maintenanceMsgAr,
                 hintText: AppStrings.maintenanceMsgArHint,
                 controller: _msgArController,
@@ -224,6 +241,7 @@ class _MaintenanceModeCardState extends State<MaintenanceModeCard> {
             SizedBox(width: 16.w),
             Expanded(
               child: AppTextField(
+                textLanguage: TextFieldLanguage.english,
                 label: AppStrings.maintenanceMsgEn,
                 hintText: AppStrings.maintenanceMsgEnHint,
                 controller: _msgEnController,

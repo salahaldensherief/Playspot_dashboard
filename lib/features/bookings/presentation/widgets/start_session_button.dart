@@ -87,10 +87,6 @@ class _StartSessionButtonState extends State<StartSessionButton> {
     SessionTickerScope.clockOf(context)(),
   );
 
-  String _format12Hour(DateTime dt) {
-    return DateFormat('hh:mm a').format(dt);
-  }
-
   Future<void> _handleStartSession(BuildContext context) async {
     if (_isLoading ||
         !widget.enabled ||

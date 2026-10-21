@@ -109,6 +109,11 @@ class Booking extends Equatable {
 
   bool get isOpenEnded => isOpenTime || durationMinutes <= 0;
 
+  bool get needsPaymentProofReview =>
+      status == BookingStatus.pendingVerification ||
+      (receiptUrl?.trim().isNotEmpty == true &&
+          paymentStatus != PaymentStatus.paid);
+
   /// Helper to determine if booking was cancelled by the client after approval
   bool get isCancelledByClient =>
       status == BookingStatus.cancelled &&

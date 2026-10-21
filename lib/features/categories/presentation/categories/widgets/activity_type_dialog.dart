@@ -150,6 +150,7 @@ class _ActivityTypeDialogState extends State<ActivityTypeDialog> {
               children: [
                 Expanded(
                   child: AppTextField(
+                    textLanguage: TextFieldLanguage.english,
                     label: AppStrings.activityKey,
                     controller: _nameController,
                     hintText: 'table_tennis',
@@ -210,6 +211,7 @@ class _ActivityTypeDialogState extends State<ActivityTypeDialog> {
               children: [
                 Expanded(
                   child: AppTextField(
+                    textLanguage: TextFieldLanguage.english,
                     label: AppStrings.activityIconKey,
                     controller: _iconController,
                     hintText: 'sports_tennis',

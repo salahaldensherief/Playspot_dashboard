@@ -104,6 +104,7 @@ class _SessionControlActionsState extends State<SessionControlActions> {
     text: 'cashier.end'.tr(),
     height: 48,
     isLoading: _busy,
+    icon: Icons.stop_circle_rounded,
     variant: AppButtonVariant.danger,
     onPressed: !_busy && _allowed('sessions_control') ? _end : null,
   );
@@ -111,12 +112,16 @@ class _SessionControlActionsState extends State<SessionControlActions> {
     text: 'cashier.collect'.tr(),
     height: 48,
     isLoading: _busy,
-    variant: AppButtonVariant.outlined,
+    icon: Icons.payments_rounded,
+    variant: AppButtonVariant.primary,
+    backgroundColor: AppColors.primary,
+    foregroundColor: AppColors.onPrimary,
     onPressed: !_busy && _allowed('billing_checkout') ? _collect : null,
   );
   Widget _swapButton(Booking booking) => AppButton(
     text: 'cashier.swap'.tr(),
     height: 48,
+    icon: Icons.swap_horiz_rounded,
     variant: AppButtonVariant.outlined,
     onPressed: !_busy && _allowed('rooms_manage')
         ? () => showDialog<void>(
@@ -166,10 +171,11 @@ class _SessionControlActionsState extends State<SessionControlActions> {
                 startTime: booking.startTime,
                 enabled: !_busy && _allowed('sessions_control'),
                 height: 48,
-                onSuccess: () => context.read<BookingCubit>().startWatchingBookings(
-                  loungeId: booking.loungeId,
-                  forceRefresh: true,
-                ),
+                onSuccess: () =>
+                    context.read<BookingCubit>().startWatchingBookings(
+                      loungeId: booking.loungeId,
+                      forceRefresh: true,
+                    ),
               );
             },
           ),

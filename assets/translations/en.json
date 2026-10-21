@@ -233,6 +233,8 @@
   "pending_requests": "Pending Requests",
   "active_bookings": "Active Bookings",
   "field_required": "This field is required",
+  "arabic_text_only": "Use Arabic text only; English letters are not allowed",
+  "english_text_only": "Use English text only; Arabic letters are not allowed",
   "invalid_email": "Invalid email address",
   "password_too_short": "Password must be at least 6 characters",
   "invalid_number": "Please enter a valid number",

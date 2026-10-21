@@ -122,6 +122,7 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
             text: 'open_shift_now'.tr(),
             icon: Icons.flash_on_rounded,
             variant: AppButtonVariant.primary,
+            backgroundColor: AppColors.success,
             height: 32.h,
             onPressed: () async {
               final user = context.read<LoginCubit>().state.user;
@@ -282,6 +283,7 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
           AppButton(
             text: "Force Close",
             variant: AppButtonVariant.danger,
+            icon: Icons.power_settings_new_rounded,
             height: 36.h,
             onPressed: () => _confirmForceClose(context, overview),
           ),
@@ -445,9 +447,7 @@ class _AdminShiftMonitoringBarState extends State<AdminShiftMonitoringBar> {
             if (context.mounted && closedShift != null) {
               showDialog(
                 context: context,
-                builder: (_) => ShiftHandoverSummaryDialog(
-                  shift: closedShift,
-                ),
+                builder: (_) => ShiftHandoverSummaryDialog(shift: closedShift),
               );
             }
           }

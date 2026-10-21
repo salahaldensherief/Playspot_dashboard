@@ -13,7 +13,9 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
 
   // Step 1 - Basic Info Controllers
   late final TextEditingController _nameController;
+  late final TextEditingController _nameEnController;
   late final TextEditingController _descriptionController;
+  late final TextEditingController _descriptionEnController;
   late final TextEditingController _cityController;
   late final TextEditingController _addressController;
   late final TextEditingController _opensAtController;
@@ -61,7 +63,9 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
     _branchNameController = TextEditingController(text: draft.branchName);
 
     _nameController = TextEditingController(text: draft.name);
+    _nameEnController = TextEditingController(text: draft.nameEn);
     _descriptionController = TextEditingController(text: draft.description);
+    _descriptionEnController = TextEditingController(text: draft.descriptionEn);
     _cityController = TextEditingController(text: draft.city);
     _addressController = TextEditingController(text: draft.address);
     _opensAtController = TextEditingController(text: draft.opensAt);
@@ -72,7 +76,9 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
     _branchNameController.addListener(_onBranchNameChanged);
 
     _nameController.addListener(_onFieldChanged);
+    _nameEnController.addListener(_onFieldChanged);
     _descriptionController.addListener(_onFieldChanged);
+    _descriptionEnController.addListener(_onFieldChanged);
     _cityController.addListener(_onFieldChanged);
     _addressController.addListener(_onFieldChanged);
     _opensAtController.addListener(_onFieldChanged);
@@ -110,7 +116,9 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
           branchesCount: count,
           branchName: _branchNameController.text,
           name: _nameController.text,
+          nameEn: _nameEnController.text,
           description: _descriptionController.text,
+          descriptionEn: _descriptionEnController.text,
           walletPhone: _walletPhoneController.text,
           instapayAccount: _instapayAccountController.text,
           contactPhone: _contactPhoneController.text,
@@ -133,7 +141,9 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
     _branchesCountController.dispose();
     _branchNameController.dispose();
     _nameController.dispose();
+    _nameEnController.dispose();
     _descriptionController.dispose();
+    _descriptionEnController.dispose();
     _cityController.dispose();
     _addressController.dispose();
     _opensAtController.dispose();
@@ -164,7 +174,9 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
     cubit.saveDraft(
       cubit.state.draft.copyWith(
         name: _nameController.text,
+        nameEn: _nameEnController.text,
         description: _descriptionController.text,
+        descriptionEn: _descriptionEnController.text,
         city: _cityController.text,
         address: _addressController.text,
         walletPhone: _walletPhoneController.text,
@@ -188,7 +200,9 @@ class _LoungeSetupViewState extends State<LoungeSetupView> {
     _restoringFields = true;
     final draft = state.draft;
     _nameController.text = draft.name;
+    _nameEnController.text = draft.nameEn;
     _descriptionController.text = draft.description;
+    _descriptionEnController.text = draft.descriptionEn;
     _cityController.text = draft.city;
     _addressController.text = draft.address;
     _contactPhoneController.text = draft.contactPhone;

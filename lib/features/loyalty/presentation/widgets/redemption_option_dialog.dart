@@ -107,6 +107,7 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
               children: [
                 Expanded(
                   child: AppTextField(
+                    textLanguage: TextFieldLanguage.arabic,
                     controller: _titleArController,
                     label: AppStrings.nameAr,
                     validator: (v) => v?.trim().isEmpty == true
@@ -117,6 +118,7 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
                 SizedBox(width: 16.w),
                 Expanded(
                   child: AppTextField(
+                    textLanguage: TextFieldLanguage.english,
                     controller: _titleEnController,
                     label: AppStrings.nameEn,
                     validator: (v) => v?.trim().isEmpty == true
@@ -128,12 +130,14 @@ class _RedemptionOptionDialogState extends State<RedemptionOptionDialog> {
             ),
             SizedBox(height: 16.h),
             AppTextField(
+              textLanguage: TextFieldLanguage.arabic,
               controller: _descArController,
               label: AppStrings.descriptionArLabel,
               maxLines: 2,
             ),
             SizedBox(height: 16.h),
             AppTextField(
+              textLanguage: TextFieldLanguage.english,
               controller: _descEnController,
               label: AppStrings.descriptionEnLabel,
               maxLines: 2,

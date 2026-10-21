@@ -77,6 +77,7 @@ class _CityDialogState extends State<CityDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AppTextField(
+              textLanguage: TextFieldLanguage.arabic,
               label: AppStrings.nameAr,
               hintText: AppStrings.nameAr,
               controller: _nameArController,
@@ -84,6 +85,7 @@ class _CityDialogState extends State<CityDialog> {
             ),
             SizedBox(height: 16.h),
             AppTextField(
+              textLanguage: TextFieldLanguage.english,
               label: AppStrings.nameEn,
               hintText: AppStrings.nameEn,
               controller: _nameEnController,

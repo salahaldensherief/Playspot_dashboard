@@ -99,6 +99,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
           children: [
             // Title AR & EN
             AppTextField(
+              textLanguage: TextFieldLanguage.arabic,
               controller: _titleArController,
               label: AppStrings.taskNameAr,
               validator: (val) => val == null || val.trim().isEmpty
@@ -107,6 +108,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
             ),
             SizedBox(height: 12.h),
             AppTextField(
+              textLanguage: TextFieldLanguage.english,
               controller: _titleEnController,
               label: AppStrings.taskNameEn,
               validator: (val) => val == null || val.trim().isEmpty
@@ -117,12 +119,14 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
 
             // Description AR & EN
             AppTextField(
+              textLanguage: TextFieldLanguage.arabic,
               controller: _descriptionArController,
               label: AppStrings.taskDescAr,
               maxLines: 2,
             ),
             SizedBox(height: 12.h),
             AppTextField(
+              textLanguage: TextFieldLanguage.english,
               controller: _descriptionEnController,
               label: AppStrings.taskDescEn,
               maxLines: 2,

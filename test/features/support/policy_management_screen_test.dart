@@ -109,14 +109,18 @@ void main() {
           'Stored content',
         ]);
 
-        for (final label in [
-          AppStrings.privacyPolicy,
-          AppStrings.refundPolicy,
+        for (final (label, arabicTitle, englishTitle) in [
+          (AppStrings.privacyPolicy, 'سياسة الخصوصية', 'Privacy Policy'),
+          (
+            AppStrings.refundPolicy,
+            'سياسة الإلغاء والاسترجاع',
+            'Cancellation & Refund Policy',
+          ),
         ]) {
           await tester.tap(find.text(label).first);
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
-          expect(texts(), [label, '', label, '']);
+          expect(texts(), [arabicTitle, '', englishTitle, '']);
         }
 
         await tester.enterText(find.byType(TextField).at(1), 'Unsaved draft');
@@ -134,9 +138,9 @@ void main() {
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         expect(texts(), [
-          AppStrings.refundPolicy,
+          'سياسة الإلغاء والاسترجاع',
           '',
-          AppStrings.refundPolicy,
+          'Cancellation & Refund Policy',
           '',
         ]);
         await tester.pumpWidget(const SizedBox.shrink());

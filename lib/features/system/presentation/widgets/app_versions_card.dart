@@ -6,6 +6,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/section_container.dart';
+import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import '../../domain/entities/app_status_entity.dart';
 
 class AppVersionsCard extends StatefulWidget {
@@ -92,6 +93,21 @@ class _AppVersionsCardState extends State<AppVersionsCard> {
   }
 
   void _submit() {
+    final languageError =
+        AppValidator.validateLanguage(
+          _msgArController.text,
+          TextFieldLanguage.arabic,
+        ) ??
+        AppValidator.validateLanguage(
+          _msgEnController.text,
+          TextFieldLanguage.english,
+        );
+    if (languageError != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(languageError)));
+      return;
+    }
     final updated = widget.appStatus.copyWith(
       minAndroidVersion: _minAndroidController.text.trim(),
       minIosVersion: _minIosController.text.trim(),
@@ -195,6 +211,7 @@ class _AppVersionsCardState extends State<AppVersionsCard> {
           children: [
             Expanded(
               child: AppTextField(
+                textLanguage: TextFieldLanguage.arabic,
                 label: AppStrings.updateMessageAr,
                 hintText: AppStrings.updateMessageArHint,
                 controller: _msgArController,
@@ -204,6 +221,7 @@ class _AppVersionsCardState extends State<AppVersionsCard> {
             SizedBox(width: 16.w),
             Expanded(
               child: AppTextField(
+                textLanguage: TextFieldLanguage.english,
                 label: AppStrings.updateMessageEn,
                 hintText: AppStrings.updateMessageEnHint,
                 controller: _msgEnController,

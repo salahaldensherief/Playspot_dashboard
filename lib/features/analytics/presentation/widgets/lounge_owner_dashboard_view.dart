@@ -10,20 +10,12 @@ import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit
 import '../dashboard_cubit.dart';
 import '../lounge_stats_cubit.dart';
 import 'dashboard_header.dart';
-import 'dashboard_time_range_selector.dart';
 import 'desktop_lounge_dashboard_content.dart';
 import 'mobile_lounge_dashboard_content.dart';
 import 'tablet_lounge_dashboard_content.dart';
 
 class LoungeOwnerDashboardView extends StatelessWidget {
-  final DashboardTimeRange timeRange;
-  final ValueChanged<DashboardTimeRange> onTimeRangeChanged;
-
-  const LoungeOwnerDashboardView({
-    super.key,
-    required this.timeRange,
-    required this.onTimeRangeChanged,
-  });
+  const LoungeOwnerDashboardView({super.key});
 
   Future<void> _handleRefresh(BuildContext context) async {
     final loungeId = context.read<LoginCubit>().state.user?.loungeId;
@@ -82,21 +74,9 @@ class LoungeOwnerDashboardView extends StatelessWidget {
   }
 
   Widget _buildHeaderSection(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: DashboardHeader(
-            isSuperAdmin: false,
-            onRefresh: () => _handleRefresh(context),
-          ),
-        ),
-        SizedBox(width: 12.w),
-        DashboardTimeRangeSelector(
-          selectedRange: timeRange,
-          onRangeChanged: onTimeRangeChanged,
-        ),
-      ],
+    return DashboardHeader(
+      isSuperAdmin: false,
+      onRefresh: () => _handleRefresh(context),
     );
   }
 }

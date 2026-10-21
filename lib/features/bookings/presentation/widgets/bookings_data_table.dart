@@ -331,6 +331,8 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
           AppButton(
             text: AppStrings.approve,
             variant: AppButtonVariant.primary,
+            backgroundColor: AppColors.success,
+            icon: Icons.check_circle_outline_rounded,
             height: 48.h,
             onPressed: () =>
                 context.read<BookingCubit>().approveBooking(booking.id),
@@ -339,6 +341,8 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
           AppButton(
             text: AppStrings.reject,
             variant: AppButtonVariant.outlined,
+            foregroundColor: AppColors.danger,
+            icon: Icons.cancel_outlined,
             height: 48.h,
             onPressed: () =>
                 context.read<BookingCubit>().rejectBooking(booking.id),
@@ -353,6 +357,8 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
           : AppButton(
               text: AppStrings.approve,
               variant: AppButtonVariant.primary,
+              backgroundColor: AppColors.success,
+              icon: Icons.check_circle_outline_rounded,
               height: 48.h,
               onPressed: () =>
                   context.read<BookingCubit>().approveBooking(booking.id),

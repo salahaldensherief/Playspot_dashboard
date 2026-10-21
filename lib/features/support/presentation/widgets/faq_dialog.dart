@@ -96,6 +96,7 @@ class _FaqDialogState extends State<FaqDialog> {
             _buildSectionHeader(AppStrings.arabicLanguage),
             SizedBox(height: 8.h),
             AppTextField(
+              textLanguage: TextFieldLanguage.arabic,
               controller: _qArController,
               label: AppStrings.questionAr,
               hintText: AppStrings.questionArHint,
@@ -105,6 +106,7 @@ class _FaqDialogState extends State<FaqDialog> {
             ),
             SizedBox(height: 12.h),
             AppTextField(
+              textLanguage: TextFieldLanguage.arabic,
               controller: _aArController,
               label: AppStrings.answerAr,
               hintText: AppStrings.answerArHint,
@@ -117,6 +119,7 @@ class _FaqDialogState extends State<FaqDialog> {
             _buildSectionHeader(AppStrings.englishLanguage),
             SizedBox(height: 8.h),
             AppTextField(
+              textLanguage: TextFieldLanguage.english,
               controller: _qEnController,
               label: AppStrings.questionEn,
               hintText: AppStrings.questionEnHint,
@@ -126,6 +129,7 @@ class _FaqDialogState extends State<FaqDialog> {
             ),
             SizedBox(height: 12.h),
             AppTextField(
+              textLanguage: TextFieldLanguage.english,
               controller: _aEnController,
               label: AppStrings.answerEn,
               hintText: AppStrings.answerEnHint,

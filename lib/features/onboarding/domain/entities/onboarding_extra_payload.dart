@@ -4,8 +4,8 @@ class OnboardingExtraPayload {
   static Map<String, dynamic> fromExtra(ExtraEntity extra) => {
     'id': extra.id,
     'name': extra.nameEn.isNotEmpty ? extra.nameEn : extra.nameAr,
-    'name_ar': extra.nameAr.isNotEmpty ? extra.nameAr : extra.nameEn,
-    'name_en': extra.nameEn.isNotEmpty ? extra.nameEn : extra.nameAr,
+    'name_ar': extra.nameAr,
+    'name_en': extra.nameEn,
     'price': extra.price,
     'category': extra.category,
     'is_available': extra.isAvailable,

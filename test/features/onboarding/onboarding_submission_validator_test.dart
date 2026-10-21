@@ -4,8 +4,10 @@ import 'package:play_spot_dashboard/features/onboarding/domain/services/onboardi
 
 void main() {
   const draft = LoungeDraftParams(
-    name: 'Lounge',
-    description: 'Gaming lounge',
+    name: 'صالة',
+    nameEn: 'Lounge',
+    description: 'صالة ألعاب',
+    descriptionEn: 'Gaming lounge',
     city: 'Cairo',
     address: 'Street 1',
     contactPhone: '+201001234567',
@@ -32,12 +34,21 @@ void main() {
   test('rejects each missing core field', () {
     for (final incomplete in [
       draft.copyWith(name: ' '),
+      draft.copyWith(nameEn: ' '),
       draft.copyWith(description: ''),
+      draft.copyWith(descriptionEn: ''),
       draft.copyWith(city: ''),
       draft.copyWith(address: ''),
     ]) {
       expect(validate(incomplete), 'onboarding_validation.details_required');
     }
+  });
+  test('rejects a script entered in the other language field', () {
+    expect(validate(draft.copyWith(name: 'Lounge')), 'arabic_text_only');
+    expect(
+      validate(draft.copyWith(descriptionEn: 'صالة ألعاب')),
+      'english_text_only',
+    );
   });
   test(
     'rejects invalid contact phone without accepting alphabetic numbers',

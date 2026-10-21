@@ -7,6 +7,7 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
+import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import '../../domain/entities/lounge.dart';
 import '../cubit/lounge_cubit.dart';
@@ -113,6 +114,27 @@ class _QuickDiscountSectionState extends State<QuickDiscountSection> {
   Future<void> _saveDiscount() async {
     final lounge = widget.lounge;
     if (lounge == null) return;
+
+    if (_hasDiscount) {
+      final languageError =
+          AppValidator.validateLanguage(
+            _discountTitleArController.text,
+            TextFieldLanguage.arabic,
+          ) ??
+          AppValidator.validateLanguage(
+            _discountTitleEnController.text,
+            TextFieldLanguage.english,
+          );
+      if (languageError != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(languageError),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+        return;
+      }
+    }
 
     final String vodafoneCash = widget.vodafoneCashController.text.trim();
     final String instapay = widget.instapayController.text.trim();
@@ -286,6 +308,7 @@ class _QuickDiscountSectionState extends State<QuickDiscountSection> {
                   child: _buildField(
                     label: AppStrings.discountTitleAr,
                     controller: _discountTitleArController,
+                    textLanguage: TextFieldLanguage.arabic,
                     hint: AppStrings.promoTitleArHint,
                   ),
                 ),
@@ -294,6 +317,7 @@ class _QuickDiscountSectionState extends State<QuickDiscountSection> {
                   child: _buildField(
                     label: AppStrings.discountTitleEn,
                     controller: _discountTitleEnController,
+                    textLanguage: TextFieldLanguage.english,
                     hint: AppStrings.promoTitleEnHint,
                   ),
                 ),
@@ -318,6 +342,7 @@ class _QuickDiscountSectionState extends State<QuickDiscountSection> {
   Widget _buildField({
     required String label,
     required TextEditingController controller,
+    TextFieldLanguage textLanguage = TextFieldLanguage.unrestricted,
     String? hint,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
@@ -328,6 +353,7 @@ class _QuickDiscountSectionState extends State<QuickDiscountSection> {
     return AppTextField(
       label: label,
       controller: controller,
+      textLanguage: textLanguage,
       hintText: hint,
       keyboardType: keyboardType ?? TextInputType.text,
       inputFormatters: inputFormatters,

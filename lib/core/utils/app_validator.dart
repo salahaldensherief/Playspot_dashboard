@@ -1,7 +1,22 @@
 import 'package:easy_localization/easy_localization.dart';
 import '../../art_core/app_strings.dart';
+import 'text_field_language.dart';
 
 class AppValidator {
+  /// Rejects the opposite script for fields stored as Arabic/English variants.
+  /// Empty values and punctuation are handled by the field's required validator.
+  static bool matchesLanguage(String? value, TextFieldLanguage language) =>
+      matchesTextLanguage(value, language);
+
+  static String? validateLanguage(String? value, TextFieldLanguage language) {
+    if (matchesLanguage(value, language)) return null;
+    return switch (language) {
+      TextFieldLanguage.arabic => 'arabic_text_only'.tr(),
+      TextFieldLanguage.english => 'english_text_only'.tr(),
+      TextFieldLanguage.unrestricted => null,
+    };
+  }
+
   /// Validates that the field is not empty.
   static String? validateRequired(String? value) {
     if (value == null || value.trim().isEmpty) {

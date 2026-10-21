@@ -1,3 +1,4 @@
+import '../../../../core/utils/text_field_language.dart';
 import '../entities/lounge_draft_params.dart';
 
 class OnboardingSubmissionValidator {
@@ -9,11 +10,21 @@ class OnboardingSubmissionValidator {
   }) {
     if ([
       draft.name,
+      draft.nameEn,
       draft.description,
+      draft.descriptionEn,
       draft.city,
       draft.address,
     ].any((value) => value.trim().isEmpty)) {
       return 'onboarding_validation.details_required';
+    }
+    if (!matchesTextLanguage(draft.name, TextFieldLanguage.arabic) ||
+        !matchesTextLanguage(draft.description, TextFieldLanguage.arabic)) {
+      return 'arabic_text_only';
+    }
+    if (!matchesTextLanguage(draft.nameEn, TextFieldLanguage.english) ||
+        !matchesTextLanguage(draft.descriptionEn, TextFieldLanguage.english)) {
+      return 'english_text_only';
     }
     final phone = draft.contactPhone.replaceAll(RegExp(r'[\s()\-]'), '');
     if (!RegExp(r'^\+?[0-9]{8,15}$').hasMatch(phone)) {

@@ -31,6 +31,7 @@ class RoomBasicInfoForm extends StatelessWidget {
     final isCompact = MediaQuery.sizeOf(context).width < 600;
 
     final nameArField = AppTextField(
+      textLanguage: TextFieldLanguage.arabic,
       label: isOpenArea
           ? AppStrings.stationNameLabelAr
           : AppStrings.roomNameLabelAr,
@@ -42,6 +43,7 @@ class RoomBasicInfoForm extends StatelessWidget {
     );
 
     final nameEnField = AppTextField(
+      textLanguage: TextFieldLanguage.english,
       label: isOpenArea
           ? AppStrings.stationNameLabelEn
           : AppStrings.roomNameLabelEn,
@@ -53,6 +55,7 @@ class RoomBasicInfoForm extends StatelessWidget {
     );
 
     final descArField = AppTextField(
+      textLanguage: TextFieldLanguage.arabic,
       label: AppStrings.descriptionArLabel,
       hintText: AppStrings.descriptionArHint,
       controller: descriptionArController,
@@ -60,6 +63,7 @@ class RoomBasicInfoForm extends StatelessWidget {
     );
 
     final descEnField = AppTextField(
+      textLanguage: TextFieldLanguage.english,
       label: AppStrings.descriptionEnLabel,
       hintText: AppStrings.descriptionEnHint,
       controller: descriptionEnController,

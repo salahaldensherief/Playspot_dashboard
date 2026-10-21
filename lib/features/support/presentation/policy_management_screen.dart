@@ -8,6 +8,7 @@ import '../../../art_core/widgets/app_adaptive_page_header.dart';
 import '../../../art_core/widgets/app_button.dart';
 import '../../../art_core/widgets/app_text_field.dart';
 import '../../../art_core/widgets/section_container.dart';
+import '../../../core/utils/app_validator.dart';
 import '../domain/entities/app_policy_entity.dart';
 import 'support_cubit.dart';
 import 'support_state.dart';
@@ -70,27 +71,68 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
   String _getDefaultTitleAr(String type) {
     switch (type) {
       case 'terms_of_service':
-        return AppStrings.termsOfService;
+        return 'شروط الاستخدام';
       case 'privacy_policy':
-        return AppStrings.privacyPolicy;
+        return 'سياسة الخصوصية';
       case 'refund_policy':
-        return AppStrings.refundPolicy;
+        return 'سياسة الإلغاء والاسترجاع';
       default:
-        return AppStrings.policy;
+        return 'السياسة';
     }
   }
 
   String _getDefaultTitleEn(String type) {
     switch (type) {
       case 'terms_of_service':
-        return AppStrings.termsOfService;
+        return 'Terms of Service';
       case 'privacy_policy':
-        return AppStrings.privacyPolicy;
+        return 'Privacy Policy';
       case 'refund_policy':
-        return AppStrings.refundPolicy;
+        return 'Cancellation & Refund Policy';
       default:
-        return AppStrings.policy;
+        return 'Policy';
     }
+  }
+
+  void _savePolicy(AppPolicyEntity currentPolicy, {bool publish = false}) {
+    final languageError =
+        AppValidator.validateLanguage(
+          _titleArController.text,
+          TextFieldLanguage.arabic,
+        ) ??
+        AppValidator.validateLanguage(
+          _contentArController.text,
+          TextFieldLanguage.arabic,
+        ) ??
+        AppValidator.validateLanguage(
+          _titleEnController.text,
+          TextFieldLanguage.english,
+        ) ??
+        AppValidator.validateLanguage(
+          _contentEnController.text,
+          TextFieldLanguage.english,
+        );
+    if (languageError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(languageError),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
+
+    context.read<SupportCubit>().savePolicy(
+      AppPolicyEntity(
+        id: currentPolicy.id,
+        policyType: _selectedPolicyType,
+        titleAr: _titleArController.text.trim(),
+        titleEn: _titleEnController.text.trim(),
+        contentAr: _contentArController.text.trim(),
+        contentEn: _contentEnController.text.trim(),
+        isPublished: publish,
+      ),
+    );
   }
 
   @override
@@ -143,17 +185,7 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
                     text: AppStrings.savePolicy,
                     icon: Icons.save_outlined,
                     isLoading: state.actionStatus == SupportStatus.loading,
-                    onPressed: () {
-                      final updated = AppPolicyEntity(
-                        id: currentPolicy.id,
-                        policyType: _selectedPolicyType,
-                        titleAr: _titleArController.text.trim(),
-                        titleEn: _titleEnController.text.trim(),
-                        contentAr: _contentArController.text.trim(),
-                        contentEn: _contentEnController.text.trim(),
-                      );
-                      context.read<SupportCubit>().savePolicy(updated);
-                    },
+                    onPressed: () => _savePolicy(currentPolicy),
                   ),
                 ),
                 SizedBox(height: 24.h),
@@ -220,20 +252,8 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
                           icon: Icons.publish_outlined,
                           isLoading:
                               state.actionStatus == SupportStatus.loading,
-                          onPressed: () {
-                            final policyToSave = AppPolicyEntity(
-                              id: currentPolicy.id,
-                              policyType: _selectedPolicyType,
-                              titleAr: _titleArController.text.trim(),
-                              titleEn: _titleEnController.text.trim(),
-                              contentAr: _contentArController.text.trim(),
-                              contentEn: _contentEnController.text.trim(),
-                              isPublished: true,
-                            );
-                            context.read<SupportCubit>().savePolicy(
-                              policyToSave,
-                            );
-                          },
+                          onPressed: () =>
+                              _savePolicy(currentPolicy, publish: true),
                         ),
                       ),
                     ],
@@ -319,11 +339,17 @@ class _PolicyManagementScreenState extends State<PolicyManagementScreen> {
         SizedBox(height: 16.h),
         AppTextField(
           controller: titleController,
+          textLanguage: isArabic
+              ? TextFieldLanguage.arabic
+              : TextFieldLanguage.english,
           label: isArabic ? AppStrings.policyTitleAr : AppStrings.policyTitleEn,
         ),
         SizedBox(height: 16.h),
         AppTextField(
           controller: contentController,
+          textLanguage: isArabic
+              ? TextFieldLanguage.arabic
+              : TextFieldLanguage.english,
           label: isArabic
               ? AppStrings.policyContentAr
               : AppStrings.policyContentEn,

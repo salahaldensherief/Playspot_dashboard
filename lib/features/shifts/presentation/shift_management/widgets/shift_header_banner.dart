@@ -285,9 +285,7 @@ class ShiftHeaderBanner extends StatelessWidget {
                 closedShift.id == shift.id) {
               showDialog(
                 context: context,
-                builder: (_) => ShiftHandoverSummaryDialog(
-                  shift: closedShift,
-                ),
+                builder: (_) => ShiftHandoverSummaryDialog(shift: closedShift),
               );
             }
           },

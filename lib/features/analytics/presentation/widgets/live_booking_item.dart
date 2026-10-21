@@ -87,6 +87,8 @@ class LiveBookingItem extends StatelessWidget {
         onPressed: () =>
             context.read<BookingCubit>().approveBooking(booking.id),
         variant: AppButtonVariant.primary,
+        backgroundColor: AppColors.success,
+        icon: Icons.check_circle_outline_rounded,
       );
     }
 
@@ -97,6 +99,9 @@ class LiveBookingItem extends StatelessWidget {
         onPressed: () =>
             context.read<BookingCubit>().confirmCashPayment(booking.id),
         variant: AppButtonVariant.primary,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.onPrimary,
+        icon: Icons.payments_rounded,
       );
     }
 

@@ -51,7 +51,9 @@ extension _LoungeSetupSections on _LoungeSetupViewState {
       case 1:
         return BasicInfoStep(
           nameController: _nameController,
+          nameEnController: _nameEnController,
           descriptionController: _descriptionController,
+          descriptionEnController: _descriptionEnController,
           contactPhoneController: _contactPhoneController,
           initialMainImageUrl: cubit.state.lounge?.imageUrl,
           onMainImageSelected: (bytes, name) {

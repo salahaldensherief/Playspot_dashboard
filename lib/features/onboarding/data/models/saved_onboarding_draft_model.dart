@@ -25,8 +25,10 @@ class SavedOnboardingDraftModel extends SavedOnboardingDraft {
       reviewNotes: json['review_notes']?.toString(),
       lounge: lounge,
       fields: LoungeDraftParams(
-        name: lounge.name,
-        description: lounge.descriptionAr ?? lounge.descriptionEn ?? '',
+        name: raw['name_ar']?.toString() ?? '',
+        nameEn: raw['name_en']?.toString() ?? '',
+        description: lounge.descriptionAr ?? '',
+        descriptionEn: lounge.descriptionEn ?? '',
         city: lounge.city ?? '',
         address: raw['address']?.toString() ?? lounge.location ?? '',
         contactPhone: raw['contact_phone']?.toString() ?? '',

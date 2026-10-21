@@ -171,8 +171,9 @@ class _LiveSessionCardActionsState extends State<LiveSessionCardActions> {
         Expanded(
           child: AppButton(
             text: AppStrings.endSession,
-            icon: Icons.stop_circle_outlined,
+            icon: Icons.stop_circle_rounded,
             variant: AppButtonVariant.outlined,
+            foregroundColor: AppColors.danger,
             height: h,
             onPressed: () => _handleEndSession(context),
           ),
@@ -193,6 +194,8 @@ class _LiveSessionCardActionsState extends State<LiveSessionCardActions> {
                   text: AppStrings.completeAndCalculate,
                   icon: Icons.price_check_rounded,
                   variant: AppButtonVariant.primary,
+                  backgroundColor: AppColors.warning,
+                  foregroundColor: AppColors.onPrimary,
                   height: h,
                   isLoading: _isCompleting,
                   onPressed: _isCompleting

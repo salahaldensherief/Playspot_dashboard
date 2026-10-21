@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
+import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import '../../../categories/domain/entities/activity_type_entity.dart';
 
 class RoomFeaturesSection extends StatefulWidget {
@@ -145,6 +146,7 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
           children: [
             Expanded(
               child: AppTextField(
+                textLanguage: TextFieldLanguage.arabic,
                 controller: _featureArController,
                 hintText: AppStrings.nameAr,
               ),
@@ -152,6 +154,7 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
             SizedBox(width: 12.w),
             Expanded(
               child: AppTextField(
+                textLanguage: TextFieldLanguage.english,
                 controller: _featureEnController,
                 hintText: AppStrings.nameEn,
               ),
@@ -159,6 +162,21 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
             SizedBox(width: 12.w),
             IconButton(
               onPressed: () {
+                final languageError =
+                    AppValidator.validateLanguage(
+                      _featureArController.text,
+                      TextFieldLanguage.arabic,
+                    ) ??
+                    AppValidator.validateLanguage(
+                      _featureEnController.text,
+                      TextFieldLanguage.english,
+                    );
+                if (languageError != null) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(languageError)));
+                  return;
+                }
                 if (_featureArController.text.isNotEmpty &&
                     _featureEnController.text.isNotEmpty) {
                   widget.onAddFeature(

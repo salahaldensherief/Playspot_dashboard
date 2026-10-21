@@ -8,9 +8,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/art_core/widgets/stat_card.dart';
-import 'package:play_spot_dashboard/core/responsive/responsive.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
-import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
@@ -18,6 +16,7 @@ import '../dashboard_cubit.dart';
 import '../dashboard_state.dart';
 import '../lounge_stats_cubit.dart';
 import '../lounge_stats_state.dart';
+import '../lounge_kpi_snapshot.dart';
 
 class CockpitKpiGrid extends StatelessWidget {
   final bool isSuperAdmin;
@@ -56,7 +55,7 @@ class _SuperAdminKpiGrid extends StatelessWidget {
           prev.cancelledBookings != curr.cancelledBookings,
       builder: (context, state) {
         if (state.status == FeatureStatus.loading) {
-          return const _KpiGridShimmer();
+          return const _KpiGridShimmer(itemCount: 4);
         }
 
         if (state.status == FeatureStatus.failure) {
@@ -123,7 +122,7 @@ class _LoungeOwnerKpiGrid extends StatelessWidget {
               builder: (context, dashState) {
                 if (loungeStatsState.status == LoungeStatsStatus.loading &&
                     loungeStatsState.stats == null) {
-                  return const _KpiGridShimmer();
+                  return const _KpiGridShimmer(itemCount: 6);
                 }
 
                 if (loungeStatsState.status == LoungeStatsStatus.failure &&
@@ -138,56 +137,30 @@ class _LoungeOwnerKpiGrid extends StatelessWidget {
 
                 final stats = loungeStatsState.stats;
                 final bookings = bookingState.bookings;
-                final user = context.watch<LoginCubit>().state.user;
-                final isCashier = user?.isCashier ?? false;
-                final reqState = context.watch<ClientRequestsCubit>().state;
-                final int unattendedRequestsCount = reqState.requests
-                    .where((r) => !r.isAttended)
-                    .length;
-
-                final now = DateTime.now();
-                final int endingSoonCount = bookings.where((b) {
-                  if (b.status != BookingStatus.inProgress || b.isOpenEnded) {
-                    return false;
-                  }
-                  final remaining = b.remainingDuration(now);
-                  return remaining > Duration.zero &&
-                      remaining <= const Duration(minutes: 15);
-                }).length;
-
-                // Today revenue
-                final double todayRevenue = stats?.todayRevenue ?? 0;
-
-                // Occupancy
-                final double occupancyRate =
-                    stats?.occupancyRate ?? dashState.occupancyRate;
-                final int occupiedRooms = stats?.occupiedRooms ?? 0;
-                final int totalRooms = stats?.totalRooms ?? 0;
-
-                // Active sessions count
-                final int activeCount = dashState.activeSessionsList.isNotEmpty
-                    ? dashState.activeSessionsList
-                          .where((b) => b.status == BookingStatus.inProgress)
-                          .length
-                    : bookings
-                          .where((b) => b.status == BookingStatus.inProgress)
-                          .length;
-
-                // Pending payment proofs count
-                final int pendingProofsCount = bookings.where((b) {
-                  return b.status == BookingStatus.pendingVerification;
-                }).length;
-
-                // Cancellations & No-Shows count
-                final int cancellationsCount = bookings.where((b) {
-                  final cancelledAt = b.cancelledAt?.toLocal();
-                  return cancelledAt != null &&
-                      cancelledAt.year == now.year &&
-                      cancelledAt.month == now.month &&
-                      cancelledAt.day == now.day &&
-                      (b.status == BookingStatus.cancelled ||
-                          b.status == BookingStatus.rejected);
-                }).length;
+                final isCashier = context.select(
+                  (LoginCubit cubit) => cubit.state.user?.isCashier ?? false,
+                );
+                final requests = context.select(
+                  (ClientRequestsCubit cubit) => cubit.state.requests,
+                );
+                final metrics = LoungeKpiSnapshot.fromData(
+                  stats: stats,
+                  bookings: bookings,
+                  liveSessions: dashState.activeSessionsList,
+                  hasLiveSessionsSnapshot: dashState.activeSessionsStats
+                      .containsKey('active_count'),
+                  requests: requests,
+                  fallbackOccupancyRate: dashState.occupancyRate,
+                );
+                final todayRevenue = metrics.todayRevenue;
+                final occupancyRate = metrics.occupancyRate;
+                final occupiedRooms = metrics.occupiedRooms;
+                final totalRooms = metrics.totalRooms;
+                final activeCount = metrics.activeSessionsCount;
+                final endingSoonCount = metrics.endingSoonCount;
+                final pendingProofsCount = metrics.pendingProofsCount;
+                final unattendedRequestsCount = metrics.unattendedRequestsCount;
+                final cancellationsCount = metrics.cancellationsCount;
 
                 return DashboardKpiLayout(
                   children: isCashier
@@ -367,36 +340,19 @@ class _LoungeOwnerKpiGrid extends StatelessWidget {
 }
 
 class _KpiGridShimmer extends StatelessWidget {
-  const _KpiGridShimmer();
+  const _KpiGridShimmer({required this.itemCount});
+
+  final int itemCount;
 
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    final crossAxisCount = context.responsive<int>(
-      mobile: 2,
-      tablet: 3,
-      desktop: 6,
-    );
-
-    final extent = context.responsive<double>(
-      mobile: 116.h,
-      tablet: 124.h,
-      desktop: 130.h,
-    );
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      addSemanticIndexes: false,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 14.w,
-        mainAxisSpacing: 14.h,
-        mainAxisExtent: extent,
-      ),
-      itemCount: 6,
-      itemBuilder: (context, index) =>
-          ShimmerLoading.rounded(height: extent, width: double.infinity),
+    final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
+    return DashboardKpiLayout(
+      children: [
+        for (var index = 0; index < itemCount; index++)
+          ShimmerLoading.rounded(height: 128 * scale),
+      ],
     );
   }
 }

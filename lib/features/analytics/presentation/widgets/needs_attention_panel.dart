@@ -10,7 +10,6 @@ import 'package:play_spot_dashboard/art_core/widgets/app_section_header.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
-import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
@@ -57,15 +56,9 @@ class NeedsAttentionPanel extends StatelessWidget {
                     final bookings = bookingState.bookings;
 
                     // 1. Pending payment proofs
-                    final pendingProofs = bookings.where((b) {
-                      final hasReceipt =
-                          b.receiptUrl != null &&
-                          b.receiptUrl!.trim().isNotEmpty;
-                      final isUnpaid = b.paymentStatus != PaymentStatus.paid;
-                      final isPendingVerification =
-                          b.status == BookingStatus.pendingVerification;
-                      return (hasReceipt && isUnpaid) || isPendingVerification;
-                    }).toList();
+                    final pendingProofs = bookings
+                        .where((booking) => booking.needsPaymentProofReview)
+                        .toList();
 
                     // 2. Unattended client requests
                     final unattendedRequests = reqState.requests

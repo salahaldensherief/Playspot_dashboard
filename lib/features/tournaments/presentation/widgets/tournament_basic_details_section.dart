@@ -6,7 +6,8 @@ import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_text_field.dart';
 
 class TournamentBasicDetailsSection extends StatelessWidget {
-  final TextEditingController titleController;
+  final TextEditingController titleArController;
+  final TextEditingController titleEnController;
   final TextEditingController gameTitleController;
   final TextEditingController entryFeeController;
   final TextEditingController prizePoolController;
@@ -15,7 +16,8 @@ class TournamentBasicDetailsSection extends StatelessWidget {
 
   const TournamentBasicDetailsSection({
     super.key,
-    required this.titleController,
+    required this.titleArController,
+    required this.titleEnController,
     required this.gameTitleController,
     required this.entryFeeController,
     required this.prizePoolController,
@@ -30,8 +32,17 @@ class TournamentBasicDetailsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppTextField(
-          controller: titleController,
-          label: AppStrings.tournamentTitle,
+          controller: titleArController,
+          label: AppStrings.titleAr,
+          textLanguage: TextFieldLanguage.arabic,
+          validator: (v) =>
+              v == null || v.trim().isEmpty ? AppStrings.fieldRequired : null,
+        ),
+        SizedBox(height: 16.h),
+        AppTextField(
+          controller: titleEnController,
+          label: AppStrings.titleEn,
+          textLanguage: TextFieldLanguage.english,
           validator: (v) =>
               v == null || v.trim().isEmpty ? AppStrings.fieldRequired : null,
         ),

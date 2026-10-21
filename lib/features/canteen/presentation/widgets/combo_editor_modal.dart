@@ -299,6 +299,7 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
               children: [
                 Expanded(
                   child: AppTextField(
+                    textLanguage: TextFieldLanguage.arabic,
                     label: AppStrings.comboNameAr,
                     controller: _nameArController,
                     validator: (v) => (v == null || v.trim().isEmpty)
@@ -309,6 +310,7 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
                 SizedBox(width: 16.w),
                 Expanded(
                   child: AppTextField(
+                    textLanguage: TextFieldLanguage.english,
                     label: AppStrings.comboNameEn,
                     controller: _nameEnController,
                   ),
@@ -346,6 +348,7 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
               children: [
                 Expanded(
                   child: AppTextField(
+                    textLanguage: TextFieldLanguage.arabic,
                     label: AppStrings.comboDescAr,
                     controller: _descArController,
                     maxLines: 2,
@@ -354,6 +357,7 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
                 SizedBox(width: 16.w),
                 Expanded(
                   child: AppTextField(
+                    textLanguage: TextFieldLanguage.english,
                     label: AppStrings.comboDescEn,
                     controller: _descEnController,
                     maxLines: 2,

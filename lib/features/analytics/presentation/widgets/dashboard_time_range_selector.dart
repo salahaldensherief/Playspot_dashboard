@@ -42,26 +42,34 @@ class DashboardTimeRangeSelector extends StatelessWidget {
 
   Widget _buildRangeChip(String label, DashboardTimeRange range) {
     final bool isSelected = selectedRange == range;
-    return InkWell(
-      onTap: () => onRangeChanged(range),
-      borderRadius: BorderRadius.circular(8.r),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.neonBlue.withValues(alpha: 0.15)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8.r),
-          border: Border.all(
-            color: isSelected ? AppColors.neonBlue : Colors.transparent,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: label,
+      child: InkWell(
+        onTap: () => onRangeChanged(range),
+        excludeFromSemantics: true,
+        borderRadius: BorderRadius.circular(8.r),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          constraints: const BoxConstraints(minHeight: 48),
+          alignment: Alignment.center,
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.neonBlue.withValues(alpha: 0.15)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(8.r),
+            border: Border.all(
+              color: isSelected ? AppColors.neonBlue : Colors.transparent,
+            ),
           ),
-        ),
-        child: AppText.body(
-          label,
-          color: isSelected ? AppColors.neonBlue : AppColors.textSecondary,
-          fontSize: 12.sp,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          child: AppText.body(
+            label,
+            color: isSelected ? AppColors.neonBlue : AppColors.textSecondary,
+            fontSize: 12.sp,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
         ),
       ),
     );

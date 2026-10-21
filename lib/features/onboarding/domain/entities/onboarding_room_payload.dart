@@ -4,8 +4,8 @@ class OnboardingRoomPayload {
   static Map<String, dynamic> fromRoom(RoomEntity room) => {
     'id': room.id,
     'name': room.nameEn.isNotEmpty ? room.nameEn : room.nameAr,
-    'name_ar': room.nameAr.isNotEmpty ? room.nameAr : room.nameEn,
-    'name_en': room.nameEn.isNotEmpty ? room.nameEn : room.nameAr,
+    'name_ar': room.nameAr,
+    'name_en': room.nameEn,
     'description_ar': room.descriptionAr,
     'description_en': room.descriptionEn,
     'is_available': room.isAvailable,

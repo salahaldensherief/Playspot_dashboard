@@ -176,6 +176,7 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                   children: [
                     // Rule Name Arabic / English
                     AppTextField(
+                      textLanguage: TextFieldLanguage.arabic,
                       controller: _nameArController,
                       label: AppStrings.ruleNameAr,
                       validator: (v) => v == null || v.trim().isEmpty
@@ -184,6 +185,7 @@ class _PricingRuleEditorDrawerState extends State<PricingRuleEditorDrawer> {
                     ),
                     SizedBox(height: 12.h),
                     AppTextField(
+                      textLanguage: TextFieldLanguage.english,
                       controller: _nameEnController,
                       label: AppStrings.ruleNameEn,
                       validator: (v) => v == null || v.trim().isEmpty

@@ -3,7 +3,9 @@ import 'package:equatable/equatable.dart';
 class LoungeDraftParams extends Equatable {
   final int step;
   final String name;
+  final String nameEn;
   final String description;
+  final String descriptionEn;
   final String city;
   final String address;
   final String walletPhone;
@@ -21,7 +23,9 @@ class LoungeDraftParams extends Equatable {
   const LoungeDraftParams({
     this.step = 0,
     this.name = '',
+    this.nameEn = '',
     this.description = '',
+    this.descriptionEn = '',
     this.city = '',
     this.address = '',
     this.walletPhone = '',
@@ -40,7 +44,9 @@ class LoungeDraftParams extends Equatable {
   LoungeDraftParams copyWith({
     int? step,
     String? name,
+    String? nameEn,
     String? description,
+    String? descriptionEn,
     String? city,
     String? address,
     String? walletPhone,
@@ -59,7 +65,9 @@ class LoungeDraftParams extends Equatable {
     return LoungeDraftParams(
       step: step ?? this.step,
       name: name ?? this.name,
+      nameEn: nameEn ?? this.nameEn,
       description: description ?? this.description,
+      descriptionEn: descriptionEn ?? this.descriptionEn,
       city: city ?? this.city,
       address: address ?? this.address,
       walletPhone: walletPhone ?? this.walletPhone,
@@ -79,7 +87,9 @@ class LoungeDraftParams extends Equatable {
   Map<String, dynamic> toJson() => {
     'step': step,
     'name': name,
+    'nameEn': nameEn,
     'description': description,
+    'descriptionEn': descriptionEn,
     'city': city,
     'address': address,
     'walletPhone': walletPhone,
@@ -99,7 +109,9 @@ class LoungeDraftParams extends Equatable {
     return LoungeDraftParams(
       step: json['step'] as int? ?? 0,
       name: json['name']?.toString() ?? '',
+      nameEn: json['nameEn']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
+      descriptionEn: json['descriptionEn']?.toString() ?? '',
       city: json['city']?.toString() ?? '',
       address: json['address']?.toString() ?? '',
       walletPhone: json['walletPhone']?.toString() ?? '',
@@ -120,7 +132,9 @@ class LoungeDraftParams extends Equatable {
   List<Object?> get props => [
     step,
     name,
+    nameEn,
     description,
+    descriptionEn,
     city,
     address,
     walletPhone,

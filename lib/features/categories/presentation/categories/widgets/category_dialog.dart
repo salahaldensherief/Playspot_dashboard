@@ -93,6 +93,7 @@ class _CategoryDialogState extends State<CategoryDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AppTextField(
+              textLanguage: TextFieldLanguage.arabic,
               label: AppStrings.nameAr,
               controller: _nameAr,
               hintText: AppStrings.nameAr,
@@ -100,6 +101,7 @@ class _CategoryDialogState extends State<CategoryDialog> {
             ),
             SizedBox(height: 16.h),
             AppTextField(
+              textLanguage: TextFieldLanguage.english,
               label: AppStrings.nameEn,
               controller: _nameEn,
               hintText: AppStrings.nameEn,

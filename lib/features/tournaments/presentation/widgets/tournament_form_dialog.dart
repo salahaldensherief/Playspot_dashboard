@@ -34,13 +34,16 @@ class TournamentFormDialog extends StatefulWidget {
 
 class _TournamentFormDialogState extends State<TournamentFormDialog> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _titleController;
+  late TextEditingController _titleArController;
+  late TextEditingController _titleEnController;
   late TextEditingController _gameTitleController;
   late TextEditingController _entryFeeController;
   late TextEditingController _prizePoolController;
   late TextEditingController _minPlayersController;
   late TextEditingController _maxPlayersController;
   late TextEditingController _rulesController;
+  late TextEditingController _descriptionArController;
+  late TextEditingController _descriptionEnController;
 
   Uint8List? _bannerBytes;
   String? _bannerName;
@@ -63,7 +66,10 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
   void initState() {
     super.initState();
     final t = widget.tournament;
-    _titleController = TextEditingController(text: t?.title ?? '');
+    _titleArController = TextEditingController(
+      text: t?.titleAr ?? t?.title ?? '',
+    );
+    _titleEnController = TextEditingController(text: t?.titleEn ?? '');
     _gameTitleController = TextEditingController(
       text: t?.gameTitle ?? 'EA FC 25',
     );
@@ -80,6 +86,12 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
       text: t?.maxPlayers.toString() ?? '16',
     );
     _rulesController = TextEditingController(text: t?.rules ?? '');
+    _descriptionArController = TextEditingController(
+      text: t?.descriptionAr ?? '',
+    );
+    _descriptionEnController = TextEditingController(
+      text: t?.descriptionEn ?? '',
+    );
 
     if (t != null) {
       _treeSize = t.treeSize;
@@ -98,13 +110,16 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
 
   @override
   void dispose() {
-    _titleController.dispose();
+    _titleArController.dispose();
+    _titleEnController.dispose();
     _gameTitleController.dispose();
     _entryFeeController.dispose();
     _prizePoolController.dispose();
     _minPlayersController.dispose();
     _maxPlayersController.dispose();
     _rulesController.dispose();
+    _descriptionArController.dispose();
+    _descriptionEnController.dispose();
     super.dispose();
   }
 
@@ -152,11 +167,11 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
       if (mounted) {
         final entity = TournamentEntity(
           id: widget.tournament?.id ?? tournamentId,
-          title: _titleController.text.trim(),
-          titleAr: _titleController.text.trim(),
-          titleEn: _titleController.text.trim(),
-          descriptionAr: _rulesController.text.trim(),
-          descriptionEn: _rulesController.text.trim(),
+          title: _titleArController.text.trim(),
+          titleAr: _titleArController.text.trim(),
+          titleEn: _titleEnController.text.trim(),
+          descriptionAr: _descriptionArController.text.trim(),
+          descriptionEn: _descriptionEnController.text.trim(),
           gameTitle: _gameTitleController.text.trim(),
           bannerUrl: bannerUrl,
           treeSize: _treeSize,
@@ -198,8 +213,8 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
   void _openManagePrizes() {
     final currentEntity = TournamentEntity(
       id: widget.tournament?.id ?? const Uuid().v4(),
-      title: _titleController.text.trim().isNotEmpty
-          ? _titleController.text.trim()
+      title: _titleArController.text.trim().isNotEmpty
+          ? _titleArController.text.trim()
           : AppStrings.tournamentTitle,
       treeSize: _treeSize,
       status: widget.tournament?.status ?? TournamentStatus.draft,
@@ -260,7 +275,8 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
             ),
             SizedBox(height: 16.h),
             TournamentBasicDetailsSection(
-              titleController: _titleController,
+              titleArController: _titleArController,
+              titleEnController: _titleEnController,
               gameTitleController: _gameTitleController,
               entryFeeController: _entryFeeController,
               prizePoolController: _prizePoolController,
@@ -313,6 +329,20 @@ class _TournamentFormDialogState extends State<TournamentFormDialog> {
               onCheckInOpensChanged: (d) => setState(() => _checkInOpensAt = d),
               onStartDateChanged: (d) => setState(() => _startDate = d),
               onEndDateChanged: (d) => setState(() => _endDate = d),
+            ),
+            SizedBox(height: 20.h),
+            AppTextField(
+              controller: _descriptionArController,
+              label: AppStrings.descriptionAr,
+              textLanguage: TextFieldLanguage.arabic,
+              maxLines: 3,
+            ),
+            SizedBox(height: 16.h),
+            AppTextField(
+              controller: _descriptionEnController,
+              label: AppStrings.descriptionEn,
+              textLanguage: TextFieldLanguage.english,
+              maxLines: 3,
             ),
             SizedBox(height: 20.h),
             AppTextField(

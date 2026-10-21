@@ -76,7 +76,8 @@ extension _LoungeSetupSubmission on _LoungeSetupViewState {
       lounge: Lounge(
         id: loungeId,
         name: draft.name,
-        descriptionEn: draft.description,
+        descriptionAr: draft.description,
+        descriptionEn: draft.descriptionEn,
         city: draft.city,
         location: draft.address,
         opensAt: draft.opensAt,

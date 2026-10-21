@@ -107,8 +107,8 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
         params: {
           'p_lounge_id': tournament.loungeId,
           'p_city_id': cityId,
-          'p_title_ar': tournament.titleAr ?? tournament.title,
-          'p_title_en': tournament.titleEn ?? tournament.title,
+          'p_title_ar': tournament.titleAr ?? '',
+          'p_title_en': tournament.titleEn ?? '',
           'p_game_name': tournament.gameTitle,
           'p_bracket_size': tournament.treeSize,
           'p_max_participants': tournament.maxPlayers,
@@ -141,10 +141,10 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
       if (createdData != null) {
         final createdMap = Map<String, dynamic>.from(createdData);
         final metadata = <String, dynamic>{
-          if (tournament.rules != null && tournament.rules!.trim().isNotEmpty)
-            'description_ar': tournament.rules!.trim(),
-          if (tournament.rules != null && tournament.rules!.trim().isNotEmpty)
-            'description_en': tournament.rules!.trim(),
+          if (tournament.descriptionAr?.trim().isNotEmpty == true)
+            'description_ar': tournament.descriptionAr!.trim(),
+          if (tournament.descriptionEn?.trim().isNotEmpty == true)
+            'description_en': tournament.descriptionEn!.trim(),
           if (tournament.bannerUrl != null &&
               tournament.bannerUrl!.trim().isNotEmpty)
             'banner_url': tournament.bannerUrl!.trim(),
@@ -181,10 +181,10 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
       'update_tournament',
       params: {
         'p_tournament_id': tournament.id,
-        'p_title_ar': tournament.titleAr ?? tournament.title,
-        'p_title_en': tournament.titleEn ?? tournament.title,
-        'p_description_ar': tournament.descriptionAr ?? tournament.rules ?? '',
-        'p_description_en': tournament.descriptionEn ?? tournament.rules ?? '',
+        'p_title_ar': tournament.titleAr ?? '',
+        'p_title_en': tournament.titleEn ?? '',
+        'p_description_ar': tournament.descriptionAr ?? '',
+        'p_description_en': tournament.descriptionEn ?? '',
         'p_game_name': tournament.gameTitle,
         'p_max_participants': tournament.maxPlayers,
         'p_entry_fee': tournament.entryFee,

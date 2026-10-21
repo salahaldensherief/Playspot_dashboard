@@ -109,6 +109,7 @@ class TournamentRewardRow extends StatelessWidget {
               Expanded(
                 flex: 3,
                 child: AppTextField(
+                  textLanguage: TextFieldLanguage.arabic,
                   initialValue: reward.titleAr ?? reward.title ?? '',
                   label: AppStrings.titleAr,
                   onChanged: (val) {
@@ -120,6 +121,7 @@ class TournamentRewardRow extends StatelessWidget {
               Expanded(
                 flex: 3,
                 child: AppTextField(
+                  textLanguage: TextFieldLanguage.english,
                   initialValue: reward.titleEn ?? '',
                   label: AppStrings.titleEn,
                   onChanged: (val) {
@@ -181,6 +183,7 @@ class TournamentRewardRow extends StatelessWidget {
               Expanded(
                 flex: 3,
                 child: AppTextField(
+                  textLanguage: TextFieldLanguage.arabic,
                   initialValue:
                       reward.descriptionAr ?? reward.description ?? '',
                   label: AppStrings.descriptionAr,
@@ -195,6 +198,7 @@ class TournamentRewardRow extends StatelessWidget {
               Expanded(
                 flex: 3,
                 child: AppTextField(
+                  textLanguage: TextFieldLanguage.english,
                   initialValue: reward.descriptionEn ?? '',
                   label: AppStrings.descriptionEn,
                   onChanged: (val) {

@@ -49,11 +49,13 @@ class OnboardingReviewSummary extends StatelessWidget {
           fontSize: OperationsTokens.label.fontSize,
         ),
         AppText.body(
-          'onboarding_review.lounge'.tr(args: [draft.name]),
+          'onboarding_review.lounge'.tr(
+            args: [arabic ? draft.name : draft.nameEn],
+          ),
           fontSize: OperationsTokens.label.fontSize,
         ),
         AppText.body(
-          draft.description,
+          arabic ? draft.description : draft.descriptionEn,
           fontSize: OperationsTokens.label.fontSize,
         ),
         AppText.body(

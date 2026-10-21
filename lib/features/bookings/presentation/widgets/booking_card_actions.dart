@@ -107,7 +107,9 @@ class BookingCardActions extends StatelessWidget {
               child: AppButton(
                 text: AppStrings.confirmReceipt,
                 variant: AppButtonVariant.primary,
-                backgroundColor: AppColors.neonBlue,
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.onPrimary,
+                icon: Icons.receipt_long_rounded,
                 height: h,
                 onPressed: () {
                   if (onConfirmPayment != null) {
@@ -123,6 +125,8 @@ class BookingCardActions extends StatelessWidget {
               child: AppButton(
                 text: AppStrings.reject,
                 variant: AppButtonVariant.outlined,
+                foregroundColor: AppColors.danger,
+                icon: Icons.cancel_outlined,
                 height: h,
                 onPressed: () {
                   if (onReject != null) {
@@ -163,6 +167,8 @@ class BookingCardActions extends StatelessWidget {
             child: AppButton(
               text: AppStrings.reject,
               variant: AppButtonVariant.outlined,
+              foregroundColor: AppColors.danger,
+              icon: Icons.cancel_outlined,
               height: h,
               onPressed: () {
                 if (onReject != null) {
@@ -188,7 +194,11 @@ class BookingCardActions extends StatelessWidget {
                   ? AppStrings.confirmCash
                   : AppStrings.confirmReceipt,
               variant: AppButtonVariant.primary,
-              backgroundColor: AppColors.neonBlue,
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.onPrimary,
+              icon: booking.isCashPayment
+                  ? Icons.payments_rounded
+                  : Icons.receipt_long_rounded,
               height: h,
               onPressed: () {
                 if (onConfirmPayment != null) {
@@ -205,6 +215,8 @@ class BookingCardActions extends StatelessWidget {
             child: AppButton(
               text: AppStrings.reject,
               variant: AppButtonVariant.outlined,
+              foregroundColor: AppColors.danger,
+              icon: Icons.cancel_outlined,
               height: h,
               onPressed: () {
                 if (onReject != null) {
@@ -246,6 +258,8 @@ class BookingCardActions extends StatelessWidget {
                     child: AppButton(
                       text: AppStrings.markNoShowAction,
                       variant: AppButtonVariant.outlined,
+                      foregroundColor: AppColors.warning,
+                      icon: Icons.person_off_outlined,
                       height: h,
                       onPressed: () => _showNoShowConfirmDialog(context),
                     ),
@@ -257,6 +271,7 @@ class BookingCardActions extends StatelessWidget {
                 AppButton(
                   text: AppStrings.confirmCash,
                   variant: AppButtonVariant.outlined,
+                  icon: Icons.payments_rounded,
                   height: h,
                   onPressed: onConfirmPayment ?? onOpenDetails,
                 ),

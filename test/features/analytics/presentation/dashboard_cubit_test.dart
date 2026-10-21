@@ -19,6 +19,8 @@ import 'package:play_spot_dashboard/features/lounges/domain/repositories/lounge_
 class FakeDashboardRepository implements DashboardRepository {
   bool reviewApproved = false;
   bool shouldFail = false;
+  bool useControlledSessionStreams = false;
+  final sessionStreams = <String, StreamController<List<Booking>>>{};
 
   @override
   Future<Either<Failure, void>> reviewExtensionRequest({
@@ -112,6 +114,14 @@ class FakeDashboardRepository implements DashboardRepository {
 
   @override
   Stream<List<Booking>> watchActiveSessions({String? loungeId}) {
+    if (useControlledSessionStreams) {
+      return sessionStreams
+          .putIfAbsent(
+            loungeId ?? 'all',
+            StreamController<List<Booking>>.broadcast,
+          )
+          .stream;
+    }
     return Stream.value([]);
   }
 }
@@ -171,9 +181,52 @@ void main() {
       );
     });
 
-    tearDown(() {
-      cubit.close();
+    tearDown(() async {
+      await cubit.close();
+      for (final stream in repository.sessionStreams.values) {
+        await stream.close();
+      }
     });
+
+    test(
+      'switching lounge clears prior live sessions before next response',
+      () async {
+        repository.useControlledSessionStreams = true;
+        final oldSession = Booking(
+          id: 'old-session',
+          userId: 'user-1',
+          loungeId: 'lounge-a',
+          roomId: 'room-1',
+          date: DateTime(2026, 10, 20),
+          startTime: '12:00',
+          endTime: '13:00',
+          status: BookingStatus.inProgress,
+          totalPrice: 100,
+        );
+
+        cubit.startWatchingActiveSessions(loungeId: 'lounge-a');
+        repository.sessionStreams['lounge-a']!.add([oldSession]);
+        await Future<void>.delayed(Duration.zero);
+        expect(cubit.state.activeSessionsList, [oldSession]);
+
+        cubit.startWatchingActiveSessions(loungeId: 'lounge-b');
+        expect(cubit.state.activeSessionsList, isEmpty);
+        expect(cubit.state.activeSessions, 0);
+        expect(cubit.state.activeSessionsStats, isEmpty);
+
+        repository.sessionStreams['lounge-a']!.add([oldSession]);
+        await Future<void>.delayed(Duration.zero);
+        expect(cubit.state.activeSessionsList, isEmpty);
+
+        final newSession = oldSession.copyWith(
+          id: 'new-session',
+          loungeId: 'lounge-b',
+        );
+        repository.sessionStreams['lounge-b']!.add([newSession]);
+        await Future<void>.delayed(Duration.zero);
+        expect(cubit.state.activeSessionsList, [newSession]);
+      },
+    );
 
     test('Initial state should be DashboardState.init()', () {
       expect(cubit.state.status, FeatureStatus.initial);

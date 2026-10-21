@@ -82,6 +82,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
               children: [
                 Expanded(
                   child: AppTextField(
+                    textLanguage: TextFieldLanguage.arabic,
                     label: AppStrings.promoTitleAr,
                     controller: _titleArController,
                     validator: AppValidator.validateRequired,
@@ -90,6 +91,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                 SizedBox(width: 16.w),
                 Expanded(
                   child: AppTextField(
+                    textLanguage: TextFieldLanguage.english,
                     label: AppStrings.promoTitleEn,
                     controller: _titleEnController,
                     validator: AppValidator.validateRequired,
@@ -99,6 +101,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
             ),
             SizedBox(height: 16.h),
             AppTextField(
+              textLanguage: TextFieldLanguage.arabic,
               label: AppStrings.descriptionArLabel,
               controller: _bodyArController,
               maxLines: 3,
@@ -106,6 +109,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
             ),
             SizedBox(height: 16.h),
             AppTextField(
+              textLanguage: TextFieldLanguage.english,
               label: AppStrings.descriptionEnLabel,
               controller: _bodyEnController,
               maxLines: 3,

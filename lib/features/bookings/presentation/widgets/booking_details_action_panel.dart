@@ -132,6 +132,7 @@ class _BookingDetailsActionPanelState extends State<BookingDetailsActionPanel> {
             text: 'accept_booking_now'.tr(),
             variant: AppButtonVariant.primary,
             backgroundColor: AppColors.success,
+            icon: Icons.check_circle_outline_rounded,
             height: 40.h,
             onPressed: context.hasPermission('bookings.manage')
                 ? () => _run(() => cubit.approveBooking(booking.id))
@@ -146,6 +147,8 @@ class _BookingDetailsActionPanelState extends State<BookingDetailsActionPanel> {
               return AppButton(
                 text: 'start_session_now'.tr(),
                 variant: AppButtonVariant.primary,
+                backgroundColor: AppColors.success,
+                icon: Icons.play_arrow_rounded,
                 height: 40.h,
                 onPressed: context.hasPermission('sessions_control')
                     ? () => _run(() => cubit.startBookingSession(booking.id))
@@ -157,6 +160,9 @@ class _BookingDetailsActionPanelState extends State<BookingDetailsActionPanel> {
           AppButton(
             text: 'finish_and_bill_session'.tr(),
             variant: AppButtonVariant.primary,
+            backgroundColor: AppColors.warning,
+            foregroundColor: AppColors.onPrimary,
+            icon: Icons.receipt_long_rounded,
             height: 40.h,
             onPressed: context.hasPermission('sessions_control')
                 ? _finish
@@ -167,7 +173,9 @@ class _BookingDetailsActionPanelState extends State<BookingDetailsActionPanel> {
           AppButton(
             text: AppStrings.confirmCash,
             variant: AppButtonVariant.primary,
-            backgroundColor: AppColors.neonBlue,
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.onPrimary,
+            icon: Icons.payments_rounded,
             height: 40.h,
             onPressed: context.hasPermission('billing_checkout')
                 ? widget.onConfirmCashPayment
@@ -182,6 +190,7 @@ class _BookingDetailsActionPanelState extends State<BookingDetailsActionPanel> {
                 child: AppButton(
                   text: AppStrings.swapRoom,
                   variant: AppButtonVariant.outlined,
+                  icon: Icons.swap_horiz_rounded,
                   height: 36.h,
                   onPressed: () {
                     showDialog(
@@ -201,6 +210,7 @@ class _BookingDetailsActionPanelState extends State<BookingDetailsActionPanel> {
                 child: AppButton(
                   text: AppStrings.cancelBooking,
                   variant: AppButtonVariant.danger,
+                  icon: Icons.cancel_outlined,
                   height: 36.h,
                   onPressed: context.hasPermission('bookings.manage')
                       ? _cancel

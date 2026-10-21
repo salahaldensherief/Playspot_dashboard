@@ -24,6 +24,7 @@ class DashboardCubit extends Cubit<DashboardState> {
 
   StreamSubscription<List<Booking>>? _activeSessionsSubscription;
   String? _watchedLoungeId;
+  int _activeSessionsGeneration = 0;
   int _dashboardGeneration = 0;
   String _revenuePeriod = 'week';
 
@@ -42,6 +43,7 @@ class DashboardCubit extends Cubit<DashboardState> {
     String? loungeId,
     bool forceRefresh = false,
   }) {
+    if (isClosed) return;
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty)
         ? loungeId.trim()
         : null;
@@ -52,13 +54,24 @@ class DashboardCubit extends Cubit<DashboardState> {
       return;
     }
 
+    final scopeChanged = _watchedLoungeId != cleanLoungeId;
+    final generation = ++_activeSessionsGeneration;
     _watchedLoungeId = cleanLoungeId;
     _activeSessionsSubscription?.cancel();
+    if (scopeChanged) {
+      emit(
+        state.copyWith(
+          activeSessionsList: const [],
+          activeSessionsStats: const {},
+          activeSessions: 0,
+        ),
+      );
+    }
 
     _activeSessionsSubscription =
         watchActiveSessionsUseCase(loungeId: cleanLoungeId).listen(
           (sessions) {
-            if (isClosed) return;
+            if (isClosed || generation != _activeSessionsGeneration) return;
 
             final activeList = sessions
                 .where((b) => b.isBookingActive())
@@ -91,7 +104,7 @@ class DashboardCubit extends Cubit<DashboardState> {
             );
           },
           onError: (error) {
-            if (isClosed) return;
+            if (isClosed || generation != _activeSessionsGeneration) return;
             AppLogger.error(
               '[DASHBOARD_CUBIT] watchActiveSessions Error',
               error,
@@ -436,6 +449,7 @@ class DashboardCubit extends Cubit<DashboardState> {
 
   @override
   Future<void> close() {
+    ++_activeSessionsGeneration;
     _activeSessionsSubscription?.cancel();
     return super.close();
   }

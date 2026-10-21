@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_colors.dart';
+import '../../core/utils/app_validator.dart';
+import '../../core/utils/text_field_language.dart';
+
+export '../../core/utils/text_field_language.dart';
 
 class AppTextField extends StatelessWidget {
   final String label;
@@ -12,6 +16,7 @@ class AppTextField extends StatelessWidget {
   final bool isPassword;
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
+  final TextFieldLanguage textLanguage;
   final bool readOnly;
   final bool enabled;
   final IconData? prefixIcon;
@@ -44,6 +49,7 @@ class AppTextField extends StatelessWidget {
     this.isPassword = false,
     this.keyboardType = TextInputType.text,
     this.validator,
+    this.textLanguage = TextFieldLanguage.unrestricted,
     this.readOnly = false,
     this.enabled = true,
     this.prefixIcon,
@@ -87,7 +93,17 @@ class AppTextField extends StatelessWidget {
           obscureText: isPassword,
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
-          validator: validator,
+          validator: (value) =>
+              validator?.call(value) ??
+              AppValidator.validateLanguage(value, textLanguage),
+          autovalidateMode: textLanguage == TextFieldLanguage.unrestricted
+              ? AutovalidateMode.disabled
+              : AutovalidateMode.onUserInteraction,
+          textDirection: switch (textLanguage) {
+            TextFieldLanguage.arabic => TextDirection.rtl,
+            TextFieldLanguage.english => TextDirection.ltr,
+            TextFieldLanguage.unrestricted => null,
+          },
           readOnly: readOnly,
           enabled: enabled,
           focusNode: focusNode,

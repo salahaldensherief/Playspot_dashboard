@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
+import '../../../../core/utils/text_field_language.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
@@ -104,8 +105,13 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
         result.add({
           'id': extra.id,
           'name': extra.name,
-          'name_ar': extra.nameAr.isNotEmpty ? extra.nameAr : extra.name,
-          'name_en': extra.nameEn.isNotEmpty ? extra.nameEn : extra.name,
+          'name_ar': matchesTextLanguage(extra.nameAr, TextFieldLanguage.arabic)
+              ? extra.nameAr
+              : '',
+          'name_en':
+              matchesTextLanguage(extra.nameEn, TextFieldLanguage.english)
+              ? extra.nameEn
+              : '',
           'quantity': qty,
           'qty': qty,
           'price': extra.price,

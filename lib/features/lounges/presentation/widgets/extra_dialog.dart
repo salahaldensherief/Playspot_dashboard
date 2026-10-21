@@ -232,6 +232,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
                         ),
                         SizedBox(height: 16.h),
                         AppTextField(
+                          textLanguage: TextFieldLanguage.arabic,
                           label: AppStrings.nameAr,
                           hintText: AppStrings.nameAr,
                           controller: _nameArController,
@@ -239,6 +240,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
                         ),
                         SizedBox(height: 16.h),
                         AppTextField(
+                          textLanguage: TextFieldLanguage.english,
                           label: AppStrings.nameEn,
                           hintText: AppStrings.nameEn,
                           controller: _nameEnController,

@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../art_core/app_strings.dart';
+import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/theme/operations_tokens.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../domain/entities/booking.dart';
@@ -68,8 +69,12 @@ class CashierSessionTile extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 6,
                     children: [
-                      _tag(paid ? AppStrings.paid : AppStrings.unpaid),
-                      if (booking.isOpenEnded) _tag('cashier.open'.tr()),
+                      _tag(
+                        paid ? AppStrings.paid : AppStrings.unpaid,
+                        color: paid ? AppColors.success : AppColors.warning,
+                      ),
+                      if (booking.isOpenEnded)
+                        _tag('cashier.open'.tr(), color: AppColors.neonCyan),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -79,7 +84,8 @@ class CashierSessionTile extends StatelessWidget {
                     AppButton(
                       text: AppStrings.pendingVerification,
                       variant: AppButtonVariant.outlined,
-                      foregroundColor: OperationsTokens.accent,
+                      foregroundColor: AppColors.warning,
+                      icon: Icons.verified_user_rounded,
                       height: 48,
                       onPressed: () => showDialog<void>(
                         context: context,
@@ -99,6 +105,9 @@ class CashierSessionTile extends StatelessWidget {
                     const SizedBox(height: 8),
                     AppButton(
                       text: AppStrings.confirmBooking,
+                      variant: AppButtonVariant.primary,
+                      backgroundColor: AppColors.success,
+                      icon: Icons.check_circle_outline_rounded,
                       height: 48,
                       onPressed: () => context
                           .read<BookingCubit>()
@@ -109,6 +118,8 @@ class CashierSessionTile extends StatelessWidget {
                       text: AppStrings.reject,
                       height: 48,
                       variant: AppButtonVariant.outlined,
+                      foregroundColor: AppColors.danger,
+                      icon: Icons.cancel_outlined,
                       onPressed: () => context
                           .read<BookingCubit>()
                           .rejectBooking(booking.id),
@@ -123,13 +134,26 @@ class CashierSessionTile extends StatelessWidget {
     );
   }
 
-  Widget _tag(String text) => Container(
+  Widget _tag(String text, {Color? color}) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     decoration: BoxDecoration(
-      color: OperationsTokens.surfaceRaised,
+      color: color != null
+          ? color.withValues(alpha: 0.12)
+          : OperationsTokens.surfaceRaised,
       borderRadius: BorderRadius.circular(6),
-      border: Border.all(color: OperationsTokens.border),
+      border: Border.all(
+        color: color != null
+            ? color.withValues(alpha: 0.3)
+            : OperationsTokens.border,
+      ),
     ),
-    child: Text(text, style: OperationsTokens.label.copyWith(fontSize: 12)),
+    child: Text(
+      text,
+      style: OperationsTokens.label.copyWith(
+        fontSize: 12,
+        color: color ?? OperationsTokens.label.color,
+        fontWeight: color != null ? FontWeight.bold : FontWeight.normal,
+      ),
+    ),
   );
 }
