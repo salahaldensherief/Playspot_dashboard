@@ -110,9 +110,9 @@ extension _LoungeSetupSections on _LoungeSetupViewState {
           answers: cubit.state.draft.integrationAnswers,
           onChanged: (answers) {
             _reviewConfirmed = false;
-            cubit.saveDraft(cubit.state.draft.copyWith(
-              integrationAnswers: answers,
-            ));
+            cubit.saveDraft(
+              cubit.state.draft.copyWith(integrationAnswers: answers),
+            );
           },
         );
       case 9:
