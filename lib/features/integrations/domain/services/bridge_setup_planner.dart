@@ -162,7 +162,13 @@ class BridgeSetupPlanner {
     }
     if (a.wantsSessionControl) {
       actions.add('test_start_extend_end_without_real_customer');
-      if (a.sessionCommandsAvailable != true) {
+      final hasCommandChannel = switch (route) {
+        BridgeRoute.cloudApi => a.apiSessionCommandsAvailable == true,
+        BridgeRoute.localAgent || BridgeRoute.hybrid =>
+          a.sessionCommandsAvailable == true,
+        _ => false,
+      };
+      if (!hasCommandChannel) {
         blockers.add('session_commands_not_verified');
       }
     }
