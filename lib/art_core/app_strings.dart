@@ -325,6 +325,7 @@ class AppStrings {
   static String get paid => 'paid'.tr();
   static String get unpaid => 'unpaid'.tr();
   static String get partial => 'partial'.tr();
+  static String get refunded => 'refunded'.tr();
   static String get egp {
     final label = 'currency_egp'.tr();
     return label == 'currency_egp' ? 'EGP' : label;
