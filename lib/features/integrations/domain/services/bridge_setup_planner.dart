@@ -9,7 +9,11 @@ enum ApiReachability { publicHttps, localNetwork, unknown }
 
 enum BridgeRoute { playspotOs, cloudApi, localAgent, hybrid, assessment }
 
-enum BridgeReadiness { setupGuidance, evidenceRequired, technicalPilotCandidate }
+enum BridgeReadiness {
+  setupGuidance,
+  evidenceRequired,
+  technicalPilotCandidate,
+}
 
 class BridgeSetupAnswers {
   final ExistingSystemType system;
@@ -103,18 +107,21 @@ class BridgeSetupPlanner {
     final apiDocumented =
         a.supportsApi == true && a.hasApiDocumentation == true;
     final localSupported = a.supportsLocalInterface == true;
-    final localHostReady = a.hasWindowsComputer == true &&
-        a.outboundInternetAvailable == true;
+    final localHostReady =
+        a.hasWindowsComputer == true && a.outboundInternetAvailable == true;
     final apiNeedsAgent =
         a.supportsApi == true &&
         a.apiReachability == ApiReachability.localNetwork;
     final canReachCloudApi =
         apiDocumented && a.apiReachability == ApiReachability.publicHttps;
-    final canUseLocalAgent = (localSupported || apiNeedsAgent) &&
+    final canUseLocalAgent =
+        (localSupported || apiNeedsAgent) &&
         a.system == ExistingSystemType.windowsLocal;
 
     BridgeRoute route;
-    if (canReachCloudApi && canUseLocalAgent && a.wantsSessionControl &&
+    if (canReachCloudApi &&
+        canUseLocalAgent &&
+        a.wantsSessionControl &&
         a.apiSessionCommandsAvailable != true &&
         a.sessionCommandsAvailable == true) {
       route = BridgeRoute.hybrid;
@@ -164,8 +171,8 @@ class BridgeSetupPlanner {
       actions.add('test_start_extend_end_without_real_customer');
       final hasCommandChannel = switch (route) {
         BridgeRoute.cloudApi => a.apiSessionCommandsAvailable == true,
-        BridgeRoute.localAgent || BridgeRoute.hybrid =>
-          a.sessionCommandsAvailable == true,
+        BridgeRoute.localAgent ||
+        BridgeRoute.hybrid => a.sessionCommandsAvailable == true,
         _ => false,
       };
       if (!hasCommandChannel) {
@@ -175,7 +182,8 @@ class BridgeSetupPlanner {
     actions.add('reconcile_both_systems_after_disconnect');
     actions.add('review_by_playspot_integration_team');
 
-    final eligibleForPilot = blockers.isEmpty &&
+    final eligibleForPilot =
+        blockers.isEmpty &&
         route != BridgeRoute.assessment &&
         a.integrationPermission == true;
     // Even when the vendor says these features exist, they are disabled until
