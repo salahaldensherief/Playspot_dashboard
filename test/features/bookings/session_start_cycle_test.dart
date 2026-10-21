@@ -193,6 +193,14 @@ void main() {
       expect(find.text('cashier.collectionSection'.tr()), findsOneWidget);
       expect(find.text('cashier.postpaidHint'.tr()), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
+      await mount(
+        tester,
+        SessionControlActions(
+          booking: booking.copyWith(paymentStatus: PaymentStatus.partial),
+        ),
+      );
+      expect(find.text('cashier.collectionSection'.tr()), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
     },
   );
   testWidgets(

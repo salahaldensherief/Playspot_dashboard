@@ -144,6 +144,9 @@ class BookingModel extends Booking {
       case 'refunded':
         paymentStatus = PaymentStatus.refunded;
         break;
+      case 'partial':
+        paymentStatus = PaymentStatus.partial;
+        break;
       default:
         paymentStatus = PaymentStatus.unpaid;
     }
