@@ -70,7 +70,8 @@ extension _LoungeSetupContent on _LoungeSetupViewState {
               child: BlocBuilder<OnboardingCubit, OnboardingState>(
                 buildWhen: (previous, current) =>
                     previous.currentStep != current.currentStep ||
-                    previous.draft.integrationAnswers != current.draft.integrationAnswers ||
+                    previous.draft.integrationAnswers !=
+                        current.draft.integrationAnswers ||
                     previous.status != current.status,
                 builder: (context, state) {
                   final currentStep = state.currentStep;
