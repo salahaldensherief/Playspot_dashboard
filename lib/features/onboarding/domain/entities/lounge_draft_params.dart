@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 class LoungeDraftParams extends Equatable {
   final int step;
+
   /// Browser-local Bridge preflight answers; not submitted to the backend.
   final Map<String, dynamic> integrationAnswers;
   final String name;
