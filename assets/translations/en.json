@@ -367,6 +367,7 @@
   "manager_override_required": "Manager override required for discounts over 10%",
   "reason_required": "Reason is required for discounts",
   "unpaid": "Unpaid",
+  "partial": "Partially paid",
   "finished_today": "Finished Today",
   "today": "Today",
   "daily_total": "Daily Total",

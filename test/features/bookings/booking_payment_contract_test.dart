@@ -80,6 +80,24 @@ void main() {
     },
   );
 
+  test('partially paid extension remains distinguishable from unpaid', () {
+    final model = BookingModel.fromJson({
+      'id': 'booking-extension',
+      'user_id': 'user-1',
+      'lounge_id': 'lounge-1',
+      'room_id': 'room-1',
+      'date': '2026-10-11',
+      'start_time': '14:00',
+      'end_time': '15:30',
+      'status': 'in_progress',
+      'payment_status': 'partial',
+      'payment_method': 'cash',
+      'total_price': 230,
+    });
+    expect(model.paymentStatus, PaymentStatus.partial);
+    expect(model.totalPrice, 230);
+  });
+
   test(
     'cash payment uses the canonical complete_booking_payment RPC',
     () async {

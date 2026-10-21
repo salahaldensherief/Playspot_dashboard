@@ -262,6 +262,8 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
         return StatusBadge.success(AppStrings.paid.toUpperCase());
       case PaymentStatus.refunded:
         return StatusBadge.danger(AppStrings.payouts.toUpperCase());
+      case PaymentStatus.partial:
+        return StatusBadge.warning(AppStrings.partial.toUpperCase());
       case PaymentStatus.unpaid:
         return StatusBadge.warning(AppStrings.unpaid.toUpperCase());
     }

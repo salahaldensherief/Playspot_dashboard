@@ -1,4 +1,4 @@
-enum PaymentStatus { unpaid, paid, refunded }
+enum PaymentStatus { unpaid, partial, paid, refunded }
 
 enum PaymentMethod { cash, wallet, manualTransfer, card, online, other }
 
