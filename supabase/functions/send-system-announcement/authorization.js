@@ -13,3 +13,14 @@ export async function isAnnouncementCallerAuthorized(request, dependencies) {
   const expected = await dependencies.expectedKey();
   return typeof expected === 'string' && expected.length > 0 && provided === expected;
 }
+
+// Keep the authorization gate outside payload parsing and FCM delivery.
+export async function dispatchAuthorizedAnnouncement(request, authorize, send) {
+  if (!(await authorize(request))) {
+    return new Response(JSON.stringify({ error: 'Unauthorized: Admin privileges required' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  return send(await request.json());
+}

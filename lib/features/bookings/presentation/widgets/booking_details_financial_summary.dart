@@ -82,6 +82,8 @@ class BookingDetailsFinancialSummary extends StatelessWidget {
               StatusBadge(
                 text: booking.paymentStatus == PaymentStatus.paid
                     ? AppStrings.paid
+                    : booking.paymentStatus == PaymentStatus.partial
+                    ? AppStrings.partial
                     : AppStrings.unpaid,
                 color: booking.paymentStatus == PaymentStatus.paid
                     ? AppColors.success

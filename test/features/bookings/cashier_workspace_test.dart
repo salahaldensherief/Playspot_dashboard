@@ -294,12 +294,18 @@ void main() {
   testWidgets('session rail labels operational priorities', (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await mount(tester, 1440, 'ar', 1, bookings: [
-      a,
-      b.copyWith(paymentStatus: PaymentStatus.paid),
-      a.copyWith(id: 'running', paymentStatus: PaymentStatus.paid),
-      next,
-    ]);
+    await mount(
+      tester,
+      1440,
+      'ar',
+      1,
+      bookings: [
+        a,
+        b.copyWith(paymentStatus: PaymentStatus.paid),
+        a.copyWith(id: 'running', paymentStatus: PaymentStatus.paid),
+        next,
+      ],
+    );
     expect(find.text(AppStrings.needsAttention), findsOneWidget);
     expect(find.text(AppStrings.openTimeSessions), findsOneWidget);
     expect(find.text(AppStrings.runningSessions), findsOneWidget);
