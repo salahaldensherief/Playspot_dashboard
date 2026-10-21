@@ -62,7 +62,7 @@ void main() {
       BookingDetailsFinancialSummary(booking: refundedBooking),
     );
 
-    expect(find.text('Refunded'), findsOneWidget);
+    expect(find.text('REFUNDED'), findsOneWidget);
     expect(find.text('Unpaid'), findsNothing);
   });
 
