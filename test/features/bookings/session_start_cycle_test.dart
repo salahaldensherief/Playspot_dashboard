@@ -204,6 +204,95 @@ void main() {
     },
   );
   testWidgets(
+    'long-running Open Time remains closable through the canonical RPC for an authorized cashier',
+    (tester) async {
+      final bookings = _Bookings();
+      final login = _Login();
+      final permissions = _Permissions();
+      final expiredOpenTime = booking.copyWith(
+        id: 'expired-open',
+        status: BookingStatus.inProgress,
+        isOpenTime: true,
+        openTimeStartedAt: DateTime(2030, 1, 10, 10),
+        openTimePricingSnapshot: const {'max_minutes': 120},
+      );
+      when(() => bookings.state).thenReturn(const BookingState());
+      when(
+        () => bookings.stream,
+      ).thenAnswer((_) => const Stream<BookingState>.empty());
+      when(
+        () => bookings.completeOpenTimeSession('expired-open'),
+      ).thenAnswer(
+        (_) async => {
+          'success': true,
+          'booking_id': 'expired-open',
+          'status': 'completed',
+        },
+      );
+      when(() => login.state).thenReturn(
+        const LoginState(
+          user: UserEntity(
+            id: 'cashier',
+            email: 'cashier@local.invalid',
+            name: 'Cashier',
+            role: UserRole.cashier,
+          ),
+        ),
+      );
+      when(
+        () => login.stream,
+      ).thenAnswer((_) => const Stream<LoginState>.empty());
+      when(
+        () => permissions.state,
+      ).thenReturn(const PermissionsState(status: PermissionsStatus.success));
+      when(
+        () => permissions.stream,
+      ).thenAnswer((_) => const Stream<PermissionsState>.empty());
+      when(
+        () => permissions.hasPermission(
+          any(),
+          userRole: any(named: 'userRole'),
+          userId: any(named: 'userId'),
+        ),
+      ).thenReturn(true);
+
+      await mount(
+        tester,
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<BookingCubit>.value(value: bookings),
+            BlocProvider<LoginCubit>.value(value: login),
+            BlocProvider<PermissionsCubit>.value(value: permissions),
+          ],
+          child: SessionControlActions(booking: expiredOpenTime),
+        ),
+        clock: () => DateTime(2030, 1, 10, 16),
+      );
+
+      expect(
+        expiredOpenTime.remainingDuration(DateTime(2030, 1, 10, 16)),
+        const Duration(hours: 6),
+      );
+      final endButton = find.text('cashier.end'.tr());
+      expect(endButton, findsOneWidget);
+      await tester.tap(endButton);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('confirm'.tr()));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => bookings.completeOpenTimeSession('expired-open'),
+      ).called(1);
+      verifyNever(
+        () => bookings.updateBookingStatus(
+          'expired-open',
+          BookingStatus.completed,
+        ),
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+  testWidgets(
     'drawer details omit duplicate booking actions while the workspace retains them',
     (tester) async {
       await mount(
