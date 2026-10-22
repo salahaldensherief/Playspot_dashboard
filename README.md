@@ -101,3 +101,7 @@ GitHub Actions checks formatting, analysis, and tests on pull requests and pushe
 ## Localization and layout
 
 User-facing text must be localized. Dashboard changes must remain usable in Arabic/English and RTL/LTR layouts.
+
+## Agent and developer onboarding
+
+Start with **[PlaySpot Complete System Atlas](docs/PLAYSPOT_SYSTEM_ATLAS.md)** for architecture, business invariants, UI/UX, feature/file index, cross-client data flows, Supabase ownership, open PRs, risks, verification and safe branch instructions. Then read this repository's `AGENTS.md` and current feature source. The atlas is synchronized as a docs-only copy in the companion repository; refresh it when contracts change.
