@@ -51,3 +51,7 @@ Read this file before changing code. It is the single agent guidance for this Fl
 - Map external errors at the data boundary into the project's failure contract. Keep secrets and personal data out of logs. Declare directly imported packages in `pubspec.yaml` and explain dependency overrides.
 - For a bug: reproduce -> identify root cause -> fix in the owning layer -> add a regression test -> verify. For new behavior, test the important business invariant and authorization/concurrency where relevant. Unit, widget, integration, browser, and RLS tests are all allowed; do not prohibit network-backed tests when an isolated environment exists.
 - Run `dart format --output=none --set-exit-if-changed lib test`, `flutter analyze --no-fatal-infos`, and relevant `flutter test` suites when available. Report exactly what ran and what could not run. Keep changes in a focused PR and wait for CI before claiming verification.
+
+## REQUIRED FIRST READ — CROSS-STACK SYSTEM ATLAS
+
+Before any feature, UI/UX, data-flow, pricing, session, offline, security or integration change, read **[docs/PLAYSPOT_SYSTEM_ATLAS.md](docs/PLAYSPOT_SYSTEM_ATLAS.md)**, then review current `dev`, overlapping PRs and the owning feature's actual source/tests. The atlas maps Mobile, Dashboard and shared Supabase responsibilities, operating flows, unresolved risks and the agent workflow. It is a dated source snapshot, **not** evidence that a Draft PR is merged or a database/function is deployed. This `AGENTS.md` remains authoritative for repository-specific engineering rules.
