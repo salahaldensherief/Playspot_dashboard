@@ -1,3 +1,4 @@
+import 'package:play_spot_dashboard/features/onboarding/domain/entities/onboarding_steps.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
@@ -40,7 +41,7 @@ void main() {
   });
   for (final width in [360.0, 600.0, 768.0, 1024.0, 1440.0]) {
     for (final scale in [1.0, 1.6]) {
-      for (var step = 0; step < 9; step++) {
+      for (var step = 0; step < OnboardingSteps.ids().length; step++) {
         testWidgets('Arabic wizard width $width scale $scale step $step', (
           tester,
         ) async {
@@ -109,7 +110,8 @@ void main() {
             Directionality.of(tester.element(find.byType(LoungeSetupView))),
             ui.TextDirection.rtl,
           );
-          if (scale == 1.6) {
+          if (scale == 1.6 &&
+              const bool.fromEnvironment('CAPTURE_ONBOARDING_TESTS')) {
             await tester.runAsync(() async {
               final boundary =
                   captureKey.currentContext?.findRenderObject()
@@ -121,7 +123,7 @@ void main() {
               image.dispose();
               if (bytes != null) {
                 final file = File(
-                  'C:/Users/salah/Documents/Codex/2026-09-30/playspot-chatgpt-remotes-git-fetch-origin/outputs/onboarding-screenshots/step-$step-ar-${width.toInt()}-$scale.png',
+                  'work/onboarding-screenshots/step-$step-ar-${width.toInt()}-$scale.png',
                 );
                 file.parent.createSync(recursive: true);
                 file.writeAsBytesSync(bytes.buffer.asUint8List());

@@ -1,7 +1,11 @@
 import 'package:equatable/equatable.dart';
+import 'onboarding_steps.dart';
 
 class LoungeDraftParams extends Equatable {
   final int step;
+
+  /// Browser-local Bridge preflight answers; not submitted to the backend.
+  final Map<String, dynamic> integrationAnswers;
   final String name;
   final String nameEn;
   final String description;
@@ -22,6 +26,7 @@ class LoungeDraftParams extends Equatable {
 
   const LoungeDraftParams({
     this.step = 0,
+    this.integrationAnswers = const {},
     this.name = '',
     this.nameEn = '',
     this.description = '',
@@ -43,6 +48,7 @@ class LoungeDraftParams extends Equatable {
 
   LoungeDraftParams copyWith({
     int? step,
+    Map<String, dynamic>? integrationAnswers,
     String? name,
     String? nameEn,
     String? description,
@@ -64,6 +70,7 @@ class LoungeDraftParams extends Equatable {
   }) {
     return LoungeDraftParams(
       step: step ?? this.step,
+      integrationAnswers: integrationAnswers ?? this.integrationAnswers,
       name: name ?? this.name,
       nameEn: nameEn ?? this.nameEn,
       description: description ?? this.description,
@@ -85,7 +92,10 @@ class LoungeDraftParams extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
+    'stepId':
+        OnboardingSteps.ids()[step.clamp(0, OnboardingSteps.ids().length - 1)],
     'step': step,
+    'integrationAnswers': integrationAnswers,
     'name': name,
     'nameEn': nameEn,
     'description': description,
@@ -107,7 +117,10 @@ class LoungeDraftParams extends Equatable {
 
   factory LoungeDraftParams.fromJson(Map<String, dynamic> json) {
     return LoungeDraftParams(
-      step: json['step'] as int? ?? 0,
+      step: OnboardingSteps.restore(json),
+      integrationAnswers: json['integrationAnswers'] is Map
+          ? Map<String, dynamic>.from(json['integrationAnswers'] as Map)
+          : const {},
       name: json['name']?.toString() ?? '',
       nameEn: json['nameEn']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
@@ -131,6 +144,7 @@ class LoungeDraftParams extends Equatable {
   @override
   List<Object?> get props => [
     step,
+    integrationAnswers,
     name,
     nameEn,
     description,

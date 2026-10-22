@@ -2044,5 +2044,84 @@
   "tournament_refund_pending": "استرداد الرسوم قيد الانتظار",
   "tournament_payment_unknown": "حالة دفع غير معروفة",
   "complete_tournament": "إنهاء البطولة",
-  "award_tournament_prizes": "توزيع الجوائز"
+  "award_tournament_prizes": "توزيع الجوائز",
+  "bridge_step": {
+    "title": "ربط نظام إدارة الصالة (اختياري)",
+    "introduction": "جاوب على الأسئلة حسب معلوماتك. هنحدد طريقة الربط المقترحة والمتطلبات. الإجابات مش بتفعّل أي تحكم أو حجز تلقائي.",
+    "result_title": "الخطة المقترحة حسب إجاباتك",
+    "blockers_title": "لازم نتأكد من الحاجات دي أولًا",
+    "not_activated": "الحجز والتحكم في الجلسات من النظام الخارجي مش هيشتغلوا قبل اختبار فني وموافقة من إدارة PlaySpot.",
+    "no_secrets": "مهم: متكتبش باسورد أو API Key أو أي بيانات دخول في الأسئلة.",
+    "local_draft_notice": "نسخة تجريبية: إجاباتك محفوظة مؤقتًا في مسودة المتصفح فقط، ومش بتتبعت لفريق التكامل تلقائيًا.",
+    "questions": {
+      "system": "الصالة بتستخدم برنامج إدارة حاليًا؟ موجود فين؟",
+      "vendorName": "اسم البرنامج إيه؟",
+      "vendorVersion": "إصدار البرنامج؟",
+      "integrationPermission": "صاحب الصالة موافق نربط البرنامج؟ وهل الترخيص يسمح؟",
+      "supportsApi": "البرنامج عنده API رسمية؟",
+      "hasApiDocumentation": "معاك رابط توثيق الـ API؟",
+      "apiReachability": "الـ API بتتفتح من الإنترنت ولا من شبكة الصالة بس؟",
+      "supportsLocalInterface": "هل للبرنامج وسيلة تكامل محلية موثّقة ومسموح بيها؟",
+      "hasWindowsComputer": "هل فيه كمبيوتر Windows نقدر نثبت عليه Connector؟",
+      "outboundInternetAvailable": "الكمبيوتر ده يقدر يفتح مواقع HTTPS على الإنترنت؟",
+      "wantsOnlineBooking": "عايز الحجوزات من PlaySpot تدخل البرنامج القديم؟",
+      "wantsSessionControl": "عايز بدء وتمديد وإنهاء الجلسة من PlaySpot؟",
+      "availabilityReadable": "البرنامج يقدر يقول مين فاضي ومين مشغول؟",
+      "atomicFutureReservation": "يقدر يحجز الروم للمستقبل ويمنع حجزين لنفس الوقت آليًا؟",
+      "sessionCommandsAvailable": "الوسيلة المحلية تدعم Start/Extend/End؟",
+      "apiSessionCommandsAvailable": "الـ API نفسها تدعم Start/Extend/End؟",
+      "changeEventsAvailable": "البرنامج يقدر يبلغنا بتغيير الحالة تلقائيًا (Webhook/Event)؟"
+    },
+    "options": {
+      "none": "مفيش برنامج — عايز PlaySpot OS",
+      "cloud": "نظام أونلاين (Cloud)",
+      "windowsLocal": "برنامج على Windows داخل الصالة",
+      "otherLocal": "جهاز محلي غير Windows",
+      "unknown": "مش عارف",
+      "yes": "أيوه",
+      "no": "لا",
+      "publicHttps": "HTTPS من الإنترنت",
+      "localNetwork": "داخل شبكة الصالة فقط"
+    },
+    "routes": {
+      "playspotOs": "استخدم إدارة PlaySpot مباشرة",
+      "cloudApi": "الأقرب: تكامل API سحابي",
+      "localAgent": "الأقرب: Local Agent داخل الصالة",
+      "hybrid": "الأقرب: API + Local Agent",
+      "assessment": "محتاج تقييم فني قبل اختيار طريقة الربط"
+    },
+    "readiness": {
+      "setupGuidance": "خطة تجهيز مبدئية",
+      "evidenceRequired": "لازم معلومات وموافقات إضافية",
+      "technicalPilotCandidate": "مرشح لتجربة فنية فقط — مش جاهز للتفعيل"
+    },
+    "actions": {
+      "configure_playspot_os": "جهز بيانات الرومز والأجهزة على PlaySpot.",
+      "map_rooms": "طابق الرومز والأسعار الفعلية مع PlaySpot.",
+      "staff_training": "درّب الموظفين على دورة الحجوزات والشفتات.",
+      "identify_vendor_version": "حدد اسم البرنامج ورقم نسخته من Help / About.",
+      "list_rooms": "اعمل قائمة بالأجهزة والرومز وأرقامها في برنامجك.",
+      "request_api_sandbox_without_credentials_in_form": "اطلب Sandbox تجريبية من مورد البرنامج؛ لا تدخل بيانات الدخول هنا.",
+      "validate_api_scopes_rate_limits_and_auth": "فريق التكامل يراجع صلاحيات API وحدود الاستدعاء.",
+      "install_signed_local_agent_after_approval": "بعد الموافقة، ثبّت النسخة الرسمية الموقعة من Connector على Windows.",
+      "pair_agent_with_one_time_code": "اربط Connector بكود لمرة واحدة فقط من شاشة PlaySpot الرسمية.",
+      "contact_vendor_support": "اسأل دعم البرنامج عن وسيلة تكامل رسمية ومصرح بها.",
+      "map_external_rooms_to_playspot_ids": "اربط كل رقم جهاز قديم بالروم المقابل في PlaySpot.",
+      "test_booking_collision_with_vendor": "اعمل اختبار تضارب حجزين في بيئة تجريبية.",
+      "test_start_extend_end_without_real_customer": "اختبر Start/Extend/End بجلسة تجريبية من غير عميل حقيقي.",
+      "reconcile_both_systems_after_disconnect": "جرّب فصل وعودة الإنترنت وتطابق الجلسات والحجوزات.",
+      "review_by_playspot_integration_team": "لازم مراجعة فريق PlaySpot قبل التفعيل."
+    },
+    "blockers": {
+      "identify_vendor_version": "اسم البرنامج أو الإصدار لسه ناقص.",
+      "obtain_integration_permission": "محتاج موافقة صريحة من المالك ومورّد البرنامج.",
+      "verify_windows_and_outbound_https": "اتأكد من وجود Windows مناسب واتصال HTTPS خارجي.",
+      "no_verified_supported_interface": "لسه مفيش واجهة تكامل موثقة متاحة.",
+      "collect_official_api_documentation": "محتاج وثائق الـ API الرسمية.",
+      "confirm_api_reachability": "محتاج نحدد مكان الوصول لـ API.",
+      "verify_availability_read": "لسه قراءة الإشغال غير مؤكدة.",
+      "no_atomic_reservation_manual_confirmation_only": "مفيش تأكيد لحجز ذري يمنع التضارب؛ استخدم موافقة موظف حتى التحقق.",
+      "session_commands_not_verified": "أوامر الجلسات غير مؤكدة على قناة الربط المختارة."
+    }
+  }
 }

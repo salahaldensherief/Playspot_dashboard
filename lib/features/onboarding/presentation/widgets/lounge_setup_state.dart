@@ -1,7 +1,7 @@
 part of 'lounge_setup_view.dart';
 
 class _LoungeSetupViewState extends State<LoungeSetupView> {
-  final int _totalSteps = 9;
+  final int _totalSteps = OnboardingSteps.ids().length;
   bool _reviewConfirmed = false;
   bool _restoringFields = false;
 

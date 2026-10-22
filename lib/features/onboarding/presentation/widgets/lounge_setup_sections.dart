@@ -105,7 +105,18 @@ extension _LoungeSetupSections on _LoungeSetupViewState {
             _businessDocName = name;
           },
         );
+      case 8 when OnboardingSteps.bridgePreviewEnabled:
+        return BridgeReadinessStep(
+          answers: cubit.state.draft.integrationAnswers,
+          onChanged: (answers) {
+            _reviewConfirmed = false;
+            cubit.saveDraft(
+              cubit.state.draft.copyWith(integrationAnswers: answers),
+            );
+          },
+        );
       case 8:
+      case 9:
         return OnboardingReviewSummary(
           state: cubit.state,
           ownerName: admin?.name ?? '',
