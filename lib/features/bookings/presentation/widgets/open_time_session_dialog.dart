@@ -142,6 +142,57 @@ class _OpenTimeSessionDialogState extends State<OpenTimeSessionDialog> {
             AppStrings.openTimeDialogNotice,
             style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
           ),
+          const SizedBox(height: 10),
+          Text(
+            'openTimePolicyPreview'.tr(),
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'openTimePolicyMode'.tr(
+              namedArgs: {
+                'mode': 'openTimeMode_${room.openTimePricingMode}'.tr(),
+              },
+            ),
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+          if (room.openTimePricingMode == 'custom_hourly' &&
+              room.openTimeCustomHourlyRate != null)
+            Text(
+              'openTimeCustomRate'.tr(
+                namedArgs: {
+                  'rate': room.openTimeCustomHourlyRate!.toStringAsFixed(2),
+                },
+              ),
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          if (room.openTimePricingMode == 'hourly_plus_percentage')
+            Text(
+              'openTimeRateMultiplier'.tr(
+                namedArgs: {
+                  'multiplier': room.openTimePriceMultiplier.toStringAsFixed(2),
+                },
+              ),
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          Text(
+            'openTimePolicyMinutes'.tr(
+              namedArgs: {
+                'minimum': '${room.openTimeMinimumMinutes}',
+                'rounding': '${room.openTimeRoundingMinutes}',
+                'maximum': room.openTimeMaxMinutes?.toString() ?? '—',
+              },
+            ),
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'openTimePolicyAuthority'.tr(),
+            style: const TextStyle(color: AppColors.warning, fontSize: 12),
+          ),
         ],
       ),
     );

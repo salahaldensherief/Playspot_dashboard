@@ -73,22 +73,23 @@ class _RoomOccupancyActiveSectionState
                       ),
                     ],
                   ),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 6.w,
-                      vertical: 2.h,
+                  if (!isOpenTime)
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 6.w,
+                        vertical: 2.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.neonGreen.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                      child: AppText.body(
+                        '${activeBooking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
+                        fontSize: 11.sp,
+                        color: AppColors.neonGreen,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: AppColors.neonGreen.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(4.r),
-                    ),
-                    child: AppText.body(
-                      '${activeBooking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
-                      fontSize: 11.sp,
-                      color: AppColors.neonGreen,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
                 ],
               ),
               if (phone != null && phone.isNotEmpty) ...[
@@ -168,7 +169,7 @@ class _RoomOccupancyActiveSectionState
                       SizedBox(width: 6.w),
                       AppText.body(
                         isOpenTime
-                            ? AppStrings.duration
+                            ? 'cashier.elapsed'.tr()
                             : (isExpired
                                   ? AppStrings.timeExpired
                                   : AppStrings.remainingTime),

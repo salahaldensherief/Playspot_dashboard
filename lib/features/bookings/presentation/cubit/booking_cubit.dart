@@ -46,9 +46,6 @@ class BookingCubit extends Cubit<BookingState>
     _scheduler = BookingSessionScheduler(
       repository: repository,
       audioService: audioService,
-      onTransitionStatus: (id, status) {
-        if (!isClosed) changeBookingStatus(id, status);
-      },
     );
   }
 
@@ -115,7 +112,7 @@ class BookingCubit extends Cubit<BookingState>
           ),
         );
         _scheduler.checkBookingStartTimesAndNotify(bookings);
-        _scheduler.checkAndAutoTransitionExpiredSessions(bookings);
+        _scheduler.checkExpiredSessionsAndAlert(bookings);
       },
       onError: (error) {
         AppLogger.debug('🔴 [BOOKING_CUBIT] watchBookings Error: $error');

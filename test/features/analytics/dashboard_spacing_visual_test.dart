@@ -232,7 +232,7 @@ void main() {
         expect(find.text('VIP 01'), findsNothing);
         expect(find.text('35%'), findsNothing);
         expect(find.byType(Switch), findsNothing);
-        expect(find.text('غرفة 3'), findsOneWidget);
+        expect(find.text('غرفة 3'), findsWidgets);
         final output = Platform.environment['PLAYSPOT_SCREENSHOT_DIR'];
         if (output != null) {
           await tester.runAsync(() async {

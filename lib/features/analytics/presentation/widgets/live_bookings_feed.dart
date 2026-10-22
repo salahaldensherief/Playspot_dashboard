@@ -13,6 +13,8 @@ import '../dashboard_cubit.dart';
 import '../dashboard_state.dart';
 import '../../../bookings/domain/entities/booking.dart';
 import '../../../bookings/presentation/widgets/session_clock_host.dart';
+import '../../../rooms/presentation/cubit/room_cubit.dart';
+import '../../../rooms/presentation/cubit/room_state.dart';
 
 class LiveBookingsFeed extends StatelessWidget {
   const LiveBookingsFeed({super.key});
@@ -30,6 +32,7 @@ class LiveBookingsFeed extends StatelessWidget {
             live,
             loungeId: context.read<BookingCubit>().watchedEntityId,
           );
+          final roomState = context.watch<RoomCubit?>()?.state;
           return Container(
             decoration: OperationsTokens.panel,
             padding: const EdgeInsets.all(OperationsTokens.padding),
@@ -70,6 +73,8 @@ class LiveBookingsFeed extends StatelessWidget {
                 ] else
                   LiveSessionsOperationsBoard(
                     bookings: bookings,
+                    rooms: roomState?.rooms ?? const [],
+                    roomDataFresh: roomState?.status == RoomStatus.success,
                     onShowDetails: (booking) =>
                         StationControlDrawer.show(context, booking: booking),
                   ),
