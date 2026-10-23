@@ -12,11 +12,13 @@ import 'session_ticker.dart';
 class StationOverviewGrid extends StatefulWidget {
   final List<StationOperationalState> stations;
   final ValueChanged<Booking> onManage;
+  final bool showHeader;
 
   const StationOverviewGrid({
     super.key,
     required this.stations,
     required this.onManage,
+    this.showHeader = true,
   });
 
   @override
@@ -41,76 +43,165 @@ class _StationOverviewGridState extends State<StationOverviewGrid> {
       return true;
     }).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'stationOverview'.tr(),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
+    final availableCount = widget.stations
+        .where((station) => station.canClaimAvailable)
+        .length;
+    final activeCount = widget.stations
+        .where((station) => station.active != null)
+        .length;
+    final attentionCount = widget.stations
+        .where((station) => station.needsAttention)
+        .length;
+
+    return Container(
+      padding: widget.showHeader ? const EdgeInsets.all(16) : EdgeInsets.zero,
+      decoration: widget.showHeader
+          ? BoxDecoration(
+              color: AppColors.cardBackground,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.borderDefault),
+            )
+          : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (widget.showHeader) ...[
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.grid_view_rounded,
+                    size: 19,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'stationOverview'.tr(),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'stationAuthorityNotice'.tr(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+          ],
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _StationMetricChip(
+                label: 'stationFilter_all'.tr(),
+                value: widget.stations.length,
+                color: AppColors.primary,
+              ),
+              _StationMetricChip(
+                label: 'stationFilter_available'.tr(),
+                value: availableCount,
+                color: AppColors.success,
+              ),
+              _StationMetricChip(
+                label: 'room_occupied'.tr(),
+                value: activeCount,
+                color: AppColors.neonBlue,
+              ),
+              _StationMetricChip(
+                label: 'stationFilter_attention'.tr(),
+                value: attentionCount,
+                color: AppColors.warning,
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'stationAuthorityNotice'.tr(),
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            SizedBox(
-              width: 240,
-              child: TextField(
-                key: const ValueKey('station_search'),
-                onChanged: (value) => setState(() => _query = value.trim()),
-                decoration: InputDecoration(
-                  isDense: true,
-                  prefixIcon: const Icon(Icons.search),
-                  labelText: 'stationSearch'.tr(),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SizedBox(
+                width: 260,
+                child: TextField(
+                  key: const ValueKey('station_search'),
+                  onChanged: (value) => setState(() => _query = value.trim()),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    filled: true,
+                    fillColor: AppColors.mutedBackground,
+                    prefixIcon: const Icon(Icons.search, size: 19),
+                    hintText: 'stationSearch'.tr(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
                 ),
               ),
-            ),
-            for (final filter in ['all', 'available', 'attention'])
-              ChoiceChip(
-                label: Text('stationFilter_$filter'.tr()),
-                selected: _filter == filter,
-                onSelected: (_) => setState(() => _filter = filter),
-              ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (stations.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              'stationNoMatches'.tr(),
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-          )
-        else
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final width = constraints.maxWidth;
-              final columns = (width / 210).floor().clamp(1, 6);
-              final cardWidth = (width - (columns - 1) * 8) / columns;
-              return Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final station in stations)
-                    SizedBox(
-                      width: cardWidth,
-                      child: _card(context, station, now),
-                    ),
-                ],
-              );
-            },
+              for (final filter in ['all', 'available', 'attention'])
+                ChoiceChip(
+                  label: Text('stationFilter_$filter'.tr()),
+                  selected: _filter == filter,
+                  onSelected: (_) => setState(() => _filter = filter),
+                ),
+            ],
           ),
-      ],
+          const SizedBox(height: 14),
+          if (stations.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'stationNoMatches'.tr(),
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            )
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                final availableColumns = (width / 230).floor().clamp(1, 5);
+                final columns = stations.length <= 6 && availableColumns >= 3
+                    ? 3
+                    : availableColumns;
+                final cardWidth = (width - (columns - 1) * 10) / columns;
+                return Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    for (final station in stations)
+                      SizedBox(
+                        width: cardWidth,
+                        child: _card(context, station, now),
+                      ),
+                  ],
+                );
+              },
+            ),
+        ],
+      ),
     );
   }
 
@@ -166,11 +257,11 @@ class _StationOverviewGridState extends State<StationOverviewGrid> {
       label:
           '${room.nameAr.isNotEmpty ? room.nameAr : room.nameEn}, ${status.tr()}',
       child: Material(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(10),
+        color: AppColors.mutedBackground.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(12),
         child: InkWell(
           key: ValueKey('station_${room.id}'),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           onTap: () {
             if (station.activeBookingCount > 1 || !station.roomDataFresh) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -202,25 +293,38 @@ class _StationOverviewGridState extends State<StationOverviewGrid> {
             }
           },
           child: Container(
-            constraints: const BoxConstraints(minHeight: 148),
-            padding: const EdgeInsets.all(12),
+            constraints: const BoxConstraints(minHeight: 170),
+            padding: const EdgeInsets.fromLTRB(13, 12, 13, 11),
             decoration: BoxDecoration(
-              border: Border.all(color: color.withValues(alpha: 0.55)),
-              borderRadius: BorderRadius.circular(10),
+              border: Border(
+                top: BorderSide(color: color.withValues(alpha: 0.9), width: 2),
+                left: const BorderSide(color: AppColors.borderDefault),
+                right: const BorderSide(color: AppColors.borderDefault),
+                bottom: const BorderSide(color: AppColors.borderDefault),
+              ),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(
-                      room.resourceType == 'pc'
-                          ? Icons.computer
-                          : Icons.sports_esports,
-                      color: color,
-                      size: 18,
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        room.resourceType == 'pc'
+                            ? Icons.computer_rounded
+                            : Icons.sports_esports_rounded,
+                        color: color,
+                        size: 17,
+                      ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 9),
                     Expanded(
                       child: Text(
                         context.locale.languageCode == 'ar' &&
@@ -239,61 +343,45 @@ class _StationOverviewGridState extends State<StationOverviewGrid> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${room.resourceType.toUpperCase()} · ${status.tr()}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: color, fontSize: 12),
-                ),
+                const SizedBox(height: 9),
+                _StationStatusChip(label: status.tr(), color: color),
                 if (active != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    active.userName ?? 'anonymous'.tr(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.textSecondary),
-                  ),
+                  const SizedBox(height: 9),
+                  _StationDetailLine(text: active.userName ?? 'anonymous'.tr()),
                   if (duration != null)
-                    Text(
-                      '${active.isOpenEnded ? 'cashier.elapsed'.tr() : 'cashier.remaining'.tr()}: ${duration.inMinutes.abs()}m',
-                      style: const TextStyle(color: AppColors.textSecondary),
+                    _StationDetailLine(
+                      text:
+                          '${active.isOpenEnded ? 'cashier.elapsed'.tr() : 'cashier.remaining'.tr()}: ${duration.inMinutes.abs()}m',
                     ),
                   if (active.isOpenEnded)
-                    Text(
-                      'stationFinalBillPending'.tr(),
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    )
+                    _StationDetailLine(text: 'stationFinalBillPending'.tr())
                   else if (active.paymentStatus != PaymentStatus.paid)
-                    Text(
-                      'stationPaymentDue'.tr(),
-                      style: const TextStyle(color: AppColors.warning),
+                    _StationDetailLine(
+                      text: 'stationPaymentDue'.tr(),
+                      color: AppColors.warning,
                     ),
                 ],
                 if (pending != null)
-                  Text(
-                    'stationAwaitingConfirmation'.tr(),
-                    style: const TextStyle(color: AppColors.warning),
+                  _StationDetailLine(
+                    text: 'stationAwaitingConfirmation'.tr(),
+                    color: AppColors.warning,
                   ),
                 if (station.attentionRequests > 0)
-                  Text(
-                    'stationRequests'.tr(
+                  _StationDetailLine(
+                    text: 'stationRequests'.tr(
                       namedArgs: {'count': '${station.attentionRequests}'},
                     ),
-                    style: const TextStyle(color: AppColors.warning),
+                    color: AppColors.warning,
                   ),
                 if (nextAt != null)
-                  Text(
-                    'stationNextBooking'.tr(
+                  _StationDetailLine(
+                    text: 'stationNextBooking'.tr(
                       namedArgs: {
                         'time': MaterialLocalizations.of(
                           context,
                         ).formatTimeOfDay(TimeOfDay.fromDateTime(nextAt)),
                       },
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
               ],
             ),
@@ -302,4 +390,89 @@ class _StationOverviewGridState extends State<StationOverviewGrid> {
       ),
     );
   }
+}
+
+class _StationMetricChip extends StatelessWidget {
+  final String label;
+  final int value;
+  final Color color;
+
+  const _StationMetricChip({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+    decoration: BoxDecoration(
+      color: AppColors.mutedBackground,
+      borderRadius: BorderRadius.circular(9),
+      border: Border.all(color: AppColors.borderDefault),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 7),
+        Text(
+          '$value',
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+        ),
+      ],
+    ),
+  );
+}
+
+class _StationStatusChip extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _StationStatusChip({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),
+    ),
+  );
+}
+
+class _StationDetailLine extends StatelessWidget {
+  final String text;
+  final Color color;
+
+  const _StationDetailLine({
+    required this.text,
+    this.color = AppColors.textSecondary,
+  });
+
+  @override
+  Widget build(BuildContext context) => Text(
+    text,
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    style: TextStyle(color: color),
+  );
 }
