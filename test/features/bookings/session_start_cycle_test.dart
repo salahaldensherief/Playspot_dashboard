@@ -220,9 +220,7 @@ void main() {
       when(
         () => bookings.stream,
       ).thenAnswer((_) => const Stream<BookingState>.empty());
-      when(
-        () => bookings.completeOpenTimeSession('expired-open'),
-      ).thenAnswer(
+      when(() => bookings.completeOpenTimeSession('expired-open')).thenAnswer(
         (_) async => {
           'success': true,
           'booking_id': 'expired-open',
@@ -280,9 +278,7 @@ void main() {
       await tester.tap(find.text('confirm'.tr()));
       await tester.pumpAndSettle();
 
-      verify(
-        () => bookings.completeOpenTimeSession('expired-open'),
-      ).called(1);
+      verify(() => bookings.completeOpenTimeSession('expired-open')).called(1);
       verifyNever(
         () => bookings.updateBookingStatus(
           'expired-open',
