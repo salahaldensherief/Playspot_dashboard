@@ -296,12 +296,7 @@ class _StationOverviewGridState extends State<StationOverviewGrid> {
             constraints: const BoxConstraints(minHeight: 170),
             padding: const EdgeInsets.fromLTRB(13, 12, 13, 11),
             decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: color.withValues(alpha: 0.9), width: 2),
-                left: const BorderSide(color: AppColors.borderDefault),
-                right: const BorderSide(color: AppColors.borderDefault),
-                bottom: const BorderSide(color: AppColors.borderDefault),
-              ),
+              border: Border.all(color: AppColors.borderDefault),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
