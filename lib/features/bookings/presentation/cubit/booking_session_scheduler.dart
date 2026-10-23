@@ -4,24 +4,22 @@ import 'package:play_spot_dashboard/core/audio/audio_service.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/repositories/booking_repository.dart';
 
-/// Handles background timers, automatic session transitions, and audible start-time alerts for bookings.
+/// Handles local cashier alerts. Session completion must use the server's
+/// authoritative close RPC, never a generic status transition from a timer.
 class BookingSessionScheduler {
   final BookingRepository repository;
   final AudioService audioService;
-  final void Function(String bookingId, BookingStatus newStatus)
-  onTransitionStatus;
-
   final DateTime Function() _clock;
   List<Booking> _bookings = const [];
   bool _autoCancelInFlight = false;
   bool _disposed = false;
   Timer? _periodicTimer;
   final Set<String> _alertedStartBookingIds = {};
+  final Set<String> _alertedExpiredBookingIds = {};
 
   BookingSessionScheduler({
     required this.repository,
     required this.audioService,
-    required this.onTransitionStatus,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
 
@@ -33,6 +31,7 @@ class BookingSessionScheduler {
 
   void resetAlerts() {
     _alertedStartBookingIds.clear();
+    _alertedExpiredBookingIds.clear();
     _bookings = const [];
   }
 
@@ -97,7 +96,7 @@ class BookingSessionScheduler {
     }
   }
 
-  void checkAndAutoTransitionExpiredSessions(List<Booking> bookings) {
+  void checkExpiredSessionsAndAlert(List<Booking> bookings) {
     if (_disposed) return;
     final expiredInProgress = bookings.where((b) {
       return b.status == BookingStatus.inProgress &&
@@ -105,10 +104,8 @@ class BookingSessionScheduler {
     }).toList();
 
     for (final booking in expiredInProgress) {
-      AppLogger.debug(
-        '🔄 [BookingSessionScheduler] Auto-transitioning expired session ${booking.id} to completed...',
-      );
-      onTransitionStatus(booking.id, BookingStatus.completed);
+      if (!_alertedExpiredBookingIds.add(booking.id)) continue;
+      unawaited(audioService.playNotificationSound());
     }
   }
 
@@ -117,7 +114,7 @@ class BookingSessionScheduler {
     _periodicTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       triggerAutoCancelExpired();
       checkBookingStartTimesAndNotify(_bookings);
-      checkAndAutoTransitionExpiredSessions(_bookings);
+      checkExpiredSessionsAndAlert(_bookings);
     });
   }
 
@@ -127,5 +124,6 @@ class BookingSessionScheduler {
     _periodicTimer?.cancel();
     _periodicTimer = null;
     _alertedStartBookingIds.clear();
+    _alertedExpiredBookingIds.clear();
   }
 }

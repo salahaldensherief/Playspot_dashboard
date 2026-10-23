@@ -37,7 +37,6 @@ void main() {
     final scheduler = BookingSessionScheduler(
       repository: repository,
       audioService: audio,
-      onTransitionStatus: (_, _) {},
       clock: () => now,
     );
     addTearDown(scheduler.dispose);
@@ -50,5 +49,35 @@ void main() {
     await tester.pump(const Duration(seconds: 30));
     verifyNever(() => audio.playUrgentAlertSound());
     scheduler.dispose();
+  });
+
+  test('expired active session alerts once without changing its status', () {
+    final repository = _Repository(), audio = _Audio();
+    when(() => audio.playNotificationSound()).thenAnswer((_) async {});
+    final now = DateTime(2030, 1, 10, 16);
+    final booking = Booking(
+      id: 'expired',
+      userId: 'customer',
+      loungeId: 'branch',
+      roomId: 'room',
+      date: now,
+      startTime: '14:00',
+      endTime: '15:00',
+      status: BookingStatus.inProgress,
+      paymentStatus: PaymentStatus.paid,
+      totalPrice: 100,
+    );
+    final scheduler = BookingSessionScheduler(
+      repository: repository,
+      audioService: audio,
+      clock: () => now,
+    );
+    addTearDown(scheduler.dispose);
+    scheduler.checkExpiredSessionsAndAlert([booking]);
+    scheduler.checkExpiredSessionsAndAlert([booking]);
+    verify(() => audio.playNotificationSound()).called(1);
+    verifyNever(
+      () => repository.updateBookingStatus('expired', BookingStatus.completed),
+    );
   });
 }
