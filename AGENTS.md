@@ -37,6 +37,7 @@ Read this file before changing code. It is the single agent guidance for this Fl
 
 ## Dashboard UI and accessibility
 
+- The current `dev` Dashboard presentation is the approved baseline. The user rejected the station overview and live operations redesign proposed in Dashboard PR #75; it was closed without merge. Preserve the existing presentation unless a new design is reviewed and accepted. Keep functional fixes separate from visual redesigns.
 - Use `AppStrings` and the translation files for user-facing text. Keep Arabic and English, RTL and LTR, and locale changes working. Use directional layout values where direction matters.
 - Reuse shared buttons, text, tables, states, and design tokens when they fit the same interaction. Extract a component when it represents the same reusable pattern; do not centralize unrelated feature UI solely because it looks similar.
 - Build responsive layouts from available constraints and test narrow widths and enlarged text. Avoid unbounded constraints, overflow, unnecessary whole-screen rebuilds, and perpetual animations.
@@ -51,3 +52,4 @@ Read this file before changing code. It is the single agent guidance for this Fl
 - Map external errors at the data boundary into the project's failure contract. Keep secrets and personal data out of logs. Declare directly imported packages in `pubspec.yaml` and explain dependency overrides.
 - For a bug: reproduce -> identify root cause -> fix in the owning layer -> add a regression test -> verify. For new behavior, test the important business invariant and authorization/concurrency where relevant. Unit, widget, integration, browser, and RLS tests are all allowed; do not prohibit network-backed tests when an isolated environment exists.
 - Run `dart format --output=none --set-exit-if-changed lib test`, `flutter analyze --no-fatal-infos`, and relevant `flutter test` suites when available. Report exactly what ran and what could not run. Keep changes in a focused PR and wait for CI before claiming verification.
+- After each scoped change, update the relevant handoff or evidence document with the current commit, actual checks, and remaining blockers. Update this guide whenever the verified product direction changes.
