@@ -31,6 +31,7 @@ void main() async {
           initiallyFresh: Uri.base.queryParameters['fresh'] != 'false',
           initiallyConflicted: Uri.base.queryParameters['conflict'] == 'true',
           initiallyPermitted: Uri.base.queryParameters['permitted'] != 'false',
+          variedTypes: Uri.base.queryParameters['types'] == 'varied',
         ),
       ),
     ),
@@ -42,12 +43,14 @@ class _Harness extends StatefulWidget {
   final bool initiallyFresh;
   final bool initiallyConflicted;
   final bool initiallyPermitted;
+  final bool variedTypes;
 
   const _Harness({
     required this.stationCount,
     required this.initiallyFresh,
     required this.initiallyConflicted,
     required this.initiallyPermitted,
+    required this.variedTypes,
   });
 
   @override
@@ -84,16 +87,35 @@ class _HarnessState extends State<_Harness> {
     final now = DateTime.now();
     _rooms = List.generate(widget.stationCount, (index) {
       final number = index + 1;
+      final kind = widget.variedTypes ? index % 5 : index % 2;
+      final namesEn = widget.variedTypes
+          ? ['Room', 'PC', 'PlayStation', 'Billiards', 'Ping pong']
+          : ['PC', 'PlayStation'];
+      final namesAr = widget.variedTypes
+          ? ['غرفة', 'كمبيوتر', 'بلايستيشن', 'بلياردو', 'بنج بونج']
+          : ['كمبيوتر', 'بلايستيشن'];
       return RoomEntity(
         id: 'station-$number',
         loungeId: 'fixture-lounge',
-        nameAr: index.isEven ? 'كمبيوتر $number' : 'بلايستيشن $number',
-        nameEn: index.isEven ? 'PC $number' : 'PlayStation $number',
+        nameAr: '${namesAr[kind]} $number',
+        nameEn: '${namesEn[kind]} $number',
+        spaceType: widget.variedTypes && kind == 0
+            ? 'standard_room'
+            : 'open_area',
+        activityNames: widget.variedTypes && kind == 3
+            ? const ['Billiards']
+            : widget.variedTypes && kind == 4
+            ? const ['Table Tennis']
+            : const [],
         isAvailable: index % 4 == 0,
         images: const [],
         featuresAr: const [],
         featuresEn: const [],
-        resourceType: index.isEven ? 'pc' : 'playstation',
+        resourceType: widget.variedTypes
+            ? ['console', 'pc', 'console', 'table_sport', 'table_sport'][kind]
+            : index.isEven
+            ? 'pc'
+            : 'playstation',
         status: index % 4 == 0
             ? RoomStatusEnum.available
             : RoomStatusEnum.occupied,
