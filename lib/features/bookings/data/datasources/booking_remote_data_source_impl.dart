@@ -472,9 +472,13 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       },
     );
 
-    return response is Map
-        ? Map<String, dynamic>.from(response)
-        : throw const FormatException('Invalid session completion response');
+    if (response is! Map ||
+        response['success'] != true ||
+        response['booking_id'] != bookingId ||
+        response['status'] != 'completed') {
+      throw const FormatException('Invalid session completion response');
+    }
+    return Map<String, dynamic>.from(response);
   }
 
   @override
