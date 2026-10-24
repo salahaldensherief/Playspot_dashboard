@@ -456,7 +456,15 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       },
     );
 
-    if (response is! Map || response['success'] != true) {
+    if (response is! Map ||
+        response['success'] != true ||
+        response['room_id'] != roomId ||
+        response['booking_id'] is! String ||
+        (response['booking_id'] as String).isEmpty ||
+        response['status'] != 'in_progress' ||
+        response['is_open_time'] != true ||
+        response['started_at'] is! String ||
+        DateTime.tryParse(response['started_at'] as String) == null) {
       throw const FormatException('Invalid open-time start response');
     }
     return Map<String, dynamic>.from(response);
