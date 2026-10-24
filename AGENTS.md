@@ -53,3 +53,7 @@ Read this file before changing code. It is the single agent guidance for this Fl
 - For a bug: reproduce -> identify root cause -> fix in the owning layer -> add a regression test -> verify. For new behavior, test the important business invariant and authorization/concurrency where relevant. Unit, widget, integration, browser, and RLS tests are all allowed; do not prohibit network-backed tests when an isolated environment exists.
 - Run `dart format --output=none --set-exit-if-changed lib test`, `flutter analyze --no-fatal-infos`, and relevant `flutter test` suites when available. Report exactly what ran and what could not run. Keep changes in a focused PR and wait for CI before claiming verification.
 - After each scoped change, update the relevant handoff or evidence document with the current commit, actual checks, and remaining blockers. Update this guide whenever the verified product direction changes.
+
+## REQUIRED FIRST READ — CROSS-STACK SYSTEM ATLAS
+
+Before a feature, UI/UX, data-flow, pricing, session, offline, security, or integration change, read **[docs/PLAYSPOT_SYSTEM_ATLAS.md](docs/PLAYSPOT_SYSTEM_ATLAS.md)**, then verify current `dev`, overlapping PRs, and the owning source/tests. The atlas is a dated map, not evidence that a Draft PR is merged or a database function is deployed. This `AGENTS.md` remains authoritative for repository-specific engineering rules.
