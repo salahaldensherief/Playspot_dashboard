@@ -500,6 +500,8 @@
   "deficit": "Deficit",
   "surplus": "Surplus",
   "permissions": "Permissions",
+  "staff_custom_permissions": "Employee permissions",
+  "staff_permissions_empty": "No permissions are available for this employee.",
   "role_manager": "Lounge Manager",
   "role_cashier": "Cashier",
   "role_staff": "Staff",

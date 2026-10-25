@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -11,6 +12,10 @@ import 'package:play_spot_dashboard/features/staff/domain/entities/staff_entity.
 import '../../../../../art_core/widgets/app_avatar.dart';
 import '../../../../../art_core/widgets/app_cached_image.dart';
 import '../../../../../art_core/widgets/app_dialog.dart';
+import '../../../../../core/di/di.dart';
+import '../../../../auth/presentation/login/login_cubit.dart';
+import '../../../../permissions/domain/repositories/permissions_repository.dart';
+import 'staff_permissions_dialog.dart';
 
 class StaffDetailsDialog extends StatelessWidget {
   final StaffEntity staff;
@@ -25,6 +30,27 @@ class StaffDetailsDialog extends StatelessWidget {
       icon: Icons.badge_outlined,
       width: 600.w,
       actions: [
+        if ((context.read<LoginCubit>().state.user?.isOwner == true ||
+                context.read<LoginCubit>().state.user?.isSuperAdmin == true) &&
+            context.read<LoginCubit>().state.user?.id != staff.id &&
+            ![
+              'owner',
+              'lounge_owner',
+              'super_admin',
+              'superadmin',
+            ].contains(staff.role.toLowerCase().trim()))
+          AppButton(
+            text: 'staff_custom_permissions'.tr(),
+            icon: Icons.admin_panel_settings_outlined,
+            onPressed: () => showDialog<void>(
+              context: context,
+              useRootNavigator: false,
+              builder: (_) => StaffPermissionsDialog(
+                staff: staff,
+                repository: sl<PermissionsRepository>(),
+              ),
+            ),
+          ),
         AppButton(
           text: AppStrings.close,
           variant: AppButtonVariant.outlined,

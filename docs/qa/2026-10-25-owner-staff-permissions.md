@@ -1,0 +1,9 @@
+# Owner-controlled staff permissions — 25 October 2026
+
+Status: Draft, targeting `dev`. This Dashboard change depends on Mobile/backend Draft PR #85. Neither change has been merged or deployed.
+
+The existing Dashboard edits lounge-wide role templates but has no per-employee control. The existing exact-schema backend permits direct manager writes to permission overrides, so hiding a switch would not fix self-escalation. Backend PR #85 supplies an owner-only `set_staff_permission` RPC and a protected audit trail. This Dashboard branch adds a separate employee-permission dialog to the existing staff detail view, visible only to an owner/super-admin for another non-owner employee. It reads effective permissions with `get_staff_permissions`, sends changes through the new RPC, accepts only a response matching lounge, employee, permission and value, and reloads server state after success. Errors leave the existing value visible. Arabic and English copy is included; no broader Dashboard design changed.
+
+Local validation: `flutter analyze --no-pub --no-fatal-infos` passed with no issues; `flutter test --no-pub` passed **1,331 tests, 2 skipped**; the new permission RPC contract suite passed **3/3**; strict Dart formatting and `git diff --check` passed. The browser has not been tested against a signed-in staging Supabase instance. The backend PR #85 exact-schema authorization suite passed 3/3 local runs and its Flutter CI/formatting checks succeeded on implementation head `be3ffaf140c83091aa602afc6dcaec8eaed3faca`.
+
+Release gates: deploy and verify backend PR #85 before this client, assess any older direct-table permission writers, run a signed-in owner/manager cross-lounge browser test, and review the remaining permission catalogue and approval requirements. Do not merge or deploy without the owner's explicit approval.
