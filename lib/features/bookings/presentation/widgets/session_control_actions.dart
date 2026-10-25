@@ -11,6 +11,7 @@ import '../cubit/booking_cubit.dart';
 import '../../../analytics/presentation/dashboard_cubit.dart';
 import '../../../permissions/presentation/cubit/permissions_cubit.dart';
 import '../../../auth/presentation/login/login_cubit.dart';
+import '../../../shifts/presentation/shift_management/shift_cubit.dart';
 import '../../../../core/utils/permission_extension.dart';
 import 'session_time_builder.dart';
 import 'swap_room_dialog.dart';

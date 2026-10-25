@@ -258,6 +258,7 @@ class BookingCubit extends Cubit<BookingState>
       action: () => confirmCashPaymentUseCase(
         bookingId,
         shiftId: shiftId,
+        amount: amount,
         discountAmount: discountAmount,
         discountPercentage: discountPercentage,
         discountReason: discountReason,

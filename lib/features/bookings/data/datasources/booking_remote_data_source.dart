@@ -28,6 +28,7 @@ abstract class BookingRemoteDataSource {
   Future<void> confirmCashPayment(
     String bookingId, {
     String? shiftId,
+    double? amount,
     double? discountAmount,
     double? discountPercentage,
     String? discountReason,

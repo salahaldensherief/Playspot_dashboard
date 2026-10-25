@@ -19,6 +19,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/sessi
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_time_selector.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/station_control_drawer.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/swap_room_dialog.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 
 /// Interactive UI Card Widget for live active gaming sessions.
 /// Listens to global SessionTickerScope without running individual timers.
@@ -70,8 +71,9 @@ class _LiveSessionCardState extends State<LiveSessionCard> {
             : AppStrings.roomLabel,
         currentPrice: widget.booking.totalPrice,
         onApplyDiscount: (amount, percent, reason) {
-          context.read<BookingCubit>().confirmCashPayment(
+          return context.read<BookingCubit>().confirmCashPayment(
             widget.booking.id,
+            shiftId: context.read<ShiftCubit>().state.activeShift?.id,
             discountAmount: amount,
             discountPercentage: percent,
             discountReason: reason,

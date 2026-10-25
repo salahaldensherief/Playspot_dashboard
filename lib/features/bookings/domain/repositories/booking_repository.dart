@@ -30,6 +30,7 @@ abstract class BookingRepository {
   Future<Either<Failure, void>> confirmCashPayment(
     String bookingId, {
     String? shiftId,
+    double? amount,
     double? discountAmount,
     double? discountPercentage,
     String? discountReason,

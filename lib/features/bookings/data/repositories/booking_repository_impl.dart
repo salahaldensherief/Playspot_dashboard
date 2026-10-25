@@ -113,6 +113,7 @@ class BookingRepositoryImpl implements BookingRepository {
   Future<Either<Failure, void>> confirmCashPayment(
     String bookingId, {
     String? shiftId,
+    double? amount,
     double? discountAmount,
     double? discountPercentage,
     String? discountReason,
@@ -121,6 +122,7 @@ class BookingRepositoryImpl implements BookingRepository {
       await remoteDataSource.confirmCashPayment(
         bookingId,
         shiftId: shiftId,
+        amount: amount,
         discountAmount: discountAmount,
         discountPercentage: discountPercentage,
         discountReason: discountReason,
