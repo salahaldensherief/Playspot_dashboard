@@ -33,7 +33,10 @@ class _StaffPermissionsDialogState extends State<StaffPermissionsDialog> {
   }
 
   Future<void> _load() async {
-    final result = await widget.repository.getStaffPermissions(widget.staff.id);
+    final result = await widget.repository.getStaffPermissions(
+      widget.staff.id,
+      loungeId: widget.staff.loungeId,
+    );
     if (!mounted) return;
     result.fold(
       (failure) => setState(() {

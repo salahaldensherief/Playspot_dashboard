@@ -5,8 +5,9 @@ import '../entities/permission_item_entity.dart';
 
 abstract class PermissionsRepository {
   Future<Either<Failure, List<PermissionItemEntity>>> getStaffPermissions(
-    String staffId,
-  );
+    String staffId, {
+    required String loungeId,
+  });
   Future<Either<Failure, void>> setStaffPermission({
     required String loungeId,
     required String staffId,

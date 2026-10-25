@@ -10,13 +10,18 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
   PermissionsRemoteSourceImpl(this._supabase);
 
   @override
-  Future<List<PermissionItemModel>> getStaffPermissions(String staffId) async {
+  Future<List<PermissionItemModel>> getStaffPermissions(
+    String staffId, {
+    required String loungeId,
+  }) async {
     final response = await _supabase.rpc(
-      'get_staff_permissions',
-      params: {'p_target_user_id': staffId},
+      'get_lounge_staff_permissions',
+      params: {'p_lounge_id': loungeId, 'p_target_user_id': staffId},
     );
     if (response is! Map ||
         response['success'] != true ||
+        response['lounge_id'] != loungeId ||
+        response['target_user_id'] != staffId ||
         response['permissions'] is! List) {
       throw const FormatException('Invalid staff permissions response');
     }

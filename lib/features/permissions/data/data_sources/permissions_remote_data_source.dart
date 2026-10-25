@@ -2,7 +2,10 @@ import '../../../../core/utils/paginated_result.dart';
 import '../models/permission_item_model.dart';
 
 abstract class PermissionsRemoteSource {
-  Future<List<PermissionItemModel>> getStaffPermissions(String staffId);
+  Future<List<PermissionItemModel>> getStaffPermissions(
+    String staffId, {
+    required String loungeId,
+  });
   Future<void> setStaffPermission({
     required String loungeId,
     required String staffId,

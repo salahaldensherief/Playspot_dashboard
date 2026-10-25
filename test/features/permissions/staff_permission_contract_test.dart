@@ -17,6 +17,8 @@ void main() {
         return http.Response(
           jsonEncode({
             'success': true,
+            'lounge_id': 'lounge-a',
+            'target_user_id': 'staff-a',
             'permissions': [
               {'permission_key': 'billing_checkout', 'is_enabled': false},
             ],
@@ -29,11 +31,15 @@ void main() {
     );
     final permissions = await PermissionsRemoteSourceImpl(
       client,
-    ).getStaffPermissions('staff-a');
+    ).getStaffPermissions('staff-a', loungeId: 'lounge-a');
     expect(permissions.single.key, 'billing_checkout');
     expect(permissions.single.isEnabled, false);
-    expect(requests.single.url.path, '/rest/v1/rpc/get_staff_permissions');
+    expect(
+      requests.single.url.path,
+      '/rest/v1/rpc/get_lounge_staff_permissions',
+    );
     expect(jsonDecode(requests.single.body)['p_target_user_id'], 'staff-a');
+    expect(jsonDecode(requests.single.body)['p_lounge_id'], 'lounge-a');
     await client.dispose();
   });
 
