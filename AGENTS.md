@@ -70,3 +70,7 @@ The Draft Dashboard branch now detects deposit-required bookings in the manual v
 ## Draft owner staff permissions (25 October 2026)
 
 The existing staff detail view gains an owner-only per-employee permission dialog on a separate Draft branch. It depends on backend Draft PR #85's branch-scoped `get_lounge_staff_permissions`, `set_staff_permission` and server-side audit; the client only displays effective server permissions and confirms matching RPC responses. Keep this separate from the Dashboard cash-checkout PR #83, preserve the approved Dashboard design, and do not deploy the UI before the backend. See [staff permission evidence](docs/qa/2026-10-25-owner-staff-permissions.md).
+
+## Preview backend isolation (26 October 2026)
+
+The Vercel project builds a preview on `dev` pushes. Never put the production Supabase URL or anon key in Dart fallback values: a preview without explicit `--dart-define` values must fail closed. Verify a staging build's configured project reference before sharing its URL, and confirm real sign-in against that same isolated backend on both Dashboard and Mobile. See [preview isolation evidence](docs/qa/2026-10-26-dev-preview-safety.md).

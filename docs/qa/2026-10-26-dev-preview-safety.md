@@ -1,0 +1,5 @@
+# Dashboard preview backend isolation — 26 October 2026
+
+The Vercel `playspot-dashboard` project is linked to `salahaldensherief/Playspot_dashboard`. Read-only deployment inspection showed recent `dev` commits built as previews (`target: null`) and `main` commits built as production. Its listed Supabase environment variables target production, with no preview-targeted variable listed. The former Dart constants embedded the production Supabase URL and anon key as build fallbacks, so a `dev` preview could connect to production despite its preview deployment label.
+
+This change removes both fallbacks. Builds without explicit `SUPABASE_URL` and `SUPABASE_ANON_KEY` now fail closed at the existing dependency-injection guard. A usable staging preview requires an isolated backend and explicit build-time Dart defines, followed by a signed-in browser test. A successful Vercel build alone does not establish backend isolation or financial compatibility. This source change does not alter the Vercel project's production settings or any Supabase project.
