@@ -58,6 +58,8 @@ flutter build web --release \
 
 See `.env.example` for variable names. Flutter consumes these as dart defines.
 
+For a checked Windows launch against a named demo or development project, see [docs/LOCAL_DEVELOPMENT_LAUNCH.md](docs/LOCAL_DEVELOPMENT_LAUNCH.md). The PowerShell launcher validates the project reference and public key before starting Flutter.
+
 ## Local development
 
 ```bash
