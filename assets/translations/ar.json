@@ -1201,7 +1201,6 @@
   "bank_transfer_reference": "مرجع تحويل البنك أو المحفظة",
   "deposit_funds_holder": "الفلوس وصلت فين؟",
   "funds_at_lounge": "حساب الصالة",
-  "funds_at_platform": "حساب بلاي سبوت",
   "manual_booking_rejected": "تم رفض طلب الدفع اليدوي",
   "select_rejection_reason": "اختر سبب الرفض",
   "select_rejection_reason_required": "يرجى تحديد سبب الرفض أولاً",

@@ -566,7 +566,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         bookingId.isEmpty ||
         shiftId.isEmpty ||
         reference.isEmpty ||
-        !{'platform', 'lounge'}.contains(fundsHolder)) {
+        fundsHolder != 'lounge') {
       throw StateError('INVALID_DEPOSIT_VERIFICATION_REQUEST');
     }
     final requestKey = Uri.encodeComponent(

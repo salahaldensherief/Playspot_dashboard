@@ -47,7 +47,6 @@ class _ManualPaymentVerificationDialogState
   String? _contractError;
   String? _confirmationStatus;
   String? _serverStatus;
-  String _fundsHolder = 'lounge';
   final _evidenceReference = TextEditingController();
 
   List<String> get _rejectionReasons => [
@@ -252,7 +251,7 @@ class _ManualPaymentVerificationDialogState
       bookingId: widget.booking.id,
       shiftId: shift.id,
       evidenceReference: reference,
-      fundsHolder: _fundsHolder,
+      fundsHolder: 'lounge',
     );
     if (!mounted || !context.mounted) return;
     setState(() => _isSubmitting = false);
@@ -540,27 +539,7 @@ class _ManualPaymentVerificationDialogState
                 labelText: 'bank_transfer_reference'.tr(),
               ),
             ),
-            DropdownButtonFormField<String>(
-              initialValue: _fundsHolder,
-              decoration: InputDecoration(
-                labelText: 'deposit_funds_holder'.tr(),
-              ),
-              items: [
-                DropdownMenuItem(
-                  value: 'lounge',
-                  child: Text('funds_at_lounge'.tr()),
-                ),
-                DropdownMenuItem(
-                  value: 'platform',
-                  child: Text('funds_at_platform'.tr()),
-                ),
-              ],
-              onChanged: _isSubmitting
-                  ? null
-                  : (value) {
-                      if (value != null) setState(() => _fundsHolder = value);
-                    },
-            ),
+            _buildMetaTile('deposit_funds_holder'.tr(), 'funds_at_lounge'.tr()),
           ],
         ],
         if (_isRejecting) ...[

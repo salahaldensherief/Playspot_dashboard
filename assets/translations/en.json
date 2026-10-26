@@ -1206,7 +1206,6 @@
   "bank_transfer_reference": "Bank or wallet transaction reference",
   "deposit_funds_holder": "Where did the funds arrive?",
   "funds_at_lounge": "Lounge account",
-  "funds_at_platform": "PlaySpot account",
   "manual_booking_rejected": "Manual payment rejected",
   "select_rejection_reason": "Select Rejection Reason",
   "select_rejection_reason_required": "Please select a rejection reason",

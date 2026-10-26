@@ -100,7 +100,7 @@ void main() {
         bookingId: 'booking-a',
         shiftId: 'shift-a',
         evidenceReference: 'BANK-123',
-        fundsHolder: 'platform',
+        fundsHolder: 'lounge',
       ),
       throwsA(isA<FormatException>()),
     );
