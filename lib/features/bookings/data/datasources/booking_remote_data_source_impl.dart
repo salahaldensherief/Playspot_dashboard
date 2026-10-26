@@ -5,12 +5,18 @@ import 'package:play_spot_dashboard/features/bookings/data/models/booking_model.
 import 'package:play_spot_dashboard/features/bookings/domain/entities/customer_cancellation_summary.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'booking_remote_data_source.dart';
+import 'cash_checkout_operation_store.dart';
 
 class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   final SupabaseClient client;
+  final CashCheckoutOperationStore _cashOperations;
   late final BookingMutationHelper _mutationHelper;
 
-  BookingRemoteDataSourceImpl(this.client) {
+  BookingRemoteDataSourceImpl(
+    this.client, {
+    CashCheckoutOperationStore cashOperations =
+        const CashCheckoutOperationStore(),
+  }) : _cashOperations = cashOperations {
     _mutationHelper = BookingMutationHelper(
       client: client,
       consumeVoucher: consumeVoucherByCode,
@@ -231,30 +237,73 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   Future<void> confirmCashPayment(
     String bookingId, {
     String? shiftId,
+    double? amount,
     double? discountAmount,
     double? discountPercentage,
     String? discountReason,
   }) async {
+    final actorId = client.auth.currentUser?.id;
+    if (actorId == null || shiftId == null || shiftId.isEmpty) {
+      throw StateError('OWN_OPEN_SHIFT_REQUIRED');
+    }
     final fixedDiscount = discountAmount ?? 0;
     final percentageDiscount = discountPercentage ?? 0;
-    final hasDiscount = fixedDiscount > 0 || percentageDiscount > 0;
-
-    if (hasDiscount) {
-      await client.rpc(
-        'apply_booking_discount',
-        params: {
-          'p_booking_id': bookingId,
-          'p_discount_amount': fixedDiscount,
-          'p_discount_percentage': percentageDiscount,
-          'p_discount_reason': discountReason,
-        },
-      );
+    if (fixedDiscount > 0 && percentageDiscount > 0) {
+      throw ArgumentError('Specify one discount type');
     }
-
-    await client.rpc(
-      'complete_booking_payment',
-      params: {'p_booking_id': bookingId, 'p_payment_method': 'cash'},
+    if (fixedDiscount < 0 ||
+        percentageDiscount < 0 ||
+        !fixedDiscount.isFinite ||
+        !percentageDiscount.isFinite) {
+      throw ArgumentError('Invalid discount');
+    }
+    int? amountMinor;
+    if (amount != null) {
+      final minor = amount * 100;
+      if (!minor.isFinite ||
+          minor <= 0 ||
+          (minor - minor.round()).abs() > 0.000001) {
+        throw ArgumentError('Invalid cash amount');
+      }
+      amountMinor = minor.round();
+    }
+    final normalizedReason = discountReason?.trim();
+    final reason = normalizedReason == null || normalizedReason.isEmpty
+        ? null
+        : normalizedReason;
+    final requestKey = Uri.encodeComponent(
+      [
+        actorId,
+        bookingId,
+        shiftId,
+        amountMinor?.toString() ?? 'remaining',
+        fixedDiscount.toString(),
+        percentageDiscount.toString(),
+        reason ?? '',
+      ].join('|'),
     );
+    final operationId = await _cashOperations.getOrCreate(requestKey);
+    final response = await client.rpc(
+      'checkout_booking_cash_atomic',
+      params: {
+        'p_booking_id': bookingId,
+        'p_shift_id': shiftId,
+        'p_amount_minor': amountMinor,
+        'p_operation_id': operationId,
+        'p_discount_amount': fixedDiscount,
+        'p_discount_percentage': percentageDiscount,
+        'p_discount_reason': reason,
+      },
+    );
+    if (response is! Map ||
+        response['booking_id'] != bookingId ||
+        response['shift_id'] != shiftId ||
+        response['operation_id'] != operationId ||
+        response['shift_payment_id'] == null ||
+        (response['collected_minor'] is! num) ||
+        (response['collected_minor'] as num) <= 0) {
+      throw const FormatException('CASH_CHECKOUT_RECEIPT_UNCONFIRMED');
+    }
   }
 
   @override
@@ -502,6 +551,54 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       'approve_manual_booking',
       params: {'p_booking_id': bookingId, 'p_action_by': actionBy},
     );
+  }
+
+  @override
+  Future<void> verifyManualDeposit({
+    required String bookingId,
+    required String shiftId,
+    required String evidenceReference,
+    required String fundsHolder,
+  }) async {
+    final actorId = client.auth.currentUser?.id;
+    final reference = evidenceReference.trim();
+    if (actorId == null ||
+        bookingId.isEmpty ||
+        shiftId.isEmpty ||
+        reference.isEmpty ||
+        fundsHolder != 'lounge') {
+      throw StateError('INVALID_DEPOSIT_VERIFICATION_REQUEST');
+    }
+    final requestKey = Uri.encodeComponent(
+      [
+        'verified-deposit',
+        actorId,
+        bookingId,
+        shiftId,
+        reference,
+        fundsHolder,
+      ].join('|'),
+    );
+    final operationId = await _cashOperations.getOrCreate(requestKey);
+    final response = await client.rpc(
+      'verify_booking_deposit_transfer',
+      params: {
+        'p_booking_id': bookingId,
+        'p_shift_id': shiftId,
+        'p_operation_id': operationId,
+        'p_evidence_reference': reference,
+        'p_funds_holder': fundsHolder,
+      },
+    );
+    if (response is! Map ||
+        response['booking_id'] != bookingId ||
+        response['shift_id'] != shiftId ||
+        response['operation_id'] != operationId ||
+        response['movement_id'] == null ||
+        (response['collected_minor'] is! num) ||
+        (response['collected_minor'] as num) <= 0) {
+      throw const FormatException('DEPOSIT_RECEIPT_UNCONFIRMED');
+    }
   }
 
   @override

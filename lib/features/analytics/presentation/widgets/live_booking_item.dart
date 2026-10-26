@@ -8,6 +8,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 
 class LiveBookingItem extends StatelessWidget {
   final Booking booking;
@@ -96,8 +97,10 @@ class LiveBookingItem extends StatelessWidget {
         booking.paymentStatus == PaymentStatus.unpaid) {
       return AppButton(
         text: AppStrings.confirmCash,
-        onPressed: () =>
-            context.read<BookingCubit>().confirmCashPayment(booking.id),
+        onPressed: () => context.read<BookingCubit>().confirmCashPayment(
+          booking.id,
+          shiftId: context.read<ShiftCubit>().state.activeShift?.id,
+        ),
         variant: AppButtonVariant.primary,
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.onPrimary,

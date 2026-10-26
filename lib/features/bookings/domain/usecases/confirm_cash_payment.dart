@@ -10,6 +10,7 @@ class ConfirmCashPayment {
   Future<Either<Failure, void>> call(
     String bookingId, {
     String? shiftId,
+    double? amount,
     double? discountAmount,
     double? discountPercentage,
     String? discountReason,
@@ -17,6 +18,7 @@ class ConfirmCashPayment {
     return await repository.confirmCashPayment(
       bookingId,
       shiftId: shiftId,
+      amount: amount,
       discountAmount: discountAmount,
       discountPercentage: discountPercentage,
       discountReason: discountReason,

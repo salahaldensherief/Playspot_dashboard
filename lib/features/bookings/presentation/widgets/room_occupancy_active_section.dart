@@ -208,12 +208,7 @@ class _RoomOccupancyActiveSectionState
                 variant: AppButtonVariant.outlined,
                 height: 32.h,
                 onPressed: () {
-                  showDialog(
-                    context: context,
-                    useRootNavigator: false,
-                    builder: (_) =>
-                        BookingDetailsDialog(booking: activeBooking),
-                  );
+                  BookingDetailsDialog.show(context, booking: activeBooking);
                 },
               ),
             ),
