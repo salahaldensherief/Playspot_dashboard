@@ -10,6 +10,51 @@ class PermissionsRemoteSourceImpl implements PermissionsRemoteSource {
   PermissionsRemoteSourceImpl(this._supabase);
 
   @override
+  Future<List<PermissionItemModel>> getStaffPermissions(
+    String staffId, {
+    required String loungeId,
+  }) async {
+    final response = await _supabase.rpc(
+      'get_lounge_staff_permissions',
+      params: {'p_lounge_id': loungeId, 'p_target_user_id': staffId},
+    );
+    if (response is! Map ||
+        response['success'] != true ||
+        response['lounge_id'] != loungeId ||
+        response['target_user_id'] != staffId ||
+        response['permissions'] is! List) {
+      throw const FormatException('Invalid staff permissions response');
+    }
+    return _parsePermissions(response['permissions']);
+  }
+
+  @override
+  Future<void> setStaffPermission({
+    required String loungeId,
+    required String staffId,
+    required String permissionKey,
+    required bool isEnabled,
+  }) async {
+    final response = await _supabase.rpc(
+      'set_staff_permission',
+      params: {
+        'p_lounge_id': loungeId,
+        'p_target_user_id': staffId,
+        'p_permission_key': permissionKey,
+        'p_is_enabled': isEnabled,
+      },
+    );
+    if (response is! Map ||
+        response['success'] != true ||
+        response['lounge_id'] != loungeId ||
+        response['target_user_id'] != staffId ||
+        response['permission_key'] != permissionKey ||
+        response['is_enabled'] != isEnabled) {
+      throw const FormatException('Invalid staff permission receipt');
+    }
+  }
+
+  @override
   Future<List<PermissionItemModel>> getUserPermissions({
     String? loungeId,
   }) async {
