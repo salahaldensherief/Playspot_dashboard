@@ -1,5 +1,7 @@
 # PlaySpot Dashboard: agent engineering rules
 
+For Windows local runs, use `scripts/launch_local.ps1` and `docs/LOCAL_DEVELOPMENT_LAUNCH.md`. It rejects production endpoints and distinguishes the limited demo backend from a separately prepared development backend. A working login page or Auth token on the old demo schema does not validate the canonical financial contract.
+
 Read this file before changing code. It is the single agent guidance for this Flutter Web dashboard. User instructions and verified product requirements take precedence. The companion Mobile app shares server and domain contracts; its presentation can differ.
 
 ## Understand the change
