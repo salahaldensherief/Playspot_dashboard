@@ -15,7 +15,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 class RoomDiscountDialog extends StatefulWidget {
   final String roomName;
   final double currentPrice;
-  final Function(
+  final Future<bool> Function(
     double discountAmount,
     double discountPercentage,
     String reason,
@@ -38,6 +38,7 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
   bool _isPercentage = true;
   final _valueController = TextEditingController();
   final _reasonController = TextEditingController();
+  bool _submitting = false;
 
   @override
   void dispose() {
@@ -72,7 +73,8 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
   double get _finalPrice => (widget.currentPrice - _calculatedDiscountAmount)
       .clamp(0.0, double.infinity);
 
-  void _handleConfirm() {
+  Future<void> _handleConfirm() async {
+    if (_submitting) return;
     final reason = _reasonController.text.trim();
     if (_inputValue <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -94,12 +96,30 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
       return;
     }
 
-    widget.onApplyDiscount(
-      _calculatedDiscountAmount,
-      _calculatedDiscountPercentage,
-      reason,
-    );
-    Navigator.of(context).pop();
+    setState(() => _submitting = true);
+    try {
+      final confirmed = await widget.onApplyDiscount(
+        _isPercentage ? 0 : _calculatedDiscountAmount,
+        _isPercentage ? _calculatedDiscountPercentage : 0,
+        reason,
+      );
+      if (!mounted) return;
+      if (confirmed) {
+        Navigator.of(context).pop();
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(AppStrings.actionFailed)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(AppStrings.actionFailed)));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
@@ -385,7 +405,7 @@ class _RoomDiscountDialogState extends State<RoomDiscountDialog> {
                   Expanded(
                     child: AppButton(
                       text: 'apply_discount'.tr(),
-                      onPressed: _handleConfirm,
+                      onPressed: _submitting ? null : _handleConfirm,
                     ),
                   ),
                 ],

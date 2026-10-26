@@ -18,6 +18,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booki
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_discount_dialog.dart';
 
 import '../../../auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 
 /// Booking card (redesigned & decomposed).
 class BookingCard extends StatefulWidget {
@@ -56,6 +57,7 @@ class _BookingCardState extends State<BookingCard> {
         onConfirmPayment: (amount, percent, reason) {
           return context.read<BookingCubit>().confirmCashPayment(
             widget.booking.id,
+            shiftId: context.read<ShiftCubit>().state.activeShift?.id,
             discountAmount: amount,
             discountPercentage: percent,
             discountReason: reason,
@@ -77,8 +79,9 @@ class _BookingCardState extends State<BookingCard> {
             : AppStrings.roomLabel,
         currentPrice: widget.booking.totalPrice,
         onApplyDiscount: (amount, percent, reason) {
-          context.read<BookingCubit>().confirmCashPayment(
+          return context.read<BookingCubit>().confirmCashPayment(
             widget.booking.id,
+            shiftId: context.read<ShiftCubit>().state.activeShift?.id,
             discountAmount: amount,
             discountPercentage: percent,
             discountReason: reason,

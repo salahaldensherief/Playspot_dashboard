@@ -373,12 +373,10 @@ class _BookingsDataTableState extends State<BookingsDataTable> {
   }
 
   void _showBookingDetails(BuildContext context, Booking booking) {
-    showDialog(
-      context: context,
-      builder: (_) => BookingDetailsDialog(
-        booking: booking,
-        onCancel: () => context.read<BookingCubit>().rejectBooking(booking.id),
-      ),
+    BookingDetailsDialog.show(
+      context,
+      booking: booking,
+      onCancel: () => context.read<BookingCubit>().rejectBooking(booking.id),
     );
   }
 

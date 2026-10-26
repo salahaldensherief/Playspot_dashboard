@@ -72,7 +72,10 @@ class _SessionControlActionsState extends State<SessionControlActions> {
     _confirming = false;
     if (!mounted || confirmed != true || !_allowed('billing_checkout')) return;
     await _run(
-      () => context.read<BookingCubit>().confirmCashPayment(booking.id),
+      () => context.read<BookingCubit>().confirmCashPayment(
+        booking.id,
+        shiftId: context.read<ShiftCubit>().state.activeShift?.id,
+      ),
     );
   }
 

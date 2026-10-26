@@ -258,6 +258,7 @@ class BookingCubit extends Cubit<BookingState>
       action: () => confirmCashPaymentUseCase(
         bookingId,
         shiftId: shiftId,
+        amount: amount,
         discountAmount: discountAmount,
         discountPercentage: discountPercentage,
         discountReason: discountReason,
@@ -362,6 +363,24 @@ class BookingCubit extends Cubit<BookingState>
       actionName: 'Approve Manual Booking',
       bookingId: bookingId,
       action: () => repository.approveManualBooking(bookingId, actionBy),
+    );
+  }
+
+  Future<bool> verifyManualDeposit({
+    required String bookingId,
+    required String shiftId,
+    required String evidenceReference,
+    required String fundsHolder,
+  }) {
+    return _executeBookingAction(
+      actionName: 'Verify Manual Deposit',
+      bookingId: bookingId,
+      action: () => repository.verifyManualDeposit(
+        bookingId: bookingId,
+        shiftId: shiftId,
+        evidenceReference: evidenceReference,
+        fundsHolder: fundsHolder,
+      ),
     );
   }
 

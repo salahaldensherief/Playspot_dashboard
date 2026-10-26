@@ -28,6 +28,7 @@ abstract class BookingRemoteDataSource {
   Future<void> confirmCashPayment(
     String bookingId, {
     String? shiftId,
+    double? amount,
     double? discountAmount,
     double? discountPercentage,
     String? discountReason,
@@ -89,6 +90,13 @@ abstract class BookingRemoteDataSource {
   Future<void> autoCancelExpiredBookings();
 
   Future<void> approveManualBooking(String bookingId, String actionBy);
+
+  Future<void> verifyManualDeposit({
+    required String bookingId,
+    required String shiftId,
+    required String evidenceReference,
+    required String fundsHolder,
+  });
 
   Future<void> rejectManualBooking(
     String bookingId,

@@ -30,6 +30,7 @@ abstract class BookingRepository {
   Future<Either<Failure, void>> confirmCashPayment(
     String bookingId, {
     String? shiftId,
+    double? amount,
     double? discountAmount,
     double? discountPercentage,
     String? discountReason,
@@ -80,6 +81,12 @@ abstract class BookingRepository {
     String bookingId,
     String actionBy,
   );
+  Future<Either<Failure, void>> verifyManualDeposit({
+    required String bookingId,
+    required String shiftId,
+    required String evidenceReference,
+    required String fundsHolder,
+  });
   Future<Either<Failure, void>> rejectManualBooking(
     String bookingId,
     String reason,

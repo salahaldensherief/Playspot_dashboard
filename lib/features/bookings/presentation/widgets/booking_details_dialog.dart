@@ -19,6 +19,7 @@ import 'booking_details_customer_card.dart';
 import 'booking_details_financial_summary.dart';
 import 'booking_receipt_card.dart';
 import 'booking_specifications_card.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 
 class BookingDetailsDialog extends StatefulWidget {
   final Booking booking;
@@ -37,10 +38,15 @@ class BookingDetailsDialog extends StatefulWidget {
     this.onCancel,
   });
 
-  static Future<void> show(BuildContext context, {required Booking booking}) {
+  static Future<void> show(
+    BuildContext context, {
+    required Booking booking,
+    VoidCallback? onCancel,
+  }) {
     final bookings = context.read<BookingCubit>();
     final login = context.read<LoginCubit>();
     final dashboard = context.read<DashboardCubit?>();
+    final shifts = context.read<ShiftCubit>();
     return showDialog<void>(
       context: context,
       useRootNavigator: false,
@@ -48,9 +54,10 @@ class BookingDetailsDialog extends StatefulWidget {
         providers: [
           BlocProvider.value(value: bookings),
           BlocProvider.value(value: login),
+          BlocProvider.value(value: shifts),
           if (dashboard != null) BlocProvider.value(value: dashboard),
         ],
-        child: BookingDetailsDialog(booking: booking),
+        child: BookingDetailsDialog(booking: booking, onCancel: onCancel),
       ),
     );
   }
@@ -111,9 +118,8 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
       return;
     }
 
-    final calculatedDiscountAmount = _isPercentage
-        ? (activeBooking.totalPrice * discount / 100)
-        : discount;
+    final submittedAmount = _isPercentage ? 0.0 : discount;
+    final submittedPercentage = _isPercentage ? discount : 0.0;
 
     final cubit = context.read<BookingCubit>();
     setState(() => _isConfirmingPayment = true);
@@ -121,14 +127,15 @@ class _BookingDetailsDialogState extends State<BookingDetailsDialog> {
       final confirm = widget.onConfirmPayment;
       final success = confirm != null
           ? await confirm(
-              calculatedDiscountAmount,
-              percent,
+              submittedAmount,
+              submittedPercentage,
               _reasonController.text.trim(),
             )
           : await cubit.confirmCashPayment(
               activeBooking.id,
-              discountAmount: calculatedDiscountAmount,
-              discountPercentage: percent,
+              shiftId: context.read<ShiftCubit>().state.activeShift?.id,
+              discountAmount: submittedAmount,
+              discountPercentage: submittedPercentage,
               discountReason: _reasonController.text.trim(),
             );
       if (!mounted) return;

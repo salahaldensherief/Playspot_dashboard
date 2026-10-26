@@ -14,6 +14,29 @@ class PermissionsRepositoryImpl
   PermissionsRepositoryImpl(this.remoteSource);
 
   @override
+  Future<Either<Failure, List<PermissionItemEntity>>> getStaffPermissions(
+    String staffId, {
+    required String loungeId,
+  }) => callRepository(
+    () => remoteSource.getStaffPermissions(staffId, loungeId: loungeId),
+  );
+
+  @override
+  Future<Either<Failure, void>> setStaffPermission({
+    required String loungeId,
+    required String staffId,
+    required String permissionKey,
+    required bool isEnabled,
+  }) => callRepository(
+    () => remoteSource.setStaffPermission(
+      loungeId: loungeId,
+      staffId: staffId,
+      permissionKey: permissionKey,
+      isEnabled: isEnabled,
+    ),
+  );
+
+  @override
   Future<Either<Failure, List<PermissionItemEntity>>> getUserPermissions({
     String? loungeId,
   }) {

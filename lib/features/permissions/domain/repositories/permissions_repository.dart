@@ -4,6 +4,16 @@ import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import '../entities/permission_item_entity.dart';
 
 abstract class PermissionsRepository {
+  Future<Either<Failure, List<PermissionItemEntity>>> getStaffPermissions(
+    String staffId, {
+    required String loungeId,
+  });
+  Future<Either<Failure, void>> setStaffPermission({
+    required String loungeId,
+    required String staffId,
+    required String permissionKey,
+    required bool isEnabled,
+  });
   Future<Either<Failure, List<PermissionItemEntity>>> getUserPermissions({
     String? loungeId,
   });
