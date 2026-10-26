@@ -554,6 +554,54 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
 
   @override
+  Future<void> verifyManualDeposit({
+    required String bookingId,
+    required String shiftId,
+    required String evidenceReference,
+    required String fundsHolder,
+  }) async {
+    final actorId = client.auth.currentUser?.id;
+    final reference = evidenceReference.trim();
+    if (actorId == null ||
+        bookingId.isEmpty ||
+        shiftId.isEmpty ||
+        reference.isEmpty ||
+        !{'platform', 'lounge'}.contains(fundsHolder)) {
+      throw StateError('INVALID_DEPOSIT_VERIFICATION_REQUEST');
+    }
+    final requestKey = Uri.encodeComponent(
+      [
+        'verified-deposit',
+        actorId,
+        bookingId,
+        shiftId,
+        reference,
+        fundsHolder,
+      ].join('|'),
+    );
+    final operationId = await _cashOperations.getOrCreate(requestKey);
+    final response = await client.rpc(
+      'verify_booking_deposit_transfer',
+      params: {
+        'p_booking_id': bookingId,
+        'p_shift_id': shiftId,
+        'p_operation_id': operationId,
+        'p_evidence_reference': reference,
+        'p_funds_holder': fundsHolder,
+      },
+    );
+    if (response is! Map ||
+        response['booking_id'] != bookingId ||
+        response['shift_id'] != shiftId ||
+        response['operation_id'] != operationId ||
+        response['movement_id'] == null ||
+        (response['collected_minor'] is! num) ||
+        (response['collected_minor'] as num) <= 0) {
+      throw const FormatException('DEPOSIT_RECEIPT_UNCONFIRMED');
+    }
+  }
+
+  @override
   Future<void> rejectManualBooking(
     String bookingId,
     String reason,

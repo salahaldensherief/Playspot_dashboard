@@ -366,6 +366,24 @@ class BookingCubit extends Cubit<BookingState>
     );
   }
 
+  Future<bool> verifyManualDeposit({
+    required String bookingId,
+    required String shiftId,
+    required String evidenceReference,
+    required String fundsHolder,
+  }) {
+    return _executeBookingAction(
+      actionName: 'Verify Manual Deposit',
+      bookingId: bookingId,
+      action: () => repository.verifyManualDeposit(
+        bookingId: bookingId,
+        shiftId: shiftId,
+        evidenceReference: evidenceReference,
+        fundsHolder: fundsHolder,
+      ),
+    );
+  }
+
   Future<bool> rejectManualBooking(
     String bookingId,
     String reason,

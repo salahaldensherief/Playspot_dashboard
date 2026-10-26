@@ -14,6 +14,7 @@ import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ManualPaymentVerificationDialog extends StatefulWidget {
@@ -39,6 +40,15 @@ class _ManualPaymentVerificationDialogState
   String? _selectedRejectionReason;
   bool _isRejecting = false;
   bool _isSubmitting = false;
+  bool _isLoadingContract = true;
+  bool _requiresDeposit = false;
+  bool _depositPaid = false;
+  double? _depositAmount;
+  String? _contractError;
+  String? _confirmationStatus;
+  String? _serverStatus;
+  String _fundsHolder = 'lounge';
+  final _evidenceReference = TextEditingController();
 
   List<String> get _rejectionReasons => [
     AppStrings.rejectionReasonUnclear,
@@ -52,12 +62,41 @@ class _ManualPaymentVerificationDialogState
   void initState() {
     super.initState();
     _resolveReceiptUrl();
+    _loadPaymentContract();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _evidenceReference.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadPaymentContract() async {
+    try {
+      final row = await Supabase.instance.client
+          .from('bookings')
+          .select(
+            'deposit_required,deposit_paid,deposit_amount,confirmation_status,status',
+          )
+          .eq('id', widget.booking.id)
+          .single();
+      if (!mounted) return;
+      setState(() {
+        _requiresDeposit = row['deposit_required'] == true;
+        _depositPaid = row['deposit_paid'] == true;
+        _depositAmount = (row['deposit_amount'] as num?)?.toDouble();
+        _confirmationStatus = row['confirmation_status']?.toString();
+        _serverStatus = row['status']?.toString();
+        _isLoadingContract = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _contractError = 'deposit_contract_unavailable'.tr();
+        _isLoadingContract = false;
+      });
+    }
   }
 
   Future<void> _resolveReceiptUrl() async {
@@ -130,6 +169,12 @@ class _ManualPaymentVerificationDialogState
   Future<void> _handleApprove(BuildContext context) async {
     if (_isSubmitting) return;
 
+    if (_isLoadingContract || _contractError != null) return;
+    if (_requiresDeposit) {
+      await _handleDepositVerification(context);
+      return;
+    }
+
     final confirmed = await AppDialog.confirm(
       context: context,
       title: 'approve_manual_booking'.tr(),
@@ -167,6 +212,66 @@ class _ManualPaymentVerificationDialogState
           ),
         );
       }
+    }
+  }
+
+  Future<void> _handleDepositVerification(BuildContext context) async {
+    final actorId = context.read<LoginCubit>().state.user?.id;
+    final shift = context.read<ShiftCubit>().state.activeShift;
+    final reference = _evidenceReference.text.trim();
+    if (_depositPaid ||
+        _depositAmount == null ||
+        _depositAmount! <= 0 ||
+        _confirmationStatus != 'confirmed' ||
+        !{'pending', 'upcoming'}.contains(_serverStatus) ||
+        actorId == null ||
+        shift == null ||
+        shift.cashierId != actorId ||
+        shift.status != 'open' ||
+        reference.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('deposit_verification_requirements'.tr()),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
+    final confirmed = await AppDialog.confirm(
+      context: context,
+      title: 'verify_deposit_received'.tr(),
+      message: 'confirm_actual_deposit_received'.tr(
+        args: [_depositAmount!.toStringAsFixed(2), AppStrings.egp],
+      ),
+      confirmText: 'verify_deposit_received'.tr(),
+      confirmColor: AppColors.success,
+    );
+    if (confirmed != true || !mounted || !context.mounted) return;
+    setState(() => _isSubmitting = true);
+    final success = await context.read<BookingCubit>().verifyManualDeposit(
+      bookingId: widget.booking.id,
+      shiftId: shift.id,
+      evidenceReference: reference,
+      fundsHolder: _fundsHolder,
+    );
+    if (!mounted || !context.mounted) return;
+    setState(() => _isSubmitting = false);
+    final messenger = ScaffoldMessenger.of(context);
+    if (success) {
+      Navigator.pop(context);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('deposit_verified_partial'.tr()),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } else {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.actionFailed),
+          backgroundColor: AppColors.danger,
+        ),
+      );
     }
   }
 
@@ -334,10 +439,16 @@ class _ManualPaymentVerificationDialogState
                           : () => setState(() => _isRejecting = true),
                     ),
                     AppButton(
-                      text: 'approve_manual_booking'.tr(),
+                      text: _requiresDeposit
+                          ? 'verify_deposit_received'.tr()
+                          : 'approve_manual_booking'.tr(),
                       variant: AppButtonVariant.primary,
                       isLoading: _isSubmitting,
-                      onPressed: _isSubmitting
+                      onPressed:
+                          _isSubmitting ||
+                              _isLoadingContract ||
+                              _contractError != null ||
+                              (_requiresDeposit && _depositPaid)
                           ? null
                           : () => _handleApprove(context),
                     ),
@@ -404,6 +515,54 @@ class _ManualPaymentVerificationDialogState
           copyable: true,
         ),
         _buildMetaTile('transaction_ref'.tr(), b.id, copyable: true),
+        if (_isLoadingContract)
+          const LinearProgressIndicator()
+        else if (_contractError != null)
+          AppText.body(_contractError!, color: AppColors.danger)
+        else if (_requiresDeposit) ...[
+          SizedBox(height: 12.h),
+          _buildMetaTile(
+            'required_deposit'.tr(),
+            '${(_depositAmount ?? 0).toStringAsFixed(2)} ${AppStrings.egp}',
+          ),
+          AppText.body(
+            _depositPaid
+                ? 'deposit_already_verified'.tr()
+                : 'deposit_not_full_payment'.tr(),
+            color: AppColors.warning,
+          ),
+          if (!_depositPaid) ...[
+            SizedBox(height: 12.h),
+            TextField(
+              controller: _evidenceReference,
+              maxLength: 500,
+              decoration: InputDecoration(
+                labelText: 'bank_transfer_reference'.tr(),
+              ),
+            ),
+            DropdownButtonFormField<String>(
+              initialValue: _fundsHolder,
+              decoration: InputDecoration(
+                labelText: 'deposit_funds_holder'.tr(),
+              ),
+              items: [
+                DropdownMenuItem(
+                  value: 'lounge',
+                  child: Text('funds_at_lounge'.tr()),
+                ),
+                DropdownMenuItem(
+                  value: 'platform',
+                  child: Text('funds_at_platform'.tr()),
+                ),
+              ],
+              onChanged: _isSubmitting
+                  ? null
+                  : (value) {
+                      if (value != null) setState(() => _fundsHolder = value);
+                    },
+            ),
+          ],
+        ],
         if (_isRejecting) ...[
           SizedBox(height: 20.h),
           CustomDropdown<String>(

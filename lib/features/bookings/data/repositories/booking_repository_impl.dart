@@ -362,6 +362,28 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
+  Future<Either<Failure, void>> verifyManualDeposit({
+    required String bookingId,
+    required String shiftId,
+    required String evidenceReference,
+    required String fundsHolder,
+  }) async {
+    try {
+      await remoteDataSource.verifyManualDeposit(
+        bookingId: bookingId,
+        shiftId: shiftId,
+        evidenceReference: evidenceReference,
+        fundsHolder: fundsHolder,
+      );
+      return const Right(null);
+    } on PostgrestException catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.message)));
+    } catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> rejectManualBooking(
     String bookingId,
     String reason,
