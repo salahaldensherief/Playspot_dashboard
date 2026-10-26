@@ -59,3 +59,7 @@ Read this file before changing code. It is the single agent guidance for this Fl
 Before a feature, UI/UX, data-flow, pricing, session, offline, security, or integration change, read **[docs/PLAYSPOT_SYSTEM_ATLAS.md](docs/PLAYSPOT_SYSTEM_ATLAS.md)**, then verify current `dev`, overlapping PRs, and the owning source/tests. The atlas is a dated map, not evidence that a Draft PR is merged or a database function is deployed. This `AGENTS.md` remains authoritative for repository-specific engineering rules.
 
 For Open Time cashier start/close, validate the RPC result in the booking remote data source before any UI success. Start must confirm the requested `room_id`, a nonempty `booking_id`, `status: in_progress`, `is_open_time: true`, and parseable server `started_at`; close must confirm `success: true`, the requested `booking_id`, and `status: completed`. These client checks do not validate deployed pricing, payment, or ledger behavior; Mobile financial PR #75 remains blocked on exact-schema verification.
+
+## Preview backend isolation (26 October 2026)
+
+The Vercel project builds a preview on `dev` pushes. Never put the production Supabase URL or anon key in Dart fallback values: a preview without explicit `--dart-define` values must fail closed. Verify a staging build's configured project reference before sharing its URL, and confirm real sign-in against that same isolated backend on both Dashboard and Mobile. See [preview isolation evidence](docs/qa/2026-10-26-dev-preview-safety.md).
