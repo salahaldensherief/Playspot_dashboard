@@ -9,17 +9,24 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_occupancy_available_section.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_occupancy_walk_in_section.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
+import 'room_equipment_artwork.dart';
 
 class RoomOccupancyCard extends StatelessWidget {
   final RoomEntity room;
   final Booking? activeBooking;
   final String loungeId;
+  final double width;
+  final bool isStale;
+  final bool isRefreshing;
 
   const RoomOccupancyCard({
     super.key,
     required this.room,
     this.activeBooking,
     required this.loungeId,
+    this.width = 320,
+    this.isStale = false,
+    this.isRefreshing = false,
   });
 
   @override
@@ -32,28 +39,27 @@ class RoomOccupancyCard extends StatelessWidget {
         room.status == RoomStatusEnum.occupied && !isOccupiedByApp;
     final isOccupied = isOccupiedByApp || isOccupiedByWalkIn;
     final isMaintenance = room.status == RoomStatusEnum.maintenance;
+    final unavailable = !room.isAvailable && !isOccupied;
 
     Color borderColor = AppColors.borderDefault;
     Color statusColor = AppColors.success;
     String statusText = 'room_available'.tr();
 
-    if (isMaintenance) {
+    if (isMaintenance || unavailable) {
       borderColor = AppColors.warning.withValues(alpha: 0.5);
       statusColor = AppColors.warning;
-      statusText = 'room_maintenance'.tr();
+      statusText = isMaintenance
+          ? 'room_maintenance'.tr()
+          : 'equipment_unavailable'.tr();
     } else if (isOccupied) {
       borderColor = AppColors.danger.withValues(alpha: 0.6);
       statusColor = AppColors.danger;
       statusText = 'room_occupied'.tr();
     }
 
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final double cardWidth = screenWidth < 360 ? double.infinity : 320.w;
-
     return Container(
-      width: cardWidth,
-      constraints: BoxConstraints(maxWidth: 320.w),
-      padding: EdgeInsets.all(14.r),
+      width: width,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(14.r),
@@ -68,113 +74,152 @@ class RoomOccupancyCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header Row: Room Name & Status Badge
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: ExcludeFocus(
+        excluding: isStale || isRefreshing,
+        child: IgnorePointer(
+          ignoring: isStale || isRefreshing,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Icon(
-                      room.isOpenArea
-                          ? Icons.grid_view_rounded
-                          : Icons.sports_esports_rounded,
-                      size: 18.r,
-                      color: isOccupied ? AppColors.danger : AppColors.neonBlue,
+              if (isRefreshing) const LinearProgressIndicator(minHeight: 2),
+              if (isStale)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'cashier.loadFailed'.tr(),
+                    style: const TextStyle(color: AppColors.warning),
+                  ),
+                ),
+              // Header Row: Room Name & Status Badge
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Icon(
+                          room.isOpenArea
+                              ? Icons.grid_view_rounded
+                              : Icons.sports_esports_rounded,
+                          size: 18.r,
+                          color: isOccupied
+                              ? AppColors.danger
+                              : AppColors.neonBlue,
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: AppText.subHeading(
+                            context.locale.languageCode == 'ar'
+                                ? (room.nameAr.isNotEmpty
+                                      ? room.nameAr
+                                      : room.nameEn)
+                                : (room.nameEn.isNotEmpty
+                                      ? room.nameEn
+                                      : room.nameAr),
+                            fontSize: 15.sp,
+                            color: AppColors.textPrimary,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 3.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20.r),
+                      border: Border.all(
+                        color: statusColor.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isMaintenance || unavailable
+                              ? Icons.build_outlined
+                              : isOccupied
+                              ? Icons.sports_esports
+                              : Icons.check_circle_outline,
+                          size: 14,
+                          color: statusColor,
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          statusText,
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8.h),
+
+              RoomEquipmentArtwork(room: room, accent: statusColor),
+              const SizedBox(height: 12),
+
+              // Specs Subtitle Bar
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  AppText.body(
+                    '${room.capacity} ${AppStrings.persons}',
+                    fontSize: 10.sp,
+                    color: AppColors.textMuted,
+                  ),
+                  if (room.requiresControllers)
+                    AppText.body(
+                      '${room.controllersCount} ${AppStrings.controllers}',
+                      fontSize: 10.sp,
+                      color: AppColors.textMuted,
+                    ),
+                  if (room.requiresScreen && room.screenSize.isNotEmpty) ...[
+                    SizedBox(width: 8.w),
+                    AppText.body(
+                      '•',
+                      fontSize: 10.sp,
+                      color: AppColors.textMuted,
                     ),
                     SizedBox(width: 8.w),
-                    Expanded(
-                      child: AppText.subHeading(
-                        room.nameAr.isNotEmpty ? room.nameAr : room.nameEn,
-                        fontSize: 15.sp,
-                        color: AppColors.textPrimary,
-                        maxLines: 1,
-                      ),
+                    AppText.body(
+                      room.screenSize,
+                      fontSize: 10.sp,
+                      color: AppColors.neonBlue,
                     ),
                   ],
-                ),
+                ],
               ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.4)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6.r,
-                      height: 6.r,
-                      decoration: BoxDecoration(
-                        color: statusColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      statusText,
-                      style: TextStyle(
-                        color: statusColor,
-                        fontSize: 10.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 8.h),
+              SizedBox(height: 12.h),
 
-          // Specs Subtitle Bar
-          Row(
-            children: [
-              AppText.body(
-                '${room.capacity} ${AppStrings.persons}',
-                fontSize: 10.sp,
-                color: AppColors.textMuted,
-              ),
-              SizedBox(width: 8.w),
-              AppText.body('•', fontSize: 10.sp, color: AppColors.textMuted),
-              SizedBox(width: 8.w),
-              AppText.body(
-                '${room.controllersCount} ${AppStrings.controllers}',
-                fontSize: 10.sp,
-                color: AppColors.textMuted,
-              ),
-              if (room.screenSize.isNotEmpty) ...[
-                SizedBox(width: 8.w),
-                AppText.body('•', fontSize: 10.sp, color: AppColors.textMuted),
-                SizedBox(width: 8.w),
-                AppText.body(
-                  room.screenSize,
-                  fontSize: 10.sp,
-                  color: AppColors.neonBlue,
+              // Body Content: App Booking vs Walk-In vs Maintenance vs Available
+              if (isOccupiedByApp) ...[
+                RoomOccupancyActiveSection(
+                  activeBooking: activeBooking,
+                  room: room,
                 ),
+              ] else if (isOccupiedByWalkIn) ...[
+                RoomOccupancyWalkInSection(room: room),
+              ] else if (isMaintenance) ...[
+                _buildMaintenanceContent(),
+              ] else ...[
+                if (unavailable)
+                  Text('equipment_unavailable'.tr())
+                else
+                  RoomOccupancyAvailableSection(room: room, loungeId: loungeId),
               ],
             ],
           ),
-          SizedBox(height: 12.h),
-
-          // Body Content: App Booking vs Walk-In vs Maintenance vs Available
-          if (isOccupiedByApp) ...[
-            RoomOccupancyActiveSection(
-              activeBooking: activeBooking,
-              room: room,
-            ),
-          ] else if (isOccupiedByWalkIn) ...[
-            RoomOccupancyWalkInSection(room: room),
-          ] else if (isMaintenance) ...[
-            _buildMaintenanceContent(),
-          ] else ...[
-            RoomOccupancyAvailableSection(room: room, loungeId: loungeId),
-          ],
-        ],
+        ),
       ),
     );
   }

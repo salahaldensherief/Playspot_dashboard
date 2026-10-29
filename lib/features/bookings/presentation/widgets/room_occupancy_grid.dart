@@ -11,6 +11,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
+import 'session_clock_host.dart';
 
 /// Live Room & Station Occupancy Grid Component for Live Operations.
 /// Clarifies empty vs occupied rooms with real-time countdown timers, customer info, and quick booking actions.
@@ -39,149 +40,190 @@ class _RoomOccupancyGridState extends State<RoomOccupancyGrid> {
   @override
   Widget build(BuildContext context) {
     EasyLocalization.of(context);
-    return BlocBuilder<RoomCubit, RoomState>(
-      buildWhen: (prev, curr) => prev.rooms != curr.rooms,
-      builder: (context, roomState) {
-        return BlocBuilder<BookingCubit, BookingState>(
-          buildWhen: (prev, curr) => prev.bookings != curr.bookings,
-          builder: (context, bookingState) {
-            final rooms = roomState.rooms;
-            if (rooms.isEmpty) {
-              return const SizedBox.shrink();
-            }
+    return SessionClockHost(
+      child: BlocBuilder<RoomCubit, RoomState>(
+        buildWhen: (prev, curr) =>
+            prev.rooms != curr.rooms || prev.status != curr.status,
+        builder: (context, roomState) {
+          return BlocBuilder<BookingCubit, BookingState>(
+            buildWhen: (prev, curr) => prev.bookings != curr.bookings,
+            builder: (context, bookingState) {
+              final rooms = roomState.rooms;
+              if (rooms.isEmpty) {
+                if (roomState.status == RoomStatus.loading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (roomState.status == RoomStatus.failure) {
+                  return TextButton.icon(
+                    onPressed: () => context.read<RoomCubit>().watchRooms(
+                      widget.loungeId,
+                      forceRefresh: true,
+                    ),
+                    icon: const Icon(Icons.refresh),
+                    label: Text('retry'.tr()),
+                  );
+                }
+                return const SizedBox.shrink();
+              }
 
-            final activeBookings = bookingState.bookings
-                .where((b) => b.isBookingActive())
-                .toList();
+              final activeBookings = bookingState.bookings
+                  .where((b) => b.isBookingActive())
+                  .toList();
 
-            // Calculate Counts
-            int occupiedCount = 0;
-            int availableCount = 0;
-            int maintenanceCount = 0;
+              // Calculate Counts
+              int occupiedCount = 0;
+              int availableCount = 0;
+              int maintenanceCount = 0;
 
-            for (final room in rooms) {
-              if (room.status == RoomStatusEnum.maintenance) {
-                maintenanceCount++;
-              } else {
+              for (final room in rooms) {
+                if (room.status == RoomStatusEnum.maintenance) {
+                  maintenanceCount++;
+                } else {
+                  final isOccupied = activeBookings.any(
+                    (b) => b.roomId == room.id,
+                  );
+                  if (isOccupied) {
+                    occupiedCount++;
+                  } else {
+                    availableCount++;
+                  }
+                }
+              }
+
+              // Filter rooms
+              final displayedRooms = rooms.where((room) {
                 final isOccupied = activeBookings.any(
                   (b) => b.roomId == room.id,
                 );
-                if (isOccupied) {
-                  occupiedCount++;
-                } else {
-                  availableCount++;
+                if (_filterType == 'available') {
+                  return !isOccupied &&
+                      room.status != RoomStatusEnum.maintenance;
+                } else if (_filterType == 'occupied') {
+                  return isOccupied;
+                } else if (_filterType == 'maintenance') {
+                  return room.status == RoomStatusEnum.maintenance;
                 }
-              }
-            }
+                return true;
+              }).toList();
 
-            // Filter rooms
-            final displayedRooms = rooms.where((room) {
-              final isOccupied = activeBookings.any((b) => b.roomId == room.id);
-              if (_filterType == 'available') {
-                return !isOccupied && room.status != RoomStatusEnum.maintenance;
-              } else if (_filterType == 'occupied') {
-                return isOccupied;
-              } else if (_filterType == 'maintenance') {
-                return room.status == RoomStatusEnum.maintenance;
-              }
-              return true;
-            }).toList();
+              final isNarrow = MediaQuery.sizeOf(context).width < 800;
 
-            final isNarrow = MediaQuery.sizeOf(context).width < 800;
-
-            final titleWidget = Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.meeting_room_outlined,
-                  color: AppColors.neonBlue,
-                  size: 20.r,
-                ),
-                SizedBox(width: 8.w),
-                AppText.heading(AppStrings.roomUtilization, fontSize: 15.sp),
-              ],
-            );
-
-            final filterChipsBar = SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
+              final titleWidget = Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildFilterChip(
-                    label: '${AppStrings.viewAll} (${rooms.length})',
-                    value: 'all',
+                  if (roomState.status == RoomStatus.failure)
+                    TextButton.icon(
+                      onPressed: () => context.read<RoomCubit>().watchRooms(
+                        widget.loungeId,
+                        forceRefresh: true,
+                      ),
+                      icon: const Icon(Icons.refresh),
+                      label: Text('retry'.tr()),
+                    ),
+                  Icon(
+                    Icons.meeting_room_outlined,
                     color: AppColors.neonBlue,
+                    size: 20.r,
                   ),
                   SizedBox(width: 8.w),
-                  _buildFilterChip(
-                    label: 'available_rooms_count'.tr(
-                      args: [(availableCount).toString()],
+                  AppText.heading(AppStrings.roomUtilization, fontSize: 15.sp),
+                ],
+              );
+
+              final filterChipsBar = SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children: [
+                    _buildFilterChip(
+                      label: '${AppStrings.viewAll} (${rooms.length})',
+                      value: 'all',
+                      color: AppColors.neonBlue,
                     ),
-                    value: 'available',
-                    color: AppColors.success,
-                  ),
-                  SizedBox(width: 8.w),
-                  _buildFilterChip(
-                    label: 'occupied_rooms_count'.tr(
-                      args: [(occupiedCount).toString()],
-                    ),
-                    value: 'occupied',
-                    color: AppColors.danger,
-                  ),
-                  if (maintenanceCount > 0) ...[
                     SizedBox(width: 8.w),
                     _buildFilterChip(
-                      label: 'maintenance_rooms_count'.tr(
-                        args: [(maintenanceCount).toString()],
+                      label: 'available_rooms_count'.tr(
+                        args: [(availableCount).toString()],
                       ),
-                      value: 'maintenance',
-                      color: AppColors.warning,
+                      value: 'available',
+                      color: AppColors.success,
+                    ),
+                    SizedBox(width: 8.w),
+                    _buildFilterChip(
+                      label: 'occupied_rooms_count'.tr(
+                        args: [(occupiedCount).toString()],
+                      ),
+                      value: 'occupied',
+                      color: AppColors.danger,
+                    ),
+                    if (maintenanceCount > 0) ...[
+                      SizedBox(width: 8.w),
+                      _buildFilterChip(
+                        label: 'maintenance_rooms_count'.tr(
+                          args: [(maintenanceCount).toString()],
+                        ),
+                        value: 'maintenance',
+                        color: AppColors.warning,
+                      ),
+                    ],
+                  ],
+                ),
+              );
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header & Filter Badges (Responsive)
+                  if (isNarrow) ...[
+                    titleWidget,
+                    SizedBox(height: 10.h),
+                    filterChipsBar,
+                  ] else ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        titleWidget,
+                        Flexible(child: filterChipsBar),
+                      ],
                     ),
                   ],
-                ],
-              ),
-            );
+                  SizedBox(height: 14.h),
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header & Filter Badges (Responsive)
-                if (isNarrow) ...[
-                  titleWidget,
-                  SizedBox(height: 10.h),
-                  filterChipsBar,
-                ] else ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      titleWidget,
-                      Flexible(child: filterChipsBar),
-                    ],
+                  // Rooms Grid / Wrap
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final columns = (constraints.maxWidth / 320)
+                          .floor()
+                          .clamp(1, 6);
+                      final cardWidth =
+                          (constraints.maxWidth - (columns - 1) * 16) / columns;
+                      return Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        children: displayedRooms.map((room) {
+                          final activeBooking = activeBookings
+                              .where((b) => b.roomId == room.id)
+                              .firstOrNull;
+                          return RoomOccupancyCard(
+                            key: ValueKey('room_card_${room.id}'),
+                            room: room,
+                            activeBooking: activeBooking,
+                            loungeId: widget.loungeId,
+                            width: cardWidth,
+                            isStale: roomState.status == RoomStatus.failure,
+                            isRefreshing:
+                                roomState.status == RoomStatus.loading,
+                          );
+                        }).toList(),
+                      );
+                    },
                   ),
                 ],
-                SizedBox(height: 14.h),
-
-                // Rooms Grid / Wrap
-                Wrap(
-                  spacing: 16.r,
-                  runSpacing: 16.r,
-                  children: displayedRooms.map((room) {
-                    final activeBooking = activeBookings
-                        .where((b) => b.roomId == room.id)
-                        .firstOrNull;
-                    return RoomOccupancyCard(
-                      key: ValueKey('room_card_${room.id}'),
-                      room: room,
-                      activeBooking: activeBooking,
-                      loungeId: widget.loungeId,
-                    );
-                  }).toList(),
-                ),
-              ],
-            );
-          },
-        );
-      },
+              );
+            },
+          );
+        },
+      ),
     );
   }
 

@@ -59,17 +59,21 @@ class _RoomOccupancyActiveSectionState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.person, color: AppColors.neonBlue, size: 14.r),
                       SizedBox(width: 6.w),
-                      AppText.subHeading(
-                        activeBooking.userName ?? AppStrings.anonymous,
-                        fontSize: 13.sp,
-                        color: AppColors.textPrimary,
+                      Flexible(
+                        child: AppText.subHeading(
+                          activeBooking.userName ?? AppStrings.anonymous,
+                          fontSize: 13.sp,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ],
                   ),
@@ -83,7 +87,9 @@ class _RoomOccupancyActiveSectionState
                       borderRadius: BorderRadius.circular(4.r),
                     ),
                     child: AppText.body(
-                      '${activeBooking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
+                      isOpenTime
+                          ? 'cashier.awaitingFinal'.tr()
+                          : '${'cashier.serverTotal'.tr()}: ${activeBooking.totalPrice.toStringAsFixed(2)} ${AppStrings.egp}',
                       fontSize: 11.sp,
                       color: AppColors.neonGreen,
                       fontWeight: FontWeight.bold,
@@ -168,7 +174,7 @@ class _RoomOccupancyActiveSectionState
                       SizedBox(width: 6.w),
                       AppText.body(
                         isOpenTime
-                            ? AppStrings.duration
+                            ? AppStrings.elapsedTime
                             : (isExpired
                                   ? AppStrings.timeExpired
                                   : AppStrings.remainingTime),
@@ -199,20 +205,19 @@ class _RoomOccupancyActiveSectionState
         SizedBox(height: 10.h),
 
         // Action Buttons: Details & Extend
-        Row(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: AppButton(
-                text: AppStrings.bookingAndClientDetails,
-                icon: Icons.info_outline_rounded,
-                variant: AppButtonVariant.outlined,
-                height: 32.h,
-                onPressed: () {
-                  BookingDetailsDialog.show(context, booking: activeBooking);
-                },
-              ),
+            AppButton(
+              text: AppStrings.bookingAndClientDetails,
+              icon: Icons.info_outline_rounded,
+              variant: AppButtonVariant.outlined,
+              height: 44,
+              onPressed: () {
+                BookingDetailsDialog.show(context, booking: activeBooking);
+              },
             ),
-            SizedBox(width: 8.w),
+            const SizedBox(height: 8),
             AppButton(
               text: isOpenTime
                   ? AppStrings.completeAndCalculate
@@ -221,7 +226,7 @@ class _RoomOccupancyActiveSectionState
                   ? Icons.price_check_rounded
                   : Icons.add_alarm_rounded,
               variant: AppButtonVariant.primary,
-              height: 32.h,
+              height: 44,
               isLoading: isOpenTime && _isCompleting,
               onPressed: (isOpenTime && _isCompleting)
                   ? null

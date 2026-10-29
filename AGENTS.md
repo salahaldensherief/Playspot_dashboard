@@ -1,5 +1,9 @@
 # PlaySpot Dashboard: agent engineering rules
 
+## Owner-approved room equipment cards (29 October 2026)
+
+The owner approved a targeted equipment-illustration treatment for RoomOccupancyCard/RoomOccupancyGrid. This does not approve the rejected whole-Dashboard redesign. Use structured RoomEntity categories and explicit activity names; VIP is a space type. Unknown/mixed equipment uses neutral artwork. Keep timers, prices and controls as Flutter widgets, with the existing server contracts; Open Time has elapsed time and no invented remaining-time progress. Original static SVG provenance and research are in `docs/design/EQUIPMENT_CARDS_20261029.md` and `assets/equipment/PROVENANCE.md`. The local fixture is synthetic and does not initialize Supabase. Preserve the shared clock and artwork repaint isolation. Dashboard dev push remains coupled to Vercel Preview; obtain the separate deployment authorization before pushing.
+
 For Windows local runs, use `scripts/launch_local.ps1` and `docs/LOCAL_DEVELOPMENT_LAUNCH.md`. It rejects production endpoints and distinguishes the limited demo backend from a separately prepared development backend. A working login page or Auth token on the old demo schema does not validate the canonical financial contract.
 
 Read this file before changing code. It is the single agent guidance for this Flutter Web dashboard. User instructions and verified product requirements take precedence. The companion Mobile app shares server and domain contracts; its presentation can differ.
