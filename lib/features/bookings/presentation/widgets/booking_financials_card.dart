@@ -124,10 +124,13 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(
                     Icons.payments_outlined,
@@ -135,10 +138,12 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
                     size: 20,
                   ),
                   SizedBox(width: 8.w),
-                  AppText.subHeading(
-                    AppStrings.financialsAndExtras,
-                    fontSize: 16.sp,
-                    color: AppColors.textPrimary,
+                  Flexible(
+                    child: AppText.subHeading(
+                      AppStrings.financialsAndExtras,
+                      fontSize: 16.sp,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ],
               ),
@@ -242,12 +247,15 @@ class _BookingFinancialsCardState extends State<BookingFinancialsCard> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        AppText.body(
-          label,
-          fontSize: fontSize ?? 13.sp,
-          color: color ?? AppColors.textSecondary,
-          fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+        Flexible(
+          child: AppText.body(
+            label,
+            fontSize: fontSize ?? 13.sp,
+            color: color ?? AppColors.textSecondary,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+          ),
         ),
+        const SizedBox(width: 12),
         AppText.body(
           value,
           fontSize: fontSize ?? 13.sp,
