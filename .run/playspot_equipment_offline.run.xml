@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="PlaySpot - OFFLINE equipment preview (Chrome)" type="FlutterRunConfigurationType" factoryName="Flutter">
+    <option name="filePath" value="$PROJECT_DIR$/tool/equipment_cards_preview.dart" />
+    <option name="additionalArgs" value="--no-pub -d chrome" />
+    <method v="2" />
+  </configuration>
+</component>

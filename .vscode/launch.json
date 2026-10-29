@@ -20,6 +20,30 @@
         "edge",
         "--dart-define-from-file=.env"
       ]
+    },
+    {
+      "name": "PlaySpot - Local backend (Chrome, explicit config)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "cwd": "${workspaceFolder}",
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--no-pub",
+        "--dart-define-from-file=${workspaceFolder}/.env.local.json"
+      ],
+      "preLaunchTask": "PlaySpot: validate local backend (offline)"
+    },
+    {
+      "name": "PlaySpot - OFFLINE equipment preview (Chrome)",
+      "request": "launch",
+      "type": "dart",
+      "program": "tool/equipment_cards_preview.dart",
+      "cwd": "${workspaceFolder}",
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--no-pub"
+      ]
     }
   ]
 }

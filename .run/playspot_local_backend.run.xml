@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="PlaySpot - Local backend (Chrome, explicit config)" type="FlutterRunConfigurationType" factoryName="Flutter">
+    <option name="filePath" value="$PROJECT_DIR$/lib/main.dart" />
+    <option name="additionalArgs" value="--no-pub -d chrome --dart-define-from-file=.env.local.json" />
+    <method v="2" />
+  </configuration>
+</component>

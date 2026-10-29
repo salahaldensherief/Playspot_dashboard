@@ -28,7 +28,11 @@ if (-not (Test-Path -LiteralPath $ConfigFile -PathType Leaf)) {
 $configPath = (Resolve-Path -LiteralPath $ConfigFile).Path
 $values = @{}
 if ([IO.Path]::GetExtension($configPath) -eq '.json') {
-  $json = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
+  try {
+    $json = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
+  } catch {
+    throw 'Invalid local configuration JSON. Values are not logged.'
+  }
   foreach ($name in @('SUPABASE_URL', 'SUPABASE_ANON_KEY')) {
     $values[$name] = [string]$json.$name
   }
@@ -65,10 +69,9 @@ if ($key.StartsWith('sb_secret_')) {
   throw 'A privileged Supabase key cannot be used in Flutter.'
 }
 if ($key.StartsWith('sb_publishable_')) {
-  try {
-    Invoke-WebRequest -Uri "$($uri.GetLeftPart('Authority'))/auth/v1/settings" -Headers @{ apikey = $key } -TimeoutSec 10 -UseBasicParsing | Out-Null
-  } catch {
-    throw 'The publishable key could not be verified against the selected project.'
+  # Offline format check only. Opaque keys cannot prove project association locally.
+  if ($key -notmatch '^sb_publishable_[A-Za-z0-9_-]+$') {
+    throw 'Invalid publishable key format.'
   }
 } else {
   $parts = $key.Split('.')
@@ -85,7 +88,7 @@ if ($key.StartsWith('sb_publishable_')) {
   }
 }
 
-Write-Output "Validated $Environment configuration for project $projectRef."
+Write-Output "Local format checks passed for $Environment project $projectRef; no hosted verification performed."
 if ($ValidateOnly) { return }
 
 $temporaryDefines = Join-Path ([IO.Path]::GetTempPath()) ("playspot-dashboard-defines-$([guid]::NewGuid().ToString('N')).json")

@@ -82,3 +82,6 @@ The existing staff detail view gains an owner-only per-employee permission dialo
 ## Preview backend isolation (26 October 2026)
 
 The Vercel project builds a preview on `dev` pushes. Never put the production Supabase URL or anon key in Dart fallback values: a preview without explicit `--dart-define` values must fail closed. Verify a staging build's configured project reference before sharing its URL, and confirm real sign-in against that same isolated backend on both Dashboard and Mobile. See [preview isolation evidence](docs/qa/2026-10-26-dev-preview-safety.md).
+
+## Explicit local IDE profiles (30 October 2026)
+Use the named Local backend profile with ignored .env.local.json only after authorization of its exact target; do not populate it from Demo/Staging automatically. The OFFLINE equipment preview profile uses tool/equipment_cards_preview.dart with synthetic Cubits and no hosted initialization. scripts/launch_local.ps1 -ValidateOnly performs offline format checks only, not hosted key/schema verification. VS Code preLaunchTask blocks invalid configuration; IntelliJ users must run validation manually. Preserve generic/legacy profiles and setupInjection's fail-closed check. See docs/LOCAL_DEVELOPMENT_LAUNCH.md.
