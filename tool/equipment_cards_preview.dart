@@ -9,6 +9,8 @@ import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.da
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_occupancy_card.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_cards_layout.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/bookings_collapsible_occupancy.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_clock_host.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_state.dart';
@@ -31,16 +33,39 @@ class FixtureRequests extends Cubit<ClientRequestsState>
 }
 
 class FixtureRooms extends Cubit<RoomState> implements RoomCubit {
-  FixtureRooms() : super(const RoomState());
+  int refreshes = 0;
+  FixtureRooms({int count = 7, bool stale = false, bool refreshing = false})
+    : super(
+        RoomState(
+          rooms: List.generate(count, fixtureRoom),
+          status: stale
+              ? RoomStatus.failure
+              : refreshing
+              ? RoomStatus.loading
+              : RoomStatus.success,
+        ),
+      );
+  void setStatus(RoomStatus status) => emit(state.copyWith(status: status));
+  @override
+  void watchRooms(String? loungeId, {bool forceRefresh = false}) {
+    refreshes++;
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class FixtureBookings extends Cubit<BookingState> implements BookingCubit {
   int attempts = 0;
-  FixtureBookings()
+  FixtureBookings({int count = 7})
     : super(
-        const BookingState(errorMessage: 'Fixture: operation not confirmed'),
+        BookingState(
+          errorMessage: 'Fixture: operation not confirmed',
+          bookings: [
+            for (var i = 0; i < count; i++)
+              if (i % 7 < 2) fixtureBooking(i),
+          ],
+        ),
       );
   @override
   Future<Map<String, dynamic>?> completeOpenTimeSession(String id) async {
@@ -131,20 +156,31 @@ class EquipmentPreview extends StatelessWidget {
   final bool isRefreshing;
   final int? stationCount;
   final double textScale;
+  final bool operational;
   const EquipmentPreview({
     super.key,
     this.isStale = false,
     this.isRefreshing = false,
     this.stationCount,
     this.textScale = 1,
+    this.operational = false,
   });
   @override
   Widget build(BuildContext context) => MultiBlocProvider(
     providers: [
       BlocProvider<LoginCubit>(create: (_) => FixtureLogin()),
       BlocProvider<ClientRequestsCubit>(create: (_) => FixtureRequests()),
-      BlocProvider<BookingCubit>(create: (_) => FixtureBookings()),
-      BlocProvider<RoomCubit>(create: (_) => FixtureRooms()),
+      BlocProvider<BookingCubit>(
+        create: (_) => FixtureBookings(count: stationCount ?? 7),
+      ),
+      BlocProvider<RoomCubit>(
+        create: (_) => FixtureRooms(
+          count: stationCount ?? 7,
+          stale: isStale || Uri.base.queryParameters['stale'] == 'true',
+          refreshing:
+              isRefreshing || Uri.base.queryParameters['loading'] == 'true',
+        ),
+      ),
     ],
     child: ScreenUtilInit(
       designSize: const Size(1920, 1080),
@@ -180,22 +216,21 @@ class EquipmentPreview extends StatelessWidget {
                     style: TextStyle(color: Colors.blueGrey),
                   ),
                   const SizedBox(height: 24),
-                  LayoutBuilder(
-                    builder: (context, c) {
-                      final cols = (c.maxWidth / 320).floor().clamp(1, 6);
-                      final width = (c.maxWidth - (cols - 1) * 16) / cols;
-                      final count =
-                          stationCount ??
-                          int.tryParse(
-                            Uri.base.queryParameters['stations'] ?? '7',
-                          ) ??
-                          7;
-                      return Wrap(
-                        spacing: 16,
-                        runSpacing: 16,
-                        children: List.generate(
-                          count.clamp(1, 40),
-                          (i) => RoomOccupancyCard(
+                  if (operational ||
+                      Uri.base.queryParameters['operational'] == 'true')
+                    const BookingsCollapsibleOccupancy(loungeId: 'fixture')
+                  else
+                    LayoutBuilder(
+                      builder: (context, c) {
+                        final count =
+                            stationCount ??
+                            int.tryParse(
+                              Uri.base.queryParameters['stations'] ?? '7',
+                            ) ??
+                            7;
+                        return RoomCardsLayout(
+                          count: count.clamp(1, 40),
+                          itemBuilder: (i, width) => RoomOccupancyCard(
                             room: fixtureRoom(i),
                             loungeId: 'fixture',
                             width: width,
@@ -207,10 +242,9 @@ class EquipmentPreview extends StatelessWidget {
                                 isRefreshing ||
                                 Uri.base.queryParameters['loading'] == 'true',
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
                 ],
               ),
             ),

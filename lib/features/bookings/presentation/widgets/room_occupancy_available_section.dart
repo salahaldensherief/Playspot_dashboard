@@ -29,7 +29,8 @@ class RoomOccupancyAvailableSection extends StatelessWidget {
     );
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Container(
           padding: EdgeInsets.all(10.r),
@@ -104,9 +105,9 @@ class RoomOccupancyAvailableSection extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  quickBooking,
-                  const SizedBox(height: 4),
                   detailedBooking,
+                  const SizedBox(height: 4),
+                  quickBooking,
                 ],
               );
             }

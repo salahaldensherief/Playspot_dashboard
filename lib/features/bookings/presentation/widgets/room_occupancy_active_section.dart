@@ -1,8 +1,6 @@
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 
-import 'session_time_builder.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -46,7 +44,8 @@ class _RoomOccupancyActiveSectionState
     final isOpenTime = activeBooking.isOpenEnded;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         // Customer Info Box
         Container(
@@ -83,7 +82,7 @@ class _RoomOccupancyActiveSectionState
                       vertical: 2.h,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.neonGreen.withValues(alpha: 0.15),
+                      color: AppColors.neonBlue.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(4.r),
                     ),
                     child: AppText.body(
@@ -91,10 +90,25 @@ class _RoomOccupancyActiveSectionState
                           ? 'cashier.awaitingFinal'.tr()
                           : '${'cashier.serverTotal'.tr()}: ${activeBooking.totalPrice.toStringAsFixed(2)} ${AppStrings.egp}',
                       fontSize: 11.sp,
-                      color: AppColors.neonGreen,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 10,
+                runSpacing: 4,
+                children: [
+                  for (final label in ['cashier.collected', 'cashier.due'])
+                    Text(
+                      '${label.tr()}: ${'cashier.unavailable'.tr()}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
                 ],
               ),
               if (phone != null && phone.isNotEmpty) ...[
@@ -133,74 +147,6 @@ class _RoomOccupancyActiveSectionState
         ),
         SizedBox(height: 10.h),
 
-        SessionTimeBuilder(
-          builder: (context, now) {
-            final remaining = activeBooking.remainingDuration(now);
-            final isExpired = activeBooking.isSessionExpired(now);
-            final seconds = remaining.inSeconds.abs();
-            final hours = (seconds ~/ 3600).toString().padLeft(2, '0');
-            final minutes = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
-            final secs = (seconds % 60).toString().padLeft(2, '0');
-            final formattedRemaining = seconds >= 3600
-                ? '$hours:$minutes:$secs'
-                : '$minutes:$secs';
-            return Container(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-              decoration: BoxDecoration(
-                color: isExpired
-                    ? AppColors.danger.withValues(alpha: 0.15)
-                    : AppColors.neonBlue.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(
-                  color: isExpired
-                      ? AppColors.danger
-                      : AppColors.neonBlue.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        isOpenTime
-                            ? Icons.all_inclusive_rounded
-                            : (isExpired ? Icons.timer_off : Icons.timer),
-                        size: 16.r,
-                        color: isExpired
-                            ? AppColors.danger
-                            : AppColors.neonBlue,
-                      ),
-                      SizedBox(width: 6.w),
-                      AppText.body(
-                        isOpenTime
-                            ? AppStrings.elapsedTime
-                            : (isExpired
-                                  ? AppStrings.timeExpired
-                                  : AppStrings.remainingTime),
-                        fontSize: 11.sp,
-                        color: isExpired
-                            ? AppColors.danger
-                            : AppColors.textSecondary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ],
-                  ),
-                  AppText.subHeading(
-                    isOpenTime
-                        ? formattedRemaining
-                        : (isExpired
-                              ? '-$formattedRemaining'
-                              : formattedRemaining),
-                    fontSize: 14.sp,
-                    color: isExpired ? AppColors.danger : AppColors.neonBlue,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
         RoomOccupancyRequestsBadge(booking: activeBooking, room: room),
         SizedBox(height: 10.h),
 

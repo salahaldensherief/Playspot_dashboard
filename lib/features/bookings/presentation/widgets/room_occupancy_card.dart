@@ -59,7 +59,7 @@ class RoomOccupancyCard extends StatelessWidget {
 
     return Container(
       width: width,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(14.r),
@@ -79,149 +79,188 @@ class RoomOccupancyCard extends StatelessWidget {
         child: IgnorePointer(
           ignoring: isStale || isRefreshing,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (isRefreshing) const LinearProgressIndicator(minHeight: 2),
-              if (isStale)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    'cashier.loadFailed'.tr(),
-                    style: const TextStyle(color: AppColors.warning),
-                  ),
-                ),
-              // Header Row: Room Name & Status Badge
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Icon(
-                          room.isOpenArea
-                              ? Icons.grid_view_rounded
-                              : Icons.sports_esports_rounded,
-                          size: 18.r,
-                          color: isOccupied
-                              ? AppColors.danger
-                              : AppColors.neonBlue,
-                        ),
-                        SizedBox(width: 8.w),
-                        Expanded(
-                          child: AppText.subHeading(
-                            context.locale.languageCode == 'ar'
-                                ? (room.nameAr.isNotEmpty
-                                      ? room.nameAr
-                                      : room.nameEn)
-                                : (room.nameEn.isNotEmpty
-                                      ? room.nameEn
-                                      : room.nameAr),
-                            fontSize: 15.sp,
-                            color: AppColors.textPrimary,
-                            maxLines: 1,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 3.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(
-                        color: statusColor.withValues(alpha: 0.4),
+                  if (isRefreshing) const LinearProgressIndicator(minHeight: 2),
+                  if (isStale)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        'cashier.loadFailed'.tr(),
+                        style: const TextStyle(color: AppColors.warning),
                       ),
                     ),
+                  // Header Row: Room Name & Status Badge
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 40),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Icon(
-                          isMaintenance || unavailable
-                              ? Icons.build_outlined
-                              : isOccupied
-                              ? Icons.sports_esports
-                              : Icons.check_circle_outline,
-                          size: 14,
-                          color: statusColor,
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Icon(
+                                room.isOpenArea
+                                    ? Icons.grid_view_rounded
+                                    : Icons.sports_esports_rounded,
+                                size: 18,
+                                color: isOccupied
+                                    ? AppColors.danger
+                                    : AppColors.neonBlue,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: AppText.subHeading(
+                                  context.locale.languageCode == 'ar'
+                                      ? (room.nameAr.isNotEmpty
+                                            ? room.nameAr
+                                            : room.nameEn)
+                                      : (room.nameEn.isNotEmpty
+                                            ? room.nameEn
+                                            : room.nameAr),
+                                  fontSize: 15,
+                                  color: AppColors.textPrimary,
+                                  maxLines: 2,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          statusText,
-                          style: TextStyle(
-                            color: statusColor,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20.r),
+                            border: Border.all(
+                              color: statusColor.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isMaintenance || unavailable
+                                    ? Icons.build_outlined
+                                    : isOccupied
+                                    ? Icons.sports_esports
+                                    : Icons.check_circle_outline,
+                                size: 14,
+                                color: statusColor,
+                              ),
+                              SizedBox(width: 4.w),
+                              Text(
+                                statusText,
+                                style: TextStyle(
+                                  color: statusColor,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
-              SizedBox(height: 8.h),
+                  const SizedBox(height: 8),
 
-              RoomEquipmentArtwork(room: room, accent: statusColor),
-              const SizedBox(height: 12),
-
-              // Specs Subtitle Bar
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: [
-                  AppText.body(
-                    '${room.capacity} ${AppStrings.persons}',
-                    fontSize: 10.sp,
-                    color: AppColors.textMuted,
+                  RoomEquipmentHero(
+                    room: room,
+                    accent: statusColor,
+                    booking: isOccupiedByApp ? activeBooking : null,
                   ),
-                  if (room.requiresControllers)
-                    AppText.body(
-                      '${room.controllersCount} ${AppStrings.controllers}',
-                      fontSize: 10.sp,
-                      color: AppColors.textMuted,
-                    ),
-                  if (room.requiresScreen && room.screenSize.isNotEmpty) ...[
-                    SizedBox(width: 8.w),
-                    AppText.body(
-                      '•',
-                      fontSize: 10.sp,
-                      color: AppColors.textMuted,
-                    ),
-                    SizedBox(width: 8.w),
-                    AppText.body(
-                      room.screenSize,
-                      fontSize: 10.sp,
-                      color: AppColors.neonBlue,
-                    ),
-                  ],
+                  const SizedBox(height: 8),
+
+                  // Specs Subtitle Bar
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      AppText.body(
+                        '${room.capacity} ${AppStrings.persons}',
+                        fontSize: 10.sp,
+                        color: AppColors.textMuted,
+                      ),
+                      if (room.requiresControllers)
+                        AppText.body(
+                          '${room.controllersCount} ${AppStrings.controllers}',
+                          fontSize: 10.sp,
+                          color: AppColors.textMuted,
+                        ),
+                      if (room.requiresScreen &&
+                          room.screenSize.isNotEmpty) ...[
+                        SizedBox(width: 8.w),
+                        AppText.body(
+                          '•',
+                          fontSize: 10.sp,
+                          color: AppColors.textMuted,
+                        ),
+                        SizedBox(width: 8.w),
+                        AppText.body(
+                          room.screenSize,
+                          fontSize: 10.sp,
+                          color: AppColors.neonBlue,
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Body Content: App Booking vs Walk-In vs Maintenance vs Available
                 ],
               ),
-              SizedBox(height: 12.h),
-
-              // Body Content: App Booking vs Walk-In vs Maintenance vs Available
-              if (isOccupiedByApp) ...[
-                RoomOccupancyActiveSection(
-                  activeBooking: activeBooking,
-                  room: room,
-                ),
-              ] else if (isOccupiedByWalkIn) ...[
-                RoomOccupancyWalkInSection(room: room),
-              ] else if (isMaintenance) ...[
-                _buildMaintenanceContent(),
-              ] else ...[
-                if (unavailable)
-                  Text('equipment_unavailable'.tr())
-                else
-                  RoomOccupancyAvailableSection(room: room, loungeId: loungeId),
-              ],
+              _body(
+                context,
+                isOccupiedByApp,
+                isOccupiedByWalkIn,
+                isMaintenance,
+                unavailable,
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _body(
+    BuildContext context,
+    bool isOccupiedByApp,
+    bool isOccupiedByWalkIn,
+    bool isMaintenance,
+    bool unavailable,
+  ) {
+    if (isOccupiedByApp) {
+      return RoomOccupancyActiveSection(
+        activeBooking: activeBooking!,
+        room: room,
+      );
+    }
+    if (isOccupiedByWalkIn) {
+      return RoomOccupancyWalkInSection(room: room);
+    }
+    if (isMaintenance) {
+      return Align(
+        alignment: Alignment.bottomCenter,
+        child: _buildMaintenanceContent(),
+      );
+    }
+    if (unavailable) {
+      return Align(
+        alignment: Alignment.bottomCenter,
+        child: Text('equipment_unavailable'.tr()),
+      );
+    }
+    return RoomOccupancyAvailableSection(room: room, loungeId: loungeId);
   }
 
   Widget _buildMaintenanceContent() {

@@ -12,7 +12,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  equipment-visuals:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.44.1'
+          cache: true
+      - run: flutter pub get
+      - name: Verify reviewed equipment references and interactions
+        run: flutter test --no-pub test/features/bookings/room_equipment_card_test.dart
+      - name: Preserve visual failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: equipment-visual-diffs
+          path: test/features/bookings/failures/
+          if-no-files-found: ignore
   quality:
+    needs: equipment-visuals
     runs-on: ubuntu-latest
     timeout-minutes: 35
 

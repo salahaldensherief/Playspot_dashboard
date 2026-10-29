@@ -12,6 +12,7 @@ import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.d
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
 import 'session_clock_host.dart';
+import 'room_cards_layout.dart';
 
 /// Live Room & Station Occupancy Grid Component for Live Operations.
 /// Clarifies empty vs occupied rooms with real-time countdown timers, customer info, and quick booking actions.
@@ -79,9 +80,9 @@ class _RoomOccupancyGridState extends State<RoomOccupancyGrid> {
                 if (room.status == RoomStatusEnum.maintenance) {
                   maintenanceCount++;
                 } else {
-                  final isOccupied = activeBookings.any(
-                    (b) => b.roomId == room.id,
-                  );
+                  final isOccupied =
+                      room.status == RoomStatusEnum.occupied ||
+                      activeBookings.any((b) => b.roomId == room.id);
                   if (isOccupied) {
                     occupiedCount++;
                   } else {
@@ -92,9 +93,9 @@ class _RoomOccupancyGridState extends State<RoomOccupancyGrid> {
 
               // Filter rooms
               final displayedRooms = rooms.where((room) {
-                final isOccupied = activeBookings.any(
-                  (b) => b.roomId == room.id,
-                );
+                final isOccupied =
+                    room.status == RoomStatusEnum.occupied ||
+                    activeBookings.any((b) => b.roomId == room.id);
                 if (_filterType == 'available') {
                   return !isOccupied &&
                       room.status != RoomStatusEnum.maintenance;
@@ -190,31 +191,21 @@ class _RoomOccupancyGridState extends State<RoomOccupancyGrid> {
                   SizedBox(height: 14.h),
 
                   // Rooms Grid / Wrap
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final columns = (constraints.maxWidth / 320)
-                          .floor()
-                          .clamp(1, 6);
-                      final cardWidth =
-                          (constraints.maxWidth - (columns - 1) * 16) / columns;
-                      return Wrap(
-                        spacing: 16,
-                        runSpacing: 16,
-                        children: displayedRooms.map((room) {
-                          final activeBooking = activeBookings
-                              .where((b) => b.roomId == room.id)
-                              .firstOrNull;
-                          return RoomOccupancyCard(
-                            key: ValueKey('room_card_${room.id}'),
-                            room: room,
-                            activeBooking: activeBooking,
-                            loungeId: widget.loungeId,
-                            width: cardWidth,
-                            isStale: roomState.status == RoomStatus.failure,
-                            isRefreshing:
-                                roomState.status == RoomStatus.loading,
-                          );
-                        }).toList(),
+                  RoomCardsLayout(
+                    count: displayedRooms.length,
+                    itemBuilder: (index, width) {
+                      final room = displayedRooms[index];
+                      final activeBooking = activeBookings
+                          .where((b) => b.roomId == room.id)
+                          .firstOrNull;
+                      return RoomOccupancyCard(
+                        key: ValueKey('room_card_${room.id}'),
+                        room: room,
+                        activeBooking: activeBooking,
+                        loungeId: widget.loungeId,
+                        width: width,
+                        isStale: roomState.status == RoomStatus.failure,
+                        isRefreshing: roomState.status == RoomStatus.loading,
                       );
                     },
                   ),

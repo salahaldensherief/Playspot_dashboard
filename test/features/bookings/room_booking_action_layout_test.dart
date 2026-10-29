@@ -100,7 +100,8 @@ void main() {
             find.widgetWithText(AppButton, AppStrings.detailedBooking),
           );
           expect(quick.width, greaterThan(200));
-          expect(detailed.top, greaterThanOrEqualTo(quick.bottom));
+          // The consistent primary-action zone is now the bottom of the card.
+          expect(quick.top, greaterThanOrEqualTo(detailed.bottom));
           expect(find.textContaining('50'), findsOneWidget);
           expect(find.textContaining('80'), findsOneWidget);
           expect(tester.takeException(), isNull);
