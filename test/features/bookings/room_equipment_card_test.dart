@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_state.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/bookings_collapsible_occupancy.dart';
@@ -208,6 +210,50 @@ void main() {
         rooms.setStatus(RoomStatus.success);
         await tester.pump();
         expect(find.byType(LinearProgressIndicator), findsNothing);
+        final bookings =
+            tester.element(find.byType(RoomOccupancyGrid)).read<BookingCubit>()
+                as FixtureBookings;
+        // Preserve the same booking list: status-only stream transitions must
+        // rebuild the actual operational grid and block stale session controls.
+        for (final status in [
+          BookingStatusState.initial,
+          BookingStatusState.loading,
+        ]) {
+          bookings.setStatus(status);
+          await tester.pump();
+          expect(find.byType(LinearProgressIndicator), findsNWidgets(7));
+          expect(
+            tester
+                .widgetList<RoomOccupancyCard>(find.byType(RoomOccupancyCard))
+                .every((card) => card.isRefreshing),
+            isTrue,
+          );
+        }
+        bookings.setStatus(BookingStatusState.failure);
+        await tester.pump();
+        expect(
+          tester
+              .widgetList<RoomOccupancyCard>(find.byType(RoomOccupancyCard))
+              .every((card) => card.isStale),
+          isTrue,
+        );
+        final attempts = bookings.attempts;
+        await tester.tap(closeIcon, warnIfMissed: false);
+        await tester.pump();
+        expect(bookings.attempts, attempts);
+        final bookingRefreshes = bookings.refreshes;
+        await tester.tap(find.widgetWithIcon(TextButton, Icons.refresh).first);
+        await tester.pump();
+        expect(bookings.refreshes, bookingRefreshes + 1);
+        bookings.setStatus(BookingStatusState.success);
+        await tester.pump();
+        expect(
+          tester
+              .widgetList<RoomOccupancyCard>(find.byType(RoomOccupancyCard))
+              .every((card) => !card.isStale && !card.isRefreshing),
+          isTrue,
+        );
+        expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());
       },
     );

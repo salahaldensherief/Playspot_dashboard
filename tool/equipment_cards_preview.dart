@@ -57,9 +57,18 @@ class FixtureRooms extends Cubit<RoomState> implements RoomCubit {
 
 class FixtureBookings extends Cubit<BookingState> implements BookingCubit {
   int attempts = 0;
+  int refreshes = 0;
+  void setStatus(BookingStatusState status) =>
+      emit(state.copyWith(status: status));
+  @override
+  void startWatchingBookings({String? loungeId, bool forceRefresh = false}) {
+    refreshes++;
+  }
+
   FixtureBookings({int count = 7})
     : super(
         BookingState(
+          status: BookingStatusState.success,
           errorMessage: 'Fixture: operation not confirmed',
           bookings: [
             for (var i = 0; i < count; i++)

@@ -47,19 +47,39 @@ class _RoomOccupancyGridState extends State<RoomOccupancyGrid> {
             prev.rooms != curr.rooms || prev.status != curr.status,
         builder: (context, roomState) {
           return BlocBuilder<BookingCubit, BookingState>(
-            buildWhen: (prev, curr) => prev.bookings != curr.bookings,
+            buildWhen: (prev, curr) =>
+                prev.bookings != curr.bookings || prev.status != curr.status,
             builder: (context, bookingState) {
               final rooms = roomState.rooms;
+              final isStale =
+                  roomState.status == RoomStatus.failure ||
+                  bookingState.status == BookingStatusState.failure;
+              final isRefreshing =
+                  roomState.status == RoomStatus.loading ||
+                  bookingState.status == BookingStatusState.loading ||
+                  bookingState.status == BookingStatusState.initial;
+              void retry() {
+                if (roomState.status == RoomStatus.failure) {
+                  context.read<RoomCubit>().watchRooms(
+                    widget.loungeId,
+                    forceRefresh: true,
+                  );
+                }
+                if (bookingState.status == BookingStatusState.failure) {
+                  context.read<BookingCubit>().startWatchingBookings(
+                    loungeId: widget.loungeId,
+                    forceRefresh: true,
+                  );
+                }
+              }
+
               if (rooms.isEmpty) {
                 if (roomState.status == RoomStatus.loading) {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (roomState.status == RoomStatus.failure) {
                   return TextButton.icon(
-                    onPressed: () => context.read<RoomCubit>().watchRooms(
-                      widget.loungeId,
-                      forceRefresh: true,
-                    ),
+                    onPressed: retry,
                     icon: const Icon(Icons.refresh),
                     label: Text('retry'.tr()),
                   );
@@ -112,12 +132,9 @@ class _RoomOccupancyGridState extends State<RoomOccupancyGrid> {
               final titleWidget = Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (roomState.status == RoomStatus.failure)
+                  if (isStale)
                     TextButton.icon(
-                      onPressed: () => context.read<RoomCubit>().watchRooms(
-                        widget.loungeId,
-                        forceRefresh: true,
-                      ),
+                      onPressed: retry,
                       icon: const Icon(Icons.refresh),
                       label: Text('retry'.tr()),
                     ),
@@ -204,8 +221,8 @@ class _RoomOccupancyGridState extends State<RoomOccupancyGrid> {
                         activeBooking: activeBooking,
                         loungeId: widget.loungeId,
                         width: width,
-                        isStale: roomState.status == RoomStatus.failure,
-                        isRefreshing: roomState.status == RoomStatus.loading,
+                        isStale: isStale,
+                        isRefreshing: isRefreshing,
                       );
                     },
                   ),
