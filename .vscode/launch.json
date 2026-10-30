@@ -44,6 +44,20 @@
       "toolArgs": [
         "--no-pub"
       ]
+    },
+    {
+      "name": "PlaySpot - Isolated loopback backend (Chrome)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "cwd": "${workspaceFolder}",
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--no-pub",
+        "--web-port=51651",
+        "--dart-define-from-file=${workspaceFolder}/.env.isolated.json"
+      ],
+      "preLaunchTask": "PlaySpot: validate isolated loopback (offline)"
     }
   ]
 }

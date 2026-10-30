@@ -1,6 +1,6 @@
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateSet('Demo', 'Development')]
+  [ValidateSet('Demo', 'Development', 'Local')]
   [string]$Environment,
 
   [string]$ConfigFile,
@@ -17,7 +17,11 @@ $productionRef = 'tgpdexoitemmpruepgyt'
 $demoRef = 'tmqhncduzlavgqoyjcmn'
 
 if (-not $ConfigFile) {
-  $fileName = if ($Environment -eq 'Demo') { '.env.demo' } else { '.env.dev' }
+  $fileName = switch ($Environment) {
+    'Demo' { '.env.demo' }
+    'Local' { '.env.isolated.json' }
+    default { '.env.dev' }
+  }
   $ConfigFile = Join-Path $projectRoot $fileName
 }
 
@@ -51,10 +55,17 @@ if ([string]::IsNullOrWhiteSpace($url) -or [string]::IsNullOrWhiteSpace($key)) {
 }
 
 $uri = [uri]$url
-if ($uri.Scheme -ne 'https' -or $uri.Host -notmatch '^([a-z0-9]+)\.supabase\.co$' -or $uri.AbsolutePath -ne '/' -or $uri.Query) {
+if ($Environment -eq 'Local') {
+  if ($uri.Scheme -ne 'http' -or $uri.Host -ne '127.0.0.1' -or $uri.Port -ne 56621 -or
+      $uri.AbsolutePath -ne '/' -or $uri.Query -or $uri.Fragment -or $uri.UserInfo) {
+    throw 'Local mode requires the explicit isolated API at http://127.0.0.1:56621.'
+  }
+  $projectRef = 'playspot-local-acceptance'
+} elseif ($uri.Scheme -ne 'https' -or $uri.Host -notmatch '^([a-z0-9]+)\.supabase\.co$' -or $uri.AbsolutePath -ne '/' -or $uri.Query -or $uri.Fragment -or $uri.UserInfo) {
   throw 'SUPABASE_URL must be a project URL such as https://PROJECT_REF.supabase.co.'
+} else {
+  $projectRef = $Matches[1]
 }
-$projectRef = $Matches[1]
 if ($projectRef -eq $productionRef) {
   throw 'The production Supabase project is forbidden for local development builds.'
 }
@@ -83,7 +94,11 @@ if ($key.StartsWith('sb_publishable_')) {
   } catch {
     throw 'The legacy anon key could not be decoded.'
   }
-  if ($claims.role -ne 'anon' -or $claims.ref -ne $projectRef) {
+  $matchesProject = if ($Environment -eq 'Local') {
+    $claims.iss -eq 'supabase-demo' -and
+      ([string]::IsNullOrEmpty($claims.ref) -or $claims.ref -eq $projectRef)
+  } else { $claims.ref -eq $projectRef }
+  if ($claims.role -ne 'anon' -or -not $matchesProject) {
     throw 'The anon key role or project reference does not match SUPABASE_URL.'
   }
 }

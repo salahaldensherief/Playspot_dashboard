@@ -17,6 +17,23 @@
       "command": "powershell.exe",
       "label": "PlaySpot: validate local backend (offline)",
       "type": "process"
+    },
+    {
+      "label": "PlaySpot: validate isolated loopback (offline)",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-NonInteractive",
+        "-File",
+        "${workspaceFolder}/scripts/launch_local.ps1",
+        "-Environment",
+        "Local",
+        "-ConfigFile",
+        "${workspaceFolder}/.env.isolated.json",
+        "-ValidateOnly"
+      ],
+      "problemMatcher": []
     }
   ]
 }
