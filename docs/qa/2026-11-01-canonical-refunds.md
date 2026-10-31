@@ -10,8 +10,17 @@ This supersedes the earlier verbal report that dev was the Production Branch.
 No Production-branch change is needed from the evidence shown; no settings were changed.
 Draft release PR #88 is still open/Draft, dev → main; it was not merged.
 
-The remaining pre-push gate is narrower: verify current Git connection/build command
-and Preview Supabase variable scopes/target, without exposing values or connecting to
+The owner subsequently inspected current project settings: connected repository
+`salahaldensherief/Playspot_dashboard`, Framework Other, root ./, output build/web,
+Build Command Override enabled, Install/Development Command Overrides disabled.
+Only the prefix `git clone https://github.com/flutter/flutter.git --depth 1 -b stable flutter && ./flutter...`
+was visible. The complete build command and absence of hosted mutations remain unverified.
+The reported SUPABASE_URL/SUPABASE_ANON_KEY scope is Production-only at TEAM level;
+project-level Preview variables/target remain unknown. The owner explicitly holds
+all further push/deployment until these risks are resolved. No settings were saved.
+
+The remaining pre-push gate is narrower: verify the COMPLETE redacted build command
+and PROJECT Preview Supabase variable scopes/target, without exposing values or connecting to
 hosted backends. Existing source has empty compile-time defaults and checks required
 configuration before Supabase initialization. Missing Preview configuration can fail
 closed; an injected Production/Staging configuration cannot be assumed safe.
@@ -23,6 +32,8 @@ The refund implementation remains `413826ec7239ae46861db016b05a9a0b2cc5ab96`;
 this follow-up changes guidance/evidence only. Reuse its exact 27 targeted tests and
 local Auth/API/ledger/main-build evidence; do not claim browser acceptance.
 Dashboard remote dev remains `6113da82da43b8630f042b3be30e3cfeaf2560fd` at inspection.
+Mobile `50cc1ce2829704a4fc96c4fb41709e029229f434` was independently pushed/verified
+before the subsequent hold; Mobile's canonical handover records its exact CI outcome.
 The dated pre-screenshot investigation below is preserved as history.
 
 ## Source and scope
