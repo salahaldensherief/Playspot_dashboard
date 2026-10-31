@@ -27,15 +27,15 @@ class LoungeStatsEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        success,
-        loungeId,
-        todayRevenue,
-        monthlyRevenue,
-        totalRooms,
-        occupiedRooms,
-        occupancyRate,
-        activeBookings,
-        openShifts,
-        lowStockItems,
-      ];
+    success,
+    loungeId,
+    todayRevenue,
+    monthlyRevenue,
+    totalRooms,
+    occupiedRooms,
+    occupancyRate,
+    activeBookings,
+    openShifts,
+    lowStockItems,
+  ];
 }

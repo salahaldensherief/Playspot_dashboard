@@ -20,9 +20,11 @@ abstract class LoungeRemoteDataSource {
     String? city,
     String? address,
     String? phone,
+    String? ownerPhone,
   });
   Future<void> updateLounge(String id, Map<String, dynamic> data);
-  Future<void> updateLoungeDiscount(String id, {
+  Future<void> updateLoungeDiscount(
+    String id, {
     required bool hasDiscount,
     required int discountPercentage,
     String? titleAr,
@@ -33,7 +35,7 @@ abstract class LoungeRemoteDataSource {
   });
   Future<Map<String, dynamic>> getDashboardStats(String? loungeId);
   Future<Map<String, dynamic>> getDashboardOverview();
-  Future<List<Map<String, dynamic>>> getRevenueOverTime(int daysBack);
+  Future<List<Map<String, dynamic>>> getRevenueOverTime(String period);
   Future<List<Map<String, dynamic>>> getTopLoungesByRevenue(int limitCount);
 
   // Rooms & Activities

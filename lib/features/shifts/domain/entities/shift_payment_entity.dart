@@ -24,12 +24,12 @@ class ShiftPaymentEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        shiftId,
-        amount,
-        paymentMethod,
-        category,
-        bookingId,
-        createdAt,
-      ];
+    id,
+    shiftId,
+    amount,
+    paymentMethod,
+    category,
+    bookingId,
+    createdAt,
+  ];
 }

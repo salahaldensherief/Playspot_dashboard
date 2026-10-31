@@ -10,74 +10,101 @@ class ExtrasCubit extends Cubit<ExtrasState> {
 
   Future<void> loadExtras(String loungeId, {bool forceRefresh = false}) async {
     emit(state.copyWith(status: ExtrasStatus.loading));
-    final result = await repository.getExtras(loungeId, forceRefresh: forceRefresh);
-    
+    final result = await repository.getExtras(
+      loungeId,
+      forceRefresh: forceRefresh,
+    );
+
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: ExtrasStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (extras) => emit(state.copyWith(
-        status: ExtrasStatus.success,
-        extras: extras,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: ExtrasStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (extras) =>
+          emit(state.copyWith(status: ExtrasStatus.success, extras: extras)),
     );
   }
 
-  Future<void> toggleStock(String extraId, bool isOutOfStock, String loungeId) async {
+  Future<void> toggleStock(
+    String extraId,
+    bool isOutOfStock,
+    String loungeId,
+  ) async {
     final result = await repository.toggleExtraStock(extraId, isOutOfStock);
-    
+
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: ExtrasStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: ExtrasStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) => loadExtras(loungeId),
     );
   }
 
-  Future<void> addExtra(ExtraEntity extra) async {
+  Future<bool> addExtra(ExtraEntity extra) async {
     final result = await repository.addExtra(extra);
-    
-    if (isClosed) return;
 
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: ExtrasStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (_) => loadExtras(extra.loungeId),
+    if (isClosed) return false;
+
+    return result.fold<Future<bool>>(
+      (failure) async {
+        emit(
+          state.copyWith(
+            status: ExtrasStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
+        return false;
+      },
+      (_) async {
+        await loadExtras(extra.loungeId);
+        return true;
+      },
     );
   }
 
-  Future<void> updateExtra(ExtraEntity extra) async {
+  Future<bool> updateExtra(ExtraEntity extra) async {
     final result = await repository.updateExtra(extra);
-    
-    if (isClosed) return;
 
-    result.fold(
-      (failure) => emit(state.copyWith(
-        status: ExtrasStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (_) => loadExtras(extra.loungeId),
+    if (isClosed) return false;
+
+    return result.fold<Future<bool>>(
+      (failure) async {
+        emit(
+          state.copyWith(
+            status: ExtrasStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
+        return false;
+      },
+      (_) async {
+        await loadExtras(extra.loungeId);
+        return true;
+      },
     );
   }
 
   Future<void> deleteExtra(String extraId, String loungeId) async {
     final result = await repository.deleteExtra(extraId);
-    
+
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: ExtrasStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: ExtrasStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) => loadExtras(loungeId),
     );
   }

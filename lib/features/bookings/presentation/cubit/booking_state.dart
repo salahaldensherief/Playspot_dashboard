@@ -25,43 +25,94 @@ class BookingState extends Equatable {
     this.latestNewBooking,
   });
 
+  List<Booking> withSupplementalBookings(
+    List<Booking> supplemental, {
+    String? loungeId,
+  }) {
+    final scoped = loungeId != null && loungeId != 'all';
+    return List<Booking>.unmodifiable(
+      {
+        for (final booking in supplemental)
+          if (!scoped || booking.loungeId == loungeId) booking.id: booking,
+        for (final booking in bookings)
+          if (!scoped || booking.loungeId == loungeId) booking.id: booking,
+      }.values,
+    );
+  }
+
   bool get hasNextPage => page * pageSize < totalCount;
   bool get hasPreviousPage => page > 1;
   int get totalPages => pageSize > 0 ? (totalCount / pageSize).ceil() : 0;
 
   /// Active Bookings: currently in-progress or upcoming (and not expired)
   List<Booking> get activeBookings => bookings
-      .where((b) => b.isBookingActive() || (b.status == BookingStatus.upcoming && !b.isSessionExpired()))
+      .where(
+        (b) =>
+            b.isBookingActive() ||
+            (b.status == BookingStatus.upcoming && !b.isSessionExpired()),
+      )
       .toList();
 
-  /// Pending Bookings: waiting for approval
+  /// Pending Bookings: waiting for approval or transfer verification
   List<Booking> get pendingBookings => bookings
-      .where((b) => b.status == BookingStatus.pending)
+      .where(
+        (b) =>
+            b.status == BookingStatus.pending ||
+            b.status == BookingStatus.pendingVerification,
+      )
+      .toList();
+
+  /// Upcoming Bookings: confirmed upcoming bookings not yet started
+  List<Booking> get upcomingBookings => bookings
+      .where((b) => b.status == BookingStatus.upcoming && !b.isSessionExpired())
       .toList();
 
   /// Cancelled Bookings: bookings with status == BookingStatus.cancelled
-  List<Booking> get cancelledBookings => bookings
-      .where((b) => b.status == BookingStatus.cancelled)
-      .toList();
+  List<Booking> get cancelledBookings =>
+      bookings.where((b) => b.status == BookingStatus.cancelled).toList();
 
   /// Current Shift / Today Cancelled Bookings
-  List<Booking> currentShiftCancelledBookings({dynamic activeShift, Lounge? userLounge}) {
+  List<Booking> currentShiftCancelledBookings({
+    dynamic activeShift,
+    Lounge? userLounge,
+  }) {
     return bookings
-        .where((b) => b.status == BookingStatus.cancelled && isBookingInCurrentShiftOrToday(b, activeShift, userLounge: userLounge, allowCancelled: true))
+        .where(
+          (b) =>
+              b.status == BookingStatus.cancelled &&
+              isBookingInCurrentShiftOrToday(
+                b,
+                activeShift,
+                userLounge: userLounge,
+                allowCancelled: true,
+              ),
+        )
         .toList();
   }
 
   /// Current Shift / Today Bookings
-  List<Booking> currentShiftBookings({dynamic activeShift, Lounge? userLounge}) {
+  List<Booking> currentShiftBookings({
+    dynamic activeShift,
+    Lounge? userLounge,
+  }) {
     return bookings
-        .where((b) => isBookingInCurrentShiftOrToday(b, activeShift, userLounge: userLounge, requireCompleted: true))
+        .where(
+          (b) => isBookingInCurrentShiftOrToday(
+            b,
+            activeShift,
+            userLounge: userLounge,
+            requireCompleted: true,
+          ),
+        )
         .toList();
   }
 
   /// Current Shift / Today Revenue
   double currentShiftRevenue({dynamic activeShift, Lounge? userLounge}) {
-    return currentShiftBookings(activeShift: activeShift, userLounge: userLounge)
-        .fold(0.0, (sum, item) => sum + item.totalPrice);
+    return currentShiftBookings(
+      activeShift: activeShift,
+      userLounge: userLounge,
+    ).fold(0.0, (sum, item) => sum + item.totalPrice);
   }
 
   /// Core logic for checking if a booking belongs to current active shift or today's operational day
@@ -72,8 +123,12 @@ class BookingState extends Equatable {
     bool requireCompleted = false,
     bool allowCancelled = false,
   }) {
-    if (requireCompleted && booking.status != BookingStatus.completed) return false;
-    if (!allowCancelled && booking.status == BookingStatus.cancelled) return false;
+    if (requireCompleted && booking.status != BookingStatus.completed) {
+      return false;
+    }
+    if (!allowCancelled && booking.status == BookingStatus.cancelled) {
+      return false;
+    }
 
     final now = DateTime.now();
     int thresholdHour = 5;
@@ -91,28 +146,53 @@ class BookingState extends Equatable {
     final DateTime operationalDayStart;
     if (now.hour < thresholdHour) {
       final yesterday = now.subtract(const Duration(days: 1));
-      operationalDayStart = DateTime(yesterday.year, yesterday.month, yesterday.day, thresholdHour);
+      operationalDayStart = DateTime(
+        yesterday.year,
+        yesterday.month,
+        yesterday.day,
+        thresholdHour,
+      );
     } else {
-      operationalDayStart = DateTime(now.year, now.month, now.day, thresholdHour);
+      operationalDayStart = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        thresholdHour,
+      );
     }
-    final DateTime operationalDayEnd = operationalDayStart.add(const Duration(hours: 24));
+    final DateTime operationalDayEnd = operationalDayStart.add(
+      const Duration(hours: 24),
+    );
 
-    final bookingTime = booking.cancelledAt ??
+    final bookingTime =
+        booking.cancelledAt ??
         booking.checkedInAt ??
         booking.startDateTime ??
-        DateTime(booking.date.year, booking.date.month, booking.date.day, 12, 0);
+        DateTime(
+          booking.date.year,
+          booking.date.month,
+          booking.date.day,
+          12,
+          0,
+        );
 
     final bool isInOperationalDay =
-        (bookingTime.isAfter(operationalDayStart) || bookingTime.isAtSameMomentAs(operationalDayStart)) &&
-            bookingTime.isBefore(operationalDayEnd);
+        (bookingTime.isAfter(operationalDayStart) ||
+            bookingTime.isAtSameMomentAs(operationalDayStart)) &&
+        bookingTime.isBefore(operationalDayEnd);
 
     if (activeShift != null) {
       if (booking.shiftId != null && booking.shiftId == activeShift.id) {
         return isInOperationalDay;
       }
       final DateTime startTime = activeShift.startTime;
-      final bool isAfterShiftStart = bookingTime.isAfter(startTime.subtract(const Duration(minutes: 15))) ||
-          bookingTime.isAtSameMomentAs(startTime.subtract(const Duration(minutes: 15)));
+      final bool isAfterShiftStart =
+          bookingTime.isAfter(
+            startTime.subtract(const Duration(minutes: 15)),
+          ) ||
+          bookingTime.isAtSameMomentAs(
+            startTime.subtract(const Duration(minutes: 15)),
+          );
       return isAfterShiftStart && isInOperationalDay;
     }
 
@@ -137,20 +217,23 @@ class BookingState extends Equatable {
       pageSize: pageSize ?? this.pageSize,
       totalCount: totalCount ?? this.totalCount,
       errorMessage: errorMessage ?? this.errorMessage,
-      selectedDurationMinutes: selectedDurationMinutes ?? this.selectedDurationMinutes,
-      latestNewBooking: clearLatestNewBooking ? null : (latestNewBooking ?? this.latestNewBooking),
+      selectedDurationMinutes:
+          selectedDurationMinutes ?? this.selectedDurationMinutes,
+      latestNewBooking: clearLatestNewBooking
+          ? null
+          : (latestNewBooking ?? this.latestNewBooking),
     );
   }
 
   @override
   List<Object?> get props => [
-        status,
-        bookings,
-        page,
-        pageSize,
-        totalCount,
-        errorMessage,
-        selectedDurationMinutes,
-        latestNewBooking,
-      ];
+    status,
+    bookings,
+    page,
+    pageSize,
+    totalCount,
+    errorMessage,
+    selectedDurationMinutes,
+    latestNewBooking,
+  ];
 }

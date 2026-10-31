@@ -1,7 +1,7 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -30,25 +30,31 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = context.read<LoginCubit>().state.user;
-      context.read<BookingCubit>().startWatchingBookings(loungeId: user?.loungeId);
+      context.read<BookingCubit>().startWatchingBookings(
+        loungeId: user?.loungeId,
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return DashboardLayout(
       title: AppStrings.monthlyReports,
       activeRoute: 'Reports',
       child: BlocBuilder<BookingCubit, BookingState>(
-        buildWhen: (previous, current) => 
-            previous.status != current.status || 
+        buildWhen: (previous, current) =>
+            previous.status != current.status ||
             previous.bookings != current.bookings,
         builder: (context, state) {
-          final monthlyBookings = state.bookings.where((b) => 
-            b.date.month == _selectedDate.month && 
-            b.date.year == _selectedDate.year &&
-            b.status == BookingStatus.completed
-          ).toList();
+          final monthlyBookings = state.bookings
+              .where(
+                (b) =>
+                    b.date.month == _selectedDate.month &&
+                    b.date.year == _selectedDate.year &&
+                    b.status == BookingStatus.completed,
+              )
+              .toList();
 
           double totalRevenue = 0;
           for (var b in monthlyBookings) {
@@ -77,7 +83,10 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppText.heading(DateFormat('MMMM yyyy').format(_selectedDate), fontSize: 22.sp),
+          AppText.heading(
+            DateFormat('MMMM yyyy').format(_selectedDate),
+            fontSize: 22.sp,
+          ),
           SizedBox(height: 4.h),
           AppText.body(AppStrings.selectMonth, fontSize: 13.sp),
           SizedBox(height: 12.h),
@@ -100,7 +109,10 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AppText.heading(DateFormat('MMMM yyyy').format(_selectedDate), fontSize: 28.sp),
+            AppText.heading(
+              DateFormat('MMMM yyyy').format(_selectedDate),
+              fontSize: 28.sp,
+            ),
             AppText.body(AppStrings.selectMonth),
           ],
         ),
@@ -120,23 +132,52 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
     if (isMobile) {
       return Column(
         children: [
-          _buildStatCard(AppStrings.totalBookings, count.toString(), Icons.confirmation_number_outlined, AppColors.neonBlue),
+          _buildStatCard(
+            AppStrings.totalBookings,
+            count.toString(),
+            Icons.confirmation_number_outlined,
+            AppColors.neonBlue,
+          ),
           SizedBox(height: 12.h),
-          _buildStatCard(AppStrings.totalRevenue, "${revenue.toStringAsFixed(0)} ${AppStrings.egp}", Icons.payments_outlined, AppColors.success),
+          _buildStatCard(
+            AppStrings.totalRevenue,
+            "${revenue.toStringAsFixed(0)} ${AppStrings.egp}",
+            Icons.payments_outlined,
+            AppColors.success,
+          ),
         ],
       );
     }
 
     return Row(
       children: [
-        Expanded(child: _buildStatCard(AppStrings.totalBookings, count.toString(), Icons.confirmation_number_outlined, AppColors.neonBlue)),
+        Expanded(
+          child: _buildStatCard(
+            AppStrings.totalBookings,
+            count.toString(),
+            Icons.confirmation_number_outlined,
+            AppColors.neonBlue,
+          ),
+        ),
         SizedBox(width: 20.w),
-        Expanded(child: _buildStatCard(AppStrings.totalRevenue, "${revenue.toStringAsFixed(0)} ${AppStrings.egp}", Icons.payments_outlined, AppColors.success)),
+        Expanded(
+          child: _buildStatCard(
+            AppStrings.totalRevenue,
+            "${revenue.toStringAsFixed(0)} ${AppStrings.egp}",
+            Icons.payments_outlined,
+            AppColors.success,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: EdgeInsets.all(24.r),
       decoration: BoxDecoration(
@@ -148,7 +189,10 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
         children: [
           Container(
             padding: EdgeInsets.all(12.r),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12.r)),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
             child: Icon(icon, color: color, size: 28.r),
           ),
           SizedBox(width: 12.w),
@@ -156,7 +200,11 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppText.body(label, color: AppColors.textSecondary, overflow: TextOverflow.ellipsis),
+                AppText.body(
+                  label,
+                  color: AppColors.textSecondary,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 AppText.heading(value, fontSize: 24.sp, color: color),
               ],
             ),
@@ -168,16 +216,113 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
 
   Widget _buildHistoryTable(List<Booking> bookings) {
     return DataTableWidget(
-      columns: [AppStrings.date, AppStrings.customerName, AppStrings.roomLabel, AppStrings.totalPrice, AppStrings.status],
-      rows: bookings.map((b) => DataRow(
-        cells: [
-          DataCell(AppText.body(DateFormat('MMM dd').format(b.date))),
-          DataCell(AppText.body(b.userName ?? AppStrings.anonymous)),
-          DataCell(AppText.body(b.roomName)),
-          DataCell(AppText.body("${b.totalPrice} ${AppStrings.egp}", color: AppColors.neonBlue, fontWeight: FontWeight.bold)),
-          DataCell(StatusBadge.success(AppStrings.completed)),
-        ],
-      )).toList(),
+      mobileCardBuilder: (context, index) {
+        final b = bookings[index];
+        return Container(
+          padding: EdgeInsets.all(14.r),
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: AppColors.borderDefault),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.person_outline,
+                        size: 16,
+                        color: AppColors.neonBlue,
+                      ),
+                      SizedBox(width: 6.w),
+                      Text(
+                        b.userName ?? AppStrings.anonymous,
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14.sp,
+                        ),
+                      ),
+                    ],
+                  ),
+                  StatusBadge.success(AppStrings.completed),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    DateFormat('MMM dd, hh:mm a').format(b.date),
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                  Text(
+                    b.roomName,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(color: AppColors.borderDefault, height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    AppStrings.totalPrice,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                  Text(
+                    "${b.totalPrice} ${AppStrings.egp}",
+                    style: TextStyle(
+                      color: AppColors.neonBlue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.sp,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+      columns: [
+        AppStrings.date,
+        AppStrings.customerName,
+        AppStrings.roomLabel,
+        AppStrings.totalPrice,
+        AppStrings.status,
+      ],
+      rows: bookings
+          .map(
+            (b) => DataRow(
+              cells: [
+                DataCell(AppText.body(DateFormat('MMM dd').format(b.date))),
+                DataCell(AppText.body(b.userName ?? AppStrings.anonymous)),
+                DataCell(AppText.body(b.roomName)),
+                DataCell(
+                  AppText.body(
+                    "${b.totalPrice} ${AppStrings.egp}",
+                    color: AppColors.neonBlue,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                DataCell(StatusBadge.success(AppStrings.completed)),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

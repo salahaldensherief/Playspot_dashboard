@@ -1,3 +1,6 @@
+import 'package:google_fonts/google_fonts.dart';
+import 'core/config/local_acceptance.dart';
+import 'core/constants/app_constants.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,14 +14,24 @@ import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+  validateLocalAcceptanceTarget(enabled: localAcceptance, url: supabaseUrl);
+  validateLocalAcceptancePublicKey(
+    enabled: localAcceptance,
+    key: supabaseAnonKey,
+  );
+  if (localAcceptance) GoogleFonts.config.allowRuntimeFetching = false;
+
   // Set the Bloc observer for the entire app
   Bloc.observer = AppBlocObserver();
 
   // Catch uncaught Flutter framework errors
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    AppLogger.error('Flutter Framework Error: ${details.exception}', details.exception, details.stack);
+    AppLogger.error(
+      'Flutter Framework Error: ${details.exception}',
+      details.exception,
+      details.stack,
+    );
   };
 
   // Catch uncaught asynchronous platform errors
@@ -26,7 +39,7 @@ void main() async {
     AppLogger.error('Uncaught Async Error: $error', error, stack);
     return true; // Prevents process crash
   };
-  
+
   // Removes the '#' from the URL to make it look like a standard website
   usePathUrlStrategy();
 

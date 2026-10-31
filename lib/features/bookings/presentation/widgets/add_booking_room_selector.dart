@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,6 +23,7 @@ class AddBookingRoomSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -34,15 +36,23 @@ class AddBookingRoomSelector extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.5)),
+              border: Border.all(
+                color: AppColors.neonBlue.withValues(alpha: 0.5),
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.sports_esports_rounded, color: AppColors.neonBlue, size: 20.r),
+                Icon(
+                  Icons.sports_esports_rounded,
+                  color: AppColors.neonBlue,
+                  size: 20.r,
+                ),
                 SizedBox(width: 10.w),
                 Expanded(
                   child: Text(
-                    initialRoom!.nameAr.isNotEmpty ? initialRoom!.nameAr : initialRoom!.nameEn,
+                    initialRoom!.nameAr.isNotEmpty
+                        ? initialRoom!.nameAr
+                        : initialRoom!.nameEn,
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
@@ -52,7 +62,10 @@ class AddBookingRoomSelector extends StatelessWidget {
                 ),
                 if (initialRoom!.activityNames.isNotEmpty)
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 4.h,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.neonBlue.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6.r),
@@ -73,12 +86,16 @@ class AddBookingRoomSelector extends StatelessWidget {
           BlocBuilder<RoomCubit, RoomState>(
             builder: (context, state) {
               final rooms = state.rooms
-                  .where((r) => r.status == RoomStatusEnum.available || r.id == selectedRoom?.id)
+                  .where(
+                    (r) =>
+                        r.status == RoomStatusEnum.available ||
+                        r.id == selectedRoom?.id,
+                  )
                   .toList();
 
               final selectedRoomInList = rooms.cast<RoomEntity?>().firstWhere(
                 (r) => r?.id == selectedRoom?.id,
-                orElse: () => rooms.isNotEmpty ? rooms.first : null,
+                orElse: () => null,
               );
 
               return Container(
@@ -91,14 +108,23 @@ class AddBookingRoomSelector extends StatelessWidget {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<RoomEntity>(
                     value: selectedRoomInList,
-                    hint: AppText.body(AppStrings.roomLabel, color: AppColors.textSecondary),
+                    hint: AppText.body(
+                      AppStrings.roomLabel,
+                      color: AppColors.textSecondary,
+                    ),
                     isExpanded: true,
                     dropdownColor: AppColors.cardBackground,
                     items: rooms
-                        .map((room) => DropdownMenuItem<RoomEntity>(
-                              value: room,
-                              child: AppText.body(room.nameAr.isNotEmpty ? room.nameAr : room.nameEn),
-                            ))
+                        .map(
+                          (room) => DropdownMenuItem<RoomEntity>(
+                            value: room,
+                            child: AppText.body(
+                              room.nameAr.isNotEmpty
+                                  ? room.nameAr
+                                  : room.nameEn,
+                            ),
+                          ),
+                        )
                         .toList(),
                     onChanged: onRoomSelected,
                   ),

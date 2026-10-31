@@ -21,6 +21,7 @@ void initMarketingDI(GetIt sl) {
   sl.registerLazySingleton(() => CreatePromotionUseCase(sl()));
   sl.registerLazySingleton(() => UpdatePromotionUseCase(sl()));
   sl.registerLazySingleton(() => DeletePromotionUseCase(sl()));
+  sl.registerLazySingleton(() => ResharePromotionUseCase(sl()));
   sl.registerLazySingleton(() => UploadPromoPosterUseCase(sl()));
   sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
   sl.registerLazySingleton(() => GetNotificationsPageUseCase(sl()));
@@ -33,6 +34,7 @@ void initMarketingDI(GetIt sl) {
       createPromotionUseCase: sl(),
       updatePromotionUseCase: sl(),
       deletePromotionUseCase: sl(),
+      resharePromotionUseCase: sl(),
       uploadPromoPosterUseCase: sl(),
       getNotificationsUseCase: sl(),
       getNotificationsPageUseCase: sl(),

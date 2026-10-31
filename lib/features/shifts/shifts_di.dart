@@ -19,9 +19,7 @@ void initShiftsDI(GetIt sl) {
 
   // Repositories
   if (!sl.isRegistered<ShiftRepository>()) {
-    sl.registerLazySingleton<ShiftRepository>(
-      () => ShiftRepositoryImpl(sl()),
-    );
+    sl.registerLazySingleton<ShiftRepository>(() => ShiftRepositoryImpl(sl()));
   }
 
   // Use Cases

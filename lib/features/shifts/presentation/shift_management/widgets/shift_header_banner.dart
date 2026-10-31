@@ -1,7 +1,7 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
@@ -21,22 +21,33 @@ class ShiftHeaderBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<LoginCubit, LoginState>(
       builder: (context, loginState) {
         final user = loginState.user;
-        if (user == null) return const SizedBox.shrink();
+        if (user == null || user.isSuperAdmin) return const SizedBox.shrink();
         final loungeId = user.loungeId ?? '';
+        if (loungeId.isEmpty) return const SizedBox.shrink();
 
         return BlocBuilder<ShiftCubit, ShiftState>(
           builder: (context, state) {
             // If no active shift
-            if (state.status == ShiftStatus.initial && state.activeShift == null) {
-              return _buildNoActiveShiftBanner(context, loungeId, isMandatory: user.isCashier);
+            if (state.status == ShiftStatus.initial &&
+                state.activeShift == null) {
+              return _buildNoActiveShiftBanner(
+                context,
+                loungeId,
+                isMandatory: user.isCashier,
+              );
             }
 
             // If there is an active shift
             if (state.activeShift != null) {
-              return _buildActiveShiftBanner(context, state.activeShift!, loungeId);
+              return _buildActiveShiftBanner(
+                context,
+                state.activeShift!,
+                loungeId,
+              );
             }
 
             return const SizedBox.shrink();
@@ -46,11 +57,17 @@ class ShiftHeaderBanner extends StatelessWidget {
     );
   }
 
-  Widget _buildNoActiveShiftBanner(BuildContext context, String loungeId, {bool isMandatory = false}) {
+  Widget _buildNoActiveShiftBanner(
+    BuildContext context,
+    String loungeId, {
+    bool isMandatory = false,
+  }) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      color: (isMandatory ? AppColors.danger : AppColors.neonBlue).withValues(alpha: 0.1),
+      color: (isMandatory ? AppColors.danger : AppColors.neonBlue).withValues(
+        alpha: 0.1,
+      ),
       child: Wrap(
         alignment: WrapAlignment.spaceBetween,
         crossAxisAlignment: WrapCrossAlignment.center,
@@ -78,7 +95,11 @@ class ShiftHeaderBanner extends StatelessWidget {
           ),
           AppButton(
             text: AppStrings.openNewShift,
-            onPressed: () => _showOpenShiftDialog(context, loungeId, isDismissible: !isMandatory),
+            onPressed: () => _showOpenShiftDialog(
+              context,
+              loungeId,
+              isDismissible: !isMandatory,
+            ),
             variant: AppButtonVariant.primary,
             height: 32.h,
           ),
@@ -87,11 +108,29 @@ class ShiftHeaderBanner extends StatelessWidget {
     );
   }
 
-  Widget _buildActiveShiftBanner(BuildContext context, ShiftEntity shift, String loungeId) {
+  Widget _buildActiveShiftBanner(
+    BuildContext context,
+    ShiftEntity shift,
+    String loungeId,
+  ) {
     final startTime = DateFormat('hh:mm a').format(shift.startTime);
     final user = context.read<LoginCubit>().state.user;
     final bool isMyShift = user?.id == shift.cashierId;
-    
+    final permissions = context.watch<PermissionsCubit>();
+    final canClose =
+        user != null &&
+        user.isActive &&
+        !user.isBanned &&
+        shift.loungeId == loungeId &&
+        user.loungeId == loungeId &&
+        (isMyShift || user.isLoungeAdmin) &&
+        permissions.hasLoadedAccess(user.role.name, user.id, loungeId) &&
+        permissions.hasPermission(
+          'shift_close',
+          userRole: user.role.name,
+          userId: user.id,
+        );
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
@@ -99,76 +138,96 @@ class ShiftHeaderBanner extends StatelessWidget {
         color: AppColors.success.withValues(alpha: 0.1),
         border: const Border(bottom: BorderSide(color: AppColors.divider)),
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(4.r),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 8.r,
-                    height: 8.r,
-                    decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
-                  ),
-                  SizedBox(width: 8.w),
-                  Text(
-                    AppStrings.shiftActive,
-                    style: TextStyle(color: AppColors.success, fontSize: 12.sp, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(4.r),
             ),
-            SizedBox(width: 16.w),
-            _buildInfoItem(AppStrings.cashier, shift.cashierName ?? 'N/A'),
-            SizedBox(width: 16.w),
-            _buildInfoItem(AppStrings.startTimeLabel, startTime),
-            SizedBox(width: 24.w),
-            if (isMyShift) ...[
-              AppButton(
-                text: 'تسجيل مصروف / سحب',
-                icon: Icons.receipt_long_outlined,
-                variant: AppButtonVariant.outlined,
-                height: 32.h,
-                onPressed: () => _showAddExpenseDialog(context, shift, loungeId),
-              ),
-              SizedBox(width: 8.w),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8.r,
+                  height: 8.r,
+                  decoration: const BoxDecoration(
+                    color: AppColors.success,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                Text(
+                  AppStrings.shiftActive,
+                  style: TextStyle(
+                    color: AppColors.success,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _buildInfoItem(AppStrings.cashier, shift.cashierName ?? 'N/A'),
+          _buildInfoItem(AppStrings.startTimeLabel, startTime),
+          if (isMyShift) ...[
+            AppButton(
+              text: AppStrings.recordExpense,
+              icon: Icons.receipt_long_outlined,
+              variant: AppButtonVariant.outlined,
+              height: 32.h,
+              onPressed: () => _showAddExpenseDialog(context, shift, loungeId),
+            ),
+            if (canClose)
               AppButton(
                 text: AppStrings.closeShift,
-                onPressed: () => _showCloseShiftDialog(context, shift, loungeId),
+                onPressed: () =>
+                    _showCloseShiftDialog(context, shift, loungeId),
                 variant: AppButtonVariant.outlined,
                 height: 32.h,
               ),
-            ] else ...[
-              AppButton(
-                text: 'إغلاق الشيفت (تسليم)',
-                onPressed: () => _showCloseShiftDialog(context, shift, loungeId),
-                variant: AppButtonVariant.outlined,
-                height: 32.h,
-              ),
-            ],
+          ] else if (canClose) ...[
+            AppButton(
+              text: 'close_shift_handover'.tr(),
+              onPressed: () => _showCloseShiftDialog(context, shift, loungeId),
+              variant: AppButtonVariant.outlined,
+              height: 32.h,
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildInfoItem(String label, String value) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text('$label:', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
+        Text(
+          '$label:',
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+        ),
         SizedBox(width: 4.w),
-        Text(value, style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp, fontWeight: FontWeight.bold)),
+        Text(
+          value,
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 13.sp,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
 
-  void _showOpenShiftDialog(BuildContext context, String loungeId, {bool isDismissible = true}) {
+  void _showOpenShiftDialog(
+    BuildContext context,
+    String loungeId, {
+    bool isDismissible = true,
+  }) {
     final shiftCubit = context.read<ShiftCubit>();
     final loginCubit = context.read<LoginCubit>();
     final permissionsCubit = context.read<PermissionsCubit>();
@@ -184,16 +243,24 @@ class ShiftHeaderBanner extends StatelessWidget {
         ],
         child: OpenShiftDialog(
           isDismissible: isDismissible,
-          onConfirm: (startingCash) {
-            shiftCubit.openShift(loungeId, startingCash);
-            Navigator.pop(diagContext);
+          onConfirm: (startingCash) async {
+            await shiftCubit.openShift(loungeId, startingCash);
+            if (diagContext.mounted &&
+                shiftCubit.state.activeShift != null &&
+                shiftCubit.state.status != ShiftStatus.error) {
+              Navigator.pop(diagContext);
+            }
           },
         ),
       ),
     );
   }
 
-  void _showCloseShiftDialog(BuildContext context, ShiftEntity shift, String loungeId) {
+  void _showCloseShiftDialog(
+    BuildContext context,
+    ShiftEntity shift,
+    String loungeId,
+  ) {
     final shiftCubit = context.read<ShiftCubit>();
     final loginCubit = context.read<LoginCubit>();
     final permissionsCubit = context.read<PermissionsCubit>();
@@ -212,10 +279,13 @@ class ShiftHeaderBanner extends StatelessWidget {
           onConfirm: (actualCash, notes) async {
             Navigator.pop(diagContext);
             await shiftCubit.closeShift(shift.id, actualCash, notes, loungeId);
-            if (context.mounted && shiftCubit.state.lastClosedShift != null) {
+            final closedShift = shiftCubit.state.lastClosedShift;
+            if (context.mounted &&
+                closedShift != null &&
+                closedShift.id == shift.id) {
               showDialog(
                 context: context,
-                builder: (_) => ShiftHandoverSummaryDialog(shift: shiftCubit.state.lastClosedShift!),
+                builder: (_) => ShiftHandoverSummaryDialog(shift: closedShift),
               );
             }
           },
@@ -224,17 +294,18 @@ class ShiftHeaderBanner extends StatelessWidget {
     );
   }
 
-  void _showAddExpenseDialog(BuildContext context, ShiftEntity shift, String loungeId) {
+  void _showAddExpenseDialog(
+    BuildContext context,
+    ShiftEntity shift,
+    String loungeId,
+  ) {
     final shiftCubit = context.read<ShiftCubit>();
     showDialog(
       context: context,
       useRootNavigator: false,
       builder: (diagContext) => BlocProvider.value(
         value: shiftCubit,
-        child: AddExpenseDialog(
-          shiftId: shift.id,
-          loungeId: loungeId,
-        ),
+        child: AddExpenseDialog(shiftId: shift.id, loungeId: loungeId),
       ),
     );
   }

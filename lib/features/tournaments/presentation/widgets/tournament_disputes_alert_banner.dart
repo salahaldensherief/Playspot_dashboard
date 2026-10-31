@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
@@ -20,6 +21,7 @@ class TournamentDisputesAlertBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (disputedCount <= 0) return const SizedBox.shrink();
 
     return Container(
@@ -31,7 +33,11 @@ class TournamentDisputesAlertBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 28),
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: AppColors.danger,
+            size: 28,
+          ),
           SizedBox(width: 12.w),
           Expanded(
             child: Column(
@@ -48,7 +54,10 @@ class TournamentDisputesAlertBanner extends StatelessWidget {
                 SizedBox(height: 2.h),
                 Text(
                   '${AppStrings.resolveDispute} $player1Name vs $player2Name',
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 13.sp,
+                  ),
                 ),
               ],
             ),

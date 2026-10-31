@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -15,14 +16,17 @@ class ReviewsPaginationFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final loungeId = context.read<LoginCubit>().state.user?.loungeId;
     if (loungeId == null || loungeId.isEmpty || state.totalCount == 0) {
       return const SizedBox.shrink();
     }
 
     final startIndex = (state.page - 1) * state.pageSize + 1;
-    final endIndex =
-        (startIndex + state.reviews.length - 1).clamp(0, state.totalCount);
+    final endIndex = (startIndex + state.reviews.length - 1).clamp(
+      0,
+      state.totalCount,
+    );
 
     return Container(
       margin: EdgeInsets.only(top: 20.h),
@@ -47,10 +51,10 @@ class ReviewsPaginationFooter extends StatelessWidget {
                 fontSize: 12.sp,
                 onPressed: state.hasPreviousPage
                     ? () => context.read<ReviewsCubit>().fetchReviewsPage(
-                          loungeId: loungeId,
-                          page: state.page - 1,
-                          pageSize: state.pageSize,
-                        )
+                        loungeId: loungeId,
+                        page: state.page - 1,
+                        pageSize: state.pageSize,
+                      )
                     : null,
               ),
               SizedBox(width: 12.w),
@@ -69,10 +73,10 @@ class ReviewsPaginationFooter extends StatelessWidget {
                 fontSize: 12.sp,
                 onPressed: state.hasNextPage
                     ? () => context.read<ReviewsCubit>().fetchReviewsPage(
-                          loungeId: loungeId,
-                          page: state.page + 1,
-                          pageSize: state.pageSize,
-                        )
+                        loungeId: loungeId,
+                        page: state.page + 1,
+                        pageSize: state.pageSize,
+                      )
                     : null,
               ),
             ],

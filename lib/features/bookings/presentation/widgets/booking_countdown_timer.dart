@@ -1,12 +1,15 @@
-import 'dart:async';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
+
+import 'session_time_builder.dart';
+
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 
 /// Live Countdown Timer widget for cash bookings
-class BookingCountdownTimer extends StatefulWidget {
+class BookingCountdownTimer extends StatelessWidget {
   final Booking booking;
   final int gracePeriodMinutes;
 
@@ -17,39 +20,13 @@ class BookingCountdownTimer extends StatefulWidget {
   });
 
   @override
-  State<BookingCountdownTimer> createState() => _BookingCountdownTimerState();
-}
+  Widget build(BuildContext context) =>
+      SessionTimeBuilder(builder: _buildCountdown);
 
-class _BookingCountdownTimerState extends State<BookingCountdownTimer> {
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _startTimer();
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() {});
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final start = widget.booking.startDateTime;
+  Widget _buildCountdown(BuildContext context, DateTime now) {
+    EasyLocalization.of(context);
+    final start = booking.startDateTime;
     if (start == null) return const SizedBox.shrink();
-
-    final now = DateTime.now();
 
     if (now.isBefore(start)) {
       // Countdown to start time
@@ -72,7 +49,11 @@ class _BookingCountdownTimerState extends State<BookingCountdownTimer> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.hourglass_top_rounded, color: AppColors.warning, size: 12.r),
+            Icon(
+              Icons.hourglass_top_rounded,
+              color: AppColors.warning,
+              size: 12.r,
+            ),
             SizedBox(width: 4.w),
             Text(
               AppStrings.countdownToStart(timeFormatted),
@@ -89,7 +70,7 @@ class _BookingCountdownTimerState extends State<BookingCountdownTimer> {
       // Past start time - grace period tracking
       final elapsed = now.difference(start);
       final elapsedMins = elapsed.inMinutes;
-      final graceLimit = widget.gracePeriodMinutes;
+      final graceLimit = gracePeriodMinutes;
 
       final isExpired = elapsedMins >= graceLimit;
 
@@ -104,7 +85,11 @@ class _BookingCountdownTimerState extends State<BookingCountdownTimer> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline_rounded, color: AppColors.danger, size: 12.r),
+              Icon(
+                Icons.error_outline_rounded,
+                color: AppColors.danger,
+                size: 12.r,
+              ),
               SizedBox(width: 4.w),
               Text(
                 AppStrings.gracePeriodExpired(graceLimit.toString()),
@@ -121,7 +106,8 @@ class _BookingCountdownTimerState extends State<BookingCountdownTimer> {
         final remainingGraceSecs = (graceLimit * 60) - elapsed.inSeconds;
         final mins = (remainingGraceSecs / 60).floor();
         final secs = remainingGraceSecs % 60;
-        final formattedGrace = '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+        final formattedGrace =
+            '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
 
         return Container(
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
@@ -133,10 +119,16 @@ class _BookingCountdownTimerState extends State<BookingCountdownTimer> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.timer_off_outlined, color: AppColors.danger, size: 12.r),
+              Icon(
+                Icons.timer_off_outlined,
+                color: AppColors.danger,
+                size: 12.r,
+              ),
               SizedBox(width: 4.w),
               Text(
-                'تأخير $formattedGrace د (من مهلة $graceLimit د)',
+                'session_grace_elapsed'.tr(
+                  args: [(formattedGrace).toString(), (graceLimit).toString()],
+                ),
                 style: TextStyle(
                   color: AppColors.danger,
                   fontSize: 10.sp,

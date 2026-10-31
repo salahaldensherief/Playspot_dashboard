@@ -18,7 +18,9 @@ class CategoryModel extends CategoryEntity {
   }
 
   Map<String, dynamic> toJson() {
-    final name = nameEn.isNotEmpty ? nameEn : (nameAr.isNotEmpty ? nameAr : 'Category');
+    final name = nameEn.isNotEmpty
+        ? nameEn
+        : (nameAr.isNotEmpty ? nameAr : 'Category');
     return {
       if (id.isNotEmpty) 'id': id,
       'name': name,

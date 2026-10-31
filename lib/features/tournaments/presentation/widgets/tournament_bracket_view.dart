@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
@@ -10,6 +11,7 @@ class TournamentBracketView extends StatelessWidget {
   final TournamentEntity? tournament;
   final List<TournamentMatchEntity> matches;
   final VoidCallback onDrawBracket;
+  final VoidCallback onRefresh;
   final Function(TournamentMatchEntity match) onStartMatch;
 
   const TournamentBracketView({
@@ -17,11 +19,13 @@ class TournamentBracketView extends StatelessWidget {
     this.tournament,
     required this.matches,
     required this.onDrawBracket,
+    required this.onRefresh,
     required this.onStartMatch,
   });
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (matches.isEmpty) {
       final canDraw = tournament?.canDrawBracket ?? false;
 
@@ -36,16 +40,27 @@ class TournamentBracketView extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.account_tree_outlined, size: 64.r, color: AppColors.neonBlue),
+              Icon(
+                Icons.account_tree_outlined,
+                size: 64.r,
+                color: AppColors.neonBlue,
+              ),
               SizedBox(height: 16.h),
               Text(
                 AppStrings.drawBracket,
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 18.sp, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               SizedBox(height: 8.h),
               Text(
                 '${AppStrings.users}: ${tournament?.registeredCount ?? 0} / ${tournament?.minPlayers ?? 4}',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14.sp,
+                ),
               ),
               SizedBox(height: 24.h),
               AppButton(
@@ -61,7 +76,9 @@ class TournamentBracketView extends StatelessWidget {
 
     // Group matches by round
     final Map<int, List<TournamentMatchEntity>> rounds = {};
+    final bronze = matches.where((m) => m.isThirdPlace).toList();
     for (var m in matches) {
+      if (m.isThirdPlace) continue;
       rounds.putIfAbsent(m.round, () => []).add(m);
     }
 
@@ -75,13 +92,17 @@ class TournamentBracketView extends StatelessWidget {
           children: [
             Text(
               AppStrings.drawBracket,
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 18.sp, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             AppButton(
               text: AppStrings.refresh,
               variant: AppButtonVariant.outlined,
               icon: Icons.refresh,
-              onPressed: onDrawBracket,
+              onPressed: onRefresh,
             ),
           ],
         ),
@@ -95,10 +116,25 @@ class TournamentBracketView extends StatelessWidget {
             maxScale: 2.5,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: sortedRounds.map((r) {
-                final roundMatches = rounds[r]!;
-                return _buildRoundColumn(context, r, sortedRounds.length, roundMatches);
-              }).toList(),
+              children: [
+                ...sortedRounds.map((r) {
+                  final roundMatches = rounds[r]!;
+                  return _buildRoundColumn(
+                    context,
+                    r,
+                    sortedRounds.last,
+                    roundMatches,
+                  );
+                }),
+                if (bronze.isNotEmpty)
+                  _buildRoundColumn(
+                    context,
+                    0,
+                    sortedRounds.length,
+                    bronze,
+                    title: AppStrings.thirdPlace,
+                  ),
+              ],
             ),
           ),
         ),
@@ -110,8 +146,9 @@ class TournamentBracketView extends StatelessWidget {
     BuildContext context,
     int roundNumber,
     int totalRounds,
-    List<TournamentMatchEntity> roundMatches,
-  ) {
+    List<TournamentMatchEntity> roundMatches, {
+    String? title,
+  }) {
     String roundTitle = '${AppStrings.roundLabel} $roundNumber';
     if (roundNumber == totalRounds) {
       roundTitle = AppStrings.finalRound;
@@ -136,7 +173,7 @@ class TournamentBracketView extends StatelessWidget {
               border: Border.all(color: AppColors.neonBlue.withAlpha(80)),
             ),
             child: Text(
-              roundTitle,
+              title ?? roundTitle,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppColors.neonBlue,
@@ -146,15 +183,19 @@ class TournamentBracketView extends StatelessWidget {
             ),
           ),
           SizedBox(height: 16.h),
-          ...roundMatches.map((m) => RepaintBoundary(child: _buildMatchCard(context, m))),
+          ...roundMatches.map(
+            (m) => RepaintBoundary(child: _buildMatchCard(context, m)),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildMatchCard(BuildContext context, TournamentMatchEntity match) {
-    final bool p1Won = match.winnerId != null && match.winnerId == match.player1Id;
-    final bool p2Won = match.winnerId != null && match.winnerId == match.player2Id;
+    final bool p1Won =
+        match.winnerId != null && match.winnerId == match.player1Id;
+    final bool p2Won =
+        match.winnerId != null && match.winnerId == match.player2Id;
 
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
@@ -167,7 +208,9 @@ class TournamentBracketView extends StatelessWidget {
         border: Border.all(
           color: match.isDisputed
               ? AppColors.danger
-              : (match.isCompleted ? AppColors.success.withAlpha(100) : AppColors.borderDefault),
+              : (match.isCompleted
+                    ? AppColors.success.withAlpha(100)
+                    : AppColors.borderDefault),
           width: match.isDisputed ? 2 : 1,
         ),
       ),
@@ -177,21 +220,47 @@ class TournamentBracketView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'مباراة #${match.matchNumber}',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp, fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  'tournament_match_number'.tr(
+                    args: [(match.matchNumber).toString()],
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               if (match.isBye)
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                  decoration: BoxDecoration(color: Colors.blue.withAlpha(30), borderRadius: BorderRadius.circular(4.r)),
-                  child: Text(AppStrings.byeLabel, style: TextStyle(color: Colors.blue, fontSize: 10.sp)),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withAlpha(30),
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  child: Text(
+                    AppStrings.byeLabel,
+                    style: TextStyle(color: Colors.blue, fontSize: 10.sp),
+                  ),
                 )
               else if (match.isDisputed)
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                  decoration: BoxDecoration(color: AppColors.danger.withAlpha(30), borderRadius: BorderRadius.circular(4.r)),
-                  child: Text(AppStrings.disputedTag, style: TextStyle(color: AppColors.danger, fontSize: 10.sp, fontWeight: FontWeight.bold)),
+                  decoration: BoxDecoration(
+                    color: AppColors.danger.withAlpha(30),
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  child: Text(
+                    AppStrings.disputedTag,
+                    style: TextStyle(
+                      color: AppColors.danger,
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -200,7 +269,9 @@ class TournamentBracketView extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
             decoration: BoxDecoration(
-              color: p1Won ? AppColors.success.withAlpha(30) : Colors.transparent,
+              color: p1Won
+                  ? AppColors.success.withAlpha(30)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Row(
@@ -210,7 +281,9 @@ class TournamentBracketView extends StatelessWidget {
                   child: Text(
                     match.player1Name ?? 'P1',
                     style: TextStyle(
-                      color: match.player1Name != null ? AppColors.textPrimary : AppColors.textSecondary,
+                      color: match.player1Name != null
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
                       fontSize: 13.sp,
                       fontWeight: p1Won ? FontWeight.bold : FontWeight.normal,
                     ),
@@ -233,7 +306,9 @@ class TournamentBracketView extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
             decoration: BoxDecoration(
-              color: p2Won ? AppColors.success.withAlpha(30) : Colors.transparent,
+              color: p2Won
+                  ? AppColors.success.withAlpha(30)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Row(
@@ -243,7 +318,9 @@ class TournamentBracketView extends StatelessWidget {
                   child: Text(
                     match.player2Name ?? 'P2',
                     style: TextStyle(
-                      color: match.player2Name != null ? AppColors.textPrimary : AppColors.textSecondary,
+                      color: match.player2Name != null
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
                       fontSize: 13.sp,
                       fontWeight: p2Won ? FontWeight.bold : FontWeight.normal,
                     ),
@@ -261,7 +338,7 @@ class TournamentBracketView extends StatelessWidget {
               ],
             ),
           ),
-          if (match.isScheduled && !match.isBye) ...[
+          if (match.canStart) ...[
             SizedBox(height: 10.h),
             SizedBox(
               width: double.infinity,

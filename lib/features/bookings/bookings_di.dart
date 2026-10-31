@@ -10,8 +10,18 @@ import 'domain/usecases/confirm_cash_payment.dart';
 import 'domain/usecases/create_booking.dart';
 import 'domain/usecases/start_booking_session.dart';
 import 'presentation/cubit/booking_cubit.dart';
+import 'domain/repositories/booking_refund_repository.dart';
+import 'data/repositories/booking_refund_repository_impl.dart';
 
 void initBookingsDI(GetIt sl) {
+  sl.registerLazySingleton<BookingRefundRepository>(
+    () => BookingRefundRepositoryImpl(
+      sl(),
+      writesEnabled: const bool.fromEnvironment(
+        'PLAYSPOT_MANUAL_REFUND_WRITES',
+      ),
+    ),
+  );
   // Data Sources
   sl.registerLazySingleton<BookingRemoteDataSource>(
     () => BookingRemoteDataSourceImpl(sl()),

@@ -1,3 +1,4 @@
+import 'package:play_spot_dashboard/core/error/backend_access_error.dart';
 import 'package:flutter/foundation.dart';
 import 'package:play_spot_dashboard/features/requests/data/models/client_request_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -22,6 +23,7 @@ class RequestsFallbackFetcher {
             .toList();
       }
     } catch (e) {
+      if (isBackendAccessDenied(e)) rethrow;
       debugPrint(
         '⚠️ [RequestsFallbackFetcher] get_pending_extension_requests RPC error ($e), fallback to bookings',
       );
@@ -36,6 +38,7 @@ class RequestsFallbackFetcher {
           return ClientRequestModel.fromBookingExtensionJson(map);
         }).toList();
       } catch (e2) {
+        if (isBackendAccessDenied(e2)) rethrow;
         debugPrint(
           '⚠️ [RequestsFallbackFetcher] fallback bookings select error: $e2',
         );
@@ -79,6 +82,7 @@ class RequestsFallbackFetcher {
         }
       }
     } catch (e) {
+      if (isBackendAccessDenied(e)) rethrow;
       debugPrint(
         '⚠️ [RequestsFallbackFetcher] fallback service_calls error: $e',
       );
@@ -111,6 +115,7 @@ class RequestsFallbackFetcher {
         }
       }
     } catch (e) {
+      if (isBackendAccessDenied(e)) rethrow;
       debugPrint(
         '⚠️ [RequestsFallbackFetcher] fallback canteen_orders error: $e',
       );
@@ -144,6 +149,7 @@ class RequestsFallbackFetcher {
         }
       }
     } catch (e) {
+      if (isBackendAccessDenied(e)) rethrow;
       debugPrint(
         '⚠️ [RequestsFallbackFetcher] fallback client_requests error: $e',
       );

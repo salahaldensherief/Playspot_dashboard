@@ -38,7 +38,7 @@ class StaffState extends Equatable {
     if (searchQuery.isEmpty) return staffList;
     return staffList.where((staff) {
       return staff.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
-             staff.email.toLowerCase().contains(searchQuery.toLowerCase());
+          staff.email.toLowerCase().contains(searchQuery.toLowerCase());
     }).toList();
   }
 

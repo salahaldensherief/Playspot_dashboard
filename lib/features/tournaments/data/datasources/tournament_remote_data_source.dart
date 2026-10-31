@@ -16,7 +16,10 @@ abstract class TournamentRemoteDataSource {
   });
   Future<TournamentModel> createTournament(TournamentModel tournament);
   Future<TournamentModel> updateTournament(TournamentModel tournament);
-  Future<void> saveTournamentPrizes(String tournamentId, List<TournamentPrizeModel> prizes);
+  Future<void> saveTournamentPrizes(
+    String tournamentId,
+    List<TournamentPrizeModel> prizes,
+  );
   Future<void> publishTournament(String tournamentId);
   Future<void> cancelTournament(String tournamentId, String reason);
   Future<void> deleteDraftTournament(String tournamentId);

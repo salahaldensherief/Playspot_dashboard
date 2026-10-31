@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -18,11 +19,11 @@ import '../../domain/entities/extra_entity.dart';
 class ExtraDialog extends StatefulWidget {
   final String loungeId;
   final ExtraEntity? extra;
-  final Function(ExtraEntity)? onSave;
+  final Future<bool> Function(ExtraEntity)? onSave;
 
   const ExtraDialog({
-    super.key, 
-    required this.loungeId, 
+    super.key,
+    required this.loungeId,
     this.extra,
     this.onSave,
   });
@@ -38,6 +39,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
   late TextEditingController _priceController;
   late TextEditingController _stockQuantityController;
   late TextEditingController _minStockAlertController;
+  final ScrollController _scrollController = ScrollController();
   String _selectedCategory = 'drinks';
   bool _trackStock = false;
 
@@ -53,7 +55,7 @@ class _ExtraDialogState extends State<ExtraDialog> {
     'food',
     'snacks',
     'services',
-    'others'
+    'others',
   ];
 
   @override
@@ -61,10 +63,16 @@ class _ExtraDialogState extends State<ExtraDialog> {
     super.initState();
     _nameArController = TextEditingController(text: widget.extra?.nameAr);
     _nameEnController = TextEditingController(text: widget.extra?.nameEn);
-    _priceController = TextEditingController(text: widget.extra?.price.toString());
-    _stockQuantityController = TextEditingController(text: (widget.extra?.stockQuantity ?? 0).toString());
-    _minStockAlertController = TextEditingController(text: (widget.extra?.minStockAlert ?? 5).toString());
-    
+    _priceController = TextEditingController(
+      text: widget.extra?.price.toString(),
+    );
+    _stockQuantityController = TextEditingController(
+      text: (widget.extra?.stockQuantity ?? 0).toString(),
+    );
+    _minStockAlertController = TextEditingController(
+      text: (widget.extra?.minStockAlert ?? 5).toString(),
+    );
+
     final rawCat = widget.extra?.category.toLowerCase().trim() ?? 'drinks';
     _selectedCategory = _validCategories.contains(rawCat) ? rawCat : 'drinks';
     _trackStock = widget.extra?.trackStock ?? false;
@@ -78,11 +86,12 @@ class _ExtraDialogState extends State<ExtraDialog> {
     _priceController.dispose();
     _stockQuantityController.dispose();
     _minStockAlertController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isUploading || !_formKey.currentState!.validate()) return;
 
     setState(() {
       _isUploading = true;
@@ -101,7 +110,10 @@ class _ExtraDialogState extends State<ExtraDialog> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppStrings.imageUploadError(e.toString())), backgroundColor: AppColors.danger),
+            SnackBar(
+              content: Text(AppStrings.imageUploadError(e.toString())),
+              backgroundColor: AppColors.danger,
+            ),
           );
           setState(() {
             _isUploading = false;
@@ -111,8 +123,11 @@ class _ExtraDialogState extends State<ExtraDialog> {
       }
     }
 
+    if (!mounted) return;
     final stockQty = int.tryParse(_stockQuantityController.text) ?? 0;
-    final isOutOfStock = (_trackStock && stockQty <= 0) || (widget.extra?.isOutOfStock ?? false);
+    final isOutOfStock = _trackStock
+        ? stockQty <= 0
+        : (widget.extra?.isOutOfStock ?? false);
 
     final extra = ExtraEntity(
       id: widget.extra?.id ?? const Uuid().v4(),
@@ -127,157 +142,211 @@ class _ExtraDialogState extends State<ExtraDialog> {
       trackStock: _trackStock,
       stockQuantity: stockQty,
       minStockAlert: int.tryParse(_minStockAlertController.text) ?? 5,
+      costPrice: widget.extra?.costPrice,
     );
 
-    if (widget.onSave != null) {
-      widget.onSave!(extra);
-    }
-
-    if (mounted) {
-      Navigator.pop(context);
+    try {
+      final saved = await widget.onSave?.call(extra) ?? false;
+      if (mounted && saved) Navigator.pop(context);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${AppStrings.error}: $error'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final bool canEditPrice = context.hasPermission('menu_edit_prices');
 
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: ConstrainedBox(
+      child: Container(
+        width: 480.w,
         constraints: BoxConstraints(
-          maxWidth: 480.w,
           maxHeight: MediaQuery.sizeOf(context).height * 0.85,
         ),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(28.r),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppText.heading(
-                  widget.extra == null ? AppStrings.addExtraItem : AppStrings.editItem, 
-                  fontSize: 22.sp
-                ),
-                SizedBox(height: 20.h),
-                AppImagePicker(
-                  label: AppStrings.productImageLabel,
-                  initialImageUrl: _currentImageUrl,
-                  height: 120.h,
-                  onImageSelected: (bytes, name) {
-                    setState(() {
-                      _imageBytes = bytes;
-                      _imageName = name;
-                    });
-                  },
-                ),
-                SizedBox(height: 16.h),
-                AppTextField(
-                  label: AppStrings.nameAr,
-                  hintText: AppStrings.nameAr,
-                  controller: _nameArController,
-                  validator: AppValidator.validateRequired,
-                ),
-                SizedBox(height: 16.h),
-                AppTextField(
-                  label: AppStrings.nameEn,
-                  hintText: AppStrings.nameEn,
-                  controller: _nameEnController,
-                  validator: AppValidator.validateRequired,
-                ),
-                SizedBox(height: 16.h),
-                AppTextField(
-                  label: AppStrings.priceEgp,
-                  hintText: AppStrings.priceHint,
-                  controller: _priceController,
-                  keyboardType: TextInputType.number,
-                  validator: AppValidator.validateNumber,
-                  enabled: canEditPrice,
-                ),
-                SizedBox(height: 16.h),
-                CustomDropdown<String>(
-                  label: AppStrings.category,
-                  value: _selectedCategory,
-                  items: _validCategories,
-                  itemLabel: (s) {
-                    switch (s) {
-                      case 'drinks':
-                        return AppStrings.drinks;
-                      case 'hot_drinks':
-                        return 'Hot Drinks | مشروبات ساخنة';
-                      case 'cold_drinks':
-                        return 'Cold Drinks | مشروبات باردة';
-                      case 'food':
-                        return 'Food | مأكولات';
-                      case 'snacks':
-                        return AppStrings.snacks;
-                      case 'services':
-                        return AppStrings.services;
-                      default:
-                        return AppStrings.others;
-                    }
-                  },
-                  onChanged: (val) {
-                    if (val != null) setState(() => _selectedCategory = val);
-                  },
-                ),
-                SizedBox(height: 20.h),
-                const Divider(color: AppColors.divider),
-                SizedBox(height: 12.h),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: AppText.body(AppStrings.trackStock),
-                  value: _trackStock,
-                  activeThumbColor: AppColors.neonBlue,
-                  onChanged: (val) => setState(() => _trackStock = val),
-                ),
-                if (_trackStock) ...[
-                  SizedBox(height: 12.h),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: AppTextField(
-                          label: AppStrings.stockQuantity,
-                          controller: _stockQuantityController,
-                          keyboardType: TextInputType.number,
-                          validator: AppValidator.validateNumber,
-                        ),
-                      ),
-                      SizedBox(width: 16.w),
-                      Expanded(
-                        child: AppTextField(
-                          label: AppStrings.lowStockThreshold,
-                          controller: _minStockAlertController,
-                          keyboardType: TextInputType.number,
-                          validator: AppValidator.validateNumber,
-                        ),
-                      ),
-                    ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(28.r, 24.r, 28.r, 16.r),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  AppText.heading(
+                    widget.extra == null
+                        ? AppStrings.addExtraItem
+                        : AppStrings.editItem,
+                    fontSize: 22.sp,
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppColors.textSecondary,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
                 ],
-                SizedBox(height: 28.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    AppButton(
-                      text: AppStrings.cancel,
-                      variant: AppButtonVariant.outlined,
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    SizedBox(width: 16.w),
-                    AppButton(
-                      text: widget.extra == null ? AppStrings.addItem : AppStrings.updateItem,
-                      isLoading: _isUploading,
-                      onPressed: _isUploading ? null : _submit,
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
-          ),
+            const Divider(height: 1, color: AppColors.divider),
+            Flexible(
+              child: Scrollbar(
+                controller: _scrollController,
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 28.r,
+                    vertical: 20.r,
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppImagePicker(
+                          label: AppStrings.productImageLabel,
+                          initialImageUrl: _currentImageUrl,
+                          height: 120.h,
+                          onImageSelected: (bytes, name) {
+                            setState(() {
+                              _imageBytes = bytes;
+                              _imageName = name;
+                            });
+                          },
+                        ),
+                        SizedBox(height: 16.h),
+                        AppTextField(
+                          textLanguage: TextFieldLanguage.arabic,
+                          label: AppStrings.nameAr,
+                          hintText: AppStrings.nameAr,
+                          controller: _nameArController,
+                          validator: AppValidator.validateRequired,
+                        ),
+                        SizedBox(height: 16.h),
+                        AppTextField(
+                          textLanguage: TextFieldLanguage.english,
+                          label: AppStrings.nameEn,
+                          hintText: AppStrings.nameEn,
+                          controller: _nameEnController,
+                          validator: AppValidator.validateRequired,
+                        ),
+                        SizedBox(height: 16.h),
+                        AppTextField(
+                          label: AppStrings.priceEgp,
+                          hintText: AppStrings.priceHint,
+                          controller: _priceController,
+                          keyboardType: TextInputType.number,
+                          validator: AppValidator.validateNumber,
+                          enabled: canEditPrice,
+                        ),
+                        SizedBox(height: 16.h),
+                        CustomDropdown<String>(
+                          label: AppStrings.category,
+                          value: _selectedCategory,
+                          items: _validCategories,
+                          itemLabel: (s) {
+                            switch (s) {
+                              case 'drinks':
+                                return AppStrings.drinks;
+                              case 'hot_drinks':
+                                return 'extra_category_hot_drinks'.tr();
+                              case 'cold_drinks':
+                                return 'extra_category_cold_drinks'.tr();
+                              case 'food':
+                                return 'extra_category_food'.tr();
+                              case 'snacks':
+                                return AppStrings.snacks;
+                              case 'services':
+                                return AppStrings.services;
+                              default:
+                                return AppStrings.others;
+                            }
+                          },
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() => _selectedCategory = val);
+                            }
+                          },
+                        ),
+                        SizedBox(height: 20.h),
+                        const Divider(color: AppColors.divider),
+                        SizedBox(height: 12.h),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: AppText.body(AppStrings.trackStock),
+                          value: _trackStock,
+                          activeThumbColor: AppColors.neonBlue,
+                          onChanged: (val) => setState(() => _trackStock = val),
+                        ),
+                        if (_trackStock) ...[
+                          SizedBox(height: 12.h),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: AppTextField(
+                                  label: AppStrings.stockQuantity,
+                                  controller: _stockQuantityController,
+                                  keyboardType: TextInputType.number,
+                                  validator: AppValidator.validateNumber,
+                                ),
+                              ),
+                              SizedBox(width: 16.w),
+                              Expanded(
+                                child: AppTextField(
+                                  label: AppStrings.lowStockThreshold,
+                                  controller: _minStockAlertController,
+                                  keyboardType: TextInputType.number,
+                                  validator: AppValidator.validateNumber,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const Divider(height: 1, color: AppColors.divider),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 28.r, vertical: 16.r),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  AppButton(
+                    text: AppStrings.cancel,
+                    variant: AppButtonVariant.outlined,
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  SizedBox(width: 16.w),
+                  AppButton(
+                    text: widget.extra == null
+                        ? AppStrings.addItem
+                        : AppStrings.updateItem,
+                    isLoading: _isUploading,
+                    onPressed: _isUploading ? null : _submit,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
@@ -17,6 +18,7 @@ class TournamentHeaderBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (AppBreakpoints.isMobile(context)) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,6 +30,7 @@ class TournamentHeaderBar extends StatelessWidget {
               fontSize: 20.sp,
               fontWeight: FontWeight.bold,
               fontFamily: 'Orbitron',
+              fontFamilyFallback: const ['Tajawal'],
             ),
           ),
           SizedBox(height: 4.h),
@@ -74,12 +77,16 @@ class TournamentHeaderBar extends StatelessWidget {
                   fontSize: 24.sp,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Orbitron',
+                  fontFamilyFallback: const ['Tajawal'],
                 ),
               ),
               SizedBox(height: 4.h),
               Text(
                 AppStrings.tournamentsHubSub,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14.sp,
+                ),
               ),
             ],
           ),

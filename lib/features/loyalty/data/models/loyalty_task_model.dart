@@ -15,12 +15,18 @@ class LoyaltyTaskModel extends LoyaltyTaskEntity {
   factory LoyaltyTaskModel.fromJson(Map<String, dynamic> json) {
     return LoyaltyTaskModel(
       id: json['id']?.toString() ?? '',
-      titleAr: json['title_ar']?.toString() ?? json['name_ar']?.toString() ?? '',
-      titleEn: json['title_en']?.toString() ?? json['name_en']?.toString() ?? '',
+      titleAr:
+          json['title_ar']?.toString() ?? json['name_ar']?.toString() ?? '',
+      titleEn:
+          json['title_en']?.toString() ?? json['name_en']?.toString() ?? '',
       descriptionAr: json['description_ar']?.toString() ?? '',
       descriptionEn: json['description_en']?.toString() ?? '',
-      pointsReward: (json['points_reward'] as num?)?.toInt() ?? (json['points'] as num?)?.toInt() ?? 0,
-      completedCount: (json['completed_count'] as num?)?.toInt() ?? 0,
+      pointsReward:
+          (json['reward_points'] as num?)?.toInt() ??
+          (json['points_reward'] as num?)?.toInt() ??
+          (json['points'] as num?)?.toInt() ??
+          0,
+      completedCount: (json['completed_count'] as num?)?.toInt(),
       isActive: json['is_active'] as bool? ?? true,
     );
   }

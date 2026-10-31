@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
@@ -13,6 +14,7 @@ class LoyaltyStatsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -22,7 +24,9 @@ class LoyaltyStatsTab extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               final double width = constraints.maxWidth;
-              final int crossAxisCount = width > 1200 ? 5 : (width > 800 ? 3 : 2);
+              final int crossAxisCount = width > 1200
+                  ? 5
+                  : (width > 800 ? 3 : 2);
 
               return GridView.count(
                 shrinkWrap: true,
@@ -55,7 +59,8 @@ class LoyaltyStatsTab extends StatelessWidget {
                   ),
                   StatCard(
                     title: AppStrings.totalReferralPoints,
-                    value: '${stats.totalReferralPoints} ${AppStrings.pointsUnit}',
+                    value:
+                        '${stats.totalReferralPoints} ${AppStrings.pointsUnit}',
                     icon: Icons.card_giftcard,
                     iconColor: AppColors.warning,
                     trendValue: 0.0,
@@ -90,7 +95,10 @@ class LoyaltyStatsTab extends StatelessWidget {
                   Center(
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 24.h),
-                      child: AppText.body(AppStrings.noResultsMatching, color: AppColors.textSecondary),
+                      child: AppText.body(
+                        AppStrings.noResultsMatching,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   )
                 else
@@ -113,16 +121,20 @@ class LoyaltyStatsTab extends StatelessWidget {
     Color badgeColor = AppColors.neonBlue;
     String localizedName = levelName;
 
-    if (levelName.contains('برونزي') || levelName.toLowerCase().contains('bronze')) {
+    if (levelName.contains('برونزي') ||
+        levelName.toLowerCase().contains('bronze')) {
       badgeColor = AppColors.bronzeTier;
       localizedName = AppStrings.levelBronze;
-    } else if (levelName.contains('فضي') || levelName.toLowerCase().contains('silver')) {
+    } else if (levelName.contains('فضي') ||
+        levelName.toLowerCase().contains('silver')) {
       badgeColor = AppColors.silverTier;
       localizedName = AppStrings.levelSilver;
-    } else if (levelName.contains('ذهبي') || levelName.toLowerCase().contains('gold')) {
+    } else if (levelName.contains('ذهبي') ||
+        levelName.toLowerCase().contains('gold')) {
       badgeColor = AppColors.goldTier;
       localizedName = AppStrings.levelGold;
-    } else if (levelName.contains('بلاتيني') || levelName.toLowerCase().contains('platinum')) {
+    } else if (levelName.contains('بلاتيني') ||
+        levelName.toLowerCase().contains('platinum')) {
       badgeColor = AppColors.platinumTier;
       localizedName = AppStrings.levelPlatinum;
     }
@@ -140,14 +152,26 @@ class LoyaltyStatsTab extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.workspace_premium_rounded, color: badgeColor, size: 24.r),
+              Icon(
+                Icons.workspace_premium_rounded,
+                color: badgeColor,
+                size: 24.r,
+              ),
               SizedBox(width: 8.w),
-              AppText.body(localizedName, fontWeight: FontWeight.bold, fontSize: 16.sp),
+              AppText.body(
+                localizedName,
+                fontWeight: FontWeight.bold,
+                fontSize: 16.sp,
+              ),
             ],
           ),
           SizedBox(height: 12.h),
           AppText.heading('$userCount', fontSize: 24.sp, color: badgeColor),
-          AppText.body(AppStrings.usersInLevel, fontSize: 12.sp, color: AppColors.textSecondary),
+          AppText.body(
+            AppStrings.usersInLevel,
+            fontSize: 12.sp,
+            color: AppColors.textSecondary,
+          ),
         ],
       ),
     );

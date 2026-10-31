@@ -1,6 +1,6 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
@@ -10,15 +10,17 @@ import '../../domain/entities/booking.dart';
 class BookingSpecificationsCard extends StatelessWidget {
   final Booking booking;
 
-  const BookingSpecificationsCard({
-    super.key,
-    required this.booking,
-  });
+  const BookingSpecificationsCard({super.key, required this.booking});
 
   @override
   Widget build(BuildContext context) {
-    final loungeName = booking.loungeName.isNotEmpty ? booking.loungeName : AppStrings.lounges;
-    final roomName = booking.roomName.isNotEmpty ? booking.roomName : AppStrings.roomLabel;
+    EasyLocalization.of(context);
+    final loungeName = booking.loungeName.isNotEmpty
+        ? booking.loungeName
+        : AppStrings.lounges;
+    final roomName = booking.roomName.isNotEmpty
+        ? booking.roomName
+        : AppStrings.roomLabel;
     final formattedDate = DateFormat('EEE, MMM dd, yyyy').format(booking.date);
     final scheduleText = '${booking.startTime} - ${booking.endTime}';
     final durationText = '${booking.durationMinutes} ${AppStrings.minutesUnit}';
@@ -28,7 +30,8 @@ class BookingSpecificationsCard extends StatelessWidget {
 
     final roomSpecsText = [
       if (booking.screenSize.isNotEmpty) booking.screenSize,
-      if (booking.controllersCount > 0) '${booking.controllersCount} ${AppStrings.controllers}',
+      if (booking.controllersCount > 0)
+        '${booking.controllersCount} ${AppStrings.controllers}',
     ].join(' • ');
 
     return Container(
@@ -43,7 +46,11 @@ class BookingSpecificationsCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.meeting_room_outlined, color: AppColors.neonPurple, size: 20),
+              const Icon(
+                Icons.meeting_room_outlined,
+                color: AppColors.neonPurple,
+                size: 20,
+              ),
               SizedBox(width: 8.w),
               AppText.subHeading(
                 AppStrings.bookingSpecifications,
@@ -61,34 +68,46 @@ class BookingSpecificationsCard extends StatelessWidget {
                 runSpacing: 16.h,
                 children: [
                   _buildSpecTile(
-                    width: isWide ? (constraints.maxWidth - 16.w) / 2 : constraints.maxWidth,
+                    width: isWide
+                        ? (constraints.maxWidth - 16.w) / 2
+                        : constraints.maxWidth,
                     icon: Icons.storefront_outlined,
                     label: AppStrings.lounges,
                     value: loungeName,
-                    subtitle: booking.loungeLocation.isNotEmpty ? booking.loungeLocation : null,
+                    subtitle: booking.loungeLocation.isNotEmpty
+                        ? booking.loungeLocation
+                        : null,
                   ),
                   _buildSpecTile(
-                    width: isWide ? (constraints.maxWidth - 16.w) / 2 : constraints.maxWidth,
+                    width: isWide
+                        ? (constraints.maxWidth - 16.w) / 2
+                        : constraints.maxWidth,
                     icon: Icons.sports_esports_outlined,
                     label: AppStrings.roomLabel,
                     value: roomName,
                     subtitle: roomSpecsText.isNotEmpty ? roomSpecsText : null,
                   ),
                   _buildSpecTile(
-                    width: isWide ? (constraints.maxWidth - 16.w) / 2 : constraints.maxWidth,
+                    width: isWide
+                        ? (constraints.maxWidth - 16.w) / 2
+                        : constraints.maxWidth,
                     icon: Icons.calendar_today_outlined,
                     label: AppStrings.date,
                     value: formattedDate,
                   ),
                   _buildSpecTile(
-                    width: isWide ? (constraints.maxWidth - 16.w) / 2 : constraints.maxWidth,
+                    width: isWide
+                        ? (constraints.maxWidth - 16.w) / 2
+                        : constraints.maxWidth,
                     icon: Icons.access_time_outlined,
                     label: AppStrings.schedule,
                     value: scheduleText,
                     subtitle: durationText,
                   ),
                   _buildSpecTile(
-                    width: isWide ? (constraints.maxWidth - 16.w) / 2 : constraints.maxWidth,
+                    width: isWide
+                        ? (constraints.maxWidth - 16.w) / 2
+                        : constraints.maxWidth,
                     icon: Icons.groups_outlined,
                     label: AppStrings.numberOfGuests,
                     value: guestsText,
@@ -119,14 +138,21 @@ class BookingSpecificationsCard extends StatelessWidget {
                   Row(
                     children: [
                       Icon(
-                        booking.isCancelledByClient ? Icons.cancel_outlined : Icons.info_outline_rounded,
-                        color: booking.isCancelledByClient ? AppColors.danger : AppColors.textSecondary,
+                        booking.isCancelledByClient
+                            ? Icons.cancel_outlined
+                            : Icons.info_outline_rounded,
+                        color: booking.isCancelledByClient
+                            ? AppColors.danger
+                            : AppColors.textSecondary,
                         size: 18.r,
                       ),
                       SizedBox(width: 8.w),
                       if (booking.isCancelledByClient)
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 2.h,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.danger,
                             borderRadius: BorderRadius.circular(4.r),
@@ -157,11 +183,20 @@ class BookingSpecificationsCard extends StatelessWidget {
                       children: [
                         Text(
                           '${AppStrings.cancellationTime}: ',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
-                          DateFormat('yyyy/MM/dd hh:mm a').format(booking.cancelledAt!),
-                          style: TextStyle(color: AppColors.textPrimary, fontSize: 12.sp),
+                          DateFormat(
+                            'yyyy/MM/dd hh:mm a',
+                          ).format(booking.cancelledAt!),
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 12.sp,
+                          ),
                         ),
                       ],
                     ),
@@ -172,15 +207,22 @@ class BookingSpecificationsCard extends StatelessWidget {
                     children: [
                       Text(
                         '${AppStrings.cancellationReason}: ',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Expanded(
                         child: Text(
-                          (booking.cancellationReason != null && booking.cancellationReason!.trim().isNotEmpty)
+                          (booking.cancellationReason != null &&
+                                  booking.cancellationReason!.trim().isNotEmpty)
                               ? booking.cancellationReason!
-                              : 'لا يوجد سبب مدوّن',
+                              : 'reason_not_recorded'.tr(),
                           style: TextStyle(
-                            color: booking.isCancelledByClient ? AppColors.danger : AppColors.textPrimary,
+                            color: booking.isCancelledByClient
+                                ? AppColors.danger
+                                : AppColors.textPrimary,
                             fontSize: 12.sp,
                           ),
                         ),
@@ -222,7 +264,11 @@ class BookingSpecificationsCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppText.body(label, fontSize: 11.sp, color: AppColors.textSecondary),
+                AppText.body(
+                  label,
+                  fontSize: 11.sp,
+                  color: AppColors.textSecondary,
+                ),
                 SizedBox(height: 2.h),
                 AppText.subHeading(
                   value,

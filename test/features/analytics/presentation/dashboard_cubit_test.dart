@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/entities/lounge_stats_entity.dart';
@@ -8,6 +9,7 @@ import 'package:play_spot_dashboard/features/analytics/domain/usecases/end_sessi
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/extend_session_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/handle_client_request_action_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/review_extension_request_usecase.dart';
+import 'package:play_spot_dashboard/features/analytics/domain/usecases/start_open_time_session_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/watch_active_sessions_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_state.dart';
@@ -17,6 +19,8 @@ import 'package:play_spot_dashboard/features/lounges/domain/repositories/lounge_
 class FakeDashboardRepository implements DashboardRepository {
   bool reviewApproved = false;
   bool shouldFail = false;
+  bool useControlledSessionStreams = false;
+  final sessionStreams = <String, StreamController<List<Booking>>>{};
 
   @override
   Future<Either<Failure, void>> reviewExtensionRequest({
@@ -35,13 +39,21 @@ class FakeDashboardRepository implements DashboardRepository {
   }
 
   @override
-  Future<Either<Failure, void>> extendSession(String bookingId, int additionalMinutes, {double? additionalCost}) async {
+  Future<Either<Failure, void>> extendSession(
+    String bookingId,
+    int additionalMinutes, {
+    double? additionalCost,
+  }) async {
     if (shouldFail) return const Left(ServerFailure('Failed to extend'));
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, void>> addExtrasToSession(String bookingId, List<Map<String, dynamic>> extras, double additionalCost) async {
+  Future<Either<Failure, void>> addExtrasToSession(
+    String bookingId,
+    List<Map<String, dynamic>> extras,
+    double additionalCost,
+  ) async {
     if (shouldFail) return const Left(ServerFailure('Failed to add extras'));
     return const Right(null);
   }
@@ -67,29 +79,78 @@ class FakeDashboardRepository implements DashboardRepository {
   }
 
   @override
-  Future<Either<Failure, LoungeStatsEntity>> getLoungeStats(String? loungeId) async {
+  Future<Either<Failure, Map<String, dynamic>>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  }) async {
+    if (shouldFail) {
+      return const Left(ServerFailure('Failed to start open time'));
+    }
+    return const Right({'booking_id': 'b_open_1', 'status': 'in_progress'});
+  }
+
+  @override
+  Future<Either<Failure, LoungeStatsEntity>> getLoungeStats(
+    String? loungeId,
+  ) async {
     if (shouldFail) return const Left(ServerFailure('Failed to fetch stats'));
-    return const Right(LoungeStatsEntity(
-      success: true,
-      loungeId: 'test_lounge',
-      todayRevenue: 1000.0,
-      monthlyRevenue: 30000.0,
-      totalRooms: 10,
-      occupiedRooms: 5,
-      occupancyRate: 50.0,
-      activeBookings: 5,
-      openShifts: 1,
-      lowStockItems: 0,
-    ));
+    return const Right(
+      LoungeStatsEntity(
+        success: true,
+        loungeId: 'test_lounge',
+        todayRevenue: 1000.0,
+        monthlyRevenue: 30000.0,
+        totalRooms: 10,
+        occupiedRooms: 5,
+        occupancyRate: 50.0,
+        activeBookings: 5,
+        openShifts: 1,
+        lowStockItems: 0,
+      ),
+    );
   }
 
   @override
   Stream<List<Booking>> watchActiveSessions({String? loungeId}) {
+    if (useControlledSessionStreams) {
+      return sessionStreams
+          .putIfAbsent(
+            loungeId ?? 'all',
+            StreamController<List<Booking>>.broadcast,
+          )
+          .stream;
+    }
     return Stream.value([]);
   }
 }
 
 class FakeLoungeRepository implements LoungeRepository {
+  bool failChart = false;
+  Completer<Either<Failure, Map<String, dynamic>>>? pendingOverview;
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> getDashboardStats(
+    String? loungeId,
+  ) async => const Right({'total_revenue': 123});
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> getDashboardOverview() =>
+      pendingOverview?.future ??
+      Future.value(const Right({'total_lounges': 4}));
+  @override
+  Future<Either<Failure, List<Map<String, dynamic>>>> getRevenueOverTime(
+    String period,
+  ) async => failChart
+      ? const Left(ServerFailure('chart denied'))
+      : const Right([
+          {'revenue': 123},
+        ]);
+  @override
+  Future<Either<Failure, List<Map<String, dynamic>>>> getTopLoungesByRevenue(
+    int limitCount,
+  ) async => const Right([
+    {'lounge_name': 'Fixture'},
+  ]);
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -110,50 +171,168 @@ void main() {
         extendSessionUseCase: ExtendSessionUseCase(repository),
         addExtrasToSessionUseCase: AddExtrasToSessionUseCase(repository),
         endSessionUseCase: EndSessionUseCase(repository),
-        reviewExtensionRequestUseCase: ReviewExtensionRequestUseCase(repository),
-        handleClientRequestActionUseCase: HandleClientRequestActionUseCase(repository),
+        reviewExtensionRequestUseCase: ReviewExtensionRequestUseCase(
+          repository,
+        ),
+        handleClientRequestActionUseCase: HandleClientRequestActionUseCase(
+          repository,
+        ),
+        startOpenTimeSessionUseCase: StartOpenTimeSessionUseCase(repository),
       );
     });
 
-    tearDown(() {
-      cubit.close();
+    tearDown(() async {
+      await cubit.close();
+      for (final stream in repository.sessionStreams.values) {
+        await stream.close();
+      }
     });
+
+    test(
+      'switching lounge clears prior live sessions before next response',
+      () async {
+        repository.useControlledSessionStreams = true;
+        final oldSession = Booking(
+          id: 'old-session',
+          userId: 'user-1',
+          loungeId: 'lounge-a',
+          roomId: 'room-1',
+          date: DateTime(2026, 10, 20),
+          startTime: '12:00',
+          endTime: '13:00',
+          status: BookingStatus.inProgress,
+          totalPrice: 100,
+        );
+
+        cubit.startWatchingActiveSessions(loungeId: 'lounge-a');
+        repository.sessionStreams['lounge-a']!.add([oldSession]);
+        await Future<void>.delayed(Duration.zero);
+        expect(cubit.state.activeSessionsList, [oldSession]);
+
+        cubit.startWatchingActiveSessions(loungeId: 'lounge-b');
+        expect(cubit.state.activeSessionsList, isEmpty);
+        expect(cubit.state.activeSessions, 0);
+        expect(cubit.state.activeSessionsStats, isEmpty);
+
+        repository.sessionStreams['lounge-a']!.add([oldSession]);
+        await Future<void>.delayed(Duration.zero);
+        expect(cubit.state.activeSessionsList, isEmpty);
+
+        final newSession = oldSession.copyWith(
+          id: 'new-session',
+          loungeId: 'lounge-b',
+        );
+        repository.sessionStreams['lounge-b']!.add([newSession]);
+        await Future<void>.delayed(Duration.zero);
+        expect(cubit.state.activeSessionsList, [newSession]);
+      },
+    );
 
     test('Initial state should be DashboardState.init()', () {
       expect(cubit.state.status, FeatureStatus.initial);
       expect(cubit.state.activeSessionsList, isEmpty);
     });
 
-    test('reviewExtensionRequest returns true on success and approves request', () async {
-      final success = await cubit.reviewExtensionRequest(
-        bookingId: 'b_100',
-        isApproved: true,
-        requestedMinutes: 30,
-        currentDurationMinutes: 60,
+    test('dashboard load awaits the complete overview and chart', () async {
+      loungeRepository.pendingOverview = Completer();
+      var returned = false;
+      final load = cubit.loadDashboardData().then((_) => returned = true);
+      await Future<void>.delayed(Duration.zero);
+      expect(returned, isFalse);
+      expect(cubit.state.status, FeatureStatus.loading);
+      loungeRepository.pendingOverview!.complete(
+        const Right({'total_lounges': 4}),
       );
-
-      expect(success, isTrue);
-      expect(repository.reviewApproved, isTrue);
+      await load;
+      expect(cubit.state.status, FeatureStatus.success);
+      expect(cubit.state.totalLounges, 4);
+      expect(cubit.state.revenueChart.single['revenue'], 123);
     });
 
-    test('reviewExtensionRequest returns false on failure and updates state error', () async {
-      repository.shouldFail = true;
+    test(
+      'dashboard chart denial remains failure rather than empty success',
+      () async {
+        loungeRepository.failChart = true;
+        await cubit.loadDashboardData();
+        expect(cubit.state.status, FeatureStatus.failure);
+        expect(cubit.state.errorMessage, contains('chart denied'));
+      },
+    );
 
-      final success = await cubit.reviewExtensionRequest(
-        bookingId: 'b_100',
-        isApproved: true,
-        requestedMinutes: 30,
-        currentDurationMinutes: 60,
+    test('late global overview cannot overwrite a newer lounge load', () async {
+      loungeRepository.pendingOverview = Completer();
+      final old = cubit.loadDashboardData();
+      await Future<void>.delayed(Duration.zero);
+      await cubit.loadDashboardData(loungeId: 'new-lounge');
+      loungeRepository.pendingOverview!.complete(
+        const Right({'total_lounges': 999}),
       );
-
-      expect(success, isFalse);
-      expect(cubit.state.status, FeatureStatus.failure);
-      expect(cubit.state.errorMessage, 'Database error');
+      await old;
+      expect(cubit.state.status, FeatureStatus.success);
+      expect(cubit.state.totalLounges, 0);
+      expect(cubit.state.totalRevenue, 123);
     });
+
+    test(
+      'reviewExtensionRequest returns true on success and approves request',
+      () async {
+        final success = await cubit.reviewExtensionRequest(
+          bookingId: 'b_100',
+          isApproved: true,
+          requestedMinutes: 30,
+          currentDurationMinutes: 60,
+        );
+
+        expect(success, isTrue);
+        expect(repository.reviewApproved, isTrue);
+      },
+    );
+
+    test(
+      'reviewExtensionRequest returns false on failure and updates state error',
+      () async {
+        repository.shouldFail = true;
+
+        final success = await cubit.reviewExtensionRequest(
+          bookingId: 'b_100',
+          isApproved: true,
+          requestedMinutes: 30,
+          currentDurationMinutes: 60,
+        );
+
+        expect(success, isFalse);
+        expect(cubit.state.status, FeatureStatus.failure);
+        expect(cubit.state.errorMessage, 'Database error');
+      },
+    );
 
     test('endSession returns true on success', () async {
       final success = await cubit.endSession('b_200');
       expect(success, isTrue);
     });
+
+    test('startOpenTimeSession returns data on success', () async {
+      final result = await cubit.startOpenTimeSession(
+        roomId: 'r_100',
+        customerName: 'Ahmed',
+        customerPhone: '01012345678',
+      );
+
+      expect(result, isNotNull);
+      expect(result?['booking_id'], 'b_open_1');
+    });
+
+    test(
+      'startOpenTimeSession returns null on failure and updates state error',
+      () async {
+        repository.shouldFail = true;
+
+        final result = await cubit.startOpenTimeSession(roomId: 'r_100');
+
+        expect(result, isNull);
+        expect(cubit.state.status, FeatureStatus.failure);
+        expect(cubit.state.errorMessage, 'Failed to start open time');
+      },
+    );
   });
 }

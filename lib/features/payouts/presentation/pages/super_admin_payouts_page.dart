@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
+import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
 import 'package:play_spot_dashboard/core/utils/app_logger.dart';
@@ -14,6 +17,7 @@ import '../widgets/payout_details_dialog.dart';
 import '../widgets/payout_reason_dialog.dart';
 import '../widgets/pending_payouts_tab.dart';
 import '../widgets/resolve_payout_review_dialog.dart';
+import '../widgets/payment_funds_review_dialog.dart';
 
 class SuperAdminPayoutsPage extends StatefulWidget {
   const SuperAdminPayoutsPage({super.key});
@@ -60,7 +64,9 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
     payoutsRes.fold(
       (failure) {
         AppLogger.error('Failed to load more payouts: ${failure.message}');
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
         setState(() {
           _allPayoutsLoadingMore = false;
           _allPayoutsHasMore = false;
@@ -106,26 +112,34 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
 
     overviewRes.fold(
       (failure) {
-        AppLogger.error('Failed to load pending payouts overview: ${failure.message}');
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message)));
+        AppLogger.error(
+          'Failed to load pending payouts overview: ${failure.message}',
+        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
         setState(() => _isLoading = false);
       },
       (overview) {
         payoutsRes.fold(
           (failure) {
             AppLogger.error('Failed to load all payouts: ${failure.message}');
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message)));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(failure.message)));
             setState(() => _isLoading = false);
           },
           (payouts) {
             setState(() {
               _pendingOverview = overview
-                  .map((o) => {
-                        'lounge_id': o.loungeId,
-                        'lounge_name': o.loungeName,
-                        'pending_amount': o.pendingAmount,
-                        'pending_payments_count': o.pendingPaymentsCount,
-                      })
+                  .map(
+                    (o) => {
+                      'lounge_id': o.loungeId,
+                      'lounge_name': o.loungeName,
+                      'pending_amount': o.pendingAmount,
+                      'pending_payments_count': o.pendingPaymentsCount,
+                    },
+                  )
                   .toList();
               _allPayouts = payouts.map(_payoutToMap).toList();
               _allPayoutsNextPage = 2;
@@ -154,10 +168,8 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => CompletePayoutDialog(
-        payoutId: payoutId,
-        onSuccess: _fetchData,
-      ),
+      builder: (_) =>
+          CompletePayoutDialog(payoutId: payoutId, onSuccess: _fetchData),
     );
   }
 
@@ -178,19 +190,21 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => ResolvePayoutReviewDialog(
-        payoutId: payoutId,
-        onSuccess: _fetchData,
-      ),
+      builder: (_) =>
+          ResolvePayoutReviewDialog(payoutId: payoutId, onSuccess: _fetchData),
     );
   }
 
   Future<void> _viewDetails(String payoutId) async {
-    final detailsRes = await sl<PayoutRepository>().getPayoutDetails(payoutId: payoutId);
+    final detailsRes = await sl<PayoutRepository>().getPayoutDetails(
+      payoutId: payoutId,
+    );
     if (!mounted) return;
 
     detailsRes.fold(
-      (failure) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message))),
+      (failure) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(failure.message))),
       (details) => showDialog(
         context: context,
         builder: (_) => PayoutDetailsDialog(details: details),
@@ -202,44 +216,51 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
     final messenger = ScaffoldMessenger.of(context);
     final res = await sl<PayoutRepository>().approvePayout(payoutId: payoutId);
     res.fold(
-      (failure) => messenger.showSnackBar(SnackBar(content: Text(failure.message))),
+      (failure) =>
+          messenger.showSnackBar(SnackBar(content: Text(failure.message))),
       (_) => _fetchData(),
     );
   }
 
   Future<void> _processPayout(String payoutId) async {
     final messenger = ScaffoldMessenger.of(context);
-    final res = await sl<PayoutRepository>().startPayoutProcessing(payoutId: payoutId);
+    final res = await sl<PayoutRepository>().startPayoutProcessing(
+      payoutId: payoutId,
+    );
     res.fold(
-      (failure) => messenger.showSnackBar(SnackBar(content: Text(failure.message))),
+      (failure) =>
+          messenger.showSnackBar(SnackBar(content: Text(failure.message))),
       (_) => _fetchData(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(24.r),
+    return DashboardLayout(
+      title: AppStrings.loungePayouts,
+      activeRoute: 'Payouts',
+      isScrollable: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                AppStrings.loungePayouts,
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 28.sp,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Orbitron',
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.refresh, color: AppColors.neonCyan),
-                onPressed: _fetchData,
-              ),
-            ],
+          AppAdaptivePageHeader(
+            title: AppStrings.loungePayouts,
+            primaryAction: AppButton(
+              text: AppStrings.refresh,
+              icon: Icons.refresh,
+              variant: AppButtonVariant.outlined,
+              height: 38.h,
+              onPressed: _fetchData,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          AppButton(
+            text: AppStrings.paymentFundsReview,
+            icon: Icons.fact_check_outlined,
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => PaymentFundsReviewDialog(onChanged: _fetchData),
+            ),
           ),
           SizedBox(height: 16.h),
           TabBar(
@@ -251,7 +272,7 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
               Tab(text: AppStrings.allPayoutsHistory),
             ],
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 16.h),
           Expanded(
             child: _isLoading
                 ? const TableShimmer(columns: 5)
@@ -268,10 +289,18 @@ class _SuperAdminPayoutsPageState extends State<SuperAdminPayoutsPage>
                         isLoadingMore: _allPayoutsLoadingMore,
                         onLoadMore: _loadMorePayouts,
                         onApprove: _approvePayout,
-                        onCancel: (id) => _showActionWithReason(AppStrings.cancelPayout, 'cancel_payout', id),
+                        onCancel: (id) => _showActionWithReason(
+                          AppStrings.cancelPayout,
+                          'cancel_payout',
+                          id,
+                        ),
                         onProcess: _processPayout,
                         onPay: _showCompletePayout,
-                        onFail: (id) => _showActionWithReason('Mark Failed', 'fail_payout', id),
+                        onFail: (id) => _showActionWithReason(
+                          AppStrings.markFailed,
+                          'fail_payout',
+                          id,
+                        ),
                         onResolve: _showResolveReview,
                         onViewDetails: _viewDetails,
                       ),

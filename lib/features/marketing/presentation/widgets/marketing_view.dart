@@ -1,3 +1,9 @@
+import 'package:easy_localization/easy_localization.dart';
+import '../marketing_message.dart';
+import '../promotion_access.dart';
+import '../../../auth/domain/entities/user_entity.dart';
+import '../../../permissions/presentation/cubit/permissions_cubit.dart';
+import '../../../../core/utils/permission_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,7 +28,7 @@ class MarketingView extends StatefulWidget {
 }
 
 class _MarketingViewState extends State<MarketingView> {
-  String _selectedFilterStatus = 'All'; // 'All', 'Active', 'Expired'
+  String _selectedFilterStatus = 'Active'; // All, Active, Expired, Archived
   String _selectedFilterTag = 'All';
 
   @override
@@ -46,25 +52,34 @@ class _MarketingViewState extends State<MarketingView> {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<LoginCubit>().state.user;
+    EasyLocalization.of(context);
+    final user = context.select((LoginCubit cubit) => cubit.state.user);
     final isSuperAdmin = user?.isSuperAdmin ?? false;
+    context.select((PermissionsCubit cubit) => cubit.state);
+    final hasMarketingPermission = context.hasPermission('marketing_manage');
+    final canCreate = canManagePromotion(
+      user: user,
+      promotionLoungeId: user?.loungeId,
+      hasMarketingPermission: hasMarketingPermission,
+    );
     final marketingCubit = context.read<MarketingCubit>();
 
     return BlocListener<MarketingCubit, MarketingState>(
-      listenWhen: (previous, current) => previous.status != current.status,
+      listenWhen: (previous, current) =>
+          previous.status != current.status ||
+          previous.errorMessage != current.errorMessage,
       listener: (context, state) {
         if (state.status == MarketingStatus.actionSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppStrings.promoPublishedSuccess),
+              content: Text(state.actionMessageKey.tr()),
               backgroundColor: AppColors.success,
             ),
           );
-          _reloadPromotions();
         } else if (state.status == MarketingStatus.failure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.errorMessage ?? AppStrings.promoPublishError),
+              content: Text(marketingMessage(state.errorMessage)),
               backgroundColor: AppColors.danger,
             ),
           );
@@ -82,42 +97,56 @@ class _MarketingViewState extends State<MarketingView> {
               secondaryAction: isSuperAdmin
                   ? AppButton(
                       text: AppStrings.newNotification,
-                      onPressed: () => _showNotificationDialog(context, marketingCubit),
+                      onPressed: () =>
+                          _showNotificationDialog(context, marketingCubit),
                       icon: Icons.notifications_active_outlined,
                       variant: AppButtonVariant.outlined,
                     )
                   : null,
-              primaryAction: AppButton(
-                text: AppStrings.createPromotion,
-                onPressed: () => _showEditPromoDialog(
-                  context,
-                  marketingCubit,
-                  PromoEntity(
-                    id: '',
-                    titleAr: '',
-                    titleEn: '',
-                    tagAr: '',
-                    tagEn: '',
-                    hexColors: const [],
-                    iconKey: 'Flash',
-                    loungeId: user?.loungeId,
-                  ),
-                ),
-                icon: Icons.add,
-              ),
+              primaryAction: canCreate
+                  ? AppButton(
+                      text: AppStrings.createPromotion,
+                      onPressed: () => _showEditPromoDialog(
+                        context,
+                        marketingCubit,
+                        PromoEntity(
+                          id: '',
+                          titleAr: '',
+                          titleEn: '',
+                          tagAr: '',
+                          tagEn: '',
+                          hexColors: const [],
+                          iconKey: 'Flash',
+                          loungeId: user?.loungeId,
+                        ),
+                      ),
+                      icon: Icons.add,
+                    )
+                  : null,
             ),
             SizedBox(height: 24.h),
 
             // Main Promotions Dashboard Content
-            Expanded(child: _buildPromotionsContent(marketingCubit)),
+            Expanded(
+              child: _buildPromotionsContent(
+                marketingCubit,
+                user: user,
+                hasMarketingPermission: hasMarketingPermission,
+                canCreate: canCreate,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPromotionsContent(MarketingCubit cubit) {
-    final user = context.read<LoginCubit>().state.user;
+  Widget _buildPromotionsContent(
+    MarketingCubit cubit, {
+    required UserEntity? user,
+    required bool hasMarketingPermission,
+    required bool canCreate,
+  }) {
     final loungeId = user?.loungeId;
 
     return BlocBuilder<MarketingCubit, MarketingState>(
@@ -126,7 +155,29 @@ class _MarketingViewState extends State<MarketingView> {
           previous.status != current.status,
       builder: (context, state) {
         if (state.status == MarketingStatus.loading) {
-          return const Center(child: CircularProgressIndicator(color: AppColors.neonBlue));
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.neonBlue),
+          );
+        }
+        if (state.status == MarketingStatus.failure &&
+            state.promotions.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  marketingMessage(state.errorMessage),
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+                SizedBox(height: 12.h),
+                AppButton(
+                  text: AppStrings.refresh,
+                  icon: Icons.refresh,
+                  onPressed: _reloadPromotions,
+                ),
+              ],
+            ),
+          );
         }
 
         final now = DateTime.now();
@@ -134,35 +185,71 @@ class _MarketingViewState extends State<MarketingView> {
 
         // Filter by Status (Active / Expired)
         if (_selectedFilterStatus == 'Active') {
-          promos = promos.where((p) => p.expiresAt == null || p.expiresAt!.isAfter(now)).toList();
+          promos = promos
+              .where(
+                (p) =>
+                    p.isActive &&
+                    (p.expiresAt == null || p.expiresAt!.isAfter(now)),
+              )
+              .toList();
         } else if (_selectedFilterStatus == 'Expired') {
-          promos = promos.where((p) => p.expiresAt != null && p.expiresAt!.isBefore(now)).toList();
+          promos = promos
+              .where(
+                (p) =>
+                    p.isActive &&
+                    p.expiresAt != null &&
+                    p.expiresAt!.isBefore(now),
+              )
+              .toList();
+        } else if (_selectedFilterStatus == 'Archived') {
+          promos = promos.where((p) => !p.isActive).toList();
         }
 
         // Filter by Tag
         if (_selectedFilterTag != 'All') {
-          promos = promos.where((p) => p.tag == _selectedFilterTag || p.tagAr == _selectedFilterTag).toList();
+          promos = promos
+              .where(
+                (p) =>
+                    p.tag == _selectedFilterTag ||
+                    p.tagAr == _selectedFilterTag,
+              )
+              .toList();
         }
 
-        final tags = ['All', ...state.promotions.map((p) => p.tag ?? p.tagAr).where((t) => t.isNotEmpty).toSet()];
+        final tags = [
+          'All',
+          ...state.promotions
+              .map((p) => p.tag ?? p.tagAr)
+              .where((t) => t.isNotEmpty)
+              .toSet(),
+        ];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Status and Tag Filter Chips Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    _buildStatusChip(AppStrings.all, 'All'),
-                    SizedBox(width: 8.w),
-                    _buildStatusChip(AppStrings.active, 'Active'),
-                    SizedBox(width: 8.w),
-                    _buildStatusChip(AppStrings.timeExpired, 'Expired'),
-                  ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildStatusChip(AppStrings.all, 'All'),
+                      SizedBox(width: 8.w),
+                      _buildStatusChip(AppStrings.active, 'Active'),
+                      SizedBox(width: 8.w),
+                      _buildStatusChip(AppStrings.timeExpired, 'Expired'),
+                      SizedBox(width: 8.w),
+                      _buildStatusChip(
+                        AppStrings.archivedPromotions,
+                        'Archived',
+                      ),
+                    ],
+                  ),
                 ),
-                if (tags.length > 1)
+                if (tags.length > 1) ...[
+                  SizedBox(height: 6.h),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
@@ -182,6 +269,7 @@ class _MarketingViewState extends State<MarketingView> {
                       }).toList(),
                     ),
                   ),
+                ],
               ],
             ),
             SizedBox(height: 20.h),
@@ -193,32 +281,40 @@ class _MarketingViewState extends State<MarketingView> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.local_offer_outlined, size: 64.r, color: AppColors.textMuted),
+                      Icon(
+                        Icons.local_offer_outlined,
+                        size: 64.r,
+                        color: AppColors.textMuted,
+                      ),
                       SizedBox(height: 16.h),
                       Text(
                         AppStrings.noPromotions,
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp),
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 16.sp,
+                        ),
                       ),
                       SizedBox(height: 16.h),
-                      AppButton(
-                        text: AppStrings.createPromotion,
-                        onPressed: () => _showEditPromoDialog(
-                          context,
-                          cubit,
-                          PromoEntity(
-                            id: '',
-                            titleAr: '',
-                            titleEn: '',
-                            tagAr: '',
-                            tagEn: '',
-                            hexColors: const [],
-                            iconKey: 'Flash',
-                            loungeId: loungeId,
+                      if (canCreate)
+                        AppButton(
+                          text: AppStrings.createPromotion,
+                          onPressed: () => _showEditPromoDialog(
+                            context,
+                            cubit,
+                            PromoEntity(
+                              id: '',
+                              titleAr: '',
+                              titleEn: '',
+                              tagAr: '',
+                              tagEn: '',
+                              hexColors: const [],
+                              iconKey: 'Flash',
+                              loungeId: loungeId,
+                            ),
                           ),
+                          icon: Icons.add,
+                          height: 40.h,
                         ),
-                        icon: Icons.add,
-                        height: 40.h,
-                      ),
                     ],
                   ),
                 ),
@@ -235,10 +331,30 @@ class _MarketingViewState extends State<MarketingView> {
                   itemCount: promos.length,
                   itemBuilder: (context, index) {
                     final promo = promos[index];
+                    final canManage = canManagePromotion(
+                      user: user,
+                      promotionLoungeId: promo.loungeId,
+                      hasMarketingPermission: hasMarketingPermission,
+                    );
                     return PromoCard(
                       promo: promo,
-                      onEdit: () => _showEditPromoDialog(context, cubit, promo),
-                      onDelete: () => _confirmDelete(context, cubit, promo, loungeId: loungeId),
+                      onEdit: canManage && promo.isActive
+                          ? () => _showEditPromoDialog(context, cubit, promo)
+                          : null,
+                      onDelete: canManage && promo.isActive
+                          ? () => _confirmDelete(
+                              context,
+                              cubit,
+                              promo,
+                              loungeId: loungeId,
+                            )
+                          : null,
+                      onReshare: canManage
+                          ? () => cubit.resharePromotion(
+                              promo.id,
+                              loungeId: loungeId,
+                            )
+                          : null,
                     );
                   },
                 ),
@@ -268,7 +384,11 @@ class _MarketingViewState extends State<MarketingView> {
     );
   }
 
-  void _showEditPromoDialog(BuildContext context, MarketingCubit cubit, PromoEntity promo) {
+  void _showEditPromoDialog(
+    BuildContext context,
+    MarketingCubit cubit,
+    PromoEntity promo,
+  ) {
     final roomCubit = context.read<RoomCubit>();
     showDialog(
       context: context,
@@ -277,12 +397,7 @@ class _MarketingViewState extends State<MarketingView> {
           BlocProvider.value(value: roomCubit),
           BlocProvider.value(value: cubit),
         ],
-        child: PromoDialog(
-          promo: promo,
-          onSave: (updatedPromo) {
-            cubit.createPromotion(updatedPromo);
-          },
-        ),
+        child: PromoDialog(promo: promo, onSave: cubit.createPromotion),
       ),
     );
   }
@@ -290,25 +405,34 @@ class _MarketingViewState extends State<MarketingView> {
   void _showNotificationDialog(BuildContext context, MarketingCubit cubit) {
     showDialog(
       context: context,
-      builder: (diagContext) => NotificationDialog(
-        onSend: (n) => cubit.sendNotification(n),
-      ),
+      builder: (diagContext) =>
+          NotificationDialog(onSend: (n) => cubit.sendNotification(n)),
     );
   }
 
-  void _confirmDelete(BuildContext context, MarketingCubit cubit, PromoEntity promo, {String? loungeId}) {
+  void _confirmDelete(
+    BuildContext context,
+    MarketingCubit cubit,
+    PromoEntity promo, {
+    String? loungeId,
+  }) {
     final title = promo.titleAr.isNotEmpty ? promo.titleAr : promo.titleEn;
     showDialog(
       context: context,
       builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
         title: Text(
-          AppStrings.deleteConfirmation,
-          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+          AppStrings.archivePromotion,
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: Text(
-          '${AppStrings.deleteWarning} "$title"؟',
+          '${AppStrings.archivePromotion}: "$title"؟',
           style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
@@ -318,7 +442,7 @@ class _MarketingViewState extends State<MarketingView> {
             onPressed: () => Navigator.pop(diagContext),
           ),
           AppButton(
-            text: AppStrings.delete,
+            text: AppStrings.archivePromotion,
             variant: AppButtonVariant.danger,
             onPressed: () {
               cubit.deletePromotion(promo.id, loungeId: loungeId);

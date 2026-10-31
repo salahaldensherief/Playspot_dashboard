@@ -41,7 +41,9 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
-  Future<Either<Failure, TournamentEntity>> createTournament(TournamentEntity tournament) async {
+  Future<Either<Failure, TournamentEntity>> createTournament(
+    TournamentEntity tournament,
+  ) async {
     try {
       final model = TournamentModel.fromEntity(tournament);
       final result = await remoteDataSource.createTournament(model);
@@ -52,7 +54,9 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
-  Future<Either<Failure, TournamentEntity>> updateTournament(TournamentEntity tournament) async {
+  Future<Either<Failure, TournamentEntity>> updateTournament(
+    TournamentEntity tournament,
+  ) async {
     try {
       final model = TournamentModel.fromEntity(tournament);
       final result = await remoteDataSource.updateTournament(model);
@@ -68,7 +72,9 @@ class TournamentRepositoryImpl implements TournamentRepository {
     List<TournamentPrizeEntity> prizes,
   ) async {
     try {
-      final models = prizes.map((p) => TournamentPrizeModel.fromEntity(p)).toList();
+      final models = prizes
+          .map((p) => TournamentPrizeModel.fromEntity(p))
+          .toList();
       await remoteDataSource.saveTournamentPrizes(tournamentId, models);
       return const Right(null);
     } catch (e) {
@@ -87,7 +93,10 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
-  Future<Either<Failure, void>> cancelTournament(String tournamentId, String reason) async {
+  Future<Either<Failure, void>> cancelTournament(
+    String tournamentId,
+    String reason,
+  ) async {
     try {
       await remoteDataSource.cancelTournament(tournamentId, reason);
       return const Right(null);
@@ -97,7 +106,9 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteDraftTournament(String tournamentId) async {
+  Future<Either<Failure, void>> deleteDraftTournament(
+    String tournamentId,
+  ) async {
     try {
       await remoteDataSource.deleteDraftTournament(tournamentId);
       return const Right(null);
@@ -117,7 +128,9 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
-  Future<Either<Failure, List<TournamentParticipantEntity>>> getParticipants(String tournamentId) async {
+  Future<Either<Failure, List<TournamentParticipantEntity>>> getParticipants(
+    String tournamentId,
+  ) async {
     try {
       final result = await remoteDataSource.getParticipants(tournamentId);
       return Right(result);
@@ -137,7 +150,10 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
-  Future<Either<Failure, void>> rejectPayment(String participantId, String reason) async {
+  Future<Either<Failure, void>> rejectPayment(
+    String participantId,
+    String reason,
+  ) async {
     try {
       await remoteDataSource.rejectPayment(participantId, reason);
       return const Right(null);
@@ -177,7 +193,9 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
-  Future<Either<Failure, void>> withdrawParticipant(String participantId) async {
+  Future<Either<Failure, void>> withdrawParticipant(
+    String participantId,
+  ) async {
     try {
       await remoteDataSource.withdrawParticipant(participantId);
       return const Right(null);
@@ -187,7 +205,9 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
-  Future<Either<Failure, List<TournamentMatchEntity>>> drawBracket(String tournamentId) async {
+  Future<Either<Failure, List<TournamentMatchEntity>>> drawBracket(
+    String tournamentId,
+  ) async {
     try {
       final result = await remoteDataSource.drawBracket(tournamentId);
       return Right(result);
@@ -197,7 +217,9 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
-  Future<Either<Failure, List<TournamentMatchEntity>>> getMatches(String tournamentId) async {
+  Future<Either<Failure, List<TournamentMatchEntity>>> getMatches(
+    String tournamentId,
+  ) async {
     try {
       final result = await remoteDataSource.getMatches(tournamentId);
       return Right(result);
@@ -207,7 +229,10 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
-  Future<Either<Failure, void>> startMatch(String matchId, {String? roomId}) async {
+  Future<Either<Failure, void>> startMatch(
+    String matchId, {
+    String? roomId,
+  }) async {
     try {
       await remoteDataSource.startMatch(matchId, roomId: roomId);
       return const Right(null);
@@ -249,7 +274,9 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> awardPrizes(String tournamentId) async {
+  Future<Either<Failure, Map<String, dynamic>>> awardPrizes(
+    String tournamentId,
+  ) async {
     try {
       final result = await remoteDataSource.awardPrizes(tournamentId);
       return Right(result);
@@ -259,7 +286,9 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
-  Future<Either<Failure, List<TournamentAuditLogEntity>>> getAuditLogs(String tournamentId) async {
+  Future<Either<Failure, List<TournamentAuditLogEntity>>> getAuditLogs(
+    String tournamentId,
+  ) async {
     try {
       final result = await remoteDataSource.getAuditLogs(tournamentId);
       return Right(result);
@@ -269,7 +298,8 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
-  Future<Either<Failure, PaginatedResult<TournamentAuditLogEntity>>> getTournamentAuditLogsPage({
+  Future<Either<Failure, PaginatedResult<TournamentAuditLogEntity>>>
+  getTournamentAuditLogsPage({
     required String tournamentId,
     int page = 1,
     int pageSize = 50,
@@ -280,19 +310,23 @@ class TournamentRepositoryImpl implements TournamentRepository {
         page: page,
         pageSize: pageSize,
       );
-      return Right(PaginatedResult<TournamentAuditLogEntity>(
-        items: result.items,
-        totalCount: result.totalCount,
-        page: result.page,
-        pageSize: result.pageSize,
-      ));
+      return Right(
+        PaginatedResult<TournamentAuditLogEntity>(
+          items: result.items,
+          totalCount: result.totalCount,
+          page: result.page,
+          pageSize: result.pageSize,
+        ),
+      );
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Stream<List<TournamentMatchEntity>> watchDisputedMatches(String tournamentId) {
+  Stream<List<TournamentMatchEntity>> watchDisputedMatches(
+    String tournamentId,
+  ) {
     return remoteDataSource.watchDisputedMatches(tournamentId);
   }
 }

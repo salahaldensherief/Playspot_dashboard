@@ -1,7 +1,7 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
@@ -16,13 +16,14 @@ class BookingFinancialsCanteenOrders extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (canteenOrders.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(height: 16.h),
-        AppText.subHeading('طلبات الكافيتريا - Canteen Orders', fontSize: 14.sp),
+        AppText.subHeading('canteen_orders'.tr(), fontSize: 14.sp),
         SizedBox(height: 8.h),
         ...canteenOrders.map((order) {
           final orderId = order['id']?.toString() ?? '';
@@ -65,25 +66,52 @@ class BookingFinancialsCanteenOrders extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       AppText.body(
-                        'طلب #${orderId.length > 6 ? orderId.substring(0, 6) : orderId}',
+                        'canteen_order_reference'.tr(
+                          args: [
+                            (orderId.length > 6
+                                    ? orderId.substring(0, 6)
+                                    : orderId)
+                                .toString(),
+                          ],
+                        ),
                         fontSize: 11.sp,
                         color: AppColors.neonBlue,
                         fontWeight: FontWeight.bold,
                       ),
                       if (timeFormatted.isNotEmpty)
-                        AppText.body(timeFormatted, fontSize: 11.sp, color: AppColors.textMuted),
+                        AppText.body(
+                          timeFormatted,
+                          fontSize: 11.sp,
+                          color: AppColors.textMuted,
+                        ),
                     ],
                   ),
                   SizedBox(height: 6.h),
                 ],
                 ...orderItems.map((item) {
-                  final quantity = (item['quantity'] ?? item['qty'] ?? item['count'] as num?)?.toInt() ?? 1;
-                  final rawName = item['name_ar'] ?? item['name_en'] ?? item['name'] ?? item['title'] ?? item['item_name'];
-                  final name = (rawName != null && rawName.toString().trim().isNotEmpty && rawName.toString().trim() != 'null')
+                  final quantity =
+                      (item['quantity'] ?? item['qty'] ?? item['count'] as num?)
+                          ?.toInt() ??
+                      1;
+                  final rawName =
+                      item['name_ar'] ??
+                      item['name_en'] ??
+                      item['name'] ??
+                      item['title'] ??
+                      item['item_name'];
+                  final name =
+                      (rawName != null &&
+                          rawName.toString().trim().isNotEmpty &&
+                          rawName.toString().trim() != 'null')
                       ? rawName.toString().trim()
-                      : 'صنف';
-                  final unitPrice = (item['unit_price'] ?? item['price'] as num?)?.toDouble() ?? 0.0;
-                  final itemTotal = (item['total_price'] as num?)?.toDouble() ?? (unitPrice * quantity);
+                      : 'item'.tr();
+                  final unitPrice =
+                      (item['unit_price'] ?? item['price'] as num?)
+                          ?.toDouble() ??
+                      0.0;
+                  final itemTotal =
+                      (item['total_price'] as num?)?.toDouble() ??
+                      (unitPrice * quantity);
 
                   return Padding(
                     padding: EdgeInsets.symmetric(vertical: 2.h),
@@ -108,7 +136,7 @@ class BookingFinancialsCanteenOrders extends StatelessWidget {
                 if (note != null && note.trim().isNotEmpty) ...[
                   SizedBox(height: 4.h),
                   AppText.body(
-                    'ملاحظة: $note',
+                    'customer_note_label'.tr(args: [(note).toString()]),
                     fontSize: 11.sp,
                     color: AppColors.warning,
                   ),
@@ -118,7 +146,12 @@ class BookingFinancialsCanteenOrders extends StatelessWidget {
                   Align(
                     alignment: AlignmentDirectional.centerStart,
                     child: AppText.body(
-                      'الإجمالي: ${orderTotal.toStringAsFixed(2)} ${AppStrings.egp}',
+                      'order_total_label'.tr(
+                        args: [
+                          (orderTotal.toStringAsFixed(2)).toString(),
+                          (AppStrings.egp).toString(),
+                        ],
+                      ),
                       fontSize: 11.sp,
                       color: AppColors.success,
                       fontWeight: FontWeight.bold,

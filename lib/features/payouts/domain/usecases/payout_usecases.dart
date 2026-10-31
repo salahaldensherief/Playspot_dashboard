@@ -6,7 +6,8 @@ import '../../../../core/usecases/page_params.dart';
 import '../entities/payout_entity.dart';
 import '../repositories/payout_repository.dart';
 
-class GetPendingPayoutsOverviewUseCase implements UseCase<List<PendingPayoutOverview>, NoParams> {
+class GetPendingPayoutsOverviewUseCase
+    implements UseCase<List<PendingPayoutOverview>, NoParams> {
   final PayoutRepository repository;
 
   GetPendingPayoutsOverviewUseCase(this.repository);
@@ -24,7 +25,10 @@ class GetAllPayoutsUseCase implements UseCase<List<PayoutEntity>, PageParams> {
 
   @override
   Future<Either<Failure, List<PayoutEntity>>> call(PageParams params) {
-    return repository.getAllPayouts(page: params.page, pageSize: params.pageSize);
+    return repository.getAllPayouts(
+      page: params.page,
+      pageSize: params.pageSize,
+    );
   }
 }
 
@@ -43,13 +47,16 @@ class CreatePayoutParams extends Equatable {
   List<Object?> get props => [loungeId, periodStart, periodEnd];
 }
 
-class CreatePayoutUseCase implements UseCase<Map<String, dynamic>, CreatePayoutParams> {
+class CreatePayoutUseCase
+    implements UseCase<Map<String, dynamic>, CreatePayoutParams> {
   final PayoutRepository repository;
 
   CreatePayoutUseCase(this.repository);
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> call(CreatePayoutParams params) {
+  Future<Either<Failure, Map<String, dynamic>>> call(
+    CreatePayoutParams params,
+  ) {
     return repository.createPayout(
       loungeId: params.loungeId,
       periodStart: params.periodStart,
@@ -75,7 +82,10 @@ class ApprovePayoutUseCase implements UseCase<void, ApprovePayoutParams> {
 
   @override
   Future<Either<Failure, void>> call(ApprovePayoutParams params) {
-    return repository.approvePayout(payoutId: params.payoutId, notes: params.notes);
+    return repository.approvePayout(
+      payoutId: params.payoutId,
+      notes: params.notes,
+    );
   }
 }
 
@@ -106,7 +116,13 @@ class CompletePayoutParams extends Equatable {
   });
 
   @override
-  List<Object?> get props => [payoutId, transferMethod, transferReference, receiptUrl, notes];
+  List<Object?> get props => [
+    payoutId,
+    transferMethod,
+    transferReference,
+    receiptUrl,
+    notes,
+  ];
 }
 
 class CompletePayoutUseCase implements UseCase<void, CompletePayoutParams> {
@@ -143,7 +159,10 @@ class MarkPayoutPaidUseCase implements UseCase<void, MarkPayoutPaidParams> {
 
   @override
   Future<Either<Failure, void>> call(MarkPayoutPaidParams params) {
-    return repository.markPayoutPaid(payoutId: params.payoutId, notes: params.notes);
+    return repository.markPayoutPaid(
+      payoutId: params.payoutId,
+      notes: params.notes,
+    );
   }
 }
 
@@ -164,7 +183,10 @@ class FailPayoutUseCase implements UseCase<void, FailPayoutParams> {
 
   @override
   Future<Either<Failure, void>> call(FailPayoutParams params) {
-    return repository.failPayout(payoutId: params.payoutId, reason: params.reason);
+    return repository.failPayout(
+      payoutId: params.payoutId,
+      reason: params.reason,
+    );
   }
 }
 
@@ -185,7 +207,10 @@ class CancelPayoutUseCase implements UseCase<void, CancelPayoutParams> {
 
   @override
   Future<Either<Failure, void>> call(CancelPayoutParams params) {
-    return repository.cancelPayout(payoutId: params.payoutId, reason: params.reason);
+    return repository.cancelPayout(
+      payoutId: params.payoutId,
+      reason: params.reason,
+    );
   }
 }
 
@@ -204,7 +229,8 @@ class ResolvePayoutReviewParams extends Equatable {
   List<Object?> get props => [payoutId, resolution, reason];
 }
 
-class ResolvePayoutReviewUseCase implements UseCase<void, ResolvePayoutReviewParams> {
+class ResolvePayoutReviewUseCase
+    implements UseCase<void, ResolvePayoutReviewParams> {
   final PayoutRepository repository;
 
   ResolvePayoutReviewUseCase(this.repository);
@@ -245,7 +271,8 @@ class LoungePayoutsParams extends Equatable {
   List<Object?> get props => [loungeId, page, pageSize];
 }
 
-class GetPayoutsByLoungeUseCase implements UseCase<List<PayoutEntity>, LoungePayoutsParams> {
+class GetPayoutsByLoungeUseCase
+    implements UseCase<List<PayoutEntity>, LoungePayoutsParams> {
   final PayoutRepository repository;
 
   GetPayoutsByLoungeUseCase(this.repository);

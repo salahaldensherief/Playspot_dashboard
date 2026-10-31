@@ -56,5 +56,11 @@ class CategoryState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [status, categories, cities, activityTypes, errorMessage];
+  List<Object?> get props => [
+    status,
+    categories,
+    cities,
+    activityTypes,
+    errorMessage,
+  ];
 }

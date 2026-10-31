@@ -1,6 +1,53 @@
 import 'package:easy_localization/easy_localization.dart';
 
 class AppStrings {
+  static String get refundManage => 'refund_manage'.tr();
+  static String get refundSeparation => 'refund_separation'.tr();
+  static String get refundPermissionLost => 'refund_permission_lost'.tr();
+  static String get refundRolloutBlocked => 'refund_rollout_blocked'.tr();
+  static String get refundUncertain => 'refund_uncertain'.tr();
+  static String get refundFailed => 'refund_failed'.tr();
+  static String get refundRequestConfirmed => 'refund_request_confirmed'.tr();
+  static String get refundReturnConfirmed => 'refund_return_confirmed'.tr();
+  static String get refundGross => 'refund_gross'.tr();
+  static String get refundReturned => 'refund_returned'.tr();
+  static String get refundNet => 'refund_net'.tr();
+  static String get refundPending => 'refund_pending'.tr();
+  static String get refundRemaining => 'refund_remaining'.tr();
+  static String get refundRemainingHelp => 'refund_remaining_help'.tr();
+  static String get refundRequestCancelled => 'refund_request_cancelled'.tr();
+  static String get refundCashScope => 'refund_cash_scope'.tr();
+  static String get refundCollection => 'refund_collection'.tr();
+  static String get refundPolicyOverride => 'refund_policy_override'.tr();
+  static String get refundCreateRequest => 'refund_create_request'.tr();
+  static String get refundAttestation => 'refund_attestation'.tr();
+  static String get refundOwnShift => 'refund_own_shift'.tr();
+  static String get refundRecordReturn => 'refund_record_return'.tr();
+  static String get pricingRuleSaved => 'pricing_rule_saved'.tr();
+  static String get pricingRuleDeleted => 'pricing_rule_deleted'.tr();
+  static String get paymentFundsReview => 'payment_funds_review'.tr();
+  static String get paymentFundsReviewHelp => 'payment_funds_review_help'.tr();
+  static String get reviewFundsHolder => 'review_funds_holder'.tr();
+  static String get fundsHolder => 'funds_holder'.tr();
+  static String get fundsReceivedByPlatform =>
+      'funds_received_by_platform'.tr();
+  static String get fundsReceivedByLounge => 'funds_received_by_lounge'.tr();
+  static String get selectFundsHolder => 'select_funds_holder'.tr();
+  static String get fundsEvidenceReference => 'funds_evidence_reference'.tr();
+  static String get fundsEvidenceRequired => 'funds_evidence_required'.tr();
+  static String get fundsCustodyImmutableHelp =>
+      'funds_custody_immutable_help'.tr();
+  static String get payoutNoPositiveBalance =>
+      'payout_no_positive_balance'.tr();
+  static String get payoutCustodyRequired => 'payout_custody_required'.tr();
+  static String get payoutReconciliationRequired =>
+      'payout_reconciliation_required'.tr();
+  static String get payoutTransferEvidenceRequired =>
+      'payout_transfer_evidence_required'.tr();
+
+  static String get shiftFinancialsWithheld => 'shift_financials_withheld'.tr();
+  static String get playMode => 'play_mode'.tr();
+  static String get noBookingExtras => 'no_booking_extras'.tr();
   static String get appName => 'app_name'.tr();
   static String get login => 'login'.tr();
   static String get welcomeBack => 'welcome_back'.tr();
@@ -130,6 +177,18 @@ class AppStrings {
   // Room Management
   static String get addNew => 'add_new'.tr();
   static String get addNewActivity => 'add_new_activity'.tr();
+  static String get editActivity => 'edit_activity'.tr();
+  static String get activityKey => 'activity_key'.tr();
+  static String get activityLabel => 'activity_label'.tr();
+  static String get activityCategory => 'activity_category'.tr();
+  static String get activityPricingModel => 'activity_pricing_model'.tr();
+  static String get activityIconKey => 'activity_icon_key'.tr();
+  static String get sortOrder => 'sort_order'.tr();
+  static String get requiresScreen => 'requires_screen'.tr();
+  static String get requiresControllers => 'requires_controllers'.tr();
+  static String get roomActivities => 'room_activities'.tr();
+  static String get selectRoomActivityError =>
+      'select_room_activity_error'.tr();
   static String get addNewRoom => 'add_new_room'.tr();
   static String get manageRoomsDesc => 'manage_rooms_desc'.tr();
   static String get roomName => 'room_name'.tr();
@@ -143,6 +202,7 @@ class AppStrings {
   static String get roomNameLabelEn => 'room_name_label_en'.tr();
   static String get specs => 'specs'.tr();
   static String get capacity => 'capacity'.tr();
+  static String get pricedPerRoom => 'priced_per_room'.tr();
   static String get pricePerHour => 'price_per_hour'.tr();
   static String get singlePrice => 'single_price'.tr();
   static String get multiPrice => 'multi_price'.tr();
@@ -286,7 +346,13 @@ class AppStrings {
 
   static String get paid => 'paid'.tr();
   static String get unpaid => 'unpaid'.tr();
-  static String get egp => 'EGP';
+  static String get partial => 'partial'.tr();
+  static String get refunded => 'refunded'.tr();
+  static String get egp {
+    final label = 'currency_egp'.tr();
+    return label == 'currency_egp' ? 'EGP' : label;
+  }
+
   static String get upcoming {
     final val = 'upcoming'.tr();
     return (val.isNotEmpty && val != 'upcoming') ? val : 'قادم';
@@ -306,7 +372,8 @@ class AppStrings {
   static String get reject => 'reject'.tr();
   static String get pendingVerification => 'pending_verification'.tr();
   static String get currentRoom => 'current_room'.tr();
-  static String get recalculatedRateDifference => 'recalculated_rate_difference'.tr();
+  static String get recalculatedRateDifference =>
+      'recalculated_rate_difference'.tr();
   static String get shiftHandoverSummary => 'shift_handover_summary'.tr();
   static String get printHandoverSummary => 'print_handover_summary'.tr();
   static String get printingTriggered => 'printing_triggered'.tr();
@@ -353,6 +420,10 @@ class AppStrings {
   static String get changePoster => 'change_poster'.tr();
   static String get promoPoster => 'promo_poster'.tr();
   static String get promoPublishedSuccess => 'promo_published_success'.tr();
+  static String get promoArchived => 'promo_archived'.tr();
+  static String get archivePromotion => 'archive_promotion'.tr();
+  static String get resharePromotion => 'reshare_promotion'.tr();
+  static String get archivedPromotions => 'archived_promotions'.tr();
   static String get promoPublishError => 'promo_publish_error'.tr();
   static String get noPromotions => 'no_promotions'.tr();
   static String get noTournaments => 'no_tournaments'.tr();
@@ -553,7 +624,7 @@ class AppStrings {
   static String get shiftActive => 'shift_active'.tr();
   static String get noActiveShift => 'no_active_shift'.tr();
   static String get shiftRevenue => 'shift_revenue'.tr();
-  static String get cashier => 'cashier'.tr();
+  static String get cashier => 'cashier.label'.tr();
   static String get startTimeLabel => 'start_time'.tr();
   static String get closeShift => 'close_shift'.tr();
   static String get openNewShift => 'open_new_shift'.tr();
@@ -619,6 +690,7 @@ class AppStrings {
   static String get extendTime => 'extend_time'.tr();
   static String get timeExpired => 'time_expired'.tr();
   static String get remainingTime => 'remaining_time'.tr();
+  static String get elapsedTime => 'cashier.elapsed'.tr();
   static String get confirmEndSession => 'confirm_end_session'.tr();
   static String get confirmEndSessionMessage =>
       'confirm_end_session_message'.tr();
@@ -647,6 +719,11 @@ class AppStrings {
   static String get clientRequestedExtras => 'client_requested_extras'.tr();
   static String get approveRequest => 'approve_request'.tr();
   static String get rejectRequest => 'reject_request'.tr();
+
+  static String get attachedPaymentReceiptLabel =>
+      'attached_payment_receipt_label'.tr();
+  static String get paymentTransferReceipt => 'payment_transfer_receipt'.tr();
+  static String get zoomPaymentReceipt => 'zoom_payment_receipt'.tr();
   static String get requestApproved => 'request_approved'.tr();
   static String get requestRejected => 'request_rejected'.tr();
   static String get totalActiveExtras => 'total_active_extras'.tr();
@@ -690,6 +767,8 @@ class AppStrings {
   static String get prizePool => 'prize_pool'.tr();
   static String get tournamentPrizes => 'tournament_prizes'.tr();
   static String get managePrizes => 'manage_prizes'.tr();
+  static String get completeTournament => 'complete_tournament'.tr();
+  static String get awardTournamentPrizes => 'award_tournament_prizes'.tr();
   static String get placement => 'placement'.tr();
   static String get firstPlace => 'first_place'.tr();
   static String get secondPlace => 'second_place'.tr();
@@ -897,6 +976,7 @@ class AppStrings {
   static String get transferReference => 'transfer_reference'.tr();
   static String get paidAt => 'paid_at'.tr();
   static String get add => 'add'.tr();
+  static String get permissions => 'permissions'.tr();
   static String get errorLoadingPermissions => 'error_loading_permissions'.tr();
   static String get unauthorizedAccessMsg =>
       'عذراً، لا تملك الصلاحية الكافية للوصول لهذه الشاشة';
@@ -975,6 +1055,7 @@ class AppStrings {
   static String get process => 'process'.tr();
   static String get pay => 'pay'.tr();
   static String get fail => 'fail'.tr();
+  static String get markFailed => 'mark_failed'.tr();
   static String get resolve => 'resolve'.tr();
   static String get completePayoutPayment => 'complete_payout_payment'.tr();
   static String get completePayment => 'complete_payment'.tr();
@@ -1208,6 +1289,9 @@ class AppStrings {
   static String get invalidDiscountValue => 'invalid_discount_value'.tr();
   static String get discountReasonHint => 'discount_reason_hint'.tr();
   static String get reasonForAuditHint => 'reason_for_audit_hint'.tr();
+  static String get voucherCode => 'voucher_code'.tr();
+  static String get bookingExtrasTotal => 'booking_extras_total'.tr();
+  static String get bookingVoucherDiscount => 'booking_voucher_discount'.tr();
   static String get enterVoucherCodeHint => 'enter_voucher_code_hint'.tr();
   static String get reportCustomerTooltip => 'report_customer_tooltip'.tr();
 
@@ -1358,18 +1442,390 @@ class AppStrings {
   static String get addNewBranch => 'add_new_branch'.tr();
 
   // Cancellation Summary
-  static String get cancelledByClientAfterApproval => 'cancelled_by_client_after_approval'.tr();
+  static String get cancelledByClientAfterApproval =>
+      'cancelled_by_client_after_approval'.tr();
   static String get cancellationTime => 'cancellation_time'.tr();
   static String get cancellationReason => 'cancellation_reason'.tr();
   static String get cancellationSummary => 'cancellation_summary'.tr();
-  static String get afterApprovalCountLabel => 'after_approval_count_label'.tr();
+  static String get afterApprovalCountLabel =>
+      'after_approval_count_label'.tr();
   static String get last90DaysCountLabel => 'last_90_days_count_label'.tr();
   static String get viewCancellationHistory => 'view_cancellation_history'.tr();
-  static String get cancellationHistoryTitle => 'cancellation_history_title'.tr();
+  static String get cancellationHistoryTitle =>
+      'cancellation_history_title'.tr();
   static String get noCancellationHistory => 'no_cancellation_history'.tr();
-  static String get cancellationThresholdWarning => 'cancellation_threshold_warning'.tr();
+  static String get cancellationThresholdWarning =>
+      'cancellation_threshold_warning'.tr();
   static String get issueWarningBtn => 'issue_warning_btn'.tr();
   static String get requestBanBtn => 'request_ban_btn'.tr();
+
+  // Operational Cockpit
+  static String get operationalCockpit => 'operational_cockpit'.tr();
+  static String get cockpitSubtitle => 'cockpit_subtitle'.tr();
+  static String get needsAttention => 'needs_attention'.tr();
+  static String get sessionsNeedAttention => 'sessions_need_attention'.tr();
+  static String get sessionsNeedAttentionSubtitle =>
+      'sessions_need_attention_subtitle'.tr();
+  static String get openTimeSessions => 'open_time_sessions'.tr();
+  static String get openTimeSessionsSubtitle =>
+      'open_time_sessions_subtitle'.tr();
+  static String get runningSessions => 'running_sessions'.tr();
+  static String get runningSessionsSubtitle => 'running_sessions_subtitle'.tr();
+  static String get upcomingSessions => 'upcoming_sessions'.tr();
+  static String get upcomingSessionsSubtitle =>
+      'upcoming_sessions_subtitle'.tr();
+  static String get noSessionsInOperations => 'no_sessions_in_operations'.tr();
+  static String get noMatchingBookings => 'no_matching_bookings'.tr();
+  static String get sessionsEndingSoon => 'sessions_ending_soon'.tr();
+  static String get growthOpportunities => 'growth_opportunities'.tr();
+  static String get pendingPaymentProofs => 'pending_payment_proofs'.tr();
+  static String get canteenRevenue => 'canteen_revenue'.tr();
+  static String get noShowsAndCancellations =>
+      'no_shows_and_cancellations'.tr();
+  static String get noPendingActions => 'no_pending_actions'.tr();
+  static String get noPendingActionsSubtitle =>
+      'no_pending_actions_subtitle'.tr();
+  static String paymentProofsAlert(int count) =>
+      'payment_proofs_alert'.tr(args: [count.toString()]);
+  static String unattendedRequestsAlert(int count) =>
+      'unattended_requests_alert'.tr(args: [count.toString()]);
+  static String lowStockAlert(int count) =>
+      'low_stock_alert'.tr(args: [count.toString()]);
+  static String get noActiveShiftAlert => 'no_active_shift_alert'.tr();
+  static String get openShiftNow => 'open_shift_now'.tr();
+  static String get verifyNow => 'verify_now'.tr();
+  static String get attendNow => 'attend_now'.tr();
+  static String get manageStock => 'manage_stock'.tr();
+  static String get boostOccupancyTip => 'boost_occupancy_tip'.tr();
+  static String get boostOccupancyDesc => 'boost_occupancy_desc'.tr();
+  static String get highOccupancyTip => 'high_occupancy_tip'.tr();
+  static String get highOccupancyDesc => 'high_occupancy_desc'.tr();
+  static String get canteenUpsellTip => 'canteen_upsell_tip'.tr();
+  static String get canteenUpsellDesc => 'canteen_upsell_desc'.tr();
+  static String get tournamentsTip => 'tournaments_tip'.tr();
+  static String get tournamentsDesc => 'tournaments_desc'.tr();
+  static String get viewCanteen => 'view_canteen'.tr();
+  static String get viewTournaments => 'view_tournaments'.tr();
+  static String get failedToLoadStats => 'failed_to_load_stats'.tr();
+  static String occupiedRoomsSubtitle(int occupied, int total) =>
+      'occupied_rooms_subtitle'.tr(
+        args: [occupied.toString(), total.toString()],
+      );
+  static String openSessionsCount(int count) =>
+      'open_sessions_count'.tr(args: [count.toString()]);
+
+  // Operational Shift Status
+  static String get operationalStateClosed => 'operational_state_closed'.tr();
+  static String get operationalStateClosedDesc =>
+      'operational_state_closed_desc'.tr();
+  static String get operationalStateOpen => 'operational_state_open'.tr();
+  static String activeCashierLabel(String name) =>
+      'active_cashier_label'.tr(args: [name]);
+  static String shiftStartedAt(String time) =>
+      'shift_started_at'.tr(args: [time]);
+  static String get recordExpense => 'record_expense'.tr();
+
+  // Revenue Intelligence
+  static String get revenueIntelligence => 'revenue_intelligence'.tr();
+  static String get revenueIntelligenceSubtitle =>
+      'revenue_intelligence_subtitle'.tr();
+  static String get roomTierSplit => 'room_tier_split'.tr();
+  static String get vipPs5Rooms => 'vip_ps5_rooms'.tr();
+  static String get standardRooms => 'standard_rooms'.tr();
+  static String get canteenAttachRate => 'canteen_attach_rate'.tr();
+  static String canteenAttachDesc(int percent) =>
+      'canteen_attach_desc'.tr(args: [percent.toString()]);
+  static String get gamerLoyaltySplit => 'gamer_loyalty_split'.tr();
+  static String get repeatGamers => 'repeat_gamers'.tr();
+  static String get newGamers => 'new_gamers'.tr();
+  static String get avgSessionSpend => 'avg_session_spend'.tr();
+  static String get avgSessionDuration => 'avg_session_duration'.tr();
+  static String get hoursAbbr => 'hours_abbr'.tr();
+  static String unoccupiedRoomsCount(int count) =>
+      'unoccupied_rooms_count'.tr(args: [count.toString()]);
+  static String get capacityOpportunity => 'capacity_opportunity'.tr();
+  static String get capacityOpportunityDesc => 'capacity_opportunity_desc'.tr();
+
+  // PlaySpot OS Capabilities & Modules
+  static String get loungeOsModules => 'lounge_os_modules'.tr();
+  static String get loungeOsModulesSubtitle =>
+      'lounge_os_modules_subtitle'.tr();
+  static String get moduleStatusActive => 'module_status_active'.tr();
+  static String get moduleStatusPlanned => 'module_status_planned'.tr();
+  static String get moduleStatusBeta => 'module_status_beta'.tr();
+  static String get plannedDialogTitle => 'planned_dialog_title'.tr();
+  static String get plannedDialogDesc => 'planned_dialog_desc'.tr();
+  static String get plannedDialogGotIt => 'planned_dialog_got_it'.tr();
+
+  static String get smartRebookTitle => 'smart_rebook_title'.tr();
+  static String get smartRebookDesc => 'smart_rebook_desc'.tr();
+  static String get waitlistTitle => 'waitlist_title'.tr();
+  static String get waitlistDesc => 'waitlist_desc'.tr();
+  static String get membershipsTitle => 'memberships_title'.tr();
+  static String get membershipsDesc => 'memberships_desc'.tr();
+  static String get pricingRulesTitle => 'pricing_rules_title'.tr();
+  static String get pricingRulesDesc => 'pricing_rules_desc'.tr();
+  static String get gamerCrmTitle => 'gamer_crm_title'.tr();
+  static String get gamerCrmDesc => 'gamer_crm_desc'.tr();
+  static String get missionsQuestsTitle => 'missions_quests_title'.tr();
+  static String get missionsQuestsDesc => 'missions_quests_desc'.tr();
+  static String get groupSplitTitle => 'group_split_title'.tr();
+  static String get groupSplitDesc => 'group_split_desc'.tr();
+  static String get tournamentsEngineTitle => 'tournaments_engine_title'.tr();
+  static String get tournamentsEngineDesc => 'tournaments_engine_desc'.tr();
+  static String get auditTimelineTitle => 'audit_timeline_title'.tr();
+  static String get auditTimelineDesc => 'audit_timeline_desc'.tr();
+  static String get corporateEventsTitle => 'corporate_events_title'.tr();
+  static String get corporateEventsDesc => 'corporate_events_desc'.tr();
+
+  // Payment Methods
+  static String get paymentMethodWallet => 'payment_method_wallet'.tr();
+  static String get paymentMethodCash => 'payment_method_cash'.tr();
+  static String get paymentMethodInstapay => 'payment_method_instapay'.tr();
+  static String get paymentMethodCard => 'payment_method_card'.tr();
+
+  // Booking Timeline
+  static String get bookingTimeline => 'booking_timeline'.tr();
+  static String get bookingCreated => 'booking_created'.tr();
+  static String get sessionStarted => 'session_started'.tr();
+  static String get bookingCompletedTimeline =>
+      'booking_completed_timeline'.tr();
+  static String get bookingCancelledTimeline =>
+      'booking_cancelled_timeline'.tr();
+  static String get roomBasePrice => 'room_base_price'.tr();
+  static String get finalTotalDue => 'final_total_due'.tr();
+  static String get financialSummary => 'financial_summary'.tr();
+
+  // Payment Proofs Queue
+  static String get paymentProofsQueue => 'payment_proofs_queue'.tr();
+  static String get noPendingProofs => 'no_pending_proofs'.tr();
+  static String get rejectionReasonUnclear => 'rejection_reason_unclear'.tr();
+  static String get rejectionReasonAmountMismatch =>
+      'rejection_reason_amount_mismatch'.tr();
+  static String get rejectionReasonDuplicate =>
+      'rejection_reason_duplicate'.tr();
+  static String get rejectionReasonUnknownSender =>
+      'rejection_reason_unknown_sender'.tr();
+  static String get rejectionReasonOther => 'rejection_reason_other'.tr();
+  static String get confirmApprovePaymentProof =>
+      'confirm_approve_payment_proof'.tr();
+  static String get confirmRejectPaymentProof =>
+      'confirm_reject_payment_proof'.tr();
+
+  // Audit Feature
+  static String get auditLogs => 'audit_logs'.tr();
+  static String get auditTitle => 'audit_title'.tr();
+  static String get entityType => 'entity_type'.tr();
+  static String get severity => 'severity'.tr();
+  static String get allEntities => 'all_entities'.tr();
+  static String get allSeverities => 'all_severities'.tr();
+  static String get severityCritical => 'severity_critical'.tr();
+  static String get severityWarning => 'severity_warning'.tr();
+  static String get severityInfo => 'severity_info'.tr();
+  static String get actor => 'actor'.tr();
+  static String get action => 'action'.tr();
+  static String get eventId => 'event_id'.tr();
+  static String get eventDetails => 'event_details'.tr();
+  static String get fieldChanges => 'field_changes'.tr();
+  static String get oldValue => 'old_value'.tr();
+  static String get newValue => 'new_value'.tr();
+  static String get reason => 'reason'.tr();
+  static String get noReasonProvided => 'no_reason_provided'.tr();
+  static String get copyEventId => 'copy_event_id'.tr();
+  static String get eventIdCopied => 'event_id_copied'.tr();
+  static String get exportCsv => 'export_csv'.tr();
+  static String get exportingCsv => 'exporting_csv'.tr();
+  static String get csvExportedSuccess => 'csv_exported_success'.tr();
+  static String get searchBookingId => 'search_booking_id'.tr();
+  static String get searchUser => 'search_user'.tr();
+  static String get auditTimeline => 'audit_timeline'.tr();
+  static String get noAuditLogs => 'no_audit_logs'.tr();
+  static String get noAuditLogsDesc => 'no_audit_logs_desc'.tr();
+  static String get accessDeniedAudit => 'access_denied_audit'.tr();
+  static String get bookingEntity => 'booking_entity'.tr();
+  static String get shiftEntity => 'shift_entity'.tr();
+  static String get roomEntity => 'room_entity'.tr();
+  static String get systemEntity => 'system_entity'.tr();
+  static String get loungeEntity => 'lounge_entity'.tr();
+  static String get userEntity => 'user_entity'.tr();
+
+  // Pricing Engine & Rules
+  static String get pricingEngineTitle => 'pricing_engine_title'.tr();
+  static String get addPricingRule => 'add_pricing_rule'.tr();
+  static String get editPricingRule => 'edit_pricing_rule'.tr();
+  static String get ruleNameAr => 'rule_name_ar'.tr();
+  static String get ruleNameEn => 'rule_name_en'.tr();
+  static String get ruleType => 'rule_type'.tr();
+  static String get peakHours => 'peak_hours'.tr();
+  static String get offPeakHours => 'off_peak_hours'.tr();
+  static String get standardHours => 'standard_hours'.tr();
+  static String get customRule => 'custom_rule'.tr();
+  static String get daysOfWeek => 'days_of_week'.tr();
+  static String get overnightWarning => 'overnight_warning'.tr();
+  static String get validityPeriod => 'validity_period'.tr();
+  static String get adjustmentType => 'adjustment_type'.tr();
+  static String get multiplier => 'multiplier'.tr();
+  static String get percentage => 'percentage'.tr();
+  static String get fixedRate => 'fixed_rate'.tr();
+  static String get liveQuotePreview => 'live_quote_preview'.tr();
+  static String get weeklyPreview => 'weekly_preview'.tr();
+  static String get conflictingRules => 'conflicting_rules'.tr();
+  static String get openConflictingRule => 'open_conflicting_rule'.tr();
+  static String get confirmSaveRule => 'confirm_save_rule'.tr();
+  static String affectedRoomsNotice(int count) =>
+      'affected_rooms_notice'.tr(namedArgs: {'count': count.toString()});
+  static String get existingBookingsUnaffected =>
+      'existing_bookings_unaffected'.tr();
+  static String get pricingFutureScopeNotice =>
+      'pricing_future_scope_notice'.tr();
+  static String get activeStatus => 'active_status'.tr();
+  static String get scheduledStatus => 'scheduled_status'.tr();
+  static String get expiredStatus => 'expired_status'.tr();
+  static String get groupedByLounge => 'grouped_by_lounge'.tr();
+  static String get groupedBySpaceType => 'grouped_by_space_type'.tr();
+  static String get groupedByRoom => 'grouped_by_room'.tr();
+  static String get priceRangeLabel => 'price_range_label'.tr();
+  static String get pricingManage => 'pricing_manage'.tr();
+
+  // Canteen Combos & Upsell
+  static String get combosManager => 'combos_manager'.tr();
+  static String get addCombo => 'add_combo'.tr();
+  static String get editCombo => 'edit_combo'.tr();
+  static String get comboNameAr => 'combo_name_ar'.tr();
+  static String get comboNameEn => 'combo_name_en'.tr();
+  static String get comboDescAr => 'combo_desc_ar'.tr();
+  static String get comboDescEn => 'combo_desc_en'.tr();
+  static String get comboItemsSelector => 'combo_items_selector'.tr();
+  static String get addItemToCombo => 'add_item_to_combo'.tr();
+  static String get selectExtra => 'select_extra'.tr();
+  static String get separateItemsTotal => 'separate_items_total'.tr();
+  static String get bundlePrice => 'bundle_price'.tr();
+  static String get profitMargin => 'profit_margin'.tr();
+  static String get savingsBadge => 'savings_badge'.tr();
+  static String get availableDays => 'available_days'.tr();
+  static String get availableHours => 'available_hours'.tr();
+  static String get allDays => 'all_days'.tr();
+  static String get allHours => 'all_hours'.tr();
+  static String get comboImageUrl => 'combo_image_url'.tr();
+  static String get noCombosFound => 'no_combos_found'.tr();
+  static String get upsellRulesManager => 'upsell_rules_manager'.tr();
+  static String get addUpsellRule => 'add_upsell_rule'.tr();
+  static String get editUpsellRule => 'edit_upsell_rule'.tr();
+  static String get triggerTemplate => 'trigger_template'.tr();
+  static String get triggerSessionMinutes => 'trigger_session_minutes'.tr();
+  static String get triggerTimeOfDay => 'trigger_time_of_day'.tr();
+  static String get triggerCartCategory => 'trigger_cart_category'.tr();
+  static String get triggerRoomType => 'trigger_room_type'.tr();
+  static String get triggerSessionStart => 'trigger_session_start'.tr();
+  static String get suggestedItemOrCombo => 'suggested_item_or_combo'.tr();
+  static String get discountPercentOptional => 'discount_percent_optional'.tr();
+  static String get maxImpressions => 'max_impressions'.tr();
+  static String get upsellPerformance => 'upsell_performance'.tr();
+  static String get impressionsCount => 'impressions_count'.tr();
+  static String get conversionsCount => 'conversions_count'.tr();
+  static String get conversionRate => 'conversion_rate'.tr();
+  static String get revenueGenerated => 'revenue_generated'.tr();
+  static String get lowStockWarning => 'low_stock_warning'.tr();
+  static String get expandComboComponents => 'expand_combo_components'.tr();
+  static String get combosTab => 'combos_tab'.tr();
+  static String get singleItemsTab => 'single_items_tab'.tr();
+  static String get upsellTab => 'upsell_tab'.tr();
+  static String get save => saveChanges;
+  static String get required => fieldRequired;
+  static String get priority => sortOrderPriority;
+
+  // Open Time & Dynamic Grouping
+  static String get openTime => 'open_time'.tr();
+  static String get startOpenTime => 'start_open_time'.tr();
+  static String get completeAndCalculate => 'complete_and_calculate'.tr();
+  static String get completeOpenTimeSession =>
+      'complete_open_time_session'.tr();
+  static String get openTimeDisabledByPolicy =>
+      'open_time_disabled_by_policy'.tr();
+  static String get openTimeSessionActive => 'open_time_session_active'.tr();
+  static String get openTimeStartedSuccess => 'open_time_started_success'.tr();
+  static String get openTimeCompletedSuccess =>
+      'open_time_completed_success'.tr();
+  static String get activeGamingSessions => 'active_gaming_sessions'.tr();
+  static String get moreItemsTapToView => 'more_items_tap_to_view'.tr();
+  static String get failedToStartOpenTime => 'failed_to_start_open_time'.tr();
+  static String get failedToCompleteOpenTime =>
+      'failed_to_complete_open_time'.tr();
+  static String get openTimePolicySettingsTitle =>
+      'open_time_policy_settings_title'.tr();
+  static String get openTimePolicySettingsDesc =>
+      'open_time_policy_settings_desc'.tr();
+  static String get enableOpenTimeSessionsTitle =>
+      'enable_open_time_sessions_title'.tr();
+  static String get enableOpenTimeSessionsDesc =>
+      'enable_open_time_sessions_desc'.tr();
+  static String get minOpenTimeMinutesLabel =>
+      'min_open_time_minutes_label'.tr();
+  static String get openTimeRoundingMinutesLabel =>
+      'open_time_rounding_minutes_label'.tr();
+  static String get maxOpenTimeMinutesLabel =>
+      'max_open_time_minutes_label'.tr();
+  static String get maxOpenTimeMinutesHint => 'max_open_time_minutes_hint'.tr();
+  static String get endTimeLabel => 'end_time'.tr();
+  static String get numberGreaterThanZeroError =>
+      'number_greater_than_zero_error'.tr();
+  static String get customerNameOptional => 'customer_name_optional'.tr();
+  static String get customerPhoneOptional => 'customer_phone_optional'.tr();
+  static String get openTimeDialogNotice => 'open_time_dialog_notice'.tr();
+  static String get confirmCashInstruction => 'confirm_cash_instruction'.tr();
+  static String get verifiedManuallyFinanceRecords =>
+      'verified_manually_finance_records'.tr();
+  static String get maintenanceEnabledSuccess =>
+      'maintenance_enabled_success'.tr();
+  static String get maintenanceDisabledSuccess =>
+      'maintenance_disabled_success'.tr();
+  static String get appVersionsUpdatedSuccess =>
+      'app_versions_updated_success'.tr();
+  static String get announcementPublishedSuccess =>
+      'announcement_published_success'.tr();
+  static String get announcementDeactivatedSuccess =>
+      'announcement_deactivated_success'.tr();
+  static String get discountPercentageInput => 'discount_percentage_input'.tr();
+  static String get discountAmountInput => 'discount_amount_input'.tr();
+  static String get discountPercentageHint => 'discount_percentage_hint'.tr();
+  static String get discountAmountHint => 'discount_amount_hint'.tr();
+  static String get discountReasonRequiredLabel =>
+      'discount_reason_required_label'.tr();
+  static String get roomDiscountReasonHint => 'room_discount_reason_hint'.tr();
+  static String get bookingVoucherInvalid => 'booking_voucher_invalid'.tr();
+  static String get bookingVoucherUnavailable =>
+      'booking_voucher_unavailable'.tr();
+  static String get bookingVoucherChecking => 'booking_voucher_checking'.tr();
+  static String get bookingVoucherApply => 'booking_voucher_apply'.tr();
+  static String get noTimeAfterBooking => 'no_time_after_booking'.tr();
+  static String get newSupportTicket => 'new_support_ticket'.tr();
+  static String get issueTypeGeneral => 'issue_type_general'.tr();
+  static String get issueTypeBooking => 'issue_type_booking'.tr();
+  static String get issueTypePayment => 'issue_type_payment'.tr();
+  static String get issueTypeTechnical => 'issue_type_technical'.tr();
+
+  static String get issueCategoryGeneral => 'issue_category_general'.tr();
+  static String get issueCategoryBooking => 'issue_category_booking'.tr();
+  static String get issueCategoryPayment => 'issue_category_payment'.tr();
+  static String get issueCategoryTechnical => 'issue_category_technical'.tr();
+  static String get supportContactSettingsSaved =>
+      'support_contact_settings_saved'.tr();
+  static String get supportPolicySaved => 'support_policy_saved'.tr();
+  static String get faqSavedSuccess => 'faq_saved_success'.tr();
+  static String get faqDeletedSuccess => 'faq_deleted_success'.tr();
+  static String get ticketSubmittedSuccess => 'ticket_submitted_success'.tr();
+  static String get nationalIdentityDetails => 'national_identity_details'.tr();
+  static String get nationalIdNumber => 'national_id_number'.tr();
+  static String get idFront => 'id_front'.tr();
+  static String get idBack => 'id_back'.tr();
+  static String get memberSince => 'member_since'.tr();
+  static String get tournamentTitleDefault => 'tournament_title_default'.tr();
+  static String get noReceiptImage => 'no_receipt_image'.tr();
+  static String get championshipTrophy => 'championship_trophy'.tr();
+  static String get cashPrize => 'cash_prize'.tr();
+  static String get secondPlacePrize => 'second_place_prize'.tr();
+  static String get bonusPoints => 'bonus_points'.tr();
+  static String get newReward => 'new_reward'.tr();
 
   static const List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 }

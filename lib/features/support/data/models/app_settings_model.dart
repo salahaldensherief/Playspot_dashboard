@@ -17,7 +17,9 @@ class AppSettingsModel extends AppSettingsEntity {
       supportPhone: json['support_phone'] as String? ?? '',
       supportEmail: json['support_email'] as String? ?? '',
       vodafoneCashNumber: json['vodafone_cash_number'] as String? ?? '',
-      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'] as String) : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'] as String)
+          : null,
     );
   }
 

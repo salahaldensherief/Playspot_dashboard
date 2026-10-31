@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/room_model.dart';
+import '../models/room_space_type_model.dart';
 
 abstract class RoomRemoteDataSource {
+  Future<List<RoomSpaceTypeModel>> getSpaceTypes();
   Future<List<RoomModel>> getRooms(String loungeId);
   Stream<List<RoomModel>> watchRooms(String loungeId);
   Future<void> updateRoomStatus(String roomId, String status);
@@ -17,12 +19,24 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
   RoomRemoteDataSourceImpl(this._supabase);
 
   @override
+  Future<List<RoomSpaceTypeModel>> getSpaceTypes() async {
+    final rows = await _supabase
+        .from('space_types')
+        .select('id,name,label')
+        .order('sort_order')
+        .order('name');
+    return rows.map((row) => RoomSpaceTypeModel.fromJson(row)).toList();
+  }
+
+  @override
   Future<List<RoomModel>> getRooms(String loungeId) async {
     // Query rooms table directly with room_activities relation
     try {
       final response = await _supabase
           .from('rooms')
-          .select('*, room_activities(*, activity_types(*))')
+          .select(
+            '*, space_types(name,label), room_activities(*, activity_types(*))',
+          )
           .eq('lounge_id', loungeId)
           .neq('status', 'deleted')
           .order('created_at', ascending: true);
@@ -85,44 +99,34 @@ class RoomRemoteDataSourceImpl implements RoomRemoteDataSource {
   }
 
   @override
-  Future<void> addRoom(RoomModel room) async {
-    final data = room.toJson();
-    if (data['name'] == null || data['name'].toString().isEmpty) {
-      data['name'] = room.nameEn.isEmpty ? 'Room' : room.nameEn;
-    }
-    await _supabase.from('rooms').insert(data);
-    await _syncRoomActivities(room.id, room.activityIds);
-  }
+  Future<void> addRoom(RoomModel room) => _saveRoom(room);
 
   @override
-  Future<void> updateRoom(RoomModel room) async {
-    await _supabase.from('rooms').update(room.toJson()).eq('id', room.id);
-    await _syncRoomActivities(room.id, room.activityIds);
-  }
+  Future<void> updateRoom(RoomModel room) => _saveRoom(room);
 
-  Future<void> _syncRoomActivities(
-    String roomId,
-    List<String> activityIds,
-  ) async {
-    await _supabase.from('room_activities').delete().eq('room_id', roomId);
-
-    if (activityIds.isNotEmpty) {
-      final inserts = activityIds
-          .map((id) => {'room_id': roomId, 'activity_type_id': id})
-          .toList();
-      await _supabase.from('room_activities').insert(inserts);
+  Future<void> _saveRoom(RoomModel room) async {
+    final response = await _supabase.rpc(
+      'save_lounge_room_v2',
+      params: {'p_room': room.toJson(), 'p_activity_ids': room.activityIds},
+    );
+    if (response is! Map ||
+        response['success'] != true ||
+        response['room_id']?.toString() != room.id) {
+      throw const FormatException('Invalid room save response');
     }
   }
 
   @override
   Future<void> deleteRoom(String roomId) async {
-    try {
-      await _supabase.from('rooms').delete().eq('id', roomId);
-    } catch (_) {
-      await _supabase
-          .from('rooms')
-          .update({'status': 'deleted', 'is_available': false})
-          .eq('id', roomId);
+    final response = await _supabase.rpc(
+      'archive_lounge_room',
+      params: {'p_room_id': roomId},
+    );
+    if (response is! Map ||
+        response['success'] != true ||
+        response['room_id']?.toString() != roomId ||
+        response['status'] != 'deleted') {
+      throw const FormatException('Invalid room archive response');
     }
   }
 }

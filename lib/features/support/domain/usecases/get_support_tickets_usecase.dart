@@ -8,7 +8,9 @@ class GetSupportTicketsUseCase {
 
   GetSupportTicketsUseCase(this.repository);
 
-  Future<Either<Failure, List<SupportTicketEntity>>> call({String? statusFilter}) {
+  Future<Either<Failure, List<SupportTicketEntity>>> call({
+    String? statusFilter,
+  }) {
     return repository.getSupportTickets(statusFilter: statusFilter);
   }
 }

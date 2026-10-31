@@ -1,8 +1,10 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import '../../../../art_core/theme/operations_tokens.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
@@ -41,9 +43,15 @@ class BookingFilterState {
   }) {
     return BookingFilterState(
       searchQuery: searchQuery ?? this.searchQuery,
-      selectedRoomId: clearRoom ? null : (selectedRoomId ?? this.selectedRoomId),
-      selectedStatus: clearStatus ? null : (selectedStatus ?? this.selectedStatus),
-      selectedTimeFilter: clearTime ? null : (selectedTimeFilter ?? this.selectedTimeFilter),
+      selectedRoomId: clearRoom
+          ? null
+          : (selectedRoomId ?? this.selectedRoomId),
+      selectedStatus: clearStatus
+          ? null
+          : (selectedStatus ?? this.selectedStatus),
+      selectedTimeFilter: clearTime
+          ? null
+          : (selectedTimeFilter ?? this.selectedTimeFilter),
     );
   }
 }
@@ -89,7 +97,9 @@ class _BookingFilterBarState extends State<BookingFilterBar> {
   @override
   void initState() {
     super.initState();
-    _searchController = TextEditingController(text: widget.filterState.searchQuery);
+    _searchController = TextEditingController(
+      text: widget.filterState.searchQuery,
+    );
   }
 
   @override
@@ -109,73 +119,90 @@ class _BookingFilterBarState extends State<BookingFilterBar> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final isNarrow = MediaQuery.sizeOf(context).width < 800;
 
-    return Container(
+    final panel = Container(
       padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: OperationsTokens.surface,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.borderDefault),
+        border: Border.all(color: OperationsTokens.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (isNarrow) ...[
-                _buildSearchTextField(),
-                SizedBox(height: 10.h),
-                _buildRoomDropdown(context),
-                SizedBox(height: 10.h),
-                _buildStatusDropdown(),
-                SizedBox(height: 10.h),
-                _buildTimeDropdown(),
+            _buildSearchTextField(),
+            SizedBox(height: 10.h),
+            _buildRoomDropdown(context),
+            SizedBox(height: 10.h),
+            _buildStatusDropdown(),
+            SizedBox(height: 10.h),
+            _buildTimeDropdown(),
+            if (widget.filterState.hasActiveFilters) ...[
+              SizedBox(height: 8.h),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton.icon(
+                  onPressed: widget.onResetFilters,
+                  icon: Icon(
+                    Icons.clear_all_rounded,
+                    color: AppColors.danger,
+                    size: 16.r,
+                  ),
+                  label: AppText.body(
+                    AppStrings.resetFilters,
+                    color: AppColors.danger,
+                    fontSize: 11.sp,
+                  ),
+                ),
+              ),
+            ],
+          ] else ...[
+            Row(
+              children: [
+                Expanded(flex: 3, child: _buildSearchTextField()),
+                SizedBox(width: 10.w),
+                Expanded(flex: 2, child: _buildRoomDropdown(context)),
+                SizedBox(width: 10.w),
+                Expanded(flex: 2, child: _buildStatusDropdown()),
+                SizedBox(width: 10.w),
+                Expanded(flex: 2, child: _buildTimeDropdown()),
                 if (widget.filterState.hasActiveFilters) ...[
-                  SizedBox(height: 8.h),
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: TextButton.icon(
-                      onPressed: widget.onResetFilters,
-                      icon: Icon(Icons.clear_all_rounded, color: AppColors.danger, size: 16.r),
-                      label: AppText.body(AppStrings.resetFilters, color: AppColors.danger, fontSize: 11.sp),
+                  SizedBox(width: 10.w),
+                  IconButton(
+                    icon: Icon(
+                      Icons.clear_all_rounded,
+                      color: AppColors.danger,
+                      size: 20.r,
                     ),
+                    tooltip: AppStrings.resetFilters,
+                    onPressed: widget.onResetFilters,
                   ),
                 ],
-              ] else ...[
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: _buildSearchTextField(),
-                    ),
-                    SizedBox(width: 10.w),
-                    Expanded(
-                      flex: 2,
-                      child: _buildRoomDropdown(context),
-                    ),
-                    SizedBox(width: 10.w),
-                    Expanded(
-                      flex: 2,
-                      child: _buildStatusDropdown(),
-                    ),
-                    SizedBox(width: 10.w),
-                    Expanded(
-                      flex: 2,
-                      child: _buildTimeDropdown(),
-                    ),
-                    if (widget.filterState.hasActiveFilters) ...[
-                      SizedBox(width: 10.w),
-                      IconButton(
-                        icon: Icon(Icons.clear_all_rounded, color: AppColors.danger, size: 20.r),
-                        tooltip: AppStrings.resetFilters,
-                        onPressed: widget.onResetFilters,
-                      ),
-                    ],
-                  ],
-                ),
               ],
-            ],
-          ),
-        );
+            ),
+          ],
+        ],
+      ),
+    );
+    if (!isNarrow) return panel;
+    return ExpansionTile(
+      maintainState: true,
+      collapsedBackgroundColor: OperationsTokens.surface,
+      backgroundColor: OperationsTokens.surface,
+      iconColor: OperationsTokens.accent,
+      collapsedIconColor: OperationsTokens.accent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      collapsedShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: OperationsTokens.border),
+      ),
+      leading: const Icon(Icons.tune_rounded, color: OperationsTokens.accent),
+      title: Text('cashier.filterOptions'.tr(), style: OperationsTokens.value),
+      children: [panel],
+    );
   }
 
   Widget _buildSearchTextField() {
@@ -189,7 +216,9 @@ class _BookingFilterBarState extends State<BookingFilterBar> {
               onPressed: () {
                 _searchDebouncer.cancel();
                 _searchController.clear();
-                widget.onFilterChanged(widget.filterState.copyWith(searchQuery: ''));
+                widget.onFilterChanged(
+                  widget.filterState.copyWith(searchQuery: ''),
+                );
               },
             )
           : null,
@@ -208,7 +237,12 @@ class _BookingFilterBarState extends State<BookingFilterBar> {
         final rooms = state.rooms;
         final roomOptions = <_RoomFilterOption>[
           _RoomFilterOption(id: null, name: AppStrings.rooms),
-          ...rooms.map((r) => _RoomFilterOption(id: r.id, name: r.nameAr.isNotEmpty ? r.nameAr : r.nameEn)),
+          ...rooms.map(
+            (r) => _RoomFilterOption(
+              id: r.id,
+              name: r.nameAr.isNotEmpty ? r.nameAr : r.nameEn,
+            ),
+          ),
         ];
 
         final currentOption = roomOptions.firstWhere(
@@ -223,7 +257,12 @@ class _BookingFilterBarState extends State<BookingFilterBar> {
           itemLabel: (opt) => opt.name,
           onChanged: (opt) {
             final val = opt?.id;
-            widget.onFilterChanged(widget.filterState.copyWith(selectedRoomId: val, clearRoom: val == null));
+            widget.onFilterChanged(
+              widget.filterState.copyWith(
+                selectedRoomId: val,
+                clearRoom: val == null,
+              ),
+            );
           },
         );
       },
@@ -233,12 +272,30 @@ class _BookingFilterBarState extends State<BookingFilterBar> {
   Widget _buildStatusDropdown() {
     final statusOptions = <_StatusFilterOption>[
       _StatusFilterOption(status: null, name: AppStrings.filterByStatus),
-      _StatusFilterOption(status: BookingStatus.pendingVerification, name: AppStrings.pendingVerification),
-      _StatusFilterOption(status: BookingStatus.pending, name: AppStrings.pending),
-      _StatusFilterOption(status: BookingStatus.upcoming, name: AppStrings.upcoming),
-      _StatusFilterOption(status: BookingStatus.inProgress, name: AppStrings.inProgress),
-      _StatusFilterOption(status: BookingStatus.completed, name: AppStrings.completed),
-      _StatusFilterOption(status: BookingStatus.cancelled, name: AppStrings.cancelled),
+      _StatusFilterOption(
+        status: BookingStatus.pendingVerification,
+        name: AppStrings.pendingVerification,
+      ),
+      _StatusFilterOption(
+        status: BookingStatus.pending,
+        name: AppStrings.pending,
+      ),
+      _StatusFilterOption(
+        status: BookingStatus.upcoming,
+        name: AppStrings.upcoming,
+      ),
+      _StatusFilterOption(
+        status: BookingStatus.inProgress,
+        name: AppStrings.inProgress,
+      ),
+      _StatusFilterOption(
+        status: BookingStatus.completed,
+        name: AppStrings.completed,
+      ),
+      _StatusFilterOption(
+        status: BookingStatus.cancelled,
+        name: AppStrings.cancelled,
+      ),
     ];
 
     final currentOption = statusOptions.firstWhere(
@@ -253,7 +310,12 @@ class _BookingFilterBarState extends State<BookingFilterBar> {
       itemLabel: (opt) => opt.name,
       onChanged: (opt) {
         final val = opt?.status;
-        widget.onFilterChanged(widget.filterState.copyWith(selectedStatus: val, clearStatus: val == null));
+        widget.onFilterChanged(
+          widget.filterState.copyWith(
+            selectedStatus: val,
+            clearStatus: val == null,
+          ),
+        );
       },
     );
   }
@@ -278,7 +340,12 @@ class _BookingFilterBarState extends State<BookingFilterBar> {
       itemLabel: (opt) => opt.name,
       onChanged: (opt) {
         final val = opt?.key;
-        widget.onFilterChanged(widget.filterState.copyWith(selectedTimeFilter: val, clearTime: val == null));
+        widget.onFilterChanged(
+          widget.filterState.copyWith(
+            selectedTimeFilter: val,
+            clearTime: val == null,
+          ),
+        );
       },
     );
   }

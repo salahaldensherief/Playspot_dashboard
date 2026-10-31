@@ -20,7 +20,9 @@ class LoungeCacheHelper {
       pricePerHour: l.pricePerHour,
       isOpen: l.isOpen,
       location: l.location,
+      contactPhone: l.contactPhone,
       city: l.city,
+      cityId: l.cityId,
       totalReviews: l.totalReviews,
       availableRooms: l.availableRooms,
       descriptionAr: l.descriptionAr,
@@ -40,6 +42,13 @@ class LoungeCacheHelper {
       discountTitleAr: l.discountTitleAr,
       discountTitleEn: l.discountTitleEn,
       discountExpiresAt: l.discountExpiresAt,
+      vodafoneCashNumber: l.vodafoneCashNumber,
+      instapayAccount: l.instapayAccount,
+      allowCashPayment: l.allowCashPayment,
+      requirePrepaidFirstTime: l.requirePrepaidFirstTime,
+      cashGracePeriodMinutes: l.cashGracePeriodMinutes,
+      isActive: l.isActive,
+      suspensionReason: l.suspensionReason,
     );
   }
 
@@ -48,7 +57,10 @@ class LoungeCacheHelper {
     if (cached is List && cached.isNotEmpty) {
       try {
         final list = cached
-            .map((item) => LoungeModel.fromJson(Map<String, dynamic>.from(item as Map)))
+            .map(
+              (item) =>
+                  LoungeModel.fromJson(Map<String, dynamic>.from(item as Map)),
+            )
             .where((e) => e.status != 'deleted')
             .map((e) => e as Lounge)
             .toList();

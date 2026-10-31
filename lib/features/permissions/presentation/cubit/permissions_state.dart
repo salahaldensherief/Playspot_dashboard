@@ -5,6 +5,7 @@ enum PermissionsStatus { initial, loading, success, failure }
 
 class PermissionsState extends Equatable {
   final PermissionsStatus status;
+  final PermissionsStatus accessStatus;
   final List<PermissionItemEntity> permissions;
   final Map<String, bool> userPermissions;
   final int page;
@@ -17,6 +18,7 @@ class PermissionsState extends Equatable {
 
   const PermissionsState({
     required this.status,
+    this.accessStatus = PermissionsStatus.initial,
     this.permissions = const [],
     this.userPermissions = const {},
     this.page = 1,
@@ -28,7 +30,8 @@ class PermissionsState extends Equatable {
     this.userId,
   });
 
-  factory PermissionsState.initial() => const PermissionsState(status: PermissionsStatus.initial);
+  factory PermissionsState.initial() =>
+      const PermissionsState(status: PermissionsStatus.initial);
 
   bool get hasNextPage => page * pageSize < totalCount;
   bool get hasPreviousPage => page > 1;
@@ -36,6 +39,7 @@ class PermissionsState extends Equatable {
 
   PermissionsState copyWith({
     PermissionsStatus? status,
+    PermissionsStatus? accessStatus,
     List<PermissionItemEntity>? permissions,
     Map<String, bool>? userPermissions,
     int? page,
@@ -48,6 +52,7 @@ class PermissionsState extends Equatable {
   }) {
     return PermissionsState(
       status: status ?? this.status,
+      accessStatus: accessStatus ?? this.accessStatus,
       permissions: permissions ?? this.permissions,
       userPermissions: userPermissions ?? this.userPermissions,
       page: page ?? this.page,
@@ -62,15 +67,16 @@ class PermissionsState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        permissions,
-        userPermissions,
-        page,
-        pageSize,
-        totalCount,
-        errorMessage,
-        selectedRole,
-        userRole,
-        userId,
-      ];
+    status,
+    accessStatus,
+    permissions,
+    userPermissions,
+    page,
+    pageSize,
+    totalCount,
+    errorMessage,
+    selectedRole,
+    userRole,
+    userId,
+  ];
 }

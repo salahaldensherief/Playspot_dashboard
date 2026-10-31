@@ -11,6 +11,7 @@ import 'package:play_spot_dashboard/features/analytics/domain/usecases/add_extra
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/end_session_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/review_extension_request_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/handle_client_request_action_usecase.dart';
+import 'package:play_spot_dashboard/features/analytics/domain/usecases/start_open_time_session_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/lounge_stats_cubit.dart';
 
@@ -47,6 +48,9 @@ void initAnalyticsDI(GetIt sl) {
   sl.registerLazySingleton<HandleClientRequestActionUseCase>(
     () => HandleClientRequestActionUseCase(sl<DashboardRepository>()),
   );
+  sl.registerLazySingleton<StartOpenTimeSessionUseCase>(
+    () => StartOpenTimeSessionUseCase(sl<DashboardRepository>()),
+  );
 
   // Cubits
   sl.registerFactory<DashboardCubit>(
@@ -58,6 +62,7 @@ void initAnalyticsDI(GetIt sl) {
       endSessionUseCase: sl<EndSessionUseCase>(),
       reviewExtensionRequestUseCase: sl<ReviewExtensionRequestUseCase>(),
       handleClientRequestActionUseCase: sl<HandleClientRequestActionUseCase>(),
+      startOpenTimeSessionUseCase: sl<StartOpenTimeSessionUseCase>(),
     ),
   );
 

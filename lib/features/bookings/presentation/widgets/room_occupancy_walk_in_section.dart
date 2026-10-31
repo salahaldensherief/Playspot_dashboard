@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -13,13 +14,11 @@ import 'add_booking_dialog.dart';
 class RoomOccupancyWalkInSection extends StatelessWidget {
   final RoomEntity room;
 
-  const RoomOccupancyWalkInSection({
-    super.key,
-    required this.room,
-  });
+  const RoomOccupancyWalkInSection({super.key, required this.room});
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -32,7 +31,11 @@ class RoomOccupancyWalkInSection extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(Icons.directions_walk_rounded, color: AppColors.danger, size: 18.r),
+              Icon(
+                Icons.directions_walk_rounded,
+                color: AppColors.danger,
+                size: 18.r,
+              ),
               SizedBox(width: 8.w),
               Expanded(
                 child: Column(
@@ -95,16 +98,16 @@ class RoomOccupancyWalkInSection extends StatelessWidget {
                   onPressed: isUpdating
                       ? null
                       : () {
-                          context
-                              .read<RoomCubit>()
-                              .toggleWalkInStatus(room.id, room.status);
+                          context.read<RoomCubit>().toggleWalkInStatus(
+                            room.id,
+                            room.status,
+                          );
                         },
                 );
               },
             ),
           ],
         ),
-
       ],
     );
   }

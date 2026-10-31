@@ -25,6 +25,8 @@ class CategoryCubit extends Cubit<CategoryState> {
 
   final GetActivityTypesUseCase _getActivityTypesUseCase;
   final AddActivityTypeUseCase _addActivityTypeUseCase;
+  final UpdateActivityTypeUseCase _updateActivityTypeUseCase;
+  final DeleteActivityTypeUseCase _deleteActivityTypeUseCase;
 
   CategoryCubit({
     required GetCategoriesUseCase getCategoriesUseCase,
@@ -37,17 +39,21 @@ class CategoryCubit extends Cubit<CategoryState> {
     required DeleteCityUseCase deleteCityUseCase,
     required GetActivityTypesUseCase getActivityTypesUseCase,
     required AddActivityTypeUseCase addActivityTypeUseCase,
-  })  : _getCategoriesUseCase = getCategoriesUseCase,
-        _addCategoryUseCase = addCategoryUseCase,
-        _updateCategoryUseCase = updateCategoryUseCase,
-        _deleteCategoryUseCase = deleteCategoryUseCase,
-        _getCitiesUseCase = getCitiesUseCase,
-        _addCityUseCase = addCityUseCase,
-        _updateCityUseCase = updateCityUseCase,
-        _deleteCityUseCase = deleteCityUseCase,
-        _getActivityTypesUseCase = getActivityTypesUseCase,
-        _addActivityTypeUseCase = addActivityTypeUseCase,
-        super(CategoryState.init());
+    required UpdateActivityTypeUseCase updateActivityTypeUseCase,
+    required DeleteActivityTypeUseCase deleteActivityTypeUseCase,
+  }) : _getCategoriesUseCase = getCategoriesUseCase,
+       _addCategoryUseCase = addCategoryUseCase,
+       _updateCategoryUseCase = updateCategoryUseCase,
+       _deleteCategoryUseCase = deleteCategoryUseCase,
+       _getCitiesUseCase = getCitiesUseCase,
+       _addCityUseCase = addCityUseCase,
+       _updateCityUseCase = updateCityUseCase,
+       _deleteCityUseCase = deleteCityUseCase,
+       _getActivityTypesUseCase = getActivityTypesUseCase,
+       _addActivityTypeUseCase = addActivityTypeUseCase,
+       _updateActivityTypeUseCase = updateActivityTypeUseCase,
+       _deleteActivityTypeUseCase = deleteActivityTypeUseCase,
+       super(CategoryState.init());
 
   Future<void> loadCategories({bool forceRefresh = false}) async {
     emit(state.copyWith(status: CategoryStatus.loading));
@@ -56,36 +62,45 @@ class CategoryCubit extends Cubit<CategoryState> {
       _getCitiesUseCase(forceRefresh),
       _getActivityTypesUseCase(forceRefresh),
     ]);
-    
+
     if (isClosed) return;
 
     final catResult = results[0] as Either<Failure, List<CategoryEntity>>;
     final cityResult = results[1] as Either<Failure, List<CityEntity>>;
-    final activityResult = results[2] as Either<Failure, List<ActivityTypeEntity>>;
+    final activityResult =
+        results[2] as Either<Failure, List<ActivityTypeEntity>>;
 
     catResult.fold(
-      (failure) => emit(state.copyWith(
-        status: CategoryStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: CategoryStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (categories) {
         cityResult.fold(
-          (failure) => emit(state.copyWith(
-            status: CategoryStatus.failure,
-            errorMessage: failure.message,
-          )),
+          (failure) => emit(
+            state.copyWith(
+              status: CategoryStatus.failure,
+              errorMessage: failure.message,
+            ),
+          ),
           (cities) {
             activityResult.fold(
-              (failure) => emit(state.copyWith(
-                status: CategoryStatus.failure,
-                errorMessage: failure.message,
-              )),
-              (activities) => emit(state.copyWith(
-                status: CategoryStatus.success,
-                categories: categories,
-                cities: cities,
-                activityTypes: activities,
-              )),
+              (failure) => emit(
+                state.copyWith(
+                  status: CategoryStatus.failure,
+                  errorMessage: failure.message,
+                ),
+              ),
+              (activities) => emit(
+                state.copyWith(
+                  status: CategoryStatus.success,
+                  categories: categories,
+                  cities: cities,
+                  activityTypes: activities,
+                ),
+              ),
             );
           },
         );
@@ -97,15 +112,68 @@ class CategoryCubit extends Cubit<CategoryState> {
   Future<ActivityTypeEntity?> addActivityType(String name, String label) async {
     final newActivity = ActivityTypeEntity(id: '', name: name, label: label);
     final result = await _addActivityTypeUseCase(newActivity);
-    
+
     return result.fold(
       (failure) {
-        emit(state.copyWith(status: CategoryStatus.failure, errorMessage: failure.message));
+        emit(
+          state.copyWith(
+            status: CategoryStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
         return null;
       },
       (activity) {
         loadCategories();
         return activity;
+      },
+    );
+  }
+
+  Future<ActivityTypeEntity?> saveActivityType(
+    ActivityTypeEntity activityType,
+  ) async {
+    emit(state.copyWith(status: CategoryStatus.loading, errorMessage: null));
+    final result = activityType.id.isEmpty
+        ? await _addActivityTypeUseCase(activityType)
+        : await _updateActivityTypeUseCase(activityType);
+
+    if (isClosed) return null;
+
+    return result.fold(
+      (failure) {
+        emit(
+          state.copyWith(
+            status: CategoryStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
+        return null;
+      },
+      (saved) {
+        loadCategories(forceRefresh: true);
+        return saved;
+      },
+    );
+  }
+
+  Future<bool> deleteActivityType(String id) async {
+    emit(state.copyWith(status: CategoryStatus.loading, errorMessage: null));
+    final result = await _deleteActivityTypeUseCase(id);
+    if (isClosed) return false;
+    return result.fold(
+      (failure) {
+        emit(
+          state.copyWith(
+            status: CategoryStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
+        return false;
+      },
+      (_) {
+        loadCategories(forceRefresh: true);
+        return true;
       },
     );
   }
@@ -116,7 +184,12 @@ class CategoryCubit extends Cubit<CategoryState> {
     final result = await _addCityUseCase(city);
     if (isClosed) return;
     result.fold(
-      (failure) => emit(state.copyWith(status: CategoryStatus.failure, errorMessage: failure.message)),
+      (failure) => emit(
+        state.copyWith(
+          status: CategoryStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) => loadCategories(),
     );
   }
@@ -126,7 +199,12 @@ class CategoryCubit extends Cubit<CategoryState> {
     final result = await _updateCityUseCase(city);
     if (isClosed) return;
     result.fold(
-      (failure) => emit(state.copyWith(status: CategoryStatus.failure, errorMessage: failure.message)),
+      (failure) => emit(
+        state.copyWith(
+          status: CategoryStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) => loadCategories(),
     );
   }
@@ -136,7 +214,12 @@ class CategoryCubit extends Cubit<CategoryState> {
     final result = await _deleteCityUseCase(id);
     if (isClosed) return;
     result.fold(
-      (failure) => emit(state.copyWith(status: CategoryStatus.failure, errorMessage: failure.message)),
+      (failure) => emit(
+        state.copyWith(
+          status: CategoryStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) => loadCategories(),
     );
   }
@@ -144,14 +227,16 @@ class CategoryCubit extends Cubit<CategoryState> {
   Future<void> addCategory(CategoryEntity category) async {
     emit(state.copyWith(status: CategoryStatus.loading));
     final result = await _addCategoryUseCase(category);
-    
+
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: CategoryStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: CategoryStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) => loadCategories(),
     );
   }
@@ -159,14 +244,16 @@ class CategoryCubit extends Cubit<CategoryState> {
   Future<void> updateCategory(CategoryEntity category) async {
     emit(state.copyWith(status: CategoryStatus.loading));
     final result = await _updateCategoryUseCase(category);
-    
+
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: CategoryStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: CategoryStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) => loadCategories(),
     );
   }
@@ -174,14 +261,16 @@ class CategoryCubit extends Cubit<CategoryState> {
   Future<void> deleteCategory(String id) async {
     emit(state.copyWith(status: CategoryStatus.loading));
     final result = await _deleteCategoryUseCase(id);
-    
+
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: CategoryStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: CategoryStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) => loadCategories(),
     );
   }

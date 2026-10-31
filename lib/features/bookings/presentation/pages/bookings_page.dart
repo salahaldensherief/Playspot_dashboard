@@ -1,3 +1,10 @@
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/router/router_keys.dart';
+import '../../../../art_core/widgets/app_button.dart';
+import '../widgets/online_booking_status.dart';
+
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -19,7 +26,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booki
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/bookings_cockpit_tabs.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/bookings_collapsible_occupancy.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/bookings_requests_sidebar.dart';
-import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_ticker.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/session_clock_host.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/extras_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/widgets/lounge_discount_banner.dart';
@@ -28,7 +35,6 @@ import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit
 import 'package:play_spot_dashboard/features/shifts/domain/entities/shift_entity.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_state.dart';
-import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/widgets/shift_header_banner.dart';
 
 /// Redesigned Modern & Immersive Web Bookings & Live Sessions Page
 class BookingsPage extends StatefulWidget {
@@ -38,9 +44,9 @@ class BookingsPage extends StatefulWidget {
   State<BookingsPage> createState() => _BookingsPageState();
 }
 
-class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderStateMixin {
+class _BookingsPageState extends State<BookingsPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late SessionTickerNotifier _sessionTickerNotifier;
   late ScrollController _mainScrollController;
 
   int _selectedTabIndex = 0;
@@ -52,7 +58,6 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _sessionTickerNotifier = SessionTickerNotifier();
     _mainScrollController = ScrollController();
 
     _tabController.addListener(() {
@@ -72,17 +77,20 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
   @override
   void dispose() {
     _tabController.dispose();
-    _sessionTickerNotifier.dispose();
     _mainScrollController.dispose();
     super.dispose();
   }
 
   void _initRealtimeStreams(String? loungeId) {
-    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
+    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty)
+        ? loungeId.trim()
+        : null;
 
     context.read<BookingCubit>().startWatchingBookings(loungeId: cleanLoungeId);
     if (cleanLoungeId != null) {
-      context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId);
+      context.read<ClientRequestsCubit>().startWatchingRequests(
+        loungeId: cleanLoungeId,
+      );
       context.read<RoomCubit>().watchRooms(cleanLoungeId);
       context.read<ExtrasCubit>().loadExtras(cleanLoungeId);
     }
@@ -92,11 +100,19 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
   Future<void> _handleRefresh() async {
     final user = context.read<LoginCubit>().state.user;
     final loungeId = user?.loungeId;
-    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
+    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty)
+        ? loungeId.trim()
+        : null;
 
-    context.read<BookingCubit>().startWatchingBookings(loungeId: cleanLoungeId, forceRefresh: true);
+    context.read<BookingCubit>().startWatchingBookings(
+      loungeId: cleanLoungeId,
+      forceRefresh: true,
+    );
     if (cleanLoungeId != null) {
-      context.read<ClientRequestsCubit>().startWatchingRequests(loungeId: cleanLoungeId, forceRefresh: true);
+      context.read<ClientRequestsCubit>().startWatchingRequests(
+        loungeId: cleanLoungeId,
+        forceRefresh: true,
+      );
       context.read<RoomCubit>().watchRooms(cleanLoungeId, forceRefresh: true);
       context.read<ExtrasCubit>().loadExtras(cleanLoungeId, forceRefresh: true);
     }
@@ -113,17 +129,23 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
         final idMatch = b.id.toLowerCase().contains(q);
         if (!nameMatch && !phoneMatch && !roomMatch && !idMatch) return false;
       }
-      if (_filterState.selectedRoomId != null && b.roomId != _filterState.selectedRoomId) {
+      if (_filterState.selectedRoomId != null &&
+          b.roomId != _filterState.selectedRoomId) {
         return false;
       }
-      if (_filterState.selectedStatus != null && b.status != _filterState.selectedStatus) {
+      if (_filterState.selectedStatus != null &&
+          b.status != _filterState.selectedStatus) {
         return false;
       }
       if (_filterState.selectedTimeFilter == 'current_shift') {
-        if (!BookingState.isBookingInCurrentShiftOrToday(b, activeShift)) return false;
-      } else if (_filterState.selectedTimeFilter == 'morning' && b.date.hour >= 16) {
+        if (!BookingState.isBookingInCurrentShiftOrToday(b, activeShift)) {
+          return false;
+        }
+      } else if (_filterState.selectedTimeFilter == 'morning' &&
+          b.date.hour >= 16) {
         return false;
-      } else if (_filterState.selectedTimeFilter == 'evening' && b.date.hour < 16) {
+      } else if (_filterState.selectedTimeFilter == 'evening' &&
+          b.date.hour < 16) {
         return false;
       }
       return true;
@@ -141,7 +163,7 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
       builder: (_) => BookingDetailsDialog(
         booking: booking,
         onConfirmPayment: (amount, percent, reason) {
-          cubit.confirmCashPayment(
+          return cubit.confirmCashPayment(
             booking.id,
             shiftId: activeShiftId,
             discountAmount: amount,
@@ -165,17 +187,19 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final loginState = context.watch<LoginCubit>().state;
     final user = loginState.user;
     final loungeId = user?.loungeId ?? '';
     final userLounge = loginState.userLounge;
-    final isDesktop = AppBreakpoints.isDesktop(context);
+    // Reserve the permanent service feed for wide workstations. On smaller
+    // screens the alerts drawer leaves room for the session and its bill.
+    final showRequestsSidebar = MediaQuery.sizeOf(context).width >= 1920;
 
-    return SessionTickerScope(
-      ticker: _sessionTickerNotifier,
+    return SessionClockHost(
       child: Scaffold(
         backgroundColor: AppColors.scaffoldBackground,
-        endDrawer: !isDesktop
+        endDrawer: !showRequestsSidebar
             ? BookingsRequestsSidebar(
                 isDrawer: true,
                 onCloseDrawer: () => Navigator.of(context).pop(),
@@ -188,17 +212,25 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
           child: MultiBlocListener(
             listeners: [
               BlocListener<LoginCubit, LoginState>(
-                listenWhen: (previous, current) => previous.user?.loungeId != current.user?.loungeId,
-                listener: (context, state) => _initRealtimeStreams(state.user?.loungeId),
+                listenWhen: (previous, current) =>
+                    previous.user?.loungeId != current.user?.loungeId,
+                listener: (context, state) =>
+                    _initRealtimeStreams(state.user?.loungeId),
               ),
               BlocListener<BookingCubit, BookingState>(
-                listenWhen: (previous, current) => previous.status != current.status,
+                listenWhen: (previous, current) =>
+                    previous.status != current.status ||
+                    previous.errorMessage != current.errorMessage,
                 listener: (context, state) {
-                  if (state.status == BookingStatusState.failure) {
-                    final errMsg = state.errorMessage ?? AppStrings.actionFailed;
+                  if (state.errorMessage != null) {
+                    final errMsg =
+                        state.errorMessage ?? AppStrings.actionFailed;
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(errMsg), backgroundColor: AppColors.danger),
+                      SnackBar(
+                        content: Text(errMsg),
+                        backgroundColor: AppColors.danger,
+                      ),
                     );
                   }
                 },
@@ -218,14 +250,34 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                       controller: _mainScrollController,
                       physics: const AlwaysScrollableScrollPhysics(),
                       slivers: [
-                        SliverToBoxAdapter(child: LoungeDiscountBanner(lounge: userLounge)),
-                        const SliverToBoxAdapter(child: ShiftHeaderBanner()),
+                        SliverToBoxAdapter(
+                          child: Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: AppButton(
+                              text: 'offline_workspace.title'.tr(),
+                              icon: Icons.cloud_off,
+                              onPressed: loungeId.isEmpty
+                                  ? null
+                                  : () => context.push(
+                                      RouterKeys.loungeAdminOffline,
+                                    ),
+                            ),
+                          ),
+                        ),
+
+                        SliverToBoxAdapter(
+                          child: OnlineBookingStatus(loungeId: loungeId),
+                        ),
+                        SliverToBoxAdapter(
+                          child: LoungeDiscountBanner(lounge: userLounge),
+                        ),
                         SliverToBoxAdapter(child: SizedBox(height: 12.h)),
                         SliverToBoxAdapter(
                           child: BookingsCockpitStatsBar(
                             loungeId: loungeId,
                             userLounge: userLounge,
-                            onNewBooking: () => _showAddBookingModal(context, loungeId),
+                            onNewBooking: () =>
+                                _showAddBookingModal(context, loungeId),
                           ),
                         ),
                         SliverToBoxAdapter(child: SizedBox(height: 14.h)),
@@ -239,8 +291,11 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                         SliverToBoxAdapter(
                           child: BookingFilterBar(
                             filterState: _filterState,
-                            onFilterChanged: (newState) => setState(() => _filterState = newState),
-                            onResetFilters: () => setState(() => _filterState = const BookingFilterState()),
+                            onFilterChanged: (newState) =>
+                                setState(() => _filterState = newState),
+                            onResetFilters: () => setState(
+                              () => _filterState = const BookingFilterState(),
+                            ),
                           ),
                         ),
                         SliverToBoxAdapter(child: SizedBox(height: 14.h)),
@@ -251,9 +306,10 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                             child: BookingsCockpitTabs(
                               tabController: _tabController,
                               userLounge: userLounge,
-                              isDesktop: isDesktop,
+                              isDesktop: showRequestsSidebar,
                               isTableView: _isTableView,
-                              onToggleTableView: () => setState(() => _isTableView = !_isTableView),
+                              onToggleTableView: () =>
+                                  setState(() => _isTableView = !_isTableView),
                             ),
                           ),
                         ),
@@ -265,12 +321,9 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                   ),
 
                   // Desktop Realtime Sidebar
-                  if (isDesktop) ...[
+                  if (showRequestsSidebar) ...[
                     SizedBox(width: 16.w),
-                    const Expanded(
-                      flex: 3,
-                      child: BookingsRequestsSidebar(),
-                    ),
+                    const Expanded(flex: 3, child: BookingsRequestsSidebar()),
                   ],
                 ],
               ),
@@ -281,17 +334,22 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
     );
   }
 
-  List<Widget> _buildActiveBookingsView(BuildContext context, dynamic userLounge) {
+  List<Widget> _buildActiveBookingsView(
+    BuildContext context,
+    dynamic userLounge,
+  ) {
     return [
       BlocBuilder<BookingCubit, BookingState>(
-        buildWhen: (prev, curr) => prev.bookings != curr.bookings || prev.status != curr.status,
+        buildWhen: (prev, curr) =>
+            prev.bookings != curr.bookings || prev.status != curr.status,
         builder: (context, bookingState) {
           return BlocBuilder<ShiftCubit, ShiftState>(
             buildWhen: (prev, curr) => prev.activeShift != curr.activeShift,
             builder: (context, shiftState) {
               final activeShift = shiftState.activeShift;
 
-              if (bookingState.status == BookingStatusState.loading && bookingState.bookings.isEmpty) {
+              if (bookingState.status == BookingStatusState.loading &&
+                  bookingState.bookings.isEmpty) {
                 return const SliverToBoxAdapter(
                   child: GridShimmer(itemCount: 4, aspectRatio: 1.3),
                 );
@@ -300,10 +358,16 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
               final List<Booking> list = _selectedTabIndex == 0
                   ? bookingState.activeBookings
                   : (_selectedTabIndex == 1
-                      ? bookingState.pendingBookings
-                      : (_selectedTabIndex == 2
-                          ? bookingState.currentShiftBookings(activeShift: activeShift, userLounge: userLounge)
-                          : bookingState.currentShiftCancelledBookings(activeShift: activeShift, userLounge: userLounge)));
+                        ? bookingState.pendingBookings
+                        : (_selectedTabIndex == 2
+                              ? bookingState.currentShiftBookings(
+                                  activeShift: activeShift,
+                                  userLounge: userLounge,
+                                )
+                              : bookingState.currentShiftCancelledBookings(
+                                  activeShift: activeShift,
+                                  userLounge: userLounge,
+                                )));
 
               final filtered = _applyFilters(list, activeShift);
 
@@ -311,9 +375,12 @@ class _BookingsPageState extends State<BookingsPage> with SingleTickerProviderSt
                 child: BookingsActiveGrid(
                   bookings: filtered,
                   isTableView: _isTableView,
+                  prioritizeOperations: _selectedTabIndex == 0,
                   onShowDetails: (b) => _showBookingDetails(context, b),
-                  onApprove: (id) => context.read<BookingCubit>().approveBooking(id),
-                  onReject: (id) => context.read<BookingCubit>().rejectBooking(id),
+                  onApprove: (id) =>
+                      context.read<BookingCubit>().approveBooking(id),
+                  onReject: (id) =>
+                      context.read<BookingCubit>().rejectBooking(id),
                 ),
               );
             },

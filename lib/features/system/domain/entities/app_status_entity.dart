@@ -69,19 +69,19 @@ class AppStatusEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        isMaintenanceMode,
-        maintenanceMessageAr,
-        maintenanceMessageEn,
-        expectedEndTime,
-        minAndroidVersion,
-        minIosVersion,
-        latestAndroidVersion,
-        latestIosVersion,
-        storeUrlAndroid,
-        storeUrlIos,
-        updateMessageAr,
-        updateMessageEn,
-        updatedAt,
-      ];
+    id,
+    isMaintenanceMode,
+    maintenanceMessageAr,
+    maintenanceMessageEn,
+    expectedEndTime,
+    minAndroidVersion,
+    minIosVersion,
+    latestAndroidVersion,
+    latestIosVersion,
+    storeUrlAndroid,
+    storeUrlIos,
+    updateMessageAr,
+    updateMessageEn,
+    updatedAt,
+  ];
 }

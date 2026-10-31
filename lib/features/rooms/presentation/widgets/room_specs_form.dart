@@ -14,6 +14,8 @@ class RoomSpecsForm extends StatelessWidget {
   final TextEditingController screenSizeController;
   final TextEditingController extraPriceController;
   final String? selectedSpaceTypeId;
+  final bool requiresControllers;
+  final bool requiresScreen;
   final RoomStatusEnum status;
   final Function(RoomStatusEnum?)? onStatusChanged;
   final List<String> featuresEn;
@@ -26,6 +28,8 @@ class RoomSpecsForm extends StatelessWidget {
     required this.screenSizeController,
     required this.extraPriceController,
     this.selectedSpaceTypeId,
+    this.requiresControllers = true,
+    this.requiresScreen = true,
     required this.status,
     this.onStatusChanged,
     required this.featuresEn,
@@ -35,69 +39,92 @@ class RoomSpecsForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOpenArea = selectedSpaceTypeId == 'open_area';
+    final isCompact = MediaQuery.sizeOf(context).width < 600;
+
+    final statusDropdown = CustomDropdown<RoomStatusEnum>(
+      label: AppStrings.status,
+      value: status,
+      items: status == RoomStatusEnum.occupied
+          ? [RoomStatusEnum.occupied]
+          : [RoomStatusEnum.available, RoomStatusEnum.maintenance],
+      itemLabel: (s) => switch (s) {
+        RoomStatusEnum.available => AppStrings.availableStatus,
+        RoomStatusEnum.maintenance => AppStrings.maintenanceStatus,
+        RoomStatusEnum.occupied => AppStrings.occupiedStatus,
+      },
+      onChanged: status == RoomStatusEnum.occupied || onStatusChanged == null
+          ? null
+          : (val) => onStatusChanged!(val),
+    );
+
+    final extraPriceField = AppTextField(
+      label: AppStrings.extraControllerPrice,
+      hintText: AppStrings.pricePerHourHint,
+      controller: extraPriceController,
+      keyboardType: TextInputType.number,
+      validator: AppValidator.validateNumber,
+    );
+
+    final capacityField = AppTextField(
+      label: isOpenArea ? AppStrings.capacity : AppStrings.roomCapacityLabel,
+      hintText: AppStrings.capacityHint,
+      controller: capacityController,
+      keyboardType: TextInputType.number,
+      validator: AppValidator.validateNumber,
+    );
+
+    final controllersField = AppTextField(
+      label: AppStrings.controllers,
+      hintText: AppStrings.controllersHint,
+      controller: controllersController,
+      keyboardType: TextInputType.number,
+      validator: AppValidator.validateOptionalNumber,
+    );
+
+    final screenSizeField = AppTextField(
+      label: AppStrings.specs,
+      hintText: AppStrings.screenSizeHint,
+      controller: screenSizeController,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: CustomDropdown<RoomStatusEnum>(
-                label: AppStrings.status,
-                value: status,
-                items: RoomStatusEnum.values,
-                itemLabel: (s) => s.name.toUpperCase(),
-                onChanged: onStatusChanged!,
-              ),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: AppTextField(
-                label: AppStrings.extraControllerPrice,
-                hintText: AppStrings.pricePerHourHint,
-                controller: extraPriceController,
-                keyboardType: TextInputType.number,
-                validator: AppValidator.validateNumber,
-              ),
-            ),
+        if (isCompact) ...[
+          statusDropdown,
+          SizedBox(height: 16.h),
+          if (requiresControllers) ...[extraPriceField, SizedBox(height: 16.h)],
+          capacityField,
+          if (requiresControllers) ...[
+            SizedBox(height: 16.h),
+            controllersField,
           ],
-        ),
-        SizedBox(height: 20.h),
-        Row(
-          children: [
-            Expanded(
-              child: AppTextField(
-                label: isOpenArea ? AppStrings.capacity : AppStrings.roomCapacityLabel,
-                hintText: AppStrings.capacityHint,
-                controller: capacityController,
-                keyboardType: TextInputType.number,
-                validator: AppValidator.validateNumber,
-              ),
-            ),
-            SizedBox(width: 16.w),
-            if (isOpenArea) ...[
-              Expanded(
-                child: AppTextField(
-                  label: AppStrings.controllers,
-                  hintText: AppStrings.controllersHint,
-                  controller: controllersController,
-                  keyboardType: TextInputType.number,
-                  validator: AppValidator.validateOptionalNumber,
-                ),
-              ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: AppTextField(
-                  label: AppStrings.specs,
-                  hintText: AppStrings.screenSizeHint,
-                  controller: screenSizeController,
-                ),
-              ),
-            ] else ...[
-              const Spacer(flex: 2),
+          if (requiresScreen) ...[SizedBox(height: 16.h), screenSizeField],
+        ] else ...[
+          Row(
+            children: [
+              Expanded(child: statusDropdown),
+              if (requiresControllers) ...[
+                SizedBox(width: 16.w),
+                Expanded(child: extraPriceField),
+              ],
             ],
-          ],
-        ),
+          ),
+          SizedBox(height: 20.h),
+          Row(
+            children: [
+              Expanded(child: capacityField),
+              if (requiresControllers) ...[
+                SizedBox(width: 16.w),
+                Expanded(child: controllersField),
+              ],
+              if (requiresScreen) ...[
+                SizedBox(width: 16.w),
+                Expanded(child: screenSizeField),
+              ],
+            ],
+          ),
+        ],
         if (!isOpenArea) ...[
           SizedBox(height: 24.h),
           Text(
@@ -113,10 +140,14 @@ class RoomSpecsForm extends StatelessWidget {
             spacing: 24.w,
             runSpacing: 12.h,
             children: [
-              _buildFeatureCheckbox(AppStrings.airConditioning, 'Air Conditioning'),
+              _buildFeatureCheckbox(
+                AppStrings.airConditioning,
+                'Air Conditioning',
+              ),
               _buildFeatureCheckbox(AppStrings.soundproof, 'Soundproof'),
               _buildFeatureCheckbox(AppStrings.soundSystem, 'Sound System'),
-              _buildFeatureCheckbox(AppStrings.screen4k, '4K Screen'),
+              if (requiresScreen)
+                _buildFeatureCheckbox(AppStrings.screen4k, '4K Screen'),
             ],
           ),
         ],

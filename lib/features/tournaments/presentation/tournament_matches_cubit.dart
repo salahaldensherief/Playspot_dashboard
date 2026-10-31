@@ -20,12 +20,12 @@ class TournamentMatchesCubit extends Cubit<TournamentMatchesState>
     required StartMatchUseCase startMatchUseCase,
     required ResolveDisputeUseCase resolveDisputeUseCase,
     required WatchDisputedMatchesUseCase watchDisputedMatchesUseCase,
-  })  : _getMatchesUseCase = getMatchesUseCase,
-        _drawBracketUseCase = drawBracketUseCase,
-        _startMatchUseCase = startMatchUseCase,
-        _resolveDisputeUseCase = resolveDisputeUseCase,
-        _watchDisputedMatchesUseCase = watchDisputedMatchesUseCase,
-        super(const TournamentMatchesState());
+  }) : _getMatchesUseCase = getMatchesUseCase,
+       _drawBracketUseCase = drawBracketUseCase,
+       _startMatchUseCase = startMatchUseCase,
+       _resolveDisputeUseCase = resolveDisputeUseCase,
+       _watchDisputedMatchesUseCase = watchDisputedMatchesUseCase,
+       super(const TournamentMatchesState());
 
   Future<void> loadMatches(String tournamentId) async {
     final result = await _getMatchesUseCase(tournamentId);
@@ -33,18 +33,22 @@ class TournamentMatchesCubit extends Cubit<TournamentMatchesState>
     result.fold(
       (failure) {
         AppLogger.error('Failed to load matches: ${failure.message}');
-        emit(state.copyWith(
-          status: TournamentMatchesStatus.failure,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: TournamentMatchesStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (list) {
         final disputed = list.where((m) => m.isDisputed).toList();
-        emit(state.copyWith(
-          status: TournamentMatchesStatus.success,
-          matches: list,
-          disputedMatches: disputed,
-        ));
+        emit(
+          state.copyWith(
+            status: TournamentMatchesStatus.success,
+            matches: list,
+            disputedMatches: disputed,
+          ),
+        );
       },
     );
   }
@@ -56,18 +60,30 @@ class TournamentMatchesCubit extends Cubit<TournamentMatchesState>
       entityId: tournamentId,
       stream: _watchDisputedMatchesUseCase(tournamentId),
       onData: (disputedList) {
+        final resolved = state.disputedMatches.any(
+          (old) => !disputedList.any((current) => current.id == old.id),
+        );
         final updatedAll = state.matches.map((m) {
-          final found = disputedList.firstWhere((d) => d.id == m.id, orElse: () => m);
+          final found = disputedList.firstWhere(
+            (d) => d.id == m.id,
+            orElse: () => m,
+          );
           return found;
         }).toList();
 
-        emit(state.copyWith(
-          matches: updatedAll,
-          disputedMatches: disputedList,
-        ));
+        emit(
+          state.copyWith(matches: updatedAll, disputedMatches: disputedList),
+        );
+        if (resolved) loadMatches(tournamentId);
       },
       onError: (e) {
         AppLogger.error('watchDisputedMatches error: $e');
+        emit(
+          state.copyWith(
+            status: TournamentMatchesStatus.failure,
+            errorMessage: e.toString(),
+          ),
+        );
       },
     );
   }
@@ -80,39 +96,53 @@ class TournamentMatchesCubit extends Cubit<TournamentMatchesState>
     result.fold(
       (failure) {
         AppLogger.error('Failed to draw bracket: ${failure.message}');
-        emit(state.copyWith(
-          status: TournamentMatchesStatus.failure,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: TournamentMatchesStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (matchesList) {
-        emit(state.copyWith(
-          status: TournamentMatchesStatus.actionSuccess,
-          matches: matchesList,
-          successMessage: 'تمت إقامة القرعة وتوليد الشجرة بنجاح',
-        ));
+        emit(
+          state.copyWith(
+            status: TournamentMatchesStatus.actionSuccess,
+            matches: matchesList,
+            successMessage: 'تمت إقامة القرعة وتوليد الشجرة بنجاح',
+          ),
+        );
       },
     );
   }
 
-  Future<void> startMatch(String matchId, String tournamentId, {String? roomId}) async {
+  Future<void> startMatch(
+    String matchId,
+    String tournamentId, {
+    String? roomId,
+  }) async {
     emit(state.copyWith(status: TournamentMatchesStatus.loading));
-    final result = await _startMatchUseCase(StartMatchParams(matchId: matchId, roomId: roomId));
+    final result = await _startMatchUseCase(
+      StartMatchParams(matchId: matchId, roomId: roomId),
+    );
     if (isClosed) return;
 
     result.fold(
       (failure) {
         AppLogger.error('Failed to start match: ${failure.message}');
-        emit(state.copyWith(
-          status: TournamentMatchesStatus.failure,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: TournamentMatchesStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (_) {
-        emit(state.copyWith(
-          status: TournamentMatchesStatus.actionSuccess,
-          successMessage: 'تم بدء المباراة',
-        ));
+        emit(
+          state.copyWith(
+            status: TournamentMatchesStatus.actionSuccess,
+            successMessage: 'تم بدء المباراة',
+          ),
+        );
         loadMatches(tournamentId);
       },
     );
@@ -127,28 +157,34 @@ class TournamentMatchesCubit extends Cubit<TournamentMatchesState>
     required String resolutionNotes,
   }) async {
     emit(state.copyWith(status: TournamentMatchesStatus.loading));
-    final result = await _resolveDisputeUseCase(ResolveDisputeParams(
-      matchId: matchId,
-      winnerId: winnerId,
-      p1Score: p1Score,
-      p2Score: p2Score,
-      resolutionNotes: resolutionNotes,
-    ));
+    final result = await _resolveDisputeUseCase(
+      ResolveDisputeParams(
+        matchId: matchId,
+        winnerId: winnerId,
+        p1Score: p1Score,
+        p2Score: p2Score,
+        resolutionNotes: resolutionNotes,
+      ),
+    );
     if (isClosed) return;
 
     result.fold(
       (failure) {
         AppLogger.error('Failed to resolve dispute: ${failure.message}');
-        emit(state.copyWith(
-          status: TournamentMatchesStatus.failure,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: TournamentMatchesStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (_) {
-        emit(state.copyWith(
-          status: TournamentMatchesStatus.actionSuccess,
-          successMessage: 'تم حل النزاع واعتماد الفائز',
-        ));
+        emit(
+          state.copyWith(
+            status: TournamentMatchesStatus.actionSuccess,
+            successMessage: 'تم حل النزاع واعتماد الفائز',
+          ),
+        );
         loadMatches(tournamentId);
       },
     );

@@ -1,11 +1,12 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/domain/entities/client_request_entity.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
@@ -21,6 +22,7 @@ class RequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final requestsCubit = context.read<ClientRequestsCubit>();
     final dashboardCubit = context.read<DashboardCubit>();
 
@@ -242,11 +244,12 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
         final rawPath = res['receipt_url'].toString().trim();
         if (rawPath.isNotEmpty && rawPath != 'null') {
           if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
-            if (mounted)
+            if (mounted) {
               setState(() {
                 _receiptUrl = rawPath;
                 _isLoading = false;
               });
+            }
             return;
           }
           final bucketsToTry = [
@@ -272,24 +275,32 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                     .from(bucket)
                     .createSignedUrl(p, 3600);
                 if (url.isNotEmpty && !url.contains('error')) {
-                  if (mounted)
+                  if (mounted) {
                     setState(() {
                       _receiptUrl = url;
                       _isLoading = false;
                     });
+                  }
                   return;
                 }
-              } catch (_) {}
+              } catch (e) {
+                AppLogger.warning(
+                  'Receipt signed URL generation failed for $bucket/$p: $e',
+                );
+              }
             }
           }
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.warning('Receipt image loading error: $e');
+    }
     if (mounted) setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (_isLoading) {
       return Container(
         height: 40.h,
@@ -305,15 +316,16 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
       );
     }
 
-    if (_receiptUrl == null || _receiptUrl!.isEmpty)
+    if (_receiptUrl == null || _receiptUrl!.isEmpty) {
       return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(height: 10.h),
         AppText.body(
-          'إيصال تحويل الدفع المرفق:',
+          AppStrings.attachedPaymentReceiptLabel,
           fontSize: 11.sp,
           color: AppColors.neonBlue,
           fontWeight: FontWeight.bold,
@@ -337,7 +349,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           AppText.heading(
-                            'إيصال تحويل الدفع',
+                            AppStrings.paymentTransferReceipt,
                             fontSize: 16.sp,
                             color: Colors.white,
                           ),
@@ -356,7 +368,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                         child: Image.network(
                           _receiptUrl!,
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) =>
+                          errorBuilder: (_, _, _) =>
                               const Icon(Icons.broken_image, color: Colors.red),
                         ),
                       ),
@@ -383,7 +395,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                     child: Image.network(
                       _receiptUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Center(
+                      errorBuilder: (_, _, _) => const Center(
                         child: Icon(Icons.broken_image, color: Colors.red),
                       ),
                     ),
@@ -409,7 +421,7 @@ class _RequestReceiptPreviewState extends State<_RequestReceiptPreview> {
                           ),
                           SizedBox(width: 4.w),
                           AppText.body(
-                            'تكبير الإيصال',
+                            AppStrings.zoomPaymentReceipt,
                             fontSize: 10.sp,
                             color: Colors.white,
                           ),

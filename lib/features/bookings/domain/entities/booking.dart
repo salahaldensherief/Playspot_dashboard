@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'booking_status.dart';
 import 'payment_enums.dart';
+import '../services/booking_schedule.dart';
 
 export 'booking_status.dart';
 export 'payment_enums.dart';
@@ -21,6 +22,8 @@ class Booking extends Equatable {
   final DateTime date;
   final String startTime;
   final String endTime;
+  final DateTime? scheduledStartUtc;
+  final DateTime? scheduledEndUtc;
   final int durationMinutes;
   final BookingStatus status;
   final PaymentStatus paymentStatus;
@@ -45,10 +48,15 @@ class Booking extends Equatable {
   final bool isFirstBooking;
   final String? senderWalletPhone;
   final DateTime? checkedInAt;
+  final DateTime? createdAt;
   final String? cancellationReason;
   final String? rejectionReason;
   final String? cancelledBy;
   final DateTime? cancelledAt;
+  final bool isOpenTime;
+  final DateTime? openTimeStartedAt;
+  final DateTime? openTimeEndedAt;
+  final Map<String, dynamic> openTimePricingSnapshot;
 
   const Booking({
     required this.id,
@@ -66,6 +74,8 @@ class Booking extends Equatable {
     required this.date,
     required this.startTime,
     required this.endTime,
+    this.scheduledStartUtc,
+    this.scheduledEndUtc,
     this.durationMinutes = 60,
     required this.status,
     this.paymentStatus = PaymentStatus.unpaid,
@@ -90,13 +100,23 @@ class Booking extends Equatable {
     this.isFirstBooking = false,
     this.senderWalletPhone,
     this.checkedInAt,
+    this.createdAt,
     this.cancellationReason,
     this.rejectionReason,
     this.cancelledBy,
     this.cancelledAt,
+    this.isOpenTime = false,
+    this.openTimeStartedAt,
+    this.openTimeEndedAt,
+    this.openTimePricingSnapshot = const {},
   });
 
-  bool get isOpenEnded => durationMinutes <= 0;
+  bool get isOpenEnded => isOpenTime || durationMinutes <= 0;
+
+  bool get needsPaymentProofReview =>
+      status == BookingStatus.pendingVerification ||
+      (receiptUrl?.trim().isNotEmpty == true &&
+          paymentStatus != PaymentStatus.paid);
 
   /// Helper to determine if booking was cancelled by the client after approval
   bool get isCancelledByClient =>
@@ -107,49 +127,56 @@ class Booking extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        userName,
-        userEmail,
-        userPhone,
-        loungeId,
-        roomId,
-        loungeName,
-        loungeLocation,
-        roomName,
-        controllersCount,
-        screenSize,
-        date,
-        startTime,
-        endTime,
-        durationMinutes,
-        status,
-        paymentStatus,
-        totalPrice,
-        addonsPrice,
-        voucherDiscount,
-        voucherCode,
-        discountAmount,
-        discountPercentage,
-        discountReason,
-        extras,
-        canteenOrders,
-        lat,
-        lng,
-        shiftId,
-        playMode,
-        roomPrice,
-        visitNumber,
-        paymentMethod,
-        receiptUrl,
-        expiresAt,
-        isFirstBooking,
-        senderWalletPhone,
-        checkedInAt,
-        cancellationReason,
-        cancelledBy,
-        cancelledAt,
-      ];
+    id,
+    userId,
+    userName,
+    userEmail,
+    userPhone,
+    loungeId,
+    roomId,
+    loungeName,
+    loungeLocation,
+    roomName,
+    controllersCount,
+    screenSize,
+    date,
+    startTime,
+    endTime,
+    scheduledStartUtc,
+    scheduledEndUtc,
+    durationMinutes,
+    status,
+    paymentStatus,
+    totalPrice,
+    addonsPrice,
+    voucherDiscount,
+    voucherCode,
+    discountAmount,
+    discountPercentage,
+    discountReason,
+    extras,
+    canteenOrders,
+    lat,
+    lng,
+    shiftId,
+    playMode,
+    roomPrice,
+    visitNumber,
+    paymentMethod,
+    receiptUrl,
+    expiresAt,
+    isFirstBooking,
+    senderWalletPhone,
+    checkedInAt,
+    createdAt,
+    cancellationReason,
+    cancelledBy,
+    cancelledAt,
+    isOpenTime,
+    openTimeStartedAt,
+    openTimeEndedAt,
+    openTimePricingSnapshot,
+  ];
 
   Booking copyWith({
     String? id,
@@ -167,6 +194,8 @@ class Booking extends Equatable {
     DateTime? date,
     String? startTime,
     String? endTime,
+    DateTime? scheduledStartUtc,
+    DateTime? scheduledEndUtc,
     int? durationMinutes,
     BookingStatus? status,
     PaymentStatus? paymentStatus,
@@ -191,10 +220,15 @@ class Booking extends Equatable {
     bool? isFirstBooking,
     String? senderWalletPhone,
     DateTime? checkedInAt,
+    DateTime? createdAt,
     String? cancellationReason,
     String? rejectionReason,
     String? cancelledBy,
     DateTime? cancelledAt,
+    bool? isOpenTime,
+    DateTime? openTimeStartedAt,
+    DateTime? openTimeEndedAt,
+    Map<String, dynamic>? openTimePricingSnapshot,
   }) {
     return Booking(
       id: id ?? this.id,
@@ -212,6 +246,8 @@ class Booking extends Equatable {
       date: date ?? this.date,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
+      scheduledStartUtc: scheduledStartUtc ?? this.scheduledStartUtc,
+      scheduledEndUtc: scheduledEndUtc ?? this.scheduledEndUtc,
       durationMinutes: durationMinutes ?? this.durationMinutes,
       status: status ?? this.status,
       paymentStatus: paymentStatus ?? this.paymentStatus,
@@ -236,10 +272,16 @@ class Booking extends Equatable {
       isFirstBooking: isFirstBooking ?? this.isFirstBooking,
       senderWalletPhone: senderWalletPhone ?? this.senderWalletPhone,
       checkedInAt: checkedInAt ?? this.checkedInAt,
+      createdAt: createdAt ?? this.createdAt,
       cancellationReason: cancellationReason ?? this.cancellationReason,
       rejectionReason: rejectionReason ?? this.rejectionReason,
       cancelledBy: cancelledBy ?? this.cancelledBy,
       cancelledAt: cancelledAt ?? this.cancelledAt,
+      isOpenTime: isOpenTime ?? this.isOpenTime,
+      openTimeStartedAt: openTimeStartedAt ?? this.openTimeStartedAt,
+      openTimeEndedAt: openTimeEndedAt ?? this.openTimeEndedAt,
+      openTimePricingSnapshot:
+          openTimePricingSnapshot ?? this.openTimePricingSnapshot,
     );
   }
 
@@ -249,9 +291,22 @@ class Booking extends Equatable {
     return pm == 'cash' || pm.isEmpty;
   }
 
+  /// Starting play does not confirm collection. Transfers still need verification.
+  bool get canStartSession =>
+      (status == BookingStatus.upcoming ||
+          (status == BookingStatus.pending && paymentMethod == 'cash')) &&
+      paymentStatus != PaymentStatus.refunded &&
+      (paymentStatus == PaymentStatus.paid ||
+          isOpenTime ||
+          paymentMethod == 'cash');
+
   bool get isManualTransfer {
     final pm = (paymentMethod ?? '').toLowerCase().trim();
-    return pm == 'manual_transfer' || pm == 'manual' || pm == 'wallet' || pm == 'vodafone_cash' || pm == 'instapay';
+    return pm == 'manual_transfer' ||
+        pm == 'manual' ||
+        pm == 'wallet' ||
+        pm == 'vodafone_cash' ||
+        pm == 'instapay';
   }
 
   bool get isWalletPayment => isManualTransfer;
@@ -267,42 +322,29 @@ class Booking extends Equatable {
   }
 
   /// Calculates the exact start [DateTime] combining [date] and [startTime].
-  DateTime? get startDateTime {
-    if (startTime.trim().isEmpty) return null;
-    try {
-      final parts = startTime.trim().split(':');
-      if (parts.length >= 2) {
-        final hour = int.tryParse(parts[0]) ?? 0;
-        final minute = int.tryParse(parts[1]) ?? 0;
-        return DateTime(date.year, date.month, date.day, hour, minute);
-      }
-    } catch (_) {}
-    return null;
-  }
+  DateTime? get startDateTime =>
+      scheduledStartUtc?.toLocal() ?? BookingSchedule.startAt(date, startTime);
 
   /// Calculates the exact end [DateTime].
-  /// Prefers calculating [startDateTime] + [durationMinutes] when available,
-  /// otherwise falls back to parsing [endTime].
+  /// Uses the server's booked end, which is updated after an extension.
   DateTime? get endDateTime {
+    if (scheduledEndUtc != null) return scheduledEndUtc!.toLocal();
     final start = startDateTime;
-
-    if (start != null && durationMinutes > 0) {
-      return start.add(Duration(minutes: durationMinutes));
-    }
 
     if (endTime.trim().isNotEmpty) {
       try {
         final cleanEndTime = endTime.trim();
         if (cleanEndTime.contains('T')) {
           final parsed = DateTime.tryParse(cleanEndTime);
-          if (parsed != null) return parsed;
+          if (parsed != null) return parsed.toLocal();
         }
         final parts = cleanEndTime.split(':');
         if (parts.length >= 2) {
           final hour = int.tryParse(parts[0]) ?? 0;
           final minute = int.tryParse(parts[1]) ?? 0;
           var end = DateTime(date.year, date.month, date.day, hour, minute);
-          if (start != null && (end.isBefore(start) || end.isAtSameMomentAs(start))) {
+          if (start != null &&
+              (end.isBefore(start) || end.isAtSameMomentAs(start))) {
             end = end.add(const Duration(days: 1));
           }
           return end;
@@ -314,36 +356,29 @@ class Booking extends Equatable {
     return start.add(Duration(minutes: durationMinutes));
   }
 
-  /// Determines if the booking is currently active in real-time.
-  bool isBookingActive([DateTime? now]) {
-    if (status == BookingStatus.completed || status == BookingStatus.cancelled) {
-      return false;
-    }
-    if (status == BookingStatus.inProgress) {
-      return true;
-    }
-    final currentTime = now ?? DateTime.now();
-    final end = endDateTime;
-    final start = startDateTime;
-    if (end == null || start == null) return false;
-
-    return (currentTime.isAfter(start) || currentTime.isAtSameMomentAs(start)) &&
-        currentTime.isBefore(end);
-  }
+  /// Only a server-confirmed start occupies a resource. A scheduled time does
+  /// not start play, and overtime does not close a running session.
+  bool isBookingActive([DateTime? now]) => status == BookingStatus.inProgress;
 
   /// Checks if the session or cash hold has expired.
   /// For pending bookings, uses [expiresAt] as hold expiration if available.
   /// For active/upcoming sessions, calculates end time + grace period.
-  bool isSessionExpired([DateTime? now, Duration gracePeriod = const Duration(minutes: 5)]) {
+  bool isSessionExpired([
+    DateTime? now,
+    Duration gracePeriod = const Duration(minutes: 5),
+  ]) {
     final currentTime = now ?? DateTime.now();
     final holdExpiry = expiresAt;
     if (status == BookingStatus.pending && holdExpiry != null) {
-      return currentTime.isAfter(holdExpiry) || currentTime.isAtSameMomentAs(holdExpiry);
+      return currentTime.isAfter(holdExpiry) ||
+          currentTime.isAtSameMomentAs(holdExpiry);
     }
+    if (isOpenEnded) return false;
     final end = endDateTime;
     if (end == null) return false;
     final endWithGrace = end.add(gracePeriod);
-    return currentTime.isAfter(endWithGrace) || currentTime.isAtSameMomentAs(endWithGrace);
+    return currentTime.isAfter(endWithGrace) ||
+        currentTime.isAtSameMomentAs(endWithGrace);
   }
 
   /// Alias for checking if hold grace period has expired using [expiresAt] SSOT
@@ -351,6 +386,12 @@ class Booking extends Equatable {
 
   /// Helper to get remaining duration based on real-world clock.
   Duration remainingDuration([DateTime? now]) {
+    if (isOpenEnded) {
+      final start = openTimeStartedAt ?? startDateTime;
+      if (start == null) return Duration.zero;
+      final currentTime = now ?? DateTime.now();
+      return currentTime.difference(start);
+    }
     final end = endDateTime;
     if (end == null) return Duration.zero;
     final currentTime = now ?? DateTime.now();

@@ -1,3 +1,6 @@
+import '../../features/offline_cashier/presentation/offline_workspace_page.dart';
+import '../../features/offline_cashier/presentation/offline_workspace_cubit.dart';
+import '../../features/offline_cashier/presentation/cashier_conflict_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:play_spot_dashboard/art_core/di/provider_scope.dart';
@@ -40,6 +43,10 @@ import 'package:play_spot_dashboard/features/tournaments/presentation/tournament
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournament_participants_cubit.dart';
 import 'package:play_spot_dashboard/features/tournaments/presentation/tournaments_screen.dart'
     as tournaments;
+import 'package:play_spot_dashboard/features/audit/presentation/audit_screen.dart'
+    as audit;
+import 'package:play_spot_dashboard/features/pricing/presentation/pricing_screen.dart'
+    as pricing;
 
 List<RouteBase> getLoungeAdminRoutes(LoginCubit authCubit) {
   return [
@@ -60,6 +67,18 @@ List<RouteBase> getLoungeAdminRoutes(LoginCubit authCubit) {
           const NoTransitionPage(child: bookings.BookingsPage()),
     ),
     GoRoute(
+      path: RouterKeys.loungeAdminOffline,
+      pageBuilder: (context, state) => NoTransitionPage(
+        child: BlocProvider(
+          create: (_) => sl<OfflineWorkspaceCubit>(),
+          child: BlocProvider(
+            create: (_) => sl<CashierConflictCubit>(),
+            child: const OfflineWorkspacePage(),
+          ),
+        ),
+      ),
+    ),
+    GoRoute(
       path: RouterKeys.loungeAdminRooms,
       pageBuilder: (context, state) => NoTransitionPage(
         child: BlocProvider(
@@ -70,15 +89,13 @@ List<RouteBase> getLoungeAdminRoutes(LoginCubit authCubit) {
     ),
     GoRoute(
       path: RouterKeys.loungeAdminExtras,
-      pageBuilder: (context, state) => const NoTransitionPage(
-        child: extras.ExtrasManagementPage(),
-      ),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: extras.ExtrasManagementPage()),
     ),
     GoRoute(
       path: RouterKeys.loungeAdminReviews,
-      pageBuilder: (context, state) => const NoTransitionPage(
-        child: reviews_page.ReviewsScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: reviews_page.ReviewsScreen()),
     ),
     GoRoute(
       path: RouterKeys.loungeAdminTournaments,
@@ -86,9 +103,7 @@ List<RouteBase> getLoungeAdminRoutes(LoginCubit authCubit) {
         child: MultiBlocProviderScope(
           providers: [
             BlocProvider(create: (_) => sl<TournamentCubit>()),
-            BlocProvider(
-              create: (_) => sl<TournamentParticipantsCubit>(),
-            ),
+            BlocProvider(create: (_) => sl<TournamentParticipantsCubit>()),
             BlocProvider(create: (_) => sl<TournamentMatchesCubit>()),
           ],
           child: const tournaments.TournamentsScreen(),
@@ -119,6 +134,16 @@ List<RouteBase> getLoungeAdminRoutes(LoginCubit authCubit) {
           const NoTransitionPage(child: reports.BookingHistoryPage()),
     ),
     GoRoute(
+      path: RouterKeys.loungeAdminAudit,
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: audit.AuditScreen()),
+    ),
+    GoRoute(
+      path: RouterKeys.loungeAdminPricing,
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: pricing.PricingScreen()),
+    ),
+    GoRoute(
       path: RouterKeys.loungeAdminShifts,
       pageBuilder: (context, state) =>
           const NoTransitionPage(child: shifts.ShiftHistoryScreen()),
@@ -134,9 +159,8 @@ List<RouteBase> getLoungeAdminRoutes(LoginCubit authCubit) {
     ),
     GoRoute(
       path: RouterKeys.loungeAdminProfile,
-      pageBuilder: (context, state) => const NoTransitionPage(
-        child: lounge_profile.LoungeProfilePage(),
-      ),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: lounge_profile.LoungeProfilePage()),
     ),
     GoRoute(
       path: RouterKeys.loungeAdminSupport,

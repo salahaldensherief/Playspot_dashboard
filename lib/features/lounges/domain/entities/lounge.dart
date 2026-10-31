@@ -10,6 +10,7 @@ class Lounge extends Equatable {
   final double pricePerHour;
   final bool isOpen;
   final String? location;
+  final String? contactPhone;
   final String? city;
   final String? cityId;
   final int? totalReviews;
@@ -36,6 +37,7 @@ class Lounge extends Equatable {
   final bool allowCashPayment;
   final bool requirePrepaidFirstTime;
   final int cashGracePeriodMinutes;
+  final bool allowOpenTimeSessions;
   final bool isActive;
   final String? suspensionReason;
 
@@ -48,6 +50,7 @@ class Lounge extends Equatable {
     this.pricePerHour = 0.0,
     this.isOpen = true,
     this.location,
+    this.contactPhone,
     this.city,
     this.cityId,
     this.totalReviews,
@@ -74,6 +77,7 @@ class Lounge extends Equatable {
     this.allowCashPayment = true,
     this.requirePrepaidFirstTime = false,
     this.cashGracePeriodMinutes = 15,
+    this.allowOpenTimeSessions = false,
     this.isActive = true,
     this.suspensionReason,
   });
@@ -88,7 +92,8 @@ class Lounge extends Equatable {
     const double earthRadiusKm = 6371.0;
     final dLat = _degToRad(lat! - deviceLat);
     final dLng = _degToRad(lng! - deviceLng);
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(_degToRad(deviceLat)) *
             math.cos(_degToRad(lat!)) *
             math.sin(dLng / 2) *
@@ -107,43 +112,45 @@ class Lounge extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        imageUrl,
-        rating,
-        distance,
-        pricePerHour,
-        isOpen,
-        location,
-        city,
-        cityId,
-        totalReviews,
-        availableRooms,
-        descriptionAr,
-        descriptionEn,
-        images,
-        opensAt,
-        closesAt,
-        lat,
-        lng,
-        categoryIcons,
-        categoryId,
-        ownerName,
-        ownerEmail,
-        status,
-        hasDiscount,
-        discountPercentage,
-        discountTitleAr,
-        discountTitleEn,
-        discountExpiresAt,
-        vodafoneCashNumber,
-        instapayAccount,
-        allowCashPayment,
-        requirePrepaidFirstTime,
-        cashGracePeriodMinutes,
-        isActive,
-        suspensionReason,
-      ];
+    id,
+    name,
+    imageUrl,
+    rating,
+    distance,
+    pricePerHour,
+    isOpen,
+    location,
+    contactPhone,
+    city,
+    cityId,
+    totalReviews,
+    availableRooms,
+    descriptionAr,
+    descriptionEn,
+    images,
+    opensAt,
+    closesAt,
+    lat,
+    lng,
+    categoryIcons,
+    categoryId,
+    ownerName,
+    ownerEmail,
+    status,
+    hasDiscount,
+    discountPercentage,
+    discountTitleAr,
+    discountTitleEn,
+    discountExpiresAt,
+    vodafoneCashNumber,
+    instapayAccount,
+    allowCashPayment,
+    requirePrepaidFirstTime,
+    cashGracePeriodMinutes,
+    allowOpenTimeSessions,
+    isActive,
+    suspensionReason,
+  ];
 
   Lounge copyWith({
     String? id,
@@ -154,6 +161,7 @@ class Lounge extends Equatable {
     double? pricePerHour,
     bool? isOpen,
     String? location,
+    String? contactPhone,
     String? city,
     String? cityId,
     int? totalReviews,
@@ -180,6 +188,7 @@ class Lounge extends Equatable {
     bool? allowCashPayment,
     bool? requirePrepaidFirstTime,
     int? cashGracePeriodMinutes,
+    bool? allowOpenTimeSessions,
     bool? isActive,
     String? suspensionReason,
   }) {
@@ -192,6 +201,7 @@ class Lounge extends Equatable {
       pricePerHour: pricePerHour ?? this.pricePerHour,
       isOpen: isOpen ?? this.isOpen,
       location: location ?? this.location,
+      contactPhone: contactPhone ?? this.contactPhone,
       city: city ?? this.city,
       cityId: cityId ?? this.cityId,
       totalReviews: totalReviews ?? this.totalReviews,
@@ -216,11 +226,14 @@ class Lounge extends Equatable {
       vodafoneCashNumber: vodafoneCashNumber ?? this.vodafoneCashNumber,
       instapayAccount: instapayAccount ?? this.instapayAccount,
       allowCashPayment: allowCashPayment ?? this.allowCashPayment,
-      requirePrepaidFirstTime: requirePrepaidFirstTime ?? this.requirePrepaidFirstTime,
-      cashGracePeriodMinutes: cashGracePeriodMinutes ?? this.cashGracePeriodMinutes,
+      requirePrepaidFirstTime:
+          requirePrepaidFirstTime ?? this.requirePrepaidFirstTime,
+      cashGracePeriodMinutes:
+          cashGracePeriodMinutes ?? this.cashGracePeriodMinutes,
+      allowOpenTimeSessions:
+          allowOpenTimeSessions ?? this.allowOpenTimeSessions,
       isActive: isActive ?? this.isActive,
       suspensionReason: suspensionReason ?? this.suspensionReason,
     );
   }
 }
-

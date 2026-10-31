@@ -21,7 +21,9 @@ void main() {
         httpClient: MockClient((request) async {
           requests.add(request);
           return http.Response(
-            'null',
+            request.url.path.contains('/functions/')
+                ? '{"success":true,"user_id":"staff-a","role":"manager"}'
+                : 'null',
             200,
             headers: {'content-type': 'application/json'},
             request: request,

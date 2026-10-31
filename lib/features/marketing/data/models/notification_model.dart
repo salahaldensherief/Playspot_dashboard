@@ -24,18 +24,25 @@ class NotificationModel extends NotificationEntity {
       bodyEn: json['body_en']?.toString() ?? json['body']?.toString() ?? '',
       type: _parseType(json['type']),
       isRead: json['is_read'] == true || json['isRead'] == true,
-      createdAt: json['created_at'] != null ? (DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()) : DateTime.now(),
+      createdAt: json['created_at'] != null
+          ? (DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now())
+          : DateTime.now(),
       metadata: json['metadata'],
     );
   }
 
   static NotificationType _parseType(String? type) {
     switch (type) {
-      case 'booking': return NotificationType.booking;
-      case 'offer': return NotificationType.offer;
-      case 'loyalty': return NotificationType.loyalty;
-      case 'kyc': return NotificationType.kyc;
-      default: return NotificationType.system;
+      case 'booking':
+        return NotificationType.booking;
+      case 'offer':
+        return NotificationType.offer;
+      case 'loyalty':
+        return NotificationType.loyalty;
+      case 'kyc':
+        return NotificationType.kyc;
+      default:
+        return NotificationType.system;
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -34,6 +35,7 @@ class StationControlCountdownGauge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final now = SessionTickerScope.nowOf(context);
     final currentRemaining = booking.remainingDuration(now);
     final currentExpired = booking.isSessionExpired(now);
@@ -62,18 +64,26 @@ class StationControlCountdownGauge extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  currentExpired ? AppStrings.timeExpired : AppStrings.remainingTime,
+                  currentExpired
+                      ? AppStrings.timeExpired
+                      : AppStrings.remainingTime,
                   style: TextStyle(
-                    color: currentExpired ? AppColors.danger : AppColors.textSecondary,
+                    color: currentExpired
+                        ? AppColors.danger
+                        : AppColors.textSecondary,
                     fontSize: 12.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  booking.isOpenEnded ? 'الوقت مفتوح' : _formatDuration(currentRemaining),
+                  booking.isOpenEnded
+                      ? 'open_time'.tr()
+                      : _formatDuration(currentRemaining),
                   style: TextStyle(
-                    color: currentExpired ? AppColors.danger : AppColors.neonBlue,
+                    color: currentExpired
+                        ? AppColors.danger
+                        : AppColors.neonBlue,
                     fontSize: 20.sp,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'SpaceGrotesk',
@@ -81,11 +91,12 @@ class StationControlCountdownGauge extends StatelessWidget {
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  AppStrings.totalDuration('${booking.durationMinutes} دقيقة'),
-                  style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 11.sp,
+                  AppStrings.totalDuration(
+                    'duration_minutes_value'.tr(
+                      args: [(booking.durationMinutes).toString()],
+                    ),
                   ),
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 11.sp),
                 ),
               ],
             ),

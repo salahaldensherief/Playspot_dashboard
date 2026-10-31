@@ -53,9 +53,18 @@ class NotificationMetadata extends Equatable {
       notes: map['notes']?.toString(),
       roomId: map['room_id']?.toString() ?? map['roomId']?.toString(),
       roomName: map['room_name']?.toString() ?? map['roomName']?.toString(),
-      userName: map['user_name']?.toString() ?? map['userName']?.toString() ?? map['full_name']?.toString(),
-      userPhone: map['user_phone']?.toString() ?? map['userPhone']?.toString() ?? map['phone']?.toString(),
-      userAvatar: map['user_avatar']?.toString() ?? map['user_avatar_url']?.toString() ?? map['avatar_url']?.toString(),
+      userName:
+          map['user_name']?.toString() ??
+          map['userName']?.toString() ??
+          map['full_name']?.toString(),
+      userPhone:
+          map['user_phone']?.toString() ??
+          map['userPhone']?.toString() ??
+          map['phone']?.toString(),
+      userAvatar:
+          map['user_avatar']?.toString() ??
+          map['user_avatar_url']?.toString() ??
+          map['avatar_url']?.toString(),
       loungeId: map['lounge_id']?.toString() ?? map['loungeId']?.toString(),
       items: parsedItems,
     );
@@ -80,17 +89,17 @@ class NotificationMetadata extends Equatable {
 
   @override
   List<Object?> get props => [
-        bookingId,
-        userId,
-        requestType,
-        reason,
-        notes,
-        roomId,
-        roomName,
-        userName,
-        userPhone,
-        userAvatar,
-        loungeId,
-        items,
-      ];
+    bookingId,
+    userId,
+    requestType,
+    reason,
+    notes,
+    roomId,
+    roomName,
+    userName,
+    userPhone,
+    userAvatar,
+    loungeId,
+    items,
+  ];
 }

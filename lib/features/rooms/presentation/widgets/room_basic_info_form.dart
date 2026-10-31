@@ -12,6 +12,7 @@ class RoomBasicInfoForm extends StatelessWidget {
   final TextEditingController hourlyRateSingleController;
   final TextEditingController hourlyRateMultiController;
   final bool isOpenArea;
+  final bool supportsMultiRate;
 
   const RoomBasicInfoForm({
     super.key,
@@ -22,77 +23,113 @@ class RoomBasicInfoForm extends StatelessWidget {
     required this.hourlyRateSingleController,
     required this.hourlyRateMultiController,
     this.isOpenArea = false,
+    this.supportsMultiRate = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isCompact = MediaQuery.sizeOf(context).width < 600;
+
+    final nameArField = AppTextField(
+      textLanguage: TextFieldLanguage.arabic,
+      label: isOpenArea
+          ? AppStrings.stationNameLabelAr
+          : AppStrings.roomNameLabelAr,
+      hintText: isOpenArea
+          ? AppStrings.stationNameLabelAr
+          : AppStrings.roomNameLabelAr,
+      controller: nameArController,
+      validator: AppValidator.validateRequired,
+    );
+
+    final nameEnField = AppTextField(
+      textLanguage: TextFieldLanguage.english,
+      label: isOpenArea
+          ? AppStrings.stationNameLabelEn
+          : AppStrings.roomNameLabelEn,
+      hintText: isOpenArea
+          ? AppStrings.stationNameLabelEn
+          : AppStrings.roomNameLabelEn,
+      controller: nameEnController,
+      validator: AppValidator.validateRequired,
+    );
+
+    final descArField = AppTextField(
+      textLanguage: TextFieldLanguage.arabic,
+      label: AppStrings.descriptionArLabel,
+      hintText: AppStrings.descriptionArHint,
+      controller: descriptionArController,
+      maxLines: 3,
+    );
+
+    final descEnField = AppTextField(
+      textLanguage: TextFieldLanguage.english,
+      label: AppStrings.descriptionEnLabel,
+      hintText: AppStrings.descriptionEnHint,
+      controller: descriptionEnController,
+      maxLines: 3,
+    );
+
+    final singleRateField = AppTextField(
+      label: supportsMultiRate
+          ? AppStrings.singleRateLabel
+          : AppStrings.pricePerHour,
+      hintText: AppStrings.pricePerHourHint,
+      controller: hourlyRateSingleController,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      validator: AppValidator.validateNumber,
+    );
+
+    final multiRateField = AppTextField(
+      label: AppStrings.multiRateLabel,
+      hintText: AppStrings.pricePerHourHint,
+      controller: hourlyRateMultiController,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      validator: AppValidator.validateNumber,
+    );
+
+    if (isCompact) {
+      return Column(
+        children: [
+          nameArField,
+          SizedBox(height: 16.h),
+          nameEnField,
+          SizedBox(height: 16.h),
+          descArField,
+          SizedBox(height: 16.h),
+          descEnField,
+          SizedBox(height: 16.h),
+          singleRateField,
+          if (supportsMultiRate) ...[SizedBox(height: 16.h), multiRateField],
+        ],
+      );
+    }
+
     return Column(
       children: [
         Row(
           children: [
-            Expanded(
-              child: AppTextField(
-                label: isOpenArea ? AppStrings.stationNameLabelAr : AppStrings.roomNameLabelAr,
-                hintText: isOpenArea ? AppStrings.stationNameLabelAr : AppStrings.roomNameLabelAr,
-                controller: nameArController,
-                validator: AppValidator.validateRequired,
-              ),
-            ),
+            Expanded(child: nameArField),
             SizedBox(width: 16.w),
-            Expanded(
-              child: AppTextField(
-                label: isOpenArea ? AppStrings.stationNameLabelEn : AppStrings.roomNameLabelEn,
-                hintText: isOpenArea ? AppStrings.stationNameLabelEn : AppStrings.roomNameLabelEn,
-                controller: nameEnController,
-                validator: AppValidator.validateRequired,
-              ),
-            ),
+            Expanded(child: nameEnField),
           ],
         ),
         SizedBox(height: 20.h),
         Row(
           children: [
-            Expanded(
-              child: AppTextField(
-                label: AppStrings.descriptionArLabel,
-                hintText: AppStrings.descriptionArHint,
-                controller: descriptionArController,
-                maxLines: 3,
-              ),
-            ),
+            Expanded(child: descArField),
             SizedBox(width: 16.w),
-            Expanded(
-              child: AppTextField(
-                label: AppStrings.descriptionEnLabel,
-                hintText: AppStrings.descriptionEnHint,
-                controller: descriptionEnController,
-                maxLines: 3,
-              ),
-            ),
+            Expanded(child: descEnField),
           ],
         ),
         SizedBox(height: 20.h),
         Row(
           children: [
-            Expanded(
-              child: AppTextField(
-                label: AppStrings.singleRateLabel,
-                hintText: AppStrings.pricePerHourHint,
-                controller: hourlyRateSingleController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: AppValidator.validateNumber,
-              ),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: AppTextField(
-                label: AppStrings.multiRateLabel,
-                hintText: AppStrings.pricePerHourHint,
-                controller: hourlyRateMultiController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: AppValidator.validateNumber,
-              ),
-            ),
+            Expanded(child: singleRateField),
+            if (supportsMultiRate) ...[
+              SizedBox(width: 16.w),
+              Expanded(child: multiRateField),
+            ],
           ],
         ),
       ],

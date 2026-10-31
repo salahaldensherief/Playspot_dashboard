@@ -3,7 +3,8 @@ import '../models/permission_item_model.dart';
 class DefaultRolePermissionsCatalog {
   static List<PermissionItemModel> getDefaultPermissionsForRole(String role) {
     final cleanRole = role.toLowerCase().trim();
-    final isManager = cleanRole == 'manager' ||
+    final isManager =
+        cleanRole == 'manager' ||
         cleanRole == 'lounge_admin' ||
         cleanRole == 'admin' ||
         cleanRole == 'owner' ||
@@ -92,19 +93,19 @@ class DefaultRolePermissionsCatalog {
       // --- Shifts & Operations ---
       const PermissionItemModel(
         key: 'shift_start',
-        nameAr: 'فتح شيفت جديد',
+        nameAr: 'فتح وردية جديدة',
         nameEn: 'Start New Shift',
         category: 'category_shifts',
-        descriptionAr: 'إمكانية فتح شيفت جديد واستلام العهدة',
+        descriptionAr: 'إمكانية فتح وردية جديدة واستلام العهدة',
         descriptionEn: 'Ability to open a new shift and register cash',
         isEnabled: true,
       ),
       const PermissionItemModel(
         key: 'shift_close',
-        nameAr: 'تقفيل الشيفت',
+        nameAr: 'إغلاق الوردية',
         nameEn: 'Close Shift',
         category: 'category_shifts',
-        descriptionAr: 'إمكانية تقفيل الشيفت وإدخال الخزينة',
+        descriptionAr: 'إمكانية إغلاق الوردية وتسجيل المبلغ في الخزينة',
         descriptionEn: 'Ability to close shift and count cash drawer',
         isEnabled: true,
       ),
@@ -131,7 +132,7 @@ class DefaultRolePermissionsCatalog {
         nameAr: 'اعتماد الورديات المغلقة',
         nameEn: 'Approve Closed Shifts',
         category: 'category_shifts',
-        descriptionAr: 'مراجعة واعتماد المبالغ المغلقة في الشيفتات',
+        descriptionAr: 'مراجعة مبالغ الورديات المغلقة واعتمادها',
         descriptionEn: 'Review and approve closed cashier shifts',
         isEnabled: isManager,
       ),

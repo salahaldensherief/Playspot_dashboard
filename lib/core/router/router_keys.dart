@@ -1,7 +1,8 @@
 class RouterKeys {
   static const String login = '/login';
   static const String root = '/';
-  
+  static const String accessLoading = '/access-loading';
+
   // Super Admin
   static const String superAdminDashboard = '/super-admin/dashboard';
   static const String superAdminLounges = '/super-admin/lounges';
@@ -12,7 +13,8 @@ class RouterKeys {
   static const String superAdminKyc = '/super-admin/kyc';
   static const String superAdminLoyalty = '/super-admin/loyalty';
   static const String superAdminTournaments = '/super-admin/tournaments';
-  static const String superAdminSupportSettings = '/super-admin/support-settings';
+  static const String superAdminSupportSettings =
+      '/super-admin/support-settings';
   static const String superAdminPolicies = '/super-admin/policies';
   static const String superAdminFaqs = '/super-admin/faqs';
   static const String superAdminTickets = '/super-admin/tickets';
@@ -23,6 +25,7 @@ class RouterKeys {
   static const String kycPending = '/kyc-pending';
   static const String loungeAdminDashboard = '/lounge-admin/dashboard';
   static const String loungeAdminLiveOps = '/lounge-admin/live-operations';
+  static const String loungeAdminOffline = '/lounge-admin/offline-cashier';
   static const String loungeAdminRooms = '/lounge-admin/rooms';
   static const String loungeAdminExtras = '/lounge-admin/extras';
   static const String loungeAdminMarketing = '/lounge-admin/marketing';
@@ -34,5 +37,7 @@ class RouterKeys {
   static const String loungeAdminSupport = '/lounge-admin/support';
   static const String loungeAdminShifts = '/lounge-admin/shifts';
   static const String loungeAdminReports = '/lounge-admin/reports';
+  static const String loungeAdminAudit = '/lounge-admin/audit';
+  static const String loungeAdminPricing = '/lounge-admin/pricing';
   static const String profile = '/profile';
 }

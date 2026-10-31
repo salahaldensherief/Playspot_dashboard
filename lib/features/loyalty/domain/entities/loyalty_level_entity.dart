@@ -21,12 +21,12 @@ class LoyaltyLevelEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        nameAr,
-        nameEn,
-        minPoints,
-        multiplier,
-        userCount,
-        colorHex,
-      ];
+    id,
+    nameAr,
+    nameEn,
+    minPoints,
+    multiplier,
+    userCount,
+    colorHex,
+  ];
 }

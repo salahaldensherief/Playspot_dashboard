@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -18,6 +19,7 @@ class DashboardTimeRangeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       padding: EdgeInsets.all(4.r),
       decoration: BoxDecoration(
@@ -40,24 +42,34 @@ class DashboardTimeRangeSelector extends StatelessWidget {
 
   Widget _buildRangeChip(String label, DashboardTimeRange range) {
     final bool isSelected = selectedRange == range;
-    return InkWell(
-      onTap: () => onRangeChanged(range),
-      borderRadius: BorderRadius.circular(8.r),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.neonBlue.withValues(alpha: 0.15) : Colors.transparent,
-          borderRadius: BorderRadius.circular(8.r),
-          border: Border.all(
-            color: isSelected ? AppColors.neonBlue : Colors.transparent,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: label,
+      child: InkWell(
+        onTap: () => onRangeChanged(range),
+        excludeFromSemantics: true,
+        borderRadius: BorderRadius.circular(8.r),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          constraints: const BoxConstraints(minHeight: 48),
+          alignment: Alignment.center,
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.neonBlue.withValues(alpha: 0.15)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(8.r),
+            border: Border.all(
+              color: isSelected ? AppColors.neonBlue : Colors.transparent,
+            ),
           ),
-        ),
-        child: AppText.body(
-          label,
-          color: isSelected ? AppColors.neonBlue : AppColors.textSecondary,
-          fontSize: 12.sp,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          child: AppText.body(
+            label,
+            color: isSelected ? AppColors.neonBlue : AppColors.textSecondary,
+            fontSize: 12.sp,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
         ),
       ),
     );

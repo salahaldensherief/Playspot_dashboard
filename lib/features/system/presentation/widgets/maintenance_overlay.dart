@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -15,11 +16,14 @@ class MaintenanceOverlayWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeMessage = messageAr.trim().isNotEmpty
-        ? messageAr
-        : (messageEn.trim().isNotEmpty
-            ? messageEn
-            : 'النظام حالياً قيد الصيانة المبرمجة لتحديث الخدمات. يرجى إعادة المحاولة لاحقاً.');
+    final isArabic = context.locale.languageCode == 'ar';
+    final preferredMessage = isArabic ? messageAr : messageEn;
+    final alternateMessage = isArabic ? messageEn : messageAr;
+    final activeMessage = preferredMessage.trim().isNotEmpty
+        ? preferredMessage
+        : (alternateMessage.trim().isNotEmpty
+              ? alternateMessage
+              : 'maintenance_default_message'.tr());
 
     return Material(
       color: AppColors.scaffoldBackground.withAlpha(242),
@@ -32,7 +36,10 @@ class MaintenanceOverlayWidget extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(20.r),
-              border: Border.all(color: AppColors.danger.withAlpha(100), width: 1.5),
+              border: Border.all(
+                color: AppColors.danger.withAlpha(100),
+                width: 1.5,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: AppColors.danger.withAlpha(38),
@@ -78,7 +85,10 @@ class MaintenanceOverlayWidget extends StatelessWidget {
                 ),
                 SizedBox(height: 24.h),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.mutedBackground,
                     borderRadius: BorderRadius.circular(8.r),
@@ -96,12 +106,14 @@ class MaintenanceOverlayWidget extends StatelessWidget {
                         ),
                       ),
                       SizedBox(width: 10.w),
-                      Text(
-                        'جاري إجراء التحديثات والتحسينات...',
-                        style: TextStyle(
-                          color: AppColors.warning,
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w500,
+                      Flexible(
+                        child: Text(
+                          'maintenance_updates_in_progress'.tr(),
+                          style: TextStyle(
+                            color: AppColors.warning,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],

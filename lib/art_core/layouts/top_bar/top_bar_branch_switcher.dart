@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -5,16 +6,36 @@ import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_state.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/widgets/add_branch_dialog.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
 
 class TopBarBranchSwitcher extends StatelessWidget {
   const TopBarBranchSwitcher({super.key});
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
+    EasyLocalization.of(
+      context,
+    ); // Observe locale without requiring a provider for the platform empty state.
+    return BlocBuilder<LoginCubit, LoginState>(
+      buildWhen: (previous, current) => previous.user != current.user,
+      builder: (context, login) {
+        // Platform pages have a global scope, never an implicit first branch.
+        if (login.user?.isSuperAdmin == true || login.user == null) {
+          return const SizedBox.shrink();
+        }
+        return _buildBranches(context);
+      },
+    );
+  }
+
+  Widget _buildBranches(BuildContext context) {
     return BlocBuilder<LoungeCubit, LoungeState>(
       buildWhen: (prev, curr) =>
           prev.selectedLoungeId != curr.selectedLoungeId ||
@@ -215,6 +236,7 @@ class _BranchPickerDialogState extends State<_BranchPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final filtered = widget.lounges.where((l) {
       if (_searchQuery.isEmpty) return true;
       final name = l.name.toLowerCase();
@@ -229,10 +251,7 @@ class _BranchPickerDialogState extends State<_BranchPickerDialog> {
         side: const BorderSide(color: AppColors.borderDefault),
       ),
       child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 440.w,
-          maxHeight: 520.h,
-        ),
+        constraints: BoxConstraints(maxWidth: 440.w, maxHeight: 520.h),
         child: Padding(
           padding: EdgeInsets.all(24.r),
           child: Column(
@@ -258,15 +277,14 @@ class _BranchPickerDialogState extends State<_BranchPickerDialog> {
                         ),
                       ),
                       SizedBox(width: 12.w),
-                      AppText.heading(
-                        AppStrings.switchBranch,
-                        fontSize: 18.sp,
-                      ),
+                      AppText.heading(AppStrings.switchBranch, fontSize: 18.sp),
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded,
-                        color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: AppColors.textSecondary,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -275,41 +293,13 @@ class _BranchPickerDialogState extends State<_BranchPickerDialog> {
 
               // Search field (if more than 3 branches)
               if (widget.lounges.length > 3) ...[
-                TextField(
+                AppTextField(
                   controller: _searchController,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 13.sp,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: AppStrings.searchBranches,
-                    hintStyle: TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 13.sp,
-                    ),
-                    prefixIcon: Icon(
-                      Icons.search_rounded,
-                      color: AppColors.textSecondary,
-                      size: 20.r,
-                    ),
-                    filled: true,
-                    fillColor: AppColors.mutedBackground,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 12.h,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(color: AppColors.borderDefault),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(color: AppColors.borderDefault),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(color: AppColors.neonBlue),
-                    ),
+                  hintText: AppStrings.searchBranches,
+                  prefixIcon: Icons.search_rounded,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 12.h,
                   ),
                 ),
                 SizedBox(height: 16.h),
@@ -334,7 +324,8 @@ class _BranchPickerDialogState extends State<_BranchPickerDialog> {
                             SizedBox(height: 8.h),
                         itemBuilder: (context, index) {
                           final branch = filtered[index];
-                          final isSelected = branch.id == widget.selectedLoungeId;
+                          final isSelected =
+                              branch.id == widget.selectedLoungeId;
 
                           return Material(
                             color: Colors.transparent,
@@ -349,7 +340,9 @@ class _BranchPickerDialogState extends State<_BranchPickerDialog> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? AppColors.neonBlue.withValues(alpha: 0.1)
+                                      ? AppColors.neonBlue.withValues(
+                                          alpha: 0.1,
+                                        )
                                       : AppColors.mutedBackground,
                                   borderRadius: BorderRadius.circular(12.r),
                                   border: Border.all(
@@ -366,9 +359,13 @@ class _BranchPickerDialogState extends State<_BranchPickerDialog> {
                                       height: 36.r,
                                       decoration: BoxDecoration(
                                         color: isSelected
-                                            ? AppColors.neonBlue.withValues(alpha: 0.2)
+                                            ? AppColors.neonBlue.withValues(
+                                                alpha: 0.2,
+                                              )
                                             : AppColors.cardBackground,
-                                        borderRadius: BorderRadius.circular(8.r),
+                                        borderRadius: BorderRadius.circular(
+                                          8.r,
+                                        ),
                                       ),
                                       child: Icon(
                                         Icons.storefront_rounded,
@@ -381,7 +378,8 @@ class _BranchPickerDialogState extends State<_BranchPickerDialog> {
                                     SizedBox(width: 12.w),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             branch.name,
@@ -394,7 +392,8 @@ class _BranchPickerDialogState extends State<_BranchPickerDialog> {
                                             ),
                                           ),
                                           if (branch.city != null &&
-                                              (branch.city ?? '').isNotEmpty) ...[
+                                              (branch.city ?? '')
+                                                  .isNotEmpty) ...[
                                             SizedBox(height: 2.h),
                                             Text(
                                               branch.city ?? '',

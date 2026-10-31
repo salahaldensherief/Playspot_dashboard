@@ -14,6 +14,7 @@ class ExtraEntity extends Equatable {
   final int stockQuantity;
   final bool trackStock;
   final int minStockAlert;
+  final double? costPrice;
 
   const ExtraEntity({
     required this.id,
@@ -29,24 +30,26 @@ class ExtraEntity extends Equatable {
     this.stockQuantity = 0,
     this.trackStock = false,
     this.minStockAlert = 5,
+    this.costPrice,
   });
 
   bool get isAvailable => !isOutOfStock;
 
   @override
   List<Object?> get props => [
-        id,
-        loungeId,
-        nameAr,
-        nameEn,
-        name,
-        price,
-        category,
-        iconKey,
-        isOutOfStock,
-        imageUrl,
-        stockQuantity,
-        trackStock,
-        minStockAlert,
-      ];
+    id,
+    loungeId,
+    nameAr,
+    nameEn,
+    name,
+    price,
+    category,
+    iconKey,
+    isOutOfStock,
+    imageUrl,
+    stockQuantity,
+    trackStock,
+    minStockAlert,
+    costPrice,
+  ];
 }

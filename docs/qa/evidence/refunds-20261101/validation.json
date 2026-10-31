@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-01",
+  "hostedAccess": false,
+  "logs": [
+    {
+      "file": "refund-delivery-focused-20261101.log",
+      "sha256": "BAC7C6602EDE8015A5806E367C13AD4D08B404C48446E7827BBD5DA788BBA634"
+    },
+    {
+      "file": "refund-final-clean-analysis-20261101.log",
+      "sha256": "B3DDB7ABA9F7D0FD987B5408A9992080A5CD90D8C5BDE108321C1089AD6BBDA0"
+    },
+    {
+      "file": "refund-final-ui-analysis-20261101.log",
+      "sha256": "BCC347920B1B95449E0687E98CC877626A881BC73394173409628084BACA1674"
+    },
+    {
+      "file": "dashboard-refund-local-final-v3-20261101.log",
+      "sha256": "471471365F19E391335C231AE39DB7281040563727700D44AE5CF5D8BB8214E5"
+    },
+    {
+      "file": "refund-main-web-build-final-20261101.log",
+      "sha256": "4D4B84611638EACA644570F3685A0094C69F5E87DD603DB15281CE79630EA94D"
+    }
+  ],
+  "focusedTestsPassed": 27,
+  "push": false,
+  "format": "1137 files, 0 changed",
+  "mainWebBuild": "Passed, 117.5 seconds, explicit loopback public config and local refund write gate",
+  "sourceBase": "a54ad29acd58873d7f34653bacef452b308f59f7",
+  "analysis": "No issues; full analysis plus final two UI files",
+  "actualLocalRepositoryJourneyPassed": 1,
+  "browserAcceptance": false
+}

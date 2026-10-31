@@ -15,7 +15,10 @@ class PayoutStatusBadge extends StatelessWidget {
       case 'approved':
         return StatusBadge.info('APPROVED');
       case 'processing':
-        return const StatusBadge(text: 'PROCESSING', color: Colors.purpleAccent);
+        return const StatusBadge(
+          text: 'PROCESSING',
+          color: Colors.purpleAccent,
+        );
       case 'paid':
         return StatusBadge.success('PAID');
       case 'failed':
@@ -27,7 +30,10 @@ class PayoutStatusBadge extends StatelessWidget {
       case 'needs_review':
         return const StatusBadge(text: 'NEEDS REVIEW', color: Colors.redAccent);
       default:
-        return StatusBadge(text: status.toUpperCase(), color: AppColors.textPrimary);
+        return StatusBadge(
+          text: status.toUpperCase(),
+          color: AppColors.textPrimary,
+        );
     }
   }
 }

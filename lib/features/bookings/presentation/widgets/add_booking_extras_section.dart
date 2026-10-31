@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -36,17 +37,30 @@ class AddBookingExtrasSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.restaurant_menu_rounded, size: 18.r, color: AppColors.neonBlue),
+                Icon(
+                  Icons.restaurant_menu_rounded,
+                  size: 18.r,
+                  color: AppColors.neonBlue,
+                ),
                 SizedBox(width: 6.w),
-                AppText.body(AppStrings.extras, fontWeight: FontWeight.bold),
+                Flexible(
+                  child: AppText.body(
+                    AppStrings.extras,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             InkWell(
@@ -55,14 +69,21 @@ class AddBookingExtrasSection extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.add_circle_outline, size: 16.r, color: AppColors.neonBlue),
-                    SizedBox(width: 4.w),
-                    AppText.body(
-                      AppStrings.addExtrasToSession,
-                      fontSize: 12.sp,
+                    Icon(
+                      Icons.add_circle_outline,
+                      size: 16.r,
                       color: AppColors.neonBlue,
-                      fontWeight: FontWeight.bold,
+                    ),
+                    SizedBox(width: 4.w),
+                    Flexible(
+                      child: AppText.body(
+                        AppStrings.addExtrasToSession,
+                        fontSize: 12.sp,
+                        color: AppColors.neonBlue,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -81,11 +102,15 @@ class AddBookingExtrasSection extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline, size: 16.r, color: AppColors.textMuted),
+                Icon(
+                  Icons.info_outline,
+                  size: 16.r,
+                  color: AppColors.textMuted,
+                ),
                 SizedBox(width: 8.w),
                 Expanded(
                   child: AppText.body(
-                    'لم يتم إضافة مشروبات أو مأكولات مع الحجز حتى الآن',
+                    AppStrings.noBookingExtras,
                     fontSize: 12.sp,
                     color: AppColors.textMuted,
                   ),
@@ -119,7 +144,10 @@ class AddBookingExtrasSection extends StatelessWidget {
                 ),
                 label: Text(
                   '$name (${price.toStringAsFixed(0)} ${AppStrings.egp})',
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 11.sp),
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 11.sp,
+                  ),
                 ),
                 deleteIcon: const Icon(Icons.close, size: 14),
                 deleteIconColor: AppColors.danger,

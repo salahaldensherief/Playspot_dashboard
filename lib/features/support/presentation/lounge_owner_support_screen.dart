@@ -8,6 +8,8 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
+import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import '../domain/entities/app_settings_entity.dart';
 import '../domain/entities/support_ticket_entity.dart';
@@ -18,7 +20,8 @@ class LoungeOwnerSupportScreen extends StatefulWidget {
   const LoungeOwnerSupportScreen({super.key});
 
   @override
-  State<LoungeOwnerSupportScreen> createState() => _LoungeOwnerSupportScreenState();
+  State<LoungeOwnerSupportScreen> createState() =>
+      _LoungeOwnerSupportScreenState();
 }
 
 class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
@@ -69,12 +72,7 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
               SizedBox(height: 12.h),
 
               if (isLoading)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(32.0),
-                    child: CircularProgressIndicator(color: AppColors.neonBlue),
-                  ),
-                )
+                const TableShimmer(rows: 4, columns: 4)
               else if (state.tickets.isEmpty)
                 _buildEmptyTicketsCard()
               else
@@ -99,9 +97,16 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.headset_mic_outlined, color: AppColors.neonBlue, size: 24.r),
+              Icon(
+                Icons.headset_mic_outlined,
+                color: AppColors.neonBlue,
+                size: 24.r,
+              ),
               SizedBox(width: 8.w),
-              AppText.heading(AppStrings.directSupportChannels, fontSize: 18.sp),
+              AppText.heading(
+                AppStrings.directSupportChannels,
+                fontSize: 18.sp,
+              ),
             ],
           ),
           SizedBox(height: 16.h),
@@ -138,10 +143,12 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
               if (isNarrow) {
                 return Column(
                   children: tiles
-                      .map((tile) => Padding(
-                            padding: EdgeInsets.only(bottom: 12.h),
-                            child: tile,
-                          ))
+                      .map(
+                        (tile) => Padding(
+                          padding: EdgeInsets.only(bottom: 12.h),
+                          child: tile,
+                        ),
+                      )
                       .toList(),
                 );
               }
@@ -173,73 +180,158 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
       ),
       child: Column(
         children: [
-          Icon(Icons.assignment_outlined, color: AppColors.textSecondary, size: 48.r),
+          Icon(
+            Icons.assignment_outlined,
+            color: AppColors.textSecondary,
+            size: 48.r,
+          ),
           SizedBox(height: 12.h),
-          AppText.body(AppStrings.noTicketsFound, color: AppColors.textSecondary),
+          AppText.body(
+            AppStrings.noTicketsFound,
+            color: AppColors.textSecondary,
+          ),
         ],
       ),
     );
   }
 
   Widget _buildTicketsTable(List<SupportTicketEntity> tickets) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.borderDefault),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16.r),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
-            columns: [
-              DataColumn(label: _buildHeaderCell(AppStrings.nameAndDetails)),
-              DataColumn(label: _buildHeaderCell(AppStrings.issueType)),
-              DataColumn(label: _buildHeaderCell(AppStrings.status)),
-              DataColumn(label: _buildHeaderCell(AppStrings.date)),
-            ],
-            rows: tickets.map((ticket) {
-              return DataRow(
-                cells: [
-                  DataCell(
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          ticket.userName,
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14.sp,
-                          ),
-                        ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          ticket.message,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
-                        ),
-                      ],
+    return DataTableWidget(
+      columns: [
+        AppStrings.nameAndDetails,
+        AppStrings.issueType,
+        AppStrings.status,
+        AppStrings.date,
+      ],
+      mobileCardBuilder: (context, index) {
+        final ticket = tickets[index];
+        final createdAt = ticket.createdAt;
+        final dateStr = createdAt != null
+            ? DateFormat('yyyy-MM-dd hh:mm a').format(createdAt)
+            : 'N/A';
+        return Container(
+          padding: EdgeInsets.all(16.r),
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: AppColors.borderDefault),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      ticket.userName,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.sp,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  DataCell(Text(ticket.issueType, style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp))),
-                  DataCell(_getStatusBadge(ticket.status)),
-                  DataCell(
-                    Text(
-                      ticket.createdAt != null ? DateFormat('yyyy-MM-dd hh:mm a').format(ticket.createdAt!) : 'N/A',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                  _getStatusBadge(ticket.status),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                ticket.message,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13.sp,
+                ),
+              ),
+              SizedBox(height: 10.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 3.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.mutedBackground,
+                      borderRadius: BorderRadius.circular(6.r),
+                    ),
+                    child: Text(
+                      ticket.issueType,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 11.sp,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    dateStr,
+                    style: TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 11.sp,
                     ),
                   ),
                 ],
-              );
-            }).toList(),
+              ),
+            ],
           ),
-        ),
-      ),
+        );
+      },
+      rows: tickets.map((ticket) {
+        final createdAt = ticket.createdAt;
+        final dateStr = createdAt != null
+            ? DateFormat('yyyy-MM-dd hh:mm a').format(createdAt)
+            : 'N/A';
+        return DataRow(
+          cells: [
+            DataCell(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    ticket.userName,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.sp,
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    ticket.message,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            DataCell(
+              Text(
+                ticket.issueType,
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 13.sp),
+              ),
+            ),
+            DataCell(_getStatusBadge(ticket.status)),
+            DataCell(
+              Text(
+                dateStr,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12.sp,
+                ),
+              ),
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 
@@ -271,7 +363,13 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12.sp,
+                  ),
+                ),
                 SizedBox(height: 2.h),
                 SelectableText(
                   value,
@@ -285,20 +383,6 @@ class _LoungeOwnerSupportScreenState extends State<LoungeOwnerSupportScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildHeaderCell(String text) {
-    return Padding(
-      padding: EdgeInsets.all(12.r),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.bold,
-          fontSize: 13.sp,
-        ),
       ),
     );
   }

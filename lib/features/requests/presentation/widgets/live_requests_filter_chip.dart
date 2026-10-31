@@ -56,7 +56,9 @@ class LiveRequestsFilterChip extends StatelessWidget {
       selected: isSelected,
       selectedColor: AppColors.neonBlue,
       backgroundColor: AppColors.mutedBackground,
-      side: BorderSide(color: isSelected ? AppColors.neonBlue : AppColors.borderDefault),
+      side: BorderSide(
+        color: isSelected ? AppColors.neonBlue : AppColors.borderDefault,
+      ),
       onSelected: (selected) {
         if (selected) onSelected(filter);
       },

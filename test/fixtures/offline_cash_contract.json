@@ -1,0 +1,35 @@
+{
+  "operation": {
+    "id": "f7cd90a2-8481-4a88-b322-741da53c41b4",
+    "actor_id": "5acece89-302f-4fb1-8c61-f48275bd5b7f",
+    "lounge_id": "bd257ef3-7da5-48bf-98d0-44ed9dd3b214",
+    "device_id": "b6e29c45-1898-4851-8d72-ba34a81bc4dc",
+    "permit_id": "ae3b3ccb-79ae-47ea-b2e1-d724a05b5aa2",
+    "booking_id": "88d78889-ad01-4705-b3be-ea9c9951474b",
+    "shift_id": "182f0bb8-8748-4d07-9e92-9eb875d40757",
+    "sequence": 1,
+    "occurred_at": "2026-10-01T17:25:18.066Z",
+    "kind": "collectCash",
+    "payload": {
+      "amount_minor": 4000
+    }
+  },
+  "response": {
+    "status": "applied",
+    "sequence": 1,
+    "lounge_id": "bd257ef3-7da5-48bf-98d0-44ed9dd3b214",
+    "operation_id": "f7cd90a2-8481-4a88-b322-741da53c41b4",
+    "financial_receipt": {
+      "replayed": false,
+      "shift_id": "182f0bb8-8748-4d07-9e92-9eb875d40757",
+      "due_minor": 6000,
+      "lounge_id": "bd257ef3-7da5-48bf-98d0-44ed9dd3b214",
+      "booking_id": "88d78889-ad01-4705-b3be-ea9c9951474b",
+      "paid_minor": 4000,
+      "operation_id": "f7cd90a2-8481-4a88-b322-741da53c41b4",
+      "payment_status": "partial",
+      "collected_minor": 4000,
+      "shift_payment_id": "787bf60f-1c5a-41e8-adaa-23a9d48793a2"
+    }
+  }
+}

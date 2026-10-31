@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -24,18 +25,19 @@ class VenueTypeStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppText.heading(
           AppStrings.venueTypeStepTitle,
-          fontSize: 20.sp,
+          fontSize: 20,
           color: AppColors.textPrimary,
         ),
         SizedBox(height: 6.h),
         AppText.body(
           AppStrings.venueTypeStepSubtitle,
-          fontSize: 14.sp,
+          fontSize: 14,
           color: AppColors.textSecondary,
         ),
         SizedBox(height: 24.h),
@@ -99,18 +101,19 @@ class VenueTypeStep extends StatelessWidget {
                           Icon(
                             Icons.auto_awesome_rounded,
                             color: AppColors.neonBlue,
-                            size: 20.r,
+                            size: 20,
                           ),
                           SizedBox(width: 8.w),
                           AppText.heading(
                             AppStrings.multiBranchChain,
-                            fontSize: 16.sp,
+                            fontSize: 16,
                             color: AppColors.neonBlue,
                           ),
                         ],
                       ),
                       SizedBox(height: 16.h),
                       AppTextField(
+                        fontSize: 16,
                         label: AppStrings.brandName,
                         hintText: AppStrings.brandNameHint,
                         controller: brandNameController,
@@ -121,6 +124,7 @@ class VenueTypeStep extends StatelessWidget {
                           Expanded(
                             flex: 1,
                             child: AppTextField(
+                              fontSize: 16,
                               label: AppStrings.branchesCount,
                               hintText: AppStrings.branchesCountHint,
                               controller: branchesCountController,
@@ -134,6 +138,7 @@ class VenueTypeStep extends StatelessWidget {
                           Expanded(
                             flex: 2,
                             child: AppTextField(
+                              fontSize: 16,
                               label: AppStrings.branchName,
                               hintText: AppStrings.branchNameHint,
                               controller: branchNameController,
@@ -192,8 +197,8 @@ class VenueTypeStep extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: 44.r,
-                    height: 44.r,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppColors.neonBlue.withValues(alpha: 0.2)
@@ -205,16 +210,18 @@ class VenueTypeStep extends StatelessWidget {
                       color: isSelected
                           ? AppColors.neonBlue
                           : AppColors.textSecondary,
-                      size: 24.r,
+                      size: 24,
                     ),
                   ),
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    width: 24.r,
-                    height: 24.r,
+                    width: 24,
+                    height: 24,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isSelected ? AppColors.neonBlue : Colors.transparent,
+                      color: isSelected
+                          ? AppColors.neonBlue
+                          : Colors.transparent,
                       border: Border.all(
                         color: isSelected
                             ? AppColors.neonBlue
@@ -225,7 +232,7 @@ class VenueTypeStep extends StatelessWidget {
                     child: isSelected
                         ? Icon(
                             Icons.check,
-                            size: 16.r,
+                            size: 16,
                             color: AppColors.textPrimary,
                           )
                         : null,
@@ -235,13 +242,13 @@ class VenueTypeStep extends StatelessWidget {
               SizedBox(height: 16.h),
               AppText.heading(
                 title,
-                fontSize: 16.sp,
+                fontSize: 16,
                 color: isSelected ? AppColors.neonBlue : AppColors.textPrimary,
               ),
               SizedBox(height: 6.h),
               AppText.body(
                 description,
-                fontSize: 13.sp,
+                fontSize: 13,
                 color: AppColors.textSecondary,
               ),
             ],

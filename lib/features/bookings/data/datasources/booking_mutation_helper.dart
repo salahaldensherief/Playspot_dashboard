@@ -5,8 +5,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class BookingMutationHelper {
   final SupabaseClient client;
-  final Future<void> Function(String voucherCode, String bookingId) consumeVoucher;
-  final Future<Map<String, dynamic>> Function(String voucherCode) validateVoucher;
+  final Future<void> Function(String voucherCode, String bookingId)
+  consumeVoucher;
+  final Future<Map<String, dynamic>> Function(String voucherCode)
+  validateVoucher;
 
   BookingMutationHelper({
     required this.client,
@@ -15,125 +17,56 @@ class BookingMutationHelper {
   });
 
   Future<void> executeCreateBooking(BookingModel booking) async {
-    final activeShift = await client
-        .from('shifts')
-        .select('id')
-        .eq('lounge_id', booking.loungeId)
-        .or('status.eq.open,status.eq.active')
-        .limit(1)
-        .maybeSingle();
-
-    if (activeShift == null) {
-      throw Exception('لا توجد وردية مفتوحة حالياً لهذا المقر. يرجى فتح وردية أولاً قبل إضافة أي حجز.');
+    final voucherCode = booking.voucherCode?.trim();
+    if (voucherCode != null && voucherCode.isNotEmpty) {
+      throw StateError(
+        'Vouchers require a linked customer account and are not supported for walk-in bookings.',
+      );
     }
 
-    final cleanVoucherCode = booking.voucherCode?.trim().toUpperCase();
-    if (cleanVoucherCode != null && cleanVoucherCode.isNotEmpty) {
-      await validateVoucher(cleanVoucherCode);
-    }
-
-    final activeShiftId = activeShift['id']?.toString();
-    final bookingToInsert = (activeShiftId != null && (booking.shiftId == null || booking.shiftId!.isEmpty))
-        ? BookingModel(
-            id: booking.id,
-            userId: booking.userId,
-            userName: booking.userName,
-            userEmail: booking.userEmail,
-            userPhone: booking.userPhone,
-            loungeId: booking.loungeId,
-            roomId: booking.roomId,
-            loungeName: booking.loungeName,
-            loungeLocation: booking.loungeLocation,
-            roomName: booking.roomName,
-            controllersCount: booking.controllersCount,
-            screenSize: booking.screenSize,
-            date: booking.date,
-            startTime: booking.startTime,
-            endTime: booking.endTime,
-            durationMinutes: booking.durationMinutes,
-            status: booking.status,
-            paymentStatus: booking.paymentStatus,
-            totalPrice: booking.totalPrice,
-            voucherDiscount: booking.voucherDiscount,
-            voucherCode: cleanVoucherCode,
-            discountAmount: booking.discountAmount,
-            discountPercentage: booking.discountPercentage,
-            discountReason: booking.discountReason,
-            extras: booking.extras,
-            lat: booking.lat,
-            lng: booking.lng,
-            shiftId: activeShiftId,
-            playMode: booking.playMode,
-            roomPrice: booking.roomPrice,
-          )
-        : booking;
-
-    final jsonMap = bookingToInsert.toJson();
-    if (bookingToInsert.id.trim().isEmpty) {
-      jsonMap.remove('id');
-    }
-    if (bookingToInsert.userId.trim().isEmpty) {
-      jsonMap.remove('user_id');
-    }
-    if (bookingToInsert.shiftId == null || bookingToInsert.shiftId!.trim().isEmpty) {
-      jsonMap.remove('shift_id');
-    }
-
-    final response = await client.from('bookings').insert(jsonMap).select().single();
-    final createdBookingId = (response['id'] ?? bookingToInsert.id)?.toString();
-
-    if (bookingToInsert.status == BookingStatus.inProgress &&
-        createdBookingId != null &&
-        createdBookingId.isNotEmpty) {
-      try {
-        await client.rpc('complete_booking_payment', params: {
-          'p_booking_id': createdBookingId,
-          'p_payment_method': 'cash',
-          'p_final_amount': null,
-        });
-        debugPrint('🟢 [BookingMutationHelper] complete_booking_payment RPC succeeded for walk-in booking: $createdBookingId');
-      } catch (e1) {
-        debugPrint('⚠️ [BookingMutationHelper] complete_booking_payment RPC failed ($e1), trying start_booking_session');
-        try {
-          await client.rpc('start_booking_session', params: {
-            'p_booking_id': createdBookingId,
-          });
-        } catch (e2) {
-          debugPrint('⚠️ [BookingMutationHelper] start_booking_session RPC failed: $e2');
-          try {
-            await client
-                .from('rooms')
-                .update({'status': 'occupied', 'is_available': false})
-                .eq('id', bookingToInsert.roomId);
-          } catch (_) {}
-        }
+    final extraItems = booking.extras.map((extra) {
+      final extraId = (extra['id'] ?? extra['extra_id'])?.toString().trim();
+      if (extraId == null || extraId.isEmpty) {
+        throw ArgumentError('Invalid booking extra: missing extra_id');
       }
+
+      final rawQuantity = extra['quantity'] ?? extra['qty'] ?? 1;
+      final quantity = rawQuantity is num
+          ? rawQuantity.toInt()
+          : int.tryParse(rawQuantity.toString()) ?? 1;
+
+      return {'extra_id': extraId, 'quantity': quantity};
+    }).toList();
+
+    final response = await client.rpc(
+      'create_manual_booking_admin',
+      params: {
+        'p_lounge_id': booking.loungeId,
+        'p_room_id': booking.roomId,
+        'p_booking_date': booking.date.toIso8601String().split('T')[0],
+        'p_start_time': booking.startTime,
+        'p_duration_minutes': booking.durationMinutes,
+        'p_customer_name': booking.userName,
+        'p_customer_phone': booking.userPhone,
+        'p_play_mode':
+            (booking.playMode == null || booking.playMode!.trim().isEmpty)
+            ? 'single'
+            : booking.playMode!.trim(),
+        'p_extra_items': extraItems,
+        'p_start_immediately': booking.status == BookingStatus.inProgress,
+      },
+    );
+
+    if (response is! Map || response['success'] != true) {
+      throw const PostgrestException(
+        message: 'Manual booking command did not complete successfully',
+        code: 'P0001',
+      );
     }
 
-    if (bookingToInsert.extras.isNotEmpty && createdBookingId != null && createdBookingId.isNotEmpty) {
-      final itemsToInsert = bookingToInsert.extras.map((extra) => {
-            'booking_id': createdBookingId,
-            'extra_id': extra['id'] ?? extra['extra_id'],
-            'name': extra['name_ar'] ?? extra['name'] ?? extra['name_en'] ?? 'صنف',
-            'quantity': extra['quantity'] ?? extra['qty'] ?? 1,
-            'unit_price': extra['unit_price'] ?? extra['price'] ?? 0.0,
-            'total_price': extra['total_price'] ??
-                ((extra['unit_price'] ?? extra['price'] ?? 0.0) *
-                    (extra['quantity'] ?? extra['qty'] ?? 1)),
-          }).toList();
-
-      try {
-        await client.from('booking_items').insert(itemsToInsert);
-      } catch (e) {
-        debugPrint('⚠️ [BookingMutationHelper] Failed inserting booking_items: $e');
-      }
-    }
-
-    if (cleanVoucherCode != null &&
-        cleanVoucherCode.isNotEmpty &&
-        createdBookingId != null &&
-        createdBookingId.isNotEmpty) {
-      await consumeVoucher(cleanVoucherCode, createdBookingId);
-    }
+    debugPrint(
+      '🟢 [BookingMutationHelper] Server-authoritative manual booking created: '
+      '${response['booking_id']}',
+    );
   }
 }

@@ -12,7 +12,9 @@ class GetTournamentParticipantsUseCase
   GetTournamentParticipantsUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<TournamentParticipantEntity>>> call(String tournamentId) {
+  Future<Either<Failure, List<TournamentParticipantEntity>>> call(
+    String tournamentId,
+  ) {
     return repository.getParticipants(tournamentId);
   }
 }
@@ -32,13 +34,17 @@ class RejectPaymentParams extends Equatable {
   final String participantId;
   final String reason;
 
-  const RejectPaymentParams({required this.participantId, required this.reason});
+  const RejectPaymentParams({
+    required this.participantId,
+    required this.reason,
+  });
 
   @override
   List<Object?> get props => [participantId, reason];
 }
 
-class RejectParticipantPaymentUseCase implements UseCase<void, RejectPaymentParams> {
+class RejectParticipantPaymentUseCase
+    implements UseCase<void, RejectPaymentParams> {
   final TournamentRepository repository;
 
   RejectParticipantPaymentUseCase(this.repository);

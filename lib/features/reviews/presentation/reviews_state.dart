@@ -48,12 +48,12 @@ class ReviewsState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        reviews,
-        averageRating,
-        page,
-        pageSize,
-        totalCount,
-        errorMessage,
-      ];
+    status,
+    reviews,
+    averageRating,
+    page,
+    pageSize,
+    totalCount,
+    errorMessage,
+  ];
 }

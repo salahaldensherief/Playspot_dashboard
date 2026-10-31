@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -9,14 +10,15 @@ class ShiftKpiCards extends StatelessWidget {
   final List<ShiftEntity> shifts;
   final ShiftEntity? activeShift;
 
-  const ShiftKpiCards({
-    super.key,
-    required this.shifts,
-    this.activeShift,
-  });
+  const ShiftKpiCards({super.key, required this.shifts, this.activeShift});
 
   @override
   Widget build(BuildContext context) {
+    if (shifts.any((s) => !s.financialsVisible) ||
+        activeShift?.financialsVisible == false) {
+      return Text(AppStrings.shiftFinancialsWithheld);
+    }
+    EasyLocalization.of(context);
     double totalRev = 0.0;
     double totalCash = 0.0;
     double totalDigital = 0.0;
@@ -36,39 +38,67 @@ class ShiftKpiCards extends StatelessWidget {
     }
 
     final bool isHealthy = totalDiscrepancy >= 0;
-    final bool isMobile = MediaQuery.sizeOf(context).width < 850;
-
-    return Container(
-      margin: EdgeInsets.only(bottom: 20.h),
-      child: isMobile
-          ? SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _buildCardsList(
-                  context,
-                  totalRev,
-                  totalCash,
-                  totalDigital,
-                  totalExp,
-                  totalExpectedCash,
-                  totalDiscrepancy,
-                  isHealthy,
-                ).map((card) => Container(width: 260.w, margin: EdgeInsets.only(right: 12.w), child: card)).toList(),
-              ),
-            )
-          : Row(
-              children: _buildCardsList(
-                context,
-                totalRev,
-                totalCash,
-                totalDigital,
-                totalExp,
-                totalExpectedCash,
-                totalDiscrepancy,
-                isHealthy,
-              ).map((card) => Expanded(child: Container(margin: EdgeInsets.symmetric(horizontal: 6.w), child: card))).toList(),
-            ),
+    final width = MediaQuery.sizeOf(context).width;
+    final cards = _buildCardsList(
+      context,
+      totalRev,
+      totalCash,
+      totalDigital,
+      totalExp,
+      totalExpectedCash,
+      totalDiscrepancy,
+      isHealthy,
     );
+
+    if (width < 600) {
+      return Container(
+        margin: EdgeInsets.only(bottom: 20.h),
+        child: GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 10.w,
+            mainAxisSpacing: 10.h,
+            mainAxisExtent: 115.h,
+          ),
+          itemCount: cards.length,
+          itemBuilder: (context, index) => cards[index],
+        ),
+      );
+    } else if (width < 1200) {
+      return Container(
+        margin: EdgeInsets.only(bottom: 20.h),
+        child: GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 12.w,
+            mainAxisSpacing: 12.h,
+            mainAxisExtent: 115.h,
+          ),
+          itemCount: cards.length,
+          itemBuilder: (context, index) => cards[index],
+        ),
+      );
+    } else {
+      return Container(
+        margin: EdgeInsets.only(bottom: 20.h),
+        child: Row(
+          children: cards
+              .map(
+                (card) => Expanded(
+                  child: Container(
+                    margin: EdgeInsets.symmetric(horizontal: 5.w),
+                    child: card,
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+      );
+    }
   }
 
   List<Widget> _buildCardsList(
@@ -85,12 +115,18 @@ class ShiftKpiCards extends StatelessWidget {
       // 1. Current Active Shift Card
       _buildCard(
         title: AppStrings.currentShift,
-        value: activeShift != null ? (activeShift!.cashierName ?? AppStrings.active) : AppStrings.noActiveShiftTitle,
-        subtitle: activeShift != null 
-            ? AppStrings.startingCashLabel('${activeShift!.startingCash.toStringAsFixed(0)} ${AppStrings.egp}') 
+        value: activeShift != null
+            ? (activeShift!.cashierName ?? AppStrings.active)
+            : AppStrings.noActiveShiftTitle,
+        subtitle: activeShift != null
+            ? AppStrings.startingCashLabel(
+                '${activeShift!.startingCash.toStringAsFixed(0)} ${AppStrings.egp}',
+              )
             : AppStrings.clickToOpen,
         icon: Icons.account_circle_outlined,
-        color: activeShift != null ? AppColors.success : AppColors.textSecondary,
+        color: activeShift != null
+            ? AppColors.success
+            : AppColors.textSecondary,
       ),
 
       // 2. Total Revenue Card
@@ -133,8 +169,12 @@ class ShiftKpiCards extends StatelessWidget {
       _buildCard(
         title: AppStrings.financialDiscrepancies,
         value: '${totalDiscrepancy.toStringAsFixed(0)} ${AppStrings.egp}',
-        subtitle: isHealthy ? AppStrings.matchedOrSurplus : AppStrings.deficitReviewNeeded,
-        icon: isHealthy ? Icons.check_circle_outline : Icons.warning_amber_rounded,
+        subtitle: isHealthy
+            ? AppStrings.matchedOrSurplus
+            : AppStrings.deficitReviewNeeded,
+        icon: isHealthy
+            ? Icons.check_circle_outline
+            : Icons.warning_amber_rounded,
         color: isHealthy ? AppColors.success : AppColors.danger,
       ),
     ];
@@ -154,7 +194,11 @@ class ShiftKpiCards extends StatelessWidget {
         borderRadius: BorderRadius.circular(14.r),
         border: Border.all(color: AppColors.borderDefault),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 8, offset: const Offset(0, 3)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
         ],
       ),
       child: Column(
@@ -182,11 +226,7 @@ class ShiftKpiCards extends StatelessWidget {
             ],
           ),
           SizedBox(height: 12.h),
-          AppText.heading(
-            value,
-            fontSize: 18.sp,
-            color: AppColors.textPrimary,
-          ),
+          AppText.heading(value, fontSize: 18.sp, color: AppColors.textPrimary),
           SizedBox(height: 4.h),
           AppText.body(
             subtitle,

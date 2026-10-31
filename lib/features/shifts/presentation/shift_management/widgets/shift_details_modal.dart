@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -15,16 +17,14 @@ import 'shift_payments_tab.dart';
 class ShiftDetailsModal extends StatefulWidget {
   final ShiftEntity shift;
 
-  const ShiftDetailsModal({
-    super.key,
-    required this.shift,
-  });
+  const ShiftDetailsModal({super.key, required this.shift});
 
   @override
   State<ShiftDetailsModal> createState() => _ShiftDetailsModalState();
 }
 
-class _ShiftDetailsModalState extends State<ShiftDetailsModal> with SingleTickerProviderStateMixin {
+class _ShiftDetailsModalState extends State<ShiftDetailsModal>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -44,12 +44,14 @@ class _ShiftDetailsModalState extends State<ShiftDetailsModal> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
+    final screenSize = MediaQuery.sizeOf(context);
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Container(
-        width: 850.w,
-        height: 650.h,
+        width: math.min(850.w, screenSize.width - 32),
+        height: math.min(650.h, screenSize.height * 0.9),
         padding: EdgeInsets.all(24.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,11 +65,26 @@ class _ShiftDetailsModalState extends State<ShiftDetailsModal> with SingleTicker
               unselectedLabelColor: AppColors.textSecondary,
               isScrollable: true,
               tabs: [
-                Tab(icon: const Icon(Icons.analytics_outlined), text: AppStrings.financialSummaryTab),
-                Tab(icon: const Icon(Icons.receipt_long_outlined), text: AppStrings.expensesAndDropsTab),
-                Tab(icon: const Icon(Icons.payments_outlined), text: AppStrings.paymentsTab),
-                Tab(icon: const Icon(Icons.bookmark_border_rounded), text: AppStrings.linkedBookingsTab),
-                Tab(icon: const Icon(Icons.history_edu_rounded), text: AppStrings.auditLogTab),
+                Tab(
+                  icon: const Icon(Icons.analytics_outlined),
+                  text: AppStrings.financialSummaryTab,
+                ),
+                Tab(
+                  icon: const Icon(Icons.receipt_long_outlined),
+                  text: AppStrings.expensesAndDropsTab,
+                ),
+                Tab(
+                  icon: const Icon(Icons.payments_outlined),
+                  text: AppStrings.paymentsTab,
+                ),
+                Tab(
+                  icon: const Icon(Icons.bookmark_border_rounded),
+                  text: AppStrings.linkedBookingsTab,
+                ),
+                Tab(
+                  icon: const Icon(Icons.history_edu_rounded),
+                  text: AppStrings.auditLogTab,
+                ),
               ],
             ),
             SizedBox(height: 16.h),
@@ -79,7 +96,7 @@ class _ShiftDetailsModalState extends State<ShiftDetailsModal> with SingleTicker
                   const ShiftExpensesTab(),
                   const ShiftPaymentsTab(),
                   const ShiftBookingsTab(),
-                  const ShiftAuditLogsTab(),
+                  ShiftAuditLogsTab(shiftId: widget.shift.id),
                 ],
               ),
             ),

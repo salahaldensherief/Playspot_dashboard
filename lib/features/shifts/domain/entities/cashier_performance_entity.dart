@@ -31,17 +31,17 @@ class CashierPerformanceEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        cashierId,
-        cashierName,
-        shiftCount,
-        closedShiftCount,
-        approvedShiftCount,
-        totalSales,
-        cashSales,
-        digitalSales,
-        totalExpenses,
-        totalDifference,
-        averageShiftSales,
-        openShiftCount,
-      ];
+    cashierId,
+    cashierName,
+    shiftCount,
+    closedShiftCount,
+    approvedShiftCount,
+    totalSales,
+    cashSales,
+    digitalSales,
+    totalExpenses,
+    totalDifference,
+    averageShiftSales,
+    openShiftCount,
+  ];
 }

@@ -1,11 +1,19 @@
 import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
 import '../entities/room_entity.dart';
+import '../entities/room_space_type.dart';
 
 abstract class RoomRepository {
-  Future<Either<Failure, List<RoomEntity>>> getRooms(String loungeId, {bool forceRefresh = false});
+  Future<Either<Failure, List<RoomSpaceType>>> getSpaceTypes();
+  Future<Either<Failure, List<RoomEntity>>> getRooms(
+    String loungeId, {
+    bool forceRefresh = false,
+  });
   Stream<List<RoomEntity>> watchRooms(String loungeId);
-  Future<Either<Failure, void>> updateRoomStatus(String roomId, RoomStatusEnum status);
+  Future<Either<Failure, void>> updateRoomStatus(
+    String roomId,
+    RoomStatusEnum status,
+  );
   Future<Either<Failure, void>> addRoom(RoomEntity room);
   Future<Either<Failure, void>> updateRoom(RoomEntity room);
   Future<Either<Failure, void>> deleteRoom(String roomId);

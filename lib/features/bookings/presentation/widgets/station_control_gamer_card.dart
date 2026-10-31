@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,10 +10,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/custo
 class StationControlGamerCard extends StatelessWidget {
   final Booking booking;
 
-  const StationControlGamerCard({
-    super.key,
-    required this.booking,
-  });
+  const StationControlGamerCard({super.key, required this.booking});
 
   String _getInitials(String? name) {
     if (name == null || name.trim().isEmpty) return 'U';
@@ -25,6 +23,7 @@ class StationControlGamerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final userName = (booking.userName != null && booking.userName!.isNotEmpty)
         ? booking.userName!
         : AppStrings.anonymous;
@@ -89,8 +88,14 @@ class StationControlGamerCard extends StatelessWidget {
                 SizedBox(height: 2.h),
                 Row(
                   children: [
-                    if (userPhone.isNotEmpty && userPhone != 'null' && userPhone != 'No Phone') ...[
-                      Icon(Icons.phone_outlined, size: 12.sp, color: AppColors.neonBlue),
+                    if (userPhone.isNotEmpty &&
+                        userPhone != 'null' &&
+                        userPhone != 'No Phone') ...[
+                      Icon(
+                        Icons.phone_outlined,
+                        size: 12.sp,
+                        color: AppColors.neonBlue,
+                      ),
                       SizedBox(width: 4.w),
                       Text(
                         userPhone,
@@ -112,7 +117,11 @@ class StationControlGamerCard extends StatelessWidget {
                             ),
                           );
                         },
-                        child: Icon(Icons.copy_rounded, size: 12.sp, color: AppColors.textMuted),
+                        child: Icon(
+                          Icons.copy_rounded,
+                          size: 12.sp,
+                          color: AppColors.textMuted,
+                        ),
                       ),
                     ],
                   ],

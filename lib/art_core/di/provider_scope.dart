@@ -20,9 +20,6 @@ class MultiBlocProviderScope extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Nested(
-      children: providers,
-      child: child,
-    );
+    return Nested(children: providers, child: child);
   }
 }

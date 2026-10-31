@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -43,17 +44,13 @@ class _EditAdminDialogState extends State<EditAdminDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      if (widget.onSave != null) {
-        widget.onSave!(
-          _nameController.text,
-          _emailController.text,
-        );
-      }
+      widget.onSave?.call(_nameController.text, _emailController.text);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AppDialog(
       title: AppStrings.editAdmin,
       width: 500.w,
@@ -78,14 +75,17 @@ class _EditAdminDialogState extends State<EditAdminDialog> {
             AppTextField(
               label: AppStrings.fullName,
               controller: _nameController,
-              validator: (val) => val == null || val.isEmpty ? AppStrings.fieldRequired : null,
+              validator: (val) =>
+                  val == null || val.isEmpty ? AppStrings.fieldRequired : null,
             ),
             SizedBox(height: 16.h),
             AppTextField(
               label: AppStrings.email,
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              validator: (val) => val == null || !val.contains('@') ? AppStrings.invalidEmail : null,
+              validator: (val) => val == null || !val.contains('@')
+                  ? AppStrings.invalidEmail
+                  : null,
             ),
           ],
         ),

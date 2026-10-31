@@ -17,22 +17,58 @@ class ReferralModel extends ReferralEntity {
   });
 
   factory ReferralModel.fromJson(Map<String, dynamic> json) {
-    final inviterMap = json['referrer'] as Map<String, dynamic>? ?? json['inviter'] as Map<String, dynamic>? ?? {};
-    final inviteeMap = json['invitee'] as Map<String, dynamic>? ?? json['referred'] as Map<String, dynamic>? ?? {};
+    final inviterMap =
+        json['referrer'] as Map<String, dynamic>? ??
+        json['inviter'] as Map<String, dynamic>? ??
+        {};
+    final inviteeMap =
+        json['invitee'] as Map<String, dynamic>? ??
+        json['referred'] as Map<String, dynamic>? ??
+        {};
 
     return ReferralModel(
       id: json['id']?.toString() ?? '',
-      inviterId: json['inviter_id']?.toString() ?? json['referrer_id']?.toString() ?? '',
-      inviterName: inviterMap['full_name']?.toString() ?? inviterMap['name']?.toString() ?? json['inviter_name']?.toString() ?? 'N/A',
-      inviterEmail: inviterMap['email']?.toString() ?? json['inviter_email']?.toString() ?? '',
-      inviteeId: json['invitee_id']?.toString() ?? json['referred_id']?.toString() ?? '',
-      inviteeName: inviteeMap['full_name']?.toString() ?? inviteeMap['name']?.toString() ?? json['invitee_name']?.toString() ?? 'N/A',
-      inviteeEmail: inviteeMap['email']?.toString() ?? json['invitee_email']?.toString() ?? '',
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
+      inviterId:
+          json['inviter_id']?.toString() ??
+          json['referrer_id']?.toString() ??
+          '',
+      inviterName:
+          inviterMap['full_name']?.toString() ??
+          inviterMap['name']?.toString() ??
+          json['inviter_name']?.toString() ??
+          'N/A',
+      inviterEmail:
+          inviterMap['email']?.toString() ??
+          json['inviter_email']?.toString() ??
+          '',
+      inviteeId:
+          json['invitee_id']?.toString() ??
+          json['referred_id']?.toString() ??
+          '',
+      inviteeName:
+          inviteeMap['full_name']?.toString() ??
+          inviteeMap['name']?.toString() ??
+          json['invitee_name']?.toString() ??
+          'N/A',
+      inviteeEmail:
+          inviteeMap['email']?.toString() ??
+          json['invitee_email']?.toString() ??
+          '',
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
+          : null,
       status: json['status']?.toString() ?? 'pending',
-      rewardIssued: json['reward_issued'] as bool? ?? json['is_rewarded'] as bool? ?? false,
-      inviterPoints: (json['inviter_points'] as num?)?.toInt() ?? (json['referrer_points'] as num?)?.toInt() ?? 0,
-      inviteePoints: (json['invitee_points'] as num?)?.toInt() ?? (json['referred_points'] as num?)?.toInt() ?? 0,
+      rewardIssued:
+          json['reward_claimed'] as bool? ??
+          json['reward_issued'] as bool? ??
+          json['is_rewarded'] as bool? ??
+          false,
+      inviterPoints:
+          (json['inviter_points'] as num?)?.toInt() ??
+          (json['referrer_points'] as num?)?.toInt(),
+      inviteePoints:
+          (json['invitee_points'] as num?)?.toInt() ??
+          (json['referred_points'] as num?)?.toInt(),
     );
   }
 

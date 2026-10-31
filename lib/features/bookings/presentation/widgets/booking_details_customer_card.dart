@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,10 +22,12 @@ class BookingDetailsCustomerCard extends StatefulWidget {
   const BookingDetailsCustomerCard({super.key, required this.booking});
 
   @override
-  State<BookingDetailsCustomerCard> createState() => _BookingDetailsCustomerCardState();
+  State<BookingDetailsCustomerCard> createState() =>
+      _BookingDetailsCustomerCardState();
 }
 
-class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard> {
+class _BookingDetailsCustomerCardState
+    extends State<BookingDetailsCustomerCard> {
   CustomerCancellationSummary? _summary;
   bool _isLoadingSummary = true;
   RealtimeChannel? _realtimeChannel;
@@ -78,7 +81,8 @@ class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard>
   void _subscribeRealtime() {
     if (widget.booking.loungeId.isEmpty) return;
     try {
-      final channelName = 'public:bookings_cancellation_${widget.booking.loungeId}_${widget.booking.userId}';
+      final channelName =
+          'public:bookings_cancellation_${widget.booking.loungeId}_${widget.booking.userId}';
       _realtimeChannel = Supabase.instance.client.channel(channelName);
       _realtimeChannel!
           .onPostgresChanges(
@@ -92,7 +96,8 @@ class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard>
             ),
             callback: (payload) {
               final newStatus = payload.newRecord['status']?.toString();
-              if (newStatus == 'cancelled' || payload.eventType == PostgresChangeEvent.update) {
+              if (newStatus == 'cancelled' ||
+                  payload.eventType == PostgresChangeEvent.update) {
                 _fetchSummary();
               }
             },
@@ -110,11 +115,14 @@ class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard>
           children: [
             const Icon(Icons.warning_amber_rounded, color: AppColors.warning),
             SizedBox(width: 8.w),
-            Text(AppStrings.issueWarningBtn, style: const TextStyle(color: AppColors.textPrimary)),
+            Text(
+              AppStrings.issueWarningBtn,
+              style: const TextStyle(color: AppColors.textPrimary),
+            ),
           ],
         ),
         content: Text(
-          'سيتم تسجيل تحذير للعميل ${widget.booking.userName ?? ""} على تجاوزه حد الإلغاءات بعد الموافقة.',
+          'customer_warning_not_connected'.tr(),
           style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
@@ -122,19 +130,6 @@ class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard>
             text: AppStrings.cancel,
             variant: AppButtonVariant.text,
             onPressed: () => Navigator.pop(diagContext),
-          ),
-          AppButton(
-            text: 'إرسال التحذير',
-            backgroundColor: AppColors.warning,
-            onPressed: () {
-              Navigator.pop(diagContext);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('تم تسجيل وإرسال التحذير للعميل بنجاح'),
-                  backgroundColor: AppColors.warning,
-                ),
-              );
-            },
           ),
         ],
       ),
@@ -169,6 +164,7 @@ class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard>
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final booking = widget.booking;
     final currentUser = context.watch<LoginCubit>().state.user;
     final isLoungeAdmin = currentUser?.isLoungeAdmin == true;
@@ -216,7 +212,7 @@ class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard>
                     ),
                     SizedBox(height: 2.h),
                     Text(
-                      booking.userPhone ?? 'لا يوجد هاتف',
+                      booking.userPhone ?? 'no_customer_phone'.tr(),
                       style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12.sp,
@@ -227,8 +223,11 @@ class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard>
               ),
               if (isLoungeAdmin)
                 IconButton(
-                  icon: const Icon(Icons.report_problem_outlined,
-                      color: AppColors.danger, size: 20),
+                  icon: const Icon(
+                    Icons.report_problem_outlined,
+                    color: AppColors.danger,
+                    size: 20,
+                  ),
                   tooltip: AppStrings.reportCustomerTooltip,
                   onPressed: () => _openBanReportDialog(context),
                 ),
@@ -250,15 +249,23 @@ class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      booking.isFirstBooking ? Icons.star_rounded : Icons.person_pin_circle_outlined,
+                      booking.isFirstBooking
+                          ? Icons.star_rounded
+                          : Icons.person_pin_circle_outlined,
                       size: 14.r,
-                      color: booking.isFirstBooking ? AppColors.warning : AppColors.neonPurple,
+                      color: booking.isFirstBooking
+                          ? AppColors.warning
+                          : AppColors.neonPurple,
                     ),
                     SizedBox(width: 4.w),
                     Text(
-                      booking.isFirstBooking ? AppStrings.firstBookingBadge : AppStrings.returningCustomerBadge,
+                      booking.isFirstBooking
+                          ? AppStrings.firstBookingBadge
+                          : AppStrings.returningCustomerBadge,
                       style: TextStyle(
-                        color: booking.isFirstBooking ? AppColors.warning : AppColors.textPrimary,
+                        color: booking.isFirstBooking
+                            ? AppColors.warning
+                            : AppColors.textPrimary,
                         fontSize: 11.sp,
                       ),
                     ),
@@ -292,7 +299,9 @@ class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard>
                         Icon(
                           Icons.event_busy_rounded,
                           size: 16.r,
-                          color: hasCancellationAlert ? AppColors.warning : AppColors.textMuted,
+                          color: hasCancellationAlert
+                              ? AppColors.warning
+                              : AppColors.textMuted,
                         ),
                         SizedBox(width: 6.w),
                         Text(
@@ -329,11 +338,19 @@ class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard>
                         SizedBox(
                           width: 12.r,
                           height: 12.r,
-                          child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.neonBlue),
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.neonBlue,
+                          ),
                         ),
                         SizedBox(width: 8.w),
-                        Text('جاري تحميل سجل الإلغاءات...',
-                            style: TextStyle(fontSize: 11.sp, color: AppColors.textMuted)),
+                        Text(
+                          'loading_cancellation_history'.tr(),
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
                       ],
                     ),
                   )
@@ -345,9 +362,13 @@ class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard>
                       Text(
                         '${AppStrings.afterApprovalCountLabel}: $afterApprovalCount',
                         style: TextStyle(
-                          color: afterApprovalCount > 0 ? AppColors.warning : AppColors.textSecondary,
+                          color: afterApprovalCount > 0
+                              ? AppColors.warning
+                              : AppColors.textSecondary,
                           fontSize: 11.sp,
-                          fontWeight: afterApprovalCount > 0 ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: afterApprovalCount > 0
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
                       Text(
@@ -369,7 +390,9 @@ class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard>
                     decoration: BoxDecoration(
                       color: AppColors.warning.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6.r),
-                      border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: AppColors.warning.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -387,33 +410,31 @@ class _BookingDetailsCustomerCardState extends State<BookingDetailsCustomerCard>
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              OutlinedButton.icon(
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: AppColors.warning),
-                                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              AppButton(
+                                text: AppStrings.issueWarningBtn,
+                                icon: Icons.warning_amber_rounded,
+                                variant: AppButtonVariant.outlined,
+                                foregroundColor: AppColors.warning,
+                                height: 32.h,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 10.w,
+                                  vertical: 4.h,
                                 ),
-                                icon: Icon(Icons.warning_amber_rounded, size: 14.r, color: AppColors.warning),
-                                label: Text(
-                                  AppStrings.issueWarningBtn,
-                                  style: TextStyle(fontSize: 11.sp, color: AppColors.warning),
-                                ),
-                                onPressed: () => _showWarningIssueDialog(context),
+                                fontSize: 11.sp,
+                                onPressed: () =>
+                                    _showWarningIssueDialog(context),
                               ),
                               SizedBox(width: 8.w),
-                              ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.danger,
-                                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              AppButton(
+                                text: AppStrings.requestBanBtn,
+                                icon: Icons.gavel_rounded,
+                                variant: AppButtonVariant.danger,
+                                height: 32.h,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 10.w,
+                                  vertical: 4.h,
                                 ),
-                                icon: Icon(Icons.gavel_rounded, size: 14.r, color: AppColors.textPrimary),
-                                label: Text(
-                                  AppStrings.requestBanBtn,
-                                  style: TextStyle(fontSize: 11.sp, color: AppColors.textPrimary),
-                                ),
+                                fontSize: 11.sp,
                                 onPressed: () => _openBanReportDialog(context),
                               ),
                             ],

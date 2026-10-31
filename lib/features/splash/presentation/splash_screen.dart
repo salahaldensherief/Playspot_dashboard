@@ -26,13 +26,15 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 800),
     );
 
-    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _fadeAnim = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
-    _scaleAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _scaleAnim = Tween<double>(
+      begin: 0.85,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
 
     _controller.forward();
   }
@@ -57,10 +59,7 @@ class _SplashScreenState extends State<SplashScreen>
               decoration: BoxDecoration(
                 color: Colors.black,
                 borderRadius: BorderRadius.circular(24.r),
-                border: Border.all(
-                  color: AppColors.neonBlue,
-                  width: 2.5,
-                ),
+                border: Border.all(color: AppColors.neonBlue, width: 2.5),
                 boxShadow: [
                   BoxShadow(
                     color: AppColors.neonBlue.withValues(alpha: 0.35),
@@ -91,4 +90,3 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 }
-

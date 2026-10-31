@@ -16,6 +16,7 @@ class AppBreakpoints {
       MediaQuery.sizeOf(context).width >= desktopMin;
 
   static bool isMobileWidth(double width) => width < mobileMax;
-  static bool isTabletWidth(double width) => width >= mobileMax && width < tabletMax;
+  static bool isTabletWidth(double width) =>
+      width >= mobileMax && width < tabletMax;
   static bool isDesktopWidth(double width) => width >= desktopMin;
 }

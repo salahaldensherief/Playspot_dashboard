@@ -1,0 +1,9 @@
+# Financial card narrow layout — 29 October 2026
+
+The cashier financial card overflowed by 63 pixels at a 360-pixel viewport because the title and payment badge were forced into one Row. Enlarged text also overflowed the bill labels. The header now wraps when needed; the title and bill labels can use their available width. Existing AppText, StatusBadge, theme, financial calculations and Arabic/English translations are reused. No RPC or payment behavior changed.
+
+Regression reproduced before the fix. Final focused suite: 5 passed, including 360px and 1.6 text scaling with explicit Arabic RTL/English LTR assertions, refunded labeling and discount denial for refunded bookings. Full Dashboard tests: 1,340 passed, 2 skipped. Full Flutter analysis: no issues. Final changed-file/tool Dart analysis: no issues. Strict formatting: 1,121 files, zero changes. Release Web build succeeded without environment defines; compiled JS contains neither production nor staging project reference. This unconfigured build is not a signed-in preview.
+
+Local fixture: `flutter run -d web-server --no-pub --web-hostname=127.0.0.1 --web-port=51621 --target=tool/financial_card_preview.dart`. Open `http://127.0.0.1:51621/?lang=ar` or `?lang=en`. It displays a synthetic refunded booking at width 360/text scale 1.6 and never initializes Supabase, Auth or DI. Browser inspection could not run: Computer Use failed to write its local kernel assets even after reset. No browser interaction/E2E success claimed. Widget tests exercise Flutter rendering but are not browser acceptance.
+
+The existing Vercel integration builds dev pushes as Preview (see 2026-10-26-dev-preview-safety.md). The owner has not authorized deployment in this task. Therefore this fix may be integrated locally into dev after checks, but must not be pushed while that automatic deployment remains coupled to the push without separate authorization. Workflows/protections were not disabled.

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -12,13 +13,15 @@ class ExtensionDetailsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final firstMetadataItem = metadata.items.isNotEmpty
         ? metadata.items.first
         : <String, dynamic>{};
 
-    final int requestedMinutes = (firstMetadataItem['requested_minutes'] ??
-            firstMetadataItem['minutes'] as num?)
-        ?.toInt() ??
+    final int requestedMinutes =
+        (firstMetadataItem['requested_minutes'] ??
+                firstMetadataItem['minutes'] as num?)
+            ?.toInt() ??
         30;
 
     final int currentDuration =
@@ -35,7 +38,11 @@ class ExtensionDetailsRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(Icons.add_circle_outline, size: 14.r, color: AppColors.neonBlue),
+              Icon(
+                Icons.add_circle_outline,
+                size: 14.r,
+                color: AppColors.neonBlue,
+              ),
               SizedBox(width: 4.w),
               AppText.subHeading(
                 '+$requestedMinutes ${AppStrings.minutesUnit}',

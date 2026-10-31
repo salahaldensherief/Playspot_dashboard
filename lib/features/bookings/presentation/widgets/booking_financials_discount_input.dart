@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -23,6 +24,7 @@ class BookingFinancialsDiscountInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -44,11 +46,16 @@ class BookingFinancialsDiscountInput extends StatelessWidget {
                     InkWell(
                       onTap: () => onTogglePercentage?.call(false),
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 4.h,
+                        ),
                         child: Text(
-                          'EGP',
+                          'currency_egp'.tr(),
                           style: TextStyle(
-                            color: !isPercentage ? AppColors.neonBlue : Colors.white70,
+                            color: !isPercentage
+                                ? AppColors.neonBlue
+                                : Colors.white70,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -57,11 +64,16 @@ class BookingFinancialsDiscountInput extends StatelessWidget {
                     InkWell(
                       onTap: () => onTogglePercentage?.call(true),
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 4.h,
+                        ),
                         child: Text(
                           '%',
                           style: TextStyle(
-                            color: isPercentage ? AppColors.neonBlue : Colors.white70,
+                            color: isPercentage
+                                ? AppColors.neonBlue
+                                : Colors.white70,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -78,7 +90,7 @@ class BookingFinancialsDiscountInput extends StatelessWidget {
               child: AppTextField(
                 label: AppStrings.discountReason,
                 controller: reasonController,
-                hintText: 'Reason for audit...',
+                hintText: 'discount_audit_reason_hint'.tr(),
               ),
             ),
           ],

@@ -9,11 +9,7 @@ class UpdateAdminParams extends Equatable {
   final String? name;
   final String? email;
 
-  const UpdateAdminParams({
-    required this.adminId,
-    this.name,
-    this.email,
-  });
+  const UpdateAdminParams({required this.adminId, this.name, this.email});
 
   @override
   List<Object?> get props => [adminId, name, email];

@@ -7,7 +7,11 @@ class AddExtrasToSessionUseCase {
 
   AddExtrasToSessionUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(String bookingId, List<Map<String, dynamic>> extras, double additionalCost) {
+  Future<Either<Failure, void>> call(
+    String bookingId,
+    List<Map<String, dynamic>> extras,
+    double additionalCost,
+  ) {
     return repository.addExtrasToSession(bookingId, extras, additionalCost);
   }
 }

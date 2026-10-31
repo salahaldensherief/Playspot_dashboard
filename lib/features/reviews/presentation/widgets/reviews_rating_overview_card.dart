@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -21,8 +22,9 @@ class ReviewsRatingOverviewCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.starRating.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(16.r),
-            border:
-                Border.all(color: AppColors.starRating.withValues(alpha: 0.3)),
+            border: Border.all(
+              color: AppColors.starRating.withValues(alpha: 0.3),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -73,11 +75,17 @@ class ReviewsRatingOverviewCard extends StatelessWidget {
                 width: 40.w,
                 child: Row(
                   children: [
-                    AppText.body('$star',
-                        fontSize: 11.sp, color: AppColors.textSecondary),
+                    AppText.body(
+                      '$star',
+                      fontSize: 11.sp,
+                      color: AppColors.textSecondary,
+                    ),
                     SizedBox(width: 2.w),
-                    Icon(Icons.star_rounded,
-                        size: 12.r, color: AppColors.starRating),
+                    Icon(
+                      Icons.star_rounded,
+                      size: 12.r,
+                      color: AppColors.starRating,
+                    ),
                   ],
                 ),
               ),
@@ -111,6 +119,7 @@ class ReviewsRatingOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final double avgRating = state.averageRating;
     final int totalReviews = state.reviews.length;
 

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,6 +8,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 
 class LiveBookingItem extends StatelessWidget {
   final Booking booking;
@@ -15,6 +17,7 @@ class LiveBookingItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final statusStr = booking.status.toDbString();
 
     return Row(
@@ -22,15 +25,25 @@ class LiveBookingItem extends StatelessWidget {
         CircleAvatar(
           radius: 20.r,
           backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
-          child: Icon(Icons.person_outline, color: AppColors.neonBlue, size: 20.r),
+          child: Icon(
+            Icons.person_outline,
+            color: AppColors.neonBlue,
+            size: 20.r,
+          ),
         ),
         SizedBox(width: 16.w),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText.subHeading(booking.userName ?? 'User ${booking.userId.substring(0, 5)}', fontSize: 14.sp),
-              AppText.body('${booking.roomName} • ${booking.startTime}', fontSize: 12.sp),
+              AppText.subHeading(
+                booking.userName ?? 'User ${booking.userId.substring(0, 5)}',
+                fontSize: 14.sp,
+              ),
+              AppText.body(
+                '${booking.roomName} • ${booking.startTime}',
+                fontSize: 12.sp,
+              ),
             ],
           ),
         ),
@@ -41,10 +54,10 @@ class LiveBookingItem extends StatelessWidget {
             borderRadius: BorderRadius.circular(4.r),
           ),
           child: AppText.body(
-            statusStr.toUpperCase(), 
-            color: _getStatusColor(statusStr), 
-            fontSize: 10.sp, 
-            fontWeight: FontWeight.bold
+            statusStr.toUpperCase(),
+            color: _getStatusColor(statusStr),
+            fontSize: 10.sp,
+            fontWeight: FontWeight.bold,
           ),
         ),
         SizedBox(width: 16.w),
@@ -55,11 +68,16 @@ class LiveBookingItem extends StatelessWidget {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'pending': return AppColors.warning;
-      case 'upcoming': return AppColors.neonBlue;
-      case 'completed': return AppColors.success;
-      case 'cancelled': return AppColors.danger;
-      default: return AppColors.neonBlue;
+      case 'pending':
+        return AppColors.warning;
+      case 'upcoming':
+        return AppColors.neonBlue;
+      case 'completed':
+        return AppColors.success;
+      case 'cancelled':
+        return AppColors.danger;
+      default:
+        return AppColors.neonBlue;
     }
   }
 
@@ -67,16 +85,26 @@ class LiveBookingItem extends StatelessWidget {
     if (booking.status == BookingStatus.pending) {
       return AppButton(
         text: AppStrings.approve,
-        onPressed: () => context.read<BookingCubit>().approveBooking(booking.id),
+        onPressed: () =>
+            context.read<BookingCubit>().approveBooking(booking.id),
         variant: AppButtonVariant.primary,
+        backgroundColor: AppColors.success,
+        icon: Icons.check_circle_outline_rounded,
       );
     }
-    
-    if (booking.status == BookingStatus.upcoming && booking.paymentStatus == PaymentStatus.unpaid) {
+
+    if (booking.status == BookingStatus.upcoming &&
+        booking.paymentStatus == PaymentStatus.unpaid) {
       return AppButton(
         text: AppStrings.confirmCash,
-        onPressed: () => context.read<BookingCubit>().confirmCashPayment(booking.id),
+        onPressed: () => context.read<BookingCubit>().confirmCashPayment(
+          booking.id,
+          shiftId: context.read<ShiftCubit>().state.activeShift?.id,
+        ),
         variant: AppButtonVariant.primary,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.onPrimary,
+        icon: Icons.payments_rounded,
       );
     }
 

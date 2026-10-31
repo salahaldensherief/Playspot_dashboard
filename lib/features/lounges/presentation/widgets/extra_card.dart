@@ -25,10 +25,6 @@ class ExtraCard extends StatelessWidget {
         loungeId: loungeId,
       );
     }
-    return ExtraCardDesktop(
-      extra: extra,
-      canEdit: canEdit,
-      loungeId: loungeId,
-    );
+    return ExtraCardDesktop(extra: extra, canEdit: canEdit, loungeId: loungeId);
   }
 }

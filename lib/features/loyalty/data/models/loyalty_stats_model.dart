@@ -24,7 +24,8 @@ class LoyaltyStatsModel extends Equatable {
   });
 
   factory LoyaltyStatsModel.fromJson(Map<String, dynamic> json) {
-    final rawLevelMap = json['user_count_by_level'] as Map<String, dynamic>? ?? {};
+    final rawLevelMap =
+        json['user_count_by_level'] as Map<String, dynamic>? ?? {};
     final levelMap = rawLevelMap.map((k, v) => MapEntry(k, (v as num).toInt()));
 
     return LoyaltyStatsModel(
@@ -32,11 +33,15 @@ class LoyaltyStatsModel extends Equatable {
       userCountByLevel: levelMap,
       totalReferrals: (json['total_referrals'] as num?)?.toInt() ?? 0,
       completedReferrals: (json['completed_referrals'] as num?)?.toInt() ?? 0,
-      totalReferralPoints: (json['total_referral_points'] as num?)?.toInt() ?? 0,
-      totalVouchersIssued: (json['total_vouchers_issued'] as num?)?.toInt() ?? 0,
+      totalReferralPoints:
+          (json['total_referral_points'] as num?)?.toInt() ?? 0,
+      totalVouchersIssued:
+          (json['total_vouchers_issued'] as num?)?.toInt() ?? 0,
       totalVouchersUsed: (json['total_vouchers_used'] as num?)?.toInt() ?? 0,
-      totalVouchersActive: (json['total_vouchers_active'] as num?)?.toInt() ?? 0,
-      totalDiscountValueUsed: (json['total_discount_value_used'] as num?)?.toDouble() ?? 0.0,
+      totalVouchersActive:
+          (json['total_vouchers_active'] as num?)?.toInt() ?? 0,
+      totalDiscountValueUsed:
+          (json['total_discount_value_used'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -56,14 +61,14 @@ class LoyaltyStatsModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        totalAddedPoints,
-        userCountByLevel,
-        totalReferrals,
-        completedReferrals,
-        totalReferralPoints,
-        totalVouchersIssued,
-        totalVouchersUsed,
-        totalVouchersActive,
-        totalDiscountValueUsed,
-      ];
+    totalAddedPoints,
+    userCountByLevel,
+    totalReferrals,
+    completedReferrals,
+    totalReferralPoints,
+    totalVouchersIssued,
+    totalVouchersUsed,
+    totalVouchersActive,
+    totalDiscountValueUsed,
+  ];
 }

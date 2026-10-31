@@ -1,7 +1,10 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
+import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 import '../../../categories/domain/entities/activity_type_entity.dart';
 
 class RoomFeaturesSection extends StatefulWidget {
@@ -42,7 +45,8 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
   List<String> _getSuggestions() {
     final List<String> suggestions = [];
     String firstActivityName = '';
-    if (widget.selectedActivityIds.isNotEmpty && widget.activitiesList.isNotEmpty) {
+    if (widget.selectedActivityIds.isNotEmpty &&
+        widget.activitiesList.isNotEmpty) {
       final String targetId = widget.selectedActivityIds.first;
       ActivityTypeEntity? foundActivity;
       for (int i = 0; i < widget.activitiesList.length; i++) {
@@ -56,19 +60,44 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
     }
 
     if (firstActivityName.contains('simulator')) {
-      suggestions.addAll(['Force Feedback', 'Direct Drive', 'Load Cell Pedals', 'Bucket Seat', 'Triple Monitor']);
+      suggestions.addAll([
+        'Force Feedback',
+        'Direct Drive',
+        'Load Cell Pedals',
+        'Bucket Seat',
+        'Triple Monitor',
+      ]);
     } else if (firstActivityName.contains('vr')) {
-      suggestions.addAll(['Meta Quest 3', 'Valve Index', 'Wireless', 'Pro Controllers', 'Pico 4']);
+      suggestions.addAll([
+        'Meta Quest 3',
+        'Valve Index',
+        'Wireless',
+        'Pro Controllers',
+        'Pico 4',
+      ]);
     } else if (firstActivityName.contains('pc')) {
-      suggestions.addAll(['RTX 4080', 'RTX 4090', 'Mechanical Keyboard', 'Gaming Mouse', '240Hz Monitor']);
+      suggestions.addAll([
+        'RTX 4080',
+        'RTX 4090',
+        'Mechanical Keyboard',
+        'Gaming Mouse',
+        '240Hz Monitor',
+      ]);
     } else {
-      suggestions.addAll(['PS5', 'PS4 Pro', 'DualSense Edge', '4K TV', 'Home Theater']);
+      suggestions.addAll([
+        'PS5',
+        'PS4 Pro',
+        'DualSense Edge',
+        '4K TV',
+        'Home Theater',
+      ]);
     }
     return suggestions;
   }
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final suggestions = _getSuggestions();
 
     return Column(
@@ -85,7 +114,7 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
         SizedBox(height: 12.h),
         if (suggestions.isNotEmpty) ...[
           Text(
-            'Suggested Tags:',
+            'room_suggested_tags'.tr(),
             style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp),
           ),
           SizedBox(height: 8.h),
@@ -99,7 +128,9 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
                   s,
                   style: TextStyle(
                     fontSize: 10.sp,
-                    color: isAdded ? AppColors.textPrimary : AppColors.textSecondary,
+                    color: isAdded
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
                   ),
                 ),
                 backgroundColor: isAdded
@@ -114,43 +145,44 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
         Row(
           children: [
             Expanded(
-              child: TextFormField(
+              child: AppTextField(
+                textLanguage: TextFieldLanguage.arabic,
                 controller: _featureArController,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  hintText: AppStrings.nameAr,
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
-                  filled: true,
-                  fillColor: AppColors.mutedBackground,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
+                hintText: AppStrings.nameAr,
               ),
             ),
             SizedBox(width: 12.w),
             Expanded(
-              child: TextFormField(
+              child: AppTextField(
+                textLanguage: TextFieldLanguage.english,
                 controller: _featureEnController,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  hintText: AppStrings.nameEn,
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
-                  filled: true,
-                  fillColor: AppColors.mutedBackground,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
+                hintText: AppStrings.nameEn,
               ),
             ),
             SizedBox(width: 12.w),
             IconButton(
               onPressed: () {
-                if (_featureArController.text.isNotEmpty && _featureEnController.text.isNotEmpty) {
-                  widget.onAddFeature(_featureEnController.text, _featureArController.text);
+                final languageError =
+                    AppValidator.validateLanguage(
+                      _featureArController.text,
+                      TextFieldLanguage.arabic,
+                    ) ??
+                    AppValidator.validateLanguage(
+                      _featureEnController.text,
+                      TextFieldLanguage.english,
+                    );
+                if (languageError != null) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(languageError)));
+                  return;
+                }
+                if (_featureArController.text.isNotEmpty &&
+                    _featureEnController.text.isNotEmpty) {
+                  widget.onAddFeature(
+                    _featureEnController.text,
+                    _featureArController.text,
+                  );
                   _featureArController.clear();
                   _featureEnController.clear();
                 }
@@ -170,7 +202,11 @@ class _RoomFeaturesSectionState extends State<RoomFeaturesSection> {
                 style: TextStyle(fontSize: 11.sp),
               ),
               backgroundColor: AppColors.mutedBackground,
-              deleteIcon: Icon(Icons.close, size: 14.r, color: AppColors.danger),
+              deleteIcon: Icon(
+                Icons.close,
+                size: 14.r,
+                color: AppColors.danger,
+              ),
               onDeleted: () => widget.onRemoveFeature(index),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(4.r),

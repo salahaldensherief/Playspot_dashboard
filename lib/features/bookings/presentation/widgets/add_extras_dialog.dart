@@ -1,7 +1,10 @@
+import 'dart:math' as math;
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/core/di/di.dart';
+import '../../../../core/utils/text_field_language.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
@@ -28,7 +31,8 @@ class AddExtrasDialog extends StatefulWidget {
     BuildContext context, {
     required String bookingId,
     required String loungeId,
-    required Function(List<Map<String, dynamic>> extras, double totalCost) onConfirm,
+    required Function(List<Map<String, dynamic>> extras, double totalCost)
+    onConfirm,
   }) {
     final extrasCubit = context.read<ExtrasCubit?>();
     final bookingCubit = context.read<BookingCubit?>();
@@ -43,10 +47,8 @@ class AddExtrasDialog extends StatefulWidget {
             BlocProvider.value(value: extrasCubit)
           else
             BlocProvider(create: (_) => sl<ExtrasCubit>()),
-          if (bookingCubit != null)
-            BlocProvider.value(value: bookingCubit),
-          if (dashboardCubit != null)
-            BlocProvider.value(value: dashboardCubit),
+          if (bookingCubit != null) BlocProvider.value(value: bookingCubit),
+          if (dashboardCubit != null) BlocProvider.value(value: dashboardCubit),
         ],
         child: AddExtrasDialog(
           bookingId: bookingId,
@@ -63,6 +65,7 @@ class AddExtrasDialog extends StatefulWidget {
 
 class _AddExtrasDialogState extends State<AddExtrasDialog> {
   final Map<String, int> _selectedQuantities = {};
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -73,6 +76,12 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
         cubit.loadExtras(widget.loungeId);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   double _calculateTotal(List<ExtraEntity> availableExtras) {
@@ -86,7 +95,9 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
     return total;
   }
 
-  List<Map<String, dynamic>> _buildExtrasJsonList(List<ExtraEntity> availableExtras) {
+  List<Map<String, dynamic>> _buildExtrasJsonList(
+    List<ExtraEntity> availableExtras,
+  ) {
     final List<Map<String, dynamic>> result = [];
     for (final extra in availableExtras) {
       final qty = _selectedQuantities[extra.id] ?? 0;
@@ -94,8 +105,13 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
         result.add({
           'id': extra.id,
           'name': extra.name,
-          'name_ar': extra.nameAr.isNotEmpty ? extra.nameAr : extra.name,
-          'name_en': extra.nameEn.isNotEmpty ? extra.nameEn : extra.name,
+          'name_ar': matchesTextLanguage(extra.nameAr, TextFieldLanguage.arabic)
+              ? extra.nameAr
+              : '',
+          'name_en':
+              matchesTextLanguage(extra.nameEn, TextFieldLanguage.english)
+              ? extra.nameEn
+              : '',
           'quantity': qty,
           'qty': qty,
           'price': extra.price,
@@ -109,19 +125,25 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final existingCubit = context.read<ExtrasCubit?>();
+
+    final screenSize = MediaQuery.sizeOf(context);
 
     Widget content = Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       insetPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
       child: Container(
-        width: 500.w,
-        constraints: BoxConstraints(maxHeight: 600.h),
+        width: math.min(500.w, screenSize.width - 32),
+        constraints: BoxConstraints(
+          maxHeight: math.min(600.h, screenSize.height * 0.88),
+        ),
         padding: EdgeInsets.all(20.r),
         child: BlocBuilder<ExtrasCubit, ExtrasState>(
           builder: (context, state) {
-            if (state.status == ExtrasStatus.loading || state.status == ExtrasStatus.initial) {
+            if (state.status == ExtrasStatus.loading ||
+                state.status == ExtrasStatus.initial) {
               return const Center(
                 child: Padding(
                   padding: EdgeInsets.all(40),
@@ -139,7 +161,9 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
               );
             }
 
-            final availableExtras = state.extras.where((e) => !e.isOutOfStock).toList();
+            final availableExtras = state.extras
+                .where((e) => !e.isOutOfStock)
+                .toList();
             final totalCost = _calculateTotal(availableExtras);
 
             return Column(
@@ -152,7 +176,11 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.restaurant_menu, color: AppColors.neonBlue, size: 22.r),
+                        Icon(
+                          Icons.restaurant_menu,
+                          color: AppColors.neonBlue,
+                          size: 22.r,
+                        ),
                         SizedBox(width: 8.w),
                         AppText.heading(
                           AppStrings.addExtrasToSession,
@@ -161,7 +189,10 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
                       ],
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                      icon: const Icon(
+                        Icons.close,
+                        color: AppColors.textSecondary,
+                      ),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
@@ -170,8 +201,7 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
 
                 // Extras List
                 if (availableExtras.isEmpty)
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: 40.h),
+                  Expanded(
                     child: Center(
                       child: AppText.body(
                         AppStrings.noExtrasAvailable,
@@ -181,79 +211,100 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
                   )
                 else
                   Expanded(
-                    child: ListView.separated(
-                      itemCount: availableExtras.length,
-                      separatorBuilder: (_, _) => Divider(color: AppColors.divider, height: 16.h),
-                      itemBuilder: (context, index) {
-                        final extra = availableExtras[index];
-                        final qty = _selectedQuantities[extra.id] ?? 0;
+                    child: Scrollbar(
+                      thumbVisibility: true,
+                      controller: _scrollController,
+                      child: ListView.separated(
+                        controller: _scrollController,
+                        itemCount: availableExtras.length,
+                        separatorBuilder: (_, _) =>
+                            Divider(color: AppColors.divider, height: 16.h),
+                        itemBuilder: (context, index) {
+                          final extra = availableExtras[index];
+                          final qty = _selectedQuantities[extra.id] ?? 0;
 
-                        return Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 16.r,
-                              backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
-                              child: Icon(Icons.local_cafe, size: 16.r, color: AppColors.neonBlue),
-                            ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                          return Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 16.r,
+                                backgroundColor: AppColors.neonBlue.withValues(
+                                  alpha: 0.1,
+                                ),
+                                child: Icon(
+                                  Icons.local_cafe,
+                                  size: 16.r,
+                                  color: AppColors.neonBlue,
+                                ),
+                              ),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    AppText.subHeading(
+                                      extra.nameAr.isNotEmpty
+                                          ? extra.nameAr
+                                          : extra.name,
+                                      fontSize: 13.sp,
+                                    ),
+                                    AppText.body(
+                                      '${extra.price.toStringAsFixed(0)} ${AppStrings.egp}',
+                                      fontSize: 11.sp,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Quantity Controls
+                              Row(
                                 children: [
-                                  AppText.subHeading(
-                                    extra.nameAr.isNotEmpty ? extra.nameAr : extra.name,
-                                    fontSize: 13.sp,
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.remove_circle_outline,
+                                    ),
+                                    color: qty > 0
+                                        ? AppColors.danger
+                                        : AppColors.textMuted,
+                                    iconSize: 22.r,
+                                    onPressed: qty > 0
+                                        ? () {
+                                            setState(() {
+                                              _selectedQuantities[extra.id] =
+                                                  qty - 1;
+                                            });
+                                          }
+                                        : null,
                                   ),
-                                  AppText.body(
-                                    '${extra.price.toStringAsFixed(0)} ${AppStrings.egp}',
-                                    fontSize: 11.sp,
-                                    color: AppColors.textSecondary,
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 8.w,
+                                    ),
+                                    child: AppText.subHeading(
+                                      '$qty',
+                                      fontSize: 14.sp,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.add_circle_outline),
+                                    color: AppColors.neonBlue,
+                                    iconSize: 22.r,
+                                    onPressed: () {
+                                      setState(() {
+                                        _selectedQuantities[extra.id] = qty + 1;
+                                      });
+                                    },
                                   ),
                                 ],
                               ),
-                            ),
-                            // Quantity Controls
-                            Row(
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.remove_circle_outline),
-                                  color: qty > 0 ? AppColors.danger : AppColors.textMuted,
-                                  iconSize: 22.r,
-                                  onPressed: qty > 0
-                                      ? () {
-                                          setState(() {
-                                            _selectedQuantities[extra.id] = qty - 1;
-                                          });
-                                        }
-                                      : null,
-                                ),
-                                Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 8.w),
-                                  child: AppText.subHeading(
-                                    '$qty',
-                                    fontSize: 14.sp,
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.add_circle_outline),
-                                  color: AppColors.neonBlue,
-                                  iconSize: 22.r,
-                                  onPressed: () {
-                                    setState(() {
-                                      _selectedQuantities[extra.id] = qty + 1;
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          ],
-                        );
-                      },
+                            ],
+                          );
+                        },
+                      ),
                     ),
                   ),
 
                 SizedBox(height: 16.h),
-                Divider(color: AppColors.divider),
+                const Divider(color: AppColors.divider),
                 SizedBox(height: 8.h),
 
                 // Total Summary & Confirm Actions
@@ -290,7 +341,9 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
                           height: 38.h,
                           onPressed: totalCost > 0
                               ? () {
-                                  final extrasJson = _buildExtrasJsonList(availableExtras);
+                                  final extrasJson = _buildExtrasJsonList(
+                                    availableExtras,
+                                  );
                                   widget.onConfirm(extrasJson, totalCost);
                                   Navigator.of(context).pop();
                                 }
@@ -312,7 +365,7 @@ class _AddExtrasDialogState extends State<AddExtrasDialog> {
     }
 
     return BlocProvider<ExtrasCubit>(
-      create: (_) => sl<ExtrasCubit>()..loadExtras(widget.loungeId),
+      create: (_) => sl<ExtrasCubit>(),
       child: content,
     );
   }

@@ -19,11 +19,11 @@ class AppSettingsEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        whatsappPhone,
-        supportPhone,
-        supportEmail,
-        vodafoneCashNumber,
-        updatedAt,
-      ];
+    id,
+    whatsappPhone,
+    supportPhone,
+    supportEmail,
+    vodafoneCashNumber,
+    updatedAt,
+  ];
 }

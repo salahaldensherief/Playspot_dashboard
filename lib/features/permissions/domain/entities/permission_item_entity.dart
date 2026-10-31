@@ -19,9 +19,7 @@ class PermissionItemEntity extends Equatable {
     required this.isEnabled,
   });
 
-  PermissionItemEntity copyWith({
-    bool? isEnabled,
-  }) {
+  PermissionItemEntity copyWith({bool? isEnabled}) {
     return PermissionItemEntity(
       key: key,
       nameAr: nameAr,
@@ -34,5 +32,13 @@ class PermissionItemEntity extends Equatable {
   }
 
   @override
-  List<Object?> get props => [key, nameAr, nameEn, category, descriptionAr, descriptionEn, isEnabled];
+  List<Object?> get props => [
+    key,
+    nameAr,
+    nameEn,
+    category,
+    descriptionAr,
+    descriptionEn,
+    isEnabled,
+  ];
 }

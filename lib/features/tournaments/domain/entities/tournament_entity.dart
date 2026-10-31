@@ -141,7 +141,16 @@ class TournamentEntity extends Equatable {
   bool get isCancelled => status == TournamentStatus.cancelled;
 
   bool get canDeleteDraft => isDraft && registeredCount == 0;
-  bool get canDrawBracket => (isPublished || isDraft || status == TournamentStatus.registrationClosed || status == TournamentStatus.checkInClosed) && registeredCount >= minPlayers;
+  // Presentation previews; the server also checks all historical participants.
+  bool get canEditDetails =>
+      (isDraft || isPublished || status == TournamentStatus.registrationOpen) &&
+      registeredCount == 0;
+  bool get canManagePrizes => !isInProgress && !isCompleted && !isCancelled;
+  bool get canCancel => !isCompleted && !isCancelled;
+  bool get canDrawBracket =>
+      (status == TournamentStatus.registrationClosed ||
+          status == TournamentStatus.checkInClosed) &&
+      registeredCount >= minPlayers;
 
   TournamentEntity copyWith({
     String? id,
@@ -200,7 +209,8 @@ class TournamentEntity extends Equatable {
       registrationDeadline: registrationDeadline ?? this.registrationDeadline,
       registrationOpensAt: registrationOpensAt ?? this.registrationOpensAt,
       registrationClosesAt: registrationClosesAt ?? this.registrationClosesAt,
-      paymentDeadlineMinutes: paymentDeadlineMinutes ?? this.paymentDeadlineMinutes,
+      paymentDeadlineMinutes:
+          paymentDeadlineMinutes ?? this.paymentDeadlineMinutes,
       checkInOpensAt: checkInOpensAt ?? this.checkInOpensAt,
       checkInClosesAt: checkInClosesAt ?? this.checkInClosesAt,
       tournamentStartsAt: tournamentStartsAt ?? this.tournamentStartsAt,
@@ -215,37 +225,37 @@ class TournamentEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        loungeId,
-        loungeName,
-        cityId,
-        visibilityScope,
-        visibilityRadiusKm,
-        title,
-        titleAr,
-        titleEn,
-        descriptionAr,
-        descriptionEn,
-        gameTitle,
-        bannerUrl,
-        treeSize,
-        status,
-        entryFee,
-        prizePool,
-        startDate,
-        endDate,
-        registrationDeadline,
-        registrationOpensAt,
-        registrationClosesAt,
-        paymentDeadlineMinutes,
-        checkInOpensAt,
-        checkInClosesAt,
-        tournamentStartsAt,
-        minPlayers,
-        maxPlayers,
-        rules,
-        registeredCount,
-        prizes,
-        createdAt,
-      ];
+    id,
+    loungeId,
+    loungeName,
+    cityId,
+    visibilityScope,
+    visibilityRadiusKm,
+    title,
+    titleAr,
+    titleEn,
+    descriptionAr,
+    descriptionEn,
+    gameTitle,
+    bannerUrl,
+    treeSize,
+    status,
+    entryFee,
+    prizePool,
+    startDate,
+    endDate,
+    registrationDeadline,
+    registrationOpensAt,
+    registrationClosesAt,
+    paymentDeadlineMinutes,
+    checkInOpensAt,
+    checkInClosesAt,
+    tournamentStartsAt,
+    minPlayers,
+    maxPlayers,
+    rules,
+    registeredCount,
+    prizes,
+    createdAt,
+  ];
 }

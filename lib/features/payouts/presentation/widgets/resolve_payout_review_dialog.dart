@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -19,14 +20,23 @@ class ResolvePayoutReviewDialog extends StatefulWidget {
   });
 
   @override
-  State<ResolvePayoutReviewDialog> createState() => _ResolvePayoutReviewDialogState();
+  State<ResolvePayoutReviewDialog> createState() =>
+      _ResolvePayoutReviewDialogState();
 }
 
 class _ResolvePayoutReviewDialogState extends State<ResolvePayoutReviewDialog> {
   String _resolution = 'approve';
-  final _reasonController = TextEditingController(text: 'Verified manually with finance records');
+  late final TextEditingController _reasonController;
   bool _isSubmitting = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _reasonController = TextEditingController(
+      text: AppStrings.verifiedManuallyFinanceRecords,
+    );
+  }
 
   @override
   void dispose() {
@@ -68,6 +78,7 @@ class _ResolvePayoutReviewDialogState extends State<ResolvePayoutReviewDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AppDialog(
       title: AppStrings.resolvePayoutReview,
       actions: [
@@ -89,17 +100,29 @@ class _ResolvePayoutReviewDialogState extends State<ResolvePayoutReviewDialog> {
         children: [
           Text(
             AppStrings.reconciliationWarning,
-            style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.orange,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           SizedBox(height: 16.h),
-          Text(AppStrings.resolutionAction, style: const TextStyle(color: AppColors.textSecondary)),
+          Text(
+            AppStrings.resolutionAction,
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
           DropdownButton<String>(
             value: _resolution,
             dropdownColor: AppColors.cardBackground,
             style: const TextStyle(color: AppColors.textPrimary),
             items: [
-              DropdownMenuItem(value: 'approve', child: Text(AppStrings.approveAndMoveToPending)),
-              DropdownMenuItem(value: 'cancel', child: Text(AppStrings.cancelPayout)),
+              DropdownMenuItem(
+                value: 'approve',
+                child: Text(AppStrings.approveAndMoveToPending),
+              ),
+              DropdownMenuItem(
+                value: 'cancel',
+                child: Text(AppStrings.cancelPayout),
+              ),
             ],
             onChanged: _isSubmitting
                 ? null
@@ -108,7 +131,10 @@ class _ResolvePayoutReviewDialogState extends State<ResolvePayoutReviewDialog> {
                   },
           ),
           SizedBox(height: 16.h),
-          AppTextField(label: AppStrings.reasonNotes, controller: _reasonController),
+          AppTextField(
+            label: AppStrings.reasonNotes,
+            controller: _reasonController,
+          ),
           if (_errorMessage != null) ...[
             SizedBox(height: 12.h),
             Text(

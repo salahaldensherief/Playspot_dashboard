@@ -1,25 +1,89 @@
 import 'package:flutter/foundation.dart';
-import 'package:play_spot_dashboard/core/constants/app_constants.dart';
 import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_mutation_helper.dart';
-import 'package:play_spot_dashboard/features/bookings/data/datasources/booking_query_helper.dart';
 import 'package:play_spot_dashboard/features/bookings/data/models/booking_model.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/customer_cancellation_summary.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'booking_remote_data_source.dart';
+import 'cash_checkout_operation_store.dart';
 
 class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   final SupabaseClient client;
-  late final BookingQueryHelper _queryHelper;
+  final CashCheckoutOperationStore _cashOperations;
   late final BookingMutationHelper _mutationHelper;
 
-  BookingRemoteDataSourceImpl(this.client) {
-    _queryHelper = BookingQueryHelper(client);
+  BookingRemoteDataSourceImpl(
+    this.client, {
+    CashCheckoutOperationStore cashOperations =
+        const CashCheckoutOperationStore(),
+  }) : _cashOperations = cashOperations {
     _mutationHelper = BookingMutationHelper(
       client: client,
       consumeVoucher: consumeVoucherByCode,
       validateVoucher: validateVoucherByCode,
     );
+  }
+
+  @override
+  Future<Map<String, dynamic>> quoteBookingPrice({
+    required String roomId,
+    required String date,
+    required String startTime,
+    required String endTime,
+    String playMode = 'single',
+    int extraControllers = 0,
+    String? couponCode,
+  }) async {
+    final response = await client.rpc(
+      'quote_booking_price',
+      params: {
+        'p_room_id': roomId,
+        'p_date': date,
+        'p_start': startTime,
+        'p_end': endTime,
+        'p_play_mode': playMode,
+        'p_extra_controllers': extraControllers,
+        'p_coupon_code': couponCode,
+      },
+    );
+    if (response is! Map) {
+      throw const FormatException('Invalid booking quote response');
+    }
+    return Map<String, dynamic>.from(response);
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getRoomSlotsWithPrices({
+    required String roomId,
+    required String date,
+  }) async {
+    final response = await client.rpc(
+      'get_room_slots_with_prices',
+      params: {'p_room_id': roomId, 'p_date': date},
+    );
+    if (response is! List) {
+      throw const FormatException('Invalid priced slots response');
+    }
+
+    final rows = response.length == 1 && response.first is List
+        ? response.first as List
+        : response;
+
+    return rows.map((row) => Map<String, dynamic>.from(row as Map)).toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> getLoungePriceRange({
+    required String loungeId,
+  }) async {
+    final response = await client.rpc(
+      'get_lounge_price_range',
+      params: {'p_lounge_id': loungeId},
+    );
+    if (response is! Map) {
+      throw const FormatException('Invalid lounge price range response');
+    }
+    return Map<String, dynamic>.from(response);
   }
 
   @override
@@ -115,29 +179,19 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         ? loungeId.trim()
         : null;
 
-    try {
-      final response = await client.rpc(
-        'get_all_bookings_admin',
-        params: {
-          'p_lounge_id': cleanLoungeId,
-          'p_status': status,
-          'p_limit': limit,
-          'p_offset': offset,
-        },
-      );
+    final response = await client.rpc(
+      'get_all_bookings_admin',
+      params: {
+        'p_lounge_id': cleanLoungeId,
+        'p_status': status,
+        'p_limit': limit,
+        'p_offset': offset,
+      },
+    );
 
-      return (response as List).map((json) {
-        return BookingModel.fromJson(Map<String, dynamic>.from(json));
-      }).toList();
-    } catch (e) {
-      debugPrint('${AppConstants.bookingFetchAlert}$e');
-      return _queryHelper.fetchSafeSelect(
-        loungeId: cleanLoungeId,
-        status: status,
-        limit: limit,
-        offset: offset,
-      );
-    }
+    return (response as List).map((json) {
+      return BookingModel.fromJson(Map<String, dynamic>.from(json));
+    }).toList();
   }
 
   @override
@@ -183,30 +237,73 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   Future<void> confirmCashPayment(
     String bookingId, {
     String? shiftId,
+    double? amount,
     double? discountAmount,
     double? discountPercentage,
     String? discountReason,
   }) async {
+    final actorId = client.auth.currentUser?.id;
+    if (actorId == null || shiftId == null || shiftId.isEmpty) {
+      throw StateError('OWN_OPEN_SHIFT_REQUIRED');
+    }
     final fixedDiscount = discountAmount ?? 0;
     final percentageDiscount = discountPercentage ?? 0;
-    final hasDiscount = fixedDiscount > 0 || percentageDiscount > 0;
-
-    if (hasDiscount) {
-      await client.rpc(
-        'apply_booking_discount',
-        params: {
-          'p_booking_id': bookingId,
-          'p_discount_amount': fixedDiscount,
-          'p_discount_percentage': percentageDiscount,
-          'p_discount_reason': discountReason,
-        },
-      );
+    if (fixedDiscount > 0 && percentageDiscount > 0) {
+      throw ArgumentError('Specify one discount type');
     }
-
-    await client.rpc(
-      'complete_booking_payment',
-      params: {'p_booking_id': bookingId, 'p_payment_method': 'cash'},
+    if (fixedDiscount < 0 ||
+        percentageDiscount < 0 ||
+        !fixedDiscount.isFinite ||
+        !percentageDiscount.isFinite) {
+      throw ArgumentError('Invalid discount');
+    }
+    int? amountMinor;
+    if (amount != null) {
+      final minor = amount * 100;
+      if (!minor.isFinite ||
+          minor <= 0 ||
+          (minor - minor.round()).abs() > 0.000001) {
+        throw ArgumentError('Invalid cash amount');
+      }
+      amountMinor = minor.round();
+    }
+    final normalizedReason = discountReason?.trim();
+    final reason = normalizedReason == null || normalizedReason.isEmpty
+        ? null
+        : normalizedReason;
+    final requestKey = Uri.encodeComponent(
+      [
+        actorId,
+        bookingId,
+        shiftId,
+        amountMinor?.toString() ?? 'remaining',
+        fixedDiscount.toString(),
+        percentageDiscount.toString(),
+        reason ?? '',
+      ].join('|'),
     );
+    final operationId = await _cashOperations.getOrCreate(requestKey);
+    final response = await client.rpc(
+      'checkout_booking_cash_atomic',
+      params: {
+        'p_booking_id': bookingId,
+        'p_shift_id': shiftId,
+        'p_amount_minor': amountMinor,
+        'p_operation_id': operationId,
+        'p_discount_amount': fixedDiscount,
+        'p_discount_percentage': percentageDiscount,
+        'p_discount_reason': reason,
+      },
+    );
+    if (response is! Map ||
+        response['booking_id'] != bookingId ||
+        response['shift_id'] != shiftId ||
+        response['operation_id'] != operationId ||
+        response['shift_payment_id'] == null ||
+        (response['collected_minor'] is! num) ||
+        (response['collected_minor'] as num) <= 0) {
+      throw const FormatException('CASH_CHECKOUT_RECEIPT_UNCONFIRMED');
+    }
   }
 
   @override
@@ -229,7 +326,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
           resultMap['is_valid'] ??
           resultMap['valid'] ??
           resultMap['success'] ??
-          true;
+          false;
       if (isValid == false) {
         final errorMsg =
             resultMap['error'] ??
@@ -240,7 +337,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       }
       return resultMap;
     }
-    return {'is_valid': true};
+    throw const FormatException('invalid_voucher_response');
   }
 
   @override
@@ -348,17 +445,97 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       params: {
         'p_booking_id': bookingId,
         'p_new_room_id': newRoomId,
-        'p_action_by': actionBy,
+        'p_actor_id': actionBy,
       },
     );
   }
 
   @override
   Future<void> startBookingSession(String bookingId) async {
-    await client.rpc(
-      'start_booking_session',
+    final booking = await client
+        .from('bookings')
+        .select('is_open_time')
+        .eq('id', bookingId)
+        .single();
+    final response = await client.rpc(
+      booking['is_open_time'] == true
+          ? 'start_open_time_booking_session'
+          : 'start_booking_session',
       params: {'p_booking_id': bookingId},
     );
+    if (response is! Map ||
+        response['success'] != true ||
+        response['booking_id'] != bookingId ||
+        response['status'] != 'in_progress') {
+      throw const FormatException('Invalid session start response');
+    }
+  }
+
+  @override
+  Future<void> extendBookingSession(
+    String bookingId,
+    int additionalMinutes,
+  ) async {
+    final response = await client.rpc(
+      'extend_booking_session',
+      params: {
+        'p_booking_id': bookingId,
+        'p_additional_minutes': additionalMinutes,
+      },
+    );
+    if (response is! Map || response['success'] != true) {
+      throw const FormatException('Invalid session extension response');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  }) async {
+    final response = await client.rpc(
+      'start_open_time_session',
+      params: {
+        'p_room_id': roomId,
+        'p_customer_name': customerName,
+        'p_customer_phone': customerPhone,
+        'p_play_mode': playMode,
+      },
+    );
+
+    if (response is! Map ||
+        response['success'] != true ||
+        response['room_id'] != roomId ||
+        response['booking_id'] is! String ||
+        (response['booking_id'] as String).isEmpty ||
+        response['status'] != 'in_progress' ||
+        response['is_open_time'] != true ||
+        response['started_at'] is! String ||
+        DateTime.tryParse(response['started_at'] as String) == null) {
+      throw const FormatException('Invalid open-time start response');
+    }
+    return Map<String, dynamic>.from(response);
+  }
+
+  @override
+  Future<Map<String, dynamic>> completeOpenTimeSession(String bookingId) async {
+    final response = await client.rpc(
+      'complete_booking_session',
+      params: {
+        'p_booking_id': bookingId,
+        'p_action_by': client.auth.currentUser?.id,
+      },
+    );
+
+    if (response is! Map ||
+        response['success'] != true ||
+        response['booking_id'] != bookingId ||
+        response['status'] != 'completed') {
+      throw const FormatException('Invalid session completion response');
+    }
+    return Map<String, dynamic>.from(response);
   }
 
   @override
@@ -370,16 +547,57 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   @override
   Future<void> approveManualBooking(String bookingId, String actionBy) async {
-    try {
-      await client.rpc(
-        'approve_manual_booking',
-        params: {'p_booking_id': bookingId, 'p_action_by': actionBy},
-      );
-    } catch (e) {
-      debugPrint(
-        '⚠️ [DATA_SOURCE] approve_manual_booking RPC error ($e), falling back to updateBookingStatus',
-      );
-      await updateBookingStatus(bookingId, 'upcoming');
+    await client.rpc(
+      'approve_manual_booking',
+      params: {'p_booking_id': bookingId, 'p_action_by': actionBy},
+    );
+  }
+
+  @override
+  Future<void> verifyManualDeposit({
+    required String bookingId,
+    required String shiftId,
+    required String evidenceReference,
+    required String fundsHolder,
+  }) async {
+    final actorId = client.auth.currentUser?.id;
+    final reference = evidenceReference.trim();
+    if (actorId == null ||
+        bookingId.isEmpty ||
+        shiftId.isEmpty ||
+        reference.isEmpty ||
+        fundsHolder != 'lounge') {
+      throw StateError('INVALID_DEPOSIT_VERIFICATION_REQUEST');
+    }
+    final requestKey = Uri.encodeComponent(
+      [
+        'verified-deposit',
+        actorId,
+        bookingId,
+        shiftId,
+        reference,
+        fundsHolder,
+      ].join('|'),
+    );
+    final operationId = await _cashOperations.getOrCreate(requestKey);
+    final response = await client.rpc(
+      'verify_booking_deposit_transfer',
+      params: {
+        'p_booking_id': bookingId,
+        'p_shift_id': shiftId,
+        'p_operation_id': operationId,
+        'p_evidence_reference': reference,
+        'p_funds_holder': fundsHolder,
+      },
+    );
+    if (response is! Map ||
+        response['booking_id'] != bookingId ||
+        response['shift_id'] != shiftId ||
+        response['operation_id'] != operationId ||
+        response['movement_id'] == null ||
+        (response['collected_minor'] is! num) ||
+        (response['collected_minor'] as num) <= 0) {
+      throw const FormatException('DEPOSIT_RECEIPT_UNCONFIRMED');
     }
   }
 
@@ -389,21 +607,14 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     String reason,
     String actionBy,
   ) async {
-    try {
-      await client.rpc(
-        'reject_manual_booking',
-        params: {
-          'p_booking_id': bookingId,
-          'p_rejection_reason': reason,
-          'p_action_by': actionBy,
-        },
-      );
-    } catch (e) {
-      debugPrint(
-        '⚠️ [DATA_SOURCE] reject_manual_booking RPC error ($e), falling back to updateBookingStatus',
-      );
-      await updateBookingStatus(bookingId, 'cancelled');
-    }
+    await client.rpc(
+      'reject_manual_booking',
+      params: {
+        'p_booking_id': bookingId,
+        'p_rejection_reason': reason,
+        'p_action_by': actionBy,
+      },
+    );
   }
 
   @override

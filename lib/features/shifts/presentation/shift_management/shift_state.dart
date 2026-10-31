@@ -7,11 +7,11 @@ import '../../domain/entities/cashier_performance_entity.dart';
 import '../../domain/entities/lounge_comparison_entity.dart';
 import '../../domain/entities/shift_audit_log_entity.dart';
 
-enum ShiftStatus { 
-  initial, 
-  loading, 
-  active, 
-  closed, 
+enum ShiftStatus {
+  initial,
+  loading,
+  active,
+  closed,
   error;
 
   bool get isInitial => this == ShiftStatus.initial;
@@ -52,8 +52,10 @@ class ShiftState extends Equatable {
     this.selectedShiftDetails,
   });
 
-  double get totalExpenses => expenses.fold(0.0, (sum, item) => sum + item.amount);
-  double get totalPayments => payments.fold(0.0, (sum, item) => sum + item.amount);
+  double get totalExpenses =>
+      expenses.fold(0.0, (sum, item) => sum + item.amount);
+  double get totalPayments =>
+      payments.fold(0.0, (sum, item) => sum + item.amount);
 
   factory ShiftState.initial() => const ShiftState(status: ShiftStatus.initial);
 
@@ -64,6 +66,7 @@ class ShiftState extends Equatable {
     LiveShiftOverviewEntity? liveOverview,
     ShiftEntity? lastClosedShift,
     String? errorMessage,
+    bool clearErrorMessage = false,
     List<ShiftEntity>? shifts,
     List<ShiftExpenseEntity>? expenses,
     List<ShiftPaymentEntity>? payments,
@@ -77,10 +80,13 @@ class ShiftState extends Equatable {
       status: status ?? this.status,
       activeShift: clearActiveShift
           ? null
-          : (activeShift ?? (status == ShiftStatus.closed ? null : this.activeShift)),
+          : (activeShift ??
+                (status == ShiftStatus.closed ? null : this.activeShift)),
       liveOverview: liveOverview ?? this.liveOverview,
       lastClosedShift: lastClosedShift ?? this.lastClosedShift,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: clearErrorMessage
+          ? null
+          : (errorMessage ?? this.errorMessage),
       shifts: shifts ?? this.shifts,
       expenses: expenses ?? this.expenses,
       payments: payments ?? this.payments,
@@ -94,18 +100,18 @@ class ShiftState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        activeShift,
-        liveOverview,
-        lastClosedShift,
-        errorMessage,
-        shifts,
-        expenses,
-        payments,
-        shiftBookings,
-        auditLogs,
-        cashierPerformances,
-        loungeComparisons,
-        selectedShiftDetails,
-      ];
+    status,
+    activeShift,
+    liveOverview,
+    lastClosedShift,
+    errorMessage,
+    shifts,
+    expenses,
+    payments,
+    shiftBookings,
+    auditLogs,
+    cashierPerformances,
+    loungeComparisons,
+    selectedShiftDetails,
+  ];
 }

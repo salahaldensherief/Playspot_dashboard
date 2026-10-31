@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -28,6 +29,7 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocConsumer<SystemSettingsCubit, SystemSettingsState>(
       listenWhen: (prev, curr) =>
           curr.actionStatus != prev.actionStatus ||
@@ -42,7 +44,8 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
             ),
           );
           context.read<SystemSettingsCubit>().clearMessages();
-        } else if (state.successMessage != null && state.successMessage!.isNotEmpty) {
+        } else if (state.successMessage != null &&
+            state.successMessage!.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.successMessage!),
@@ -54,7 +57,8 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
       },
       builder: (context, state) {
         final isLoading = state.status == SystemSettingsStatus.loading;
-        final isActionLoading = state.actionStatus == SystemSettingsStatus.loading;
+        final isActionLoading =
+            state.actionStatus == SystemSettingsStatus.loading;
 
         return Scaffold(
           backgroundColor: AppColors.scaffoldBackground,
@@ -68,56 +72,69 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
                 Expanded(
                   child: isLoading && state.appStatus.id == null
                       ? _buildShimmerLoading()
-                      : state.status == SystemSettingsStatus.failure && state.appStatus.id == null
-                          ? _buildErrorState(context, state.errorMessage)
-                          : SingleChildScrollView(
-                              physics: const BouncingScrollPhysics(),
-                              child: Column(
-                                children: [
-                                  MaintenanceModeCard(
-                                    appStatus: state.appStatus,
-                                    isLoading: isActionLoading,
-                                    onSave: ({
+                      : state.status == SystemSettingsStatus.failure &&
+                            state.appStatus.id == null
+                      ? _buildErrorState(context, state.errorMessage)
+                      : SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Column(
+                            children: [
+                              MaintenanceModeCard(
+                                appStatus: state.appStatus,
+                                isLoading: isActionLoading,
+                                onSave:
+                                    ({
                                       required isMaintenanceMode,
                                       required maintenanceMessageAr,
                                       required maintenanceMessageEn,
                                       expectedEndTime,
                                     }) {
-                                      context.read<SystemSettingsCubit>().updateMaintenanceMode(
-                                            isMaintenanceMode: isMaintenanceMode,
-                                            maintenanceMessageAr: maintenanceMessageAr,
-                                            maintenanceMessageEn: maintenanceMessageEn,
+                                      context
+                                          .read<SystemSettingsCubit>()
+                                          .updateMaintenanceMode(
+                                            isMaintenanceMode:
+                                                isMaintenanceMode,
+                                            maintenanceMessageAr:
+                                                maintenanceMessageAr,
+                                            maintenanceMessageEn:
+                                                maintenanceMessageEn,
                                             expectedEndTime: expectedEndTime,
                                           );
                                     },
-                                  ),
-                                  SizedBox(height: 24.h),
-                                  AppVersionsCard(
-                                    appStatus: state.appStatus,
-                                    isLoading: isActionLoading,
-                                    onSave: (updated) {
-                                      context.read<SystemSettingsCubit>().updateAppVersions(updated);
-                                    },
-                                  ),
-                                  SizedBox(height: 24.h),
-                                  CreateAnnouncementCard(
-                                    lounges: state.lounges,
-                                    isLoading: isActionLoading,
-                                    onSubmit: (announcement) {
-                                      context.read<SystemSettingsCubit>().createAnnouncement(announcement);
-                                    },
-                                  ),
-                                  SizedBox(height: 24.h),
-                                  AnnouncementsTable(
-                                    announcements: state.announcements,
-                                    onDeactivate: (id) {
-                                      context.read<SystemSettingsCubit>().deactivateAnnouncement(id);
-                                    },
-                                  ),
-                                  SizedBox(height: 40.h),
-                                ],
                               ),
-                            ),
+                              SizedBox(height: 24.h),
+                              AppVersionsCard(
+                                appStatus: state.appStatus,
+                                isLoading: isActionLoading,
+                                onSave: (updated) {
+                                  context
+                                      .read<SystemSettingsCubit>()
+                                      .updateAppVersions(updated);
+                                },
+                              ),
+                              SizedBox(height: 24.h),
+                              CreateAnnouncementCard(
+                                lounges: state.lounges,
+                                isLoading: isActionLoading,
+                                onSubmit: (announcement) {
+                                  context
+                                      .read<SystemSettingsCubit>()
+                                      .createAnnouncement(announcement);
+                                },
+                              ),
+                              SizedBox(height: 24.h),
+                              AnnouncementsTable(
+                                announcements: state.announcements,
+                                onDeactivate: (id) {
+                                  context
+                                      .read<SystemSettingsCubit>()
+                                      .deactivateAnnouncement(id);
+                                },
+                              ),
+                              SizedBox(height: 40.h),
+                            ],
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -141,15 +158,13 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
                 fontSize: 24.sp,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Orbitron',
+                fontFamilyFallback: const ['Tajawal'],
               ),
             ),
             SizedBox(height: 4.h),
             Text(
               AppStrings.systemSettingsDesc,
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14.sp,
-              ),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
             ),
           ],
         ),

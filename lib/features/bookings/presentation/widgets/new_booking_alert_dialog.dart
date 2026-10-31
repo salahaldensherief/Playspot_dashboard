@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -12,23 +14,27 @@ import 'booking_products_preview.dart';
 class NewBookingAlertDialog extends StatelessWidget {
   final Booking booking;
 
-  const NewBookingAlertDialog({
-    super.key,
-    required this.booking,
-  });
+  const NewBookingAlertDialog({super.key, required this.booking});
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
+    final screenSize = MediaQuery.sizeOf(context);
     final double extrasTotal = booking.addonsPrice ?? 0.0;
-    final double roomPrice = booking.roomPrice ?? (booking.totalPrice - extrasTotal).clamp(0.0, double.infinity);
-    final bool hasExtras = extrasTotal > 0 || booking.extras.isNotEmpty || booking.canteenOrders.isNotEmpty;
+    final double roomPrice =
+        booking.roomPrice ??
+        (booking.totalPrice - extrasTotal).clamp(0.0, double.infinity);
+    final bool hasExtras =
+        extrasTotal > 0 ||
+        booking.extras.isNotEmpty ||
+        booking.canteenOrders.isNotEmpty;
 
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
       child: Container(
-        width: 440.w,
-        constraints: BoxConstraints(maxWidth: 440.w),
+        width: math.min(440.w, screenSize.width - 32),
+        constraints: BoxConstraints(maxHeight: screenSize.height * 0.9),
         padding: EdgeInsets.all(20.r),
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
@@ -90,62 +96,78 @@ class NewBookingAlertDialog extends StatelessWidget {
             SizedBox(height: 16.h),
 
             // Details Container
-            Container(
-              padding: EdgeInsets.all(14.r),
-              decoration: BoxDecoration(
-                color: AppColors.mutedBackground.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: AppColors.borderDefault),
-              ),
-              child: Column(
-                children: [
-                  _buildDetailRow(
-                    icon: Icons.person_outline_rounded,
-                    label: AppStrings.userLabel,
-                    value: booking.userName ?? AppStrings.guestClient,
-                  ),
-                  SizedBox(height: 8.h),
-                  _buildDetailRow(
-                    icon: Icons.meeting_room_outlined,
-                    label: AppStrings.roomLabel,
-                    value: booking.roomName,
-                  ),
-                  SizedBox(height: 8.h),
-                  _buildDetailRow(
-                    icon: Icons.access_time_rounded,
-                    label: AppStrings.schedule,
-                    value: booking.startTime,
-                  ),
-                  if (hasExtras) ...[
-                    SizedBox(height: 8.h),
-                    _buildDetailRow(
-                      icon: Icons.tv_rounded,
-                      label: AppStrings.basePrice,
-                      value: '${roomPrice.toStringAsFixed(0)} ${AppStrings.egp}',
-                      valueColor: AppColors.textSecondary,
+            Flexible(
+              child: Scrollbar(
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  child: Container(
+                    padding: EdgeInsets.all(14.r),
+                    decoration: BoxDecoration(
+                      color: AppColors.mutedBackground.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: AppColors.borderDefault),
                     ),
-                    SizedBox(height: 8.h),
-                    _buildDetailRow(
-                      icon: Icons.extension_outlined,
-                      label: AppStrings.additionalItems,
-                      value: '+${extrasTotal.toStringAsFixed(0)} ${AppStrings.egp}',
-                      valueColor: AppColors.warning,
+                    child: Column(
+                      children: [
+                        _buildDetailRow(
+                          icon: Icons.person_outline_rounded,
+                          label: AppStrings.userLabel,
+                          value: booking.userName ?? AppStrings.guestClient,
+                        ),
+                        SizedBox(height: 8.h),
+                        _buildDetailRow(
+                          icon: Icons.meeting_room_outlined,
+                          label: AppStrings.roomLabel,
+                          value: booking.roomName,
+                        ),
+                        SizedBox(height: 8.h),
+                        _buildDetailRow(
+                          icon: Icons.access_time_rounded,
+                          label: AppStrings.schedule,
+                          value: booking.startTime,
+                        ),
+                        if (hasExtras) ...[
+                          SizedBox(height: 8.h),
+                          _buildDetailRow(
+                            icon: Icons.tv_rounded,
+                            label: AppStrings.basePrice,
+                            value:
+                                '${roomPrice.toStringAsFixed(0)} ${AppStrings.egp}',
+                            valueColor: AppColors.textSecondary,
+                          ),
+                          SizedBox(height: 8.h),
+                          _buildDetailRow(
+                            icon: Icons.extension_outlined,
+                            label: AppStrings.additionalItems,
+                            value:
+                                '+${extrasTotal.toStringAsFixed(0)} ${AppStrings.egp}',
+                            valueColor: AppColors.warning,
+                          ),
+                        ],
+                        SizedBox(height: 8.h),
+                        _buildDetailRow(
+                          icon: Icons.payments_outlined,
+                          label: AppStrings.totalPriceLabel,
+                          value:
+                              '${booking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
+                          valueColor: AppColors.success,
+                        ),
+                        if (hasExtras) ...[
+                          SizedBox(height: 10.h),
+                          const Divider(
+                            color: AppColors.borderDefault,
+                            height: 1,
+                          ),
+                          SizedBox(height: 8.h),
+                          BookingProductsPreview(
+                            booking: booking,
+                            maxVisibleItems: 6,
+                          ),
+                        ],
+                      ],
                     ),
-                  ],
-                  SizedBox(height: 8.h),
-                  _buildDetailRow(
-                    icon: Icons.payments_outlined,
-                    label: AppStrings.totalPriceLabel,
-                    value: '${booking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
-                    valueColor: AppColors.success,
                   ),
-                  if (hasExtras) ...[
-                    SizedBox(height: 10.h),
-                    const Divider(color: AppColors.borderDefault, height: 1),
-                    SizedBox(height: 8.h),
-                    BookingProductsPreview(booking: booking, maxVisibleItems: 6),
-                  ],
-                ],
+                ),
               ),
             ),
             SizedBox(height: 20.h),
@@ -166,6 +188,7 @@ class NewBookingAlertDialog extends StatelessWidget {
                   child: AppButton(
                     text: AppStrings.confirmBooking,
                     variant: AppButtonVariant.primary,
+                    backgroundColor: AppColors.success,
                     icon: Icons.check_circle_rounded,
                     height: 44.h,
                     onPressed: () {

@@ -1,9 +1,11 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
@@ -19,7 +21,11 @@ class ExtendSessionDialog extends StatefulWidget {
     this.onExtendMinutes,
   });
 
-  static Future<void> show(BuildContext context, Booking booking, {ValueChanged<int>? onExtendMinutes}) {
+  static Future<void> show(
+    BuildContext context,
+    Booking booking, {
+    ValueChanged<int>? onExtendMinutes,
+  }) {
     final dashboardCubit = context.read<DashboardCubit?>();
     final bookingCubit = context.read<BookingCubit?>();
 
@@ -28,12 +34,13 @@ class ExtendSessionDialog extends StatefulWidget {
       useRootNavigator: false,
       builder: (dialogContext) => MultiBlocProvider(
         providers: [
-          if (dashboardCubit != null)
-            BlocProvider.value(value: dashboardCubit),
-          if (bookingCubit != null)
-            BlocProvider.value(value: bookingCubit),
+          if (dashboardCubit != null) BlocProvider.value(value: dashboardCubit),
+          if (bookingCubit != null) BlocProvider.value(value: bookingCubit),
         ],
-        child: ExtendSessionDialog(booking: booking, onExtendMinutes: onExtendMinutes),
+        child: ExtendSessionDialog(
+          booking: booking,
+          onExtendMinutes: onExtendMinutes,
+        ),
       ),
     );
   }
@@ -53,7 +60,7 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
 
     if (widget.onExtendMinutes != null) {
       Navigator.of(context).pop();
-      widget.onExtendMinutes!(_selectedMinutes);
+      widget.onExtendMinutes?.call(_selectedMinutes);
       return;
     }
 
@@ -62,14 +69,29 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
     final dashboardCubit = context.read<DashboardCubit>();
     final bookingCubit = context.read<BookingCubit>();
 
-    final success = await dashboardCubit.extendSession(widget.booking.id, _selectedMinutes);
+    final success = await dashboardCubit.extendSession(
+      widget.booking.id,
+      _selectedMinutes,
+    );
     if (success) {
-      bookingCubit.startWatchingBookings(loungeId: widget.booking.loungeId, forceRefresh: true);
-    } else {
-      await bookingCubit.extendBookingDuration(widget.booking.id, _selectedMinutes);
+      bookingCubit.startWatchingBookings(
+        loungeId: widget.booking.loungeId,
+        forceRefresh: true,
+      );
     }
 
     if (!mounted) return;
+
+    if (!success) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('booking_extension_failed'.tr()),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
 
     Navigator.of(context).pop();
 
@@ -84,33 +106,26 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      titlePadding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 12.h),
-      contentPadding: EdgeInsets.symmetric(horizontal: 20.w),
-      actionsPadding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 20.h),
-      title: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(8.r),
-            decoration: BoxDecoration(
-              color: AppColors.neonBlue.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-            child: const Icon(Icons.add_alarm_rounded, color: AppColors.neonBlue),
-          ),
-          SizedBox(width: 12.w),
-          AppText.subHeading(
-            AppStrings.extendTime,
-            color: AppColors.neonBlue,
-            fontSize: 16.sp,
-            fontWeight: FontWeight.bold,
-          ),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
+    EasyLocalization.of(context);
+    return AppDialog(
+      title: AppStrings.extendTime,
+      icon: Icons.add_alarm_rounded,
+      width: 420.w,
+      actions: [
+        AppButton(
+          text: AppStrings.cancel,
+          variant: AppButtonVariant.text,
+          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+        ),
+        SizedBox(width: 8.w),
+        AppButton(
+          text: AppStrings.extendTime,
+          variant: AppButtonVariant.primary,
+          isLoading: _isLoading,
+          onPressed: _handleConfirm,
+        ),
+      ],
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
@@ -121,7 +136,11 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
             ),
             child: Row(
               children: [
-                Icon(Icons.meeting_room_outlined, size: 16.r, color: AppColors.textSecondary),
+                Icon(
+                  Icons.meeting_room_outlined,
+                  size: 16.r,
+                  color: AppColors.textSecondary,
+                ),
                 SizedBox(width: 6.w),
                 Expanded(
                   child: AppText.body(
@@ -142,11 +161,15 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
               final isSelected = _selectedMinutes == mins;
               return ChoiceChip(
                 label: Text(
-                  '+$mins دقيقة',
+                  'extend_minutes_short'.tr(args: [(mins).toString()]),
                   style: TextStyle(
-                    color: isSelected ? AppColors.textPrimary : AppColors.textPrimary,
+                    color: isSelected
+                        ? AppColors.textPrimary
+                        : AppColors.textPrimary,
                     fontSize: 12.sp,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                 ),
                 selected: isSelected,
@@ -155,7 +178,9 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.r),
                   side: BorderSide(
-                    color: isSelected ? AppColors.neonBlue : AppColors.borderDefault,
+                    color: isSelected
+                        ? AppColors.neonBlue
+                        : AppColors.borderDefault,
                   ),
                 ),
                 onSelected: (selected) {
@@ -166,19 +191,6 @@ class _ExtendSessionDialogState extends State<ExtendSessionDialog> {
           ),
         ],
       ),
-      actions: [
-        AppButton(
-          text: AppStrings.cancel,
-          variant: AppButtonVariant.text,
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-        ),
-        AppButton(
-          text: AppStrings.extendTime,
-          variant: AppButtonVariant.primary,
-          isLoading: _isLoading,
-          onPressed: _handleConfirm,
-        ),
-      ],
     );
   }
 }

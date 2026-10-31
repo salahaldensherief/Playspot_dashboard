@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -19,6 +20,8 @@ class AddBookingPlayModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
+    if (room == null) return const SizedBox.shrink();
     final singleRate = room?.hourlyRateSingle ?? room?.pricePerHour ?? 0;
     final multiRate = (room?.hourlyRateMulti ?? 0) > 0
         ? room!.hourlyRateMulti
@@ -27,42 +30,53 @@ class AddBookingPlayModeSelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppText.body("طريقة اللعب (Play Mode)", fontWeight: FontWeight.bold),
+        AppText.body(AppStrings.playMode, fontWeight: FontWeight.bold),
         SizedBox(height: 8.h),
-        SegmentedButton<String>(
-          segments: [
-            ButtonSegment<String>(
-              value: 'single',
-              label: Text('${AppStrings.single} (${singleRate.toStringAsFixed(0)} ${AppStrings.egp}/hr)'),
-              icon: const Icon(Icons.person_outline_rounded),
-            ),
-            ButtonSegment<String>(
-              value: 'multi',
-              label: Text('${AppStrings.multi} (${multiRate.toStringAsFixed(0)} ${AppStrings.egp}/hr)'),
-              icon: const Icon(Icons.people_outline_rounded),
-            ),
-          ],
-          selected: {selectedMode},
-          onSelectionChanged: (Set<String> newSelection) {
-            if (newSelection.isNotEmpty) {
-              onModeChanged(newSelection.first);
-            }
-          },
-          style: ButtonStyle(
-            backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-              if (states.contains(WidgetState.selected)) {
-                return AppColors.neonBlue.withValues(alpha: 0.2);
+        LayoutBuilder(
+          builder: (context, constraints) => SegmentedButton<String>(
+            direction:
+                constraints.maxWidth <
+                    460 * MediaQuery.textScalerOf(context).scale(1)
+                ? Axis.vertical
+                : Axis.horizontal,
+            segments: [
+              ButtonSegment<String>(
+                value: 'single',
+                label: Text(
+                  '${AppStrings.single} (${singleRate.toStringAsFixed(0)} ${AppStrings.egpPerHour})',
+                ),
+                icon: const Icon(Icons.person_outline_rounded),
+              ),
+              ButtonSegment<String>(
+                value: 'multi',
+                label: Text(
+                  '${AppStrings.multi} (${multiRate.toStringAsFixed(0)} ${AppStrings.egpPerHour})',
+                ),
+                icon: const Icon(Icons.people_outline_rounded),
+              ),
+            ],
+            selected: {selectedMode},
+            onSelectionChanged: (Set<String> newSelection) {
+              if (newSelection.isNotEmpty) {
+                onModeChanged(newSelection.first);
               }
-              return AppColors.cardBackground;
-            }),
-            foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-              if (states.contains(WidgetState.selected)) {
-                return AppColors.neonBlue;
-              }
-              return AppColors.textPrimary;
-            }),
-            side: WidgetStateProperty.all(
-              const BorderSide(color: AppColors.borderDefault),
+            },
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return AppColors.neonBlue.withValues(alpha: 0.2);
+                }
+                return AppColors.cardBackground;
+              }),
+              foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return AppColors.neonBlue;
+                }
+                return AppColors.textPrimary;
+              }),
+              side: WidgetStateProperty.all(
+                const BorderSide(color: AppColors.borderDefault),
+              ),
             ),
           ),
         ),

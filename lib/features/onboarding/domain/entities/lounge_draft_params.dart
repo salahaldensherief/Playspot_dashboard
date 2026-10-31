@@ -3,9 +3,14 @@ import 'package:equatable/equatable.dart';
 class LoungeDraftParams extends Equatable {
   final int step;
   final String name;
+  final String nameEn;
   final String description;
+  final String descriptionEn;
   final String city;
   final String address;
+  final String walletPhone;
+  final String instapayAccount;
+  final String contactPhone;
   final String opensAt;
   final String closesAt;
   final double? lat;
@@ -18,9 +23,14 @@ class LoungeDraftParams extends Equatable {
   const LoungeDraftParams({
     this.step = 0,
     this.name = '',
+    this.nameEn = '',
     this.description = '',
+    this.descriptionEn = '',
     this.city = '',
     this.address = '',
+    this.walletPhone = '',
+    this.instapayAccount = '',
+    this.contactPhone = '',
     this.opensAt = '',
     this.closesAt = '',
     this.lat,
@@ -34,13 +44,19 @@ class LoungeDraftParams extends Equatable {
   LoungeDraftParams copyWith({
     int? step,
     String? name,
+    String? nameEn,
     String? description,
+    String? descriptionEn,
     String? city,
     String? address,
+    String? walletPhone,
+    String? instapayAccount,
+    String? contactPhone,
     String? opensAt,
     String? closesAt,
     double? lat,
     double? lng,
+    bool clearCoordinates = false,
     bool? isChain,
     String? brandName,
     int? branchesCount,
@@ -49,13 +65,18 @@ class LoungeDraftParams extends Equatable {
     return LoungeDraftParams(
       step: step ?? this.step,
       name: name ?? this.name,
+      nameEn: nameEn ?? this.nameEn,
       description: description ?? this.description,
+      descriptionEn: descriptionEn ?? this.descriptionEn,
       city: city ?? this.city,
       address: address ?? this.address,
+      walletPhone: walletPhone ?? this.walletPhone,
+      instapayAccount: instapayAccount ?? this.instapayAccount,
+      contactPhone: contactPhone ?? this.contactPhone,
       opensAt: opensAt ?? this.opensAt,
       closesAt: closesAt ?? this.closesAt,
-      lat: lat ?? this.lat,
-      lng: lng ?? this.lng,
+      lat: clearCoordinates ? null : lat ?? this.lat,
+      lng: clearCoordinates ? null : lng ?? this.lng,
       isChain: isChain ?? this.isChain,
       brandName: brandName ?? this.brandName,
       branchesCount: branchesCount ?? this.branchesCount,
@@ -64,28 +85,38 @@ class LoungeDraftParams extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'step': step,
-        'name': name,
-        'description': description,
-        'city': city,
-        'address': address,
-        'opensAt': opensAt,
-        'closesAt': closesAt,
-        'lat': lat,
-        'lng': lng,
-        'isChain': isChain,
-        'brandName': brandName,
-        'branchesCount': branchesCount,
-        'branchName': branchName,
-      };
+    'step': step,
+    'name': name,
+    'nameEn': nameEn,
+    'description': description,
+    'descriptionEn': descriptionEn,
+    'city': city,
+    'address': address,
+    'walletPhone': walletPhone,
+    'instapayAccount': instapayAccount,
+    'contactPhone': contactPhone,
+    'opensAt': opensAt,
+    'closesAt': closesAt,
+    'lat': lat,
+    'lng': lng,
+    'isChain': isChain,
+    'brandName': brandName,
+    'branchesCount': branchesCount,
+    'branchName': branchName,
+  };
 
   factory LoungeDraftParams.fromJson(Map<String, dynamic> json) {
     return LoungeDraftParams(
       step: json['step'] as int? ?? 0,
       name: json['name']?.toString() ?? '',
+      nameEn: json['nameEn']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
+      descriptionEn: json['descriptionEn']?.toString() ?? '',
       city: json['city']?.toString() ?? '',
       address: json['address']?.toString() ?? '',
+      walletPhone: json['walletPhone']?.toString() ?? '',
+      instapayAccount: json['instapayAccount']?.toString() ?? '',
+      contactPhone: json['contactPhone']?.toString() ?? '',
       opensAt: json['opensAt']?.toString() ?? '',
       closesAt: json['closesAt']?.toString() ?? '',
       lat: (json['lat'] as num?)?.toDouble(),
@@ -99,18 +130,23 @@ class LoungeDraftParams extends Equatable {
 
   @override
   List<Object?> get props => [
-        step,
-        name,
-        description,
-        city,
-        address,
-        opensAt,
-        closesAt,
-        lat,
-        lng,
-        isChain,
-        brandName,
-        branchesCount,
-        branchName,
-      ];
+    step,
+    name,
+    nameEn,
+    description,
+    descriptionEn,
+    city,
+    address,
+    walletPhone,
+    instapayAccount,
+    contactPhone,
+    opensAt,
+    closesAt,
+    lat,
+    lng,
+    isChain,
+    brandName,
+    branchesCount,
+    branchName,
+  ];
 }

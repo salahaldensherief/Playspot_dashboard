@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -24,6 +25,7 @@ class AddBookingSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (room == null) return const SizedBox.shrink();
 
     final calculation = BookingPriceCalculator.calculate(
@@ -51,7 +53,7 @@ class AddBookingSummaryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppText.body(
-                  "${AppStrings.schedule}: $durationHours ${AppStrings.gaming}",
+                  "${AppStrings.schedule}: $durationHours ${AppStrings.hours}",
                   color: AppColors.textSecondary,
                   fontSize: 12.sp,
                 ),
@@ -64,7 +66,7 @@ class AddBookingSummaryCard extends StatelessWidget {
                 if (calculation.extrasTotal > 0) ...[
                   SizedBox(height: 2.h),
                   AppText.body(
-                    "مجموع الإضافات: ${calculation.extrasTotal.toStringAsFixed(0)} ${AppStrings.egp}",
+                    "${AppStrings.bookingExtrasTotal}: ${calculation.extrasTotal.toStringAsFixed(0)} ${AppStrings.egp}",
                     color: AppColors.neonPurple,
                     fontSize: 12.sp,
                   ),
@@ -72,7 +74,7 @@ class AddBookingSummaryCard extends StatelessWidget {
                 if (calculation.voucherDiscount > 0) ...[
                   SizedBox(height: 2.h),
                   AppText.body(
-                    "خصم القسيمة: -${calculation.voucherDiscount.toStringAsFixed(2)} ${AppStrings.egp}",
+                    "${AppStrings.bookingVoucherDiscount}: -${calculation.voucherDiscount.toStringAsFixed(2)} ${AppStrings.egp}",
                     color: AppColors.success,
                     fontSize: 12.sp,
                     fontWeight: FontWeight.bold,
@@ -82,21 +84,23 @@ class AddBookingSummaryCard extends StatelessWidget {
             ),
           ),
           SizedBox(width: 16.w),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              AppText.body(
-                AppStrings.totalPrice,
-                fontWeight: FontWeight.bold,
-                fontSize: 12.sp,
-              ),
-              SizedBox(height: 4.h),
-              AppText.subHeading(
-                "${calculation.grandTotal.toStringAsFixed(2)} ${AppStrings.egp}",
-                color: AppColors.neonBlue,
-                fontSize: 18.sp,
-              ),
-            ],
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                AppText.body(
+                  AppStrings.totalPrice,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12.sp,
+                ),
+                SizedBox(height: 4.h),
+                AppText.subHeading(
+                  "${calculation.grandTotal.toStringAsFixed(2)} ${AppStrings.egp}",
+                  color: AppColors.neonBlue,
+                  fontSize: 18.sp,
+                ),
+              ],
+            ),
           ),
         ],
       ),

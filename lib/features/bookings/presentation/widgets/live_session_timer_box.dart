@@ -1,6 +1,6 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
@@ -55,9 +55,21 @@ class LiveSessionTimerBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final formattedTime = _formatDuration(remaining);
-    final String durationHrs =
-        (booking.durationMinutes / 60.0).toStringAsFixed(1).replaceAll('.0', '');
+    final String durationHrs = (booking.durationMinutes / 60.0)
+        .toStringAsFixed(1)
+        .replaceAll('.0', '');
+
+    final String timerHeaderTitle = isExpired
+        ? AppStrings.timeExpired
+        : (booking.isOpenEnded
+              ? AppStrings.elapsedTime
+              : AppStrings.remainingTime);
+
+    final String subtitleText = booking.isOpenEnded
+        ? '${_formatTime12Hour(booking.startTime)} • ${'cashier.open'.tr()}'
+        : '${_formatTime12Hour(booking.startTime)} ($durationHrs ${AppStrings.hours})';
 
     return Column(
       children: [
@@ -88,16 +100,18 @@ class LiveSessionTimerBox extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AppText.body(
-                        isExpired ? AppStrings.timeExpired : AppStrings.remainingTime,
+                        timerHeaderTitle,
                         fontSize: 11.5.sp,
-                        color: isExpired ? AppColors.danger : AppColors.textSecondary,
+                        color: isExpired
+                            ? AppColors.danger
+                            : AppColors.textSecondary,
                         fontWeight: FontWeight.bold,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       SizedBox(height: 2.h),
                       AppText.body(
-                        '${_formatTime12Hour(booking.startTime)} ($durationHrs ${AppStrings.hours})',
+                        subtitleText,
                         fontSize: 10.5.sp,
                         color: AppColors.textMuted,
                         maxLines: 1,
@@ -123,16 +137,33 @@ class LiveSessionTimerBox extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: 8.h),
-        Row(
-          children: [
-            Expanded(child: _buildExtendChip(label: '+15m', minutes: 15)),
-            SizedBox(width: 6.w),
-            Expanded(child: _buildExtendChip(label: '+30m', minutes: 30)),
-            SizedBox(width: 6.w),
-            Expanded(child: _buildExtendChip(label: '+1h', minutes: 60)),
-          ],
-        ),
+        if (!booking.isOpenEnded) ...[
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              Expanded(
+                child: _buildExtendChip(
+                  label: 'extend_15_minutes_short'.tr(),
+                  minutes: 15,
+                ),
+              ),
+              SizedBox(width: 6.w),
+              Expanded(
+                child: _buildExtendChip(
+                  label: 'extend_30_minutes_short'.tr(),
+                  minutes: 30,
+                ),
+              ),
+              SizedBox(width: 6.w),
+              Expanded(
+                child: _buildExtendChip(
+                  label: 'extend_1_hour_short'.tr(),
+                  minutes: 60,
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }
@@ -142,20 +173,27 @@ class LiveSessionTimerBox extends StatelessWidget {
       borderRadius: BorderRadius.circular(8.r),
       onTap: () => onExtendMinutes(minutes),
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 5.h),
+        padding: EdgeInsets.symmetric(vertical: 6.h),
         decoration: BoxDecoration(
-          color: AppColors.mutedBackground.withValues(alpha: 0.5),
+          color: AppColors.neonBlue.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(8.r),
-          border: Border.all(color: AppColors.borderDefault),
+          border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.25)),
         ),
         alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            color: AppColors.neonBlue,
-            fontSize: 11.sp,
-            fontWeight: FontWeight.w600,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add_rounded, size: 12.sp, color: AppColors.neonBlue),
+            SizedBox(width: 2.w),
+            Text(
+              label,
+              style: TextStyle(
+                color: AppColors.neonBlue,
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );

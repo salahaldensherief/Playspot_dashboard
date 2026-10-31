@@ -12,9 +12,7 @@ void initPayoutsDI(GetIt sl) {
   );
 
   // Repositories
-  sl.registerLazySingleton<PayoutRepository>(
-    () => PayoutRepositoryImpl(sl()),
-  );
+  sl.registerLazySingleton<PayoutRepository>(() => PayoutRepositoryImpl(sl()));
 
   // Use Cases
   sl.registerLazySingleton(() => GetPendingPayoutsOverviewUseCase(sl()));

@@ -42,11 +42,14 @@ class ActivityItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 RichText(
+                  textScaler: MediaQuery.textScalerOf(context),
                   text: TextSpan(
                     style: TextStyle(
                       color: AppColors.textSecondary,
-                      fontSize: 13.sp,
-                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      fontFamily: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.fontFamily,
                     ),
                     children: [
                       TextSpan(
@@ -68,11 +71,7 @@ class ActivityItem extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 4.h),
-                AppText.body(
-                  time,
-                  color: AppColors.textMuted,
-                  fontSize: 11.sp,
-                ),
+                AppText.body(time, color: AppColors.textMuted, fontSize: 11.sp),
               ],
             ),
           ),

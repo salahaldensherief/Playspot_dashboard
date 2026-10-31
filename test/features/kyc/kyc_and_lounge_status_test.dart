@@ -1,34 +1,52 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:play_spot_dashboard/features/auth/data/models/user_model.dart';
+import 'package:play_spot_dashboard/features/lounges/data/models/lounge_model.dart';
 
 void main() {
-  group('KYC & Lounge Administration Alignment', () {
-    test('kyc approval activates lounge and marks owner setup completed', () {
-      final lounge = {'id': 'l1', 'status': 'pending', 'is_active': false};
-      final profile = {'id': 'u1', 'role': 'owner', 'is_setup_completed': false, 'is_active': true};
-
-      // Simulate review_kyc(p_approve = true)
-      lounge['status'] = 'active';
-      lounge['is_active'] = true;
-      profile['is_setup_completed'] = true;
-
-      expect(lounge['status'], 'active');
-      expect(lounge['is_active'], isTrue);
-      expect(profile['is_setup_completed'], isTrue);
-    });
-
-    test('kyc rejection deactivates lounge but leaves profile active for re-upload', () {
-      final lounge = {'id': 'l1', 'status': 'pending', 'is_active': false};
-      final profile = {'id': 'u1', 'role': 'owner', 'is_setup_completed': false, 'is_active': true};
-
-      // Simulate review_kyc(p_approve = false)
-      lounge['status'] = 'rejected';
-      lounge['is_active'] = false;
-      profile['is_setup_completed'] = false;
-      // profile['is_active'] remains true
-
-      expect(lounge['status'], 'rejected');
-      expect(lounge['is_active'], isFalse);
-      expect(profile['is_active'], isTrue); // Owner can log in to view reason & re-submit
-    });
-  });
+  test(
+    'persisted pending lounge does not become active when owner setup is complete',
+    () {
+      final profile = UserModel.fromJson({
+        'id': 'owner-1',
+        'role': 'owner',
+        'is_active': true,
+        'is_setup_completed': true,
+      });
+      final lounge = LoungeModel.fromJson({
+        'id': 'lounge-1',
+        'name': 'Venue',
+        'status': 'pending',
+        'is_active': false,
+        'is_open': false,
+      });
+      expect(profile.isActive, isTrue);
+      expect(profile.isSetupCompleted, isTrue);
+      expect(lounge.status, 'pending');
+      expect(lounge.isActive, isFalse);
+      expect(lounge.isOpen, isFalse);
+    },
+  );
+  test(
+    'persisted rejection keeps the account active and requires setup correction',
+    () {
+      final profile = UserModel.fromJson({
+        'id': 'owner-1',
+        'role': 'owner',
+        'is_active': true,
+        'is_setup_completed': false,
+      });
+      final lounge = LoungeModel.fromJson({
+        'id': 'lounge-1',
+        'name': 'Venue',
+        'status': 'rejected',
+        'is_active': false,
+        'is_open': false,
+      });
+      expect(profile.isActive, isTrue);
+      expect(profile.isSetupCompleted, isFalse);
+      expect(lounge.status, 'rejected');
+      expect(lounge.isActive, isFalse);
+      expect(lounge.isOpen, isFalse);
+    },
+  );
 }

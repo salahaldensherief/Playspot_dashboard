@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +14,7 @@ class TopBarNotificationBell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // Localized labels also change without a Cubit emission.
     final user = context.read<LoginCubit>().state.user;
     if (user == null || user.isSuperAdmin) {
       return const SizedBox.shrink();

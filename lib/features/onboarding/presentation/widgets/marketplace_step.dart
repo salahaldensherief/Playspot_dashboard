@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -5,7 +6,9 @@ import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_text.dart';
+import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import '../../../lounges/presentation/widgets/extra_dialog.dart';
+import '../../../permissions/presentation/cubit/permissions_cubit.dart';
 import '../cubit/onboarding_cubit.dart';
 import '../cubit/onboarding_state.dart';
 
@@ -16,10 +19,11 @@ class MarketplaceStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppText.subHeading(AppStrings.marketplace, fontSize: 18.sp),
+        AppText.subHeading(AppStrings.marketplace, fontSize: 18),
         SizedBox(height: 8.h),
         AppText.body(AppStrings.marketplaceSubtitle),
         SizedBox(height: 24.h),
@@ -58,14 +62,21 @@ class MarketplaceStep extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBackground.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.borderDefault, style: BorderStyle.solid),
+        border: Border.all(
+          color: AppColors.borderDefault,
+          style: BorderStyle.solid,
+        ),
       ),
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.restaurant_menu, color: AppColors.textSecondary, size: 48.r),
+            Icon(
+              Icons.restaurant_menu,
+              color: AppColors.textSecondary,
+              size: 48.r,
+            ),
             SizedBox(height: 16.h),
-            AppText.body(AppStrings.noItemsAdded, fontSize: 16.sp),
+            AppText.body(AppStrings.noItemsAdded, fontSize: 16),
           ],
         ),
       ),
@@ -97,7 +108,10 @@ class MarketplaceStep extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppText.subHeading(extra.name),
-                AppText.body('${extra.category} • ${extra.price} ${AppStrings.priceEgp}', fontSize: 12.sp),
+                AppText.body(
+                  '${extra.category} • ${extra.price} ${AppStrings.priceEgp}',
+                  fontSize: 12,
+                ),
               ],
             ),
           ),
@@ -108,11 +122,19 @@ class MarketplaceStep extends StatelessWidget {
 
   void _showAddExtraDialog(BuildContext context) {
     final onboardingCubit = context.read<OnboardingCubit>();
+    final loginCubit = context.read<LoginCubit>();
+    final permissionsCubit = context.read<PermissionsCubit>();
     showDialog(
       context: context,
-      builder: (diagContext) => ExtraDialog(
-        loungeId: loungeId,
-        onSave: (newExtra) => onboardingCubit.addNewExtra(newExtra),
+      builder: (diagContext) => MultiBlocProvider(
+        providers: [
+          BlocProvider<LoginCubit>.value(value: loginCubit),
+          BlocProvider<PermissionsCubit>.value(value: permissionsCubit),
+        ],
+        child: ExtraDialog(
+          loungeId: loungeId,
+          onSave: (newExtra) => onboardingCubit.addNewExtra(newExtra),
+        ),
       ),
     );
   }

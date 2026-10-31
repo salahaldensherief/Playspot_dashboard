@@ -20,13 +20,13 @@ class BookingPriceCalculation extends Equatable {
 
   @override
   List<Object?> get props => [
-        pricePerHour,
-        roomTotal,
-        extrasTotal,
-        voucherDiscount,
-        subtotal,
-        grandTotal,
-      ];
+    pricePerHour,
+    roomTotal,
+    extrasTotal,
+    voucherDiscount,
+    subtotal,
+    grandTotal,
+  ];
 }
 
 class BookingPriceCalculator {
@@ -53,7 +53,9 @@ class BookingPriceCalculator {
     // 1. Single source of truth for rate resolution
     final double pricePerHour = playMode == 'multi'
         ? (room.hourlyRateMulti > 0 ? room.hourlyRateMulti : room.pricePerHour)
-        : (room.hourlyRateSingle > 0 ? room.hourlyRateSingle : room.pricePerHour);
+        : (room.hourlyRateSingle > 0
+              ? room.hourlyRateSingle
+              : room.pricePerHour);
 
     final double roomTotal = durationHours * pricePerHour;
 
@@ -61,14 +63,18 @@ class BookingPriceCalculator {
     double calculatedExtrasTotal = 0.0;
     for (final item in extras) {
       final int qty = int.tryParse(item['quantity']?.toString() ?? '') ?? 1;
-      final double unitPrice = double.tryParse(item['price']?.toString() ?? '') ?? 0.0;
+      final double unitPrice =
+          double.tryParse(item['price']?.toString() ?? '') ?? 0.0;
       calculatedExtrasTotal += unitPrice * qty;
     }
 
     // 3. Subtotal, voucher discount clamp, and non-negative grandTotal
     final double subtotal = roomTotal + calculatedExtrasTotal;
     final double clampedVoucherDiscount = voucherDiscount.clamp(0.0, subtotal);
-    final double grandTotal = (subtotal - clampedVoucherDiscount).clamp(0.0, double.infinity);
+    final double grandTotal = (subtotal - clampedVoucherDiscount).clamp(
+      0.0,
+      double.infinity,
+    );
 
     return BookingPriceCalculation(
       pricePerHour: pricePerHour,

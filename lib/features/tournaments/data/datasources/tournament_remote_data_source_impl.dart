@@ -39,7 +39,7 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
       var query = client.from('tournaments').select('''
         *,
         lounges(name),
-        tournament_participants(id),
+        tournament_participants(id, registration_status),
         tournament_prizes (
           id,
           tournament_id,
@@ -107,8 +107,8 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
         params: {
           'p_lounge_id': tournament.loungeId,
           'p_city_id': cityId,
-          'p_title_ar': tournament.titleAr ?? tournament.title,
-          'p_title_en': tournament.titleEn ?? tournament.title,
+          'p_title_ar': tournament.titleAr ?? '',
+          'p_title_en': tournament.titleEn ?? '',
           'p_game_name': tournament.gameTitle,
           'p_bracket_size': tournament.treeSize,
           'p_max_participants': tournament.maxPlayers,
@@ -121,18 +121,42 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
                       tournament.registrationDeadline)
                   .toUtc()
                   .toIso8601String(),
-          'p_tournament_starts_at': tournament.startDate
-              .toUtc()
+          'p_payment_deadline_minutes': tournament.paymentDeadlineMinutes,
+          'p_check_in_opens_at': tournament.checkInOpensAt
+              ?.toUtc()
               .toIso8601String(),
-          'p_rules': tournament.rules,
-          'p_banner_url': tournament.bannerUrl,
+          'p_check_in_closes_at': tournament.checkInClosesAt
+              ?.toUtc()
+              .toIso8601String(),
+          'p_tournament_starts_at':
+              (tournament.tournamentStartsAt ?? tournament.startDate)
+                  .toUtc()
+                  .toIso8601String(),
         },
       );
 
-      final createdData = response is List && response.isNotEmpty
+      dynamic createdData = response is List && response.isNotEmpty
           ? response.first
           : (response is Map ? response : null);
       if (createdData != null) {
+        final createdMap = Map<String, dynamic>.from(createdData);
+        final metadata = <String, dynamic>{
+          if (tournament.descriptionAr?.trim().isNotEmpty == true)
+            'description_ar': tournament.descriptionAr!.trim(),
+          if (tournament.descriptionEn?.trim().isNotEmpty == true)
+            'description_en': tournament.descriptionEn!.trim(),
+          if (tournament.bannerUrl != null &&
+              tournament.bannerUrl!.trim().isNotEmpty)
+            'banner_url': tournament.bannerUrl!.trim(),
+        };
+        if (metadata.isNotEmpty) {
+          createdData = await client
+              .from('tournaments')
+              .update(metadata)
+              .eq('id', createdMap['id'])
+              .select()
+              .single();
+        }
         final model = TournamentModel.fromJson(
           Map<String, dynamic>.from(createdData),
         );
@@ -153,20 +177,58 @@ class TournamentRemoteDataSourceImpl implements TournamentRemoteDataSource {
 
   @override
   Future<TournamentModel> updateTournament(TournamentModel tournament) async {
-    final payload = tournament.toJson();
-    payload.remove('prizes');
-    payload.remove('lounges');
-    payload.remove('tournament_participants');
+    final response = await client.rpc(
+      'update_tournament',
+      params: {
+        'p_tournament_id': tournament.id,
+        'p_title_ar': tournament.titleAr ?? '',
+        'p_title_en': tournament.titleEn ?? '',
+        'p_description_ar': tournament.descriptionAr ?? '',
+        'p_description_en': tournament.descriptionEn ?? '',
+        'p_game_name': tournament.gameTitle,
+        'p_max_participants': tournament.maxPlayers,
+        'p_entry_fee': tournament.entryFee,
+        'p_registration_opens_at':
+            (tournament.registrationOpensAt ?? tournament.startDate)
+                .toUtc()
+                .toIso8601String(),
+        'p_registration_closes_at':
+            (tournament.registrationClosesAt ?? tournament.registrationDeadline)
+                .toUtc()
+                .toIso8601String(),
+        'p_payment_deadline_minutes': tournament.paymentDeadlineMinutes,
+        'p_check_in_opens_at': tournament.checkInOpensAt
+            ?.toUtc()
+            .toIso8601String(),
+        'p_check_in_closes_at': tournament.checkInClosesAt
+            ?.toUtc()
+            .toIso8601String(),
+        'p_tournament_starts_at':
+            (tournament.tournamentStartsAt ?? tournament.startDate)
+                .toUtc()
+                .toIso8601String(),
+      },
+    );
 
-    final response = await client
-        .from('tournaments')
-        .update(payload)
-        .eq('id', tournament.id)
-        .select()
-        .single();
+    dynamic updatedData = response is List && response.isNotEmpty
+        ? response.first
+        : response;
+    if (updatedData is! Map) {
+      throw const FormatException('Invalid tournament update response');
+    }
+
+    final bannerUrl = tournament.bannerUrl?.trim();
+    if (bannerUrl != null && bannerUrl.isNotEmpty) {
+      updatedData = await client
+          .from('tournaments')
+          .update({'banner_url': bannerUrl})
+          .eq('id', tournament.id)
+          .select()
+          .single();
+    }
 
     final updatedModel = TournamentModel.fromJson(
-      Map<String, dynamic>.from(response),
+      Map<String, dynamic>.from(updatedData),
     );
     if (tournament.prizes.isNotEmpty) {
       final prizeModels = tournament.prizes

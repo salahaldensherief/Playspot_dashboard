@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
@@ -16,8 +17,16 @@ class RoomManagementHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<LoginCubit>().state.user;
-    final bool canEdit = user?.canEditSetup ?? false;
+    context.locale;
+    final user = context.watch<LoginCubit>().state.user;
+    final permissions = context.watch<PermissionsCubit>();
+    final bool canEdit =
+        user != null &&
+        permissions.hasPermission(
+          'rooms_manage',
+          userRole: user.role.name,
+          userId: user.id,
+        );
 
     return AppAdaptivePageHeader(
       title: AppStrings.rooms,

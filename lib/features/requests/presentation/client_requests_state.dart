@@ -3,7 +3,13 @@ import '../domain/entities/client_request_entity.dart';
 
 enum ClientRequestsStatus { initial, loading, success, failure }
 
-enum RequestFilter { all, callStaff, canteenOrders, extensionRequests, unattendedOnly }
+enum RequestFilter {
+  all,
+  callStaff,
+  canteenOrders,
+  extensionRequests,
+  unattendedOnly,
+}
 
 class ClientRequestsState extends Equatable {
   final ClientRequestsStatus status;
@@ -24,7 +30,8 @@ class ClientRequestsState extends Equatable {
     this.errorMessage,
   });
 
-  int get unreadCount => requests.where((r) => !r.isAttended || !r.isRead).length;
+  int get unreadCount =>
+      requests.where((r) => !r.isAttended || !r.isRead).length;
 
   int get totalPages => pageSize > 0 ? (totalCount / pageSize).ceil() : 0;
   bool get hasNextPage => page * pageSize < totalCount;
@@ -34,11 +41,20 @@ class ClientRequestsState extends Equatable {
     final activeRequests = requests.where((r) => !r.isAttended).toList();
     switch (filter) {
       case RequestFilter.callStaff:
-        return activeRequests.where((r) => r.type == ClientRequestType.callStaff).toList();
+        return activeRequests
+            .where((r) => r.type == ClientRequestType.callStaff)
+            .toList();
       case RequestFilter.canteenOrders:
-        return activeRequests.where((r) => r.isCanteenOrder || r.type == ClientRequestType.canteenOrder).toList();
+        return activeRequests
+            .where(
+              (r) =>
+                  r.isCanteenOrder || r.type == ClientRequestType.canteenOrder,
+            )
+            .toList();
       case RequestFilter.extensionRequests:
-        return activeRequests.where((r) => r.type == ClientRequestType.extendSession).toList();
+        return activeRequests
+            .where((r) => r.type == ClientRequestType.extendSession)
+            .toList();
       case RequestFilter.unattendedOnly:
         return activeRequests;
       case RequestFilter.all:
@@ -67,5 +83,13 @@ class ClientRequestsState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [status, requests, filter, page, pageSize, totalCount, errorMessage];
+  List<Object?> get props => [
+    status,
+    requests,
+    filter,
+    page,
+    pageSize,
+    totalCount,
+    errorMessage,
+  ];
 }

@@ -4,7 +4,10 @@ import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.da
 void main() {
   group('BookingStatus Extensions & Parsing Tests', () {
     test('BookingStatusX.fromString parses all database variants correctly', () {
-      expect(BookingStatusX.fromString('in_progress'), BookingStatus.inProgress);
+      expect(
+        BookingStatusX.fromString('in_progress'),
+        BookingStatus.inProgress,
+      );
       expect(BookingStatusX.fromString('inprogress'), BookingStatus.inProgress);
       expect(BookingStatusX.fromString('active'), BookingStatus.inProgress);
 
@@ -45,7 +48,10 @@ void main() {
         totalPrice: 100.0,
       );
 
-      final updated = booking.copyWith(status: BookingStatus.completed, totalPrice: 150.0);
+      final updated = booking.copyWith(
+        status: BookingStatus.completed,
+        totalPrice: 150.0,
+      );
 
       expect(updated.id, 'b1');
       expect(updated.status, BookingStatus.completed);

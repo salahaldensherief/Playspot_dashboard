@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'access_loading_page.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:js_interop';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,6 +36,7 @@ import 'package:play_spot_dashboard/features/reviews/presentation/reviews_cubit.
 import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 import 'package:play_spot_dashboard/features/shifts/presentation/shift_management/shift_cubit.dart';
 import 'package:play_spot_dashboard/features/system/presentation/cubit/app_status_cubit.dart';
+import 'package:play_spot_dashboard/features/canteen/presentation/canteen_cubit.dart';
 
 @JS('removeSplash')
 external void _removeWebSplash();
@@ -57,9 +59,16 @@ class AppRouter {
 
   late final router = GoRouter(
     initialLocation: RouterKeys.root,
-    refreshListenable: GoRouterRefreshStream(authCubit.stream),
-    redirect: (context, state) =>
-        RouterGuards.redirect(context, state, authCubit),
+    refreshListenable: GoRouterRefreshStream(
+      authCubit.stream,
+      additionalStreams: [sl<PermissionsCubit>().stream],
+    ),
+    redirect: (context, state) => RouterGuards.redirect(
+      context,
+      state,
+      authCubit,
+      permissionCubit: sl<PermissionsCubit>(),
+    ),
     routes: [
       ShellRoute(
         builder: (BuildContext context, GoRouterState state, Widget child) {
@@ -82,6 +91,20 @@ class AppRouter {
         },
         routes: [
           GoRoute(
+            path: RouterKeys.accessLoading,
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: MultiBlocProvider(
+                providers: [
+                  BlocProvider<LoginCubit>.value(value: authCubit),
+                  BlocProvider<PermissionsCubit>.value(
+                    value: sl<PermissionsCubit>(),
+                  ),
+                ],
+                child: const AccessLoadingPage(),
+              ),
+            ),
+          ),
+          GoRoute(
             path: RouterKeys.login,
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: LoginScreen()),
@@ -93,7 +116,11 @@ class AppRouter {
                 providers: [
                   BlocProvider(create: (_) => sl<OnboardingCubit>()),
                   BlocProvider(create: (_) => sl<CategoryCubit>()),
+                  BlocProvider(create: (_) => sl<RoomCubit>()),
                   BlocProvider(create: (_) => sl<KycCubit>()),
+                  BlocProvider<PermissionsCubit>.value(
+                    value: sl<PermissionsCubit>(),
+                  ),
                 ],
                 child: const onboarding.LoungeSetupPage(),
               ),
@@ -121,6 +148,7 @@ class AppRouter {
                     create: (_) => sl<DashboardCubit>(),
                   ),
                   BlocProvider<ExtrasCubit>(create: (_) => sl<ExtrasCubit>()),
+                  BlocProvider<CanteenCubit>(create: (_) => sl<CanteenCubit>()),
                   BlocProvider<ReviewsCubit>(create: (_) => sl<ReviewsCubit>()),
                   BlocProvider<ClientRequestsCubit>.value(
                     value: sl<ClientRequestsCubit>(),
@@ -153,7 +181,10 @@ class AppRouter {
           children: [
             Text(
               AppStrings.pageNotFound,
-              style: const TextStyle(color: AppColors.textPrimary, fontSize: 24),
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 24,
+              ),
             ),
             const SizedBox(height: 16),
             AppButton(

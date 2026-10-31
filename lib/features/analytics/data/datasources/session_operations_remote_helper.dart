@@ -16,7 +16,7 @@ class SessionOperationsRemoteHelper {
     );
 
     try {
-      await supabaseClient.rpc(
+      final response = await supabaseClient.rpc(
         'extend_booking_session',
         params: {
           'p_booking_id': bookingId,
@@ -24,6 +24,9 @@ class SessionOperationsRemoteHelper {
           'p_additional_cost': null,
         },
       );
+      if (response is! Map || response['success'] != true) {
+        throw const FormatException('Invalid session extension response');
+      }
       debugPrint(
         '🟢 [SessionOperationsRemoteHelper] Session extension RPC succeeded',
       );
@@ -88,34 +91,32 @@ class SessionOperationsRemoteHelper {
     int? requestedMinutes,
     int? currentDurationMinutes,
   }) async {
+    final rawId = bookingId.trim();
+    final cleanBookingId = rawId.startsWith('ext_')
+        ? rawId.substring(4)
+        : rawId;
     final uuidRegExp = RegExp(
       r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
     );
-    final match = uuidRegExp.firstMatch(bookingId);
-    final cleanBookingId = match != null
-        ? match.group(0)!
-        : bookingId.replaceAll('ext_', '').trim();
-
-    if (!uuidRegExp.hasMatch(cleanBookingId)) {
-      debugPrint(
-        '⚠️ [SESSION_OPERATIONS] Invalid booking UUID for extension request: $bookingId',
-      );
-      return;
+    final match = uuidRegExp.firstMatch(cleanBookingId);
+    if (match == null || match.group(0) != cleanBookingId) {
+      throw const FormatException('Invalid booking UUID for extension review');
     }
 
-    if (isApproved) {
-      await supabaseClient.rpc(
-        'approve_booking_extension',
-        params: {'p_booking_id': cleanBookingId, 'p_additional_cost': null},
-      );
-    } else {
-      await supabaseClient.rpc(
-        'reject_booking_extension',
-        params: {
-          'p_booking_id': cleanBookingId,
-          'p_reason': reason ?? 'لا يوجد وقت متاح بعد الحجز الحالي',
-        },
-      );
+    final response = isApproved
+        ? await supabaseClient.rpc(
+            'approve_booking_extension',
+            params: {'p_booking_id': cleanBookingId, 'p_additional_cost': null},
+          )
+        : await supabaseClient.rpc(
+            'reject_booking_extension',
+            params: {
+              'p_booking_id': cleanBookingId,
+              'p_reason': reason ?? 'لا يوجد وقت متاح بعد الحجز الحالي',
+            },
+          );
+    if (response is! Map || response['success'] != true) {
+      throw const FormatException('Extension review acknowledgement missing');
     }
   }
 
