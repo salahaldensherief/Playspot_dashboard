@@ -197,7 +197,10 @@ class _AuditTimelineState extends State<AuditTimeline> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                auditActionLabel(item.action),
+                                auditActionLabel(
+                                  item.action,
+                                  payload: item.newData,
+                                ),
                                 style: TextStyle(
                                   color: AppColors.textPrimary,
                                   fontSize: 12.sp,

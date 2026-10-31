@@ -7,6 +7,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'booking_products_preview.dart';
+import 'booking_refund_dialog.dart';
 
 class BookingDetailsFinancialSummary extends StatelessWidget {
   final Booking booking;
@@ -113,7 +114,7 @@ class BookingDetailsFinancialSummary extends StatelessWidget {
             ),
           const Divider(color: AppColors.borderDefault),
           _buildBillRow(
-            AppStrings.finalTotalDue,
+            AppStrings.totalAmount,
             '${booking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
             isTotal: true,
             color: AppColors.neonGreen,
@@ -124,6 +125,7 @@ class BookingDetailsFinancialSummary extends StatelessWidget {
             SizedBox(height: 10.h),
             BookingProductsPreview(booking: booking, maxVisibleItems: 10),
           ],
+          BookingRefundButton(booking: booking),
         ],
       ),
     );

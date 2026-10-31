@@ -1,0 +1,20 @@
+{
+  "environment": "http://127.0.0.1:56821",
+  "booking": "ebe2cdb0-5276-45ef-8b32-397ac40df1c5",
+  "actual": {
+    "net_minor": 0,
+    "commission_minor": 0,
+    "reversal_count": 2,
+    "payment_minor": 0,
+    "drawer_in_minor": 10000,
+    "drawer_out_minor": 10000,
+    "completed_requests": 2,
+    "initiated_audits": 2,
+    "completed_audits": 2,
+    "payment_rows": 1
+  },
+  "evidence": "Independent read-only local SQL after actual Dashboard repository Auth/RPC test",
+  "externalMoney": false,
+  "hostedCompatibility": false,
+  "renderedBrowserAcceptance": false
+}

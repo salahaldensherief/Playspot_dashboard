@@ -1,6 +1,28 @@
 import 'package:easy_localization/easy_localization.dart';
 
 class AppStrings {
+  static String get refundManage => 'refund_manage'.tr();
+  static String get refundSeparation => 'refund_separation'.tr();
+  static String get refundPermissionLost => 'refund_permission_lost'.tr();
+  static String get refundRolloutBlocked => 'refund_rollout_blocked'.tr();
+  static String get refundUncertain => 'refund_uncertain'.tr();
+  static String get refundFailed => 'refund_failed'.tr();
+  static String get refundRequestConfirmed => 'refund_request_confirmed'.tr();
+  static String get refundReturnConfirmed => 'refund_return_confirmed'.tr();
+  static String get refundGross => 'refund_gross'.tr();
+  static String get refundReturned => 'refund_returned'.tr();
+  static String get refundNet => 'refund_net'.tr();
+  static String get refundPending => 'refund_pending'.tr();
+  static String get refundRemaining => 'refund_remaining'.tr();
+  static String get refundRemainingHelp => 'refund_remaining_help'.tr();
+  static String get refundRequestCancelled => 'refund_request_cancelled'.tr();
+  static String get refundCashScope => 'refund_cash_scope'.tr();
+  static String get refundCollection => 'refund_collection'.tr();
+  static String get refundPolicyOverride => 'refund_policy_override'.tr();
+  static String get refundCreateRequest => 'refund_create_request'.tr();
+  static String get refundAttestation => 'refund_attestation'.tr();
+  static String get refundOwnShift => 'refund_own_shift'.tr();
+  static String get refundRecordReturn => 'refund_record_return'.tr();
   static String get pricingRuleSaved => 'pricing_rule_saved'.tr();
   static String get pricingRuleDeleted => 'pricing_rule_deleted'.tr();
   static String get paymentFundsReview => 'payment_funds_review'.tr();

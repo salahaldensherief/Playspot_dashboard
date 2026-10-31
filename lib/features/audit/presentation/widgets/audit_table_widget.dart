@@ -103,7 +103,7 @@ class AuditTableWidget extends StatelessWidget {
                   ),
                   DataCell(
                     Text(
-                      auditActionLabel(log.action),
+                      auditActionLabel(log.action, payload: log.newData),
                       style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 12.sp,

@@ -13,6 +13,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_status_badge.dart';
 import 'package:play_spot_dashboard/features/audit/presentation/widgets/audit_timeline.dart';
 import 'booking_details_action_panel.dart';
+import '../../../permissions/presentation/cubit/permissions_cubit.dart';
 import '../../../../art_core/di/provider_scope.dart';
 import '../../../analytics/presentation/dashboard_cubit.dart';
 import 'booking_details_customer_card.dart';
@@ -47,6 +48,7 @@ class BookingDetailsDialog extends StatefulWidget {
     final login = context.read<LoginCubit>();
     final dashboard = context.read<DashboardCubit?>();
     final shifts = context.read<ShiftCubit>();
+    final permissions = context.read<PermissionsCubit?>();
     return showDialog<void>(
       context: context,
       useRootNavigator: false,
@@ -55,6 +57,7 @@ class BookingDetailsDialog extends StatefulWidget {
           BlocProvider.value(value: bookings),
           BlocProvider.value(value: login),
           BlocProvider.value(value: shifts),
+          if (permissions != null) BlocProvider.value(value: permissions),
           if (dashboard != null) BlocProvider.value(value: dashboard),
         ],
         child: BookingDetailsDialog(booking: booking, onCancel: onCancel),

@@ -105,7 +105,7 @@ class AuditMobileList extends StatelessWidget {
                         SizedBox(width: 8.w),
                         Expanded(
                           child: Text(
-                            auditActionLabel(log.action),
+                            auditActionLabel(log.action, payload: log.newData),
                             style: TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 13.sp,

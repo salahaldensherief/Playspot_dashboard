@@ -1,5 +1,25 @@
 # PlaySpot Dashboard: agent engineering rules
 
+## Permanent agent continuity — mandatory for every task
+Before PlaySpot engineering work, read the current snapshot and relevant evidence in the
+[canonical Mobile/Backend handover](https://github.com/salahaldensherief/playspot_V2/blob/dev/docs/ANTIGRAVITY_FINAL_CODEX_HANDOFF.md)
+(`docs/ANTIGRAVITY_FINAL_CODEX_HANDOFF.md` in the companion repository), then inspect
+actual affected Git state. Reuse verified context; do not repeat broad audits.
+After EVERY task, update that same handover with proportional changes, commits,
+checks, decisions, blockers and the exact next step. Preserve historical decisions;
+separate IMPLEMENTED, TESTED, INTEGRATED, DEPLOYED and ACCEPTED. A local commit or
+passing CI is not deployment/acceptance. Never replace evidence with assumptions.
+The GitHub link can lag local work: use the verified local canonical dev worktree
+when delivery is blocked, and state this explicitly rather than creating another handover.
+
+Current deployment boundary (1 November 2026): owner reports Vercel Production
+Branch = dev; current project settings/Preview backend scope are NOT independently
+verified. This supersedes older unconditional dev=Preview descriptions below.
+No Dashboard push, Production-branch edit, hosted backend access or deployment.
+Refund writes default OFF (`PLAYSPOT_MANUAL_REFUND_WRITES`); only explicitly
+selected isolated local acceptance may enable them before a reviewed rollout.
+See `docs/qa/2026-11-01-canonical-refunds.md`.
+
 ## Current dev consolidation scope — 31 October 2026
 The latest owner directive supersedes earlier rollout authorization: local isolated dev consolidation only; no Production or hosted Staging connections, hosted changes, deployments, main changes or release PR merges. Preserve user edits, keys, disks and recovery assets. Dashboard dev push triggers Preview and requires fresh approval for its exact commit/effects.
 
