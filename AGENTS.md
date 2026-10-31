@@ -1,5 +1,10 @@
 # PlaySpot Dashboard: agent engineering rules
 
+## Current dev consolidation scope — 31 October 2026
+The latest owner directive supersedes earlier rollout authorization: local isolated dev consolidation only; no Production or hosted Staging connections, hosted changes, deployments, main changes or release PR merges. Preserve user edits, keys, disks and recovery assets. Dashboard dev push triggers Preview and requires fresh approval for its exact commit/effects.
+
+Use risk-based verification: inspect cosmetic changes; focus tests on changed behavior/contracts; use real isolated authorization, concurrency and accounting checks for financial/Auth/database work. Group related changes, reuse exact unchanged evidence, and run broader checks only at the combined integration gate. Do not create tests for colors/constants, repeatedly rerun successful unchanged suites, refactor unrelated code or produce duplicate inventories. Efficiency must never weaken financial/security/recovery checks. Current bootstrap and evidence: tooling/dev-stack/README.md and docs/audits/DEV_CONSOLIDATION_20261031.md in the canonical Mobile repository.
+
 ## Current release/recovery boundary — 31 October 2026
 The owner wants the real integrated PlaySpot system as the final destination; temporary fixtures are verification tools. Latest clarification prohibits Production connections or backup configuration changes because no restorable Production backup is verified. Hold Production migrations/main promotion/deployment and connected-runtime checks. Independent dev integration/CI and offline signed/Production-configured builds remain verification work only. See docs/audits/PRODUCTION_DELIVERY_GATE_20261031.md and canonical Mobile docs/audits/BACKUP_RECOVERY_INVENTORY_20261031.md. Preserve original user edits, disks, keys and backups. Google Play publication remains excluded.
 

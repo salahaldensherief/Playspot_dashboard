@@ -56,9 +56,9 @@ if ([string]::IsNullOrWhiteSpace($url) -or [string]::IsNullOrWhiteSpace($key)) {
 
 $uri = [uri]$url
 if ($Environment -eq 'Local') {
-  if ($uri.Scheme -ne 'http' -or $uri.Host -ne '127.0.0.1' -or $uri.Port -ne 56621 -or
+  if ($uri.Scheme -ne 'http' -or $uri.Host -ne '127.0.0.1' -or $uri.Port -notin @(56621, 56821) -or
       $uri.AbsolutePath -ne '/' -or $uri.Query -or $uri.Fragment -or $uri.UserInfo) {
-    throw 'Local mode requires the explicit isolated API at http://127.0.0.1:56621.'
+    throw 'Local mode requires an explicit isolated loopback API on port 56621 or 56821.'
   }
   $projectRef = 'playspot-local-acceptance'
 } elseif ($uri.Scheme -ne 'https' -or $uri.Host -notmatch '^([a-z0-9]+)\.supabase\.co$' -or $uri.AbsolutePath -ne '/' -or $uri.Query -or $uri.Fragment -or $uri.UserInfo) {
