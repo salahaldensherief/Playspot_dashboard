@@ -15,8 +15,16 @@ when delivery is blocked, and state this explicitly rather than creating another
 Current deployment boundary (1 November 2026): the owner's current Vercel Settings
 → Environments screenshot shows Production Branch = main and Preview = all unassigned
 Git branches. This supersedes the earlier reported dev=Production blocker.
-Current Preview backend scope and hosted build command remain unverified; hold
-Dashboard push until Preview-only effects and backend isolation are established.
+Owner subsequently inspected PROJECT variables: visible Supabase/PostgreSQL entries
+are Production-only; no Preview SUPABASE_URL/ANON_KEY/NEXT_PUBLIC_SUPABASE_URL is visible.
+The confirmed build command only clones Flutter stable and runs flutter build web
+--release, without dart-defines, hosted migrations or another deployment command.
+Focused source review confirms empty compile-time defaults and the required-config
+guard BEFORE Supabase initialization; no JS/dotenv fallback. The owner authorizes
+one reviewed normal dev push with automatic Preview only after that check.
+This is fail-closed source delivery, NOT a working connected Preview: keep
+authenticated Preview acceptance blocked until an explicit isolated compatible
+backend and reviewed build-time public configuration are authorized.
 No Vercel setting edit, hosted backend access or Production deployment is authorized.
 Refund writes default OFF (`PLAYSPOT_MANUAL_REFUND_WRITES`); only explicitly
 selected isolated local acceptance may enable them before a reviewed rollout.

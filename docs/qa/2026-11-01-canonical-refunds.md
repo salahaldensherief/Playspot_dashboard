@@ -1,5 +1,55 @@
 # Canonical manual cash refund integration — 1 November 2026
 
+## Preview-only delivery authorization — final configuration review
+
+The owner has now inspected PROJECT-level variables directly: all visible Supabase
+and PostgreSQL entries are Production-only; no Preview SUPABASE_URL,
+SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_URL is visible. Current project routing
+is main → Production, dev/unassigned branches → Preview, repository
+salahaldensherief/Playspot_dashboard. Full confirmed Build Command:
+
+    git clone https://github.com/flutter/flutter.git --depth 1 -b stable flutter && ./flutter/bin/flutter build web --release
+
+Output is build/web. This command contains no hosted migration, Supabase CLI or
+additional deployment command, and supplies no Dart defines.
+
+One focused read-only source check on d630fdb0 confirmed:
+
+- app_constants.dart uses two const String.fromEnvironment values with empty defaults.
+- setupInjection rejects missing configuration BEFORE constructing the HTTP client
+  or calling Supabase.initialize; main awaits it BEFORE runApp.
+- No dotenv, process-environment or JS bootstrap config bridge/fallback exists in
+  the reviewed app entry/configuration sources. Ordinary Vercel environment values
+  do not automatically become Dart compilation declarations.
+- vercel.json only rewrites SPA paths. Both repository workflow files perform
+  formatting/tests/analysis/Edge fixtures/Web build; no deployment or hosted
+  migration action. No repository webhook is listed; external Vercel Git integration
+  supplies Preview deployment. No workflow/vercel/Supabase source changed in the
+  pending dev range; no claim that Vercel waits for CI.
+- Runtime/assets/tests/build source still matches tested 413826ec. Reuse its
+  27 focused tests, real local API/accounting journey and main Web build evidence.
+  No repeated local suite/build or connected runtime test was needed.
+
+Conclusion: the confirmed no-defines build is expected to compile but stop at
+missing configuration before Supabase initialization. This is control-flow/source
+evidence, NOT authenticated deployed-browser acceptance. Font/CDN resource loading
+is separate; no claim of total network silence. No Production fallback is present.
+
+The latest owner instruction supersedes the earlier push hold for ONE exact reviewed
+dev delivery/automatic Preview only, conditional on this check. The commit containing
+this update is the reviewed source to push normally from remote dev 6113da82.
+Do not modify main, Vercel settings, variables, hosted databases or financial gates.
+Do not open the connected Preview application or run authentication against hosted
+Production/Staging. Even a successful deployment is not a usable connected client.
+The canonical Mobile handover will record the exact pushed SHA, actual CI and
+deployment metadata after this delivery; later pushes require their own scope review.
+
+Pre-push Production metadata baseline: latest GitHub record labelled Production is
+6206651654 / fd46373158f41cef21b7e380045868c3b8afae59 (1 September).
+This historical record is NOT independent verification of the current Production
+alias/source. The current remote main ref is 7573b62b8dce7a556059dba09ab2d964b81562d2.
+No deployed app or hosted database was opened.
+
 ## Delivery follow-up — owner-provided Vercel evidence
 
 The owner subsequently supplied the actual project Settings → Environments image:
