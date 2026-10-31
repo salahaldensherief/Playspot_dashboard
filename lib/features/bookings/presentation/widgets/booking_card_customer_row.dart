@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -9,10 +10,7 @@ import 'package:play_spot_dashboard/features/bookings/presentation/widgets/custo
 class BookingCardCustomerRow extends StatelessWidget {
   final Booking booking;
 
-  const BookingCardCustomerRow({
-    super.key,
-    required this.booking,
-  });
+  const BookingCardCustomerRow({super.key, required this.booking});
 
   String _getInitials(String? name) {
     if (name == null || name.trim().isEmpty) return 'U';
@@ -25,6 +23,7 @@ class BookingCardCustomerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [

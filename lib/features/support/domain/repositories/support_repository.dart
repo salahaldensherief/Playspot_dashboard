@@ -16,7 +16,9 @@ abstract class SupportRepository {
   Future<Either<Failure, void>> saveFaq(FaqEntity faq);
   Future<Either<Failure, void>> deleteFaq(String id);
 
-  Future<Either<Failure, List<SupportTicketEntity>>> getSupportTickets({String? statusFilter});
+  Future<Either<Failure, List<SupportTicketEntity>>> getSupportTickets({
+    String? statusFilter,
+  });
   Future<Either<Failure, void>> createSupportTicket({
     required String issueType,
     required String message,

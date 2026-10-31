@@ -18,7 +18,8 @@ class TournamentState extends Equatable {
   final int auditLogsPageSize;
   final int totalAuditLogsCount;
   final Map<String, dynamic>? lastAwardResult;
-  final int selectedTab; // 0: Tournaments, 1: Participants/Payments, 2: Bracket, 3: Disputes, 4: Audit Logs & Prizes
+  final int
+  selectedTab; // 0: Tournaments, 1: Participants/Payments, 2: Bracket, 3: Disputes, 4: Audit Logs & Prizes
   final String? errorMessage;
   final String? successMessage;
 
@@ -39,9 +40,12 @@ class TournamentState extends Equatable {
     this.successMessage,
   });
 
-  bool get hasNextAuditLogsPage => auditLogsPage * auditLogsPageSize < totalAuditLogsCount;
+  bool get hasNextAuditLogsPage =>
+      auditLogsPage * auditLogsPageSize < totalAuditLogsCount;
   bool get hasPreviousAuditLogsPage => auditLogsPage > 1;
-  int get totalAuditLogsPages => auditLogsPageSize > 0 ? (totalAuditLogsCount / auditLogsPageSize).ceil() : 0;
+  int get totalAuditLogsPages => auditLogsPageSize > 0
+      ? (totalAuditLogsCount / auditLogsPageSize).ceil()
+      : 0;
 
   TournamentState copyWith({
     TournamentCubitStatus? status,
@@ -82,19 +86,19 @@ class TournamentState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        tournaments,
-        selectedTournament,
-        participants,
-        matches,
-        disputedMatches,
-        auditLogs,
-        auditLogsPage,
-        auditLogsPageSize,
-        totalAuditLogsCount,
-        lastAwardResult,
-        selectedTab,
-        errorMessage,
-        successMessage,
-      ];
+    status,
+    tournaments,
+    selectedTournament,
+    participants,
+    matches,
+    disputedMatches,
+    auditLogs,
+    auditLogsPage,
+    auditLogsPageSize,
+    totalAuditLogsCount,
+    lastAwardResult,
+    selectedTab,
+    errorMessage,
+    successMessage,
+  ];
 }

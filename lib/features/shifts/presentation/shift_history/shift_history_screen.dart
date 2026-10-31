@@ -1,11 +1,12 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_adaptive_page_header.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_empty_state_widget.dart';
+import 'package:play_spot_dashboard/art_core/widgets/data_table_widget.dart';
 import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
@@ -13,6 +14,7 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/core/utils/permission_extension.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
+
 import '../../domain/entities/shift_entity.dart';
 import '../shift_management/shift_cubit.dart';
 import '../shift_management/shift_state.dart';
@@ -28,7 +30,6 @@ class ShiftHistoryScreen extends StatefulWidget {
 }
 
 class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
-  final ScrollController _horizontalScrollController = ScrollController();
   String _filterPeriod = 'all';
   String _filterStatus = 'all';
   String _searchQuery = '';
@@ -44,18 +45,18 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    _horizontalScrollController.dispose();
-    super.dispose();
-  }
-
   List<ShiftEntity> _applyFilters(List<ShiftEntity> rawShifts) {
     return rawShifts.where((shift) {
       if (_filterStatus == 'open' && shift.status != 'open') return false;
       if (_filterStatus == 'closed' && shift.status != 'closed') return false;
-      if (_filterStatus == 'approved' && (!shift.isApproved || shift.status != 'closed')) return false;
-      if (_filterStatus == 'unapproved' && (shift.isApproved || shift.status != 'closed')) return false;
+      if (_filterStatus == 'approved' &&
+          (!shift.isApproved || shift.status != 'closed')) {
+        return false;
+      }
+      if (_filterStatus == 'unapproved' &&
+          (shift.isApproved || shift.status != 'closed')) {
+        return false;
+      }
 
       if (_searchQuery.isNotEmpty) {
         final cashier = (shift.cashierName ?? '').toLowerCase();
@@ -66,13 +67,17 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
         final now = DateTime.now();
         final start = shift.startTime;
         if (_filterPeriod == 'today') {
-          final isSameDay = start.year == now.year && start.month == now.month && start.day == now.day;
+          final isSameDay =
+              start.year == now.year &&
+              start.month == now.month &&
+              start.day == now.day;
           if (!isSameDay) return false;
         } else if (_filterPeriod == 'week') {
           final diffDays = now.difference(start).inDays;
           if (diffDays > 7) return false;
         } else if (_filterPeriod == 'month') {
-          final isSameMonth = start.year == now.year && start.month == now.month;
+          final isSameMonth =
+              start.year == now.year && start.month == now.month;
           if (!isSameMonth) return false;
         }
       }
@@ -83,8 +88,10 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
+    final isCompact = MediaQuery.sizeOf(context).width < 700;
     return Padding(
-      padding: EdgeInsets.all(24.r),
+      padding: EdgeInsets.all(isCompact ? 12.r : 24.r),
       child: BlocBuilder<ShiftCubit, ShiftState>(
         builder: (context, state) {
           if (state.status.isLoading && state.shifts.isEmpty) {
@@ -106,8 +113,8 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                   onPressed: () {
                     final user = context.read<LoginCubit>().state.user;
                     context.read<ShiftCubit>().fetchShiftHistory(
-                          loungeId: user?.isStaff == true ? user?.loungeId : null,
-                        );
+                      loungeId: user?.isStaff == true ? user?.loungeId : null,
+                    );
                   },
                 ),
               ),
@@ -137,100 +144,21 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                         onActionTextPressed: () {
                           final user = context.read<LoginCubit>().state.user;
                           context.read<ShiftCubit>().fetchShiftHistory(
-                                loungeId: user?.isStaff == true ? user?.loungeId : null,
-                              );
+                            loungeId: user?.isStaff == true
+                                ? user?.loungeId
+                                : null,
+                          );
                         },
                       )
-                    : Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.cardBackground,
-                          borderRadius: BorderRadius.circular(16.r),
-                          border: Border.all(color: AppColors.borderDefault),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16.r),
-                          child: Scrollbar(
-                            controller: _horizontalScrollController,
-                            thumbVisibility: true,
-                            trackVisibility: true,
-                            child: SingleChildScrollView(
-                              controller: _horizontalScrollController,
-                              scrollDirection: Axis.horizontal,
-                              child: DataTable(
-                                headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
-                                dataRowMaxHeight: 60.h,
-                                dataRowMinHeight: 48.h,
-                                columnSpacing: 20.w,
-                                horizontalMargin: 16.w,
-                                columns: [
-                                  _buildColumn(AppStrings.date),
-                                  _buildColumn(AppStrings.closeTime),
-                                  _buildColumn(AppStrings.cashier),
-                                  _buildColumn(AppStrings.startingCash),
-                                  _buildColumn(AppStrings.cashRevenueTitle),
-                                  _buildColumn(AppStrings.digitalRevenueTitle),
-                                  _buildColumn(AppStrings.expensesAndDrops),
-                                  _buildColumn(AppStrings.expectedCash),
-                                  _buildColumn(AppStrings.actualCash),
-                                  _buildColumn(AppStrings.discrepancy),
-                                  _buildColumn(AppStrings.status),
-                                  _buildColumn(AppStrings.actions),
-                                ],
-                                rows: filteredShifts.map((shift) {
-                                  final discrepancy = shift.calculatedDiscrepancy;
-                                  final isHealthy = discrepancy >= 0;
-                                  final bool canApprove = context.hasPermission('shifts_approve');
-
-                                  final startStr = DateFormat('MMM dd, hh:mm a').format(shift.startTime);
-                                  final endStr = shift.endTime != null ? DateFormat('hh:mm a').format(shift.endTime!) : AppStrings.currentShiftOngoing;
-
-                                  return DataRow(cells: [
-                                    DataCell(Text(startStr, style: const TextStyle(color: AppColors.textPrimary))),
-                                    DataCell(Text(endStr, style: const TextStyle(color: AppColors.textSecondary))),
-                                    DataCell(Text(shift.cashierName ?? AppStrings.system, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold))),
-                                    DataCell(Text('${shift.startingCash.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.textPrimary))),
-                                    DataCell(Text('${(shift.cashRevenue ?? 0).toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.success))),
-                                    DataCell(Text('${(shift.digitalRevenue ?? 0).toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.warning))),
-                                    DataCell(Text('${(shift.expensesTotal ?? 0).toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.danger))),
-                                    DataCell(Text('${shift.calculatedExpectedCash.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.neonBlue))),
-                                    DataCell(Text(shift.actualCash != null ? '${shift.actualCash!.toStringAsFixed(0)} ${AppStrings.egp}' : AppStrings.notAvailable, style: const TextStyle(color: AppColors.textPrimary))),
-                                    DataCell(
-                                      shift.status == 'closed' 
-                                      ? Text(
-                                          '${discrepancy.toStringAsFixed(0)} ${AppStrings.egp}',
-                                          style: TextStyle(color: isHealthy ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold),
-                                        )
-                                      : Text(AppStrings.notAvailable, style: const TextStyle(color: AppColors.textSecondary)),
-                                    ),
-                                    DataCell(_buildStatusBadge(shift)),
-                                    DataCell(
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          AppButton(
-                                            text: AppStrings.details,
-                                            variant: AppButtonVariant.outlined,
-                                            height: 30.h,
-                                            onPressed: () => _showDetailsModal(context, shift),
-                                          ),
-                                          if (shift.status == 'closed' && !shift.isApproved && canApprove) ...[
-                                            SizedBox(width: 8.w),
-                                            AppButton(
-                                              text: AppStrings.approve,
-                                              height: 30.h,
-                                              onPressed: () => _showApproveDialog(context, shift),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                  ]);
-                                }).toList(),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                    : isCompact
+                    ? ListView.separated(
+                        itemCount: filteredShifts.length,
+                        separatorBuilder: (context, index) =>
+                            SizedBox(height: 10.h),
+                        itemBuilder: (context, index) =>
+                            _buildShiftCard(context, filteredShifts[index]),
+                      )
+                    : _buildShiftTable(context, filteredShifts),
               ),
             ],
           );
@@ -239,9 +167,231 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
     );
   }
 
-  DataColumn _buildColumn(String label) {
-    return DataColumn(
-      label: Text(label, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13.sp)),
+  Widget _buildShiftTable(BuildContext context, List<ShiftEntity> shifts) {
+    final canApprove = context.hasPermission('shifts_approve');
+    return SingleChildScrollView(
+      child: DataTableWidget(
+        columns: [
+          AppStrings.date,
+          AppStrings.closeTime,
+          AppStrings.cashier,
+          AppStrings.startingCash,
+          AppStrings.cashRevenueTitle,
+          AppStrings.digitalRevenueTitle,
+          AppStrings.expensesAndDrops,
+          AppStrings.expectedCash,
+          AppStrings.actualCash,
+          AppStrings.discrepancy,
+          AppStrings.status,
+          AppStrings.actions,
+        ],
+        rows: shifts.map((shift) {
+          final discrepancy = shift.calculatedDiscrepancy;
+          final isHealthy = discrepancy >= 0;
+          final startStr = DateFormat(
+            'MMM dd, hh:mm a',
+          ).format(shift.startTime);
+          final endStr = shift.endTime != null
+              ? DateFormat('hh:mm a').format(shift.endTime!)
+              : AppStrings.currentShiftOngoing;
+
+          return DataRow(
+            cells: [
+              DataCell(
+                Text(
+                  startStr,
+                  style: const TextStyle(color: AppColors.textPrimary),
+                ),
+              ),
+              DataCell(
+                Text(
+                  endStr,
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+              ),
+              DataCell(
+                Text(
+                  shift.cashierName ?? AppStrings.system,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              _moneyCell(
+                shift.financialsVisible ? shift.startingCash : null,
+                AppColors.textPrimary,
+              ),
+              _moneyCell(shift.cashRevenue, AppColors.success),
+              _moneyCell(shift.digitalRevenue, AppColors.warning),
+              _moneyCell(shift.expensesTotal, AppColors.danger),
+              _moneyCell(
+                shift.financialsVisible ? shift.calculatedExpectedCash : null,
+                AppColors.neonBlue,
+              ),
+              DataCell(
+                Text(
+                  shift.actualCash != null
+                      ? '${shift.actualCash!.toStringAsFixed(0)} ${AppStrings.egp}'
+                      : AppStrings.notAvailable,
+                  style: const TextStyle(color: AppColors.textPrimary),
+                ),
+              ),
+              DataCell(
+                shift.status == 'closed' && shift.financialsVisible
+                    ? Text(
+                        '${discrepancy.toStringAsFixed(0)} ${AppStrings.egp}',
+                        style: TextStyle(
+                          color: isHealthy
+                              ? AppColors.success
+                              : AppColors.danger,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : Text(
+                        AppStrings.notAvailable,
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+              ),
+              DataCell(_buildStatusBadge(shift)),
+              DataCell(
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AppButton(
+                      text: AppStrings.details,
+                      variant: AppButtonVariant.outlined,
+                      height: 30.h,
+                      onPressed: () => _showDetailsModal(context, shift),
+                    ),
+                    if (shift.status == 'closed' &&
+                        !shift.isApproved &&
+                        canApprove) ...[
+                      SizedBox(width: 8.w),
+                      AppButton(
+                        text: AppStrings.approve,
+                        height: 30.h,
+                        onPressed: () => _showApproveDialog(context, shift),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  DataCell _moneyCell(double? amount, Color color) {
+    return DataCell(
+      Text(
+        amount == null
+            ? AppStrings.shiftFinancialsWithheld
+            : '${amount.toStringAsFixed(0)} ${AppStrings.egp}',
+        style: TextStyle(color: color),
+      ),
+    );
+  }
+
+  Widget _buildShiftCard(BuildContext context, ShiftEntity shift) {
+    final discrepancy = shift.calculatedDiscrepancy;
+    final canApprove = context.hasPermission('shifts_approve');
+    return Container(
+      padding: EdgeInsets.all(14.r),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  DateFormat('MMM dd, hh:mm a').format(shift.startTime),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              _buildStatusBadge(shift),
+            ],
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            shift.cashierName ?? AppStrings.system,
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+          Divider(height: 20.h, color: AppColors.borderDefault),
+          _shiftValue(AppStrings.cashRevenueTitle, shift.cashRevenue),
+          _shiftValue(AppStrings.digitalRevenueTitle, shift.digitalRevenue),
+          _shiftValue(AppStrings.expensesAndDrops, shift.expensesTotal),
+          _shiftValue(
+            AppStrings.expectedCash,
+            shift.financialsVisible ? shift.calculatedExpectedCash : null,
+          ),
+          _shiftValue(AppStrings.actualCash, shift.actualCash),
+          if (shift.status == 'closed' && shift.financialsVisible)
+            _shiftValue(
+              AppStrings.discrepancy,
+              discrepancy,
+              color: discrepancy >= 0 ? AppColors.success : AppColors.danger,
+            ),
+          SizedBox(height: 10.h),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  text: AppStrings.details,
+                  variant: AppButtonVariant.outlined,
+                  onPressed: () => _showDetailsModal(context, shift),
+                ),
+              ),
+              if (shift.status == 'closed' &&
+                  !shift.isApproved &&
+                  canApprove) ...[
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: AppButton(
+                    text: AppStrings.approve,
+                    onPressed: () => _showApproveDialog(context, shift),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _shiftValue(String label, double? amount, {Color? color}) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 3.h),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          Text(
+            amount == null
+                ? AppStrings.notAvailable
+                : '${amount.toStringAsFixed(0)} ${AppStrings.egp}',
+            style: TextStyle(
+              color: color ?? AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -269,7 +419,7 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
   }
 
   void _showApproveDialog(BuildContext context, ShiftEntity shift) {
-    final notesController = TextEditingController();
+    var notes = '';
     final user = context.read<LoginCubit>().state.user;
     final cubit = context.read<ShiftCubit>();
 
@@ -277,7 +427,9 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
         child: Container(
           width: 420.w,
           padding: EdgeInsets.all(24.r),
@@ -288,13 +440,23 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
               AppText.heading(AppStrings.approveShift, fontSize: 18.sp),
               SizedBox(height: 16.h),
               AppText.body(AppStrings.shiftNumber(shift.id)),
-              AppText.body(AppStrings.cashierLabelText(shift.cashierName ?? AppStrings.system)),
-              AppText.body(AppStrings.cashDiscrepancyLabel('${shift.calculatedDiscrepancy.toStringAsFixed(2)} ${AppStrings.egp}')),
+              AppText.body(
+                AppStrings.cashierLabelText(
+                  shift.cashierName ?? AppStrings.system,
+                ),
+              ),
+              AppText.body(
+                AppStrings.cashDiscrepancyLabel(
+                  shift.financialsVisible
+                      ? '${shift.calculatedDiscrepancy.toStringAsFixed(2)} ${AppStrings.egp}'
+                      : AppStrings.shiftFinancialsWithheld,
+                ),
+              ),
               SizedBox(height: 16.h),
               AppTextField(
                 label: AppStrings.managerNotes,
                 hintText: AppStrings.managerNotesPrompt,
-                controller: notesController,
+                onChanged: (value) => notes = value,
                 maxLines: 3,
               ),
               SizedBox(height: 24.h),
@@ -311,9 +473,9 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                     text: AppStrings.approve,
                     onPressed: () {
                       cubit.approveShift(
-                        shift.id, 
-                        user?.id ?? '', 
-                        notesController.text.trim().isEmpty ? null : notesController.text.trim(),
+                        shift.id,
+                        user?.id ?? '',
+                        notes.trim().isEmpty ? null : notes.trim(),
                         loungeId: user?.isStaff == true ? user?.loungeId : null,
                       );
                       Navigator.pop(dialogContext);

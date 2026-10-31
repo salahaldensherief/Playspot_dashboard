@@ -68,7 +68,10 @@ class LoyaltyRepositoryImpl implements LoyaltyRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateTask(String id, Map<String, dynamic> data) async {
+  Future<Either<Failure, void>> updateTask(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
     try {
       await remoteDataSource.updateTask(id, data);
       return const Right(null);
@@ -88,7 +91,10 @@ class LoyaltyRepositoryImpl implements LoyaltyRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateLevel(String id, Map<String, dynamic> data) async {
+  Future<Either<Failure, void>> updateLevel(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
     try {
       await remoteDataSource.updateLevel(id, data);
       return const Right(null);
@@ -116,12 +122,13 @@ class LoyaltyRepositoryImpl implements LoyaltyRepository {
   }
 
   @override
-  Future<Either<Failure, PaginatedResult<PointsTransactionEntity>>> getPointsTransactionsPage({
-    int page = 1,
-    int pageSize = 20,
-  }) async {
+  Future<Either<Failure, PaginatedResult<PointsTransactionEntity>>>
+  getPointsTransactionsPage({int page = 1, int pageSize = 20}) async {
     try {
-      final result = await remoteDataSource.getPointsTransactionsPage(page: page, pageSize: pageSize);
+      final result = await remoteDataSource.getPointsTransactionsPage(
+        page: page,
+        pageSize: pageSize,
+      );
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -129,7 +136,8 @@ class LoyaltyRepositoryImpl implements LoyaltyRepository {
   }
 
   @override
-  Future<Either<Failure, List<RedemptionOptionEntity>>> getRedemptionOptions() async {
+  Future<Either<Failure, List<RedemptionOptionEntity>>>
+  getRedemptionOptions() async {
     try {
       final options = await remoteDataSource.getRedemptionOptions();
       return Right(options);
@@ -139,19 +147,23 @@ class LoyaltyRepositoryImpl implements LoyaltyRepository {
   }
 
   @override
-  Future<Either<Failure, void>> createRedemptionOption(RedemptionOptionEntity option) async {
+  Future<Either<Failure, void>> createRedemptionOption(
+    RedemptionOptionEntity option,
+  ) async {
     try {
-      await remoteDataSource.createRedemptionOption(RedemptionOptionModel(
-        id: option.id,
-        titleAr: option.titleAr,
-        titleEn: option.titleEn,
-        descriptionAr: option.descriptionAr,
-        descriptionEn: option.descriptionEn,
-        pointsCost: option.pointsCost,
-        rewardType: option.rewardType,
-        rewardValue: option.rewardValue,
-        isActive: option.isActive,
-      ));
+      await remoteDataSource.createRedemptionOption(
+        RedemptionOptionModel(
+          id: option.id,
+          titleAr: option.titleAr,
+          titleEn: option.titleEn,
+          descriptionAr: option.descriptionAr,
+          descriptionEn: option.descriptionEn,
+          pointsCost: option.pointsCost,
+          rewardType: option.rewardType,
+          rewardValue: option.rewardValue,
+          isActive: option.isActive,
+        ),
+      );
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -159,7 +171,10 @@ class LoyaltyRepositoryImpl implements LoyaltyRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateRedemptionOption(String id, Map<String, dynamic> data) async {
+  Future<Either<Failure, void>> updateRedemptionOption(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
     try {
       await remoteDataSource.updateRedemptionOption(id, data);
       return const Right(null);

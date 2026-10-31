@@ -1,9 +1,11 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../art_core/app_strings.dart';
 import '../../../art_core/theme/app_colors.dart';
 import '../../../art_core/widgets/app_button.dart';
+import '../../../art_core/widgets/app_text_field.dart';
 import '../../../art_core/widgets/section_container.dart';
 import '../domain/entities/app_settings_entity.dart';
 import 'support_cubit.dart';
@@ -62,6 +64,7 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocConsumer<SupportCubit, SupportState>(
       listenWhen: (prev, curr) =>
           prev.settings != curr.settings ||
@@ -72,14 +75,16 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
         if (state.settings != null) {
           _populateFields(state.settings!);
         }
-        if (state.actionStatus == SupportStatus.success && state.successMessage != null) {
+        if (state.actionStatus == SupportStatus.success &&
+            state.successMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.successMessage!),
               backgroundColor: AppColors.success,
             ),
           );
-        } else if (state.actionStatus == SupportStatus.failure && state.errorMessage != null) {
+        } else if (state.actionStatus == SupportStatus.failure &&
+            state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage!),
@@ -98,7 +103,11 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.contact_support_outlined, color: AppColors.neonBlue, size: 28.r),
+                    Icon(
+                      Icons.contact_support_outlined,
+                      color: AppColors.neonBlue,
+                      size: 28.r,
+                    ),
                     SizedBox(width: 12.w),
                     Text(
                       AppStrings.supportAndPaymentSettings,
@@ -119,8 +128,11 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
                   ),
                 ),
                 SizedBox(height: 24.h),
-                if (state.status == SupportStatus.loading && state.settings == null)
-                  const Center(child: CircularProgressIndicator(color: AppColors.neonBlue))
+                if (state.status == SupportStatus.loading &&
+                    state.settings == null)
+                  const Center(
+                    child: CircularProgressIndicator(color: AppColors.neonBlue),
+                  )
                 else
                   SectionContainer(
                     title: AppStrings.supportContactDetails,
@@ -163,17 +175,25 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
                                 text: AppStrings.saveChanges,
                                 variant: AppButtonVariant.gradient,
                                 icon: Icons.save,
-                                isLoading: state.actionStatus == SupportStatus.loading,
+                                isLoading:
+                                    state.actionStatus == SupportStatus.loading,
                                 onPressed: () {
                                   if (_formKey.currentState!.validate()) {
                                     final updatedSettings = AppSettingsEntity(
                                       id: _existingId,
-                                      whatsappPhone: _whatsappController.text.trim(),
-                                      supportPhone: _phoneController.text.trim(),
-                                      supportEmail: _emailController.text.trim(),
-                                      vodafoneCashNumber: _vodafoneController.text.trim(),
+                                      whatsappPhone: _whatsappController.text
+                                          .trim(),
+                                      supportPhone: _phoneController.text
+                                          .trim(),
+                                      supportEmail: _emailController.text
+                                          .trim(),
+                                      vodafoneCashNumber: _vodafoneController
+                                          .text
+                                          .trim(),
                                     );
-                                    context.read<SupportCubit>().saveAppSettings(updatedSettings);
+                                    context
+                                        .read<SupportCubit>()
+                                        .saveAppSettings(updatedSettings);
                                   }
                                 },
                               ),
@@ -197,48 +217,17 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
     required String hint,
     required IconData icon,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        SizedBox(height: 8.h),
-        TextFormField(
-          controller: controller,
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 13.sp),
-            prefixIcon: Icon(icon, color: AppColors.neonBlue, size: 20.r),
-            filled: true,
-            fillColor: AppColors.scaffoldBackground,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.r),
-              borderSide: const BorderSide(color: AppColors.borderDefault),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.r),
-              borderSide: const BorderSide(color: AppColors.borderDefault),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.r),
-              borderSide: const BorderSide(color: AppColors.neonBlue, width: 1.5),
-            ),
-          ),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return AppStrings.fieldRequired;
-            }
-            return null;
-          },
-        ),
-      ],
+    return AppTextField(
+      controller: controller,
+      label: label,
+      hintText: hint,
+      prefixIcon: icon,
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return AppStrings.fieldRequired;
+        }
+        return null;
+      },
     );
   }
 }

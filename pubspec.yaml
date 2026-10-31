@@ -8,6 +8,8 @@ environment:
   sdk: ^3.11.5
 
 dependencies:
+  crypto: ^3.0.7
+  url_launcher: ^6.3.2
   flutter:
     sdk: flutter
   flutter_web_plugins:
@@ -54,6 +56,10 @@ dependencies:
   geocoding: ^3.0.0
   cupertino_icons: ^1.0.8
   nested: ^1.0.0
+  hive: 2.2.3
+  get_storage: 2.1.1
+  flutter_secure_storage: 10.3.4
+  path_provider: 2.1.6
 
 dev_dependencies:
   flutter_test:
@@ -68,8 +74,17 @@ dependency_overrides:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Tajawal
+      fonts:
+        - asset: assets/fonts/Tajawal/Tajawal-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Tajawal/Tajawal-Bold.ttf
+          weight: 700
 
   assets:
     - assets/translations/
     - assets/audio/
     - assets/images/
+    - assets/equipment/
+    - assets/fonts/Orbitron/

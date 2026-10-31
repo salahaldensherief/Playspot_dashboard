@@ -29,16 +29,16 @@ class ShiftAuditLogEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        loungeId,
-        shiftId,
-        entityType,
-        entityId,
-        action,
-        actorUserId,
-        actorName,
-        oldData,
-        newData,
-        createdAt,
-      ];
+    id,
+    loungeId,
+    shiftId,
+    entityType,
+    entityId,
+    action,
+    actorUserId,
+    actorName,
+    oldData,
+    newData,
+    createdAt,
+  ];
 }

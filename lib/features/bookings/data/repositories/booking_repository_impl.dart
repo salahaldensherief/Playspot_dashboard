@@ -47,19 +47,22 @@ class BookingRepositoryImpl implements BookingRepository {
         page: page,
         pageSize: pageSize,
       );
-      return Right(PaginatedResult<Booking>(
-        items: result.items,
-        totalCount: result.totalCount,
-        page: result.page,
-        pageSize: result.pageSize,
-      ));
+      return Right(
+        PaginatedResult<Booking>(
+          items: result.items,
+          totalCount: result.totalCount,
+          page: result.page,
+          pageSize: result.pageSize,
+        ),
+      );
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, CustomerCancellationSummary>> getBookingCancellationSummary({
+  Future<Either<Failure, CustomerCancellationSummary>>
+  getBookingCancellationSummary({
     required String loungeId,
     required String userId,
   }) async {
@@ -80,7 +83,10 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateBookingStatus(String id, BookingStatus status) async {
+  Future<Either<Failure, void>> updateBookingStatus(
+    String id,
+    BookingStatus status,
+  ) async {
     try {
       await remoteDataSource.updateBookingStatus(id, status.toDbString());
       return const Right(null);
@@ -107,6 +113,7 @@ class BookingRepositoryImpl implements BookingRepository {
   Future<Either<Failure, void>> confirmCashPayment(
     String bookingId, {
     String? shiftId,
+    double? amount,
     double? discountAmount,
     double? discountPercentage,
     String? discountReason,
@@ -115,6 +122,7 @@ class BookingRepositoryImpl implements BookingRepository {
       await remoteDataSource.confirmCashPayment(
         bookingId,
         shiftId: shiftId,
+        amount: amount,
         discountAmount: discountAmount,
         discountPercentage: discountPercentage,
         discountReason: discountReason,
@@ -146,15 +154,22 @@ class BookingRepositoryImpl implements BookingRepository {
         date: booking.date,
         startTime: booking.startTime,
         endTime: booking.endTime,
+        durationMinutes: booking.durationMinutes,
         status: booking.status,
         paymentStatus: booking.paymentStatus,
         totalPrice: booking.totalPrice,
+        addonsPrice: booking.addonsPrice,
         voucherDiscount: booking.voucherDiscount,
         voucherCode: booking.voucherCode,
+        discountAmount: booking.discountAmount,
+        discountPercentage: booking.discountPercentage,
+        discountReason: booking.discountReason,
         extras: booking.extras,
         lat: booking.lat,
         lng: booking.lng,
         shiftId: booking.shiftId,
+        playMode: booking.playMode,
+        roomPrice: booking.roomPrice,
         paymentMethod: booking.paymentMethod,
         senderWalletPhone: booking.senderWalletPhone,
       );
@@ -168,7 +183,9 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> validateVoucherByCode(String voucherCode) async {
+  Future<Either<Failure, Map<String, dynamic>>> validateVoucherByCode(
+    String voucherCode,
+  ) async {
     try {
       final res = await remoteDataSource.validateVoucherByCode(voucherCode);
       return Right(res);
@@ -178,7 +195,10 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> consumeVoucherByCode(String voucherCode, String bookingId) async {
+  Future<Either<Failure, void>> consumeVoucherByCode(
+    String voucherCode,
+    String bookingId,
+  ) async {
     try {
       await remoteDataSource.consumeVoucherByCode(voucherCode, bookingId);
       return const Right(null);
@@ -232,7 +252,11 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> swapRoom(String bookingId, String newRoomId, String actionBy) async {
+  Future<Either<Failure, void>> swapRoom(
+    String bookingId,
+    String newRoomId,
+    String actionBy,
+  ) async {
     try {
       await remoteDataSource.swapRoom(bookingId, newRoomId, actionBy);
       return const Right(null);
@@ -256,6 +280,63 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
+  Future<Either<Failure, void>> extendBookingSession(
+    String bookingId,
+    int additionalMinutes,
+  ) async {
+    try {
+      await remoteDataSource.extendBookingSession(bookingId, additionalMinutes);
+      return const Right(null);
+    } on PostgrestException catch (e) {
+      return Left(
+        ServerFailure(
+          e.message.contains('BOOKING_EXTENSION_CONFLICT')
+              ? 'booking_extension_conflict'
+              : 'booking_extension_failed',
+        ),
+      );
+    } catch (_) {
+      return const Left(ServerFailure('booking_extension_failed'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  }) async {
+    try {
+      final result = await remoteDataSource.startOpenTimeSession(
+        roomId: roomId,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        playMode: playMode,
+      );
+      return Right(result);
+    } on PostgrestException catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.message)));
+    } catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> completeOpenTimeSession(
+    String bookingId,
+  ) async {
+    try {
+      final result = await remoteDataSource.completeOpenTimeSession(bookingId);
+      return Right(result);
+    } on PostgrestException catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.message)));
+    } catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> autoCancelExpiredBookings() async {
     try {
       await remoteDataSource.autoCancelExpiredBookings();
@@ -266,7 +347,10 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> approveManualBooking(String bookingId, String actionBy) async {
+  Future<Either<Failure, void>> approveManualBooking(
+    String bookingId,
+    String actionBy,
+  ) async {
     try {
       await remoteDataSource.approveManualBooking(bookingId, actionBy);
       return const Right(null);
@@ -278,7 +362,33 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> rejectManualBooking(String bookingId, String reason, String actionBy) async {
+  Future<Either<Failure, void>> verifyManualDeposit({
+    required String bookingId,
+    required String shiftId,
+    required String evidenceReference,
+    required String fundsHolder,
+  }) async {
+    try {
+      await remoteDataSource.verifyManualDeposit(
+        bookingId: bookingId,
+        shiftId: shiftId,
+        evidenceReference: evidenceReference,
+        fundsHolder: fundsHolder,
+      );
+      return const Right(null);
+    } on PostgrestException catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.message)));
+    } catch (e) {
+      return Left(ServerFailure(_mapBookingErrorMessage(e.toString())));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> rejectManualBooking(
+    String bookingId,
+    String reason,
+    String actionBy,
+  ) async {
     try {
       await remoteDataSource.rejectManualBooking(bookingId, reason, actionBy);
       return const Right(null);
@@ -291,17 +401,46 @@ class BookingRepositoryImpl implements BookingRepository {
 
   String _mapBookingErrorMessage(String message) {
     final clean = message.toLowerCase();
-    if (clean.contains('cash payment is disabled') || clean.contains('cash is disabled')) {
-      return 'الدفع الكاش غير متاح في هذه الصالة.';
+    if (clean.contains('no_open_shift')) return 'booking_requires_open_shift';
+    if (clean.contains('payment_required_before_session_start')) {
+      return 'booking_payment_required_before_start';
     }
-    if (clean.contains('first booking must use') || clean.contains('first_booking') || clean.contains('first booking')) {
-      return 'أول حجز يجب تأكيده بتحويل مسبق.';
+    if (clean.contains('booking_not_startable') ||
+        clean.contains('not startable from current status')) {
+      return 'booking_not_startable';
     }
-    if (clean.contains('sender_wallet_phone is required') || clean.contains('sender_wallet_phone')) {
-      return 'يجب إدخال رقم المحفظة الذي تم التحويل منه.';
+    if (clean.contains('room_has_active_session')) {
+      return 'room_has_active_session';
     }
-    if (clean.contains('23p01') || clean.contains('bookings_room_booking_period_excl') || clean.contains('exclusion')) {
-      return 'الوقت المحدد تم حجزه بالفعل، يرجى اختيار وقت آخر.';
+    if (clean.contains('room_not_available_for_session')) {
+      return 'room_not_available_for_session';
+    }
+    if (clean.contains('cash payment is disabled') ||
+        clean.contains('cash is disabled')) {
+      return 'booking_cash_unavailable';
+    }
+    if (clean.contains('first booking must use') ||
+        clean.contains('first_booking') ||
+        clean.contains('first booking')) {
+      return 'booking_first_visit_requires_prepayment';
+    }
+    if (clean.contains('sender_wallet_phone is required') ||
+        clean.contains('sender_wallet_phone')) {
+      return 'booking_sender_wallet_required';
+    }
+    if (clean.contains('23p01') ||
+        clean.contains('bookings_room_booking_period_excl') ||
+        clean.contains('exclusion')) {
+      return 'booking_time_unavailable';
+    }
+    if (clean.contains('open_time_disabled')) {
+      return 'booking_open_time_disabled';
+    }
+    if (clean.contains('next_booking_too_soon')) {
+      return 'booking_next_booking_too_soon';
+    }
+    if (clean.contains('open_time_max_exceeded')) {
+      return 'booking_open_time_limit_exceeded';
     }
     return message.replaceFirst('Exception: ', '');
   }

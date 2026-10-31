@@ -1,14 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'user_permissions.dart';
 
-enum UserRole {
-  superAdmin,
-  owner,
-  manager,
-  cashier,
-  staff,
-  user,
-}
+enum UserRole { superAdmin, owner, manager, cashier, staff, user }
 
 class UserEntity extends Equatable {
   final String id;
@@ -78,11 +71,19 @@ class UserEntity extends Equatable {
 
   String? getDisplayCityName({String? languageCode}) {
     if (languageCode == 'en') {
-      if (cityNameEn != null && cityNameEn!.trim().isNotEmpty) return cityNameEn!.trim();
-      if (cityNameAr != null && cityNameAr!.trim().isNotEmpty) return cityNameAr!.trim();
+      if (cityNameEn != null && cityNameEn!.trim().isNotEmpty) {
+        return cityNameEn!.trim();
+      }
+      if (cityNameAr != null && cityNameAr!.trim().isNotEmpty) {
+        return cityNameAr!.trim();
+      }
     } else {
-      if (cityNameAr != null && cityNameAr!.trim().isNotEmpty) return cityNameAr!.trim();
-      if (cityNameEn != null && cityNameEn!.trim().isNotEmpty) return cityNameEn!.trim();
+      if (cityNameAr != null && cityNameAr!.trim().isNotEmpty) {
+        return cityNameAr!.trim();
+      }
+      if (cityNameEn != null && cityNameEn!.trim().isNotEmpty) {
+        return cityNameEn!.trim();
+      }
     }
     return null;
   }
@@ -131,21 +132,21 @@ class UserEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        email,
-        name,
-        role,
-        rawRole,
-        loungeId,
-        avatarUrl,
-        cityId,
-        cityNameAr,
-        cityNameEn,
-        isSetupCompleted,
-        pointsBalance,
-        referralCount,
-        isBanned,
-        isActive,
-        bannedReason,
-      ];
+    id,
+    email,
+    name,
+    role,
+    rawRole,
+    loungeId,
+    avatarUrl,
+    cityId,
+    cityNameAr,
+    cityNameEn,
+    isSetupCompleted,
+    pointsBalance,
+    referralCount,
+    isBanned,
+    isActive,
+    bannedReason,
+  ];
 }

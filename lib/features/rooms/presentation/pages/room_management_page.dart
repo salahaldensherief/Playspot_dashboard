@@ -1,9 +1,11 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/layouts/dashboard_layout.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_state.dart';
+import 'package:play_spot_dashboard/features/categories/presentation/categories/category_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/room_cubit.dart';
 import '../widgets/room_management_header.dart';
@@ -23,6 +25,10 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
     if (loungeId.isNotEmpty && _loadedLoungeId != loungeId) {
       _loadedLoungeId = loungeId;
       context.read<RoomCubit>().watchRooms(loungeId);
+      context.read<RoomCubit>().loadSpaceTypes();
+      if (context.read<CategoryCubit>().state.activityTypes.isEmpty) {
+        context.read<CategoryCubit>().loadCategories();
+      }
     }
   }
 
@@ -31,19 +37,22 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final loginState = context.read<LoginCubit>().state;
-      final loungeId = loginState.user?.loungeId ?? loginState.userLounge?.id ?? '';
+      final loungeId =
+          loginState.user?.loungeId ?? loginState.userLounge?.id ?? '';
       _checkAndLoadRooms(context, loungeId);
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocListener<LoginCubit, LoginState>(
       listenWhen: (prev, curr) =>
           prev.user?.loungeId != curr.user?.loungeId ||
           prev.userLounge?.id != curr.userLounge?.id,
       listener: (context, loginState) {
-        final loungeId = loginState.user?.loungeId ?? loginState.userLounge?.id ?? '';
+        final loungeId =
+            loginState.user?.loungeId ?? loginState.userLounge?.id ?? '';
         _checkAndLoadRooms(context, loungeId);
       },
       child: BlocBuilder<LoginCubit, LoginState>(

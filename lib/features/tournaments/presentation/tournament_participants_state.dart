@@ -1,7 +1,13 @@
 import 'package:equatable/equatable.dart';
 import '../domain/entities/tournament_participant_entity.dart';
 
-enum TournamentParticipantsStatus { initial, loading, success, actionSuccess, failure }
+enum TournamentParticipantsStatus {
+  initial,
+  loading,
+  success,
+  actionSuccess,
+  failure,
+}
 
 class TournamentParticipantsState extends Equatable {
   final TournamentParticipantsStatus status;
@@ -32,9 +38,9 @@ class TournamentParticipantsState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        participants,
-        errorMessage,
-        successMessage,
-      ];
+    status,
+    participants,
+    errorMessage,
+    successMessage,
+  ];
 }

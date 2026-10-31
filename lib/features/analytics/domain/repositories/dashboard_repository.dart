@@ -6,8 +6,16 @@ import 'package:play_spot_dashboard/features/analytics/domain/entities/lounge_st
 abstract class DashboardRepository {
   Future<Either<Failure, LoungeStatsEntity>> getLoungeStats(String? loungeId);
   Stream<List<Booking>> watchActiveSessions({String? loungeId});
-  Future<Either<Failure, void>> extendSession(String bookingId, int additionalMinutes, {double? additionalCost});
-  Future<Either<Failure, void>> addExtrasToSession(String bookingId, List<Map<String, dynamic>> extras, double additionalCost);
+  Future<Either<Failure, void>> extendSession(
+    String bookingId,
+    int additionalMinutes, {
+    double? additionalCost,
+  });
+  Future<Either<Failure, void>> addExtrasToSession(
+    String bookingId,
+    List<Map<String, dynamic>> extras,
+    double additionalCost,
+  );
   Future<Either<Failure, void>> endSession(String bookingId);
   Future<Either<Failure, void>> reviewExtensionRequest({
     required String bookingId,
@@ -25,5 +33,11 @@ abstract class DashboardRepository {
     int? extensionMinutes,
     List<Map<String, dynamic>>? extraItems,
     double? extraCost,
+  });
+  Future<Either<Failure, Map<String, dynamic>>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
   });
 }

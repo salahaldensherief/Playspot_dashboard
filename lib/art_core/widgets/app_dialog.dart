@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,7 +10,9 @@ class AppDialog extends StatelessWidget {
   final Widget child;
   final List<Widget>? actions;
   final double? width;
+  final double? maxWidth;
   final bool showCloseIcon;
+  final IconData? icon;
 
   const AppDialog({
     super.key,
@@ -17,51 +20,91 @@ class AppDialog extends StatelessWidget {
     required this.child,
     this.actions,
     this.width,
+    this.maxWidth,
     this.showCloseIcon = true,
+    this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
+    final screenSize = MediaQuery.sizeOf(context);
+    final targetWidth = width ?? 600.w;
+    final dialogWidth = math.min(targetWidth, screenSize.width - 32);
+
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Container(
-        width: width ?? 600.w,
-        padding: EdgeInsets.all(32.r),
+        width: dialogWidth,
+        constraints: BoxConstraints(maxHeight: screenSize.height * 0.88),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 24.sp,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Orbitron',
+            Padding(
+              padding: EdgeInsets.fromLTRB(28.r, 24.r, 28.r, 16.r),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (icon != null) ...[
+                    Container(
+                      padding: EdgeInsets.all(8.r),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Icon(icon, color: AppColors.primary, size: 22.sp),
+                    ),
+                    SizedBox(width: 12.w),
+                  ],
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 22.sp,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Tajawal',
+                      ),
                     ),
                   ),
-                ),
-                if (showCloseIcon)
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
-                  ),
-              ],
+                  if (showCloseIcon)
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(
+                        Icons.close,
+                        color: AppColors.textSecondary,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                ],
+              ),
             ),
-            SizedBox(height: 32.h),
+            const Divider(height: 1, color: AppColors.divider),
             Flexible(
-              child: SingleChildScrollView(child: child),
+              child: Scrollbar(
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 28.r,
+                    vertical: 20.r,
+                  ),
+                  child: child,
+                ),
+              ),
             ),
-            if (actions != null && actions!.isNotEmpty) ...[
-              SizedBox(height: 40.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: actions!,
+            if (actions != null && (actions?.isNotEmpty ?? false)) ...[
+              const Divider(height: 1, color: AppColors.divider),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 28.r, vertical: 16.r),
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  runSpacing: 8,
+                  children: actions ?? const [],
+                ),
               ),
             ],
           ],
@@ -79,12 +122,8 @@ class AppDialog extends StatelessWidget {
   }) {
     return showDialog<T>(
       context: context,
-      builder: (context) => AppDialog(
-        title: title,
-        width: width,
-        actions: actions,
-        child: child,
-      ),
+      builder: (context) =>
+          AppDialog(title: title, width: width, actions: actions, child: child),
     );
   }
 
@@ -101,14 +140,16 @@ class AppDialog extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
         title: Text(
           title,
           style: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
-            fontFamily: 'Orbitron',
+            fontFamily: 'Tajawal',
           ),
         ),
         content: Text(

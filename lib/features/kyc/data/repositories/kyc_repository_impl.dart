@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'dart:typed_data';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/kyc_request.dart';
 import '../../domain/repositories/kyc_repository.dart';
@@ -13,6 +14,7 @@ class KycRepositoryImpl implements KycRepository {
   @override
   Future<Either<Failure, void>> submitKyc({
     required String userId,
+    required String loungeId,
     required Uint8List idCardBytes,
     required String idCardName,
     Uint8List? businessDocBytes,
@@ -21,6 +23,7 @@ class KycRepositoryImpl implements KycRepository {
     try {
       await _remoteDataSource.submitKyc(
         userId: userId,
+        loungeId: loungeId,
         idCardBytes: idCardBytes,
         idCardName: idCardName,
         businessDocBytes: businessDocBytes,
@@ -37,6 +40,14 @@ class KycRepositoryImpl implements KycRepository {
     try {
       final results = await _remoteDataSource.getPendingReviews();
       return Right(results.map((e) => KycRequest.fromJson(e)).toList());
+    } on PostgrestException catch (error) {
+      return Left(
+        ServerFailure(
+          error.code == 'PGRST202'
+              ? 'kyc_review_service_unavailable'
+              : error.toString(),
+        ),
+      );
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -44,13 +55,15 @@ class KycRepositoryImpl implements KycRepository {
 
   @override
   Future<Either<Failure, void>> reviewKyc({
-    required String userId,
+    required String requestId,
+    required int revision,
     required bool approve,
     String? notes,
   }) async {
     try {
       await _remoteDataSource.reviewKyc(
-        userId: userId,
+        requestId: requestId,
+        revision: revision,
         approve: approve,
         notes: notes,
       );

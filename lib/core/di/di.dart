@@ -1,11 +1,16 @@
 import 'package:get_it/get_it.dart';
+import 'package:http/http.dart' as http;
+import '../../features/offline_cashier/offline_cashier_di.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/secure_supabase_auth_options.dart';
+import '../services/request_diagnostics_client.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/core/audio/audio_service.dart';
 import 'package:play_spot_dashboard/core/constants/app_constants.dart';
 import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:play_spot_dashboard/core/services/location_service.dart';
 import 'package:play_spot_dashboard/core/services/local_cache_service.dart';
+import '../services/local_cache_service_impl.dart';
 import 'package:play_spot_dashboard/core/services/hardware_bridge_service.dart';
 
 import 'package:play_spot_dashboard/features/auth/auth_di.dart';
@@ -28,6 +33,9 @@ import 'package:play_spot_dashboard/features/reviews/reviews_di.dart';
 import 'package:play_spot_dashboard/features/tournaments/tournaments_di.dart';
 import 'package:play_spot_dashboard/features/support/support_di.dart';
 import 'package:play_spot_dashboard/features/system/system_di.dart';
+import 'package:play_spot_dashboard/features/audit/audit_di.dart';
+import 'package:play_spot_dashboard/features/pricing/pricing_di.dart';
+import 'package:play_spot_dashboard/features/canteen/canteen_di.dart';
 
 final sl = GetIt.instance;
 
@@ -39,10 +47,21 @@ Future<void> setupInjection() async {
     );
   }
 
-  await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
+  final httpClient = RequestDiagnosticsClient();
+  sl.registerSingleton<http.Client>(
+    httpClient,
+    dispose: (client) => client.close(),
+  );
+  await Supabase.initialize(
+    url: supabaseUrl,
+    publishableKey: supabaseAnonKey,
+    httpClient: httpClient,
+    authOptions: SecureSupabaseAuthOptions.forUrl(supabaseUrl),
+  );
 
   // Register Supabase Client
   sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
+  await initOfflineCashierDI(sl);
 
   // Core Services
   final prefs = await SharedPreferences.getInstance();
@@ -53,9 +72,11 @@ Future<void> setupInjection() async {
 
   sl.registerLazySingleton<AudioService>(() => AudioServiceImpl());
   sl.registerLazySingleton<StorageService>(() => StorageServiceImpl(sl()));
-  sl.registerLazySingleton<LocationService>(() => LocationServiceImpl());
+  sl.registerLazySingleton<LocationService>(
+    () => LocationServiceImpl(client: sl()),
+  );
   sl.registerLazySingleton<HardwareBridgeService>(
-    () => HardwareBridgeService(),
+    () => HardwareBridgeService(client: sl()),
   );
 
   // Initialize Feature DI Modules
@@ -79,4 +100,7 @@ Future<void> setupInjection() async {
   initTournamentsDI(sl);
   initSupportDI(sl);
   initSystemDI(sl);
+  initAuditDI(sl);
+  initPricingDI(sl);
+  initCanteenDI(sl);
 }

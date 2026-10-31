@@ -1,0 +1,79 @@
+{
+  "current": {
+    "actor_id": "3242a4e0-3653-4692-87bc-15fae4224511",
+    "timezone": "Africa/Cairo",
+    "device_id": "131662d4-be66-4ad4-a0c3-c5c7f38eefa5",
+    "issued_ms": 1790886419054,
+    "lounge_id": "1369de77-f1be-466a-b5e1-a76e7d45e794",
+    "permit_id": "57a82f88-b1db-4230-98de-49de2001d7c1",
+    "expires_ms": 1790972819054,
+    "permissions": {
+      "bookings.manage": true,
+      "billing_checkout": true,
+      "sessions_control": true
+    },
+    "lounge_active": true,
+    "lounge_status": "active",
+    "profile_active": true,
+    "profile_banned": false,
+    "server_time_ms": 1790886419054,
+    "offline_enabled": true,
+    "online_requested": false,
+    "protocol_version": 2,
+    "heartbeat_expires_at": "2026-10-01T23:26:59.054+03:00",
+    "last_applied_sequence": 0
+  },
+  "previous": {
+    "actor_id": "3242a4e0-3653-4692-87bc-15fae4224511",
+    "timezone": "Africa/Cairo",
+    "device_id": "131662d4-be66-4ad4-a0c3-c5c7f38eefa5",
+    "issued_ms": 1790713560000,
+    "lounge_id": "1369de77-f1be-466a-b5e1-a76e7d45e794",
+    "permit_id": "25aa6c5e-038b-4486-99d4-cba1d5192099",
+    "expires_ms": 1790799960000,
+    "permissions": {
+      "bookings.manage": true,
+      "billing_checkout": true,
+      "sessions_control": true
+    },
+    "lounge_active": true,
+    "lounge_status": "active",
+    "profile_active": true,
+    "profile_banned": false,
+    "server_time_ms": 1790717160000,
+    "offline_enabled": true,
+    "online_requested": false,
+    "protocol_version": 2,
+    "heartbeat_expires_at": "2026-09-29T21:26:00.000Z",
+    "last_applied_sequence": 0
+  },
+  "pending": {
+    "id": "ff22522a-6144-4974-99c1-6e45b5397e10",
+    "actor_id": "3242a4e0-3653-4692-87bc-15fae4224511",
+    "lounge_id": "1369de77-f1be-466a-b5e1-a76e7d45e794",
+    "device_id": "131662d4-be66-4ad4-a0c3-c5c7f38eefa5",
+    "permit_id": "25aa6c5e-038b-4486-99d4-cba1d5192099",
+    "booking_id": "8439489f-94dc-491e-86c8-6c7679ec8a36",
+    "shift_id": "157a14fb-27f5-4cb9-aa36-4d8e10eafcf0",
+    "sequence": 1,
+    "occurred_at": "2026-09-29T21:26:00.000Z",
+    "kind": "reserve",
+    "payload": {
+      "room_id": "ec438b64-9225-49df-9a83-9d391aceadff",
+      "start_ms": 1790717160000,
+      "end_ms": 1790720760000,
+      "timezone": "Africa/Cairo",
+      "play_mode": "single",
+      "customer_name": "Walk-in"
+    },
+    "quoted_total_minor": 10000,
+    "quoted_session": {
+      "room_id": "ec438b64-9225-49df-9a83-9d391aceadff",
+      "timezone": "Africa/Cairo",
+      "start_ms": 1790717160000,
+      "end_ms": 1790720760000,
+      "started_ms": null,
+      "paid_minor": 0
+    }
+  }
+}

@@ -1,4 +1,8 @@
-import 'dart:async';
+import 'package:play_spot_dashboard/core/error/backend_access_error.dart';
+
+import '../../../../core/streams/refreshing_stream.dart';
+import 'requests_realtime_invalidations.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:play_spot_dashboard/core/utils/paginated_result.dart';
 import 'package:play_spot_dashboard/features/requests/data/datasources/requests_fallback_fetcher.dart';
@@ -25,118 +29,12 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
       return Stream.value([]);
     }
 
-    late StreamController<List<ClientRequestModel>> controller;
-    RealtimeChannel? realtimeChannel;
-    Timer? backupSyncTimer;
-    Timer? debounceTimer;
-    bool isFetching = false;
-
-    void fetchAndEmit() {
-      debounceTimer?.cancel();
-      debounceTimer = Timer(const Duration(milliseconds: 300), () async {
-        if (isFetching) return;
-        isFetching = true;
-        try {
-          final requests = await getClientRequests(loungeId: cleanLoungeId);
-          if (!controller.isClosed) {
-            controller.add(requests);
-          }
-        } catch (e) {
-          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] fetchAndEmit Error: $e');
-        } finally {
-          isFetching = false;
-        }
-      });
-    }
-
-    controller = StreamController<List<ClientRequestModel>>(
-      onListen: () {
-        fetchAndEmit();
-
-        try {
-          final channelName = 'lounge_requests_channel_$cleanLoungeId';
-          realtimeChannel = client.channel(channelName);
-
-          realtimeChannel!
-              .onPostgresChanges(
-                event: PostgresChangeEvent.all,
-                schema: 'public',
-                table: 'service_calls',
-                callback: (_) => fetchAndEmit(),
-              )
-              .onPostgresChanges(
-                event: PostgresChangeEvent.all,
-                schema: 'public',
-                table: 'canteen_orders',
-                filter: PostgresChangeFilter(
-                  type: PostgresChangeFilterType.eq,
-                  column: 'lounge_id',
-                  value: cleanLoungeId,
-                ),
-                callback: (_) => fetchAndEmit(),
-              )
-              .onPostgresChanges(
-                event: PostgresChangeEvent.all,
-                schema: 'public',
-                table: 'client_requests',
-                filter: PostgresChangeFilter(
-                  type: PostgresChangeFilterType.eq,
-                  column: 'lounge_id',
-                  value: cleanLoungeId,
-                ),
-                callback: (_) => fetchAndEmit(),
-              )
-              .onPostgresChanges(
-                event: PostgresChangeEvent.all,
-                schema: 'public',
-                table: 'booking_items',
-                callback: (_) => fetchAndEmit(),
-              )
-              .onPostgresChanges(
-                event: PostgresChangeEvent.all,
-                schema: 'public',
-                table: 'bookings',
-                filter: PostgresChangeFilter(
-                  type: PostgresChangeFilterType.eq,
-                  column: 'lounge_id',
-                  value: cleanLoungeId,
-                ),
-                callback: (_) => fetchAndEmit(),
-              )
-              .subscribe((status, error) {
-                if (status == RealtimeSubscribeStatus.subscribed) {
-                  // Guarantee recovery of missed events upon connection establish or reconnect
-                  fetchAndEmit();
-                } else if (status == RealtimeSubscribeStatus.channelError) {
-                  debugPrint(
-                    '⚠️ [REQUESTS_DATA_SOURCE] Realtime Channel Error: $error',
-                  );
-                }
-              });
-        } catch (e) {
-          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Realtime setup failed: $e');
-        }
-
-        backupSyncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-          fetchAndEmit();
-        });
-      },
-      onCancel: () {
-        debounceTimer?.cancel();
-        backupSyncTimer?.cancel();
-        if (realtimeChannel != null) {
-          try {
-            realtimeChannel?.unsubscribe();
-            client.removeChannel(realtimeChannel!);
-          } catch (e) {
-            debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Error removing channel: $e');
-          }
-          realtimeChannel = null;
-        }
-      },
+    return refreshingStream<List<ClientRequestModel>>(
+      fetch: () => getClientRequests(loungeId: cleanLoungeId),
+      invalidations: () => watchRequestInvalidations(client, cleanLoungeId),
+      onRealtimeError: (error) =>
+          debugPrint('⚠️ [REQUESTS_DATA_SOURCE] Realtime Error: $error'),
     );
-
-    return controller.stream;
   }
 
   @override
@@ -170,6 +68,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         );
         requestsList.addAll(paginated.items);
       } catch (e) {
+        if (isBackendAccessDenied(e)) rethrow;
         debugPrint(
           '⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests_page Error: $e',
         );
@@ -205,6 +104,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         pageSize: pageSize,
       );
     } catch (e) {
+      if (isBackendAccessDenied(e)) rethrow;
       debugPrint(
         '⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests_page Error: $e',
       );
@@ -245,6 +145,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
         );
         requestsList.addAll(paginated.items);
       } catch (e) {
+        if (isBackendAccessDenied(e)) rethrow;
         debugPrint(
           '⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests Error: $e',
         );
@@ -274,6 +175,7 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
       list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return list;
     } catch (e) {
+      if (isBackendAccessDenied(e)) rethrow;
       debugPrint(
         '⚠️ [REQUESTS_DATA_SOURCE] get_active_lounge_requests Error: $e',
       );
@@ -295,10 +197,6 @@ class RequestsRemoteDataSourceImpl implements RequestsRemoteDataSource {
     }
 
     if (id.startsWith('ext_')) {
-      if (_locallyAttendedIds.length > 300) {
-        _locallyAttendedIds.clear();
-      }
-      _locallyAttendedIds.add(id);
       return;
     }
 

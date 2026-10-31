@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
@@ -10,13 +11,11 @@ import 'audit_logs_modal.dart';
 class TournamentAuditLogsTab extends StatelessWidget {
   final List<TournamentAuditLogEntity> auditLogs;
 
-  const TournamentAuditLogsTab({
-    super.key,
-    required this.auditLogs,
-  });
+  const TournamentAuditLogsTab({super.key, required this.auditLogs});
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return SectionContainer(
       title: AppStrings.auditTrail,
       children: [
@@ -53,11 +52,17 @@ class TournamentAuditLogsTab extends StatelessWidget {
               return ListTile(
                 title: Text(
                   log.actionType,
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14.sp,
+                  ),
                 ),
                 subtitle: Text(
                   log.performedByName ?? log.performedBy,
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12.sp,
+                  ),
                 ),
               );
             },

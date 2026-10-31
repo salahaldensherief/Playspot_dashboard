@@ -30,13 +30,17 @@ class ShiftExpenseModel extends ShiftExpenseEntity {
       type: (json['type'] ?? 'expense').toString().toLowerCase(),
       reason: (json['reason'] ?? json['notes'] ?? '').toString(),
       createdBy: json['created_by']?.toString(),
-      createdByName: (json['created_by_name'] ?? profileData?['full_name'])?.toString(),
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
+      createdByName: (json['created_by_name'] ?? profileData?['full_name'])
+          ?.toString(),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
     );
   }
 
   Map<String, dynamic> toJson() {
-    final validExpenseType = ['cash_drop', 'expense', 'other'].contains(type.toLowerCase().trim())
+    final validExpenseType =
+        ['cash_drop', 'expense', 'other'].contains(type.toLowerCase().trim())
         ? type.toLowerCase().trim()
         : 'expense';
 

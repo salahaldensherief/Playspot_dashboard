@@ -2,7 +2,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'art_core/theme/app_colors.dart';
 import 'core/router/app_router.dart';
 import 'features/auth/presentation/login/login_cubit.dart';
@@ -13,12 +12,11 @@ class AppScrollBehavior extends MaterialScrollBehavior {
 
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.trackpad,
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.unknown,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.unknown,
+  };
 }
 
 class MyApp extends StatefulWidget {
@@ -41,28 +39,47 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ScreenUtilInit(
-      designSize: const Size(1440, 1024),
-      minTextAdapt: true,
-      splitScreenMode: true,
-      builder: (context, child) {
-        return MaterialApp.router(
-          title: 'PlaySpot Dashboard',
-          debugShowCheckedModeBanner: false,
-          scrollBehavior: const AppScrollBehavior(),
-          localizationsDelegates: context.localizationDelegates,
-          supportedLocales: context.supportedLocales,
-          locale: context.locale,
-          theme: ThemeData(
-            scaffoldBackgroundColor: AppColors.scaffoldBackground,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: AppColors.neonBlue,
-              brightness: Brightness.dark,
-            ),
-            useMaterial3: true,
-            textTheme: GoogleFonts.cairoTextTheme(Theme.of(context).textTheme),
-          ),
-          routerConfig: _appRouter.router,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final Size designSize;
+        if (width < 600) {
+          designSize = const Size(390, 844); // Mobile standard
+        } else if (width < 1024) {
+          designSize = const Size(768, 1024); // Tablet standard
+        } else {
+          designSize = const Size(1440, 1024); // Desktop standard
+        }
+
+        return ScreenUtilInit(
+          designSize: designSize,
+          minTextAdapt: true,
+          splitScreenMode: true,
+          builder: (context, child) {
+            return MaterialApp.router(
+              title: 'PlaySpot Dashboard',
+              debugShowCheckedModeBanner: false,
+              scrollBehavior: const AppScrollBehavior(),
+              localizationsDelegates: context.localizationDelegates,
+              supportedLocales: context.supportedLocales,
+              locale: context.locale,
+              theme: ThemeData(
+                scaffoldBackgroundColor: AppColors.scaffoldBackground,
+                colorScheme: ColorScheme.fromSeed(
+                  seedColor: AppColors.primary,
+                  primary: AppColors.primary,
+                  onPrimary: AppColors.onPrimary,
+                  brightness: Brightness.dark,
+                ),
+                useMaterial3: true,
+                fontFamily: 'Tajawal',
+                textTheme: ThemeData.dark().textTheme.apply(
+                  fontFamily: 'Tajawal',
+                ),
+              ),
+              routerConfig: _appRouter.router,
+            );
+          },
         );
       },
     );

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -73,7 +74,7 @@ class _CreatePayoutDialogState extends State<CreatePayoutDialog> {
           messenger.showSnackBar(
             SnackBar(
               content: Text(
-                '${AppStrings.payoutCreatedSuccess} \$${result['amount']} (${result['payment_count']} ${AppStrings.paymentsCount})',
+                '${AppStrings.payoutCreatedSuccess} ${result['amount']} ${AppStrings.egp} (${result['payment_count']} ${AppStrings.paymentsCount})',
               ),
             ),
           );
@@ -85,6 +86,7 @@ class _CreatePayoutDialogState extends State<CreatePayoutDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AppDialog(
       title: AppStrings.createPayoutFor(widget.loungeName),
       actions: [
@@ -104,7 +106,10 @@ class _CreatePayoutDialogState extends State<CreatePayoutDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppTextField(label: AppStrings.periodStart, controller: _startController),
+          AppTextField(
+            label: AppStrings.periodStart,
+            controller: _startController,
+          ),
           SizedBox(height: 16.h),
           AppTextField(label: AppStrings.periodEnd, controller: _endController),
           if (_errorMessage != null) ...[

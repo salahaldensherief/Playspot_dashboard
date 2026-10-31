@@ -89,7 +89,8 @@ class _RadialCountdownRingState extends State<RadialCountdownRing>
     if (widget.isExpired) {
       return 0.0;
     }
-    final ratio = widget.remainingDuration.inSeconds / widget.totalDuration.inSeconds;
+    final ratio =
+        widget.remainingDuration.inSeconds / widget.totalDuration.inSeconds;
     return ratio.clamp(0.0, 1.0);
   }
 
@@ -119,8 +120,12 @@ class _RadialCountdownRingState extends State<RadialCountdownRing>
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
-        final scale = widget.isExpired ? 1.0 + (_pulseController.value * 0.06) : 1.0;
-        final opacity = widget.isExpired ? 0.7 + (_pulseController.value * 0.3) : 1.0;
+        final scale = widget.isExpired
+            ? 1.0 + (_pulseController.value * 0.06)
+            : 1.0;
+        final opacity = widget.isExpired
+            ? 0.7 + (_pulseController.value * 0.3)
+            : 1.0;
 
         return Transform.scale(
           scale: scale,
@@ -154,17 +159,30 @@ class _RadialCountdownRingState extends State<RadialCountdownRing>
   Widget _buildCenterWidget(Color ringColor) {
     if (!widget.showText) {
       if (widget.isOpenEnded) {
-        return Icon(Icons.all_inclusive, size: (widget.size * 0.45).r, color: ringColor);
+        return Icon(
+          Icons.all_inclusive,
+          size: (widget.size * 0.45).r,
+          color: ringColor,
+        );
       }
       if (widget.isExpired) {
-        return Icon(Icons.warning_amber_rounded, size: (widget.size * 0.45).r, color: ringColor);
+        return Icon(
+          Icons.warning_amber_rounded,
+          size: (widget.size * 0.45).r,
+          color: ringColor,
+        );
       }
-      return Icon(Icons.access_time_rounded, size: (widget.size * 0.45).r, color: ringColor);
+      return Icon(
+        Icons.access_time_rounded,
+        size: (widget.size * 0.45).r,
+        color: ringColor,
+      );
     }
 
     return Text(
       _centerText,
-      style: widget.textStyle ??
+      style:
+          widget.textStyle ??
           TextStyle(
             color: ringColor,
             fontSize: 10.sp,

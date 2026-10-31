@@ -22,6 +22,8 @@ class LoginCubit extends Cubit<LoginState> {
   final LocationService locationService;
   final AuthRepository authRepository;
 
+  int _authGeneration = 0;
+  int _locationGeneration = 0;
   double? _lastUpdatedLat;
   double? _lastUpdatedLng;
 
@@ -35,51 +37,85 @@ class LoginCubit extends Cubit<LoginState> {
   }) : super(const LoginState());
 
   Future<void> checkInitialAuth({BuildContext? context}) async {
+    final generation = ++_authGeneration;
     AppLogger.info('LoginCubit: checking initial auth');
-    emit(state.copyWith(status: LoginStatus.checking));
+    emit(state.copyWith(status: LoginStatus.checking, errorMessage: null));
     final result = await getCurrentUserUseCase(NoParams());
+    if (isClosed || generation != _authGeneration) return;
     result.fold(
       (failure) {
-        AppLogger.error('LoginCubit: initial auth check failed: ${failure.message}');
-        emit(state.copyWith(status: LoginStatus.unauthenticated));
+        AppLogger.error(
+          'LoginCubit: initial auth check failed: ${failure.message}',
+        );
+        emit(
+          state.copyWith(
+            status: LoginStatus.profileFailure,
+            errorMessage: 'profile_access_load_failed',
+          ),
+        );
       },
       (user) async {
         AppLogger.info('LoginCubit: user role: ${user?.role}');
         if (user != null) {
-          emit(state.copyWith(
-            status: LoginStatus.authenticated,
-            user: user,
-            isSetupCompleted: user.isSetupCompleted,
-          ));
-          
+          emit(
+            state.copyWith(
+              status: LoginStatus.authenticated,
+              errorMessage: null,
+              user: user,
+              clearUserLounge: true,
+              loungeLoadError: null,
+              isLoadingLounge: user.isStaff && user.loungeId != null,
+              isSetupCompleted: user.isSetupCompleted,
+            ),
+          );
+
           updateUserLocation();
 
           if (user.isStaff && user.loungeId != null) {
             _handleLoungeAdminAuth(user, context: context);
           }
         } else {
-          emit(state.copyWith(status: LoginStatus.unauthenticated));
+          emit(const LoginState(status: LoginStatus.unauthenticated));
         }
       },
     );
   }
 
-  Future<void> login(String email, String password, { BuildContext? context}) async {
+  Future<void> login(
+    String email,
+    String password, {
+    BuildContext? context,
+  }) async {
+    final generation = ++_authGeneration;
+    _locationGeneration++;
     AppLogger.info('LoginCubit: logging in');
     emit(state.copyWith(status: LoginStatus.loading));
-    final result = await loginUseCase(LoginParams(email: email, password: password));
+    final result = await loginUseCase(
+      LoginParams(email: email, password: password),
+    );
+    if (isClosed || generation != _authGeneration) return;
     result.fold(
       (failure) {
         AppLogger.error('LoginCubit: login failed: ${failure.message}');
-        emit(state.copyWith(status: LoginStatus.failure, errorMessage: failure.message));
+        emit(
+          state.copyWith(
+            status: LoginStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (user) async {
         AppLogger.info('LoginCubit: login success');
-        emit(state.copyWith(
-          status: LoginStatus.authenticated,
-          user: user,
-          isSetupCompleted: user.isSetupCompleted,
-        ));
+        emit(
+          state.copyWith(
+            status: LoginStatus.authenticated,
+            user: user,
+            clearUserLounge: true,
+            loungeLoadError: null,
+            isLoadingLounge: user.isStaff && user.loungeId != null,
+            isSetupCompleted: user.isSetupCompleted,
+          ),
+        );
 
         updateUserLocation();
 
@@ -90,32 +126,79 @@ class LoginCubit extends Cubit<LoginState> {
     );
   }
 
-  Future<void> _handleLoungeAdminAuth(UserEntity user, {BuildContext? context}) async {
+  Future<void> _handleLoungeAdminAuth(
+    UserEntity user, {
+    BuildContext? context,
+  }) async {
     final loungeId = user.loungeId;
     if (loungeId == null) return;
 
+    final generation = _authGeneration;
     final loungeResult = await loungeRepository.getLoungeById(loungeId);
+    if (isClosed ||
+        generation != _authGeneration ||
+        state.user?.id != user.id) {
+      return;
+    }
     loungeResult.fold(
-      (_) => null,
+      (_) {
+        emit(
+          state.copyWith(
+            isLoadingLounge: false,
+            loungeLoadError: 'venue_access_load_failed',
+          ),
+        );
+      },
       (lounge) async {
-        emit(state.copyWith(userLounge: lounge));
+        emit(
+          state.copyWith(
+            userLounge: lounge,
+            isLoadingLounge: false,
+            loungeLoadError: null,
+          ),
+        );
         // We removed the location capture from here to avoid redundancy and potential loops.
         // It's now handled by the GeolocationHandler in the UI Shell.
       },
     );
   }
 
+  Future<void> reloadLoungeAccess() async {
+    final user = state.user;
+    if (isClosed || user == null || !user.isStaff || state.isLoadingLounge) {
+      return;
+    }
+    emit(state.copyWith(isLoadingLounge: true, loungeLoadError: null));
+    await _handleLoungeAdminAuth(user);
+  }
+
   /// Reloads profile to refresh isSetupCompleted status
   Future<void> refreshProfile() async {
+    final generation = _authGeneration;
+    final actor = state.user?.id;
     final result = await getCurrentUserUseCase(NoParams());
+    if (isClosed || generation != _authGeneration || state.user?.id != actor) {
+      return;
+    }
     result.fold(
-      (_) => null,
+      (_) => emit(
+        state.copyWith(
+          status: LoginStatus.profileFailure,
+          errorMessage: 'profile_access_load_failed',
+        ),
+      ),
       (user) {
         if (user != null) {
-          emit(state.copyWith(
-            user: user,
-            isSetupCompleted: user.isSetupCompleted,
-          ));
+          emit(
+            state.copyWith(
+              status: LoginStatus.authenticated,
+              user: user,
+              isSetupCompleted: user.isSetupCompleted,
+              errorMessage: null,
+            ),
+          );
+        } else {
+          emit(const LoginState(status: LoginStatus.unauthenticated));
         }
       },
     );
@@ -126,23 +209,38 @@ class LoginCubit extends Cubit<LoginState> {
   }
 
   Future<void> updateUserLocation() async {
+    final actor = state.user?.id;
+    if (isClosed || actor == null) return;
+    final generation = ++_locationGeneration;
+    bool isCurrent() =>
+        !isClosed &&
+        generation == _locationGeneration &&
+        state.user?.id == actor &&
+        state.status != LoginStatus.unauthenticated;
     emit(state.copyWith(isLoadingLocation: true, locationErrorMessage: null));
     try {
       final hasPermission = await locationService.checkPermissions();
+      if (!isCurrent()) return;
       if (!hasPermission) {
-        emit(state.copyWith(
-          isLoadingLocation: false,
-          locationErrorMessage: 'يرجى تفعيل صلاحية الوصول إلى الموقع من إعدادات الجهاز',
-        ));
+        emit(
+          state.copyWith(
+            isLoadingLocation: false,
+            locationErrorMessage:
+                'يرجى تفعيل صلاحية الوصول إلى الموقع من إعدادات الجهاز',
+          ),
+        );
         return;
       }
 
       final position = await locationService.getCurrentPosition();
+      if (!isCurrent()) return;
       if (position == null) {
-        emit(state.copyWith(
-          isLoadingLocation: false,
-          locationErrorMessage: 'الموقع غير واضح أو تعذر تحديد الإحداثيات',
-        ));
+        emit(
+          state.copyWith(
+            isLoadingLocation: false,
+            locationErrorMessage: 'الموقع غير واضح أو تعذر تحديد الإحداثيات',
+          ),
+        );
         return;
       }
 
@@ -155,7 +253,9 @@ class LoginCubit extends Cubit<LoginState> {
           position.longitude,
         );
         if (distanceInMeters < 500) {
-          AppLogger.info('LoginCubit: User location hasn\'t changed significantly (${distanceInMeters.toStringAsFixed(1)}m < 500m). Skipping DB update.');
+          AppLogger.info(
+            'LoginCubit: User location hasn\'t changed significantly (${distanceInMeters.toStringAsFixed(1)}m < 500m). Skipping DB update.',
+          );
           emit(state.copyWith(isLoadingLocation: false));
           return;
         }
@@ -166,34 +266,45 @@ class LoginCubit extends Cubit<LoginState> {
         longitude: position.longitude,
       );
 
+      if (!isCurrent()) return;
       result.fold(
         (failure) {
           String errorMessage = 'حدث خطأ مؤقت، يرجى المحاولة مرة أخرى';
           final errStr = failure.message;
           if (errStr.contains('422') || errStr.contains('غير مضافة')) {
             errorMessage = 'عذراً، المدينة غير مضافة حالياً للنظام';
-          } else if (errStr.contains('401') || errStr.contains('انتهت صلاحية الجلسة')) {
+          } else if (errStr.contains('401') ||
+              errStr.contains('انتهت صلاحية الجلسة')) {
             errorMessage = 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى';
             logout();
+            return;
           } else if (errStr.isNotEmpty) {
             errorMessage = errStr;
           }
-          emit(state.copyWith(
-            isLoadingLocation: false,
-            locationErrorMessage: errorMessage,
-          ));
+          emit(
+            state.copyWith(
+              isLoadingLocation: false,
+              locationErrorMessage: errorMessage,
+            ),
+          );
         },
         (updatedUser) {
+          if (updatedUser.id != actor) {
+            throw StateError('Location response belongs to another account');
+          }
           _lastUpdatedLat = position.latitude;
           _lastUpdatedLng = position.longitude;
-          emit(state.copyWith(
-            isLoadingLocation: false,
-            user: updatedUser,
-            locationErrorMessage: null,
-          ));
+          emit(
+            state.copyWith(
+              isLoadingLocation: false,
+              user: updatedUser,
+              locationErrorMessage: null,
+            ),
+          );
         },
       );
     } catch (e) {
+      if (!isCurrent()) return;
       String errorMessage = 'حدث خطأ مؤقت، يرجى المحاولة مرة أخرى';
       final errStr = e.toString();
       if (errStr.contains('422')) {
@@ -201,11 +312,14 @@ class LoginCubit extends Cubit<LoginState> {
       } else if (errStr.contains('401')) {
         errorMessage = 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى';
         logout();
+        return;
       }
-      emit(state.copyWith(
-        isLoadingLocation: false,
-        locationErrorMessage: errorMessage,
-      ));
+      emit(
+        state.copyWith(
+          isLoadingLocation: false,
+          locationErrorMessage: errorMessage,
+        ),
+      );
     }
   }
 
@@ -217,8 +331,19 @@ class LoginCubit extends Cubit<LoginState> {
     emit(state.copyWith(userLounge: lounge));
   }
 
-  Future<void> refreshUserLounge(String loungeId, {bool forceRefresh = false}) async {
-    final loungeResult = await loungeRepository.getLoungeById(loungeId, forceRefresh: forceRefresh);
+  Future<void> refreshUserLounge(
+    String loungeId, {
+    bool forceRefresh = false,
+  }) async {
+    final generation = _authGeneration;
+    final actor = state.user?.id;
+    final loungeResult = await loungeRepository.getLoungeById(
+      loungeId,
+      forceRefresh: forceRefresh,
+    );
+    if (isClosed || generation != _authGeneration || state.user?.id != actor) {
+      return;
+    }
     loungeResult.fold(
       (_) => null,
       (lounge) => emit(state.copyWith(userLounge: lounge)),
@@ -226,9 +351,11 @@ class LoginCubit extends Cubit<LoginState> {
   }
 
   Future<void> logout() async {
+    _authGeneration++;
+    _locationGeneration++;
     _lastUpdatedLat = null;
     _lastUpdatedLng = null;
+    if (!isClosed) emit(const LoginState(status: LoginStatus.unauthenticated));
     await logoutUseCase(NoParams());
-    emit(const LoginState(status: LoginStatus.unauthenticated));
   }
 }

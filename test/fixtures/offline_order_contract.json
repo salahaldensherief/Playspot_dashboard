@@ -1,0 +1,58 @@
+{
+  "operation": {
+    "id": "723a8dc7-b71e-407b-b71d-1e4105281d28",
+    "actor_id": "03cdcdb3-813e-473a-8040-2b7e2a29d7d1",
+    "lounge_id": "101c0fab-89f7-4e9a-8ff6-e82e779f29fa",
+    "device_id": "b87578f2-5645-4646-9427-dd0654f794ab",
+    "permit_id": "d4fde5fc-64ef-43e5-8a15-0bd6963e0a79",
+    "booking_id": "972f985f-9100-45c4-aeda-da2a53113a9d",
+    "shift_id": "5ef4598e-3fd9-4b71-9d08-0da12e489aab",
+    "sequence": 1,
+    "occurred_at": "2026-10-01T17:25:17.495Z",
+    "kind": "addItems",
+    "payload": {
+      "items": [
+        {
+          "product_id": "c3626453-86d9-4cbd-862b-132389db7c4c",
+          "quantity": 2
+        }
+      ],
+      "note": "offline order"
+    },
+    "quoted_items": [
+      {
+        "product_id": "c3626453-86d9-4cbd-862b-132389db7c4c",
+        "quantity": 2,
+        "unit_price_minor": 1500
+      }
+    ],
+    "quoted_total_minor": 13000
+  },
+  "response": {
+    "status": "applied",
+    "sequence": 1,
+    "lounge_id": "101c0fab-89f7-4e9a-8ff6-e82e779f29fa",
+    "operation_id": "723a8dc7-b71e-407b-b71d-1e4105281d28",
+    "order_receipt": {
+      "items": [
+        {
+          "name": "Water",
+          "price": 15,
+          "extra_id": "c3626453-86d9-4cbd-862b-132389db7c4c",
+          "quantity": 2,
+          "product_id": "c3626453-86d9-4cbd-862b-132389db7c4c",
+          "unit_price": 15,
+          "total_price": 30
+        }
+      ],
+      "order_id": "723a8dc7-b71e-407b-b71d-1e4105281d28",
+      "due_minor": 13000,
+      "lounge_id": "101c0fab-89f7-4e9a-8ff6-e82e779f29fa",
+      "booking_id": "972f985f-9100-45c4-aeda-da2a53113a9d",
+      "paid_minor": 0,
+      "total_minor": 13000,
+      "payment_status": "unpaid",
+      "order_total_minor": 3000
+    }
+  }
+}

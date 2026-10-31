@@ -42,7 +42,8 @@ class AppBlocObserver extends BlocObserver {
     _activeBlocs[hash] = _ActiveBlocInfo(name: name, createdAt: now);
     _createdCounts[name] = (_createdCounts[name] ?? 0) + 1;
 
-    final timeStr = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}.${now.millisecond.toString().padLeft(3, '0')}";
+    final timeStr =
+        "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}.${now.millisecond.toString().padLeft(3, '0')}";
     _log('🟢 [CREATE] $name (#$hash) at $timeStr');
   }
 
@@ -106,7 +107,8 @@ class AppBlocObserver extends BlocObserver {
     _activeBlocs.remove(hash);
     _closedCounts[name] = (_closedCounts[name] ?? 0) + 1;
 
-    final timeStr = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}.${now.millisecond.toString().padLeft(3, '0')}";
+    final timeStr =
+        "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}.${now.millisecond.toString().padLeft(3, '0')}";
     _log('🔴 [CLOSE] $name (#$hash) at $timeStr');
   }
 
@@ -123,9 +125,13 @@ class AppBlocObserver extends BlocObserver {
     if (!kDebugMode) return;
 
     final StringBuffer buffer = StringBuffer();
-    buffer.writeln('===============================================================');
+    buffer.writeln(
+      '===============================================================',
+    );
     buffer.writeln('📊 [BLOC OBSERVER DIAGNOSTICS SUMMARY]');
-    buffer.writeln('===============================================================');
+    buffer.writeln(
+      '===============================================================',
+    );
 
     // 1. Currently Active (Alive) Cubits / Blocs
     buffer.writeln('🟢 Active (Alive) Cubits/Blocs (${_activeBlocs.length}):');
@@ -149,7 +155,9 @@ class AppBlocObserver extends BlocObserver {
       final closed = _closedCounts[name] ?? 0;
       final diff = created - closed;
       final leakWarning = diff > 0 ? ' ⚠️ ($diff unclosed instance(s))' : '';
-      buffer.writeln('   • $name: $created created, $closed closed$leakWarning');
+      buffer.writeln(
+        '   • $name: $created created, $closed closed$leakWarning',
+      );
     }
 
     // 3. State Changes Count (Rebuild Activity)
@@ -174,7 +182,9 @@ class AppBlocObserver extends BlocObserver {
       }
     }
 
-    buffer.writeln('===============================================================');
+    buffer.writeln(
+      '===============================================================',
+    );
     debugPrint(buffer.toString());
   }
 }

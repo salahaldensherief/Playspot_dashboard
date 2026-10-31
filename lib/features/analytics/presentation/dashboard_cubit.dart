@@ -9,6 +9,7 @@ import 'package:play_spot_dashboard/features/analytics/domain/usecases/add_extra
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/end_session_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/review_extension_request_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/domain/usecases/handle_client_request_action_usecase.dart';
+import 'package:play_spot_dashboard/features/analytics/domain/usecases/start_open_time_session_usecase.dart';
 import 'package:play_spot_dashboard/features/analytics/presentation/dashboard_state.dart';
 
 class DashboardCubit extends Cubit<DashboardState> {
@@ -19,9 +20,13 @@ class DashboardCubit extends Cubit<DashboardState> {
   final EndSessionUseCase endSessionUseCase;
   final ReviewExtensionRequestUseCase reviewExtensionRequestUseCase;
   final HandleClientRequestActionUseCase handleClientRequestActionUseCase;
+  final StartOpenTimeSessionUseCase startOpenTimeSessionUseCase;
 
   StreamSubscription<List<Booking>>? _activeSessionsSubscription;
   String? _watchedLoungeId;
+  int _activeSessionsGeneration = 0;
+  int _dashboardGeneration = 0;
+  String _revenuePeriod = 'week';
 
   DashboardCubit({
     required this.loungeRepository,
@@ -31,99 +36,159 @@ class DashboardCubit extends Cubit<DashboardState> {
     required this.endSessionUseCase,
     required this.reviewExtensionRequestUseCase,
     required this.handleClientRequestActionUseCase,
+    required this.startOpenTimeSessionUseCase,
   }) : super(DashboardState.init());
 
-  void startWatchingActiveSessions({String? loungeId, bool forceRefresh = false}) {
-    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty) ? loungeId.trim() : null;
+  void startWatchingActiveSessions({
+    String? loungeId,
+    bool forceRefresh = false,
+  }) {
+    if (isClosed) return;
+    final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty)
+        ? loungeId.trim()
+        : null;
 
-    if (!forceRefresh && _activeSessionsSubscription != null && _watchedLoungeId == cleanLoungeId) {
+    if (!forceRefresh &&
+        _activeSessionsSubscription != null &&
+        _watchedLoungeId == cleanLoungeId) {
       return;
     }
 
+    final scopeChanged = _watchedLoungeId != cleanLoungeId;
+    final generation = ++_activeSessionsGeneration;
     _watchedLoungeId = cleanLoungeId;
     _activeSessionsSubscription?.cancel();
+    if (scopeChanged) {
+      emit(
+        state.copyWith(
+          activeSessionsList: const [],
+          activeSessionsStats: const {},
+          activeSessions: 0,
+        ),
+      );
+    }
 
-    _activeSessionsSubscription = watchActiveSessionsUseCase(loungeId: cleanLoungeId).listen(
-      (sessions) {
-        if (isClosed) return;
+    _activeSessionsSubscription =
+        watchActiveSessionsUseCase(loungeId: cleanLoungeId).listen(
+          (sessions) {
+            if (isClosed || generation != _activeSessionsGeneration) return;
 
-        final activeList = sessions.where((b) => b.isBookingActive()).toList();
+            final activeList = sessions
+                .where((b) => b.isBookingActive())
+                .toList();
 
-        double totalRevenue = 0.0;
-        int totalExtrasCount = 0;
-        double totalPlayHours = 0.0;
+            double totalRevenue = 0.0;
+            int totalExtrasCount = 0;
+            double totalPlayHours = 0.0;
 
-        for (final booking in activeList) {
-          totalRevenue += booking.totalPrice;
-          totalExtrasCount += booking.extras.length;
-          totalPlayHours += (booking.durationMinutes / 60.0);
-        }
+            for (final booking in activeList) {
+              totalRevenue += booking.totalPrice;
+              totalExtrasCount += booking.extras.length;
+              totalPlayHours += (booking.durationMinutes / 60.0);
+            }
 
-        final statsMap = {
-          'active_count': activeList.length,
-          'total_revenue': totalRevenue,
-          'total_extras_count': totalExtrasCount,
-          'total_play_hours': totalPlayHours,
-        };
+            final statsMap = {
+              'active_count': activeList.length,
+              'total_revenue': totalRevenue,
+              'total_extras_count': totalExtrasCount,
+              'total_play_hours': totalPlayHours,
+            };
 
-        emit(state.copyWith(
-          status: FeatureStatus.success,
-          activeSessionsList: activeList,
-          activeSessionsStats: statsMap,
-          activeSessions: activeList.length,
-        ));
-      },
-      onError: (error) {
-        if (isClosed) return;
-        AppLogger.error('[DASHBOARD_CUBIT] watchActiveSessions Error', error);
-        emit(state.copyWith(
-          status: FeatureStatus.failure,
-          errorMessage: error.toString(),
-        ));
-      },
-    );
+            emit(
+              state.copyWith(
+                status: FeatureStatus.success,
+                activeSessionsList: activeList,
+                activeSessionsStats: statsMap,
+                activeSessions: activeList.length,
+              ),
+            );
+          },
+          onError: (error) {
+            if (isClosed || generation != _activeSessionsGeneration) return;
+            AppLogger.error(
+              '[DASHBOARD_CUBIT] watchActiveSessions Error',
+              error,
+            );
+            emit(
+              state.copyWith(
+                status: FeatureStatus.failure,
+                errorMessage: error.toString(),
+              ),
+            );
+          },
+        );
   }
 
-  Future<bool> extendSession(String bookingId, int additionalMinutes, {double? additionalCost}) async {
-    final result = await extendSessionUseCase(bookingId, additionalMinutes, additionalCost: additionalCost);
+  Future<bool> extendSession(
+    String bookingId,
+    int additionalMinutes, {
+    double? additionalCost,
+  }) async {
+    final result = await extendSessionUseCase(
+      bookingId,
+      additionalMinutes,
+      additionalCost: additionalCost,
+    );
     if (isClosed) return false;
 
     return result.fold(
       (failure) {
-        AppLogger.error('[DASHBOARD_CUBIT] extendSession Failed: ${failure.message}');
-        emit(state.copyWith(
-          status: FeatureStatus.failure,
-          errorMessage: failure.message,
-        ));
+        AppLogger.error(
+          '[DASHBOARD_CUBIT] extendSession Failed: ${failure.message}',
+        );
+        emit(
+          state.copyWith(
+            status: FeatureStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
         return false;
       },
       (_) {
         AppLogger.info('[DASHBOARD_CUBIT] extendSession Succeeded');
         if (_watchedLoungeId != null) {
-          startWatchingActiveSessions(loungeId: _watchedLoungeId, forceRefresh: true);
+          startWatchingActiveSessions(
+            loungeId: _watchedLoungeId,
+            forceRefresh: true,
+          );
         }
         return true;
       },
     );
   }
 
-  Future<bool> addExtrasToSession(String bookingId, List<Map<String, dynamic>> extras, double additionalCost) async {
-    final result = await addExtrasToSessionUseCase(bookingId, extras, additionalCost);
+  Future<bool> addExtrasToSession(
+    String bookingId,
+    List<Map<String, dynamic>> extras,
+    double additionalCost,
+  ) async {
+    final result = await addExtrasToSessionUseCase(
+      bookingId,
+      extras,
+      additionalCost,
+    );
     if (isClosed) return false;
 
     return result.fold(
       (failure) {
-        AppLogger.error('[DASHBOARD_CUBIT] addExtrasToSession Failed: ${failure.message}');
-        emit(state.copyWith(
-          status: FeatureStatus.failure,
-          errorMessage: failure.message,
-        ));
+        AppLogger.error(
+          '[DASHBOARD_CUBIT] addExtrasToSession Failed: ${failure.message}',
+        );
+        emit(
+          state.copyWith(
+            status: FeatureStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
         return false;
       },
       (_) {
         AppLogger.info('[DASHBOARD_CUBIT] addExtrasToSession Succeeded');
         if (_watchedLoungeId != null) {
-          startWatchingActiveSessions(loungeId: _watchedLoungeId, forceRefresh: true);
+          startWatchingActiveSessions(
+            loungeId: _watchedLoungeId,
+            forceRefresh: true,
+          );
         }
         return true;
       },
@@ -136,11 +201,15 @@ class DashboardCubit extends Cubit<DashboardState> {
 
     return result.fold(
       (failure) {
-        AppLogger.error('[DASHBOARD_CUBIT] endSession Failed: ${failure.message}');
-        emit(state.copyWith(
-          status: FeatureStatus.failure,
-          errorMessage: failure.message,
-        ));
+        AppLogger.error(
+          '[DASHBOARD_CUBIT] endSession Failed: ${failure.message}',
+        );
+        emit(
+          state.copyWith(
+            status: FeatureStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
         return false;
       },
       (_) {
@@ -171,11 +240,15 @@ class DashboardCubit extends Cubit<DashboardState> {
 
     return result.fold(
       (failure) {
-        AppLogger.error('[DASHBOARD_CUBIT] reviewExtensionRequest Failed: ${failure.message}');
-        emit(state.copyWith(
-          status: FeatureStatus.failure,
-          errorMessage: failure.message,
-        ));
+        AppLogger.error(
+          '[DASHBOARD_CUBIT] reviewExtensionRequest Failed: ${failure.message}',
+        );
+        emit(
+          state.copyWith(
+            status: FeatureStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
         return false;
       },
       (_) {
@@ -208,11 +281,15 @@ class DashboardCubit extends Cubit<DashboardState> {
 
     return result.fold(
       (failure) {
-        AppLogger.error('[DASHBOARD_CUBIT] handleClientRequestAction Failed: ${failure.message}');
-        emit(state.copyWith(
-          status: FeatureStatus.failure,
-          errorMessage: failure.message,
-        ));
+        AppLogger.error(
+          '[DASHBOARD_CUBIT] handleClientRequestAction Failed: ${failure.message}',
+        );
+        emit(
+          state.copyWith(
+            status: FeatureStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
         return false;
       },
       (_) {
@@ -222,69 +299,157 @@ class DashboardCubit extends Cubit<DashboardState> {
     );
   }
 
-  Future<void> loadDashboardData({String? loungeId}) async {
-    if (isClosed) return;
+  Future<Map<String, dynamic>?> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  }) async {
     emit(state.copyWith(status: FeatureStatus.loading));
-    
+    final result = await startOpenTimeSessionUseCase(
+      roomId: roomId,
+      customerName: customerName,
+      customerPhone: customerPhone,
+      playMode: playMode,
+    );
+
+    if (isClosed) return null;
+
+    return result.fold(
+      (failure) {
+        AppLogger.error(
+          '[DASHBOARD_CUBIT] startOpenTimeSession Failed: ${failure.message}',
+        );
+        emit(
+          state.copyWith(
+            status: FeatureStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
+        return null;
+      },
+      (data) {
+        AppLogger.info('[DASHBOARD_CUBIT] startOpenTimeSession Succeeded');
+        if (_watchedLoungeId != null) {
+          startWatchingActiveSessions(
+            loungeId: _watchedLoungeId,
+            forceRefresh: true,
+          );
+        }
+        return data;
+      },
+    );
+  }
+
+  Future<void> loadDashboardData({
+    String? loungeId,
+    String? revenuePeriod,
+  }) async {
+    if (isClosed) return;
+    final generation = ++_dashboardGeneration;
+    _revenuePeriod = revenuePeriod ?? _revenuePeriod;
+    final period = _revenuePeriod;
+    emit(state.copyWith(status: FeatureStatus.loading));
+
     try {
-      final statsResult = await loungeRepository.getDashboardStats(loungeId);
-      
-      statsResult.fold(
-        (failure) => emit(state.copyWith(status: FeatureStatus.failure, errorMessage: failure.message)),
+      final statsResult = await loungeRepository
+          .getDashboardStats(loungeId)
+          .timeout(const Duration(seconds: 30));
+      if (isClosed || generation != _dashboardGeneration) return;
+
+      await statsResult.fold<Future<void>>(
+        (failure) async => emit(
+          state.copyWith(
+            status: FeatureStatus.failure,
+            errorMessage: failure.message,
+          ),
+        ),
         (stats) async {
           DashboardState newState = state.copyWith(
             totalRevenue: (stats['total_revenue'] as num?)?.toDouble() ?? 0.0,
             activeSessions: (stats['active_sessions'] as num?)?.toInt() ?? 0,
             occupancyRate: (stats['occupancy_rate'] as num?)?.toDouble() ?? 0.0,
-            activeRoomsCount: (stats['active_rooms_count'] as num?)?.toInt() ?? 0,
-            totalPlayHours: (stats['total_play_hours'] as num?)?.toDouble() ?? 0.0,
+            activeRoomsCount:
+                (stats['active_rooms_count'] as num?)?.toInt() ?? 0,
+            totalPlayHours:
+                (stats['total_play_hours'] as num?)?.toDouble() ?? 0.0,
             revenueTrend: (stats['revenue_trend'] as num?)?.toDouble() ?? 0.0,
             bookingsTrend: (stats['bookings_trend'] as num?)?.toDouble() ?? 0.0,
-            occupancyTrend: (stats['occupancy_trend'] as num?)?.toDouble() ?? 0.0,
+            occupancyTrend:
+                (stats['occupancy_trend'] as num?)?.toDouble() ?? 0.0,
           );
 
           if (loungeId == null) {
-            final overviewResult = await loungeRepository.getDashboardOverview();
-            final chartResult = await loungeRepository.getRevenueOverTime(30);
-            final topResult = await loungeRepository.getTopLoungesByRevenue(10);
+            final overviewResult = await loungeRepository
+                .getDashboardOverview()
+                .timeout(const Duration(seconds: 30));
+            final chartResult = await loungeRepository
+                .getRevenueOverTime(period)
+                .timeout(const Duration(seconds: 30));
+            final topResult = await loungeRepository
+                .getTopLoungesByRevenue(10)
+                .timeout(const Duration(seconds: 30));
 
-            if (isClosed) return;
+            if (isClosed || generation != _dashboardGeneration) return;
 
             overviewResult.fold(
-              (failure) => null,
+              (failure) => throw StateError(failure.message),
               (overview) {
                 newState = newState.copyWith(
-                  totalLounges: (overview['total_lounges'] as num?)?.toInt() ?? 0,
-                  activeLounges: (overview['active_lounges'] as num?)?.toInt() ?? 0,
+                  totalLounges:
+                      (overview['total_lounges'] as num?)?.toInt() ?? 0,
+                  activeLounges:
+                      (overview['active_lounges'] as num?)?.toInt() ?? 0,
                   totalUsers: (overview['total_users'] as num?)?.toInt() ?? 0,
-                  totalBookings: (overview['total_bookings'] as num?)?.toInt() ?? 0,
-                  bookingsToday: (overview['bookings_today'] as num?)?.toInt() ?? 0,
-                  upcomingBookings: (overview['upcoming_bookings'] as num?)?.toInt() ?? 0,
-                  completedBookings: (overview['completed_bookings'] as num?)?.toInt() ?? 0,
-                  cancelledBookings: (overview['cancelled_bookings'] as num?)?.toInt() ?? 0,
-                  pendingRevenue: (overview['pending_revenue'] as num?)?.toDouble() ?? 0.0,
-                  totalPlatformCommission: (overview['total_platform_commission'] as num?)?.toDouble() ?? 0.0,
+                  totalBookings:
+                      (overview['total_bookings'] as num?)?.toInt() ?? 0,
+                  bookingsToday:
+                      (overview['bookings_today'] as num?)?.toInt() ?? 0,
+                  upcomingBookings:
+                      (overview['upcoming_bookings'] as num?)?.toInt() ?? 0,
+                  completedBookings:
+                      (overview['completed_bookings'] as num?)?.toInt() ?? 0,
+                  cancelledBookings:
+                      (overview['cancelled_bookings'] as num?)?.toInt() ?? 0,
+                  pendingRevenue:
+                      (overview['pending_revenue'] as num?)?.toDouble() ?? 0.0,
+                  totalPlatformCommission:
+                      (overview['total_platform_commission'] as num?)
+                          ?.toDouble() ??
+                      0.0,
                 );
               },
             );
 
-            chartResult.fold((_) => null, (chart) => newState = newState.copyWith(revenueChart: chart));
-            topResult.fold((_) => null, (top) => newState = newState.copyWith(topLounges: top));
+            chartResult.fold(
+              (failure) => throw StateError(failure.message),
+              (chart) => newState = newState.copyWith(revenueChart: chart),
+            );
+            topResult.fold(
+              (failure) => throw StateError(failure.message),
+              (top) => newState = newState.copyWith(topLounges: top),
+            );
           }
 
-          if (isClosed) return;
+          if (isClosed || generation != _dashboardGeneration) return;
           emit(newState.copyWith(status: FeatureStatus.success));
         },
       );
     } catch (e) {
-      if (!isClosed) {
-        emit(state.copyWith(status: FeatureStatus.failure, errorMessage: e.toString()));
+      if (!isClosed && generation == _dashboardGeneration) {
+        emit(
+          state.copyWith(
+            status: FeatureStatus.failure,
+            errorMessage: e.toString(),
+          ),
+        );
       }
     }
   }
 
   @override
   Future<void> close() {
+    ++_activeSessionsGeneration;
     _activeSessionsSubscription?.cancel();
     return super.close();
   }

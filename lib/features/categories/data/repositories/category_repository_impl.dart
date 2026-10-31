@@ -11,21 +11,29 @@ import '../models/category_model.dart';
 import '../models/city_model.dart';
 import '../models/activity_type_model.dart';
 
-class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository {
+class CategoryRepositoryImpl
+    with RepositoryHelper
+    implements CategoryRepository {
   final CategoryRemoteSource _remoteSource;
   final LocalCacheService _localCacheService;
 
   CategoryRepositoryImpl(this._remoteSource, this._localCacheService);
 
   @override
-  Future<Either<Failure, List<CategoryEntity>>> getCategories({bool forceRefresh = false}) async {
+  Future<Either<Failure, List<CategoryEntity>>> getCategories({
+    bool forceRefresh = false,
+  }) async {
     const cacheKey = 'cache_categories';
     try {
       if (!forceRefresh) {
         final cached = _localCacheService.getJson(cacheKey);
         if (cached is List && cached.isNotEmpty) {
           final categories = cached
-              .map((item) => CategoryModel.fromJson(Map<String, dynamic>.from(item as Map)))
+              .map(
+                (item) => CategoryModel.fromJson(
+                  Map<String, dynamic>.from(item as Map),
+                ),
+              )
               .map((m) => m as CategoryEntity)
               .toList();
           _refreshCategoriesInBackground(cacheKey);
@@ -34,24 +42,32 @@ class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository
       }
 
       final result = await callRepository(() => _remoteSource.getCategories());
-      result.fold(
-        (_) => null,
-        (categories) {
-          final models = categories.map((c) => CategoryModel(
-            id: c.id,
-            nameAr: c.nameAr,
-            nameEn: c.nameEn,
-            iconKey: c.iconKey,
-          )).toList();
-          _localCacheService.setJson(cacheKey, models.map((m) => m.toJson()).toList());
-        },
-      );
+      result.fold((_) => null, (categories) {
+        final models = categories
+            .map(
+              (c) => CategoryModel(
+                id: c.id,
+                nameAr: c.nameAr,
+                nameEn: c.nameEn,
+                iconKey: c.iconKey,
+              ),
+            )
+            .toList();
+        _localCacheService.setJson(
+          cacheKey,
+          models.map((m) => m.toJson()).toList(),
+        );
+      });
       return result;
     } catch (e) {
       final cached = _localCacheService.getJson(cacheKey);
       if (cached is List && cached.isNotEmpty) {
         final categories = cached
-            .map((item) => CategoryModel.fromJson(Map<String, dynamic>.from(item as Map)))
+            .map(
+              (item) => CategoryModel.fromJson(
+                Map<String, dynamic>.from(item as Map),
+              ),
+            )
             .map((m) => m as CategoryEntity)
             .toList();
         return Right(categories);
@@ -63,24 +79,35 @@ class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository
   void _refreshCategoriesInBackground(String cacheKey) async {
     try {
       final categories = await _remoteSource.getCategories();
-      final models = categories.map((c) => CategoryModel(
-        id: c.id,
-        nameAr: c.nameAr,
-        nameEn: c.nameEn,
-        iconKey: c.iconKey,
-      )).toList();
-      await _localCacheService.setJson(cacheKey, models.map((m) => m.toJson()).toList());
+      final models = categories
+          .map(
+            (c) => CategoryModel(
+              id: c.id,
+              nameAr: c.nameAr,
+              nameEn: c.nameEn,
+              iconKey: c.iconKey,
+            ),
+          )
+          .toList();
+      await _localCacheService.setJson(
+        cacheKey,
+        models.map((m) => m.toJson()).toList(),
+      );
     } catch (_) {}
   }
 
   @override
   Future<Either<Failure, void>> addCategory(CategoryEntity category) async {
-    final result = await callRepository(() => _remoteSource.addCategory(CategoryModel(
+    final result = await callRepository(
+      () => _remoteSource.addCategory(
+        CategoryModel(
           id: category.id,
           nameAr: category.nameAr,
           nameEn: category.nameEn,
           iconKey: category.iconKey,
-        )));
+        ),
+      ),
+    );
     if (result.isRight()) {
       await _localCacheService.remove('cache_categories');
     }
@@ -89,12 +116,16 @@ class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository
 
   @override
   Future<Either<Failure, void>> updateCategory(CategoryEntity category) async {
-    final result = await callRepository(() => _remoteSource.updateCategory(CategoryModel(
+    final result = await callRepository(
+      () => _remoteSource.updateCategory(
+        CategoryModel(
           id: category.id,
           nameAr: category.nameAr,
           nameEn: category.nameEn,
           iconKey: category.iconKey,
-        )));
+        ),
+      ),
+    );
     if (result.isRight()) {
       await _localCacheService.remove('cache_categories');
     }
@@ -111,14 +142,19 @@ class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository
   }
 
   @override
-  Future<Either<Failure, List<CityEntity>>> getCities({bool forceRefresh = false}) async {
+  Future<Either<Failure, List<CityEntity>>> getCities({
+    bool forceRefresh = false,
+  }) async {
     const cacheKey = 'cache_cities';
     try {
       if (!forceRefresh) {
         final cached = _localCacheService.getJson(cacheKey);
         if (cached is List && cached.isNotEmpty) {
           final cities = cached
-              .map((item) => CityModel.fromJson(Map<String, dynamic>.from(item as Map)))
+              .map(
+                (item) =>
+                    CityModel.fromJson(Map<String, dynamic>.from(item as Map)),
+              )
               .map((m) => m as CityEntity)
               .toList();
           _refreshCitiesInBackground(cacheKey);
@@ -127,24 +163,31 @@ class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository
       }
 
       final result = await callRepository(() => _remoteSource.getCities());
-      result.fold(
-        (_) => null,
-        (cities) {
-          final models = cities.map((c) => CityModel(
-            id: c.id,
-            nameAr: c.nameAr,
-            nameEn: c.nameEn,
-            isActive: c.isActive,
-          )).toList();
-          _localCacheService.setJson(cacheKey, models.map((m) => m.toJson()).toList());
-        },
-      );
+      result.fold((_) => null, (cities) {
+        final models = cities
+            .map(
+              (c) => CityModel(
+                id: c.id,
+                nameAr: c.nameAr,
+                nameEn: c.nameEn,
+                isActive: c.isActive,
+              ),
+            )
+            .toList();
+        _localCacheService.setJson(
+          cacheKey,
+          models.map((m) => m.toJson()).toList(),
+        );
+      });
       return result;
     } catch (e) {
       final cached = _localCacheService.getJson(cacheKey);
       if (cached is List && cached.isNotEmpty) {
         final cities = cached
-            .map((item) => CityModel.fromJson(Map<String, dynamic>.from(item as Map)))
+            .map(
+              (item) =>
+                  CityModel.fromJson(Map<String, dynamic>.from(item as Map)),
+            )
             .map((m) => m as CityEntity)
             .toList();
         return Right(cities);
@@ -156,24 +199,35 @@ class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository
   void _refreshCitiesInBackground(String cacheKey) async {
     try {
       final cities = await _remoteSource.getCities();
-      final models = cities.map((c) => CityModel(
-        id: c.id,
-        nameAr: c.nameAr,
-        nameEn: c.nameEn,
-        isActive: c.isActive,
-      )).toList();
-      await _localCacheService.setJson(cacheKey, models.map((m) => m.toJson()).toList());
+      final models = cities
+          .map(
+            (c) => CityModel(
+              id: c.id,
+              nameAr: c.nameAr,
+              nameEn: c.nameEn,
+              isActive: c.isActive,
+            ),
+          )
+          .toList();
+      await _localCacheService.setJson(
+        cacheKey,
+        models.map((m) => m.toJson()).toList(),
+      );
     } catch (_) {}
   }
 
   @override
   Future<Either<Failure, void>> addCity(CityEntity city) async {
-    final result = await callRepository(() => _remoteSource.addCity(CityModel(
+    final result = await callRepository(
+      () => _remoteSource.addCity(
+        CityModel(
           id: city.id,
           nameAr: city.nameAr,
           nameEn: city.nameEn,
           isActive: city.isActive,
-        )));
+        ),
+      ),
+    );
     if (result.isRight()) {
       await _localCacheService.remove('cache_cities');
     }
@@ -182,12 +236,16 @@ class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository
 
   @override
   Future<Either<Failure, void>> updateCity(CityEntity city) async {
-    final result = await callRepository(() => _remoteSource.updateCity(CityModel(
+    final result = await callRepository(
+      () => _remoteSource.updateCity(
+        CityModel(
           id: city.id,
           nameAr: city.nameAr,
           nameEn: city.nameEn,
           isActive: city.isActive,
-        )));
+        ),
+      ),
+    );
     if (result.isRight()) {
       await _localCacheService.remove('cache_cities');
     }
@@ -204,14 +262,20 @@ class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository
   }
 
   @override
-  Future<Either<Failure, List<ActivityTypeEntity>>> getActivityTypes({bool forceRefresh = false}) async {
+  Future<Either<Failure, List<ActivityTypeEntity>>> getActivityTypes({
+    bool forceRefresh = false,
+  }) async {
     const cacheKey = 'cache_activity_types';
     try {
       if (!forceRefresh) {
         final cached = _localCacheService.getJson(cacheKey);
         if (cached is List && cached.isNotEmpty) {
           final activities = cached
-              .map((item) => ActivityTypeModel.fromJson(Map<String, dynamic>.from(item as Map)))
+              .map(
+                (item) => ActivityTypeModel.fromJson(
+                  Map<String, dynamic>.from(item as Map),
+                ),
+              )
               .map((m) => m as ActivityTypeEntity)
               .toList();
           _refreshActivityTypesInBackground(cacheKey);
@@ -219,25 +283,40 @@ class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository
         }
       }
 
-      final result = await callRepository(() => _remoteSource.getActivityTypes());
-      result.fold(
-        (_) => null,
-        (activities) {
-          final models = activities.map((a) => ActivityTypeModel(
-            id: a.id,
-            name: a.name,
-            label: a.label,
-            sortOrder: a.sortOrder,
-          )).toList();
-          _localCacheService.setJson(cacheKey, models.map((m) => m.toJson()).toList());
-        },
+      final result = await callRepository(
+        () => _remoteSource.getActivityTypes(),
       );
+      result.fold((_) => null, (activities) {
+        final models = activities
+            .map(
+              (a) => ActivityTypeModel(
+                id: a.id,
+                name: a.name,
+                label: a.label,
+                sortOrder: a.sortOrder,
+                category: a.category,
+                iconName: a.iconName,
+                pricingModel: a.pricingModel,
+                requiresScreen: a.requiresScreen,
+                requiresControllers: a.requiresControllers,
+              ),
+            )
+            .toList();
+        _localCacheService.setJson(
+          cacheKey,
+          models.map((m) => m.toCacheJson()).toList(),
+        );
+      });
       return result;
     } catch (e) {
       final cached = _localCacheService.getJson(cacheKey);
       if (cached is List && cached.isNotEmpty) {
         final activities = cached
-            .map((item) => ActivityTypeModel.fromJson(Map<String, dynamic>.from(item as Map)))
+            .map(
+              (item) => ActivityTypeModel.fromJson(
+                Map<String, dynamic>.from(item as Map),
+              ),
+            )
             .map((m) => m as ActivityTypeEntity)
             .toList();
         return Right(activities);
@@ -249,24 +328,73 @@ class CategoryRepositoryImpl with RepositoryHelper implements CategoryRepository
   void _refreshActivityTypesInBackground(String cacheKey) async {
     try {
       final activities = await _remoteSource.getActivityTypes();
-      final models = activities.map((a) => ActivityTypeModel(
-        id: a.id,
-        name: a.name,
-        label: a.label,
-        sortOrder: a.sortOrder,
-      )).toList();
-      await _localCacheService.setJson(cacheKey, models.map((m) => m.toJson()).toList());
+      final models = activities
+          .map(
+            (a) => ActivityTypeModel(
+              id: a.id,
+              name: a.name,
+              label: a.label,
+              sortOrder: a.sortOrder,
+              category: a.category,
+              iconName: a.iconName,
+              pricingModel: a.pricingModel,
+              requiresScreen: a.requiresScreen,
+              requiresControllers: a.requiresControllers,
+            ),
+          )
+          .toList();
+      await _localCacheService.setJson(
+        cacheKey,
+        models.map((m) => m.toCacheJson()).toList(),
+      );
     } catch (_) {}
   }
 
+  ActivityTypeModel _activityModel(ActivityTypeEntity activityType) {
+    return ActivityTypeModel(
+      id: activityType.id,
+      name: activityType.name,
+      label: activityType.label,
+      sortOrder: activityType.sortOrder,
+      category: activityType.category,
+      iconName: activityType.iconName,
+      pricingModel: activityType.pricingModel,
+      requiresScreen: activityType.requiresScreen,
+      requiresControllers: activityType.requiresControllers,
+    );
+  }
+
   @override
-  Future<Either<Failure, ActivityTypeEntity>> addActivityType(ActivityTypeEntity activityType) async {
-    final result = await callRepository(() => _remoteSource.addActivityType(ActivityTypeModel(
-          id: activityType.id,
-          name: activityType.name,
-          label: activityType.label,
-          sortOrder: activityType.sortOrder,
-        )));
+  Future<Either<Failure, ActivityTypeEntity>> addActivityType(
+    ActivityTypeEntity activityType,
+  ) async {
+    final result = await callRepository(
+      () => _remoteSource.addActivityType(_activityModel(activityType)),
+    );
+    if (result.isRight()) {
+      await _localCacheService.remove('cache_activity_types');
+    }
+    return result;
+  }
+
+  @override
+  Future<Either<Failure, ActivityTypeEntity>> updateActivityType(
+    ActivityTypeEntity activityType,
+  ) async {
+    final result = await callRepository(
+      () => _remoteSource.updateActivityType(_activityModel(activityType)),
+    );
+    if (result.isRight()) {
+      await _localCacheService.remove('cache_activity_types');
+    }
+    return result;
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteActivityType(String id) async {
+    final result = await callRepository(
+      () => _remoteSource.deleteActivityType(id),
+    );
     if (result.isRight()) {
       await _localCacheService.remove('cache_activity_types');
     }

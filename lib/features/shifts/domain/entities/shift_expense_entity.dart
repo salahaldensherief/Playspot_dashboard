@@ -27,14 +27,14 @@ class ShiftExpenseEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        shiftId,
-        loungeId,
-        amount,
-        type,
-        reason,
-        createdBy,
-        createdByName,
-        createdAt,
-      ];
+    id,
+    shiftId,
+    loungeId,
+    amount,
+    type,
+    reason,
+    createdBy,
+    createdByName,
+    createdAt,
+  ];
 }

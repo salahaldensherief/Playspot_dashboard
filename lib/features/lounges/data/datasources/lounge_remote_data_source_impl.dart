@@ -1,3 +1,4 @@
+import '../../../../core/services/lounge_staff_provisioner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import 'package:play_spot_dashboard/features/rooms/data/models/room_model.dart';
@@ -56,6 +57,7 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     String? city,
     String? address,
     String? phone,
+    String? ownerPhone,
   }) => _queryHelper.createLoungeWithOwner(
     email: email,
     password: password,
@@ -64,6 +66,7 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     city: city,
     address: address,
     phone: phone,
+    ownerPhone: ownerPhone,
   );
 
   @override
@@ -72,11 +75,17 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     cleanData.remove('id');
     cleanData.remove('owner_name');
     cleanData.remove('owner_email');
+    cleanData.remove('owner_id');
     cleanData.remove('rating');
     cleanData.remove('distance');
     cleanData.remove('price_per_hour');
     cleanData.remove('available_rooms');
     cleanData.remove('total_reviews');
+    cleanData.remove('is_open');
+    cleanData.remove('status');
+    cleanData.remove('is_active');
+    cleanData.remove('suspension_reason');
+    cleanData.remove('created_at');
     cleanData.remove('opens_at');
     cleanData.remove('closes_at');
     cleanData.remove('description');
@@ -97,7 +106,15 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     cleanData.removeWhere((key, value) => value == null);
 
     try {
-      await client.from('lounges').update(cleanData).eq('id', id);
+      final updated = await client
+          .from('lounges')
+          .update(cleanData)
+          .eq('id', id)
+          .select('id')
+          .maybeSingle();
+      if (updated == null) {
+        throw StateError('Lounge update did not modify a row');
+      }
       AppLogger.info('updateLounge Succeeded for id: $id');
     } on PostgrestException catch (e) {
       AppLogger.error(
@@ -156,8 +173,8 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
       _analyticsHelper.getDashboardOverview();
 
   @override
-  Future<List<Map<String, dynamic>>> getRevenueOverTime(int daysBack) =>
-      _analyticsHelper.getRevenueOverTime(daysBack);
+  Future<List<Map<String, dynamic>>> getRevenueOverTime(String period) =>
+      _analyticsHelper.getRevenueOverTime(period);
 
   @override
   Future<List<Map<String, dynamic>>> getTopLoungesByRevenue(int limitCount) =>
@@ -258,24 +275,14 @@ class LoungeRemoteDataSourceImpl implements LoungeRemoteDataSource {
     required String name,
     required String loungeId,
   }) async {
-    final response = await client.functions.invoke(
-      'create-lounge-staff',
-      body: {
-        'email': email,
-        'password': password,
-        'full_name': name,
-        'lounge_id': loungeId,
-        'role': 'manager',
-      },
-    );
-
-    if (response.status < 200 || response.status >= 300) {
-      final data = response.data;
-      final message = data is Map && data['error'] != null
-          ? data['error'].toString()
-          : 'Failed to create lounge staff account';
-      throw Exception(message);
-    }
+    await LoungeStaffProvisioner(client).create({
+      'email': email.trim().toLowerCase(),
+      'password': password,
+      'full_name': name.trim(),
+      'phone': '',
+      'lounge_id': loungeId.trim(),
+      'role': 'manager',
+    });
   }
 
   @override

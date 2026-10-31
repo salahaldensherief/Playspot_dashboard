@@ -29,10 +29,7 @@ class LiveRequestsFeed extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(
-              color: AppColors.borderDefault,
-              width: 1.0,
-            ),
+            border: Border.all(color: AppColors.borderDefault, width: 1.0),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,7 +37,9 @@ class LiveRequestsFeed extends StatelessWidget {
               // Header Section
               LiveRequestsHeader(
                 unreadCount: unreadCount,
-                isLoading: state.status == ClientRequestsStatus.loading && requests.isEmpty,
+                isLoading:
+                    state.status == ClientRequestsStatus.loading &&
+                    requests.isEmpty,
               ),
               SizedBox(height: 14.h),
 
@@ -79,15 +78,16 @@ class LiveRequestsFeed extends StatelessWidget {
                                   .asMap()
                                   .entries
                                   .map((entry) {
-                                final index = entry.key;
-                                final request = entry.value;
+                                    final index = entry.key;
+                                    final request = entry.value;
 
-                                return SizedBox(
-                                  key: ValueKey('${request.id}_$index'),
-                                  width: cardWidth,
-                                  child: RequestCard(request: request),
-                                );
-                              }).toList(),
+                                    return SizedBox(
+                                      key: ValueKey('${request.id}_$index'),
+                                      width: cardWidth,
+                                      child: RequestCard(request: request),
+                                    );
+                                  })
+                                  .toList(),
                             );
                           },
                         ),

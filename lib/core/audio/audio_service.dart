@@ -16,7 +16,7 @@ abstract class AudioService extends ChangeNotifier {
 
 class AudioServiceImpl extends ChangeNotifier implements AudioService {
   static const String _prefMuteKey = 'audio_alerts_muted';
-  
+
   late final AudioPlayer _player;
   late final AudioPlayer _urgentPlayer;
   bool _isMuted = false;
@@ -33,7 +33,7 @@ class AudioServiceImpl extends ChangeNotifier implements AudioService {
     try {
       _player.setPlayerMode(PlayerMode.mediaPlayer);
       _player.setReleaseMode(ReleaseMode.stop);
-      
+
       _urgentPlayer.setPlayerMode(PlayerMode.mediaPlayer);
       _urgentPlayer.setReleaseMode(ReleaseMode.loop);
     } catch (e) {
@@ -111,7 +111,9 @@ class AudioServiceImpl extends ChangeNotifier implements AudioService {
         try {
           await _urgentPlayer.play(AssetSource('audio/notification.wav'));
         } catch (_) {
-          await _urgentPlayer.play(UrlSource('assets/assets/audio/notification.wav'));
+          await _urgentPlayer.play(
+            UrlSource('assets/assets/audio/notification.wav'),
+          );
         }
       } else {
         await _urgentPlayer.play(AssetSource('audio/notification.wav'));

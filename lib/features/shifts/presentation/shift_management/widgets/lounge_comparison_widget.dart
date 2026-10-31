@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -8,13 +9,11 @@ import '../../../domain/entities/lounge_comparison_entity.dart';
 class LoungeComparisonWidget extends StatelessWidget {
   final List<LoungeComparisonEntity> comparisons;
 
-  const LoungeComparisonWidget({
-    super.key,
-    required this.comparisons,
-  });
+  const LoungeComparisonWidget({super.key, required this.comparisons});
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (comparisons.isEmpty) {
       return Container(
         padding: EdgeInsets.all(20.r),
@@ -26,9 +25,16 @@ class LoungeComparisonWidget extends StatelessWidget {
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.store_mall_directory_outlined, size: 40.r, color: AppColors.textSecondary),
+              Icon(
+                Icons.store_mall_directory_outlined,
+                size: 40.r,
+                color: AppColors.textSecondary,
+              ),
               SizedBox(height: 8.h),
-              AppText.body(AppStrings.noDataFound, color: AppColors.textSecondary),
+              AppText.body(
+                AppStrings.noDataFound,
+                color: AppColors.textSecondary,
+              ),
             ],
           ),
         ),
@@ -47,42 +53,168 @@ class LoungeComparisonWidget extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.compare_arrows_rounded, color: AppColors.neonBlue, size: 22.r),
+              Icon(
+                Icons.compare_arrows_rounded,
+                color: AppColors.neonBlue,
+                size: 22.r,
+              ),
               SizedBox(width: 8.w),
-              AppText.heading(AppStrings.loungeComparisonTitle, fontSize: 16.sp),
+              AppText.heading(
+                AppStrings.loungeComparisonTitle,
+                fontSize: 16.sp,
+              ),
             ],
           ),
           SizedBox(height: 16.h),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
-              headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
+              headingRowColor: WidgetStateProperty.all(
+                AppColors.mutedBackground,
+              ),
               columnSpacing: 20.w,
               columns: [
-                DataColumn(label: Text(AppStrings.loungeName, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.comparisonTotalShiftsCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.comparisonOpenNowCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.comparisonTotalSalesCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.comparisonTotalExpensesCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.comparisonTotalDifferencesCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.comparisonAvgShiftSalesCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
-                DataColumn(label: Text(AppStrings.comparisonPendingApprovalCol, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
+                DataColumn(
+                  label: Text(
+                    AppStrings.loungeName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.comparisonTotalShiftsCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.comparisonOpenNowCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.comparisonTotalSalesCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.comparisonTotalExpensesCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.comparisonTotalDifferencesCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.comparisonAvgShiftSalesCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    AppStrings.comparisonPendingApprovalCol,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
               ],
               rows: comparisons.map((c) {
                 final isHealthy = c.totalDifference >= 0;
-                return DataRow(cells: [
-                  DataCell(Text(c.loungeName, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold))),
-                  DataCell(Text(c.shiftCount.toString(), style: const TextStyle(color: AppColors.textPrimary))),
-                  DataCell(Text(c.openShiftCount.toString(), style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.bold))),
-                  DataCell(Text('${c.totalSales.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold))),
-                  DataCell(Text('${c.totalExpenses.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.danger))),
-                  DataCell(Text(
-                    '${c.totalDifference.toStringAsFixed(0)} ${AppStrings.egp}',
-                    style: TextStyle(color: isHealthy ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold),
-                  )),
-                  DataCell(Text('${c.averageShiftSales.toStringAsFixed(0)} ${AppStrings.egp}', style: const TextStyle(color: AppColors.textPrimary))),
-                  DataCell(Text(c.pendingApprovalCount.toString(), style: const TextStyle(color: AppColors.warning))),
-                ]);
+                return DataRow(
+                  cells: [
+                    DataCell(
+                      Text(
+                        c.loungeName,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        c.shiftCount.toString(),
+                        style: const TextStyle(color: AppColors.textPrimary),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        c.openShiftCount.toString(),
+                        style: const TextStyle(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        '${c.totalSales.toStringAsFixed(0)} ${AppStrings.egp}',
+                        style: const TextStyle(
+                          color: AppColors.neonBlue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        '${c.totalExpenses.toStringAsFixed(0)} ${AppStrings.egp}',
+                        style: const TextStyle(color: AppColors.danger),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        '${c.totalDifference.toStringAsFixed(0)} ${AppStrings.egp}',
+                        style: TextStyle(
+                          color: isHealthy
+                              ? AppColors.success
+                              : AppColors.danger,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        '${c.averageShiftSales.toStringAsFixed(0)} ${AppStrings.egp}',
+                        style: const TextStyle(color: AppColors.textPrimary),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        c.pendingApprovalCount.toString(),
+                        style: const TextStyle(color: AppColors.warning),
+                      ),
+                    ),
+                  ],
+                );
               }).toList(),
             ),
           ),

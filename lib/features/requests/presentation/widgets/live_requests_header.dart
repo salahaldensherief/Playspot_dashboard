@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -16,6 +17,7 @@ class LiveRequestsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -28,16 +30,15 @@ class LiveRequestsHeader extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                unreadCount > 0 ? Icons.notifications_active_rounded : Icons.notifications_none_rounded,
+                unreadCount > 0
+                    ? Icons.notifications_active_rounded
+                    : Icons.notifications_none_rounded,
                 color: AppColors.neonBlue,
                 size: 20.r,
               ),
             ),
             SizedBox(width: 10.w),
-            AppText.heading(
-              AppStrings.requestsFeed,
-              fontSize: 16.sp,
-            ),
+            AppText.heading(AppStrings.requestsFeed, fontSize: 16.sp),
             if (unreadCount > 0) ...[
               SizedBox(width: 8.w),
               Container(

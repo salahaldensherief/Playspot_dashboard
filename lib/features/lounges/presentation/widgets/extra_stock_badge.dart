@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
@@ -10,6 +11,7 @@ class ExtraStockBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (extra.isOutOfStock || (extra.trackStock && extra.stockQuantity <= 0)) {
       return StatusBadge.danger(AppStrings.outOfStock);
     } else if (extra.trackStock && extra.stockQuantity <= extra.minStockAlert) {

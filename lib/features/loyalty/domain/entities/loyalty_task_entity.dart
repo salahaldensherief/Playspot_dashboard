@@ -7,7 +7,7 @@ class LoyaltyTaskEntity extends Equatable {
   final String descriptionAr;
   final String descriptionEn;
   final int pointsReward;
-  final int completedCount;
+  final int? completedCount;
   final bool isActive;
 
   const LoyaltyTaskEntity({
@@ -23,13 +23,13 @@ class LoyaltyTaskEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        titleAr,
-        titleEn,
-        descriptionAr,
-        descriptionEn,
-        pointsReward,
-        completedCount,
-        isActive,
-      ];
+    id,
+    titleAr,
+    titleEn,
+    descriptionAr,
+    descriptionEn,
+    pointsReward,
+    completedCount,
+    isActive,
+  ];
 }

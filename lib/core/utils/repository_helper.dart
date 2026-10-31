@@ -6,7 +6,9 @@ import '../../art_core/exceptions/app_exceptions.dart';
 import '../error/failures.dart';
 
 mixin RepositoryHelper {
-  Future<Either<Failure, T>> callRepository<T>(Future<T> Function() call) async {
+  Future<Either<Failure, T>> callRepository<T>(
+    Future<T> Function() call,
+  ) async {
     try {
       final result = await call();
       return Right(result);
@@ -16,12 +18,25 @@ mixin RepositoryHelper {
           e.message.contains('no_overlapping_room_bookings')) {
         return Left(ServerFailure(AppStrings.overlappingBookingError.tr()));
       }
+      if (e.code == 'PGRST302') {
+        return Left(AuthFailure('يرجى تسجيل الدخول لإتمام العملية'));
+      }
+      if (e.code == 'PGRST301' ||
+          e.code == 'PGRST303' ||
+          e.message.toLowerCase().contains('jwt expired')) {
+        return Left(
+          AuthFailure('الجلسة غير صالحة أو منتهية، يرجى تسجيل الدخول مجددًا'),
+        );
+      }
       if (e.code == '42501' ||
+          e.message.toLowerCase().contains('row-level security') ||
           e.message.toLowerCase().contains('permission denied') ||
           e.message.toLowerCase().contains('not authorized')) {
-        return Left(ServerFailure('صلاحيات الحساب لا تسمح بالوصول لهذه البيانات'));
+        return Left(
+          ServerFailure('صلاحيات الحساب لا تسمح بالوصول لهذه البيانات'),
+        );
       }
-      
+
       return Left(ServerFailure("${e.code}: ${e.message}"));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -11,35 +12,45 @@ class LoyaltyStatsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Row(
       children: [
-        Expanded(child: _StatCard(
-          title: AppStrings.totalVouchersIssued,
-          value: stats.totalVouchersIssued.toString(),
-          icon: Icons.confirmation_number_outlined,
-          color: AppColors.neonBlue,
-        )),
+        Expanded(
+          child: _StatCard(
+            title: AppStrings.totalVouchersIssued,
+            value: stats.totalVouchersIssued.toString(),
+            icon: Icons.confirmation_number_outlined,
+            color: AppColors.neonBlue,
+          ),
+        ),
         SizedBox(width: 24.w),
-        Expanded(child: _StatCard(
-          title: AppStrings.totalVouchersUsed,
-          value: stats.totalVouchersUsed.toString(),
-          icon: Icons.check_circle_outline,
-          color: AppColors.success,
-        )),
+        Expanded(
+          child: _StatCard(
+            title: AppStrings.totalVouchersUsed,
+            value: stats.totalVouchersUsed.toString(),
+            icon: Icons.check_circle_outline,
+            color: AppColors.success,
+          ),
+        ),
         SizedBox(width: 24.w),
-        Expanded(child: _StatCard(
-          title: AppStrings.totalVouchersActive,
-          value: stats.totalVouchersActive.toString(),
-          icon: Icons.timer_outlined,
-          color: AppColors.warning,
-        )),
+        Expanded(
+          child: _StatCard(
+            title: AppStrings.totalVouchersActive,
+            value: stats.totalVouchersActive.toString(),
+            icon: Icons.timer_outlined,
+            color: AppColors.warning,
+          ),
+        ),
         SizedBox(width: 24.w),
-        Expanded(child: _StatCard(
-          title: AppStrings.totalDiscountUsedValue,
-          value: "${stats.totalDiscountValueUsed.toStringAsFixed(0)} ${AppStrings.egp}",
-          icon: Icons.account_balance_wallet_outlined,
-          color: AppColors.neonPurple,
-        )),
+        Expanded(
+          child: _StatCard(
+            title: AppStrings.totalDiscountUsedValue,
+            value:
+                "${stats.totalDiscountValueUsed.toStringAsFixed(0)} ${AppStrings.egp}",
+            icon: Icons.account_balance_wallet_outlined,
+            color: AppColors.neonPurple,
+          ),
+        ),
       ],
     );
   }
@@ -60,6 +71,7 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       padding: EdgeInsets.all(24.r),
       decoration: BoxDecoration(

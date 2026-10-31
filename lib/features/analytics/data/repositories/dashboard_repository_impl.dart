@@ -11,7 +11,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
   DashboardRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<Either<Failure, LoungeStatsEntity>> getLoungeStats(String? loungeId) async {
+  Future<Either<Failure, LoungeStatsEntity>> getLoungeStats(
+    String? loungeId,
+  ) async {
     try {
       final stats = await remoteDataSource.fetchLoungeStats(loungeId);
       return Right(stats);
@@ -26,9 +28,17 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<Either<Failure, void>> extendSession(String bookingId, int additionalMinutes, {double? additionalCost}) async {
+  Future<Either<Failure, void>> extendSession(
+    String bookingId,
+    int additionalMinutes, {
+    double? additionalCost,
+  }) async {
     try {
-      await remoteDataSource.extendSession(bookingId, additionalMinutes, additionalCost: additionalCost);
+      await remoteDataSource.extendSession(
+        bookingId,
+        additionalMinutes,
+        additionalCost: additionalCost,
+      );
       return const Right(null);
     } catch (e) {
       final msg = e.toString().replaceFirst('Exception: ', '');
@@ -37,9 +47,17 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<Either<Failure, void>> addExtrasToSession(String bookingId, List<Map<String, dynamic>> extras, double additionalCost) async {
+  Future<Either<Failure, void>> addExtrasToSession(
+    String bookingId,
+    List<Map<String, dynamic>> extras,
+    double additionalCost,
+  ) async {
     try {
-      await remoteDataSource.addExtrasToSession(bookingId, extras, additionalCost);
+      await remoteDataSource.addExtrasToSession(
+        bookingId,
+        extras,
+        additionalCost,
+      );
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -103,6 +121,26 @@ class DashboardRepositoryImpl implements DashboardRepository {
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  }) async {
+    try {
+      final result = await remoteDataSource.startOpenTimeSession(
+        roomId: roomId,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        playMode: playMode,
+      );
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
     }
   }
 }

@@ -46,12 +46,12 @@ class SystemSettingsState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        actionStatus,
-        appStatus,
-        announcements,
-        lounges,
-        errorMessage,
-        successMessage,
-      ];
+    status,
+    actionStatus,
+    appStatus,
+    announcements,
+    lounges,
+    errorMessage,
+    successMessage,
+  ];
 }

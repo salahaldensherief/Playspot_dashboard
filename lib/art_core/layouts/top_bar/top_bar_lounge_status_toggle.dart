@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -7,12 +8,14 @@ import 'package:play_spot_dashboard/features/auth/presentation/login/login_state
 import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_cubit.dart';
 import 'package:play_spot_dashboard/features/lounges/presentation/cubit/lounge_state.dart';
+import 'package:play_spot_dashboard/features/permissions/presentation/cubit/permissions_cubit.dart';
 
 class TopBarLoungeStatusToggle extends StatelessWidget {
   const TopBarLoungeStatusToggle({super.key});
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // Localized labels also change without a Cubit emission.
     return BlocBuilder<LoginCubit, LoginState>(
       buildWhen: (prev, curr) =>
           prev.user != curr.user || prev.userLounge != curr.userLounge,
@@ -21,9 +24,19 @@ class TopBarLoungeStatusToggle extends StatelessWidget {
         final loungeId = user?.loungeId;
         if (user == null ||
             user.isSuperAdmin ||
-            !user.canToggleLoungeStatus ||
             loungeId == null ||
             loungeId.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        // Grants arrive independently of authentication and can be revoked.
+        // Observe the provider rather than a one-time entity/GetIt lookup.
+        final permissions = context.watch<PermissionsCubit>();
+        if (!permissions.hasPermission(
+          'lounge_toggle_status',
+          userRole: user.role.name,
+          userId: user.id,
+        )) {
           return const SizedBox.shrink();
         }
 
@@ -32,13 +45,15 @@ class TopBarLoungeStatusToggle extends StatelessWidget {
           builder: (context, loungeState) {
             Lounge? currentLounge;
             if (loungeState.lounges.isNotEmpty) {
-              final found =
-                  loungeState.lounges.where((l) => l.id == loungeId).toList();
+              final found = loungeState.lounges
+                  .where((l) => l.id == loungeId)
+                  .toList();
               if (found.isNotEmpty) currentLounge = found.first;
             }
 
             final isOpen =
-                currentLounge?.isOpen ?? (loginState.userLounge?.isOpen ?? true);
+                currentLounge?.isOpen ??
+                (loginState.userLounge?.isOpen ?? true);
             final bool isMobile = MediaQuery.sizeOf(context).width < 600;
             final color = isOpen ? AppColors.success : AppColors.danger;
 
@@ -50,9 +65,7 @@ class TopBarLoungeStatusToggle extends StatelessWidget {
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: color.withValues(alpha: 0.3),
-                ),
+                border: Border.all(color: color.withValues(alpha: 0.3)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -68,7 +81,9 @@ class TopBarLoungeStatusToggle extends StatelessWidget {
                   if (!isMobile) const SizedBox(width: 8),
                   if (!isMobile)
                     Text(
-                      isOpen ? AppStrings.loungeIsOpen : AppStrings.loungeIsClosed,
+                      isOpen
+                          ? AppStrings.loungeIsOpen
+                          : AppStrings.loungeIsClosed,
                       style: TextStyle(
                         color: color,
                         fontSize: 12,
@@ -80,14 +95,23 @@ class TopBarLoungeStatusToggle extends StatelessWidget {
                     scale: 0.75,
                     child: Switch(
                       value: isOpen,
-                      activeTrackColor: AppColors.success.withValues(alpha: 0.5),
+                      activeTrackColor: AppColors.success.withValues(
+                        alpha: 0.5,
+                      ),
                       activeThumbColor: AppColors.success,
                       inactiveThumbColor: AppColors.danger,
-                      inactiveTrackColor: AppColors.danger.withValues(alpha: 0.3),
+                      inactiveTrackColor: AppColors.danger.withValues(
+                        alpha: 0.3,
+                      ),
                       onChanged: (val) async {
-                        await context.read<LoungeCubit>().toggleLoungeStatus(loungeId, val);
+                        await context.read<LoungeCubit>().toggleLoungeStatus(
+                          loungeId,
+                          val,
+                        );
                         if (context.mounted) {
-                          context.read<LoginCubit>().refreshUserLounge(loungeId);
+                          context.read<LoginCubit>().refreshUserLounge(
+                            loungeId,
+                          );
                         }
                       },
                     ),

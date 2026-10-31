@@ -1,6 +1,7 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
@@ -8,7 +9,13 @@ import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/status_badge.dart';
 import 'package:play_spot_dashboard/features/staff/domain/entities/staff_entity.dart';
 
+import '../../../../../art_core/widgets/app_avatar.dart';
 import '../../../../../art_core/widgets/app_cached_image.dart';
+import '../../../../../art_core/widgets/app_dialog.dart';
+import '../../../../../core/di/di.dart';
+import '../../../../auth/presentation/login/login_cubit.dart';
+import '../../../../permissions/domain/repositories/permissions_repository.dart';
+import 'staff_permissions_dialog.dart';
 
 class StaffDetailsDialog extends StatelessWidget {
   final StaffEntity staff;
@@ -17,74 +24,134 @@ class StaffDetailsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      title: Row(
-        children: [
-          Builder(
-            builder: (context) {
-              final bool hasAvatar = staff.avatarUrl != null && staff.avatarUrl!.trim().isNotEmpty;
-              return CircleAvatar(
-                radius: 20.r,
-                backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
-                backgroundImage: hasAvatar ? AppCachedImage.provider(staff.avatarUrl) : null,
-                child: !hasAvatar ? Icon(Icons.person, color: AppColors.neonBlue, size: 20.r) : null,
-              );
-            },
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: AppText.subHeading(staff.name, fontSize: 18.sp, maxLines: 1),
-          ),
-          _buildRoleBadge(staff.role),
-        ],
-      ),
-      content: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 600.r),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionTitle(Icons.contact_mail_outlined, AppStrings.contactLabel),
-              SizedBox(height: 12.h),
-              _buildInfoRow(Icons.email_outlined, AppStrings.email, staff.email),
-              _buildInfoRow(Icons.phone_android_outlined, AppStrings.staffPhone, staff.phone ?? 'N/A'),
-              
-              const Divider(color: AppColors.borderDefault),
-              SizedBox(height: 8.h),
-              
-              _buildSectionTitle(Icons.badge_outlined, "National Identity Details"),
-              SizedBox(height: 12.h),
-              _buildInfoRow(Icons.numbers_outlined, "National ID Number", staff.nationalIdNumber ?? 'N/A'),
-              
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  Expanded(child: _buildIdCardPreview(context, "ID Front", staff.idFrontUrl)),
-                  SizedBox(width: 16.w),
-                  Expanded(child: _buildIdCardPreview(context, "ID Back", staff.idBackUrl)),
-                ],
-              ),
-              
-              SizedBox(height: 24.h),
-              const Divider(color: AppColors.borderDefault),
-              SizedBox(height: 8.h),
-              
-              _buildSectionTitle(Icons.history_outlined, AppStrings.shiftHistory),
-              SizedBox(height: 8.h),
-              AppText.body("Member since ${DateFormat('MMM yyyy').format(staff.createdAt)}", color: AppColors.textSecondary),
-            ],
-          ),
-        ),
-      ),
+    EasyLocalization.of(context);
+    return AppDialog(
+      title: staff.name,
+      icon: Icons.badge_outlined,
+      width: 600.w,
       actions: [
+        if ((context.read<LoginCubit>().state.user?.isOwner == true ||
+                context.read<LoginCubit>().state.user?.isSuperAdmin == true) &&
+            context.read<LoginCubit>().state.user?.id != staff.id &&
+            ![
+              'owner',
+              'lounge_owner',
+              'super_admin',
+              'superadmin',
+            ].contains(staff.role.toLowerCase().trim()))
+          AppButton(
+            text: 'staff_custom_permissions'.tr(),
+            icon: Icons.admin_panel_settings_outlined,
+            onPressed: () => showDialog<void>(
+              context: context,
+              useRootNavigator: false,
+              builder: (_) => StaffPermissionsDialog(
+                staff: staff,
+                repository: sl<PermissionsRepository>(),
+              ),
+            ),
+          ),
         AppButton(
           text: AppStrings.close,
           variant: AppButtonVariant.outlined,
           onPressed: () => Navigator.pop(context),
         ),
       ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              AppAvatar(
+                radius: 24.r,
+                imageUrl: staff.avatarUrl,
+                backgroundColor: AppColors.neonBlue.withValues(alpha: 0.1),
+                fallback: Icon(
+                  Icons.person,
+                  color: AppColors.neonBlue,
+                  size: 24.r,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppText.subHeading(
+                      staff.name,
+                      fontSize: 16.sp,
+                      maxLines: 1,
+                    ),
+                    SizedBox(height: 4.h),
+                    _buildRoleBadge(staff.role),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          const Divider(color: AppColors.borderDefault),
+          SizedBox(height: 12.h),
+
+          _buildSectionTitle(
+            Icons.contact_mail_outlined,
+            AppStrings.contactLabel,
+          ),
+          SizedBox(height: 12.h),
+          _buildInfoRow(Icons.email_outlined, AppStrings.email, staff.email),
+          _buildInfoRow(
+            Icons.phone_android_outlined,
+            AppStrings.staffPhone,
+            staff.phone ?? 'N/A',
+          ),
+
+          const Divider(color: AppColors.borderDefault),
+          SizedBox(height: 8.h),
+
+          _buildSectionTitle(
+            Icons.badge_outlined,
+            AppStrings.nationalIdentityDetails,
+          ),
+          SizedBox(height: 12.h),
+          _buildInfoRow(
+            Icons.numbers_outlined,
+            AppStrings.nationalIdNumber,
+            staff.nationalIdNumber ?? 'N/A',
+          ),
+
+          SizedBox(height: 16.h),
+          Row(
+            children: [
+              Expanded(
+                child: _buildIdCardPreview(
+                  context,
+                  AppStrings.idFront,
+                  staff.idFrontUrl,
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: _buildIdCardPreview(
+                  context,
+                  AppStrings.idBack,
+                  staff.idBackUrl,
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 24.h),
+          const Divider(color: AppColors.borderDefault),
+          SizedBox(height: 8.h),
+
+          _buildSectionTitle(Icons.history_outlined, AppStrings.shiftHistory),
+          SizedBox(height: 8.h),
+          AppText.body(
+            '${AppStrings.memberSince} ${DateFormat('MMM yyyy').format(staff.createdAt)}',
+            color: AppColors.textSecondary,
+          ),
+        ],
+      ),
     );
   }
 
@@ -93,7 +160,11 @@ class StaffDetailsDialog extends StatelessWidget {
       children: [
         Icon(icon, size: 18.r, color: AppColors.neonBlue),
         SizedBox(width: 8.w),
-        AppText.subHeading(title, fontSize: 14.sp, color: AppColors.textPrimary),
+        AppText.subHeading(
+          title,
+          fontSize: 14.sp,
+          color: AppColors.textPrimary,
+        ),
       ],
     );
   }
@@ -106,7 +177,11 @@ class StaffDetailsDialog extends StatelessWidget {
           Icon(icon, size: 14.r, color: AppColors.textSecondary),
           SizedBox(width: 8.w),
           AppText.body("$label: ", color: AppColors.textSecondary),
-          AppText.body(value, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+          AppText.body(
+            value,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
         ],
       ),
     );
@@ -129,12 +204,14 @@ class StaffDetailsDialog extends StatelessWidget {
               border: Border.all(color: AppColors.borderDefault),
             ),
             clipBehavior: Clip.antiAlias,
-            child: url != null 
-              ? AppCachedImage(
-                  imageUrl: url, 
-                  fit: BoxFit.cover,
-                )
-              : const Center(child: Icon(Icons.image_not_supported_outlined, color: AppColors.textSecondary)),
+            child: url != null
+                ? AppCachedImage(imageUrl: url, fit: BoxFit.cover)
+                : const Center(
+                    child: Icon(
+                      Icons.image_not_supported_outlined,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
           ),
         ),
       ],
@@ -150,14 +227,16 @@ class StaffDetailsDialog extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            InteractiveViewer(
-              child: AppCachedImage(imageUrl: url),
-            ),
+            InteractiveViewer(child: AppCachedImage(imageUrl: url)),
             Positioned(
               top: 0,
               right: 0,
               child: IconButton(
-                icon: const Icon(Icons.close, color: AppColors.textPrimary, size: 30),
+                icon: const Icon(
+                  Icons.close,
+                  color: AppColors.textPrimary,
+                  size: 30,
+                ),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
@@ -169,7 +248,9 @@ class StaffDetailsDialog extends StatelessWidget {
 
   Widget _buildRoleBadge(String role) {
     final cleanRole = role.toLowerCase().trim();
-    if (cleanRole == 'owner' || cleanRole == 'lounge_owner' || cleanRole == 'lounge_admin') {
+    if (cleanRole == 'owner' ||
+        cleanRole == 'lounge_owner' ||
+        cleanRole == 'lounge_admin') {
       return StatusBadge.secondary(AppStrings.loungeOwnerLabel);
     }
     if (cleanRole == 'manager') {

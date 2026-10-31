@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -13,9 +14,11 @@ class UsersStatsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<AdminManagementCubit, AdminManagementState>(
       buildWhen: (previous, current) =>
-          previous.status != current.status || previous.admins != current.admins,
+          previous.status != current.status ||
+          previous.admins != current.admins,
       builder: (context, state) {
         final totalUsers = state.admins.length;
         final totalReferrals = state.admins.fold<int>(

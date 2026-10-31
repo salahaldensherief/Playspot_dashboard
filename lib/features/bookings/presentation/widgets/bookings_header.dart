@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -9,6 +10,7 @@ class BookingsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AppAdaptivePageHeader(
       title: AppStrings.liveBookingsFeed,
       subtitle: AppStrings.loungeOperationsDesc,
@@ -25,11 +27,14 @@ class BookingsHeader extends StatelessWidget {
             Container(
               width: 8.r,
               height: 8.r,
-              decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: AppColors.success,
+                shape: BoxShape.circle,
+              ),
             ),
             SizedBox(width: 8.w),
             Text(
-              'مباشر | Live',
+              'live'.tr(),
               style: TextStyle(
                 color: AppColors.success,
                 fontSize: 12.sp,

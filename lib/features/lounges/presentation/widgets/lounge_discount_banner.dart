@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -19,6 +20,7 @@ class LoungeDiscountBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (lounge == null) return const SizedBox.shrink();
 
     bool hasDiscount = false;
@@ -33,14 +35,20 @@ class LoungeDiscountBanner extends StatelessWidget {
       discountPercentage = l.discountPercentage;
       titleAr = l.discountTitleAr ?? '';
       titleEn = l.discountTitleEn ?? '';
-      expiration = l.discountExpiresAt != null ? l.discountExpiresAt.toString().split(' ').first : '';
+      expiration = l.discountExpiresAt != null
+          ? l.discountExpiresAt.toString().split(' ').first
+          : '';
     } else if (lounge is Map) {
       final Map m = lounge as Map;
       hasDiscount = (m['has_discount'] ?? m['hasDiscount'] ?? false) as bool;
-      discountPercentage = (m['discount_percentage'] ?? m['discountPercentage'] ?? 0) as num;
-      titleAr = (m['discount_title_ar'] ?? m['discountTitleAr'] ?? '').toString();
-      titleEn = (m['discount_title_en'] ?? m['discountTitleEn'] ?? '').toString();
-      expiration = (m['discount_expiration'] ?? m['discountExpiration'] ?? '').toString();
+      discountPercentage =
+          (m['discount_percentage'] ?? m['discountPercentage'] ?? 0) as num;
+      titleAr = (m['discount_title_ar'] ?? m['discountTitleAr'] ?? '')
+          .toString();
+      titleEn = (m['discount_title_en'] ?? m['discountTitleEn'] ?? '')
+          .toString();
+      expiration = (m['discount_expiration'] ?? m['discountExpiration'] ?? '')
+          .toString();
     } else {
       try {
         hasDiscount = (lounge.hasDiscount ?? false) as bool;
@@ -54,7 +62,9 @@ class LoungeDiscountBanner extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final String promoTitle = titleAr.isNotEmpty ? titleAr : (titleEn.isNotEmpty ? titleEn : AppStrings.directDiscount);
+    final String promoTitle = titleAr.isNotEmpty
+        ? titleAr
+        : (titleEn.isNotEmpty ? titleEn : AppStrings.directDiscount);
 
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
@@ -67,7 +77,10 @@ class LoungeDiscountBanner extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.5), width: 1.2),
+        border: Border.all(
+          color: AppColors.warning.withValues(alpha: 0.5),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
             color: AppColors.warning.withValues(alpha: 0.15),
@@ -88,7 +101,11 @@ class LoungeDiscountBanner extends StatelessWidget {
                     color: AppColors.warning,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.celebration_rounded, color: Colors.black, size: 16.r),
+                  child: Icon(
+                    Icons.celebration_rounded,
+                    color: Colors.black,
+                    size: 16.r,
+                  ),
                 ),
                 SizedBox(width: 10.w),
                 Expanded(
@@ -105,13 +122,22 @@ class LoungeDiscountBanner extends StatelessWidget {
                           ),
                           SizedBox(width: 8.w),
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 6.w,
+                              vertical: 2.h,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.warning,
                               borderRadius: BorderRadius.circular(10.r),
                             ),
                             child: Text(
-                              'خصم ${discountPercentage.toStringAsFixed(0)}% شامل',
+                              'lounge_discount_percent'.tr(
+                                args: [
+                                  (discountPercentage.toStringAsFixed(
+                                    0,
+                                  )).toString(),
+                                ],
+                              ),
                               style: TextStyle(
                                 color: Colors.black,
                                 fontSize: 10.sp,
@@ -124,7 +150,9 @@ class LoungeDiscountBanner extends StatelessWidget {
                       if (expiration.isNotEmpty) ...[
                         SizedBox(height: 2.h),
                         AppText.body(
-                          'ينتهي العرض في: $expiration',
+                          'promotion_expiration_label'.tr(
+                            args: [(expiration).toString()],
+                          ),
                           fontSize: 10.sp,
                           color: AppColors.textSecondary,
                         ),
@@ -138,9 +166,13 @@ class LoungeDiscountBanner extends StatelessWidget {
           if (onManageDiscount != null)
             TextButton.icon(
               onPressed: onManageDiscount,
-              icon: Icon(Icons.tune_rounded, size: 14.r, color: AppColors.warning),
+              icon: Icon(
+                Icons.tune_rounded,
+                size: 14.r,
+                color: AppColors.warning,
+              ),
               label: Text(
-                'إدارة الخصم',
+                'manage_lounge_discount'.tr(),
                 style: TextStyle(
                   color: AppColors.warning,
                   fontSize: 11.sp,

@@ -51,7 +51,7 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
   @override
   Future<List<LoyaltyTaskModel>> getTasks() async {
     final response = await client
-        .from('loyalty_tasks')
+        .from('loyalty_missions')
         .select()
         .order('created_at', ascending: false);
 
@@ -62,7 +62,34 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
 
   @override
   Future<void> updateTask(String id, Map<String, dynamic> data) async {
-    await client.from('loyalty_tasks').update(data).eq('id', id);
+    const editable = {
+      'title_ar',
+      'title_en',
+      'description_ar',
+      'description_en',
+      'points_reward',
+      'is_active',
+    };
+    if (data.keys.any((key) => !editable.contains(key))) {
+      throw ArgumentError('Unsupported loyalty mission field');
+    }
+    final payload = {
+      for (final entry in data.entries)
+        (entry.key == 'points_reward' ? 'reward_points' : entry.key):
+            entry.value,
+    };
+    final updated = await client
+        .from('loyalty_missions')
+        .update(payload)
+        .eq('id', id)
+        .select('id')
+        .maybeSingle();
+    if (updated == null) {
+      throw const PostgrestException(
+        message: 'Mission was not updated',
+        code: 'P0002',
+      );
+    }
   }
 
   @override
@@ -118,7 +145,7 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
 
   @override
   Future<void> createRedemptionOption(RedemptionOptionModel option) async {
-    await client.from('redemption_options').insert(option.toJson());
+    await _saveRedemptionOption(null, option);
   }
 
   @override
@@ -126,11 +153,44 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
     String id,
     Map<String, dynamic> data,
   ) async {
-    await client.from('redemption_options').update(data).eq('id', id);
+    final current = await client
+        .from('redemption_options')
+        .select()
+        .eq('id', id)
+        .single();
+    final merged = <String, dynamic>{
+      ...Map<String, dynamic>.from(current),
+      ...data,
+      'id': id,
+    };
+    await _saveRedemptionOption(id, RedemptionOptionModel.fromJson(merged));
+  }
+
+  Future<void> _saveRedemptionOption(
+    String? id,
+    RedemptionOptionModel option,
+  ) async {
+    await client.rpc(
+      'save_redemption_option_admin',
+      params: {
+        'p_option_id': id,
+        'p_title_ar': option.titleAr,
+        'p_title_en': option.titleEn,
+        'p_description_ar': option.descriptionAr,
+        'p_description_en': option.descriptionEn,
+        'p_points_cost': option.pointsCost,
+        'p_reward_type': option.rewardType,
+        'p_reward_value': option.rewardValue,
+        'p_is_active': option.isActive,
+      },
+    );
   }
 
   @override
   Future<void> deleteRedemptionOption(String id) async {
-    await client.from('redemption_options').delete().eq('id', id);
+    await client.rpc(
+      'archive_redemption_option_admin',
+      params: {'p_option_id': id},
+    );
   }
 }

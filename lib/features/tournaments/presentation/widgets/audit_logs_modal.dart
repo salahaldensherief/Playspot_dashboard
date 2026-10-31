@@ -9,50 +9,56 @@ import '../../domain/entities/tournament_audit_log_entity.dart';
 
 String formatAuditActionType(String raw) {
   final clean = raw.trim().toLowerCase();
-  if (clean.isEmpty) return 'تحديث في إعدادات البطولة';
+  if (clean.isEmpty) return 'tournament_audit_settings_changed'.tr();
   switch (clean) {
     case 'create':
     case 'tournament_created':
     case 'created':
-      return 'إنشاء مسودة البطولة';
+      return 'tournament_audit_draft_created'.tr();
     case 'update':
     case 'tournament_updated':
     case 'updated':
-      return 'تعديل بيانات البطولة';
+      return 'tournament_audit_updated'.tr();
     case 'publish':
     case 'tournament_published':
     case 'published':
-      return 'نشر البطولة للتسجيل';
+      return 'tournament_audit_published'.tr();
     case 'cancel':
     case 'tournament_cancelled':
     case 'cancelled':
-      return 'إلغاء البطولة';
+      return 'tournament_audit_cancelled'.tr();
     case 'payment_approved':
     case 'approve_payment':
-      return 'اعتماد إيصال دفع اللاعب';
+      return 'tournament_audit_receipt_approved'.tr();
     case 'payment_rejected':
     case 'reject_payment':
-      return 'رفض إيصال دفع اللاعب';
+      return 'tournament_audit_receipt_rejected'.tr();
     case 'cash_payment':
     case 'cash_payment_recorded':
-      return 'تسجيل دفع نقدي بمقر الصالة';
+      return 'tournament_audit_cash_recorded'.tr();
     case 'check_in':
     case 'participant_checked_in':
-      return 'تسجيل حضور وتأكيد لاعب';
+      return 'tournament_audit_check_in'.tr();
     case 'draw_bracket':
     case 'bracket_drawn':
-      return 'توليد وسحب قرعة البطولة';
+      return 'tournament_audit_draw'.tr();
     case 'match_started':
     case 'start_match':
-      return 'بدء مباراة جديدة';
+      return 'tournament_audit_match_started'.tr();
     case 'resolve_dispute':
     case 'dispute_resolved':
-      return 'حل نزاع مباراة وتحديد الفائز';
+      return 'tournament_audit_dispute_resolved'.tr();
     case 'complete':
     case 'tournament_completed':
-      return 'إكمال البطولة وتوزيع الجوائز';
+      return 'tournament_audit_completed'.tr();
     default:
-      return raw.replaceAll('_', ' ').split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
+      return raw
+          .replaceAll('_', ' ')
+          .split(' ')
+          .map(
+            (w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '',
+          )
+          .join(' ');
   }
 }
 
@@ -63,6 +69,7 @@ class AuditLogsModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final dateFormat = DateFormat('yyyy/MM/dd hh:mm:ss a');
 
     return AppDialog(
@@ -82,11 +89,18 @@ class AuditLogsModal extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.history_toggle_off_rounded, color: AppColors.textSecondary, size: 40),
+                    const Icon(
+                      Icons.history_toggle_off_rounded,
+                      color: AppColors.textSecondary,
+                      size: 40,
+                    ),
                     SizedBox(height: 12.h),
                     Text(
-                      'لا توجد سجلات تتبع لهذه البطولة حتى الآن',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+                      'tournament_audit_empty'.tr(),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14.sp,
+                      ),
                     ),
                   ],
                 ),
@@ -101,34 +115,61 @@ class AuditLogsModal extends StatelessWidget {
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: logs.length,
-                separatorBuilder: (ctx, i) => const Divider(color: AppColors.borderDefault, height: 1),
+                separatorBuilder: (ctx, i) =>
+                    const Divider(color: AppColors.borderDefault, height: 1),
                 itemBuilder: (ctx, index) {
                   final log = logs[index];
-                  final performer = log.performedByName ?? (log.performedBy.isNotEmpty ? log.performedBy : 'النظام');
+                  final performer =
+                      log.performedByName ??
+                      (log.performedBy.isNotEmpty
+                          ? log.performedBy
+                          : 'system_actor'.tr());
 
                   return ListTile(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 8.h,
+                    ),
                     leading: CircleAvatar(
                       backgroundColor: AppColors.neonBlue.withAlpha(30),
-                      child: const Icon(Icons.history, color: AppColors.neonBlue, size: 20),
+                      child: const Icon(
+                        Icons.history,
+                        color: AppColors.neonBlue,
+                        size: 20,
+                      ),
                     ),
                     title: Text(
                       formatAuditActionType(log.actionType),
-                      style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp),
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.sp,
+                      ),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(height: 4.h),
                         Text(
-                          'بواسطة: $performer',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+                          'audit_performer_label'.tr(
+                            args: [(performer).toString()],
+                          ),
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12.sp,
+                          ),
                         ),
-                        if (log.details != null && log.details!.isNotEmpty) ...[
+                        if (log.details != null &&
+                            (log.details?.isNotEmpty ?? false)) ...[
                           SizedBox(height: 2.h),
                           Text(
-                            'التفاصيل: ${log.details}',
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp),
+                            'audit_details_label'.tr(
+                              args: [(log.details ?? '').toString()],
+                            ),
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 11.sp,
+                            ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -137,7 +178,10 @@ class AuditLogsModal extends StatelessWidget {
                     ),
                     trailing: Text(
                       dateFormat.format(log.createdAt.toLocal()),
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 11.sp,
+                      ),
                     ),
                   );
                 },

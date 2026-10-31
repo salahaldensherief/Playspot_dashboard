@@ -6,6 +6,7 @@ class TournamentMatchModel extends TournamentMatchEntity {
     required super.tournamentId,
     required super.round,
     required super.matchNumber,
+    super.matchType,
     super.player1Id,
     super.player1Name,
     super.player2Id,
@@ -30,12 +31,16 @@ class TournamentMatchModel extends TournamentMatchEntity {
     String? roomNameVal;
 
     if (json['player1'] != null && json['player1'] is Map) {
-      p1Name = json['player1']['user_name'] as String? ?? json['player1']['full_name'] as String?;
+      p1Name =
+          json['player1']['user_name'] as String? ??
+          json['player1']['full_name'] as String?;
     } else if (json['p1_profile'] != null && json['p1_profile'] is Map) {
       p1Name = json['p1_profile']['full_name'] as String?;
     }
     if (json['player2'] != null && json['player2'] is Map) {
-      p2Name = json['player2']['user_name'] as String? ?? json['player2']['full_name'] as String?;
+      p2Name =
+          json['player2']['user_name'] as String? ??
+          json['player2']['full_name'] as String?;
     } else if (json['p2_profile'] != null && json['p2_profile'] is Map) {
       p2Name = json['p2_profile']['full_name'] as String?;
     }
@@ -49,21 +54,26 @@ class TournamentMatchModel extends TournamentMatchEntity {
       id: json['id'] as String? ?? '',
       tournamentId: json['tournament_id'] as String? ?? '',
       round: roundVal,
-      matchNumber: json['match_number'] as int? ?? 1,
+      matchType: json['match_type'] as String? ?? 'bracket',
+      matchNumber:
+          json['match_order'] as int? ?? json['match_number'] as int? ?? 1,
       player1Id: json['player1_id'] as String?,
       player1Name: p1Name ?? json['player1_name'] as String?,
       player2Id: json['player2_id'] as String?,
       player2Name: p2Name ?? json['player2_name'] as String?,
       winnerId: json['winner_id'] as String?,
-      player1Score: json['player1_score'] as int? ?? 0,
-      player2Score: json['player2_score'] as int? ?? 0,
+      player1Score:
+          json['score_player1'] as int? ?? json['player1_score'] as int? ?? 0,
+      player2Score:
+          json['score_player2'] as int? ?? json['player2_score'] as int? ?? 0,
       status: MatchStatus.fromString(json['status'] as String?),
       roomId: json['room_id'] as String?,
       roomName: roomNameVal ?? json['room_name'] as String?,
-      proofUrl: json['proof_url'] as String?,
+      proofUrl:
+          json['proof_image_url'] as String? ?? json['proof_url'] as String?,
       disputeReason: json['dispute_reason'] as String?,
       resolutionNotes: json['resolution_notes'] as String?,
-      isBye: json['is_bye'] as bool? ?? false,
+      isBye: json['is_bye'] as bool? ?? json['status'] == 'walkover',
       startedAt: json['started_at'] != null
           ? DateTime.tryParse(json['started_at'].toString())
           : null,

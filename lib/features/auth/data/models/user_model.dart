@@ -24,7 +24,9 @@ class UserModel extends UserEntity {
     if (str == null || str.trim().isEmpty) return false;
     final clean = str.trim().toLowerCase();
     if (clean == 'undefined' || clean == 'null') return false;
-    return RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(clean);
+    return RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+    ).hasMatch(clean);
   }
 
   static String? cleanUuid(dynamic value) {
@@ -36,7 +38,9 @@ class UserModel extends UserEntity {
     return null;
   }
 
-  static Map<String, dynamic> sanitizeProfilePayload(Map<String, dynamic> data) {
+  static Map<String, dynamic> sanitizeProfilePayload(
+    Map<String, dynamic> data,
+  ) {
     final cleanMap = <String, dynamic>{};
     data.forEach((key, value) {
       if (value == null) return;
@@ -48,7 +52,11 @@ class UserModel extends UserEntity {
       }
 
       // UUID fields validation (e.g. city_id, lounge_id, level_id, user_id)
-      if (key == 'city_id' || key == 'lounge_id' || key == 'level_id' || key == 'user_id' || key.endsWith('_id')) {
+      if (key == 'city_id' ||
+          key == 'lounge_id' ||
+          key == 'level_id' ||
+          key == 'user_id' ||
+          key.endsWith('_id')) {
         if (!isValidUuid(valStr)) {
           return; // Omit invalid UUID key
         }
@@ -61,17 +69,29 @@ class UserModel extends UserEntity {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     final rawRoleStr = (json['role'] ?? json['out_role'])?.toString();
-    final rawAvatar = (json['avatar_url'] ?? json['out_avatar_url'])?.toString();
-    final avatar = (rawAvatar != null && rawAvatar.trim().isNotEmpty) ? rawAvatar.trim() : null;
+    final rawAvatar = (json['avatar_url'] ?? json['out_avatar_url'])
+        ?.toString();
+    final avatar = (rawAvatar != null && rawAvatar.trim().isNotEmpty)
+        ? rawAvatar.trim()
+        : null;
 
-    final cityMap = json['cities'] is Map ? json['cities'] as Map : (json['city'] is Map ? json['city'] as Map : null);
-    final rawCityAr = json['city_name_ar'] ?? json['out_city_name_ar'] ?? cityMap?['name_ar'];
-    final rawCityEn = json['city_name_en'] ?? json['out_city_name_en'] ?? cityMap?['name_en'];
+    final cityMap = json['cities'] is Map
+        ? json['cities'] as Map
+        : (json['city'] is Map ? json['city'] as Map : null);
+    final rawCityAr =
+        json['city_name_ar'] ?? json['out_city_name_ar'] ?? cityMap?['name_ar'];
+    final rawCityEn =
+        json['city_name_en'] ?? json['out_city_name_en'] ?? cityMap?['name_en'];
 
     return UserModel(
       id: (json['id'] ?? json['user_id'] ?? json['staff_id'])?.toString() ?? '',
       email: (json['email'] ?? json['out_email'] ?? '')?.toString() ?? '',
-      name: (json['full_name'] ?? json['out_full_name'] ?? json['name'] ?? 'Unknown').toString(),
+      name:
+          (json['full_name'] ??
+                  json['out_full_name'] ??
+                  json['name'] ??
+                  'Unknown')
+              .toString(),
       role: roleFromString(rawRoleStr),
       rawRole: rawRoleStr,
       loungeId: cleanUuid(json['lounge_id'] ?? json['out_lounge_id']),
@@ -79,9 +99,20 @@ class UserModel extends UserEntity {
       cityId: cleanUuid(json['city_id'] ?? json['out_city_id']),
       cityNameAr: rawCityAr?.toString(),
       cityNameEn: rawCityEn?.toString(),
-      isSetupCompleted: json['is_setup_completed'] ?? json['out_is_setup_completed'] ?? false,
-      pointsBalance: (json['points_balance'] ?? json['reward_points'] ?? json['points'] as num?)?.toInt() ?? 0,
-      referralCount: (json['referral_count'] ?? json['referrals_count'] ?? json['referrals'] as num?)?.toInt() ?? 0,
+      isSetupCompleted:
+          json['is_setup_completed'] ?? json['out_is_setup_completed'] ?? false,
+      pointsBalance:
+          (json['points_balance'] ??
+                  json['reward_points'] ??
+                  json['points'] as num?)
+              ?.toInt() ??
+          0,
+      referralCount:
+          (json['referral_count'] ??
+                  json['referrals_count'] ??
+                  json['referrals'] as num?)
+              ?.toInt() ??
+          0,
       isBanned: json['is_banned'] ?? json['out_is_banned'] ?? false,
       isActive: json['is_active'] ?? true,
       bannedReason: json['banned_reason']?.toString(),

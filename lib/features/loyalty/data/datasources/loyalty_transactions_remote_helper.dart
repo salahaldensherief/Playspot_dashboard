@@ -13,46 +13,26 @@ class LoyaltyTransactionsRemoteHelper {
     required int pointsDelta,
     required String reason,
   }) async {
-    try {
-      await client.rpc('award_points', params: {
-        'p_user_id': userId,
-        'p_points_delta': pointsDelta,
-        'p_source_type': 'admin_adjust',
-        'p_source_id': null,
-        'p_reason': reason,
-        'p_metadata': {'adjusted_by_admin': true},
-        'p_idempotency_key': 'admin_adjust_${userId}_${DateTime.now().millisecondsSinceEpoch}',
-      });
-      return;
-    } catch (e) {
-      AppLogger.warning('award_points RPC failed, executing fallback insert: $e');
-    }
+    await client.rpc(
+      'update_user_points',
+      params: buildAdjustmentParams(
+        userId: userId,
+        pointsDelta: pointsDelta,
+        reason: reason,
+      ),
+    );
+  }
 
-    try {
-      await client.from('points_transactions').insert({
-        'user_id': userId,
-        'points_delta': pointsDelta,
-        'type': 'admin_adjust',
-        'source_type': 'admin_adjust',
-        'reason': reason,
-        'created_at': DateTime.now().toIso8601String(),
-      });
-    } catch (e) {
-      AppLogger.warning('Log points transaction fallback note: $e');
-    }
-
-    try {
-      final userRes =
-          await client.from('profiles').select('points_balance').eq('id', userId).maybeSingle();
-      final currentBalance = (userRes?['points_balance'] as num?)?.toInt() ?? 0;
-      final newBalance = currentBalance + pointsDelta;
-
-      await client.from('profiles').update({
-        'points_balance': newBalance < 0 ? 0 : newBalance,
-      }).eq('id', userId);
-    } catch (e) {
-      AppLogger.error('Error updating user points in profiles: $e');
-    }
+  static Map<String, dynamic> buildAdjustmentParams({
+    required String userId,
+    required int pointsDelta,
+    required String reason,
+  }) {
+    return {
+      'p_user_id': userId,
+      'p_points_change': pointsDelta,
+      'p_reason': reason.trim(),
+    };
   }
 
   Future<PaginatedResult<PointsTransactionModel>> getPointsTransactionsPage({
@@ -63,10 +43,10 @@ class LoyaltyTransactionsRemoteHelper {
     final validPage = page < 1 ? 1 : page;
 
     try {
-      final response = await client.rpc('get_points_transactions_page', params: {
-        'p_page': validPage,
-        'p_page_size': clampedPageSize,
-      });
+      final response = await client.rpc(
+        'get_points_transactions_page',
+        params: {'p_page': validPage, 'p_page_size': clampedPageSize},
+      );
 
       return PaginatedResult.fromRpcResponse<PointsTransactionModel>(
         response,
@@ -75,11 +55,16 @@ class LoyaltyTransactionsRemoteHelper {
         requestedPageSize: clampedPageSize,
       );
     } catch (e) {
-      AppLogger.warning('get_points_transactions_page RPC failed ($e), falling back to query');
+      AppLogger.warning(
+        'get_points_transactions_page RPC failed ($e), falling back to query',
+      );
       try {
         final userId = client.auth.currentUser?.id;
         if (userId == null || userId.isEmpty) {
-          return PaginatedResult.empty(requestedPage: validPage, requestedPageSize: clampedPageSize);
+          return PaginatedResult.empty(
+            requestedPage: validPage,
+            requestedPageSize: clampedPageSize,
+          );
         }
 
         final from = (validPage - 1) * clampedPageSize;
@@ -93,7 +78,11 @@ class LoyaltyTransactionsRemoteHelper {
             .range(from, to);
 
         final list = (queryRes as List)
-            .map((e) => PointsTransactionModel.fromJson(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) => PointsTransactionModel.fromJson(
+                Map<String, dynamic>.from(e as Map),
+              ),
+            )
             .toList();
 
         return PaginatedResult(
@@ -104,7 +93,10 @@ class LoyaltyTransactionsRemoteHelper {
         );
       } catch (e2) {
         AppLogger.error('Fallback query for points_transactions failed: $e2');
-        return PaginatedResult.empty(requestedPage: validPage, requestedPageSize: clampedPageSize);
+        return PaginatedResult.empty(
+          requestedPage: validPage,
+          requestedPageSize: clampedPageSize,
+        );
       }
     }
   }

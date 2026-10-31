@@ -1,8 +1,10 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_dialog.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
 import 'package:play_spot_dashboard/art_core/widgets/custom_dropdown.dart';
 import 'package:play_spot_dashboard/art_core/widgets/section_container.dart';
@@ -68,28 +70,33 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
       final confirmed = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: AppColors.cardBackground,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-          title: Row(
-            children: [
-              Icon(Icons.campaign_outlined, color: AppColors.warning, size: 28.r),
-              SizedBox(width: 10.w),
-              Expanded(
-                child: Text(
-                  'تأكيد إرسال الإعلان الجماعي',
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 18.sp, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
+        builder: (ctx) => AppDialog(
+          title: 'announcement_send_confirmation_title'.tr(),
+          icon: Icons.campaign_outlined,
+          width: 500.w,
+          actions: [
+            AppButton(
+              text: 'cancel'.tr(),
+              variant: AppButtonVariant.outlined,
+              onPressed: () => Navigator.of(ctx).pop(false),
+            ),
+            SizedBox(width: 12.w),
+            AppButton(
+              text: 'confirm_announcement_send'.tr(),
+              variant: AppButtonVariant.gradient,
+              onPressed: () => Navigator.of(ctx).pop(true),
+            ),
+          ],
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'هل أنت متاكد من نشر هذا الإعلان وتنبيه جميع المستخدمين المستهدفين عبر Push Notifications؟',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+                'announcement_send_confirmation_body'.tr(),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14.sp,
+                ),
               ),
               SizedBox(height: 12.h),
               Container(
@@ -102,25 +109,29 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('العنوان: $title', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13.sp)),
+                    Text(
+                      'announcement_title_preview'.tr(
+                        namedArgs: {'title': title},
+                      ),
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13.sp,
+                      ),
+                    ),
                     SizedBox(height: 4.h),
-                    Text('المحتوى: $body', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp)),
+                    Text(
+                      'announcement_body_preview'.tr(namedArgs: {'body': body}),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12.sp,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text('إلغاء', style: TextStyle(color: AppColors.textMuted)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.neonBlue),
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text('تأكيد الإرسال', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-            ),
-          ],
         ),
       );
 
@@ -132,8 +143,12 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
         final announcement = AnnouncementEntity(
           id: '',
           targetAudience: _targetAudience,
-          targetLoungeId: _targetAudience == 'specific_lounge' ? _selectedLounge?.id : null,
-          targetLoungeName: _targetAudience == 'specific_lounge' ? _selectedLounge?.name : null,
+          targetLoungeId: _targetAudience == 'specific_lounge'
+              ? _selectedLounge?.id
+              : null,
+          targetLoungeName: _targetAudience == 'specific_lounge'
+              ? _selectedLounge?.name
+              : null,
           titleAr: _titleArController.text.trim(),
           titleEn: _titleEnController.text.trim(),
           bodyAr: _bodyArController.text.trim(),
@@ -166,6 +181,7 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return SectionContainer(
       title: AppStrings.createAnnouncement,
       children: [
@@ -214,7 +230,8 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
                       label: AppStrings.audienceSpecificLounge,
                       icon: Icons.business,
                       isSelected: _targetAudience == 'specific_lounge',
-                      onTap: () => setState(() => _targetAudience = 'specific_lounge'),
+                      onTap: () =>
+                          setState(() => _targetAudience = 'specific_lounge'),
                     ),
                   ),
                 ],
@@ -227,7 +244,8 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
                   value: _selectedLounge,
                   items: widget.lounges,
                   itemLabel: (lounge) => lounge.name,
-                  onChanged: (lounge) => setState(() => _selectedLounge = lounge),
+                  onChanged: (lounge) =>
+                      setState(() => _selectedLounge = lounge),
                 ),
                 SizedBox(height: 16.h),
               ],
@@ -271,19 +289,25 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
                 children: [
                   Expanded(
                     child: AppTextField(
+                      textLanguage: TextFieldLanguage.arabic,
                       label: AppStrings.announcementTitleAr,
                       hintText: AppStrings.announcementTitleArHint,
                       controller: _titleArController,
-                      validator: (val) => val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
+                      validator: (val) => val == null || val.trim().isEmpty
+                          ? AppStrings.fieldRequired
+                          : null,
                     ),
                   ),
                   SizedBox(width: 16.w),
                   Expanded(
                     child: AppTextField(
+                      textLanguage: TextFieldLanguage.english,
                       label: AppStrings.announcementTitleEn,
                       hintText: AppStrings.announcementTitleEnHint,
                       controller: _titleEnController,
-                      validator: (val) => val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
+                      validator: (val) => val == null || val.trim().isEmpty
+                          ? AppStrings.fieldRequired
+                          : null,
                     ),
                   ),
                 ],
@@ -294,21 +318,27 @@ class _CreateAnnouncementCardState extends State<CreateAnnouncementCard> {
                 children: [
                   Expanded(
                     child: AppTextField(
+                      textLanguage: TextFieldLanguage.arabic,
                       label: AppStrings.announcementBodyAr,
                       hintText: AppStrings.announcementBodyArHint,
                       controller: _bodyArController,
                       maxLines: 3,
-                      validator: (val) => val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
+                      validator: (val) => val == null || val.trim().isEmpty
+                          ? AppStrings.fieldRequired
+                          : null,
                     ),
                   ),
                   SizedBox(width: 16.w),
                   Expanded(
                     child: AppTextField(
+                      textLanguage: TextFieldLanguage.english,
                       label: AppStrings.announcementBodyEn,
                       hintText: AppStrings.announcementBodyEnHint,
                       controller: _bodyEnController,
                       maxLines: 3,
-                      validator: (val) => val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
+                      validator: (val) => val == null || val.trim().isEmpty
+                          ? AppStrings.fieldRequired
+                          : null,
                     ),
                   ),
                 ],

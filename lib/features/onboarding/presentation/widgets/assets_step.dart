@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -6,6 +7,7 @@ import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_text.dart';
+import '../../../rooms/presentation/cubit/room_cubit.dart';
 import '../../../rooms/presentation/widgets/room_dialog.dart';
 import '../cubit/onboarding_cubit.dart';
 import '../cubit/onboarding_state.dart';
@@ -17,10 +19,11 @@ class AssetsStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppText.subHeading(AppStrings.assets, fontSize: 18.sp),
+        AppText.subHeading(AppStrings.assets, fontSize: 18),
         SizedBox(height: 8.h),
         AppText.body(AppStrings.assetsSubtitle),
         SizedBox(height: 24.h),
@@ -59,14 +62,21 @@ class AssetsStep extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBackground.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.borderDefault, style: BorderStyle.solid),
+        border: Border.all(
+          color: AppColors.borderDefault,
+          style: BorderStyle.solid,
+        ),
       ),
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.meeting_room_outlined, color: AppColors.textSecondary, size: 48.r),
+            Icon(
+              Icons.meeting_room_outlined,
+              color: AppColors.textSecondary,
+              size: 48.r,
+            ),
             SizedBox(height: 16.h),
-            AppText.body(AppStrings.noRoomsAdded, fontSize: 16.sp),
+            AppText.body(AppStrings.noRoomsAdded, fontSize: 16),
           ],
         ),
       ),
@@ -100,13 +110,17 @@ class AssetsStep extends StatelessWidget {
                 AppText.subHeading(room.nameEn),
                 AppText.body(
                   '${room.capacity} ${AppStrings.persons} • ${room.pricePerHour} ${AppStrings.priceEgp}/hr',
-                  fontSize: 12.sp,
+                  fontSize: 12,
                 ),
               ],
             ),
           ),
           IconButton(
-            icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 20.r),
+            icon: Icon(
+              Icons.delete_outline,
+              color: AppColors.danger,
+              size: 20.r,
+            ),
             onPressed: () {
               context.read<OnboardingCubit>().removeRoom(room.id);
             },
@@ -119,13 +133,17 @@ class AssetsStep extends StatelessWidget {
   void _showAddRoomDialog(BuildContext context) {
     final onboardingCubit = context.read<OnboardingCubit>();
     final categoryCubit = context.read<CategoryCubit>();
+    final roomCubit = context.read<RoomCubit>();
 
     showDialog(
       context: context,
-      builder: (diagContext) => RoomDialog(
-        loungeId: loungeId,
-        categoryCubit: categoryCubit,
-        onSave: (newRoom) => onboardingCubit.addNewRoom(newRoom),
+      builder: (diagContext) => BlocProvider<RoomCubit>.value(
+        value: roomCubit,
+        child: RoomDialog(
+          loungeId: loungeId,
+          categoryCubit: categoryCubit,
+          onSave: (newRoom) => onboardingCubit.addNewRoom(newRoom),
+        ),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -7,19 +8,16 @@ import 'package:go_router/go_router.dart';
 import 'package:play_spot_dashboard/core/router/router_keys.dart';
 import 'package:play_spot_dashboard/features/auth/presentation/login/login_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/add_booking_dialog.dart';
-import 'package:play_spot_dashboard/features/users/presentation/widgets/add_lounge_admin_dialog.dart';
 import 'action_button.dart';
 
 class QuickActionsCard extends StatelessWidget {
   final bool isSuperAdmin;
 
-  const QuickActionsCard({
-    super.key,
-    this.isSuperAdmin = false,
-  });
+  const QuickActionsCard({super.key, this.isSuperAdmin = false});
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
@@ -34,7 +32,7 @@ class QuickActionsCard extends StatelessWidget {
             AppStrings.quickActions,
             style: TextStyle(
               color: AppColors.textPrimary,
-              fontSize: 18.sp,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -42,7 +40,9 @@ class QuickActionsCard extends StatelessWidget {
           Wrap(
             spacing: 12.w,
             runSpacing: 12.h,
-            children: isSuperAdmin ? _buildSuperAdminActions(context) : _buildLoungeOwnerActions(context),
+            children: isSuperAdmin
+                ? _buildSuperAdminActions(context)
+                : _buildLoungeOwnerActions(context),
           ),
         ],
       ),
@@ -55,12 +55,7 @@ class QuickActionsCard extends StatelessWidget {
         icon: Icons.add_business_outlined,
         label: AppStrings.addLounge,
         color: AppColors.neonPurple,
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (context) => const AddLoungeAdminDialog(),
-          );
-        },
+        onTap: () => context.push(RouterKeys.superAdminLounges),
       ),
       ActionButton(
         icon: Icons.category_outlined,

@@ -1,16 +1,22 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../cubit/booking_cubit.dart';
+import '../../domain/services/booking_schedule.dart';
+import 'session_ticker.dart';
+import '../../../../core/utils/permission_extension.dart';
+import '../../../auth/presentation/login/login_cubit.dart';
+import '../../../permissions/presentation/cubit/permissions_cubit.dart';
 
 /// Clean UI Button Widget for starting a booking session via Supabase RPC with start time validation.
 class StartSessionButton extends StatefulWidget {
   final String bookingId;
+  final bool enabled;
   final DateTime? bookingDate;
   final String? startTime;
   final VoidCallback? onSuccess;
@@ -21,6 +27,7 @@ class StartSessionButton extends StatefulWidget {
   const StartSessionButton({
     super.key,
     required this.bookingId,
+    this.enabled = true,
     this.bookingDate,
     this.startTime,
     this.onSuccess,
@@ -46,15 +53,16 @@ class _StartSessionButtonState extends State<StartSessionButton> {
   @override
   void didUpdateWidget(covariant StartSessionButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.bookingDate != widget.bookingDate || oldWidget.startTime != widget.startTime) {
+    if (oldWidget.bookingDate != widget.bookingDate ||
+        oldWidget.startTime != widget.startTime) {
       _startTimerIfNeeded();
     }
   }
 
   void _startTimerIfNeeded() {
     _timer?.cancel();
-    if (!_isStartTimeReached) {
-      _timer = Timer.periodic(const Duration(seconds: 5), (_) {
+    if (_bookingStartTime != null && !_isStartTimeReached) {
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
         if (mounted) {
           setState(() {});
           if (_isStartTimeReached) {
@@ -71,36 +79,21 @@ class _StartSessionButtonState extends State<StartSessionButton> {
     super.dispose();
   }
 
-  DateTime? get _bookingStartTime {
-    if (widget.bookingDate == null || widget.startTime == null || widget.startTime!.trim().isEmpty) {
-      return null;
-    }
-    try {
-      final date = widget.bookingDate!;
-      final parts = widget.startTime!.trim().split(':');
-      if (parts.length < 2) return null;
-      final hour = int.tryParse(parts[0]) ?? 0;
-      final minute = int.tryParse(parts[1]) ?? 0;
-      return DateTime(date.year, date.month, date.day, hour, minute);
-    } catch (e) {
-      return null;
-    }
-  }
+  DateTime? get _bookingStartTime =>
+      BookingSchedule.startAt(widget.bookingDate, widget.startTime);
 
-  bool get _isStartTimeReached {
-    final start = _bookingStartTime;
-    if (start == null) return true; // Default to enabled if no date/time provided
-    final now = DateTime.now();
-    final earlyAllowedStart = start.subtract(const Duration(minutes: 15));
-    return now.isAfter(earlyAllowedStart) || now.isAtSameMomentAs(earlyAllowedStart);
-  }
-
-  String _format12Hour(DateTime dt) {
-    return DateFormat('hh:mm a').format(dt);
-  }
+  bool get _isStartTimeReached => BookingSchedule.canStart(
+    _bookingStartTime,
+    SessionTickerScope.clockOf(context)(),
+  );
 
   Future<void> _handleStartSession(BuildContext context) async {
-    if (_isLoading) return;
+    if (_isLoading ||
+        !widget.enabled ||
+        !_isStartTimeReached ||
+        !context.hasPermission('sessions_control')) {
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -122,11 +115,10 @@ class _StartSessionButtonState extends State<StartSessionButton> {
             duration: const Duration(seconds: 3),
           ),
         );
-        if (widget.onSuccess != null) {
-          widget.onSuccess!();
-        }
+        widget.onSuccess?.call();
       } else {
-        final errorMsg = cubit.state.errorMessage ?? AppStrings.sessionStartFailed;
+        final errorMsg =
+            cubit.state.errorMessage ?? AppStrings.sessionStartFailed;
         messenger.showSnackBar(
           SnackBar(
             content: Text(errorMsg),
@@ -134,13 +126,13 @@ class _StartSessionButtonState extends State<StartSessionButton> {
             duration: const Duration(seconds: 3),
           ),
         );
-        if (widget.onError != null) {
-          widget.onError!(errorMsg);
-        }
+        widget.onError?.call(errorMsg);
       }
     } catch (e) {
       if (!mounted) return;
-      final errorMsg = e.toString().isEmpty ? AppStrings.sessionStartFailed : e.toString();
+      final errorMsg = e.toString().isEmpty
+          ? AppStrings.sessionStartFailed
+          : e.toString();
       messenger.showSnackBar(
         SnackBar(
           content: Text(errorMsg),
@@ -148,9 +140,7 @@ class _StartSessionButtonState extends State<StartSessionButton> {
           duration: const Duration(seconds: 3),
         ),
       );
-      if (widget.onError != null) {
-        widget.onError!(errorMsg);
-      }
+      widget.onError?.call(errorMsg);
     } finally {
       if (mounted) {
         setState(() {
@@ -162,26 +152,27 @@ class _StartSessionButtonState extends State<StartSessionButton> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
+    context.select((PermissionsCubit? cubit) => cubit?.state);
+    context.select((LoginCubit? cubit) => cubit?.state.user);
+    final permitted = context.hasPermission('sessions_control');
     final bool isReadyToStart = _isStartTimeReached;
-    final startDt = _bookingStartTime;
 
-    final String buttonText = isReadyToStart
-        ? AppStrings.startSession
-        : (startDt != null
-            ? AppStrings.startsAt.replaceFirst('{}', _format12Hour(startDt))
-            : AppStrings.startSession);
+    if (!isReadyToStart) {
+      return const SizedBox.shrink();
+    }
 
     return AppButton(
-      text: buttonText,
-      icon: isReadyToStart ? Icons.play_arrow_rounded : Icons.access_time_rounded,
+      text: AppStrings.startSession,
+      icon: Icons.play_arrow_rounded,
       isLoading: _isLoading,
       width: widget.width,
       height: widget.height ?? 32.h,
-      backgroundColor: isReadyToStart ? AppColors.success : AppColors.cardBackground,
-      foregroundColor: isReadyToStart ? AppColors.textPrimary : AppColors.textMuted,
+      backgroundColor: AppColors.success,
+      foregroundColor: AppColors.textPrimary,
       disabledBackgroundColor: AppColors.cardBackground,
       disabledForegroundColor: AppColors.textMuted,
-      onPressed: (!isReadyToStart || _isLoading)
+      onPressed: (!permitted || !widget.enabled || _isLoading)
           ? null
           : () => _handleStartSession(context),
     );

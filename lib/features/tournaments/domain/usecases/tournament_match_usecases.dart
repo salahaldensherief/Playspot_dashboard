@@ -5,24 +5,30 @@ import '../../../../core/usecases/base_usecase.dart';
 import '../entities/tournament_match_entity.dart';
 import '../repositories/tournament_repository.dart';
 
-class GetTournamentMatchesUseCase implements UseCase<List<TournamentMatchEntity>, String> {
+class GetTournamentMatchesUseCase
+    implements UseCase<List<TournamentMatchEntity>, String> {
   final TournamentRepository repository;
 
   GetTournamentMatchesUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<TournamentMatchEntity>>> call(String tournamentId) {
+  Future<Either<Failure, List<TournamentMatchEntity>>> call(
+    String tournamentId,
+  ) {
     return repository.getMatches(tournamentId);
   }
 }
 
-class DrawBracketUseCase implements UseCase<List<TournamentMatchEntity>, String> {
+class DrawBracketUseCase
+    implements UseCase<List<TournamentMatchEntity>, String> {
   final TournamentRepository repository;
 
   DrawBracketUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<TournamentMatchEntity>>> call(String tournamentId) {
+  Future<Either<Failure, List<TournamentMatchEntity>>> call(
+    String tournamentId,
+  ) {
     return repository.drawBracket(tournamentId);
   }
 }
@@ -64,7 +70,13 @@ class ResolveDisputeParams extends Equatable {
   });
 
   @override
-  List<Object?> get props => [matchId, winnerId, p1Score, p2Score, resolutionNotes];
+  List<Object?> get props => [
+    matchId,
+    winnerId,
+    p1Score,
+    p2Score,
+    resolutionNotes,
+  ];
 }
 
 class ResolveDisputeUseCase implements UseCase<void, ResolveDisputeParams> {

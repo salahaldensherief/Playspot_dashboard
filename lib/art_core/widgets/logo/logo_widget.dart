@@ -92,10 +92,7 @@ class _LogoWidgetState extends State<LogoWidget>
               ? AnimatedBuilder(
                   animation: _wobble,
                   builder: (context, child) {
-                    return Transform.rotate(
-                      angle: _wobble.value,
-                      child: child,
-                    );
+                    return Transform.rotate(angle: _wobble.value, child: child);
                   },
                   child: _icon(),
                 )

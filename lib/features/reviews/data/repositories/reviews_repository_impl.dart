@@ -11,14 +11,20 @@ class ReviewsRepositoryImpl implements ReviewsRepository {
   ReviewsRepositoryImpl(this.remoteDataSource);
 
   @override
-  Stream<List<LoungeReviewEntity>> watchLoungeReviews({required String loungeId}) {
+  Stream<List<LoungeReviewEntity>> watchLoungeReviews({
+    required String loungeId,
+  }) {
     return remoteDataSource.watchLoungeReviews(loungeId: loungeId);
   }
 
   @override
-  Future<Either<Failure, List<LoungeReviewEntity>>> getLoungeReviews({required String loungeId}) async {
+  Future<Either<Failure, List<LoungeReviewEntity>>> getLoungeReviews({
+    required String loungeId,
+  }) async {
     try {
-      final reviews = await remoteDataSource.getLoungeReviews(loungeId: loungeId);
+      final reviews = await remoteDataSource.getLoungeReviews(
+        loungeId: loungeId,
+      );
       return Right(reviews);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -26,7 +32,8 @@ class ReviewsRepositoryImpl implements ReviewsRepository {
   }
 
   @override
-  Future<Either<Failure, PaginatedResult<LoungeReviewEntity>>> getLoungeReviewsPage({
+  Future<Either<Failure, PaginatedResult<LoungeReviewEntity>>>
+  getLoungeReviewsPage({
     required String loungeId,
     int page = 1,
     int pageSize = 20,
@@ -37,12 +44,14 @@ class ReviewsRepositoryImpl implements ReviewsRepository {
         page: page,
         pageSize: pageSize,
       );
-      return Right(PaginatedResult<LoungeReviewEntity>(
-        items: result.items,
-        totalCount: result.totalCount,
-        page: result.page,
-        pageSize: result.pageSize,
-      ));
+      return Right(
+        PaginatedResult<LoungeReviewEntity>(
+          items: result.items,
+          totalCount: result.totalCount,
+          page: result.page,
+          pageSize: result.pageSize,
+        ),
+      );
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

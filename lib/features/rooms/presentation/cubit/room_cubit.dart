@@ -9,6 +9,19 @@ class RoomCubit extends Cubit<RoomState> with RealtimeWatcherMixin<RoomState> {
 
   RoomCubit(this._repository) : super(const RoomState());
 
+  Future<void> loadSpaceTypes() async {
+    if (state.spaceTypesStatus == RoomStatus.loading) return;
+    emit(state.copyWith(spaceTypesStatus: RoomStatus.loading));
+    final result = await _repository.getSpaceTypes();
+    if (isClosed) return;
+    result.fold(
+      (_) => emit(state.copyWith(spaceTypesStatus: RoomStatus.failure)),
+      (types) => emit(
+        state.copyWith(spaceTypes: types, spaceTypesStatus: RoomStatus.success),
+      ),
+    );
+  }
+
   void watchRooms(String? loungeId, {bool forceRefresh = false}) {
     final cleanLoungeId = (loungeId != null && loungeId.trim().isNotEmpty)
         ? loungeId.trim()
@@ -91,11 +104,24 @@ class RoomCubit extends Cubit<RoomState> with RealtimeWatcherMixin<RoomState> {
           featuresEn: room.featuresEn,
           controllersCount: room.controllersCount,
           screenSize: room.screenSize,
+          resourceType: room.resourceType,
+          requiresScreen: room.requiresScreen,
+          requiresControllers: room.requiresControllers,
+          pricingModel: room.pricingModel,
           status: newStatus,
           hasOffer: room.hasOffer,
           offerTitle: room.offerTitle,
           offerTag: room.offerTag,
           activePromotionId: room.activePromotionId,
+          openTimeEnabled: room.openTimeEnabled,
+          openTimePricingMode: room.openTimePricingMode,
+          openTimeCustomHourlyRate: room.openTimeCustomHourlyRate,
+          openTimePriceMultiplier: room.openTimePriceMultiplier,
+          openTimeMinimumMinutes: room.openTimeMinimumMinutes,
+          openTimeRoundingMinutes: room.openTimeRoundingMinutes,
+          openTimeMaxMinutes: room.openTimeMaxMinutes,
+          openTimeBufferBeforeBookingMinutes:
+              room.openTimeBufferBeforeBookingMinutes,
         );
       }
       return room;
@@ -152,11 +178,11 @@ class RoomCubit extends Cubit<RoomState> with RealtimeWatcherMixin<RoomState> {
     );
   }
 
-  Future<void> addNewRoom(RoomEntity room) async {
+  Future<bool> addNewRoom(RoomEntity room) async {
     emit(state.copyWith(status: RoomStatus.loading));
     final result = await _repository.addRoom(room);
 
-    if (isClosed) return;
+    if (isClosed) return false;
 
     result.fold(
       (failure) => emit(
@@ -165,15 +191,16 @@ class RoomCubit extends Cubit<RoomState> with RealtimeWatcherMixin<RoomState> {
           errorMessage: failure.message,
         ),
       ),
-      (_) => null,
+      (_) => emit(state.copyWith(status: RoomStatus.success)),
     );
+    return result.isRight();
   }
 
-  Future<void> updateRoom(RoomEntity room) async {
+  Future<bool> updateRoom(RoomEntity room) async {
     emit(state.copyWith(status: RoomStatus.loading));
     final result = await _repository.updateRoom(room);
 
-    if (isClosed) return;
+    if (isClosed) return false;
 
     result.fold(
       (failure) => emit(
@@ -182,8 +209,9 @@ class RoomCubit extends Cubit<RoomState> with RealtimeWatcherMixin<RoomState> {
           errorMessage: failure.message,
         ),
       ),
-      (_) => null,
+      (_) => emit(state.copyWith(status: RoomStatus.success)),
     );
+    return result.isRight();
   }
 
   Future<void> deleteRoom(String roomId) async {

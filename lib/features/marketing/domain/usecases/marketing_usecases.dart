@@ -66,6 +66,17 @@ class DeletePromotionUseCase implements UseCase<void, String> {
   }
 }
 
+class ResharePromotionUseCase implements UseCase<void, String> {
+  final MarketingRepository repository;
+
+  ResharePromotionUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, void>> call(String id) {
+    return repository.resharePromotion(id);
+  }
+}
+
 class UploadPromoPosterParams extends Equatable {
   final Uint8List fileBytes;
   final String fileName;

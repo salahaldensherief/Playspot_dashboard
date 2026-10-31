@@ -2,6 +2,7 @@ import '../../domain/entities/shift_entity.dart';
 
 class ShiftModel extends ShiftEntity {
   const ShiftModel({
+    super.financialsVisible,
     required super.id,
     super.loungeId,
     required super.cashierId,
@@ -40,42 +41,65 @@ class ShiftModel extends ShiftEntity {
       return double.tryParse(val.toString()) ?? 0.0;
     }
 
+    final visible = json['financials_visible'] != false;
     final starting = parseDouble(json['starting_cash'] ?? json['opening_cash']);
-    final cashRev = parseDouble(json['total_cash_sales'] ?? json['cash_revenue']);
-    final digRev = parseDouble(json['total_digital_sales'] ?? json['digital_revenue']);
-    final expTotal = parseDouble(json['total_expenses'] ?? json['expenses_total']);
-    final dropsTotal = parseDouble(json['total_cash_drops'] ?? json['cash_drops_total']);
-    
+    final cashRev = parseDouble(
+      json['total_cash_sales'] ?? json['cash_revenue'],
+    );
+    final digRev = parseDouble(
+      json['total_digital_sales'] ?? json['digital_revenue'],
+    );
+    final expTotal = parseDouble(
+      json['total_expenses'] ?? json['expenses_total'],
+    );
+    final dropsTotal = parseDouble(
+      json['total_cash_drops'] ?? json['cash_drops_total'],
+    );
+
     // Unified Expected Cash formula
     final rawExpected = json['expected_cash'];
-    final computedExpected = rawExpected != null 
-        ? parseDouble(rawExpected) 
+    final computedExpected = rawExpected != null
+        ? parseDouble(rawExpected)
         : (starting + cashRev - expTotal - dropsTotal);
 
-    final actual = json['actual_cash_counted'] != null || json['actual_cash'] != null
+    final actual =
+        json['actual_cash_counted'] != null || json['actual_cash'] != null
         ? parseDouble(json['actual_cash_counted'] ?? json['actual_cash'])
         : null;
 
     final rawDiff = json['difference'] ?? json['discrepancy'];
-    final computedDiff = rawDiff != null 
-        ? parseDouble(rawDiff) 
+    final computedDiff = rawDiff != null
+        ? parseDouble(rawDiff)
         : (actual != null ? (actual - computedExpected) : 0.0);
 
     return ShiftModel(
+      financialsVisible: visible,
       id: (json['id'] ?? json['shift_id'] ?? '').toString(),
       loungeId: json['lounge_id']?.toString() ?? json['loungeId']?.toString(),
-      cashierId: (json['cashier_id'] ?? json['staff_id'] ?? json['staff_user_id'] ?? '').toString(),
-      cashierName: json['profiles']?['full_name']?.toString() ?? json['cashier_name']?.toString() ?? 'N/A',
+      cashierId:
+          (json['cashier_id'] ??
+                  json['staff_id'] ??
+                  json['staff_user_id'] ??
+                  '')
+              .toString(),
+      cashierName:
+          json['profiles']?['full_name']?.toString() ??
+          json['cashier_name']?.toString() ??
+          'N/A',
       startingCash: starting,
-      cashRevenue: cashRev,
-      digitalRevenue: digRev,
-      expensesTotal: expTotal,
-      cashDropsTotal: dropsTotal,
-      expectedCash: computedExpected,
+      cashRevenue: visible ? cashRev : null,
+      digitalRevenue: visible ? digRev : null,
+      expensesTotal: visible ? expTotal : null,
+      cashDropsTotal: visible ? dropsTotal : null,
+      expectedCash: visible ? computedExpected : null,
       actualCash: actual,
-      discrepancy: computedDiff,
+      discrepancy: visible ? computedDiff : null,
       status: (json['status'] ?? 'open').toString(),
-      startTime: parseDate(json['created_at'] ?? json['start_time'] ?? json['opened_at']) ?? DateTime.now(),
+      startTime:
+          parseDate(
+            json['created_at'] ?? json['start_time'] ?? json['opened_at'],
+          ) ??
+          DateTime.now(),
       endTime: parseDate(json['end_time'] ?? json['closed_at']),
       notes: json['notes']?.toString(),
       isApproved: json['is_approved'] ?? false,
@@ -87,6 +111,7 @@ class ShiftModel extends ShiftEntity {
 
   Map<String, dynamic> toJson() {
     return {
+      'financials_visible': financialsVisible,
       'id': id,
       if (loungeId != null) 'lounge_id': loungeId,
       'staff_id': cashierId,

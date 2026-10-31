@@ -12,6 +12,7 @@ class MarketingState extends Equatable {
   final int notificationPageSize;
   final int totalNotificationsCount;
   final String? errorMessage;
+  final String actionMessageKey;
 
   const MarketingState({
     this.status = MarketingStatus.initial,
@@ -21,11 +22,15 @@ class MarketingState extends Equatable {
     this.notificationPageSize = 20,
     this.totalNotificationsCount = 0,
     this.errorMessage,
+    this.actionMessageKey = 'promo_published_success',
   });
 
-  bool get hasNextNotificationPage => notificationPage * notificationPageSize < totalNotificationsCount;
+  bool get hasNextNotificationPage =>
+      notificationPage * notificationPageSize < totalNotificationsCount;
   bool get hasPreviousNotificationPage => notificationPage > 1;
-  int get totalNotificationPages => notificationPageSize > 0 ? (totalNotificationsCount / notificationPageSize).ceil() : 0;
+  int get totalNotificationPages => notificationPageSize > 0
+      ? (totalNotificationsCount / notificationPageSize).ceil()
+      : 0;
 
   MarketingState copyWith({
     MarketingStatus? status,
@@ -35,6 +40,7 @@ class MarketingState extends Equatable {
     int? notificationPageSize,
     int? totalNotificationsCount,
     String? errorMessage,
+    String? actionMessageKey,
   }) {
     return MarketingState(
       status: status ?? this.status,
@@ -42,19 +48,22 @@ class MarketingState extends Equatable {
       notifications: notifications ?? this.notifications,
       notificationPage: notificationPage ?? this.notificationPage,
       notificationPageSize: notificationPageSize ?? this.notificationPageSize,
-      totalNotificationsCount: totalNotificationsCount ?? this.totalNotificationsCount,
+      totalNotificationsCount:
+          totalNotificationsCount ?? this.totalNotificationsCount,
       errorMessage: errorMessage ?? this.errorMessage,
+      actionMessageKey: actionMessageKey ?? this.actionMessageKey,
     );
   }
 
   @override
   List<Object?> get props => [
-        status,
-        promotions,
-        notifications,
-        notificationPage,
-        notificationPageSize,
-        totalNotificationsCount,
-        errorMessage,
-      ];
+    status,
+    promotions,
+    notifications,
+    notificationPage,
+    notificationPageSize,
+    totalNotificationsCount,
+    errorMessage,
+    actionMessageKey,
+  ];
 }

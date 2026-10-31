@@ -12,27 +12,34 @@ class FakeReviewsRepository implements ReviewsRepository {
   List<LoungeReviewEntity> reviewsToEmit = [];
 
   @override
-  Stream<List<LoungeReviewEntity>> watchLoungeReviews({required String loungeId}) {
+  Stream<List<LoungeReviewEntity>> watchLoungeReviews({
+    required String loungeId,
+  }) {
     return Stream.value(reviewsToEmit);
   }
 
   @override
-  Future<Either<Failure, List<LoungeReviewEntity>>> getLoungeReviews({required String loungeId}) async {
+  Future<Either<Failure, List<LoungeReviewEntity>>> getLoungeReviews({
+    required String loungeId,
+  }) async {
     return Right(reviewsToEmit);
   }
 
   @override
-  Future<Either<Failure, PaginatedResult<LoungeReviewEntity>>> getLoungeReviewsPage({
+  Future<Either<Failure, PaginatedResult<LoungeReviewEntity>>>
+  getLoungeReviewsPage({
     required String loungeId,
     int page = 1,
     int pageSize = 20,
   }) async {
-    return Right(PaginatedResult<LoungeReviewEntity>(
-      items: reviewsToEmit,
-      totalCount: reviewsToEmit.length,
-      page: page,
-      pageSize: pageSize,
-    ));
+    return Right(
+      PaginatedResult<LoungeReviewEntity>(
+        items: reviewsToEmit,
+        totalCount: reviewsToEmit.length,
+        page: page,
+        pageSize: pageSize,
+      ),
+    );
   }
 }
 

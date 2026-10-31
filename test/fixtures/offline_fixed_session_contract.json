@@ -1,0 +1,242 @@
+{
+  "reserve": {
+    "operation": {
+      "id": "c320057e-07fc-4a7a-9161-55b2bc12a1a9",
+      "actor_id": "f274b3fc-e40f-4a92-abbb-59bd5008d872",
+      "lounge_id": "6be3b822-dc91-44d6-b5a5-a13869650fe1",
+      "device_id": "131110b9-3b67-49d6-8356-7c26145f8937",
+      "permit_id": "82db70d9-b101-4840-b620-eda03daef197",
+      "booking_id": "0d94c99f-a9ce-423e-a67c-be64030c42ea",
+      "shift_id": "c2c6cf0b-014e-4f4a-80be-3ee29f9ddcc4",
+      "sequence": 1,
+      "occurred_at": "2026-10-01T16:31:00.000Z",
+      "kind": "reserve",
+      "payload": {
+        "room_id": "2a697181-6a13-47bb-9bcc-e656d052dcea",
+        "start_ms": 1790872260000,
+        "end_ms": 1790875860000,
+        "timezone": "Africa/Cairo",
+        "play_mode": "single",
+        "customer_name": "Walk-in"
+      },
+      "quoted_total_minor": 10000,
+      "quoted_session": {
+        "room_id": "2a697181-6a13-47bb-9bcc-e656d052dcea",
+        "timezone": "Africa/Cairo",
+        "start_ms": 1790872260000,
+        "end_ms": 1790875860000,
+        "started_ms": null,
+        "paid_minor": 0
+      }
+    },
+    "response": {
+      "status": "applied",
+      "sequence": 1,
+      "lounge_id": "6be3b822-dc91-44d6-b5a5-a13869650fe1",
+      "operation_id": "c320057e-07fc-4a7a-9161-55b2bc12a1a9",
+      "session_receipt": {
+        "end_ms": 1790875860000,
+        "status": "upcoming",
+        "room_id": "2a697181-6a13-47bb-9bcc-e656d052dcea",
+        "shift_id": "c2c6cf0b-014e-4f4a-80be-3ee29f9ddcc4",
+        "start_ms": 1790872260000,
+        "timezone": "Africa/Cairo",
+        "closed_at": null,
+        "due_minor": 10000,
+        "lounge_id": "6be3b822-dc91-44d6-b5a5-a13869650fe1",
+        "booking_id": "0d94c99f-a9ce-423e-a67c-be64030c42ea",
+        "paid_minor": 0,
+        "started_at": null,
+        "total_minor": 10000,
+        "payment_status": "unpaid",
+        "capacity_end_ms": 1790875860000
+      }
+    }
+  },
+  "start": {
+    "operation": {
+      "id": "492df8a6-cf50-4c37-b483-013e8cac11fa",
+      "actor_id": "f274b3fc-e40f-4a92-abbb-59bd5008d872",
+      "lounge_id": "6be3b822-dc91-44d6-b5a5-a13869650fe1",
+      "device_id": "131110b9-3b67-49d6-8356-7c26145f8937",
+      "permit_id": "82db70d9-b101-4840-b620-eda03daef197",
+      "booking_id": "0d94c99f-a9ce-423e-a67c-be64030c42ea",
+      "shift_id": "c2c6cf0b-014e-4f4a-80be-3ee29f9ddcc4",
+      "sequence": 2,
+      "occurred_at": "2026-10-01T16:32:00.000Z",
+      "kind": "start",
+      "payload": {},
+      "quoted_total_minor": 10000,
+      "quoted_session": {
+        "room_id": "2a697181-6a13-47bb-9bcc-e656d052dcea",
+        "timezone": "Africa/Cairo",
+        "start_ms": 1790872260000,
+        "end_ms": 1790875860000,
+        "started_ms": 1790872320000,
+        "paid_minor": 0
+      }
+    },
+    "response": {
+      "status": "applied",
+      "sequence": 2,
+      "lounge_id": "6be3b822-dc91-44d6-b5a5-a13869650fe1",
+      "operation_id": "492df8a6-cf50-4c37-b483-013e8cac11fa",
+      "session_receipt": {
+        "end_ms": 1790875860000,
+        "status": "in_progress",
+        "room_id": "2a697181-6a13-47bb-9bcc-e656d052dcea",
+        "shift_id": "c2c6cf0b-014e-4f4a-80be-3ee29f9ddcc4",
+        "start_ms": 1790872260000,
+        "timezone": "Africa/Cairo",
+        "closed_at": null,
+        "due_minor": 10000,
+        "lounge_id": "6be3b822-dc91-44d6-b5a5-a13869650fe1",
+        "booking_id": "0d94c99f-a9ce-423e-a67c-be64030c42ea",
+        "paid_minor": 0,
+        "started_at": "2026-10-01T19:32:00+03:00",
+        "total_minor": 10000,
+        "payment_status": "unpaid",
+        "capacity_end_ms": 1790875860000
+      }
+    }
+  },
+  "order": {
+    "operation": {
+      "id": "8d998c4b-34fe-4b19-83d6-e03a78f7dc68",
+      "actor_id": "f274b3fc-e40f-4a92-abbb-59bd5008d872",
+      "lounge_id": "6be3b822-dc91-44d6-b5a5-a13869650fe1",
+      "device_id": "131110b9-3b67-49d6-8356-7c26145f8937",
+      "permit_id": "82db70d9-b101-4840-b620-eda03daef197",
+      "booking_id": "0d94c99f-a9ce-423e-a67c-be64030c42ea",
+      "shift_id": "c2c6cf0b-014e-4f4a-80be-3ee29f9ddcc4",
+      "sequence": 3,
+      "occurred_at": "2026-10-01T16:33:00.000Z",
+      "kind": "addItems",
+      "payload": {
+        "items": [
+          {
+            "product_id": "efa92512-2114-4814-b1c9-d4f17cb4ff7f",
+            "quantity": 2
+          }
+        ]
+      },
+      "quoted_total_minor": 13000,
+      "quoted_items": [
+        {
+          "product_id": "efa92512-2114-4814-b1c9-d4f17cb4ff7f",
+          "quantity": 2,
+          "unit_price_minor": 1500
+        }
+      ]
+    },
+    "response": {
+      "status": "applied",
+      "sequence": 3,
+      "lounge_id": "6be3b822-dc91-44d6-b5a5-a13869650fe1",
+      "operation_id": "8d998c4b-34fe-4b19-83d6-e03a78f7dc68",
+      "order_receipt": {
+        "items": [
+          {
+            "name": "Water",
+            "price": 15,
+            "extra_id": "efa92512-2114-4814-b1c9-d4f17cb4ff7f",
+            "quantity": 2,
+            "product_id": "efa92512-2114-4814-b1c9-d4f17cb4ff7f",
+            "unit_price": 15,
+            "total_price": 30
+          }
+        ],
+        "order_id": "8d998c4b-34fe-4b19-83d6-e03a78f7dc68",
+        "due_minor": 13000,
+        "lounge_id": "6be3b822-dc91-44d6-b5a5-a13869650fe1",
+        "booking_id": "0d94c99f-a9ce-423e-a67c-be64030c42ea",
+        "paid_minor": 0,
+        "total_minor": 13000,
+        "payment_status": "unpaid",
+        "order_total_minor": 3000
+      }
+    }
+  },
+  "cash": {
+    "operation": {
+      "id": "af5b8276-2089-42da-a15e-0dccfa51e886",
+      "actor_id": "f274b3fc-e40f-4a92-abbb-59bd5008d872",
+      "lounge_id": "6be3b822-dc91-44d6-b5a5-a13869650fe1",
+      "device_id": "131110b9-3b67-49d6-8356-7c26145f8937",
+      "permit_id": "82db70d9-b101-4840-b620-eda03daef197",
+      "booking_id": "0d94c99f-a9ce-423e-a67c-be64030c42ea",
+      "shift_id": "c2c6cf0b-014e-4f4a-80be-3ee29f9ddcc4",
+      "sequence": 4,
+      "occurred_at": "2026-10-01T16:34:00.000Z",
+      "kind": "collectCash",
+      "payload": {
+        "amount_minor": 5000
+      }
+    },
+    "response": {
+      "status": "applied",
+      "sequence": 4,
+      "lounge_id": "6be3b822-dc91-44d6-b5a5-a13869650fe1",
+      "operation_id": "af5b8276-2089-42da-a15e-0dccfa51e886",
+      "financial_receipt": {
+        "replayed": false,
+        "shift_id": "c2c6cf0b-014e-4f4a-80be-3ee29f9ddcc4",
+        "due_minor": 8000,
+        "lounge_id": "6be3b822-dc91-44d6-b5a5-a13869650fe1",
+        "booking_id": "0d94c99f-a9ce-423e-a67c-be64030c42ea",
+        "paid_minor": 5000,
+        "operation_id": "af5b8276-2089-42da-a15e-0dccfa51e886",
+        "payment_status": "partial",
+        "collected_minor": 5000,
+        "shift_payment_id": "26d1c44c-27cc-4b7a-bfe5-01799b36d0ae"
+      }
+    }
+  },
+  "close": {
+    "operation": {
+      "id": "9c4c8ed0-7e2e-4502-b6cc-0112ea5f35b7",
+      "actor_id": "f274b3fc-e40f-4a92-abbb-59bd5008d872",
+      "lounge_id": "6be3b822-dc91-44d6-b5a5-a13869650fe1",
+      "device_id": "131110b9-3b67-49d6-8356-7c26145f8937",
+      "permit_id": "82db70d9-b101-4840-b620-eda03daef197",
+      "booking_id": "0d94c99f-a9ce-423e-a67c-be64030c42ea",
+      "shift_id": "c2c6cf0b-014e-4f4a-80be-3ee29f9ddcc4",
+      "sequence": 5,
+      "occurred_at": "2026-10-01T16:41:00.000Z",
+      "kind": "close",
+      "payload": {},
+      "quoted_total_minor": 13000,
+      "quoted_session": {
+        "room_id": "2a697181-6a13-47bb-9bcc-e656d052dcea",
+        "timezone": "Africa/Cairo",
+        "start_ms": 1790872260000,
+        "end_ms": 1790875860000,
+        "started_ms": 1790872320000,
+        "paid_minor": 5000
+      }
+    },
+    "response": {
+      "status": "applied",
+      "sequence": 5,
+      "lounge_id": "6be3b822-dc91-44d6-b5a5-a13869650fe1",
+      "operation_id": "9c4c8ed0-7e2e-4502-b6cc-0112ea5f35b7",
+      "session_receipt": {
+        "end_ms": 1790875860000,
+        "status": "completed",
+        "room_id": "2a697181-6a13-47bb-9bcc-e656d052dcea",
+        "shift_id": "c2c6cf0b-014e-4f4a-80be-3ee29f9ddcc4",
+        "start_ms": 1790872260000,
+        "timezone": "Africa/Cairo",
+        "closed_at": "2026-10-01T19:41:00+03:00",
+        "due_minor": 8000,
+        "lounge_id": "6be3b822-dc91-44d6-b5a5-a13869650fe1",
+        "booking_id": "0d94c99f-a9ce-423e-a67c-be64030c42ea",
+        "paid_minor": 5000,
+        "started_at": "2026-10-01T19:32:00+03:00",
+        "total_minor": 13000,
+        "payment_status": "partial",
+        "capacity_end_ms": 1790872860000
+      }
+    }
+  }
+}

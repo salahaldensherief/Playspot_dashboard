@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
@@ -7,18 +8,19 @@ import '../../domain/entities/tournament_entity.dart';
 class TournamentStatusBadge extends StatelessWidget {
   final TournamentStatus status;
 
-  const TournamentStatusBadge({
-    super.key,
-    required this.status,
-  });
+  const TournamentStatusBadge({super.key, required this.status});
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     switch (status) {
       case TournamentStatus.published:
         return StatusBadge(text: AppStrings.active, color: AppColors.success);
       case TournamentStatus.inProgress:
-        return StatusBadge(text: AppStrings.inProgress, color: AppColors.neonBlue);
+        return StatusBadge(
+          text: AppStrings.inProgress,
+          color: AppColors.neonBlue,
+        );
       case TournamentStatus.completed:
         return StatusBadge(text: AppStrings.completed, color: Colors.blue);
       case TournamentStatus.cancelled:

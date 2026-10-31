@@ -21,34 +21,40 @@ class LoungeReviewModel extends LoungeReviewEntity {
     }
 
     final bookingData = json['bookings'] as Map<String, dynamic>?;
-    final bookingProfileData = bookingData?['profiles'] as Map<String, dynamic>?;
+    final bookingProfileData =
+        bookingData?['profiles'] as Map<String, dynamic>?;
     final profileData = json['profiles'] as Map<String, dynamic>?;
 
-    final String? userId = (json['user_id'] ?? json['userId'] ?? bookingData?['user_id'])?.toString();
-    final String? bookingId = (json['booking_id'] ?? json['bookingId'])?.toString();
+    final String? userId =
+        (json['user_id'] ?? json['userId'] ?? bookingData?['user_id'])
+            ?.toString();
+    final String? bookingId = (json['booking_id'] ?? json['bookingId'])
+        ?.toString();
 
-    final String? rawUserName = (
-      json['user_name'] ??
-      bookingData?['user_name'] ??
-      bookingProfileData?['full_name'] ??
-      bookingProfileData?['name'] ??
-      profileData?['full_name'] ??
-      profileData?['name'] ??
-      json['full_name']
-    )?.toString();
+    final String? rawUserName =
+        (json['user_name'] ??
+                bookingData?['user_name'] ??
+                bookingProfileData?['full_name'] ??
+                bookingProfileData?['name'] ??
+                profileData?['full_name'] ??
+                profileData?['name'] ??
+                json['full_name'])
+            ?.toString();
 
-    final String userName = (rawUserName != null && rawUserName.trim().isNotEmpty)
+    final String userName =
+        (rawUserName != null && rawUserName.trim().isNotEmpty)
         ? rawUserName
         : 'Anonymous Client';
 
-    final String? rawAvatar = (
-      json['user_avatar'] ??
-      json['avatar_url'] ??
-      bookingProfileData?['avatar_url'] ??
-      profileData?['avatar_url']
-    )?.toString();
+    final String? rawAvatar =
+        (json['user_avatar'] ??
+                json['avatar_url'] ??
+                bookingProfileData?['avatar_url'] ??
+                profileData?['avatar_url'])
+            ?.toString();
 
-    final String? userAvatarUrl = (rawAvatar != null && rawAvatar.trim().isNotEmpty)
+    final String? userAvatarUrl =
+        (rawAvatar != null && rawAvatar.trim().isNotEmpty)
         ? rawAvatar.trim()
         : null;
 
@@ -69,7 +75,10 @@ class LoungeReviewModel extends LoungeReviewEntity {
       userName: userName,
       userAvatarUrl: userAvatarUrl,
       rating: parseDouble(json['rating'] ?? json['score'] ?? json['stars']),
-      comment: json['comment']?.toString() ?? json['review_text']?.toString() ?? json['notes']?.toString(),
+      comment:
+          json['comment']?.toString() ??
+          json['review_text']?.toString() ??
+          json['notes']?.toString(),
       createdAt: parsedDate,
     );
   }

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -50,8 +51,8 @@ class _PayoutReasonDialogState extends State<PayoutReasonDialog> {
     final result = widget.rpcName == 'approve_payout'
         ? await repo.approvePayout(payoutId: widget.payoutId, notes: reason)
         : widget.rpcName == 'fail_payout'
-            ? await repo.failPayout(payoutId: widget.payoutId, reason: reason)
-            : await repo.cancelPayout(payoutId: widget.payoutId, reason: reason);
+        ? await repo.failPayout(payoutId: widget.payoutId, reason: reason)
+        : await repo.cancelPayout(payoutId: widget.payoutId, reason: reason);
 
     if (!mounted) return;
 
@@ -64,7 +65,9 @@ class _PayoutReasonDialogState extends State<PayoutReasonDialog> {
       },
       (_) {
         Navigator.pop(context);
-        messenger.showSnackBar(SnackBar(content: Text(AppStrings.actionExecutedSuccess)));
+        messenger.showSnackBar(
+          SnackBar(content: Text(AppStrings.actionExecutedSuccess)),
+        );
         widget.onSuccess();
       },
     );
@@ -72,6 +75,7 @@ class _PayoutReasonDialogState extends State<PayoutReasonDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AppDialog(
       title: widget.title,
       actions: [
@@ -91,7 +95,10 @@ class _PayoutReasonDialogState extends State<PayoutReasonDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppTextField(label: AppStrings.reasonNotes, controller: _reasonController),
+          AppTextField(
+            label: AppStrings.reasonNotes,
+            controller: _reasonController,
+          ),
           if (_errorMessage != null) ...[
             SizedBox(height: 12.h),
             Text(

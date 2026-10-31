@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,6 +8,7 @@ import 'package:play_spot_dashboard/art_core/widgets/shimmer_loading.dart';
 import '../cubit/room_cubit.dart';
 import '../cubit/room_state.dart';
 import 'rooms_data_table.dart';
+import '../../domain/entities/room_space_type.dart';
 
 class RoomTableSection extends StatefulWidget {
   const RoomTableSection({super.key});
@@ -20,6 +22,7 @@ class _RoomTableSectionState extends State<RoomTableSection> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -34,12 +37,23 @@ class _RoomTableSectionState extends State<RoomTableSection> {
             if (state.status == RoomStatus.success) {
               final filteredRooms = _selectedFilter == 'all'
                   ? state.rooms
-                  : state.rooms.where((r) => r.spaceTypeId == _selectedFilter).toList();
+                  : state.rooms
+                        .where(
+                          (r) =>
+                              roomSpaceTypeKey(r.spaceType ?? r.spaceTypeId) ==
+                              _selectedFilter,
+                        )
+                        .toList();
               return RoomsDataTable(rooms: filteredRooms);
             }
 
             if (state.status == RoomStatus.failure) {
-              return Center(child: Text(state.errorMessage ?? AppStrings.error, style: const TextStyle(color: AppColors.danger)));
+              return Center(
+                child: Text(
+                  state.errorMessage?.tr() ?? AppStrings.error,
+                  style: const TextStyle(color: AppColors.danger),
+                ),
+              );
             }
 
             return const SizedBox.shrink();

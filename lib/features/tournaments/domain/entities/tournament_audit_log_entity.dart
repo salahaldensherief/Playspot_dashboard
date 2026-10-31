@@ -21,12 +21,12 @@ class TournamentAuditLogEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        tournamentId,
-        actionType,
-        performedBy,
-        performedByName,
-        details,
-        createdAt,
-      ];
+    id,
+    tournamentId,
+    actionType,
+    performedBy,
+    performedByName,
+    details,
+    createdAt,
+  ];
 }

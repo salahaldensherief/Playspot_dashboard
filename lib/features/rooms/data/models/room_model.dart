@@ -26,11 +26,23 @@ class RoomModel extends RoomEntity {
     required super.featuresEn,
     super.controllersCount,
     super.screenSize,
+    super.resourceType,
+    super.requiresScreen,
+    super.requiresControllers,
+    super.pricingModel,
     super.status,
     super.hasOffer,
     super.offerTitle,
     super.offerTag,
     super.activePromotionId,
+    super.openTimeEnabled,
+    super.openTimePricingMode,
+    super.openTimeCustomHourlyRate,
+    super.openTimePriceMultiplier,
+    super.openTimeMinimumMinutes,
+    super.openTimeRoundingMinutes,
+    super.openTimeMaxMinutes,
+    super.openTimeBufferBeforeBookingMinutes,
   });
 
   factory RoomModel.fromJson(Map<String, dynamic> json) {
@@ -107,7 +119,7 @@ class RoomModel extends RoomEntity {
                 ? List<String>.from(json['activity_ids'])
                 : []),
       spaceType:
-          json['space_types']?['label'] ?? json['space_type_name']?.toString(),
+          json['space_types']?['name'] ?? json['space_type_name']?.toString(),
       spaceTypeId: json['space_type_id']?.toString() ?? '',
       maxCapacity: parseInt(json['max_capacity'] ?? json['capacity'], 4),
       hourlyRateSingle: singleRate,
@@ -122,10 +134,38 @@ class RoomModel extends RoomEntity {
           ? List<String>.from(json['features_en'])
           : [],
       controllersCount: parseInt(json['controllers_count'], 2),
-      screenSize: json['screen_size']?.toString() ?? '43"',
+      screenSize: json['screen_size']?.toString() ?? '',
+      resourceType: json['resource_type']?.toString() ?? 'console',
+      requiresScreen: json['requires_screen'] as bool? ?? true,
+      requiresControllers: json['requires_controllers'] as bool? ?? true,
+      pricingModel: json['pricing_model']?.toString() ?? 'single_multi_hour',
       status: parseStatus(json['status']),
+      openTimeEnabled: json['open_time_enabled'] == true,
+      openTimePricingMode:
+          json['open_time_pricing_mode']?.toString() ?? 'same_hourly',
+      openTimeCustomHourlyRate: json['open_time_custom_hourly_rate'] == null
+          ? null
+          : parseDouble(json['open_time_custom_hourly_rate']),
+      openTimePriceMultiplier:
+          parseDouble(json['open_time_price_multiplier']) <= 0
+          ? 1.0
+          : parseDouble(json['open_time_price_multiplier']),
+      openTimeMinimumMinutes: parseInt(json['open_time_minimum_minutes'], 30),
+      openTimeRoundingMinutes: parseInt(json['open_time_rounding_minutes'], 15),
+      openTimeMaxMinutes: json['open_time_max_minutes'] == null
+          ? null
+          : parseInt(json['open_time_max_minutes'], 0),
+      openTimeBufferBeforeBookingMinutes: parseInt(
+        json['open_time_buffer_before_booking_minutes'],
+        15,
+      ),
     );
   }
+
+  Map<String, dynamic> toCacheJson() => {
+    ...toJson(),
+    'space_type_name': spaceType,
+  };
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {
@@ -145,12 +185,25 @@ class RoomModel extends RoomEntity {
       'features_ar': featuresAr,
       'features_en': featuresEn,
       'controllers_count': controllersCount,
-      'screen_size': screenSize,
+      'screen_size': requiresScreen ? screenSize : '',
+      'resource_type': resourceType,
+      'requires_screen': requiresScreen,
+      'requires_controllers': requiresControllers,
+      'pricing_model': pricingModel,
       'status': switch (status) {
         RoomStatusEnum.available => 'available',
         RoomStatusEnum.maintenance => 'maintenance',
         RoomStatusEnum.occupied => 'occupied',
       },
+      'open_time_enabled': openTimeEnabled,
+      'open_time_pricing_mode': openTimePricingMode,
+      'open_time_custom_hourly_rate': openTimeCustomHourlyRate,
+      'open_time_price_multiplier': openTimePriceMultiplier,
+      'open_time_minimum_minutes': openTimeMinimumMinutes,
+      'open_time_rounding_minutes': openTimeRoundingMinutes,
+      'open_time_max_minutes': openTimeMaxMinutes,
+      'open_time_buffer_before_booking_minutes':
+          openTimeBufferBeforeBookingMinutes,
     };
     if (spaceTypeId != null && spaceTypeId!.isNotEmpty) {
       data['space_type_id'] = spaceTypeId;

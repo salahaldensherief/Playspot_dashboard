@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -16,10 +17,12 @@ class BookingsCollapsibleOccupancy extends StatefulWidget {
   });
 
   @override
-  State<BookingsCollapsibleOccupancy> createState() => _BookingsCollapsibleOccupancyState();
+  State<BookingsCollapsibleOccupancy> createState() =>
+      _BookingsCollapsibleOccupancyState();
 }
 
-class _BookingsCollapsibleOccupancyState extends State<BookingsCollapsibleOccupancy> {
+class _BookingsCollapsibleOccupancyState
+    extends State<BookingsCollapsibleOccupancy> {
   late bool _isExpanded;
 
   @override
@@ -30,6 +33,7 @@ class _BookingsCollapsibleOccupancyState extends State<BookingsCollapsibleOccupa
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
@@ -77,13 +81,18 @@ class _BookingsCollapsibleOccupancyState extends State<BookingsCollapsibleOccupa
                   Row(
                     children: [
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 3.h,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.neonBlue.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                         child: Text(
-                          _isExpanded ? 'إخفاء الخريطة' : 'عرض الخريطة',
+                          _isExpanded
+                              ? 'hide_occupancy_map'.tr()
+                              : 'show_occupancy_map'.tr(),
                           style: TextStyle(
                             color: AppColors.neonBlue,
                             fontSize: 11.sp,

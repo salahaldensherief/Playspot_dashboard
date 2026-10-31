@@ -12,7 +12,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  equipment-visuals:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.44.1'
+          cache: true
+      - run: flutter pub get
+      - name: Verify reviewed equipment references and interactions
+        run: flutter test --no-pub test/features/bookings/room_equipment_card_test.dart
+      - name: Preserve visual failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: equipment-visual-diffs
+          path: test/features/bookings/failures/
+          if-no-files-found: ignore
   quality:
+    needs: equipment-visuals
     runs-on: ubuntu-latest
     timeout-minutes: 35
 
@@ -30,6 +51,13 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Enforce canonical Supabase migration repository
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_*.py'
+          python3 scripts/check_supabase_sql.py "${{ github.event.pull_request.base.sha }}"
 
       - name: Check formatting of changed Dart files
         if: github.event_name == 'pull_request' && github.base_ref != 'main'
@@ -49,6 +77,13 @@ jobs:
 
       - name: Run tests
         run: flutter test
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Verify Edge authorization and partial failure contracts
+        run: node --test supabase/functions/*/*.test.mjs
 
       - name: Verify release build
         run: flutter build web --release

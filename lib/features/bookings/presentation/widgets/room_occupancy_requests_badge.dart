@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -19,6 +20,7 @@ class RoomOccupancyRequestsBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
       buildWhen: (previous, current) => previous.requests != current.requests,
       builder: (context, requestsState) {
@@ -51,7 +53,9 @@ class RoomOccupancyRequestsBadge extends StatelessWidget {
                   ),
                   SizedBox(width: 4.w),
                   Text(
-                    'طلبات الجلسة (${sessionRequests.length})',
+                    'session_requests_count'.tr(
+                      args: [(sessionRequests.length).toString()],
+                    ),
                     style: TextStyle(
                       color: AppColors.warning,
                       fontSize: 11.sp,
@@ -62,7 +66,9 @@ class RoomOccupancyRequestsBadge extends StatelessWidget {
               ),
               SizedBox(height: 4.h),
               ...sessionRequests.map((req) {
-                final title = req.titleAr.isNotEmpty ? req.titleAr : req.titleEn;
+                final title = req.titleAr.isNotEmpty
+                    ? req.titleAr
+                    : req.titleEn;
                 final body = req.bodyAr.isNotEmpty ? req.bodyAr : req.bodyEn;
                 return Padding(
                   padding: EdgeInsets.only(top: 4.h),
@@ -84,9 +90,9 @@ class RoomOccupancyRequestsBadge extends StatelessWidget {
                       InkWell(
                         onTap: () {
                           context.read<ClientRequestsCubit>().markAsAttended(
-                                req.id,
-                                isCanteenOrder: req.isCanteenOrder,
-                              );
+                            req.id,
+                            isCanteenOrder: req.isCanteenOrder,
+                          );
                         },
                         child: Container(
                           padding: EdgeInsets.symmetric(
@@ -98,7 +104,7 @@ class RoomOccupancyRequestsBadge extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4.r),
                           ),
                           child: Text(
-                            'تم التنفيذ',
+                            'request_fulfilled'.tr(),
                             style: TextStyle(
                               color: Colors.black,
                               fontSize: 9.sp,

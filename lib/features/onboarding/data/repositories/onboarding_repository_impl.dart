@@ -1,16 +1,27 @@
 import 'package:dartz/dartz.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
-import 'package:play_spot_dashboard/features/rooms/data/models/room_model.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/entities/extra_entity.dart';
 import 'package:play_spot_dashboard/features/lounges/domain/entities/lounge.dart';
 import '../../domain/repositories/onboarding_repository.dart';
 import '../datasources/onboarding_remote_data_source.dart';
+import '../../domain/entities/saved_onboarding_draft.dart';
 
 class OnboardingRepositoryImpl implements OnboardingRepository {
   final OnboardingRemoteDataSource remoteDataSource;
 
   OnboardingRepositoryImpl(this.remoteDataSource);
+
+  @override
+  Future<Either<Failure, SavedOnboardingDraft>> getSavedDraft(
+    String loungeId,
+  ) async {
+    try {
+      return Right(await remoteDataSource.getSavedDraft(loungeId));
+    } catch (error) {
+      return Left(ServerFailure(error.toString()));
+    }
+  }
 
   @override
   Future<Either<Failure, Lounge>> setupLounge(Lounge lounge) async {
@@ -85,50 +96,14 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
 
   @override
   Future<Either<Failure, RoomEntity>> addRoom(RoomEntity room) async {
-    try {
-      final roomModel = RoomModel(
-        id: room.id,
-        loungeId: room.loungeId,
-        nameAr: room.nameAr,
-        nameEn: room.nameEn,
-        activityNames: room.activityNames,
-        activityIds: room.activityIds,
-        spaceType: room.spaceType,
-        spaceTypeId: room.spaceTypeId ?? '',
-        hourlyRateSingle: room.hourlyRateSingle,
-        hourlyRateMulti: room.hourlyRateMulti,
-        extraControllerPrice: room.extraControllerPrice,
-        maxCapacity: room.maxCapacity,
-        images: room.images,
-        featuresAr: room.featuresAr,
-        featuresEn: room.featuresEn,
-        isAvailable: room.isAvailable,
-        controllersCount: room.controllersCount,
-        screenSize: room.screenSize,
-        status: room.status,
-      );
-      final result = await remoteDataSource.addRoom(roomModel);
-      return Right(result);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
+    return Right(room);
   }
 
   @override
   Future<Either<Failure, ExtraEntity>> addExtra(ExtraEntity extra) async {
     try {
       // Logic for adding extra
-      return Right(extra); 
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> completeOnboarding(String loungeId) async {
-    try {
-      await remoteDataSource.updateLoungeData(loungeId, {'status': 'active'});
-      return const Right(null);
+      return Right(extra);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

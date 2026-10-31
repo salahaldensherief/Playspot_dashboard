@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -10,7 +11,7 @@ import 'package:play_spot_dashboard/core/utils/app_validator.dart';
 
 class AddLoungeDialog extends StatefulWidget {
   final bool isLoading;
-  final Future<void> Function({
+  final Future<bool> Function({
     required String loungeName,
     String? address,
     String? phone,
@@ -18,13 +19,10 @@ class AddLoungeDialog extends StatefulWidget {
     required String ownerEmail,
     String? ownerPhone,
     String? ownerPassword,
-  })? onSave;
+  })?
+  onSave;
 
-  const AddLoungeDialog({
-    super.key, 
-    this.isLoading = false,
-    this.onSave,
-  });
+  const AddLoungeDialog({super.key, this.isLoading = false, this.onSave});
 
   @override
   State<AddLoungeDialog> createState() => _AddLoungeDialogState();
@@ -32,7 +30,7 @@ class AddLoungeDialog extends StatefulWidget {
 
 class _AddLoungeDialogState extends State<AddLoungeDialog> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Lounge Details Controllers
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
@@ -59,27 +57,38 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
   }
 
   Future<void> _submit() async {
+    if (_isLocalUploading || widget.isLoading || widget.onSave == null) return;
     if (_formKey.currentState!.validate()) {
       setState(() => _isLocalUploading = true);
-      
+
       try {
         if (widget.onSave != null) {
-          await widget.onSave!(
+          final saved = await widget.onSave!(
             loungeName: _nameController.text.trim(),
-            address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
-            phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+            address: _addressController.text.trim().isEmpty
+                ? null
+                : _addressController.text.trim(),
+            phone: _phoneController.text.trim().isEmpty
+                ? null
+                : _phoneController.text.trim(),
             ownerName: _ownerNameController.text.trim(),
             ownerEmail: _emailController.text.trim(),
-            ownerPhone: _ownerPhoneController.text.trim().isEmpty ? null : _ownerPhoneController.text.trim(),
-            ownerPassword: _passwordController.text.trim().isEmpty ? null : _passwordController.text.trim(),
+            ownerPhone: _ownerPhoneController.text.trim().isEmpty
+                ? null
+                : _ownerPhoneController.text.trim(),
+            ownerPassword: _passwordController.text,
           );
+          if (!saved) return;
         }
-        
+
         if (mounted) Navigator.pop(context);
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppStrings.operationError(e.toString())), backgroundColor: AppColors.danger),
+            SnackBar(
+              content: Text(AppStrings.operationError(e.toString())),
+              backgroundColor: AppColors.danger,
+            ),
           );
         }
       } finally {
@@ -90,6 +99,7 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AppDialog(
       title: AppStrings.createLoungeAndOwner,
       width: 650.w,
@@ -108,88 +118,102 @@ class _AddLoungeDialogState extends State<AddLoungeDialog> {
       ],
       child: Form(
         key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // --- Section 1: Lounge Details ---
-              AppText.subHeading("1. ${AppStrings.loungeDetails}", fontSize: 16.sp, color: AppColors.neonPurple),
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppTextField(
-                      label: AppStrings.loungeName,
-                      hintText: AppStrings.loungeNameHint,
-                      controller: _nameController,
-                      validator: AppValidator.validateRequired,
-                    ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // --- Section 1: Lounge Details ---
+            AppText.subHeading(
+              "1. ${AppStrings.loungeDetails}",
+              fontSize: 16.sp,
+              color: AppColors.neonPurple,
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.loungeName,
+                    hintText: AppStrings.loungeNameHint,
+                    controller: _nameController,
+                    validator: AppValidator.validateRequired,
                   ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: AppTextField(
-                      label: AppStrings.contactPhone,
-                      hintText: AppStrings.loungePhoneHint,
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                    ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.contactPhone,
+                    hintText: AppStrings.loungePhoneHint,
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
 
-              SizedBox(height: 28.h),
-              const Divider(color: AppColors.divider),
-              SizedBox(height: 20.h),
+            SizedBox(height: 16.h),
+            AppTextField(
+              label: AppStrings.address,
+              hintText: AppStrings.addressHint,
+              controller: _addressController,
+            ),
+            SizedBox(height: 28.h),
+            const Divider(color: AppColors.divider),
+            SizedBox(height: 20.h),
 
-              // --- Section 2: Owner Details ---
-              AppText.subHeading("2. ${AppStrings.ownerDetails}", fontSize: 16.sp, color: AppColors.neonBlue),
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppTextField(
-                      label: AppStrings.ownerName,
-                      hintText: AppStrings.ownerNameHint,
-                      controller: _ownerNameController,
-                      validator: AppValidator.validateRequired,
-                    ),
+            // --- Section 2: Owner Details ---
+            AppText.subHeading(
+              "2. ${AppStrings.ownerDetails}",
+              fontSize: 16.sp,
+              color: AppColors.neonBlue,
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.ownerName,
+                    hintText: AppStrings.ownerNameHint,
+                    controller: _ownerNameController,
+                    validator: AppValidator.validateRequired,
                   ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: AppTextField(
-                      label: AppStrings.ownerEmail,
-                      hintText: AppStrings.emailHint,
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      validator: AppValidator.validateEmail,
-                    ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.ownerEmail,
+                    hintText: AppStrings.emailHint,
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: AppValidator.validateEmail,
                   ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppTextField(
-                      label: AppStrings.ownerPhone,
-                      hintText: AppStrings.ownerPhoneHint,
-                      controller: _ownerPhoneController,
-                      keyboardType: TextInputType.phone,
-                    ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.ownerPhone,
+                    hintText: AppStrings.ownerPhoneHint,
+                    controller: _ownerPhoneController,
+                    keyboardType: TextInputType.phone,
                   ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: AppTextField(
-                      label: AppStrings.ownerPassword,
-                      hintText: AppStrings.passwordHint,
-                      controller: _passwordController,
-                      isPassword: true,
-                    ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: AppTextField(
+                    label: AppStrings.ownerPassword,
+                    hintText: AppStrings.passwordHint,
+                    controller: _passwordController,
+                    isPassword: true,
+                    validator: (value) =>
+                        AppValidator.validatePassword(value, minLength: 8),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

@@ -40,11 +40,7 @@ class StarRatingBar extends StatelessWidget {
 
         return Padding(
           padding: EdgeInsets.only(right: 2.w),
-          child: Icon(
-            iconData,
-            size: size.r,
-            color: iconColor,
-          ),
+          child: Icon(iconData, size: size.r, color: iconColor),
         );
       }),
     );

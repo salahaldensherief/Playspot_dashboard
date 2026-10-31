@@ -1,25 +1,6 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-
-class SessionTickerNotifier extends ChangeNotifier {
-  Timer? _timer;
-  DateTime _now = DateTime.now();
-
-  DateTime get now => _now;
-
-  SessionTickerNotifier() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      _now = DateTime.now();
-      notifyListeners();
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-}
+import 'session_ticker_notifier.dart';
+export 'session_ticker_notifier.dart';
 
 class SessionTickerScope extends InheritedNotifier<SessionTickerNotifier> {
   const SessionTickerScope({
@@ -29,6 +10,17 @@ class SessionTickerScope extends InheritedNotifier<SessionTickerNotifier> {
   }) : super(notifier: ticker);
 
   static DateTime nowOf(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<SessionTickerScope>()?.notifier?.now ?? DateTime.now();
+    return context
+            .dependOnInheritedWidgetOfExactType<SessionTickerScope>()
+            ?.notifier
+            ?.now ??
+        DateTime.now();
   }
+
+  static DateTime Function() clockOf(BuildContext context) =>
+      context
+          .getInheritedWidgetOfExactType<SessionTickerScope>()
+          ?.notifier
+          ?.clock ??
+      DateTime.now;
 }

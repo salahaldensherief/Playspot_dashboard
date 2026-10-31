@@ -7,7 +7,11 @@ import '../models/shift_model.dart';
 import '../models/shift_payment_model.dart';
 
 abstract class ShiftRemoteDataSource {
-  Future<List<ShiftModel>> getShifts({String? loungeId, int limit = 50, int offset = 0});
+  Future<List<ShiftModel>> getShifts({
+    String? loungeId,
+    int limit = 50,
+    int offset = 0,
+  });
   Future<List<ShiftModel>> getShiftReport({
     String? loungeId,
     DateTime? startDate,
@@ -26,7 +30,12 @@ abstract class ShiftRemoteDataSource {
   Future<ShiftModel?> getActiveShift(String loungeId);
   Future<LiveShiftOverviewModel> getLoungeLiveShiftOverview(String loungeId);
   Future<void> openShift(String loungeId, double startingCash, {String? notes});
-  Future<ShiftModel> closeShift(String shiftId, double actualCash, String? notes, {String? loungeId});
+  Future<ShiftModel> closeShift(
+    String shiftId,
+    double actualCash,
+    String? notes, {
+    String? loungeId,
+  });
   Future<void> approveShift(String shiftId, String managerId, String? notes);
   Future<void> addShiftExpense(ShiftExpenseModel expense);
   Future<List<ShiftExpenseModel>> fetchShiftExpenses(String shiftId);

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
@@ -13,6 +13,7 @@ class AddBookingSchedulePicker extends StatelessWidget {
   final TimeOfDay startTime;
   final ValueChanged<DateTime> onDateChanged;
   final ValueChanged<TimeOfDay> onStartTimeChanged;
+  final bool quickMode;
 
   const AddBookingSchedulePicker({
     super.key,
@@ -20,6 +21,7 @@ class AddBookingSchedulePicker extends StatelessWidget {
     required this.startTime,
     required this.onDateChanged,
     required this.onStartTimeChanged,
+    this.quickMode = false,
   });
 
   TimeOfDay _calculateEndTime(TimeOfDay start, int durationMinutes) {
@@ -40,10 +42,7 @@ class AddBookingSchedulePicker extends StatelessWidget {
   }
 
   Future<void> _pickStartTime(BuildContext context) async {
-    final time = await showTimePicker(
-      context: context,
-      initialTime: startTime,
-    );
+    final time = await showTimePicker(context: context, initialTime: startTime);
     if (time != null) onStartTimeChanged(time);
   }
 
@@ -90,93 +89,136 @@ class AddBookingSchedulePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 2,
-              child: _buildPickerField(
-                label: AppStrings.date,
-                value: DateFormat('yyyy-MM-dd').format(selectedDate),
-                icon: Icons.calendar_today,
-                onTap: () => _pickDate(context),
-              ),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              flex: 2,
-              child: _buildPickerField(
-                label: AppStrings.opensAt,
-                value: startTime.format(context),
-                icon: Icons.access_time,
-                onTap: () => _pickStartTime(context),
-              ),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              flex: 3,
-              child: BlocBuilder<BookingCubit, BookingState>(
-                buildWhen: (p, c) => p.selectedDurationMinutes != c.selectedDurationMinutes,
-                builder: (context, state) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppText.body(AppStrings.duration, fontWeight: FontWeight.bold),
-                      SizedBox(height: 8.h),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardBackground,
-                          borderRadius: BorderRadius.circular(8.r),
-                          border: Border.all(color: AppColors.borderDefault),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.remove, color: AppColors.neonBlue, size: 20),
-                              onPressed: state.selectedDurationMinutes > 15
-                                  ? () => context
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
+            final fieldWidth = constraints.maxWidth >= 680 * scale
+                ? (constraints.maxWidth - 32) / 3
+                : constraints.maxWidth;
+            return Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: [
+                if (!quickMode)
+                  SizedBox(
+                    width: fieldWidth,
+                    child: _buildPickerField(
+                      label: AppStrings.date,
+                      value: DateFormat('yyyy-MM-dd').format(selectedDate),
+                      icon: Icons.calendar_today,
+                      onTap: () => _pickDate(context),
+                    ),
+                  ),
+                if (!quickMode)
+                  SizedBox(
+                    width: fieldWidth,
+                    child: _buildPickerField(
+                      label: AppStrings.opensAt,
+                      value: startTime.format(context),
+                      icon: Icons.access_time,
+                      onTap: () => _pickStartTime(context),
+                    ),
+                  ),
+                SizedBox(
+                  width: fieldWidth,
+                  child: BlocBuilder<BookingCubit, BookingState>(
+                    buildWhen: (p, c) =>
+                        p.selectedDurationMinutes != c.selectedDurationMinutes,
+                    builder: (context, state) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppText.body(
+                            AppStrings.duration,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          SizedBox(height: 8.h),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8.w),
+                            decoration: BoxDecoration(
+                              color: AppColors.cardBackground,
+                              borderRadius: BorderRadius.circular(8.r),
+                              border: Border.all(
+                                color: AppColors.borderDefault,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.remove,
+                                    color: AppColors.neonBlue,
+                                    size: 20,
+                                  ),
+                                  onPressed: state.selectedDurationMinutes > 15
+                                      ? () => context
+                                            .read<BookingCubit>()
+                                            .updateSelectedDuration(
+                                              state.selectedDurationMinutes -
+                                                  15,
+                                            )
+                                      : null,
+                                ),
+                                Expanded(
+                                  child: AppText.body(
+                                    state.selectedDurationMinutes < 60
+                                        ? "${state.selectedDurationMinutes} ${AppStrings.minutesUnit}"
+                                        : "${(state.selectedDurationMinutes / 60.0).toStringAsFixed(2)} ${AppStrings.hoursAbbr}",
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.add,
+                                    color: AppColors.neonBlue,
+                                    size: 20,
+                                  ),
+                                  onPressed: () => context
                                       .read<BookingCubit>()
-                                      .updateSelectedDuration(state.selectedDurationMinutes - 15)
-                                  : null,
+                                      .updateSelectedDuration(
+                                        state.selectedDurationMinutes + 15,
+                                      ),
+                                ),
+                              ],
                             ),
-                            AppText.body(
-                              state.selectedDurationMinutes < 60
-                                  ? "${state.selectedDurationMinutes} min"
-                                  : "${(state.selectedDurationMinutes / 60.0).toStringAsFixed(2)} hrs",
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.add, color: AppColors.neonBlue, size: 20),
-                              onPressed: () => context
-                                  .read<BookingCubit>()
-                                  .updateSelectedDuration(state.selectedDurationMinutes + 15),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 12.h),
-        BlocBuilder<BookingCubit, BookingState>(
-          buildWhen: (p, c) => p.selectedDurationMinutes != c.selectedDurationMinutes,
-          builder: (context, state) {
-            final endTime = _calculateEndTime(startTime, state.selectedDurationMinutes);
-            return AppText.body(
-              "Ends at: ${endTime.format(context)} (${state.selectedDurationMinutes / 60.0} hrs total)",
-              color: AppColors.textSecondary,
-              fontSize: 12.sp,
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
             );
           },
         ),
+        if (!quickMode) SizedBox(height: 12.h),
+        if (!quickMode)
+          BlocBuilder<BookingCubit, BookingState>(
+            buildWhen: (p, c) =>
+                p.selectedDurationMinutes != c.selectedDurationMinutes,
+            builder: (context, state) {
+              final endTime = _calculateEndTime(
+                startTime,
+                state.selectedDurationMinutes,
+              );
+              return AppText.body(
+                'booking_ends_at'.tr(
+                  namedArgs: {
+                    'time': endTime.format(context),
+                    'hours': (state.selectedDurationMinutes / 60.0)
+                        .toStringAsFixed(2),
+                  },
+                ),
+                color: AppColors.textSecondary,
+                fontSize: 12.sp,
+              );
+            },
+          ),
       ],
     );
   }

@@ -12,7 +12,9 @@ class StaffRepositoryImpl with RepositoryHelper implements StaffRepository {
   StaffRepositoryImpl(this._remoteSource);
 
   @override
-  Future<Either<Failure, List<StaffEntity>>> getLoungeStaff(String loungeId) async {
+  Future<Either<Failure, List<StaffEntity>>> getLoungeStaff(
+    String loungeId,
+  ) async {
     return await callRepository(() => _remoteSource.getLoungeStaff(loungeId));
   }
 
@@ -22,13 +24,23 @@ class StaffRepositoryImpl with RepositoryHelper implements StaffRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateStaffMember(String staffId, Map<String, dynamic> data) async {
-    return await callRepository(() => _remoteSource.updateStaffMember(staffId, data));
+  Future<Either<Failure, void>> updateStaffMember(
+    String staffId,
+    Map<String, dynamic> data,
+  ) async {
+    return await callRepository(
+      () => _remoteSource.updateStaffMember(staffId, data),
+    );
   }
 
   @override
-  Future<Either<Failure, void>> updateStaffStatus(String staffId, bool isActive) async {
-    return await callRepository(() => _remoteSource.updateStaffStatus(staffId, isActive));
+  Future<Either<Failure, void>> updateStaffStatus(
+    String staffId,
+    bool isActive,
+  ) async {
+    return await callRepository(
+      () => _remoteSource.updateStaffStatus(staffId, isActive),
+    );
   }
 
   @override

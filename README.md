@@ -36,7 +36,7 @@ Shared dependency injection, routing, services, error handling, responsive helpe
 
 The dashboard is an operations client, not the security boundary. Privileged actions must be authorized by Postgres/RLS/RPC logic. UI permission checks are for presentation only and must not replace server-side authorization.
 
-Project-specific engineering rules are documented in `AGENT_RULES.md`.
+Agent engineering rules are in `AGENTS.md`.
 
 ## Configuration
 
@@ -57,6 +57,8 @@ flutter build web --release \
 ```
 
 See `.env.example` for variable names. Flutter consumes these as dart defines.
+
+For a checked Windows launch against a named demo or development project, see [docs/LOCAL_DEVELOPMENT_LAUNCH.md](docs/LOCAL_DEVELOPMENT_LAUNCH.md). The PowerShell launcher validates the project reference and public key before starting Flutter.
 
 ## Local development
 
@@ -101,3 +103,7 @@ GitHub Actions checks formatting, analysis, and tests on pull requests and pushe
 ## Localization and layout
 
 User-facing text must be localized. Dashboard changes must remain usable in Arabic/English and RTL/LTR layouts.
+
+## Agent and developer onboarding
+
+Start with **[PlaySpot Complete System Atlas](docs/PLAYSPOT_SYSTEM_ATLAS.md)** for architecture, business invariants, UI/UX, feature/file index, cross-client data flows, Supabase ownership, open PRs, risks, verification and safe branch instructions. Then read this repository's `AGENTS.md` and current feature source. The atlas is synchronized as a docs-only copy in the companion repository; refresh it when contracts change.

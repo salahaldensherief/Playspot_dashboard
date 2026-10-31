@@ -8,7 +8,7 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text_field.dart';
-import '../../../../art_core/widgets/app_cached_image.dart';
+import '../../../../art_core/widgets/app_avatar.dart';
 import '../login/login_cubit.dart';
 import '../login/login_state.dart';
 
@@ -52,13 +52,20 @@ class ProfilePage extends StatelessWidget {
                   SizedBox(height: 20.h),
                   AppTextField(
                     label: AppStrings.roleLabel,
-                    initialValue: user?.role.toString().split('.').last.toUpperCase(),
+                    initialValue: user?.role
+                        .toString()
+                        .split('.')
+                        .last
+                        .toUpperCase(),
                     readOnly: true,
                   ),
                   SizedBox(height: 20.h),
                   AppTextField(
                     label: AppStrings.userCity,
-                    initialValue: user?.getDisplayCityName(languageCode: context.locale.languageCode) ??
+                    initialValue:
+                        user?.getDisplayCityName(
+                          languageCode: context.locale.languageCode,
+                        ) ??
                         user?.displayCityName ??
                         AppStrings.notSpecified,
                     readOnly: true,
@@ -67,7 +74,10 @@ class ProfilePage extends StatelessWidget {
                   if (loginState.locationErrorMessage != null) ...[
                     Text(
                       loginState.locationErrorMessage!,
-                      style: TextStyle(color: AppColors.danger, fontSize: 12.sp),
+                      style: TextStyle(
+                        color: AppColors.danger,
+                        fontSize: 12.sp,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 12.h),
@@ -76,7 +86,8 @@ class ProfilePage extends StatelessWidget {
                     text: AppStrings.updateMyLocation,
                     variant: AppButtonVariant.gradient,
                     isLoading: loginState.isLoadingLocation,
-                    onPressed: () => context.read<LoginCubit>().updateUserLocation(),
+                    onPressed: () =>
+                        context.read<LoginCubit>().updateUserLocation(),
                   ),
                   SizedBox(height: 20.h),
                   AppButton(
@@ -104,20 +115,17 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _buildAvatar(BuildContext context, String? url, String name) {
-    final bool hasAvatar = url != null && url.trim().isNotEmpty;
     return Stack(
       children: [
-        CircleAvatar(
+        AppAvatar(
           radius: 60.r,
-          backgroundColor: AppColors.neonPurple.withAlpha(25),
-          backgroundImage: hasAvatar ? AppCachedImage.provider(url) : null,
-          child: !hasAvatar 
-            ? AppText.heading(
-                name.isNotEmpty ? name[0].toUpperCase() : '?', 
-                fontSize: 40.sp, 
-                color: AppColors.neonPurple
-              )
-            : null,
+          imageUrl: url,
+          backgroundColor: AppColors.mutedBackground,
+          fallback: AppText.heading(
+            name.isNotEmpty ? name[0].toUpperCase() : '?',
+            fontSize: 40.sp,
+            color: AppColors.neonPurple,
+          ),
         ),
         Positioned(
           bottom: 0,
@@ -134,7 +142,11 @@ class ProfilePage extends StatelessWidget {
                 color: AppColors.neonBlue,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.camera_alt, color: AppColors.textPrimary, size: 20.r),
+              child: Icon(
+                Icons.camera_alt,
+                color: AppColors.textPrimary,
+                size: 20.r,
+              ),
             ),
           ),
         ),

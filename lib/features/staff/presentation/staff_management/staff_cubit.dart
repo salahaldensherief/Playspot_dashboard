@@ -23,60 +23,87 @@ class StaffCubit extends Cubit<StaffState> {
     required UpdateStaffMemberUseCase updateStaffMemberUseCase,
     required UpdateStaffStatusUseCase updateStaffStatusUseCase,
     required DeleteStaffUseCase deleteStaffUseCase,
-  })  : _getLoungeStaffUseCase = getLoungeStaffUseCase,
-        _addStaffMemberUseCase = addStaffMemberUseCase,
-        _updateStaffMemberUseCase = updateStaffMemberUseCase,
-        _updateStaffStatusUseCase = updateStaffStatusUseCase,
-        _deleteStaffUseCase = deleteStaffUseCase,
-        super(StaffState.init());
+  }) : _getLoungeStaffUseCase = getLoungeStaffUseCase,
+       _addStaffMemberUseCase = addStaffMemberUseCase,
+       _updateStaffMemberUseCase = updateStaffMemberUseCase,
+       _updateStaffStatusUseCase = updateStaffStatusUseCase,
+       _deleteStaffUseCase = deleteStaffUseCase,
+       super(StaffState.init());
 
   Future<void> fetchStaff(String loungeId) async {
     final cleanLoungeId = loungeId.trim();
     if (cleanLoungeId.isEmpty) {
-      AppLogger.debug('StaffCubit: fetchStaff skipped because loungeId is empty');
+      AppLogger.debug(
+        'StaffCubit: fetchStaff skipped because loungeId is empty',
+      );
       return;
     }
-    
-    AppLogger.debug('StaffCubit: fetchStaff started for loungeId: $cleanLoungeId');
+
+    AppLogger.debug(
+      'StaffCubit: fetchStaff started for loungeId: $cleanLoungeId',
+    );
     emit(state.copyWith(status: StaffStatus.loading));
     final result = await _getLoungeStaffUseCase(cleanLoungeId);
-    
+
     if (isClosed) return;
 
     result.fold(
       (failure) {
         AppLogger.warning('StaffCubit: fetchStaff failed: ${failure.message}');
-        emit(state.copyWith(status: StaffStatus.failure, errorMessage: failure.message));
+        emit(
+          state.copyWith(
+            status: StaffStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (staff) {
-        AppLogger.info('StaffCubit: fetchStaff success, found ${staff.length} staff members');
+        AppLogger.info(
+          'StaffCubit: fetchStaff success, found ${staff.length} staff members',
+        );
         emit(state.copyWith(status: StaffStatus.success, staffList: staff));
       },
     );
   }
 
-  Future<void> addStaffMember(AddStaffParams params, {UserEntity? currentUser}) async {
-    if (currentUser != null && !currentUser.canManageStaff && !currentUser.isSuperAdmin) {
-      emit(state.copyWith(
-        status: StaffStatus.failure,
-        errorMessage: AppStrings.managerOverrideRequired,
-      ));
+  Future<void> addStaffMember(
+    AddStaffParams params, {
+    UserEntity? currentUser,
+  }) async {
+    if (currentUser != null &&
+        !currentUser.canManageStaff &&
+        !currentUser.isSuperAdmin) {
+      emit(
+        state.copyWith(
+          status: StaffStatus.failure,
+          errorMessage: AppStrings.managerOverrideRequired,
+        ),
+      );
       return;
     }
 
     AppLogger.debug('StaffCubit: addStaffMember started for ${params.email}');
     emit(state.copyWith(status: StaffStatus.loading));
     final result = await _addStaffMemberUseCase(params);
-    
+
     if (isClosed) return;
 
     result.fold(
       (failure) {
-        AppLogger.warning('StaffCubit: addStaffMember failed: ${failure.message}');
-        emit(state.copyWith(status: StaffStatus.failure, errorMessage: failure.message));
+        AppLogger.warning(
+          'StaffCubit: addStaffMember failed: ${failure.message}',
+        );
+        emit(
+          state.copyWith(
+            status: StaffStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (_) {
-        AppLogger.info('StaffCubit: addStaffMember success, refetching staff list');
+        AppLogger.info(
+          'StaffCubit: addStaffMember success, refetching staff list',
+        );
         fetchStaff(params.loungeId);
       },
     );
@@ -92,11 +119,15 @@ class StaffCubit extends Cubit<StaffState> {
     String loungeId, {
     UserEntity? currentUser,
   }) async {
-    if (currentUser != null && !currentUser.canManageStaff && !currentUser.isSuperAdmin) {
-      emit(state.copyWith(
-        status: StaffStatus.failure,
-        errorMessage: AppStrings.managerOverrideRequired,
-      ));
+    if (currentUser != null &&
+        !currentUser.canManageStaff &&
+        !currentUser.isSuperAdmin) {
+      emit(
+        state.copyWith(
+          status: StaffStatus.failure,
+          errorMessage: AppStrings.managerOverrideRequired,
+        ),
+      );
       return;
     }
 
@@ -104,16 +135,25 @@ class StaffCubit extends Cubit<StaffState> {
     final result = await _updateStaffMemberUseCase(
       UpdateStaffParams(staffId: staffId, data: data),
     );
-    
+
     if (isClosed) return;
 
     result.fold(
       (failure) {
-        AppLogger.warning('StaffCubit: updateStaffMember failed: ${failure.message}');
-        emit(state.copyWith(status: StaffStatus.failure, errorMessage: failure.message));
+        AppLogger.warning(
+          'StaffCubit: updateStaffMember failed: ${failure.message}',
+        );
+        emit(
+          state.copyWith(
+            status: StaffStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (_) async {
-        AppLogger.info('StaffCubit: updateStaffMember success, refreshing staff list');
+        AppLogger.info(
+          'StaffCubit: updateStaffMember success, refreshing staff list',
+        );
         await fetchStaff(loungeId);
       },
     );
@@ -125,11 +165,15 @@ class StaffCubit extends Cubit<StaffState> {
     String loungeId, {
     UserEntity? currentUser,
   }) async {
-    if (currentUser != null && !currentUser.canManageStaff && !currentUser.isSuperAdmin) {
-      emit(state.copyWith(
-        status: StaffStatus.failure,
-        errorMessage: AppStrings.managerOverrideRequired,
-      ));
+    if (currentUser != null &&
+        !currentUser.canManageStaff &&
+        !currentUser.isSuperAdmin) {
+      emit(
+        state.copyWith(
+          status: StaffStatus.failure,
+          errorMessage: AppStrings.managerOverrideRequired,
+        ),
+      );
       return;
     }
 
@@ -146,14 +190,18 @@ class StaffCubit extends Cubit<StaffState> {
     );
     if (isClosed) return;
 
-    result.fold(
-      (failure) {
-        AppLogger.warning('StaffCubit: toggleStaffStatus failed: ${failure.message}');
-        emit(state.copyWith(status: StaffStatus.failure, errorMessage: failure.message));
-        fetchStaff(loungeId);
-      },
-      (_) => fetchStaff(loungeId),
-    );
+    result.fold((failure) {
+      AppLogger.warning(
+        'StaffCubit: toggleStaffStatus failed: ${failure.message}',
+      );
+      emit(
+        state.copyWith(
+          status: StaffStatus.failure,
+          errorMessage: failure.message,
+        ),
+      );
+      fetchStaff(loungeId);
+    }, (_) => fetchStaff(loungeId));
   }
 
   Future<void> deleteStaff(
@@ -161,27 +209,35 @@ class StaffCubit extends Cubit<StaffState> {
     String loungeId, {
     UserEntity? currentUser,
   }) async {
-    if (currentUser != null && !currentUser.canManageStaff && !currentUser.isSuperAdmin) {
-      emit(state.copyWith(
-        status: StaffStatus.failure,
-        errorMessage: AppStrings.managerOverrideRequired,
-      ));
+    if (currentUser != null &&
+        !currentUser.canManageStaff &&
+        !currentUser.isSuperAdmin) {
+      emit(
+        state.copyWith(
+          status: StaffStatus.failure,
+          errorMessage: AppStrings.managerOverrideRequired,
+        ),
+      );
       return;
     }
 
-    final updatedList = state.staffList.where((staff) => staff.id != staffId).toList();
+    final updatedList = state.staffList
+        .where((staff) => staff.id != staffId)
+        .toList();
     emit(state.copyWith(staffList: updatedList));
 
     final result = await _deleteStaffUseCase(staffId);
     if (isClosed) return;
 
-    result.fold(
-      (failure) {
-        AppLogger.warning('StaffCubit: deleteStaff failed: ${failure.message}');
-        emit(state.copyWith(status: StaffStatus.failure, errorMessage: failure.message));
-        fetchStaff(loungeId);
-      },
-      (_) => fetchStaff(loungeId),
-    );
+    result.fold((failure) {
+      AppLogger.warning('StaffCubit: deleteStaff failed: ${failure.message}');
+      emit(
+        state.copyWith(
+          status: StaffStatus.failure,
+          errorMessage: failure.message,
+        ),
+      );
+      fetchStaff(loungeId);
+    }, (_) => fetchStaff(loungeId));
   }
 }

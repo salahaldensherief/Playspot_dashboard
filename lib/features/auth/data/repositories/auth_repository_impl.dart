@@ -30,11 +30,16 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, void>> logout() async {
     try {
-      await remoteDataSource.logout();
-      await localCacheService.clearAll();
+      try {
+        await remoteDataSource.logout();
+      } finally {
+        await localCacheService.clearAll();
+      }
       return const Right(null);
     } catch (e) {
-      await localCacheService.clearAll();
+      if (e is StateError && e.message == 'cache.remove_failed') {
+        return const Left(CacheFailure('cache.remove_failed'));
+      }
       return Left(ServerFailure(e.toString()));
     }
   }

@@ -4,12 +4,15 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
+import '../../../../art_core/widgets/data_table_widget.dart';
 import '../../../../art_core/widgets/status_badge.dart';
 import '../../domain/entities/tournament_participant_entity.dart';
+import '../../domain/entities/tournament_entity.dart';
 import 'payment_receipt_dialog.dart';
 
 class TournamentParticipantsTable extends StatelessWidget {
   final List<TournamentParticipantEntity> participants;
+  final TournamentStatus? tournamentStatus;
   final Function(TournamentParticipantEntity) onApprovePayment;
   final Function(TournamentParticipantEntity, String reason) onRejectPayment;
   final Function(TournamentParticipantEntity) onRecordCash;
@@ -20,6 +23,7 @@ class TournamentParticipantsTable extends StatelessWidget {
   const TournamentParticipantsTable({
     super.key,
     required this.participants,
+    this.tournamentStatus,
     required this.onApprovePayment,
     required this.onRejectPayment,
     required this.onRecordCash,
@@ -30,6 +34,7 @@ class TournamentParticipantsTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (participants.isEmpty) {
       return Container(
         padding: EdgeInsets.all(40.r),
@@ -41,11 +46,18 @@ class TournamentParticipantsTable extends StatelessWidget {
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.people_outline, size: 48.r, color: AppColors.textSecondary),
+              Icon(
+                Icons.people_outline,
+                size: 48.r,
+                color: AppColors.textSecondary,
+              ),
               SizedBox(height: 12.h),
               Text(
-                AppStrings.noPromotions,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 16.sp),
+                AppStrings.users,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 16.sp,
+                ),
               ),
             ],
           ),
@@ -55,6 +67,7 @@ class TournamentParticipantsTable extends StatelessWidget {
 
     final dateFormat = DateFormat('yyyy/MM/dd hh:mm a');
     final waitlistCount = participants.where((p) => p.isWaitlist).length;
+    final isCompact = MediaQuery.sizeOf(context).width < 700;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -62,27 +75,44 @@ class TournamentParticipantsTable extends StatelessWidget {
         if (onPromoteWaitlist != null || waitlistCount > 0) ...[
           Padding(
             padding: EdgeInsets.only(bottom: 12.h),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Wrap(
+              spacing: 12.w,
+              runSpacing: 8.h,
               children: [
-                Row(
+                Wrap(
+                  spacing: 8.w,
+                  runSpacing: 8.h,
                   children: [
                     Text(
-                      'المشاركون (${participants.length})',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 16.sp, fontWeight: FontWeight.bold),
+                      'tournament_participants_count'.tr(
+                        args: [(participants.length).toString()],
+                      ),
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     if (waitlistCount > 0) ...[
-                      SizedBox(width: 8.w),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10.w,
+                          vertical: 4.h,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.warning.withAlpha(30),
                           borderRadius: BorderRadius.circular(12.r),
                           border: Border.all(color: AppColors.warning),
                         ),
                         child: Text(
-                          'قائمة الانتظار: $waitlistCount',
-                          style: TextStyle(color: AppColors.warning, fontSize: 12.sp, fontWeight: FontWeight.bold),
+                          'tournament_waitlist_count'.tr(
+                            args: [(waitlistCount).toString()],
+                          ),
+                          style: TextStyle(
+                            color: AppColors.warning,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
@@ -90,137 +120,246 @@ class TournamentParticipantsTable extends StatelessWidget {
                 ),
                 if (onPromoteWaitlist != null && waitlistCount > 0)
                   AppButton(
-                    text: 'ترقية من قائمة الانتظار',
+                    text: 'promote_from_waitlist'.tr(),
                     icon: Icons.arrow_upward_rounded,
                     backgroundColor: AppColors.warning,
                     fontSize: 12.sp,
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 6.h,
+                    ),
                     onPressed: onPromoteWaitlist!,
                   ),
               ],
             ),
           ),
         ],
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppColors.borderDefault),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12.r),
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.all(AppColors.mutedBackground),
-              dataRowMinHeight: 64.h,
-              dataRowMaxHeight: 64.h,
-              columns: [
-                DataColumn(label: Text(AppStrings.customerName, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
-                DataColumn(label: Text(AppStrings.phoneNumber, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
-                DataColumn(label: Text(AppStrings.payment, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
-                DataColumn(label: Text(AppStrings.checkIn, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
-                DataColumn(label: Text(AppStrings.date, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
-                DataColumn(label: Text(AppStrings.actions, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.sp))),
-              ],
-              rows: participants.map((p) {
-                return DataRow(
-                  cells: [
-                    DataCell(
+        if (isCompact)
+          Expanded(
+            child: ListView.separated(
+              itemCount: participants.length,
+              separatorBuilder: (context, index) => SizedBox(height: 8.h),
+              itemBuilder: (context, index) {
+                final p = participants[index];
+                return Container(
+                  padding: EdgeInsets.all(14.r),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(color: AppColors.borderDefault),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Row(
                         children: [
-                          CircleAvatar(
-                            backgroundColor: AppColors.neonBlue.withAlpha(40),
+                          Expanded(
                             child: Text(
-                              p.userName.isNotEmpty ? p.userName[0].toUpperCase() : 'P',
-                              style: const TextStyle(color: AppColors.neonBlue, fontWeight: FontWeight.bold),
+                              p.userName,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                          SizedBox(width: 12.w),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(p.userName, style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.w600)),
-                              if (p.isWaitlist)
-                                Text(AppStrings.waitlistLabel, style: TextStyle(color: AppColors.warning, fontSize: 11.sp, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
+                          _buildPaymentBadge(p.paymentStatus),
                         ],
                       ),
-                    ),
-                    DataCell(Text(p.userPhone ?? '--', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp))),
-                    DataCell(_buildPaymentBadge(p.paymentStatus)),
-                    DataCell(
-                      p.isCheckedIn
-                          ? Row(
-                              children: [
-                                const Icon(Icons.check_circle, color: AppColors.success, size: 18),
-                                SizedBox(width: 6.w),
-                                Text(AppStrings.attended, style: TextStyle(color: AppColors.success, fontSize: 13.sp, fontWeight: FontWeight.bold)),
-                              ],
-                            )
-                          : Text(AppStrings.unread, style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp)),
-                    ),
-                    DataCell(Text(dateFormat.format(p.registeredAt), style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp))),
-                    DataCell(
-                      Row(
-                        children: [
-                          if (p.receiptPath != null && p.receiptPath!.isNotEmpty) ...[
-                            AppButton(
-                              text: AppStrings.reviewReceipt,
-                              variant: AppButtonVariant.outlined,
-                              fontSize: 12.sp,
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) => PaymentReceiptDialog(
-                                    participant: p,
-                                    onApprove: () => onApprovePayment(p),
-                                    onReject: (reason) => onRejectPayment(p, reason),
-                                  ),
-                                );
-                              },
-                            ),
-                            SizedBox(width: 8.w),
-                          ],
-                          if (!p.isPaymentApproved) ...[
-                            AppButton(
-                              text: AppStrings.cashPayment,
-                              variant: AppButtonVariant.primary,
-                              fontSize: 12.sp,
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                              onPressed: () => onRecordCash(p),
-                            ),
-                            SizedBox(width: 8.w),
-                          ],
-                          if (p.isPaymentApproved && !p.isCheckedIn) ...[
-                            AppButton(
-                              text: AppStrings.checkIn,
-                              backgroundColor: AppColors.success,
-                              fontSize: 12.sp,
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                              onPressed: () => onCheckIn(p),
-                            ),
-                          ],
-                          if (onWithdraw != null && !p.isWithdrawn) ...[
-                            SizedBox(width: 8.w),
-                            AppButton(
-                              text: AppStrings.withdraw,
-                              variant: AppButtonVariant.danger,
-                              fontSize: 12.sp,
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                              onPressed: () => onWithdraw!(p),
-                            ),
-                          ],
-                        ],
+                      SizedBox(height: 6.h),
+                      Text(
+                        p.userPhone ?? '--',
+                        style: const TextStyle(color: AppColors.textSecondary),
                       ),
-                    ),
-                  ],
+                      Text(
+                        dateFormat.format(p.registeredAt),
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                      if (p.isWaitlist)
+                        Text(
+                          AppStrings.waitlistLabel,
+                          style: const TextStyle(color: AppColors.warning),
+                        ),
+                      if (p.isCheckedIn)
+                        Text(
+                          AppStrings.attended,
+                          style: const TextStyle(color: AppColors.success),
+                        ),
+                      Divider(height: 20.h, color: AppColors.borderDefault),
+                      _buildActions(context, p),
+                    ],
+                  ),
                 );
-              }).toList(),
+              },
+            ),
+          )
+        else
+          Expanded(
+            child: SingleChildScrollView(
+              child: DataTableWidget(
+                columns: [
+                  AppStrings.customerName,
+                  AppStrings.phoneNumber,
+                  AppStrings.payment,
+                  AppStrings.checkIn,
+                  AppStrings.date,
+                  AppStrings.actions,
+                ],
+                rows: participants.map((p) {
+                  return DataRow(
+                    cells: [
+                      DataCell(
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: AppColors.neonBlue.withAlpha(40),
+                              child: Text(
+                                p.userName.isNotEmpty
+                                    ? p.userName[0].toUpperCase()
+                                    : 'P',
+                                style: const TextStyle(
+                                  color: AppColors.neonBlue,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  p.userName,
+                                  style: TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (p.isWaitlist)
+                                  Text(
+                                    AppStrings.waitlistLabel,
+                                    style: TextStyle(
+                                      color: AppColors.warning,
+                                      fontSize: 11.sp,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      DataCell(
+                        Text(
+                          p.userPhone ?? '--',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13.sp,
+                          ),
+                        ),
+                      ),
+                      DataCell(_buildPaymentBadge(p.paymentStatus)),
+                      DataCell(
+                        p.isCheckedIn
+                            ? Row(
+                                children: [
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: AppColors.success,
+                                    size: 18,
+                                  ),
+                                  SizedBox(width: 6.w),
+                                  Text(
+                                    AppStrings.attended,
+                                    style: TextStyle(
+                                      color: AppColors.success,
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Text(
+                                AppStrings.unread,
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 13.sp,
+                                ),
+                              ),
+                      ),
+                      DataCell(
+                        Text(
+                          dateFormat.format(p.registeredAt),
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13.sp,
+                          ),
+                        ),
+                      ),
+                      DataCell(_buildActions(context, p)),
+                    ],
+                  );
+                }).toList(),
+              ),
             ),
           ),
-        ),
+      ],
+    );
+  }
+
+  Widget _buildActions(BuildContext context, TournamentParticipantEntity p) {
+    return Wrap(
+      spacing: 8.w,
+      runSpacing: 8.h,
+      children: [
+        if (p.receiptPath != null && p.receiptPath!.isNotEmpty)
+          AppButton(
+            text: AppStrings.reviewReceipt,
+            variant: AppButtonVariant.outlined,
+            fontSize: 12.sp,
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+            onPressed: () => showDialog(
+              context: context,
+              builder: (ctx) => PaymentReceiptDialog(
+                participant: p,
+                onApprove: () => onApprovePayment(p),
+                onReject: (reason) => onRejectPayment(p, reason),
+              ),
+            ),
+          ),
+        if (p.canRecordCash)
+          AppButton(
+            text: AppStrings.cashPayment,
+            fontSize: 12.sp,
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+            onPressed: () => onRecordCash(p),
+          ),
+        if (p.isPaymentApproved && p.isConfirmed && !p.isCheckedIn)
+          AppButton(
+            text: AppStrings.checkIn,
+            backgroundColor: AppColors.success,
+            fontSize: 12.sp,
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+            onPressed: () => onCheckIn(p),
+          ),
+        if (onWithdraw != null &&
+            p.canWithdraw &&
+            tournamentStatus != null &&
+            const {
+              TournamentStatus.draft,
+              TournamentStatus.published,
+              TournamentStatus.registrationOpen,
+              TournamentStatus.registrationClosed,
+              TournamentStatus.checkInOpen,
+              TournamentStatus.checkInClosed,
+            }.contains(tournamentStatus))
+          AppButton(
+            text: AppStrings.withdraw,
+            variant: AppButtonVariant.danger,
+            fontSize: 12.sp,
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+            onPressed: () => onWithdraw!(p),
+          ),
       ],
     );
   }
@@ -235,6 +374,23 @@ class TournamentParticipantsTable extends StatelessWidget {
         return StatusBadge(text: AppStrings.pending, color: AppColors.warning);
       case ParticipantPaymentStatus.pending:
         return StatusBadge(text: AppStrings.pending, color: AppColors.warning);
+      case ParticipantPaymentStatus.unpaid:
+        return StatusBadge(text: AppStrings.unpaid, color: AppColors.warning);
+      case ParticipantPaymentStatus.refundPending:
+        return StatusBadge(
+          text: 'tournament_refund_pending'.tr(),
+          color: AppColors.warning,
+        );
+      case ParticipantPaymentStatus.cancelled:
+        return StatusBadge(
+          text: AppStrings.cancelled,
+          color: AppColors.textSecondary,
+        );
+      case ParticipantPaymentStatus.unknown:
+        return StatusBadge(
+          text: 'tournament_payment_unknown'.tr(),
+          color: AppColors.textSecondary,
+        );
     }
   }
 }

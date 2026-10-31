@@ -41,27 +41,34 @@ class TournamentModel extends TournamentEntity {
       loungeNameVal = json['lounges']['name'] as String?;
     }
 
-    final titleVal = json['title_ar'] as String? ??
+    final titleVal =
+        json['title_ar'] as String? ??
         json['title_en'] as String? ??
         json['title'] as String? ??
         '';
-    final gameTitleVal = json['game_name'] as String? ?? json['game_title'] as String?;
-    final treeSizeVal = json['bracket_size'] as int? ?? json['tree_size'] as int? ?? 8;
-    final maxPlayersVal = json['max_participants'] as int? ?? json['max_players'] as int? ?? treeSizeVal;
+    final gameTitleVal =
+        json['game_name'] as String? ?? json['game_title'] as String?;
+    final treeSizeVal =
+        json['bracket_size'] as int? ?? json['tree_size'] as int? ?? 8;
+    final maxPlayersVal =
+        json['max_participants'] as int? ??
+        json['max_players'] as int? ??
+        treeSizeVal;
 
     final startDateVal = json['tournament_starts_at'] != null
         ? DateTime.tryParse(json['tournament_starts_at'].toString())
         : (json['start_date'] != null
-            ? DateTime.tryParse(json['start_date'].toString())
-            : null);
+              ? DateTime.tryParse(json['start_date'].toString())
+              : null);
 
     final regDeadlineVal = json['registration_closes_at'] != null
         ? DateTime.tryParse(json['registration_closes_at'].toString())
         : (json['registration_deadline'] != null
-            ? DateTime.tryParse(json['registration_deadline'].toString())
-            : null);
+              ? DateTime.tryParse(json['registration_deadline'].toString())
+              : null);
 
-    final scopeVal = (json['visibility_scope'] as String?)?.toLowerCase() ?? 'all';
+    final scopeVal =
+        (json['visibility_scope'] as String?)?.toLowerCase() ?? 'all';
     final radiusVal = scopeVal == 'radius'
         ? (json['visibility_radius_km'] as num?)?.toDouble()
         : null;
@@ -101,11 +108,25 @@ class TournamentModel extends TournamentEntity {
           ? DateTime.tryParse(json['check_in_closes_at'].toString())
           : null,
       tournamentStartsAt: startDateVal,
-      minPlayers: json['min_players'] as int? ?? 4,
+      minPlayers: json['min_players'] as int? ?? 2,
       maxPlayers: maxPlayersVal,
       rules: json['description_ar'] as String? ?? json['rules'] as String?,
-      registeredCount: json['registered_count'] as int? ??
-          (json['tournament_participants'] is List ? (json['tournament_participants'] as List).length : 0),
+      registeredCount:
+          json['registered_count'] as int? ??
+          (json['tournament_participants'] is List
+              ? (json['tournament_participants'] as List)
+                    .where(
+                      (p) =>
+                          p is Map &&
+                          (!p.containsKey('registration_status') ||
+                              const {
+                                'pending_payment',
+                                'confirmed',
+                                'checked_in',
+                              }.contains(p['registration_status'])),
+                    )
+                    .length
+              : 0),
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
@@ -114,7 +135,9 @@ class TournamentModel extends TournamentEntity {
 
   static bool _isValidUuid(String? str) {
     if (str == null || str.trim().isEmpty) return false;
-    return RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(str.trim());
+    return RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+    ).hasMatch(str.trim());
   }
 
   Map<String, dynamic> toJson() {
@@ -123,7 +146,9 @@ class TournamentModel extends TournamentEntity {
       if (loungeId != null && _isValidUuid(loungeId)) 'lounge_id': loungeId,
       if (cityId != null && _isValidUuid(cityId)) 'city_id': cityId,
       'visibility_scope': visibilityScope,
-      'visibility_radius_km': visibilityScope == 'radius' ? visibilityRadiusKm : null,
+      'visibility_radius_km': visibilityScope == 'radius'
+          ? visibilityRadiusKm
+          : null,
       'title_ar': (titleAr != null && titleAr!.isNotEmpty) ? titleAr : title,
       'title_en': (titleEn != null && titleEn!.isNotEmpty) ? titleEn : title,
       if (descriptionAr != null && descriptionAr!.isNotEmpty)
@@ -138,17 +163,22 @@ class TournamentModel extends TournamentEntity {
       'bracket_size': treeSize,
       'max_participants': maxPlayers,
       'entry_fee': entryFee,
-      'registration_opens_at': (registrationOpensAt ?? startDate).toUtc().toIso8601String(),
-      'registration_closes_at': (registrationClosesAt ?? registrationDeadline).toUtc().toIso8601String(),
+      'registration_opens_at': (registrationOpensAt ?? startDate)
+          .toUtc()
+          .toIso8601String(),
+      'registration_closes_at': (registrationClosesAt ?? registrationDeadline)
+          .toUtc()
+          .toIso8601String(),
       'payment_deadline_minutes': paymentDeadlineMinutes,
       if (checkInOpensAt != null)
         'check_in_opens_at': checkInOpensAt!.toUtc().toIso8601String(),
       if (checkInClosesAt != null)
         'check_in_closes_at': checkInClosesAt!.toUtc().toIso8601String(),
-      'tournament_starts_at': (tournamentStartsAt ?? startDate).toUtc().toIso8601String(),
+      'tournament_starts_at': (tournamentStartsAt ?? startDate)
+          .toUtc()
+          .toIso8601String(),
       'status': status.toDbString(),
-      if (bannerUrl != null && bannerUrl!.isNotEmpty)
-        'banner_url': bannerUrl,
+      if (bannerUrl != null && bannerUrl!.isNotEmpty) 'banner_url': bannerUrl,
     };
   }
 

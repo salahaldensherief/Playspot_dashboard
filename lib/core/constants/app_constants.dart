@@ -1,8 +1,14 @@
-/// Required at build time via --dart-define=SUPABASE_URL=...
-const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+/// Overridable at build time via --dart-define=SUPABASE_URL=...
+const String supabaseUrl = String.fromEnvironment(
+  'SUPABASE_URL',
+  defaultValue: '',
+);
 
-/// Required at build time via --dart-define=SUPABASE_ANON_KEY=...
-const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+/// Overridable at build time via --dart-define=SUPABASE_ANON_KEY=...
+const String supabaseAnonKey = String.fromEnvironment(
+  'SUPABASE_ANON_KEY',
+  defaultValue: '',
+);
 
 class AppConstants {
   // Log Messages

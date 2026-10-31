@@ -25,14 +25,14 @@ class RedemptionOptionEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        titleAr,
-        titleEn,
-        descriptionAr,
-        descriptionEn,
-        pointsCost,
-        rewardType,
-        rewardValue,
-        isActive,
-      ];
+    id,
+    titleAr,
+    titleEn,
+    descriptionAr,
+    descriptionEn,
+    pointsCost,
+    rewardType,
+    rewardValue,
+    isActive,
+  ];
 }

@@ -1,3 +1,4 @@
+import 'package:play_spot_dashboard/core/services/lounge_owner_provisioner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:play_spot_dashboard/features/auth/domain/entities/user_entity.dart';
 import 'package:play_spot_dashboard/features/auth/data/models/user_model.dart';
@@ -10,13 +11,14 @@ abstract class AdminManagementRemoteDataSource {
     required String loungeName,
     String? city,
   });
-  
+
   Future<List<UserEntity>> getAdmins();
   Future<void> deleteAdmin(String adminId);
   Future<void> updateAdmin(String adminId, Map<String, dynamic> data);
 }
 
-class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSource {
+class AdminManagementRemoteDataSourceImpl
+    implements AdminManagementRemoteDataSource {
   final SupabaseClient supabaseClient;
 
   AdminManagementRemoteDataSourceImpl(this.supabaseClient);
@@ -29,29 +31,18 @@ class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSo
     required String loungeName,
     String? city,
   }) async {
-    final result = await supabaseClient.rpc('super_admin_create_lounge_with_owner', params: {
-      'p_owner_email': email,
-      'p_owner_password': password,
-      'p_owner_name': name,
-      'p_lounge_name': loungeName,
-      'p_city': city,
-    });
-
+    final result = await LoungeOwnerProvisioner(supabaseClient).create(
+      email: email,
+      password: password,
+      ownerName: name,
+      loungeName: loungeName,
+      city: city,
+    );
     if (result['success'] == true) {
-      final ownerUserId = result['owner_user_id']?.toString();
-      final loungeId = result['lounge_id']?.toString();
-
-      if (ownerUserId != null && ownerUserId.isNotEmpty) {
-        try {
-          await supabaseClient
-              .from('profiles')
-              .update({'is_setup_completed': false})
-              .eq('id', ownerUserId);
-        } catch (_) {}
-      }
-
+      final ownerUserId = result['owner_id'] as String;
+      final loungeId = result['lounge_id'] as String;
       return UserEntity(
-        id: ownerUserId ?? '',
+        id: ownerUserId,
         role: UserRole.owner,
         name: name,
         email: email,
@@ -65,33 +56,21 @@ class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSo
 
   @override
   Future<List<UserEntity>> getAdmins() async {
-    try {
-      final response = await supabaseClient
-          .from('profiles')
-          .select('id, email, full_name, role, lounge_id, avatar_url, is_setup_completed, points_balance, reward_points, referral_count, referrals_count, is_active, city_id, cities:city_id(id, name_ar, name_en)')
-          .neq('role', 'inactive')
-          .order('full_name');
-      return (response as List)
-          .where((json) => json['is_active'] != false && json['role'] != 'inactive')
-          .map((json) {
-        return UserModel.fromJson(Map<String, dynamic>.from(json));
-      }).toList();
-    } catch (_) {
-      try {
-        final fallbackResponse = await supabaseClient
-            .from('profiles')
-            .select('*, cities:city_id(id, name_ar, name_en)')
-            .neq('role', 'inactive')
-            .order('full_name');
-        return (fallbackResponse as List)
-            .where((json) => json['is_active'] != false && json['role'] != 'inactive')
-            .map((json) {
+    final response = await supabaseClient
+        .from('profiles')
+        .select(
+          'id, email, full_name, role, lounge_id, avatar_url, is_setup_completed, points, is_active, is_banned, banned_reason, city_id, cities:city_id(id, name_ar, name_en)',
+        )
+        .neq('role', 'inactive')
+        .order('full_name');
+    return response
+        .where(
+          (json) => json['is_active'] != false && json['role'] != 'inactive',
+        )
+        .map((json) {
           return UserModel.fromJson(Map<String, dynamic>.from(json));
-        }).toList();
-      } catch (fallbackError) {
-        return [];
-      }
-    }
+        })
+        .toList();
   }
 
   @override
@@ -99,38 +78,17 @@ class AdminManagementRemoteDataSourceImpl implements AdminManagementRemoteDataSo
     final cleanAdminId = adminId.trim();
     if (cleanAdminId.isEmpty) return;
 
-    // 1. Unassign lounge ownership if this admin is a lounge owner
-    try {
-      await supabaseClient
-          .from('lounges')
-          .update({'owner_id': null})
-          .eq('owner_id', cleanAdminId);
-    } catch (e) {
-      // ignore
-    }
+    final response = await supabaseClient.functions.invoke(
+      'deactivate-lounge-admin',
+      body: {'target_user_id': cleanAdminId},
+    );
 
-    // 2. Remove staff association if any
-    try {
-      await supabaseClient
-          .from('lounge_staff')
-          .delete()
-          .eq('user_id', cleanAdminId);
-    } catch (_) {}
-
-    // 3. Attempt hard delete from profiles
-    try {
-      await supabaseClient.from('profiles').delete().eq('id', cleanAdminId);
-    } on PostgrestException catch (_) {
-      // 4. Soft delete fallback if hard delete is restricted by DB foreign keys or RLS
-      await supabaseClient.from('profiles').update({
-        'is_active': false,
-        'role': 'inactive',
-      }).eq('id', cleanAdminId);
-    } catch (_) {
-      await supabaseClient.from('profiles').update({
-        'is_active': false,
-        'role': 'inactive',
-      }).eq('id', cleanAdminId);
+    final data = response.data;
+    if (data is! Map ||
+        data['success'] != true ||
+        data['auth_disabled'] != true) {
+      final error = data is Map ? data['error']?.toString() : null;
+      throw Exception(error ?? 'Failed to deactivate lounge admin');
     }
   }
 

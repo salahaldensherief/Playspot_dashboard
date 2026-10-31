@@ -1,10 +1,14 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_empty_state_widget.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_card.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/bookings_finished_data_table.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_session_card.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/widgets/live_sessions_operations_board.dart';
 
 class BookingsActiveGrid extends StatelessWidget {
   final List<Booking> bookings;
@@ -12,6 +16,7 @@ class BookingsActiveGrid extends StatelessWidget {
   final ValueChanged<Booking> onShowDetails;
   final ValueChanged<String> onApprove;
   final ValueChanged<String> onReject;
+  final bool prioritizeOperations;
 
   const BookingsActiveGrid({
     super.key,
@@ -20,40 +25,22 @@ class BookingsActiveGrid extends StatelessWidget {
     required this.onShowDetails,
     required this.onApprove,
     required this.onReject,
+    this.prioritizeOperations = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (bookings.isEmpty) {
       return Container(
-        padding: EdgeInsets.all(50.r),
-        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(12.r),
           border: Border.all(color: AppColors.borderDefault),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: EdgeInsets.all(16.r),
-              decoration: const BoxDecoration(
-                color: AppColors.scaffoldBackground,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.inbox_rounded, size: 48.r, color: AppColors.textMuted),
-            ),
-            SizedBox(height: 12.h),
-            Text(
-              'لا توجد حجوزات أو طلبات مطابقة في هذا التبويب',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+        child: AppEmptyStateWidget(
+          icon: Icons.inbox_rounded,
+          title: AppStrings.noMatchingBookings,
         ),
       );
     }
@@ -65,12 +52,19 @@ class BookingsActiveGrid extends StatelessWidget {
       );
     }
 
+    if (prioritizeOperations) {
+      return LiveSessionsOperationsBoard(
+        bookings: bookings,
+        onShowDetails: onShowDetails,
+      );
+    }
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 420.w,
-        mainAxisExtent: 515.h,
+        mainAxisExtent: 520.h,
         crossAxisSpacing: 14.r,
         mainAxisSpacing: 14.r,
       ),
@@ -88,8 +82,12 @@ class BookingsActiveGrid extends StatelessWidget {
           key: ValueKey('booking_${b.id}'),
           booking: b,
           width: double.infinity,
-          onApprove: b.status == BookingStatus.pending ? () => onApprove(b.id) : null,
-          onReject: b.status == BookingStatus.pending ? () => onReject(b.id) : null,
+          onApprove: b.status == BookingStatus.pending
+              ? () => onApprove(b.id)
+              : null,
+          onReject: b.status == BookingStatus.pending
+              ? () => onReject(b.id)
+              : null,
           onConfirmPayment: () => onShowDetails(b),
         );
       },

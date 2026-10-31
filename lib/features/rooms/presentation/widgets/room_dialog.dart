@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../audit/presentation/widgets/audit_timeline.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
@@ -10,6 +12,7 @@ import 'package:play_spot_dashboard/core/services/storage_service.dart';
 import 'package:uuid/uuid.dart';
 import '../../../categories/presentation/categories/category_cubit.dart';
 import '../../domain/entities/room_entity.dart';
+import '../cubit/room_cubit.dart';
 import 'room_basic_info_form.dart';
 import 'room_features_section.dart';
 import 'room_specs_form.dart';
@@ -18,7 +21,7 @@ class RoomDialog extends StatefulWidget {
   final String loungeId;
   final RoomEntity? room;
   final CategoryCubit categoryCubit;
-  final Future<void> Function(RoomEntity)? onSave;
+  final Future<bool> Function(RoomEntity)? onSave;
 
   const RoomDialog({
     super.key,
@@ -63,24 +66,24 @@ class _RoomDialogState extends State<RoomDialog> {
     _nameEnController = TextEditingController(text: r?.nameEn);
     _descriptionArController = TextEditingController(text: r?.descriptionAr);
     _descriptionEnController = TextEditingController(text: r?.descriptionEn);
-    _hourlyRateSingleController =
-        TextEditingController(text: r?.hourlyRateSingle.toString() ?? '0.0');
-    _hourlyRateMultiController =
-        TextEditingController(text: r?.hourlyRateMulti.toString() ?? '0.0');
+    _hourlyRateSingleController = TextEditingController(
+      text: r?.hourlyRateSingle.toString() ?? '0.0',
+    );
+    _hourlyRateMultiController = TextEditingController(
+      text: r?.hourlyRateMulti.toString() ?? '0.0',
+    );
     _maxCapacityController = TextEditingController(
       text: r?.maxCapacity.toString() ?? (r?.isOpenArea == true ? '2' : '4'),
     );
-    _controllersController = TextEditingController(text: r?.controllersCount.toString() ?? '2');
+    _controllersController = TextEditingController(
+      text: r?.controllersCount.toString() ?? '2',
+    );
     _screenSizeController = TextEditingController(text: r?.screenSize ?? '43"');
-    _extraPriceController =
-        TextEditingController(text: r?.extraControllerPrice.toString() ?? '0.0');
+    _extraPriceController = TextEditingController(
+      text: r?.extraControllerPrice.toString() ?? '0.0',
+    );
 
-    const validSpaceTypes = ['open_area', 'standard_room', 'vip_room'];
-    if (r != null && validSpaceTypes.contains(r.spaceTypeId)) {
-      _selectedSpaceTypeId = r.spaceTypeId;
-    } else {
-      _selectedSpaceTypeId = 'open_area';
-    }
+    _selectedSpaceTypeId = r?.spaceTypeId;
 
     _selectedStatus = r?.status ?? RoomStatusEnum.available;
     if (r != null) {
@@ -109,9 +112,22 @@ class _RoomDialogState extends State<RoomDialog> {
     if (_isUploading) return;
     final form = _formKey.currentState;
     if (form != null && form.validate()) {
+      if (_selectedActivityIds.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppStrings.selectRoomActivityError),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+        return;
+      }
+
       if (_roomImages.isEmpty && (widget.room?.images.isEmpty ?? true)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.minImagesError), backgroundColor: AppColors.danger),
+          SnackBar(
+            content: Text(AppStrings.minImagesError),
+            backgroundColor: AppColors.danger,
+          ),
         );
         return;
       }
@@ -130,10 +146,60 @@ class _RoomDialogState extends State<RoomDialog> {
         }
 
         if (mounted) {
-          final spaceTypeId = _selectedSpaceTypeId ?? 'open_area';
-          final isOpenArea = spaceTypeId == 'open_area';
-          final singleRate = double.tryParse(_hourlyRateSingleController.text) ?? 0.0;
-          final multiRate = double.tryParse(_hourlyRateMultiController.text) ?? 0.0;
+          final spaceTypes = context.read<RoomCubit>().state.spaceTypes;
+          final selectedSpaceTypeId =
+              _selectedSpaceTypeId ??
+              (spaceTypes.isNotEmpty ? spaceTypes.first.id : null);
+          if (selectedSpaceTypeId == null) {
+            throw StateError('Room space types are unavailable.');
+          }
+
+          final selectedSpaceType = spaceTypes
+              .where((type) => type.id == selectedSpaceTypeId)
+              .firstOrNull;
+          if (selectedSpaceType == null) {
+            throw StateError(
+              'Selected room space type is no longer available.',
+            );
+          }
+
+          final isOpenArea = selectedSpaceType.categoryKey == 'open_area';
+          final activityTypes = context
+              .read<CategoryCubit>()
+              .state
+              .activityTypes;
+          final selectedActivities = activityTypes
+              .where((activity) => _selectedActivityIds.contains(activity.id))
+              .toList();
+          if (selectedActivities.isEmpty) {
+            throw StateError('Selected room activities are unavailable.');
+          }
+
+          final requiresScreen = selectedActivities.any(
+            (activity) => activity.requiresScreen,
+          );
+          final requiresControllers = selectedActivities.any(
+            (activity) => activity.requiresControllers,
+          );
+          final supportsMultiRate = selectedActivities.any(
+            (activity) => activity.pricingModel == 'single_multi_hour',
+          );
+          final categories = selectedActivities
+              .map((activity) => activity.category)
+              .where((value) => value.trim().isNotEmpty)
+              .toSet();
+          final resourceType = categories.length == 1
+              ? categories.first
+              : 'mixed';
+          final pricingModel = supportsMultiRate
+              ? 'single_multi_hour'
+              : selectedActivities.first.pricingModel;
+
+          final singleRate =
+              double.tryParse(_hourlyRateSingleController.text) ?? 0.0;
+          final multiRate = supportsMultiRate
+              ? (double.tryParse(_hourlyRateMultiController.text) ?? singleRate)
+              : singleRate;
 
           final room = RoomEntity(
             id: widget.room?.id ?? const Uuid().v4(),
@@ -142,34 +208,57 @@ class _RoomDialogState extends State<RoomDialog> {
             nameEn: _nameEnController.text,
             descriptionAr: _descriptionArController.text,
             descriptionEn: _descriptionEnController.text,
-            spaceType: isOpenArea
-                ? 'Open Area'
-                : (spaceTypeId == 'vip_room' ? 'VIP Room' : 'Standard Room'),
-            spaceTypeId: spaceTypeId,
+            spaceType: selectedSpaceType.name,
+            spaceTypeId: selectedSpaceType.id,
             hourlyRateSingle: singleRate,
             hourlyRateMulti: multiRate,
-            extraControllerPrice: double.tryParse(_extraPriceController.text) ?? 0,
-            maxCapacity: int.tryParse(_maxCapacityController.text) ?? (isOpenArea ? 2 : 4),
-            controllersCount: isOpenArea ? (int.tryParse(_controllersController.text) ?? 2) : 2,
-            screenSize: isOpenArea ? _screenSizeController.text : '',
+            extraControllerPrice: requiresControllers
+                ? (double.tryParse(_extraPriceController.text) ?? 0)
+                : 0,
+            maxCapacity:
+                int.tryParse(_maxCapacityController.text) ??
+                (isOpenArea ? 2 : 4),
+            controllersCount: requiresControllers
+                ? (int.tryParse(_controllersController.text) ?? 2)
+                : 0,
+            screenSize: requiresScreen ? _screenSizeController.text : '',
+            resourceType: resourceType,
+            requiresScreen: requiresScreen,
+            requiresControllers: requiresControllers,
+            pricingModel: pricingModel,
             activityIds: _selectedActivityIds,
             featuresAr: _featuresAr,
             featuresEn: _featuresEn,
             images: images,
             isAvailable: _selectedStatus == RoomStatusEnum.available,
             status: _selectedStatus,
+            hasOffer: widget.room?.hasOffer ?? false,
+            offerTitle: widget.room?.offerTitle,
+            offerTag: widget.room?.offerTag,
+            activePromotionId: widget.room?.activePromotionId,
+            openTimeEnabled: widget.room?.openTimeEnabled ?? false,
+            openTimePricingMode:
+                widget.room?.openTimePricingMode ?? 'same_hourly',
+            openTimeCustomHourlyRate: widget.room?.openTimeCustomHourlyRate,
+            openTimePriceMultiplier:
+                widget.room?.openTimePriceMultiplier ?? 1.0,
+            openTimeMinimumMinutes: widget.room?.openTimeMinimumMinutes ?? 30,
+            openTimeRoundingMinutes: widget.room?.openTimeRoundingMinutes ?? 15,
+            openTimeMaxMinutes: widget.room?.openTimeMaxMinutes,
+            openTimeBufferBeforeBookingMinutes:
+                widget.room?.openTimeBufferBeforeBookingMinutes ?? 15,
           );
 
-          if (widget.onSave != null) {
-            await widget.onSave!(room);
-          }
-
-          if (mounted) Navigator.pop(context);
+          final saved = await widget.onSave?.call(room) ?? false;
+          if (mounted && saved) Navigator.pop(context);
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${AppStrings.error}: $e'), backgroundColor: AppColors.danger),
+            SnackBar(
+              content: Text('${AppStrings.error}: $e'),
+              backgroundColor: AppColors.danger,
+            ),
           );
         }
       } finally {
@@ -180,13 +269,49 @@ class _RoomDialogState extends State<RoomDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final roomState = context.watch<RoomCubit>().state;
+    final spaceTypes = roomState.spaceTypes;
+    final selectedSpaceType = spaceTypes
+        .where((type) => type.id == _selectedSpaceTypeId)
+        .firstOrNull;
+    final effectiveSpaceTypeId =
+        selectedSpaceType?.id ??
+        (spaceTypes.isNotEmpty ? spaceTypes.first.id : null);
+    final effectiveSpaceType =
+        selectedSpaceType ?? (spaceTypes.isNotEmpty ? spaceTypes.first : null);
+    final isOpenArea = effectiveSpaceType?.categoryKey == 'open_area';
+    final categoryState = context.watch<CategoryCubit>().state;
+    final activityTypes = categoryState.activityTypes;
+    final selectedActivities = activityTypes
+        .where((activity) => _selectedActivityIds.contains(activity.id))
+        .toList();
+    final requiresScreen = selectedActivities.isNotEmpty
+        ? selectedActivities.any((activity) => activity.requiresScreen)
+        : (widget.room?.requiresScreen ?? true);
+    final requiresControllers = selectedActivities.isNotEmpty
+        ? selectedActivities.any((activity) => activity.requiresControllers)
+        : (widget.room?.requiresControllers ?? true);
+    final supportsMultiRate = selectedActivities.isNotEmpty
+        ? selectedActivities.any(
+            (activity) => activity.pricingModel == 'single_multi_hour',
+          )
+        : (widget.room?.pricingModel == 'single_multi_hour');
+
     return Dialog(
       backgroundColor: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Container(
-        width: 800.w,
-        padding: EdgeInsets.all(32.r),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12.w : 24.w,
+        vertical: 24.h,
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 800,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+        ),
         child: SingleChildScrollView(
+          padding: EdgeInsets.all(isMobile ? 16.r : 32.r),
           child: Form(
             key: _formKey,
             child: Column(
@@ -195,20 +320,60 @@ class _RoomDialogState extends State<RoomDialog> {
               children: [
                 _buildHeader(),
                 SizedBox(height: 32.h),
-                CustomDropdown<String>(
-                  label: AppStrings.spaceType,
-                  value: ['open_area', 'standard_room', 'vip_room'].contains(_selectedSpaceTypeId)
-                      ? (_selectedSpaceTypeId ?? 'open_area')
-                      : 'open_area',
-                  items: const ['open_area', 'standard_room', 'vip_room'],
-                  itemLabel: (id) {
-                    if (id == 'open_area') return AppStrings.openArea;
-                    if (id == 'standard_room') return AppStrings.standardRoom;
-                    if (id == 'vip_room') return AppStrings.vipRoom;
-                    return id;
-                  },
-                  onChanged: (v) => setState(() => _selectedSpaceTypeId = v),
+                if (spaceTypes.isNotEmpty)
+                  CustomDropdown<String>(
+                    label: AppStrings.spaceType,
+                    value: effectiveSpaceTypeId,
+                    items: spaceTypes.map((type) => type.id).toList(),
+                    itemLabel: (id) =>
+                        spaceTypes
+                            .where((type) => type.id == id)
+                            .map((type) => type.label)
+                            .firstOrNull ??
+                        id,
+                    onChanged: (v) => setState(() => _selectedSpaceTypeId = v),
+                  )
+                else
+                  const LinearProgressIndicator(),
+                SizedBox(height: 24.h),
+                Text(
+                  AppStrings.roomActivities,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
+                SizedBox(height: 10.h),
+                if (activityTypes.isEmpty && categoryState.status.isLoading)
+                  const LinearProgressIndicator()
+                else if (activityTypes.isEmpty)
+                  Text(AppStrings.selectRoomActivityError)
+                else
+                  Wrap(
+                    spacing: 8.w,
+                    runSpacing: 8.h,
+                    children: activityTypes.map((activity) {
+                      final selected = _selectedActivityIds.contains(
+                        activity.id,
+                      );
+                      return FilterChip(
+                        label: Text(activity.label),
+                        selected: selected,
+                        onSelected: (value) {
+                          setState(() {
+                            if (value) {
+                              if (!_selectedActivityIds.contains(activity.id)) {
+                                _selectedActivityIds.add(activity.id);
+                              }
+                            } else {
+                              _selectedActivityIds.remove(activity.id);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
                 SizedBox(height: 24.h),
                 AppMultiImagePicker(
                   label: AppStrings.roomStationImage,
@@ -225,7 +390,8 @@ class _RoomDialogState extends State<RoomDialog> {
                   descriptionEnController: _descriptionEnController,
                   hourlyRateSingleController: _hourlyRateSingleController,
                   hourlyRateMultiController: _hourlyRateMultiController,
-                  isOpenArea: _selectedSpaceTypeId == 'open_area',
+                  isOpenArea: isOpenArea,
+                  supportsMultiRate: supportsMultiRate,
                 ),
                 SizedBox(height: 20.h),
                 RoomSpecsForm(
@@ -233,7 +399,9 @@ class _RoomDialogState extends State<RoomDialog> {
                   controllersController: _controllersController,
                   screenSizeController: _screenSizeController,
                   extraPriceController: _extraPriceController,
-                  selectedSpaceTypeId: _selectedSpaceTypeId,
+                  selectedSpaceTypeId: effectiveSpaceType?.categoryKey,
+                  requiresControllers: requiresControllers,
+                  requiresScreen: requiresScreen,
                   status: _selectedStatus,
                   onStatusChanged: (v) {
                     if (v != null) {
@@ -263,7 +431,7 @@ class _RoomDialogState extends State<RoomDialog> {
                   featuresAr: _featuresAr,
                   featuresEn: _featuresEn,
                   selectedActivityIds: _selectedActivityIds,
-                  activitiesList: widget.categoryCubit.state.activityTypes,
+                  activitiesList: activityTypes,
                   onAddFeature: (en, ar) => setState(() {
                     _featuresEn.add(en);
                     _featuresAr.add(ar);
@@ -283,6 +451,14 @@ class _RoomDialogState extends State<RoomDialog> {
                     }
                   }),
                 ),
+                if (widget.room != null) ...[
+                  SizedBox(height: 24.h),
+                  AuditTimeline(
+                    entityType: 'room',
+                    entityId: widget.room!.id,
+                    loungeId: widget.loungeId,
+                  ),
+                ],
                 SizedBox(height: 32.h),
                 _buildActions(),
               ],
@@ -315,17 +491,21 @@ class _RoomDialogState extends State<RoomDialog> {
   }
 
   Widget _buildActions() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+    return Wrap(
+      alignment: WrapAlignment.end,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 16.w,
+      runSpacing: 12.h,
       children: [
         AppButton(
           text: AppStrings.cancel,
           variant: AppButtonVariant.outlined,
           onPressed: () => Navigator.pop(context),
         ),
-        SizedBox(width: 16.w),
         AppButton(
-          text: widget.room == null ? AppStrings.createStation : AppStrings.updateStation,
+          text: widget.room == null
+              ? AppStrings.createStation
+              : AppStrings.updateStation,
           isLoading: _isUploading,
           onPressed: _submit,
         ),

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uuid/uuid.dart';
@@ -50,14 +51,14 @@ class _TournamentPrizesDialogState extends State<TournamentPrizesDialog> {
             id: 'temp_reward_1_1',
             prizeId: 'temp_1',
             type: TournamentPrizeType.trophy,
-            titleAr: 'كأس البطولة',
+            titleAr: AppStrings.championshipTrophy,
             titleEn: 'Championship Trophy',
           ),
           TournamentPrizeRewardEntity(
             id: 'temp_reward_1_2',
             prizeId: 'temp_1',
             type: TournamentPrizeType.cash,
-            titleAr: 'جائزة مالية',
+            titleAr: AppStrings.cashPrize,
             titleEn: 'Cash Prize',
             value: pool > 0 ? pool * 0.6 : 500,
             currency: 'EGP',
@@ -73,7 +74,7 @@ class _TournamentPrizesDialogState extends State<TournamentPrizesDialog> {
             id: 'temp_reward_2_1',
             prizeId: 'temp_2',
             type: TournamentPrizeType.cash,
-            titleAr: 'جائزة المركز الثاني',
+            titleAr: AppStrings.secondPlacePrize,
             titleEn: '2nd Place Prize',
             value: pool > 0 ? pool * 0.3 : 300,
             currency: 'EGP',
@@ -89,7 +90,7 @@ class _TournamentPrizesDialogState extends State<TournamentPrizesDialog> {
             id: 'temp_reward_3_1',
             prizeId: 'temp_3',
             type: TournamentPrizeType.points,
-            titleAr: 'نقاط مكافأة',
+            titleAr: AppStrings.bonusPoints,
             titleEn: 'Bonus Points',
             value: 500,
           ),
@@ -112,7 +113,7 @@ class _TournamentPrizesDialogState extends State<TournamentPrizesDialog> {
               id: 'temp_reward_${const Uuid().v4()}',
               prizeId: tempId,
               type: TournamentPrizeType.points,
-              titleAr: 'نقاط مكافأة',
+              titleAr: AppStrings.bonusPoints,
               titleEn: 'Bonus Points',
               value: 100,
             ),
@@ -139,7 +140,7 @@ class _TournamentPrizesDialogState extends State<TournamentPrizesDialog> {
         id: 'temp_reward_${const Uuid().v4()}',
         prizeId: prize.id,
         type: TournamentPrizeType.cash,
-        titleAr: 'جائزة جديدة',
+        titleAr: AppStrings.newReward,
         titleEn: 'New Reward',
         currency: 'EGP',
       );
@@ -156,7 +157,11 @@ class _TournamentPrizesDialogState extends State<TournamentPrizesDialog> {
     });
   }
 
-  void _updateReward(int placementIndex, int rewardIndex, TournamentPrizeRewardEntity updatedReward) {
+  void _updateReward(
+    int placementIndex,
+    int rewardIndex,
+    TournamentPrizeRewardEntity updatedReward,
+  ) {
     setState(() {
       final prize = _prizes[placementIndex];
       final updatedRewards = [...prize.rewards];
@@ -174,6 +179,7 @@ class _TournamentPrizesDialogState extends State<TournamentPrizesDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AppDialog(
       title: '${AppStrings.managePrizes} - ${widget.tournament.title}',
       width: 800.w,
@@ -192,57 +198,56 @@ class _TournamentPrizesDialogState extends State<TournamentPrizesDialog> {
       ],
       child: Form(
         key: _formKey,
-        child: SizedBox(
-          height: 550.h,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      AppStrings.tournamentPrizes,
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    AppButton(
-                      text: AppStrings.addPlacement,
-                      icon: Icons.add_circle_outline,
-                      variant: AppButtonVariant.outlined,
-                      fontSize: 12.sp,
-                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                      onPressed: _addPlacement,
-                    ),
-                  ],
+                Text(
+                  AppStrings.tournamentPrizes,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                SizedBox(height: 16.h),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _prizes.length,
-                  itemBuilder: (context, placementIndex) {
-                    final prize = _prizes[placementIndex];
-                    return TournamentPlacementCard(
-                      key: ValueKey(prize.id),
-                      prize: prize,
-                      placementIndex: placementIndex,
-                      canDeletePlacement: _prizes.length > 1,
-                      onAddReward: () => _addReward(placementIndex),
-                      onRemovePlacement: () => _removePlacement(placementIndex),
-                      onUpdateReward: (rewardIdx, updated) =>
-                          _updateReward(placementIndex, rewardIdx, updated),
-                      onRemoveReward: (rewardIdx) =>
-                          _removeReward(placementIndex, rewardIdx),
-                    );
-                  },
+                AppButton(
+                  text: AppStrings.addPlacement,
+                  icon: Icons.add_circle_outline,
+                  variant: AppButtonVariant.outlined,
+                  fontSize: 12.sp,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 6.h,
+                  ),
+                  onPressed: _addPlacement,
                 ),
               ],
             ),
-          ),
+            SizedBox(height: 16.h),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _prizes.length,
+              itemBuilder: (context, placementIndex) {
+                final prize = _prizes[placementIndex];
+                return TournamentPlacementCard(
+                  key: ValueKey(prize.id),
+                  prize: prize,
+                  placementIndex: placementIndex,
+                  canDeletePlacement: _prizes.length > 1,
+                  onAddReward: () => _addReward(placementIndex),
+                  onRemovePlacement: () => _removePlacement(placementIndex),
+                  onUpdateReward: (rewardIdx, updated) =>
+                      _updateReward(placementIndex, rewardIdx, updated),
+                  onRemoveReward: (rewardIdx) =>
+                      _removeReward(placementIndex, rewardIdx),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

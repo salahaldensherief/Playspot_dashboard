@@ -21,7 +21,10 @@ class LoungeExtrasRepositoryHelper {
         final cached = localCacheService.getJson(cacheKey);
         if (cached is List && cached.isNotEmpty) {
           final extras = cached
-              .map((item) => ExtraModel.fromJson(Map<String, dynamic>.from(item as Map)))
+              .map(
+                (item) =>
+                    ExtraModel.fromJson(Map<String, dynamic>.from(item as Map)),
+              )
               .toList();
           _refreshExtrasInBackground(loungeId, cacheKey);
           return Right(extras);
@@ -29,29 +32,39 @@ class LoungeExtrasRepositoryHelper {
       }
 
       final extras = await remoteDataSource.getExtras(loungeId);
-      final models = extras.map((e) => ExtraModel(
-        id: e.id,
-        loungeId: e.loungeId,
-        nameAr: e.nameAr,
-        nameEn: e.nameEn,
-        name: e.name,
-        price: e.price,
-        category: e.category,
-        iconKey: e.iconKey,
-        isOutOfStock: e.isOutOfStock,
-        imageUrl: e.imageUrl,
-        stockQuantity: e.stockQuantity,
-        trackStock: e.trackStock,
-        minStockAlert: e.minStockAlert,
-      )).toList();
+      final models = extras
+          .map(
+            (e) => ExtraModel(
+              id: e.id,
+              loungeId: e.loungeId,
+              nameAr: e.nameAr,
+              nameEn: e.nameEn,
+              name: e.name,
+              price: e.price,
+              category: e.category,
+              iconKey: e.iconKey,
+              isOutOfStock: e.isOutOfStock,
+              imageUrl: e.imageUrl,
+              stockQuantity: e.stockQuantity,
+              trackStock: e.trackStock,
+              minStockAlert: e.minStockAlert,
+            ),
+          )
+          .toList();
 
-      await localCacheService.setJson(cacheKey, models.map((m) => m.toJson()).toList());
+      await localCacheService.setJson(
+        cacheKey,
+        models.map((m) => m.toJson()).toList(),
+      );
       return Right(extras);
     } catch (e) {
       final cached = localCacheService.getJson(cacheKey);
       if (cached is List && cached.isNotEmpty) {
         final extras = cached
-            .map((item) => ExtraModel.fromJson(Map<String, dynamic>.from(item as Map)))
+            .map(
+              (item) =>
+                  ExtraModel.fromJson(Map<String, dynamic>.from(item as Map)),
+            )
             .toList();
         return Right(extras);
       }
@@ -62,23 +75,30 @@ class LoungeExtrasRepositoryHelper {
   void _refreshExtrasInBackground(String loungeId, String cacheKey) async {
     try {
       final extras = await remoteDataSource.getExtras(loungeId);
-      final models = extras.map((e) => ExtraModel(
-        id: e.id,
-        loungeId: e.loungeId,
-        nameAr: e.nameAr,
-        nameEn: e.nameEn,
-        name: e.name,
-        price: e.price,
-        category: e.category,
-        iconKey: e.iconKey,
-        isOutOfStock: e.isOutOfStock,
-        imageUrl: e.imageUrl,
-        stockQuantity: e.stockQuantity,
-        trackStock: e.trackStock,
-        minStockAlert: e.minStockAlert,
-      )).toList();
+      final models = extras
+          .map(
+            (e) => ExtraModel(
+              id: e.id,
+              loungeId: e.loungeId,
+              nameAr: e.nameAr,
+              nameEn: e.nameEn,
+              name: e.name,
+              price: e.price,
+              category: e.category,
+              iconKey: e.iconKey,
+              isOutOfStock: e.isOutOfStock,
+              imageUrl: e.imageUrl,
+              stockQuantity: e.stockQuantity,
+              trackStock: e.trackStock,
+              minStockAlert: e.minStockAlert,
+            ),
+          )
+          .toList();
 
-      await localCacheService.setJson(cacheKey, models.map((m) => m.toJson()).toList());
+      await localCacheService.setJson(
+        cacheKey,
+        models.map((m) => m.toJson()).toList(),
+      );
     } catch (_) {}
   }
 
@@ -141,7 +161,10 @@ class LoungeExtrasRepositoryHelper {
     }
   }
 
-  Future<Either<Failure, void>> toggleExtraStock(String extraId, bool isOutOfStock) async {
+  Future<Either<Failure, void>> toggleExtraStock(
+    String extraId,
+    bool isOutOfStock,
+  ) async {
     try {
       await remoteDataSource.toggleExtraStock(extraId, isOutOfStock);
       return const Right(null);

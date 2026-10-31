@@ -1,8 +1,10 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_state.dart';
@@ -10,13 +12,11 @@ import 'package:play_spot_dashboard/features/requests/presentation/client_reques
 class StationControlRequestsSection extends StatelessWidget {
   final Booking booking;
 
-  const StationControlRequestsSection({
-    super.key,
-    required this.booking,
-  });
+  const StationControlRequestsSection({super.key, required this.booking});
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     try {
       context.read<ClientRequestsCubit>();
     } catch (_) {
@@ -26,10 +26,16 @@ class StationControlRequestsSection extends StatelessWidget {
     return BlocBuilder<ClientRequestsCubit, ClientRequestsState>(
       buildWhen: (previous, current) {
         // Only rebuild if requests matching this booking/room have changed
-        final prevMatch = previous.requests.any((r) =>
-            !r.isAttended && (r.bookingId == booking.id || r.roomId == booking.roomId));
-        final currMatch = current.requests.any((r) =>
-            !r.isAttended && (r.bookingId == booking.id || r.roomId == booking.roomId));
+        final prevMatch = previous.requests.any(
+          (r) =>
+              !r.isAttended &&
+              (r.bookingId == booking.id || r.roomId == booking.roomId),
+        );
+        final currMatch = current.requests.any(
+          (r) =>
+              !r.isAttended &&
+              (r.bookingId == booking.id || r.roomId == booking.roomId),
+        );
         return prevMatch != currMatch || previous.requests != current.requests;
       },
       builder: (context, requestsState) {
@@ -55,7 +61,11 @@ class StationControlRequestsSection extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.notifications_active_rounded, color: AppColors.warning, size: 16.r),
+                  Icon(
+                    Icons.notifications_active_rounded,
+                    color: AppColors.warning,
+                    size: 16.r,
+                  ),
                   SizedBox(width: 6.w),
                   Text(
                     '${AppStrings.sessionRequests} (${sessionRequests.length})',
@@ -69,7 +79,9 @@ class StationControlRequestsSection extends StatelessWidget {
               ),
               SizedBox(height: 8.h),
               ...sessionRequests.map((req) {
-                final title = req.titleAr.isNotEmpty ? req.titleAr : req.titleEn;
+                final title = req.titleAr.isNotEmpty
+                    ? req.titleAr
+                    : req.titleEn;
                 final body = req.bodyAr.isNotEmpty ? req.bodyAr : req.bodyEn;
                 return Container(
                   margin: EdgeInsets.only(bottom: 6.h),
@@ -108,25 +120,23 @@ class StationControlRequestsSection extends StatelessWidget {
                         ),
                       ),
                       SizedBox(width: 8.w),
-                      ElevatedButton(
+                      AppButton(
+                        text: AppStrings.done,
+                        variant: AppButtonVariant.primary,
+                        backgroundColor: AppColors.success,
+                        foregroundColor: Colors.black,
+                        height: 32.h,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10.w,
+                          vertical: 4.h,
+                        ),
+                        fontSize: 11.sp,
                         onPressed: () {
                           context.read<ClientRequestsCubit>().markAsAttended(
-                                req.id,
-                                isCanteenOrder: req.isCanteenOrder,
-                              );
+                            req.id,
+                            isCanteenOrder: req.isCanteenOrder,
+                          );
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.success,
-                          foregroundColor: Colors.black,
-                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
-                        ),
-                        child: Text(
-                          AppStrings.done,
-                          style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold),
-                        ),
                       ),
                     ],
                   ),

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,16 +15,19 @@ class BookingsCockpitStatsBar extends StatelessWidget {
   final String loungeId;
   final dynamic userLounge;
   final VoidCallback onNewBooking;
+  final VoidCallback? onOpenRequests;
 
   const BookingsCockpitStatsBar({
     super.key,
     required this.loungeId,
     required this.userLounge,
     required this.onNewBooking,
+    this.onOpenRequests,
   });
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<BookingCubit, BookingState>(
       buildWhen: (prev, curr) =>
           prev.bookings != curr.bookings || prev.status != curr.status,
@@ -54,12 +58,40 @@ class BookingsCockpitStatsBar extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const LiveIndicatorBadge(),
-                        AppButton(
-                          text: AppStrings.newBooking,
-                          icon: Icons.add_rounded,
-                          variant: AppButtonVariant.primary,
-                          height: 38.h,
-                          onPressed: onNewBooking,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (onOpenRequests != null)
+                              Padding(
+                                padding: EdgeInsetsDirectional.only(end: 8.w),
+                                child: InkWell(
+                                  onTap: onOpenRequests,
+                                  borderRadius: BorderRadius.circular(10.r),
+                                  child: Container(
+                                    padding: EdgeInsets.all(8.r),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.mutedBackground,
+                                      borderRadius: BorderRadius.circular(10.r),
+                                      border: Border.all(
+                                        color: AppColors.borderDefault,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.notifications_active_outlined,
+                                      color: AppColors.neonBlue,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            AppButton(
+                              text: AppStrings.newBooking,
+                              icon: Icons.add_rounded,
+                              variant: AppButtonVariant.primary,
+                              height: 38.h,
+                              onPressed: onNewBooking,
+                            ),
+                          ],
                         ),
                       ],
                     ),

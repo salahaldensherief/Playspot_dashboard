@@ -9,7 +9,7 @@ class StaffEntity extends Equatable {
   final String loungeId;
   final bool isActive;
   final DateTime createdAt;
-  
+
   // KYC & ID Details
   final String? nationalIdNumber;
   final String? idFrontUrl;
@@ -33,13 +33,13 @@ class StaffEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    id, 
-    name, 
-    email, 
-    phone, 
-    role, 
-    loungeId, 
-    isActive, 
+    id,
+    name,
+    email,
+    phone,
+    role,
+    loungeId,
+    isActive,
     createdAt,
     nationalIdNumber,
     idFrontUrl,

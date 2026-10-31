@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -64,7 +65,7 @@ class _AddBranchDialogState extends State<AddBranchDialog> {
       };
 
       if (widget.onSave != null) {
-        await widget.onSave!(branchData);
+        await widget.onSave?.call(branchData);
       }
 
       if (mounted) {
@@ -88,6 +89,7 @@ class _AddBranchDialogState extends State<AddBranchDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AppDialog(
       title: AppStrings.addNewBranch,
       width: 540.w,

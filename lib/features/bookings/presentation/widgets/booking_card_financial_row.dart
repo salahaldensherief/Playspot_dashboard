@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -21,6 +22,7 @@ class BookingCardFinancialRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final discount = booking.discountAmount;
     final hasDiscount = discount != null && discount > 0;
 
@@ -51,7 +53,8 @@ class BookingCardFinancialRow extends StatelessWidget {
                   if (hasDiscount) ...[
                     SizedBox(width: 6.w),
                     BookingInfoChip(
-                      label: '-${discount.toStringAsFixed(0)} ${AppStrings.egp}',
+                      label:
+                          '-${discount.toStringAsFixed(0)} ${AppStrings.egp}',
                       color: AppColors.warning,
                       bordered: true,
                     ),

@@ -22,14 +22,14 @@ class TournamentParticipantsCubit extends Cubit<TournamentParticipantsState> {
     required PromoteWaitlistUseCase promoteWaitlistUseCase,
     required CheckInParticipantUseCase checkInParticipantUseCase,
     required WithdrawParticipantUseCase withdrawParticipantUseCase,
-  })  : _getParticipantsUseCase = getParticipantsUseCase,
-        _approvePaymentUseCase = approvePaymentUseCase,
-        _rejectPaymentUseCase = rejectPaymentUseCase,
-        _recordCashPaymentUseCase = recordCashPaymentUseCase,
-        _promoteWaitlistUseCase = promoteWaitlistUseCase,
-        _checkInParticipantUseCase = checkInParticipantUseCase,
-        _withdrawParticipantUseCase = withdrawParticipantUseCase,
-        super(const TournamentParticipantsState());
+  }) : _getParticipantsUseCase = getParticipantsUseCase,
+       _approvePaymentUseCase = approvePaymentUseCase,
+       _rejectPaymentUseCase = rejectPaymentUseCase,
+       _recordCashPaymentUseCase = recordCashPaymentUseCase,
+       _promoteWaitlistUseCase = promoteWaitlistUseCase,
+       _checkInParticipantUseCase = checkInParticipantUseCase,
+       _withdrawParticipantUseCase = withdrawParticipantUseCase,
+       super(const TournamentParticipantsState());
 
   Future<void> loadParticipants(String tournamentId) async {
     emit(state.copyWith(status: TournamentParticipantsStatus.loading));
@@ -38,15 +38,19 @@ class TournamentParticipantsCubit extends Cubit<TournamentParticipantsState> {
     result.fold(
       (failure) {
         AppLogger.error('Failed to load participants: ${failure.message}');
-        emit(state.copyWith(
-          status: TournamentParticipantsStatus.failure,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: TournamentParticipantsStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
-      (list) => emit(state.copyWith(
-        status: TournamentParticipantsStatus.success,
-        participants: list,
-      )),
+      (list) => emit(
+        state.copyWith(
+          status: TournamentParticipantsStatus.success,
+          participants: list,
+        ),
+      ),
     );
   }
 
@@ -94,7 +98,9 @@ class TournamentParticipantsCubit extends Cubit<TournamentParticipantsState> {
         }).toList(),
         successMessage: 'تم رفض إيصال الدفع',
       ),
-      onServer: () => _rejectPaymentUseCase(RejectPaymentParams(participantId: participantId, reason: reason)),
+      onServer: () => _rejectPaymentUseCase(
+        RejectPaymentParams(participantId: participantId, reason: reason),
+      ),
       rollback: (curr, failure) {
         AppLogger.error('Failed to reject payment: ${failure.message}');
         return curr.copyWith(
@@ -142,16 +148,20 @@ class TournamentParticipantsCubit extends Cubit<TournamentParticipantsState> {
     result.fold(
       (failure) {
         AppLogger.error('Failed to promote waitlist: ${failure.message}');
-        emit(state.copyWith(
-          status: TournamentParticipantsStatus.failure,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: TournamentParticipantsStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (_) {
-        emit(state.copyWith(
-          status: TournamentParticipantsStatus.actionSuccess,
-          successMessage: 'تم ترقية أول لاعب في قائمة الانتظار بنجاح',
-        ));
+        emit(
+          state.copyWith(
+            status: TournamentParticipantsStatus.actionSuccess,
+            successMessage: 'تم ترقية أول لاعب في قائمة الانتظار بنجاح',
+          ),
+        );
         loadParticipants(tournamentId);
       },
     );
@@ -164,10 +174,7 @@ class TournamentParticipantsCubit extends Cubit<TournamentParticipantsState> {
         status: TournamentParticipantsStatus.actionSuccess,
         participants: curr.participants.map((p) {
           if (p.id == participantId) {
-            return p.copyWith(
-              isCheckedIn: true,
-              checkedInAt: DateTime.now(),
-            );
+            return p.copyWith(isCheckedIn: true, checkedInAt: DateTime.now());
           }
           return p;
         }).toList(),
@@ -192,9 +199,7 @@ class TournamentParticipantsCubit extends Cubit<TournamentParticipantsState> {
         status: TournamentParticipantsStatus.actionSuccess,
         participants: curr.participants.map((p) {
           if (p.id == participantId) {
-            return p.copyWith(
-              participantStatus: ParticipantStatus.withdrawn,
-            );
+            return p.copyWith(participantStatus: ParticipantStatus.withdrawn);
           }
           return p;
         }).toList(),

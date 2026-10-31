@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
@@ -15,12 +16,14 @@ class OperatingHoursStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       children: [
         Row(
           children: [
             Expanded(
               child: AppTextField(
+                fontSize: 16,
                 label: AppStrings.opensAt,
                 hintText: AppStrings.timeHint,
                 controller: opensAtController,
@@ -29,6 +32,7 @@ class OperatingHoursStep extends StatelessWidget {
             SizedBox(width: 20.w),
             Expanded(
               child: AppTextField(
+                fontSize: 16,
                 label: AppStrings.closesAt,
                 hintText: AppStrings.timeHint,
                 controller: closesAtController,

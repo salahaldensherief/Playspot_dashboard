@@ -27,9 +27,15 @@ class SupportTicketModel extends SupportTicketEntity {
       status: json['status'] as String? ?? 'new',
       adminNotes: json['admin_notes'] as String?,
       resolvedBy: json['resolved_by']?.toString(),
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'] as String) : null,
-      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'] as String) : null,
-      resolvedAt: json['resolved_at'] != null ? DateTime.tryParse(json['resolved_at'] as String) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'] as String)
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'] as String)
+          : null,
+      resolvedAt: json['resolved_at'] != null
+          ? DateTime.tryParse(json['resolved_at'] as String)
+          : null,
     );
   }
 

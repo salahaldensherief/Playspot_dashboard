@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -19,11 +20,14 @@ class StationControlHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: 0.08),
-        border: const Border(bottom: BorderSide(color: AppColors.borderDefault)),
+        border: const Border(
+          bottom: BorderSide(color: AppColors.borderDefault),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -50,7 +54,9 @@ class StationControlHeader extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        booking.roomName.isNotEmpty ? booking.roomName : AppStrings.roomLabel,
+                        booking.roomName.isNotEmpty
+                            ? booking.roomName
+                            : AppStrings.roomLabel,
                         style: TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 16.sp,
@@ -75,7 +81,11 @@ class StationControlHeader extends StatelessWidget {
           ),
           IconButton(
             onPressed: onClose,
-            icon: Icon(Icons.close, color: AppColors.textSecondary, size: 20.sp),
+            icon: Icon(
+              Icons.close,
+              color: AppColors.textSecondary,
+              size: 20.sp,
+            ),
           ),
         ],
       ),

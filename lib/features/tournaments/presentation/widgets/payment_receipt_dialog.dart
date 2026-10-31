@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../art_core/app_strings.dart';
@@ -51,6 +52,7 @@ class _PaymentReceiptDialogState extends State<PaymentReceiptDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final p = widget.participant;
 
     return AppDialog(
@@ -92,14 +94,37 @@ class _PaymentReceiptDialogState extends State<PaymentReceiptDialog> {
         children: [
           Row(
             children: [
-              Text('${AppStrings.customerName}: ', style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp)),
-              Text(p.userName, style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.bold)),
+              Text(
+                '${AppStrings.customerName}: ',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14.sp,
+                ),
+              ),
+              Text(
+                p.userName,
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const Spacer(),
-              if (p.userPhone != null) Text(p.userPhone!, style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp)),
+              if (p.userPhone != null)
+                Text(
+                  p.userPhone ?? '',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14.sp,
+                  ),
+                ),
             ],
           ),
           SizedBox(height: 16.h),
-          Text(AppStrings.reviewReceipt, style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp)),
+          Text(
+            AppStrings.reviewReceipt,
+            style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp),
+          ),
           SizedBox(height: 8.h),
           Container(
             height: 320.h,
@@ -110,20 +135,29 @@ class _PaymentReceiptDialogState extends State<PaymentReceiptDialog> {
               border: Border.all(color: AppColors.borderDefault),
             ),
             clipBehavior: Clip.antiAlias,
-            child: (p.signedReceiptUrl != null && p.signedReceiptUrl!.isNotEmpty)
+            child:
+                (p.signedReceiptUrl != null &&
+                    (p.signedReceiptUrl?.isNotEmpty ?? false))
                 ? AppCachedImage(
-                    imageUrl: p.signedReceiptUrl!,
+                    imageUrl: p.signedReceiptUrl ?? '',
                     fit: BoxFit.contain,
                   )
                 : Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.receipt_long, size: 48.r, color: AppColors.textSecondary),
+                        Icon(
+                          Icons.receipt_long,
+                          size: 48.r,
+                          color: AppColors.textSecondary,
+                        ),
                         SizedBox(height: 8.h),
                         Text(
-                          AppStrings.noPromotions,
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp),
+                          AppStrings.noReceiptImage,
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14.sp,
+                          ),
                         ),
                       ],
                     ),

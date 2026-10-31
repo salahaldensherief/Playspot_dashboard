@@ -49,7 +49,11 @@ class AlertItem extends StatelessWidget {
           ),
           child: Text(
             value,
-            style: TextStyle(color: color, fontSize: 12.sp, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: color,
+              fontSize: 12.sp,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],

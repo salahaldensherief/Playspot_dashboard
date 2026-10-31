@@ -25,8 +25,10 @@ class ShiftDetailsFetcher {
 
     final expensesRes = results[0] as Either<Failure, List<ShiftExpenseEntity>>;
     final paymentsRes = results[1] as Either<Failure, List<ShiftPaymentEntity>>;
-    final bookingsRes = results[2] as Either<Failure, List<Map<String, dynamic>>>;
-    final auditLogsRes = results[3] as Either<Failure, List<ShiftAuditLogEntity>>;
+    final bookingsRes =
+        results[2] as Either<Failure, List<Map<String, dynamic>>>;
+    final auditLogsRes =
+        results[3] as Either<Failure, List<ShiftAuditLogEntity>>;
 
     return currentState.copyWith(
       selectedShiftDetails: shift,

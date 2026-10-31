@@ -22,36 +22,58 @@ class SupportRepositoryImpl with RepositoryHelper implements SupportRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateAppSettings(AppSettingsEntity settings) async {
-    return callRepository(() => remoteDataSource.updateAppSettings(
-          AppSettingsModel(
-            id: settings.id,
-            whatsappPhone: settings.whatsappPhone,
-            supportPhone: settings.supportPhone,
-            supportEmail: settings.supportEmail,
-            vodafoneCashNumber: settings.vodafoneCashNumber,
-          ),
-        ));
+  Future<Either<Failure, void>> updateAppSettings(
+    AppSettingsEntity settings,
+  ) async {
+    return callRepository(
+      () => remoteDataSource.updateAppSettings(
+        AppSettingsModel(
+          id: settings.id,
+          whatsappPhone: settings.whatsappPhone,
+          supportPhone: settings.supportPhone,
+          supportEmail: settings.supportEmail,
+          vodafoneCashNumber: settings.vodafoneCashNumber,
+        ),
+      ),
+    );
   }
 
   @override
   Future<Either<Failure, List<AppPolicyEntity>>> getPolicies() async {
-    return callRepository(() => remoteDataSource.getPolicies());
+    return callRepository<List<AppPolicyEntity>>(() async {
+      final models = await remoteDataSource.getPolicies();
+      return List<AppPolicyEntity>.unmodifiable(
+        models.map(
+          (model) => AppPolicyEntity(
+            id: model.id,
+            policyType: model.policyType,
+            titleAr: model.titleAr,
+            titleEn: model.titleEn,
+            contentAr: model.contentAr,
+            contentEn: model.contentEn,
+            isPublished: model.isPublished,
+            updatedAt: model.updatedAt,
+          ),
+        ),
+      );
+    });
   }
 
   @override
   Future<Either<Failure, void>> updatePolicy(AppPolicyEntity policy) async {
-    return callRepository(() => remoteDataSource.updatePolicy(
-          AppPolicyModel(
-            id: policy.id,
-            policyType: policy.policyType,
-            titleAr: policy.titleAr,
-            titleEn: policy.titleEn,
-            contentAr: policy.contentAr,
-            contentEn: policy.contentEn,
-            isPublished: policy.isPublished,
-          ),
-        ));
+    return callRepository(
+      () => remoteDataSource.updatePolicy(
+        AppPolicyModel(
+          id: policy.id,
+          policyType: policy.policyType,
+          titleAr: policy.titleAr,
+          titleEn: policy.titleEn,
+          contentAr: policy.contentAr,
+          contentEn: policy.contentEn,
+          isPublished: policy.isPublished,
+        ),
+      ),
+    );
   }
 
   @override
@@ -61,17 +83,19 @@ class SupportRepositoryImpl with RepositoryHelper implements SupportRepository {
 
   @override
   Future<Either<Failure, void>> saveFaq(FaqEntity faq) async {
-    return callRepository(() => remoteDataSource.saveFaq(
-          FaqModel(
-            id: faq.id,
-            questionAr: faq.questionAr,
-            answerAr: faq.answerAr,
-            questionEn: faq.questionEn,
-            answerEn: faq.answerEn,
-            sortOrder: faq.sortOrder,
-            isActive: faq.isActive,
-          ),
-        ));
+    return callRepository(
+      () => remoteDataSource.saveFaq(
+        FaqModel(
+          id: faq.id,
+          questionAr: faq.questionAr,
+          answerAr: faq.answerAr,
+          questionEn: faq.questionEn,
+          answerEn: faq.answerEn,
+          sortOrder: faq.sortOrder,
+          isActive: faq.isActive,
+        ),
+      ),
+    );
   }
 
   @override
@@ -80,8 +104,12 @@ class SupportRepositoryImpl with RepositoryHelper implements SupportRepository {
   }
 
   @override
-  Future<Either<Failure, List<SupportTicketEntity>>> getSupportTickets({String? statusFilter}) async {
-    return callRepository(() => remoteDataSource.getSupportTickets(statusFilter: statusFilter));
+  Future<Either<Failure, List<SupportTicketEntity>>> getSupportTickets({
+    String? statusFilter,
+  }) async {
+    return callRepository(
+      () => remoteDataSource.getSupportTickets(statusFilter: statusFilter),
+    );
   }
 
   @override
@@ -89,10 +117,12 @@ class SupportRepositoryImpl with RepositoryHelper implements SupportRepository {
     required String issueType,
     required String message,
   }) async {
-    return callRepository(() => remoteDataSource.createSupportTicket(
-          issueType: issueType,
-          message: message,
-        ));
+    return callRepository(
+      () => remoteDataSource.createSupportTicket(
+        issueType: issueType,
+        message: message,
+      ),
+    );
   }
 
   @override
@@ -101,10 +131,12 @@ class SupportRepositoryImpl with RepositoryHelper implements SupportRepository {
     required String status,
     String? adminNotes,
   }) async {
-    return callRepository(() => remoteDataSource.updateTicketStatus(
-          ticketId: ticketId,
-          status: status,
-          adminNotes: adminNotes,
-        ));
+    return callRepository(
+      () => remoteDataSource.updateTicketStatus(
+        ticketId: ticketId,
+        status: status,
+        adminNotes: adminNotes,
+      ),
+    );
   }
 }

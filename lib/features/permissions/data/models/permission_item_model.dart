@@ -12,14 +12,46 @@ class PermissionItemModel extends PermissionItemEntity {
   });
 
   factory PermissionItemModel.fromJson(Map<String, dynamic> json) {
-    
     return PermissionItemModel(
-      key: (json['permission_key'] ?? json['out_permission_key'] ?? json['key'] ?? json['id'] ?? '').toString(),
-      nameAr: (json['name_ar'] ?? json['out_name_ar'] ?? json['permission_name_ar'] ?? json['name'] ?? '').toString(),
-      nameEn: (json['name_en'] ?? json['out_name_en'] ?? json['permission_name_en'] ?? json['name'] ?? '').toString(),
-      category: (json['category'] ?? json['out_category'] ?? json['permission_category'] ?? 'General').toString(),
-      descriptionAr: (json['description_ar'] ?? json['out_description_ar'] ?? json['description'] ?? '').toString(),
-      descriptionEn: (json['description_en'] ?? json['out_description_en'] ?? json['description'] ?? '').toString(),
+      key:
+          (json['permission_key'] ??
+                  json['out_permission_key'] ??
+                  json['key'] ??
+                  json['id'] ??
+                  '')
+              .toString(),
+      nameAr:
+          (json['name_ar'] ??
+                  json['out_name_ar'] ??
+                  json['permission_name_ar'] ??
+                  json['name'] ??
+                  '')
+              .toString(),
+      nameEn:
+          (json['name_en'] ??
+                  json['out_name_en'] ??
+                  json['permission_name_en'] ??
+                  json['name'] ??
+                  '')
+              .toString(),
+      category:
+          (json['category'] ??
+                  json['out_category'] ??
+                  json['permission_category'] ??
+                  'General')
+              .toString(),
+      descriptionAr:
+          (json['description_ar'] ??
+                  json['out_description_ar'] ??
+                  json['description'] ??
+                  '')
+              .toString(),
+      descriptionEn:
+          (json['description_en'] ??
+                  json['out_description_en'] ??
+                  json['description'] ??
+                  '')
+              .toString(),
       isEnabled: json['is_enabled'] ?? json['out_is_enabled'] ?? false,
     );
   }

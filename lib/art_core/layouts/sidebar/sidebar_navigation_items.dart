@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -92,7 +93,8 @@ class SidebarNavigationItems extends StatelessWidget {
   List<Widget> _buildLoungeStaffItems(BuildContext context, UserEntity? user) {
     if (user == null) return [];
 
-    final canViewBookings = context.hasPermission('bookings_view') ||
+    final canViewBookings =
+        context.hasPermission('bookings_view') ||
         context.hasPermission('pos_view_menu');
     final canViewRooms = context.hasPermission('rooms_view');
     final canViewExtras = context.hasPermission('menu_view');
@@ -102,6 +104,10 @@ class SidebarNavigationItems extends StatelessWidget {
     final canManageStaff = context.hasPermission('staff_management');
     final canViewShiftHistory = context.hasPermission('shifts_view');
     final canViewReports = context.hasPermission('reports_view');
+    final canViewAudit =
+        user.isSuperAdmin ||
+        context.hasPermission('audit.view') ||
+        context.hasPermission('audit_view');
     final canEditLoungeProfile = context.hasPermission('lounge_profile_edit');
 
     return [
@@ -174,6 +180,13 @@ class SidebarNavigationItems extends StatelessWidget {
           isActive: activeRoute == RouterKeys.loungeAdminReports,
           onTap: () => context.go(RouterKeys.loungeAdminReports),
         ),
+      if (canViewAudit)
+        SidebarItem(
+          icon: Icons.history_edu_rounded,
+          label: AppStrings.auditLogs,
+          isActive: activeRoute == RouterKeys.loungeAdminAudit,
+          onTap: () => context.go(RouterKeys.loungeAdminAudit),
+        ),
       if (canEditLoungeProfile)
         SidebarItem(
           icon: Icons.settings_outlined,
@@ -198,6 +211,7 @@ class SidebarNavigationItems extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       children: isSuperAdmin
           ? _buildSuperAdminItems(context)

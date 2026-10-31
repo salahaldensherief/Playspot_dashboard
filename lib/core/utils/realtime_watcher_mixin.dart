@@ -6,12 +6,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 mixin RealtimeWatcherMixin<S> on Cubit<S> {
   StreamSubscription? realtimeSubscription;
   String? watchedEntityId;
+  int _watchGeneration = 0;
 
   /// Returns true if watching can be skipped (e.g. already watching same entityId and not forcing refresh)
   bool isAlreadyWatching(String? entityId, {bool forceRefresh = false}) {
     final cleanId = entityId?.trim();
     if (cleanId == null || cleanId.isEmpty) return true;
-    return !forceRefresh && realtimeSubscription != null && watchedEntityId == cleanId;
+    return !forceRefresh &&
+        realtimeSubscription != null &&
+        watchedEntityId == cleanId;
   }
 
   /// Starts watching a stream for the given entityId, canceling any previous subscription.
@@ -22,16 +25,18 @@ mixin RealtimeWatcherMixin<S> on Cubit<S> {
     void Function(Object error)? onError,
   }) {
     final cleanId = entityId.trim();
-    watchedEntityId = cleanId;
+    if (isClosed) return;
     cancelRealtimeSubscription();
+    watchedEntityId = cleanId;
+    final generation = _watchGeneration;
 
     realtimeSubscription = stream.listen(
       (data) {
-        if (isClosed) return;
+        if (isClosed || generation != _watchGeneration) return;
         onData(data);
       },
       onError: (error) {
-        if (isClosed) return;
+        if (isClosed || generation != _watchGeneration) return;
         if (onError != null) {
           onError(error);
         }
@@ -41,6 +46,8 @@ mixin RealtimeWatcherMixin<S> on Cubit<S> {
 
   /// Safely cancels the active realtime subscription.
   void cancelRealtimeSubscription() {
+    _watchGeneration++;
+    watchedEntityId = null;
     realtimeSubscription?.cancel();
     realtimeSubscription = null;
   }

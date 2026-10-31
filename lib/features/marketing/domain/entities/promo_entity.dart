@@ -18,6 +18,9 @@ class PromoEntity extends Equatable {
   final String targetAudience;
   final String discountType;
   final double discountValue;
+  final bool isActive;
+  final DateTime? archivedAt;
+  final String? resharedFromId;
 
   const PromoEntity({
     required this.id,
@@ -37,6 +40,9 @@ class PromoEntity extends Equatable {
     this.targetAudience = 'all',
     this.discountType = 'percentage',
     this.discountValue = 0,
+    this.isActive = true,
+    this.archivedAt,
+    this.resharedFromId,
   });
 
   @override
@@ -58,5 +64,8 @@ class PromoEntity extends Equatable {
     targetAudience,
     discountType,
     discountValue,
+    isActive,
+    archivedAt,
+    resharedFromId,
   ];
 }

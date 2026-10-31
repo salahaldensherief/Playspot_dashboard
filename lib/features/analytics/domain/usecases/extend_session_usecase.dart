@@ -7,7 +7,15 @@ class ExtendSessionUseCase {
 
   ExtendSessionUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(String bookingId, int additionalMinutes, {double? additionalCost}) {
-    return repository.extendSession(bookingId, additionalMinutes, additionalCost: additionalCost);
+  Future<Either<Failure, void>> call(
+    String bookingId,
+    int additionalMinutes, {
+    double? additionalCost,
+  }) {
+    return repository.extendSession(
+      bookingId,
+      additionalMinutes,
+      additionalCost: additionalCost,
+    );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -18,6 +19,7 @@ class LoungeElectronicPaymentSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
@@ -37,8 +39,10 @@ class LoungeElectronicPaymentSection extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.account_balance_wallet_outlined,
-                  color: AppColors.neonBlue),
+              const Icon(
+                Icons.account_balance_wallet_outlined,
+                color: AppColors.neonBlue,
+              ),
               SizedBox(width: 8.w),
               Text(
                 AppStrings.paymentMethodsTitle,
@@ -53,10 +57,7 @@ class LoungeElectronicPaymentSection extends StatelessWidget {
           SizedBox(height: 6.h),
           Text(
             AppStrings.paymentMethodsHint,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12.sp,
-            ),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
           ),
           SizedBox(height: 16.h),
           AppTextField(

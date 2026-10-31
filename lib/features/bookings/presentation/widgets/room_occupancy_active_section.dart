@@ -1,4 +1,7 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -6,33 +9,43 @@ import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_button.dart';
 import 'package:play_spot_dashboard/art_core/widgets/app_text.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
+import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/booking_details_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/extend_session_dialog.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/widgets/room_occupancy_requests_badge.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
+import 'package:play_spot_dashboard/features/rooms/presentation/cubit/room_cubit.dart';
 
-class RoomOccupancyActiveSection extends StatelessWidget {
+class RoomOccupancyActiveSection extends StatefulWidget {
   final Booking activeBooking;
   final RoomEntity room;
-  final Duration remaining;
-  final bool isExpired;
-  final String formattedRemaining;
 
   const RoomOccupancyActiveSection({
     super.key,
     required this.activeBooking,
     required this.room,
-    required this.remaining,
-    required this.isExpired,
-    required this.formattedRemaining,
   });
 
   @override
+  State<RoomOccupancyActiveSection> createState() =>
+      _RoomOccupancyActiveSectionState();
+}
+
+class _RoomOccupancyActiveSectionState
+    extends State<RoomOccupancyActiveSection> {
+  bool _isCompleting = false;
+
+  @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
+    final activeBooking = widget.activeBooking;
+    final room = widget.room;
     final phone = activeBooking.userPhone;
+    final isOpenTime = activeBooking.isOpenEnded;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         // Customer Info Box
         Container(
@@ -45,33 +58,57 @@ class RoomOccupancyActiveSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.person, color: AppColors.neonBlue, size: 14.r),
                       SizedBox(width: 6.w),
-                      AppText.subHeading(
-                        activeBooking.userName ?? AppStrings.anonymous,
-                        fontSize: 13.sp,
-                        color: AppColors.textPrimary,
+                      Flexible(
+                        child: AppText.subHeading(
+                          activeBooking.userName ?? AppStrings.anonymous,
+                          fontSize: 13.sp,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ],
                   ),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 6.w,
+                      vertical: 2.h,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppColors.neonGreen.withValues(alpha: 0.15),
+                      color: AppColors.neonBlue.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(4.r),
                     ),
                     child: AppText.body(
-                      '${activeBooking.totalPrice.toStringAsFixed(0)} ${AppStrings.egp}',
+                      isOpenTime
+                          ? 'cashier.awaitingFinal'.tr()
+                          : '${'cashier.serverTotal'.tr()}: ${activeBooking.totalPrice.toStringAsFixed(2)} ${AppStrings.egp}',
                       fontSize: 11.sp,
-                      color: AppColors.neonGreen,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 10,
+                runSpacing: 4,
+                children: [
+                  for (final label in ['cashier.collected', 'cashier.due'])
+                    Text(
+                      '${label.tr()}: ${'cashier.unavailable'.tr()}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
                 ],
               ),
               if (phone != null && phone.isNotEmpty) ...[
@@ -96,7 +133,11 @@ class RoomOccupancyActiveSection extends StatelessWidget {
                           ),
                         );
                       },
-                      child: Icon(Icons.copy_rounded, size: 12.r, color: AppColors.textMuted),
+                      child: Icon(
+                        Icons.copy_rounded,
+                        size: 12.r,
+                        color: AppColors.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -106,78 +147,85 @@ class RoomOccupancyActiveSection extends StatelessWidget {
         ),
         SizedBox(height: 10.h),
 
-        // Remaining Time Bar
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-          decoration: BoxDecoration(
-            color: isExpired
-                ? AppColors.danger.withValues(alpha: 0.15)
-                : AppColors.neonBlue.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(
-              color: isExpired ? AppColors.danger : AppColors.neonBlue.withValues(alpha: 0.3),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    isExpired ? Icons.timer_off : Icons.timer,
-                    size: 16.r,
-                    color: isExpired ? AppColors.danger : AppColors.neonBlue,
-                  ),
-                  SizedBox(width: 6.w),
-                  AppText.body(
-                    isExpired ? AppStrings.timeExpired : AppStrings.remainingTime,
-                    fontSize: 11.sp,
-                    color: isExpired ? AppColors.danger : AppColors.textSecondary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ],
-              ),
-              AppText.subHeading(
-                isExpired ? '-$formattedRemaining' : formattedRemaining,
-                fontSize: 14.sp,
-                color: isExpired ? AppColors.danger : AppColors.neonBlue,
-                fontWeight: FontWeight.bold,
-              ),
-            ],
-          ),
-        ),
         RoomOccupancyRequestsBadge(booking: activeBooking, room: room),
         SizedBox(height: 10.h),
 
         // Action Buttons: Details & Extend
-        Row(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: AppButton(
-                text: 'تفاصيل الحجز والعميل',
-                icon: Icons.info_outline_rounded,
-                variant: AppButtonVariant.outlined,
-                height: 32.h,
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    useRootNavigator: false,
-                    builder: (_) => BookingDetailsDialog(booking: activeBooking),
-                  );
-                },
-              ),
-            ),
-            SizedBox(width: 8.w),
             AppButton(
-              text: 'تمديد',
-              icon: Icons.add_alarm_rounded,
+              text: AppStrings.bookingAndClientDetails,
+              icon: Icons.info_outline_rounded,
+              variant: AppButtonVariant.outlined,
+              height: 44,
+              onPressed: () {
+                BookingDetailsDialog.show(context, booking: activeBooking);
+              },
+            ),
+            const SizedBox(height: 8),
+            AppButton(
+              text: isOpenTime
+                  ? AppStrings.completeAndCalculate
+                  : AppStrings.extendTime,
+              icon: isOpenTime
+                  ? Icons.price_check_rounded
+                  : Icons.add_alarm_rounded,
               variant: AppButtonVariant.primary,
-              height: 32.h,
-              onPressed: () => ExtendSessionDialog.show(context, activeBooking),
+              height: 44,
+              isLoading: isOpenTime && _isCompleting,
+              onPressed: (isOpenTime && _isCompleting)
+                  ? null
+                  : (isOpenTime
+                        ? () => _completeOpenTimeSession(context)
+                        : () =>
+                              ExtendSessionDialog.show(context, activeBooking)),
             ),
           ],
         ),
       ],
     );
+  }
+
+  Future<void> _completeOpenTimeSession(BuildContext context) async {
+    if (_isCompleting) return;
+    setState(() => _isCompleting = true);
+
+    try {
+      final bookingCubit = context.read<BookingCubit>();
+      final roomCubit = context.read<RoomCubit>();
+      final result = await bookingCubit.completeOpenTimeSession(
+        widget.activeBooking.id,
+      );
+
+      if (!context.mounted) return;
+
+      if (result == null) {
+        final message =
+            bookingCubit.state.errorMessage ??
+            AppStrings.failedToCompleteOpenTime;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: AppColors.danger),
+        );
+        return;
+      }
+
+      roomCubit.watchRooms(widget.activeBooking.loungeId, forceRefresh: true);
+      final total = result['final_total'];
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            total == null
+                ? AppStrings.openTimeCompletedSuccess
+                : '${AppStrings.openTimeCompletedSuccess}. ${AppStrings.totalPrice}: $total ${AppStrings.egp}',
+          ),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isCompleting = false);
+      }
+    }
   }
 }

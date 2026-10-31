@@ -4,8 +4,16 @@ import 'package:play_spot_dashboard/features/analytics/data/models/lounge_stats_
 abstract class DashboardRemoteDataSource {
   Future<LoungeStatsModel> fetchLoungeStats(String? loungeId);
   Stream<List<BookingModel>> watchActiveSessions({String? loungeId});
-  Future<void> extendSession(String bookingId, int additionalMinutes, {double? additionalCost});
-  Future<void> addExtrasToSession(String bookingId, List<Map<String, dynamic>> extras, double additionalCost);
+  Future<void> extendSession(
+    String bookingId,
+    int additionalMinutes, {
+    double? additionalCost,
+  });
+  Future<void> addExtrasToSession(
+    String bookingId,
+    List<Map<String, dynamic>> extras,
+    double additionalCost,
+  );
   Future<void> endSession(String bookingId);
   Future<void> reviewExtensionRequest({
     required String bookingId,
@@ -23,5 +31,11 @@ abstract class DashboardRemoteDataSource {
     int? extensionMinutes,
     List<Map<String, dynamic>>? extraItems,
     double? extraCost,
+  });
+  Future<Map<String, dynamic>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
   });
 }

@@ -2,12 +2,24 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../../lounges/domain/entities/lounge.dart';
 
-enum LoginStatus { initial, checking, loading, success, failure, authenticated, unauthenticated }
+enum LoginStatus {
+  initial,
+  checking,
+  profileFailure,
+  loading,
+  success,
+  failure,
+  authenticated,
+  unauthenticated,
+}
 
 class LoginState extends Equatable {
+  static const _unchanged = Object();
   final LoginStatus status;
   final UserEntity? user;
   final Lounge? userLounge;
+  final bool isLoadingLounge;
+  final String? loungeLoadError;
   final String? errorMessage;
   final bool isSetupCompleted;
   final bool locationCaptured;
@@ -18,6 +30,8 @@ class LoginState extends Equatable {
     this.status = LoginStatus.initial,
     this.user,
     this.userLounge,
+    this.isLoadingLounge = false,
+    this.loungeLoadError,
     this.errorMessage,
     this.isSetupCompleted = false,
     this.locationCaptured = false,
@@ -31,33 +45,46 @@ class LoginState extends Equatable {
     LoginStatus? status,
     UserEntity? user,
     Lounge? userLounge,
-    String? errorMessage,
+    bool clearUserLounge = false,
+    bool? isLoadingLounge,
+    Object? loungeLoadError = _unchanged,
+    Object? errorMessage = _unchanged,
     bool? isSetupCompleted,
     bool? locationCaptured,
     bool? isLoadingLocation,
-    String? locationErrorMessage,
+    Object? locationErrorMessage = _unchanged,
   }) {
     return LoginState(
       status: status ?? this.status,
       user: user ?? this.user,
-      userLounge: userLounge ?? this.userLounge,
-      errorMessage: errorMessage ?? this.errorMessage,
+      userLounge: clearUserLounge ? null : userLounge ?? this.userLounge,
+      isLoadingLounge: isLoadingLounge ?? this.isLoadingLounge,
+      loungeLoadError: identical(loungeLoadError, _unchanged)
+          ? this.loungeLoadError
+          : loungeLoadError as String?,
+      errorMessage: identical(errorMessage, _unchanged)
+          ? this.errorMessage
+          : errorMessage as String?,
       isSetupCompleted: isSetupCompleted ?? this.isSetupCompleted,
       locationCaptured: locationCaptured ?? this.locationCaptured,
       isLoadingLocation: isLoadingLocation ?? this.isLoadingLocation,
-      locationErrorMessage: locationErrorMessage ?? this.locationErrorMessage,
+      locationErrorMessage: identical(locationErrorMessage, _unchanged)
+          ? this.locationErrorMessage
+          : locationErrorMessage as String?,
     );
   }
 
   @override
   List<Object?> get props => [
-        status,
-        user,
-        userLounge,
-        errorMessage,
-        isSetupCompleted,
-        locationCaptured,
-        isLoadingLocation,
-        locationErrorMessage,
-      ];
+    status,
+    user,
+    userLounge,
+    isLoadingLounge,
+    loungeLoadError,
+    errorMessage,
+    isSetupCompleted,
+    locationCaptured,
+    isLoadingLocation,
+    locationErrorMessage,
+  ];
 }

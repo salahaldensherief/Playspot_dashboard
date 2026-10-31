@@ -23,9 +23,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
 
     final response = await supabaseClient.rpc(
       'get_lounge_owner_dashboard_stats',
-      params: {
-        'p_lounge_id': loungeId,
-      },
+      params: {'p_lounge_id': loungeId},
     );
 
     if (response == null) {
@@ -44,20 +42,18 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
     String bookingId,
     int additionalMinutes, {
     double? additionalCost,
-  }) =>
-      _operationsHelper.extendSession(
-        bookingId,
-        additionalMinutes,
-        additionalCost: additionalCost,
-      );
+  }) => _operationsHelper.extendSession(
+    bookingId,
+    additionalMinutes,
+    additionalCost: additionalCost,
+  );
 
   @override
   Future<void> addExtrasToSession(
     String bookingId,
     List<Map<String, dynamic>> extras,
     double additionalCost,
-  ) =>
-      _operationsHelper.addExtrasToSession(bookingId, extras, additionalCost);
+  ) => _operationsHelper.addExtrasToSession(bookingId, extras, additionalCost);
 
   @override
   Future<void> endSession(String bookingId) =>
@@ -71,15 +67,14 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
     String? reason,
     int? requestedMinutes,
     int? currentDurationMinutes,
-  }) =>
-      _operationsHelper.reviewExtensionRequest(
-        bookingId: bookingId,
-        isApproved: isApproved,
-        additionalCost: additionalCost,
-        reason: reason,
-        requestedMinutes: requestedMinutes,
-        currentDurationMinutes: currentDurationMinutes,
-      );
+  }) => _operationsHelper.reviewExtensionRequest(
+    bookingId: bookingId,
+    isApproved: isApproved,
+    additionalCost: additionalCost,
+    reason: reason,
+    requestedMinutes: requestedMinutes,
+    currentDurationMinutes: currentDurationMinutes,
+  );
 
   @override
   Future<void> handleClientRequestAction({
@@ -90,14 +85,36 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
     int? extensionMinutes,
     List<Map<String, dynamic>>? extraItems,
     double? extraCost,
-  }) =>
-      _operationsHelper.handleClientRequestAction(
-        requestId: requestId,
-        isCanteenOrder: isCanteenOrder,
-        approve: approve,
-        bookingId: bookingId,
-        extensionMinutes: extensionMinutes,
-        extraItems: extraItems,
-        extraCost: extraCost,
-      );
+  }) => _operationsHelper.handleClientRequestAction(
+    requestId: requestId,
+    isCanteenOrder: isCanteenOrder,
+    approve: approve,
+    bookingId: bookingId,
+    extensionMinutes: extensionMinutes,
+    extraItems: extraItems,
+    extraCost: extraCost,
+  );
+
+  @override
+  Future<Map<String, dynamic>> startOpenTimeSession({
+    required String roomId,
+    String? customerName,
+    String? customerPhone,
+    String playMode = 'single',
+  }) async {
+    final response = await supabaseClient.rpc(
+      'start_open_time_session',
+      params: {
+        'p_room_id': roomId,
+        'p_customer_name': customerName,
+        'p_customer_phone': customerPhone,
+        'p_play_mode': playMode,
+      },
+    );
+
+    if (response is! Map || response['success'] != true) {
+      throw const FormatException('Invalid open-time start response');
+    }
+    return Map<String, dynamic>.from(response);
+  }
 }

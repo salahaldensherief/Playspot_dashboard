@@ -1,11 +1,12 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import '../../../../art_core/app_strings.dart';
 import '../../../../art_core/theme/app_colors.dart';
 import '../../../../art_core/widgets/app_button.dart';
 import '../../../../art_core/widgets/app_text.dart';
+import '../../../../art_core/widgets/app_text_field.dart';
 import '../../../requests/domain/entities/client_request_entity.dart';
 import '../../../requests/presentation/client_requests_cubit.dart';
 import '../dashboard_cubit.dart';
@@ -17,6 +18,7 @@ class ExtensionRequestTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final requestsCubit = context.read<ClientRequestsCubit>();
     final dashboardCubit = context.read<DashboardCubit>();
 
@@ -24,16 +26,20 @@ class ExtensionRequestTile extends StatelessWidget {
         ? request.metadata.items.first
         : <String, dynamic>{};
 
-    final int requestedMinutes = (firstMetadataItem['requested_minutes'] ??
-            firstMetadataItem['minutes'] as num?)
+    final int requestedMinutes =
+        (firstMetadataItem['requested_minutes'] ??
+                firstMetadataItem['minutes'] as num?)
             ?.toInt() ??
         30;
 
     final int currentDuration =
         (firstMetadataItem['current_duration'] as num?)?.toInt() ?? 60;
 
-    final String timeFormatted = DateFormat('hh:mm a').format(request.createdAt);
-    final String bookingId = request.bookingId ?? request.id.replaceFirst('ext_', '');
+    final String timeFormatted = DateFormat(
+      'hh:mm a',
+    ).format(request.createdAt);
+    final String bookingId =
+        request.bookingId ?? request.id.replaceFirst('ext_', '');
 
     return Container(
       padding: EdgeInsets.all(12.r),
@@ -57,12 +63,15 @@ class ExtensionRequestTile extends StatelessWidget {
                   ),
                   SizedBox(width: 8.w),
                   AppText.subHeading(
-                    request.roomName ?? request.userName ?? AppStrings.anonymous,
+                    request.roomName ??
+                        request.userName ??
+                        AppStrings.anonymous,
                     fontSize: 14.sp,
                     color: AppColors.textPrimary,
                   ),
                   SizedBox(width: 8.w),
-                  if (request.userName != null && (request.userName?.isNotEmpty ?? false))
+                  if (request.userName != null &&
+                      (request.userName?.isNotEmpty ?? false))
                     AppText.body(
                       '(${request.userName ?? ''})',
                       fontSize: 12.sp,
@@ -85,7 +94,9 @@ class ExtensionRequestTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.neonBlue.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppColors.neonBlue.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -205,54 +216,21 @@ class _ApproveExtensionDialog extends StatefulWidget {
   });
 
   @override
-  State<_ApproveExtensionDialog> createState() => _ApproveExtensionDialogState();
+  State<_ApproveExtensionDialog> createState() =>
+      _ApproveExtensionDialogState();
 }
 
 class _ApproveExtensionDialogState extends State<_ApproveExtensionDialog> {
-  final _costController = TextEditingController(text: '0.0');
-
-  @override
-  void dispose() {
-    _costController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AlertDialog(
       backgroundColor: AppColors.cardBackground,
       title: AppText.subHeading(AppStrings.approveRequest, fontSize: 16.sp),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AppText.body(AppStrings.pricePerHour, fontSize: 13.sp),
-          SizedBox(height: 10.h),
-          TextField(
-            controller: _costController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 15.sp,
-              fontWeight: FontWeight.bold,
-            ),
-            decoration: InputDecoration(
-              labelText: AppStrings.amount,
-              labelStyle: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
-              filled: true,
-              fillColor: AppColors.scaffoldBackground,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: const BorderSide(color: AppColors.borderDefault),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: const BorderSide(color: AppColors.neonBlue, width: 1.5),
-              ),
-            ),
-          ),
-        ],
+      content: AppText.body(
+        'extension_price_calculated_server'.tr(),
+        fontSize: 13.sp,
+        color: AppColors.textSecondary,
       ),
       actions: [
         AppButton(
@@ -265,11 +243,9 @@ class _ApproveExtensionDialogState extends State<_ApproveExtensionDialog> {
           variant: AppButtonVariant.primary,
           onPressed: () async {
             Navigator.of(context).pop();
-            final cost = double.tryParse(_costController.text) ?? 0.0;
             final success = await widget.dashboardCubit.reviewExtensionRequest(
               bookingId: widget.bookingId,
               isApproved: true,
-              additionalCost: cost,
             );
             if (success && widget.parentContext.mounted) {
               widget.requestsCubit.markAsAttended(widget.request.id);
@@ -317,6 +293,7 @@ class _RejectExtensionDialogState extends State<_RejectExtensionDialog> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return AlertDialog(
       backgroundColor: AppColors.cardBackground,
       title: AppText.subHeading(AppStrings.rejectRequest, fontSize: 16.sp),
@@ -326,13 +303,10 @@ class _RejectExtensionDialogState extends State<_RejectExtensionDialog> {
         children: [
           AppText.body(AppStrings.disputeReasonLabel, fontSize: 13.sp),
           SizedBox(height: 10.h),
-          TextField(
+          AppTextField(
             controller: _reasonController,
             maxLines: 2,
-            decoration: InputDecoration(
-              labelText: AppStrings.disputeReasonLabel,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-            ),
+            labelText: AppStrings.disputeReasonLabel,
           ),
         ],
       ),
@@ -350,7 +324,9 @@ class _RejectExtensionDialogState extends State<_RejectExtensionDialog> {
             final success = await widget.dashboardCubit.reviewExtensionRequest(
               bookingId: widget.bookingId,
               isApproved: false,
-              additionalCost: 0,
+              reason: _reasonController.text.trim().isEmpty
+                  ? null
+                  : _reasonController.text.trim(),
             );
             if (success && widget.parentContext.mounted) {
               widget.requestsCubit.markAsAttended(widget.request.id);

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'room_space_type.dart';
 
 enum RoomStatusEnum { available, maintenance, occupied }
 
@@ -23,11 +24,23 @@ class RoomEntity extends Equatable {
   final List<String> featuresEn;
   final int controllersCount;
   final String screenSize;
+  final String resourceType;
+  final bool requiresScreen;
+  final bool requiresControllers;
+  final String pricingModel;
   final RoomStatusEnum status;
   final bool hasOffer;
   final String? offerTitle;
   final String? offerTag;
   final String? activePromotionId;
+  final bool openTimeEnabled;
+  final String openTimePricingMode;
+  final double? openTimeCustomHourlyRate;
+  final double openTimePriceMultiplier;
+  final int openTimeMinimumMinutes;
+  final int openTimeRoundingMinutes;
+  final int? openTimeMaxMinutes;
+  final int openTimeBufferBeforeBookingMinutes;
 
   // Aliases and backward compatibility getters
   int get capacity => maxCapacity;
@@ -35,7 +48,8 @@ class RoomEntity extends Equatable {
   double get pricePerHourMulti => hourlyRateMulti;
   double get pricePerHour => hourlyRateSingle;
   bool get isActive => isAvailable;
-  bool get isOpenArea => spaceTypeId == 'open_area';
+  bool get isOpenArea =>
+      roomSpaceTypeKey(spaceType ?? spaceTypeId) == 'open_area';
 
   const RoomEntity({
     required this.id,
@@ -62,41 +76,66 @@ class RoomEntity extends Equatable {
     required this.featuresEn,
     this.controllersCount = 2,
     this.screenSize = '43"',
+    this.resourceType = 'console',
+    this.requiresScreen = true,
+    this.requiresControllers = true,
+    this.pricingModel = 'single_multi_hour',
     this.status = RoomStatusEnum.available,
     this.hasOffer = false,
     this.offerTitle,
     this.offerTag,
     this.activePromotionId,
-  })  : maxCapacity = maxCapacity ?? capacity ?? 4,
-        hourlyRateSingle = hourlyRateSingle ?? pricePerHourSingle ?? pricePerHour,
-        hourlyRateMulti = hourlyRateMulti ?? pricePerHourMulti ?? pricePerHour;
+    this.openTimeEnabled = false,
+    this.openTimePricingMode = 'same_hourly',
+    this.openTimeCustomHourlyRate,
+    this.openTimePriceMultiplier = 1.0,
+    this.openTimeMinimumMinutes = 30,
+    this.openTimeRoundingMinutes = 15,
+    this.openTimeMaxMinutes,
+    this.openTimeBufferBeforeBookingMinutes = 15,
+  }) : maxCapacity = maxCapacity ?? capacity ?? 4,
+       hourlyRateSingle =
+           hourlyRateSingle ?? pricePerHourSingle ?? pricePerHour,
+       hourlyRateMulti = hourlyRateMulti ?? pricePerHourMulti ?? pricePerHour;
 
   @override
   List<Object?> get props => [
-        id,
-        loungeId,
-        nameAr,
-        nameEn,
-        descriptionAr,
-        descriptionEn,
-        activityNames,
-        activityIds,
-        spaceType,
-        spaceTypeId,
-        maxCapacity,
-        hourlyRateSingle,
-        hourlyRateMulti,
-        extraControllerPrice,
-        isAvailable,
-        images,
-        featuresAr,
-        featuresEn,
-        controllersCount,
-        screenSize,
-        status,
-        hasOffer,
-        offerTitle,
-        offerTag,
-        activePromotionId,
-      ];
+    id,
+    loungeId,
+    nameAr,
+    nameEn,
+    descriptionAr,
+    descriptionEn,
+    activityNames,
+    activityIds,
+    spaceType,
+    spaceTypeId,
+    maxCapacity,
+    hourlyRateSingle,
+    hourlyRateMulti,
+    extraControllerPrice,
+    isAvailable,
+    images,
+    featuresAr,
+    featuresEn,
+    controllersCount,
+    screenSize,
+    resourceType,
+    requiresScreen,
+    requiresControllers,
+    pricingModel,
+    status,
+    hasOffer,
+    offerTitle,
+    offerTag,
+    activePromotionId,
+    openTimeEnabled,
+    openTimePricingMode,
+    openTimeCustomHourlyRate,
+    openTimePriceMultiplier,
+    openTimeMinimumMinutes,
+    openTimeRoundingMinutes,
+    openTimeMaxMinutes,
+    openTimeBufferBeforeBookingMinutes,
+  ];
 }

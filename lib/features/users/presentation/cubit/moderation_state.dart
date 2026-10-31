@@ -40,11 +40,11 @@ class ModerationState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        banRequests,
-        pendingRequests,
-        errorMessage,
-        successMessage,
-        isSubmitting,
-      ];
+    status,
+    banRequests,
+    pendingRequests,
+    errorMessage,
+    successMessage,
+    isSubmitting,
+  ];
 }

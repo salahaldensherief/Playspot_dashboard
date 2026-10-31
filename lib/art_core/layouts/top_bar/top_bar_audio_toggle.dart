@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
 import 'package:play_spot_dashboard/core/audio/audio_service.dart';
@@ -8,13 +9,16 @@ class TopBarAudioToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     final audioService = sl<AudioService>();
     return ListenableBuilder(
       listenable: audioService,
       builder: (context, _) {
         final isMuted = audioService.isMuted;
         return Tooltip(
-          message: isMuted ? 'تفعيل أصوات التنبيه' : 'إيكتم صوت التنبيهات (اضغط مطولاً للتجربة)',
+          message: isMuted
+              ? 'enable_notification_sounds'.tr()
+              : 'mute_notification_sounds'.tr(),
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
             onTap: () => audioService.toggleMute(),
@@ -22,9 +26,9 @@ class TopBarAudioToggle extends StatelessWidget {
               if (!isMuted) {
                 audioService.playNotificationSound();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('🔔 تجربة صوت التنبيه'),
-                    duration: Duration(seconds: 1),
+                  SnackBar(
+                    content: Text('preview_notification_sound'.tr()),
+                    duration: const Duration(seconds: 1),
                   ),
                 );
               }

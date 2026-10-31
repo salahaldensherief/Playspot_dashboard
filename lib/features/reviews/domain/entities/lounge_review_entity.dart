@@ -25,14 +25,14 @@ class LoungeReviewEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        loungeId,
-        userId,
-        bookingId,
-        userName,
-        userAvatarUrl,
-        rating,
-        comment,
-        createdAt,
-      ];
+    id,
+    loungeId,
+    userId,
+    bookingId,
+    userName,
+    userAvatarUrl,
+    rating,
+    comment,
+    createdAt,
+  ];
 }

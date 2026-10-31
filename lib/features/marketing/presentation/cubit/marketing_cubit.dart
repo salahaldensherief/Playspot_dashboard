@@ -8,10 +8,12 @@ import '../../domain/usecases/marketing_usecases.dart';
 import 'marketing_state.dart';
 
 class MarketingCubit extends Cubit<MarketingState> {
+  final Set<String> _deleting = {};
   final GetPromotionsUseCase _getPromotionsUseCase;
   final CreatePromotionUseCase _createPromotionUseCase;
   final UpdatePromotionUseCase _updatePromotionUseCase;
   final DeletePromotionUseCase _deletePromotionUseCase;
+  final ResharePromotionUseCase _resharePromotionUseCase;
   final UploadPromoPosterUseCase _uploadPromoPosterUseCase;
   final GetNotificationsUseCase _getNotificationsUseCase;
   final GetNotificationsPageUseCase _getNotificationsPageUseCase;
@@ -22,6 +24,7 @@ class MarketingCubit extends Cubit<MarketingState> {
     required CreatePromotionUseCase createPromotionUseCase,
     required UpdatePromotionUseCase updatePromotionUseCase,
     required DeletePromotionUseCase deletePromotionUseCase,
+    required ResharePromotionUseCase resharePromotionUseCase,
     required UploadPromoPosterUseCase uploadPromoPosterUseCase,
     required GetNotificationsUseCase getNotificationsUseCase,
     required GetNotificationsPageUseCase getNotificationsPageUseCase,
@@ -30,6 +33,7 @@ class MarketingCubit extends Cubit<MarketingState> {
        _createPromotionUseCase = createPromotionUseCase,
        _updatePromotionUseCase = updatePromotionUseCase,
        _deletePromotionUseCase = deletePromotionUseCase,
+       _resharePromotionUseCase = resharePromotionUseCase,
        _uploadPromoPosterUseCase = uploadPromoPosterUseCase,
        _getNotificationsUseCase = getNotificationsUseCase,
        _getNotificationsPageUseCase = getNotificationsPageUseCase,
@@ -61,11 +65,44 @@ class MarketingCubit extends Cubit<MarketingState> {
   }
 
   Future<void> deletePromotion(String id, {String? loungeId}) async {
-    final result = await _deletePromotionUseCase(id);
+    if (!_deleting.add(id)) return;
+    try {
+      final result = await _deletePromotionUseCase(id);
+      if (isClosed) return;
+      await result.fold<Future<void>>(
+        (failure) async {
+          emit(
+            state.copyWith(
+              status: MarketingStatus.failure,
+              errorMessage: failure.message,
+            ),
+          );
+          if (failure.message == 'promotion_not_found') {
+            await loadPromotions(loungeId: loungeId);
+          }
+        },
+        (_) async {
+          emit(
+            state.copyWith(
+              status: MarketingStatus.actionSuccess,
+              actionMessageKey: 'promo_deleted_success',
+            ),
+          );
+          await loadPromotions(loungeId: loungeId);
+        },
+      );
+    } finally {
+      _deleting.remove(id);
+    }
+  }
+
+  Future<void> resharePromotion(String id, {String? loungeId}) async {
+    if (id.trim().isEmpty) return;
+    emit(state.copyWith(status: MarketingStatus.loading));
+    final result = await _resharePromotionUseCase(id.trim());
     if (isClosed) return;
-    result.fold(
-      (failure) {
-        AppLogger.error('Delete promotion error: ${failure.message}');
+    await result.fold<Future<void>>(
+      (failure) async {
         emit(
           state.copyWith(
             status: MarketingStatus.failure,
@@ -73,20 +110,25 @@ class MarketingCubit extends Cubit<MarketingState> {
           ),
         );
       },
-      (_) {
-        emit(state.copyWith(status: MarketingStatus.actionSuccess));
-        loadPromotions(loungeId: loungeId);
+      (_) async {
+        emit(
+          state.copyWith(
+            status: MarketingStatus.actionSuccess,
+            actionMessageKey: 'promo_reshared_success',
+          ),
+        );
+        await loadPromotions(loungeId: loungeId);
       },
     );
   }
 
-  Future<void> createPromotion(PromoEntity promo) async {
+  Future<bool> createPromotion(PromoEntity promo) async {
     emit(state.copyWith(status: MarketingStatus.loading));
     final result = (promo.id.isNotEmpty)
         ? await _updatePromotionUseCase(promo)
         : await _createPromotionUseCase(promo);
-    if (isClosed) return;
-    result.fold(
+    if (isClosed) return false;
+    return result.fold(
       (failure) {
         AppLogger.error('Create/update promotion error: ${failure.message}');
         emit(
@@ -95,10 +137,17 @@ class MarketingCubit extends Cubit<MarketingState> {
             errorMessage: failure.message,
           ),
         );
+        return false;
       },
       (_) {
-        emit(state.copyWith(status: MarketingStatus.actionSuccess));
+        emit(
+          state.copyWith(
+            status: MarketingStatus.actionSuccess,
+            actionMessageKey: 'promo_published_success',
+          ),
+        );
         loadPromotions(loungeId: promo.loungeId);
+        return true;
       },
     );
   }

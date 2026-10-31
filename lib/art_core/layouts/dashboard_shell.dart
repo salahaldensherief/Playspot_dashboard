@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
@@ -58,18 +59,22 @@ class _DashboardShellState extends State<DashboardShell> {
       return;
     }
 
-    if (user.isSuperAdmin) {
-      _loadedPermissionIdentity = 'super_admin:${user.id}';
-      permissionsCubit.setActiveLoungeId(null);
-      return;
-    }
-
-    final loungeId = user.loungeId?.trim();
+    final loungeId = permissionsCubit.accessLoungeIdFor(
+      user.id,
+      fallbackLoungeId: user.loungeId,
+    );
     final identity = '${user.id}|${_permissionRole(user)}|${loungeId ?? ''}';
     if (_loadedPermissionIdentity == identity) return;
     _loadedPermissionIdentity = identity;
 
-    await permissionsCubit.loadUserPermissions(
+    if (permissionsCubit.hasLoadedAccess(
+      _permissionRole(user),
+      user.id,
+      loungeId,
+    )) {
+      return;
+    }
+    await permissionsCubit.ensureUserPermissions(
       _permissionRole(user),
       loungeId: loungeId,
       userId: user.id,
@@ -78,6 +83,7 @@ class _DashboardShellState extends State<DashboardShell> {
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // Rebuild localized labels when the locale changes.
     return BlocListener<LoginCubit, LoginState>(
       listenWhen: (previous, current) => previous.user != current.user,
       listener: (context, state) {

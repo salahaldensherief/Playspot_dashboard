@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -17,6 +18,7 @@ class OccupancyGaugeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
       decoration: BoxDecoration(
@@ -44,10 +46,18 @@ class OccupancyGaugeCard extends StatelessWidget {
               children: [
                 Text(
                   AppStrings.loungeOccupancy,
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 SizedBox(width: 8.w),
-                Icon(Icons.meeting_room_outlined, color: AppColors.neonPurple, size: 20.r),
+                Icon(
+                  Icons.meeting_room_outlined,
+                  color: AppColors.neonPurple,
+                  size: 20.r,
+                ),
               ],
             ),
             SizedBox(height: 8.h),
@@ -59,11 +69,19 @@ class OccupancyGaugeCard extends StatelessWidget {
                   children: [
                     Text(
                       '$occupied / $total',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 22.sp, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 22.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Text(
                       '${(rate * 100).toStringAsFixed(1)}%',
-                      style: TextStyle(color: AppColors.neonPurple, fontSize: 13.sp, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: AppColors.neonPurple,
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -74,7 +92,9 @@ class OccupancyGaugeCard extends StatelessWidget {
                   child: CircularProgressIndicator(
                     value: rate,
                     strokeWidth: 6,
-                    backgroundColor: AppColors.neonPurple.withValues(alpha: 0.1),
+                    backgroundColor: AppColors.neonPurple.withValues(
+                      alpha: 0.1,
+                    ),
                     color: AppColors.neonPurple,
                   ),
                 ),

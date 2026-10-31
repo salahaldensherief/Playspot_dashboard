@@ -1,4 +1,7 @@
 import 'package:dartz/dartz.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../domain/entities/room_space_type.dart';
+import '../models/room_space_type_model.dart';
 import 'package:play_spot_dashboard/core/error/failures.dart';
 import 'package:play_spot_dashboard/core/services/local_cache_service.dart';
 import 'package:play_spot_dashboard/features/rooms/domain/entities/room_entity.dart';
@@ -13,14 +16,54 @@ class RoomRepositoryImpl implements RoomRepository {
   RoomRepositoryImpl(this._remoteSource, this._localCacheService);
 
   @override
-  Future<Either<Failure, List<RoomEntity>>> getRooms(String loungeId, {bool forceRefresh = false}) async {
+  Future<Either<Failure, List<RoomSpaceType>>> getSpaceTypes() async {
+    const key = 'cache_room_space_types';
+    try {
+      final types = await _remoteSource.getSpaceTypes();
+      await _localCacheService.setJson(
+        key,
+        types.map((type) => type.toJson()).toList(),
+      );
+      return Right(types);
+    } catch (error) {
+      // Database/authorization failures must not be disguised as offline success.
+      if (error is! PostgrestException) {
+        final cached = _localCacheService.getJson(key);
+        if (cached is List && cached.isNotEmpty) {
+          try {
+            return Right(
+              cached
+                  .map(
+                    (row) => RoomSpaceTypeModel.fromJson(
+                      Map<String, dynamic>.from(row as Map),
+                    ),
+                  )
+                  .toList(),
+            );
+          } catch (_) {
+            /* Reject a malformed cache below. */
+          }
+        }
+      }
+      return Left(ServerFailure('room_space_types_unavailable'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<RoomEntity>>> getRooms(
+    String loungeId, {
+    bool forceRefresh = false,
+  }) async {
     final cacheKey = 'cache_rooms_$loungeId';
     try {
       if (!forceRefresh) {
         final cached = _localCacheService.getJson(cacheKey);
         if (cached is List && cached.isNotEmpty) {
           final cachedRooms = cached
-              .map((item) => RoomModel.fromJson(Map<String, dynamic>.from(item as Map)))
+              .map(
+                (item) =>
+                    RoomModel.fromJson(Map<String, dynamic>.from(item as Map)),
+              )
               .map((m) => m as RoomEntity)
               .toList();
           _refreshRoomsInBackground(loungeId, cacheKey);
@@ -29,37 +72,60 @@ class RoomRepositoryImpl implements RoomRepository {
       }
 
       final rooms = await _remoteSource.getRooms(loungeId);
-      final roomModels = rooms.map((r) => RoomModel(
-        id: r.id,
-        loungeId: r.loungeId,
-        nameAr: r.nameAr,
-        nameEn: r.nameEn,
-        descriptionAr: r.descriptionAr,
-        descriptionEn: r.descriptionEn,
-        activityNames: r.activityNames,
-        activityIds: r.activityIds,
-        spaceType: r.spaceType,
-        spaceTypeId: r.spaceTypeId ?? '',
-        maxCapacity: r.maxCapacity,
-        hourlyRateSingle: r.hourlyRateSingle,
-        hourlyRateMulti: r.hourlyRateMulti,
-        extraControllerPrice: r.extraControllerPrice,
-        isAvailable: r.isAvailable,
-        images: r.images,
-        featuresAr: r.featuresAr,
-        featuresEn: r.featuresEn,
-        controllersCount: r.controllersCount,
-        screenSize: r.screenSize,
-        status: r.status,
-      )).toList();
+      final roomModels = rooms
+          .map(
+            (r) => RoomModel(
+              id: r.id,
+              loungeId: r.loungeId,
+              nameAr: r.nameAr,
+              nameEn: r.nameEn,
+              descriptionAr: r.descriptionAr,
+              descriptionEn: r.descriptionEn,
+              activityNames: r.activityNames,
+              activityIds: r.activityIds,
+              spaceType: r.spaceType,
+              spaceTypeId: r.spaceTypeId ?? '',
+              maxCapacity: r.maxCapacity,
+              hourlyRateSingle: r.hourlyRateSingle,
+              hourlyRateMulti: r.hourlyRateMulti,
+              extraControllerPrice: r.extraControllerPrice,
+              isAvailable: r.isAvailable,
+              images: r.images,
+              featuresAr: r.featuresAr,
+              featuresEn: r.featuresEn,
+              controllersCount: r.controllersCount,
+              screenSize: r.screenSize,
+              resourceType: r.resourceType,
+              requiresScreen: r.requiresScreen,
+              requiresControllers: r.requiresControllers,
+              pricingModel: r.pricingModel,
+              status: r.status,
+              openTimeEnabled: r.openTimeEnabled,
+              openTimePricingMode: r.openTimePricingMode,
+              openTimeCustomHourlyRate: r.openTimeCustomHourlyRate,
+              openTimePriceMultiplier: r.openTimePriceMultiplier,
+              openTimeMinimumMinutes: r.openTimeMinimumMinutes,
+              openTimeRoundingMinutes: r.openTimeRoundingMinutes,
+              openTimeMaxMinutes: r.openTimeMaxMinutes,
+              openTimeBufferBeforeBookingMinutes:
+                  r.openTimeBufferBeforeBookingMinutes,
+            ),
+          )
+          .toList();
 
-      await _localCacheService.setJson(cacheKey, roomModels.map((m) => m.toJson()).toList());
+      await _localCacheService.setJson(
+        cacheKey,
+        roomModels.map((m) => m.toCacheJson()).toList(),
+      );
       return Right(rooms);
     } catch (e) {
       final cached = _localCacheService.getJson(cacheKey);
       if (cached is List && cached.isNotEmpty) {
         final cachedRooms = cached
-            .map((item) => RoomModel.fromJson(Map<String, dynamic>.from(item as Map)))
+            .map(
+              (item) =>
+                  RoomModel.fromJson(Map<String, dynamic>.from(item as Map)),
+            )
             .map((m) => m as RoomEntity)
             .toList();
         return Right(cachedRooms);
@@ -71,31 +137,51 @@ class RoomRepositoryImpl implements RoomRepository {
   void _refreshRoomsInBackground(String loungeId, String cacheKey) async {
     try {
       final rooms = await _remoteSource.getRooms(loungeId);
-      final roomModels = rooms.map((r) => RoomModel(
-        id: r.id,
-        loungeId: r.loungeId,
-        nameAr: r.nameAr,
-        nameEn: r.nameEn,
-        descriptionAr: r.descriptionAr,
-        descriptionEn: r.descriptionEn,
-        activityNames: r.activityNames,
-        activityIds: r.activityIds,
-        spaceType: r.spaceType,
-        spaceTypeId: r.spaceTypeId ?? '',
-        maxCapacity: r.maxCapacity,
-        hourlyRateSingle: r.hourlyRateSingle,
-        hourlyRateMulti: r.hourlyRateMulti,
-        extraControllerPrice: r.extraControllerPrice,
-        isAvailable: r.isAvailable,
-        images: r.images,
-        featuresAr: r.featuresAr,
-        featuresEn: r.featuresEn,
-        controllersCount: r.controllersCount,
-        screenSize: r.screenSize,
-        status: r.status,
-      )).toList();
+      final roomModels = rooms
+          .map(
+            (r) => RoomModel(
+              id: r.id,
+              loungeId: r.loungeId,
+              nameAr: r.nameAr,
+              nameEn: r.nameEn,
+              descriptionAr: r.descriptionAr,
+              descriptionEn: r.descriptionEn,
+              activityNames: r.activityNames,
+              activityIds: r.activityIds,
+              spaceType: r.spaceType,
+              spaceTypeId: r.spaceTypeId ?? '',
+              maxCapacity: r.maxCapacity,
+              hourlyRateSingle: r.hourlyRateSingle,
+              hourlyRateMulti: r.hourlyRateMulti,
+              extraControllerPrice: r.extraControllerPrice,
+              isAvailable: r.isAvailable,
+              images: r.images,
+              featuresAr: r.featuresAr,
+              featuresEn: r.featuresEn,
+              controllersCount: r.controllersCount,
+              screenSize: r.screenSize,
+              resourceType: r.resourceType,
+              requiresScreen: r.requiresScreen,
+              requiresControllers: r.requiresControllers,
+              pricingModel: r.pricingModel,
+              status: r.status,
+              openTimeEnabled: r.openTimeEnabled,
+              openTimePricingMode: r.openTimePricingMode,
+              openTimeCustomHourlyRate: r.openTimeCustomHourlyRate,
+              openTimePriceMultiplier: r.openTimePriceMultiplier,
+              openTimeMinimumMinutes: r.openTimeMinimumMinutes,
+              openTimeRoundingMinutes: r.openTimeRoundingMinutes,
+              openTimeMaxMinutes: r.openTimeMaxMinutes,
+              openTimeBufferBeforeBookingMinutes:
+                  r.openTimeBufferBeforeBookingMinutes,
+            ),
+          )
+          .toList();
 
-      await _localCacheService.setJson(cacheKey, roomModels.map((m) => m.toJson()).toList());
+      await _localCacheService.setJson(
+        cacheKey,
+        roomModels.map((m) => m.toCacheJson()).toList(),
+      );
     } catch (_) {}
   }
 
@@ -105,7 +191,10 @@ class RoomRepositoryImpl implements RoomRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateRoomStatus(String roomId, RoomStatusEnum status) async {
+  Future<Either<Failure, void>> updateRoomStatus(
+    String roomId,
+    RoomStatusEnum status,
+  ) async {
     try {
       final String dbStatus = switch (status) {
         RoomStatusEnum.occupied => 'occupied',
@@ -115,34 +204,55 @@ class RoomRepositoryImpl implements RoomRepository {
       await _remoteSource.updateRoomStatus(roomId, dbStatus);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      final key =
+          e is PostgrestException && e.message == 'ROOM_HAS_ACTIVE_SESSION'
+          ? 'room_has_active_session'
+          : e is PostgrestException && e.code == '42501'
+          ? 'room_operation_permission_denied'
+          : 'room_operation_failed';
+      return Left(ServerFailure(key));
     }
   }
 
   @override
   Future<Either<Failure, void>> addRoom(RoomEntity room) async {
     try {
-      await _remoteSource.addRoom(RoomModel(
-        id: room.id,
-        loungeId: room.loungeId,
-        nameAr: room.nameAr,
-        nameEn: room.nameEn,
-        activityNames: room.activityNames,
-        activityIds: room.activityIds,
-        spaceType: room.spaceType,
-        spaceTypeId: room.spaceTypeId ?? '',
-        hourlyRateSingle: room.hourlyRateSingle,
-        hourlyRateMulti: room.hourlyRateMulti,
-        extraControllerPrice: room.extraControllerPrice,
-        isAvailable: room.isAvailable,
-        status: room.status,
-        maxCapacity: room.maxCapacity,
-        featuresAr: room.featuresAr,
-        featuresEn: room.featuresEn,
-        images: room.images,
-        controllersCount: room.controllersCount,
-        screenSize: room.screenSize,
-      ));
+      await _remoteSource.addRoom(
+        RoomModel(
+          id: room.id,
+          loungeId: room.loungeId,
+          nameAr: room.nameAr,
+          nameEn: room.nameEn,
+          activityNames: room.activityNames,
+          activityIds: room.activityIds,
+          spaceType: room.spaceType,
+          spaceTypeId: room.spaceTypeId ?? '',
+          hourlyRateSingle: room.hourlyRateSingle,
+          hourlyRateMulti: room.hourlyRateMulti,
+          extraControllerPrice: room.extraControllerPrice,
+          isAvailable: room.isAvailable,
+          status: room.status,
+          maxCapacity: room.maxCapacity,
+          featuresAr: room.featuresAr,
+          featuresEn: room.featuresEn,
+          images: room.images,
+          controllersCount: room.controllersCount,
+          screenSize: room.screenSize,
+          resourceType: room.resourceType,
+          requiresScreen: room.requiresScreen,
+          requiresControllers: room.requiresControllers,
+          pricingModel: room.pricingModel,
+          openTimeEnabled: room.openTimeEnabled,
+          openTimePricingMode: room.openTimePricingMode,
+          openTimeCustomHourlyRate: room.openTimeCustomHourlyRate,
+          openTimePriceMultiplier: room.openTimePriceMultiplier,
+          openTimeMinimumMinutes: room.openTimeMinimumMinutes,
+          openTimeRoundingMinutes: room.openTimeRoundingMinutes,
+          openTimeMaxMinutes: room.openTimeMaxMinutes,
+          openTimeBufferBeforeBookingMinutes:
+              room.openTimeBufferBeforeBookingMinutes,
+        ),
+      );
       await _localCacheService.remove('cache_rooms_${room.loungeId}');
       return const Right(null);
     } catch (e) {
@@ -153,27 +263,42 @@ class RoomRepositoryImpl implements RoomRepository {
   @override
   Future<Either<Failure, void>> updateRoom(RoomEntity room) async {
     try {
-      await _remoteSource.updateRoom(RoomModel(
-        id: room.id,
-        loungeId: room.loungeId,
-        nameAr: room.nameAr,
-        nameEn: room.nameEn,
-        activityNames: room.activityNames,
-        activityIds: room.activityIds,
-        spaceType: room.spaceType,
-        spaceTypeId: room.spaceTypeId ?? '',
-        hourlyRateSingle: room.hourlyRateSingle,
-        hourlyRateMulti: room.hourlyRateMulti,
-        extraControllerPrice: room.extraControllerPrice,
-        isAvailable: room.isAvailable,
-        status: room.status,
-        maxCapacity: room.maxCapacity,
-        featuresAr: room.featuresAr,
-        featuresEn: room.featuresEn,
-        images: room.images,
-        controllersCount: room.controllersCount,
-        screenSize: room.screenSize,
-      ));
+      await _remoteSource.updateRoom(
+        RoomModel(
+          id: room.id,
+          loungeId: room.loungeId,
+          nameAr: room.nameAr,
+          nameEn: room.nameEn,
+          activityNames: room.activityNames,
+          activityIds: room.activityIds,
+          spaceType: room.spaceType,
+          spaceTypeId: room.spaceTypeId ?? '',
+          hourlyRateSingle: room.hourlyRateSingle,
+          hourlyRateMulti: room.hourlyRateMulti,
+          extraControllerPrice: room.extraControllerPrice,
+          isAvailable: room.isAvailable,
+          status: room.status,
+          maxCapacity: room.maxCapacity,
+          featuresAr: room.featuresAr,
+          featuresEn: room.featuresEn,
+          images: room.images,
+          controllersCount: room.controllersCount,
+          screenSize: room.screenSize,
+          resourceType: room.resourceType,
+          requiresScreen: room.requiresScreen,
+          requiresControllers: room.requiresControllers,
+          pricingModel: room.pricingModel,
+          openTimeEnabled: room.openTimeEnabled,
+          openTimePricingMode: room.openTimePricingMode,
+          openTimeCustomHourlyRate: room.openTimeCustomHourlyRate,
+          openTimePriceMultiplier: room.openTimePriceMultiplier,
+          openTimeMinimumMinutes: room.openTimeMinimumMinutes,
+          openTimeRoundingMinutes: room.openTimeRoundingMinutes,
+          openTimeMaxMinutes: room.openTimeMaxMinutes,
+          openTimeBufferBeforeBookingMinutes:
+              room.openTimeBufferBeforeBookingMinutes,
+        ),
+      );
       await _localCacheService.remove('cache_rooms_${room.loungeId}');
       return const Right(null);
     } catch (e) {

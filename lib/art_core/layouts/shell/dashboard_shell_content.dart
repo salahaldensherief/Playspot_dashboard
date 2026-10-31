@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -46,19 +47,22 @@ class DashboardShellContent extends StatefulWidget {
 }
 
 class _DashboardShellContentState extends State<DashboardShellContent> {
+  late final ClientRequestsCubit _requestsCubit;
   @override
   void initState() {
     super.initState();
+    _requestsCubit = context.read<ClientRequestsCubit>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       _checkUnauthorizedNotice();
       _initializePermissionsAndLounges();
       final loungeId = widget.user?.loungeId;
-      if (loungeId != null && loungeId.isNotEmpty) {
-        context.read<ShiftCubit>().checkActiveShift(loungeId);
+      if (!widget.isSuperAdmin && loungeId != null && loungeId.isNotEmpty) {
+        if (!widget.isSuperAdmin) {
+          context.read<ShiftCubit>().checkActiveShift(loungeId);
+        }
         context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
-        context
-            .read<ClientRequestsCubit>()
-            .startWatchingRequests(loungeId: loungeId);
+        _requestsCubit.startWatchingRequests(loungeId: loungeId);
       } else if (widget.isSuperAdmin) {
         context.read<BookingCubit>().startWatchingBookings();
       }
@@ -67,12 +71,19 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
 
   void _initializePermissionsAndLounges() {
     final loginState = context.read<LoginCubit>().state;
-    final user = loginState.user;
-    final loungeId = user?.loungeId ?? loginState.userLounge?.id;
-    final roleStr = user?.rawRole ?? user?.role.name ?? 'staff';
-    context
-        .read<PermissionsCubit>()
-        .loadUserPermissions(roleStr, loungeId: loungeId, userId: user?.id);
+    final user = loginState.user ?? widget.user;
+    if (user == null) return;
+    final raw = user.rawRole;
+    final roleStr = (raw != null && raw.isNotEmpty) ? raw : user.role.name;
+    final loungeId = context.read<PermissionsCubit>().accessLoungeIdFor(
+      user.id,
+      fallbackLoungeId: user.loungeId ?? loginState.userLounge?.id,
+    );
+    context.read<PermissionsCubit>().ensureUserPermissions(
+      roleStr,
+      loungeId: loungeId,
+      userId: user.id,
+    );
 
     final loungeCubit = context.read<LoungeCubit>();
     loungeCubit.initSelectedLounge(loungeId);
@@ -82,23 +93,30 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
   }
 
   @override
+  void dispose() {
+    _requestsCubit.stopWatchingRequests();
+    super.dispose();
+  }
+
+  @override
   void didUpdateWidget(covariant DashboardShellContent oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.location != oldWidget.location) {
       _checkUnauthorizedNotice();
     }
-    if (widget.user?.id != oldWidget.user?.id ||
-        widget.user?.role != oldWidget.user?.role ||
-        widget.user?.loungeId != oldWidget.user?.loungeId) {
+    if (widget.user != null &&
+        (widget.user?.id != oldWidget.user?.id ||
+            widget.user?.role != oldWidget.user?.role ||
+            widget.user?.loungeId != oldWidget.user?.loungeId)) {
       _initializePermissionsAndLounges();
     }
-    if (widget.user?.loungeId != oldWidget.user?.loungeId) {
+    if (widget.user?.id != oldWidget.user?.id ||
+        widget.user?.loungeId != oldWidget.user?.loungeId) {
+      _requestsCubit.stopWatchingRequests();
       final loungeId = widget.user?.loungeId;
-      if (loungeId != null && loungeId.isNotEmpty) {
+      if (!widget.isSuperAdmin && loungeId != null && loungeId.isNotEmpty) {
         context.read<BookingCubit>().startWatchingBookings(loungeId: loungeId);
-        context
-            .read<ClientRequestsCubit>()
-            .startWatchingRequests(loungeId: loungeId);
+        _requestsCubit.startWatchingRequests(loungeId: loungeId);
       } else if (widget.isSuperAdmin) {
         context.read<BookingCubit>().startWatchingBookings();
       }
@@ -114,13 +132,18 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.lock_outline_rounded, color: AppColors.textPrimary),
+                const Icon(
+                  Icons.lock_outline_rounded,
+                  color: AppColors.textPrimary,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     AppStrings.unauthorizedAccessMsg,
                     style: const TextStyle(
-                        color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -135,6 +158,7 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return MultiBlocListener(
       listeners: [
         BlocListener<ShiftCubit, ShiftState>(
@@ -146,7 +170,8 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                      AppStrings.errorCheckingShift(state.errorMessage ?? '')),
+                    AppStrings.errorCheckingShift(state.errorMessage ?? ''),
+                  ),
                   backgroundColor: AppColors.danger,
                 ),
               );
@@ -162,15 +187,16 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text(AppStrings.shiftClosedSuccess),
-                      backgroundColor: AppColors.success),
+                    content: Text(AppStrings.shiftClosedSuccess),
+                    backgroundColor: AppColors.success,
+                  ),
                 );
                 context.read<ShiftCubit>().resetToInitial();
                 final currentLoungeId = widget.user?.loungeId;
                 if (currentLoungeId != null && currentLoungeId.isNotEmpty) {
-                  context
-                      .read<ShiftCubit>()
-                      .getLiveShiftOverview(currentLoungeId);
+                  context.read<ShiftCubit>().getLiveShiftOverview(
+                    currentLoungeId,
+                  );
                 }
               }
             }
@@ -204,55 +230,68 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
               curr.selectedLoungeId != null &&
               prev.selectedLoungeId != curr.selectedLoungeId,
           listener: (context, state) {
+            if (widget.isSuperAdmin) return;
             final activeId = state.selectedLoungeId;
             if (activeId != null && activeId.isNotEmpty) {
-              context.read<ShiftCubit>().checkActiveShift(activeId);
-              context
-                  .read<BookingCubit>()
-                  .startWatchingBookings(loungeId: activeId);
-              context
-                  .read<ClientRequestsCubit>()
-                  .startWatchingRequests(loungeId: activeId);
+              if (!widget.isSuperAdmin) {
+                context.read<ShiftCubit>().checkActiveShift(activeId);
+              }
+              context.read<BookingCubit>().startWatchingBookings(
+                loungeId: activeId,
+              );
+              _requestsCubit.startWatchingRequests(loungeId: activeId);
               final roleStr =
                   widget.user?.rawRole ?? widget.user?.role.name ?? 'staff';
-              context
-                  .read<PermissionsCubit>()
-                  .loadUserPermissions(roleStr, loungeId: activeId, userId: widget.user?.id);
+              context.read<PermissionsCubit>().ensureUserPermissions(
+                roleStr,
+                loungeId: activeId,
+                userId: widget.user?.id,
+              );
             }
           },
         ),
       ],
       child: BlocBuilder<AppStatusCubit, AppStatusCubitState>(
         builder: (context, appStatusState) {
-          final isMaintenanceActive = appStatusState.appStatus.isMaintenanceMode && !widget.isSuperAdmin;
+          final isMaintenanceActive =
+              appStatusState.appStatus.isMaintenanceMode &&
+              !widget.isSuperAdmin;
 
           return Scaffold(
             backgroundColor: AppColors.scaffoldBackground,
-            drawer: Responsive.isMobile(context)
-                ? Drawer(child: DashboardSidebar(activeRoute: widget.activeRoute))
+            drawer: !Responsive.isDesktop(context)
+                ? Drawer(
+                    child: DashboardSidebar(activeRoute: widget.activeRoute),
+                  )
                 : null,
             body: Stack(
               children: [
                 Row(
                   children: [
-                    if (!Responsive.isMobile(context))
+                    if (Responsive.isDesktop(context))
                       DashboardSidebar(activeRoute: widget.activeRoute),
                     Expanded(
                       child: Column(
                         children: [
                           DashboardTopBar(
                             title: widget.title,
-                            showMenuButton: Responsive.isMobile(context),
+                            showMenuButton: !Responsive.isDesktop(context),
                             actions: widget.activeRoute == RouterKeys.profile
                                 ? [
                                     IconButton(
-                                      icon: const Icon(Icons.edit_outlined,
-                                          color: AppColors.textPrimary),
+                                      icon: const Icon(
+                                        Icons.edit_outlined,
+                                        color: AppColors.textPrimary,
+                                      ),
                                       onPressed: () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           SnackBar(
-                                              content:
-                                                  Text(AppStrings.underConstruction)),
+                                            content: Text(
+                                              AppStrings.underConstruction,
+                                            ),
+                                          ),
                                         );
                                       },
                                     ),
@@ -260,9 +299,7 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
                                 : null,
                           ),
                           if (!widget.isSuperAdmin) const ShiftHeaderBanner(),
-                          Expanded(
-                            child: widget.child,
-                          ),
+                          Expanded(child: widget.child),
                         ],
                       ),
                     ),
@@ -293,9 +330,13 @@ class _DashboardShellContentState extends State<DashboardShellContent> {
       barrierDismissible: isDismissible,
       builder: (diagContext) => OpenShiftDialog(
         isDismissible: isDismissible,
-        onConfirm: (startingCash) {
-          shiftCubit.openShift(loungeId, startingCash);
-          Navigator.pop(diagContext);
+        onConfirm: (startingCash) async {
+          await shiftCubit.openShift(loungeId, startingCash);
+          if (diagContext.mounted &&
+              shiftCubit.state.activeShift != null &&
+              shiftCubit.state.status != ShiftStatus.error) {
+            Navigator.pop(diagContext);
+          }
         },
       ),
     );

@@ -25,14 +25,14 @@ class FaqEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        questionAr,
-        answerAr,
-        questionEn,
-        answerEn,
-        sortOrder,
-        isActive,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    questionAr,
+    answerAr,
+    questionEn,
+    answerEn,
+    sortOrder,
+    isActive,
+    createdAt,
+    updatedAt,
+  ];
 }

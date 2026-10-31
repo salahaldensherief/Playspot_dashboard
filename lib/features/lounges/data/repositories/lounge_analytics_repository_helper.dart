@@ -7,7 +7,9 @@ class LoungeAnalyticsRepositoryHelper {
 
   LoungeAnalyticsRepositoryHelper(this.remoteDataSource);
 
-  Future<Either<Failure, Map<String, dynamic>>> getDashboardStats(String? loungeId) async {
+  Future<Either<Failure, Map<String, dynamic>>> getDashboardStats(
+    String? loungeId,
+  ) async {
     try {
       final stats = await remoteDataSource.getDashboardStats(loungeId);
       return Right(stats);
@@ -25,16 +27,20 @@ class LoungeAnalyticsRepositoryHelper {
     }
   }
 
-  Future<Either<Failure, List<Map<String, dynamic>>>> getRevenueOverTime(int daysBack) async {
+  Future<Either<Failure, List<Map<String, dynamic>>>> getRevenueOverTime(
+    String period,
+  ) async {
     try {
-      final chart = await remoteDataSource.getRevenueOverTime(daysBack);
+      final chart = await remoteDataSource.getRevenueOverTime(period);
       return Right(chart);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
 
-  Future<Either<Failure, List<Map<String, dynamic>>>> getTopLoungesByRevenue(int limitCount) async {
+  Future<Either<Failure, List<Map<String, dynamic>>>> getTopLoungesByRevenue(
+    int limitCount,
+  ) async {
     try {
       final top = await remoteDataSource.getTopLoungesByRevenue(limitCount);
       return Right(top);

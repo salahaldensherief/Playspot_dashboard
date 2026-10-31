@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -20,6 +21,7 @@ class BookingsRequestsSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     if (isDrawer) {
       return Drawer(
         backgroundColor: AppColors.cardBackground,
@@ -31,9 +33,15 @@ class BookingsRequestsSidebar extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    AppText.heading(AppStrings.clientRequestsAndAlerts, fontSize: 16.sp),
+                    AppText.heading(
+                      AppStrings.clientRequestsAndAlerts,
+                      fontSize: 16.sp,
+                    ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                      icon: const Icon(
+                        Icons.close,
+                        color: AppColors.textSecondary,
+                      ),
                       onPressed: onCloseDrawer,
                     ),
                   ],
@@ -75,10 +83,17 @@ class BookingsRequestsSidebar extends StatelessWidget {
                         color: AppColors.warning.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
-                      child: const Icon(Icons.bolt_rounded, color: AppColors.warning, size: 18),
+                      child: const Icon(
+                        Icons.bolt_rounded,
+                        color: AppColors.warning,
+                        size: 18,
+                      ),
                     ),
                     SizedBox(width: 8.w),
-                    AppText.subHeading(AppStrings.clientRequestsAndAlerts, fontSize: 13.sp),
+                    AppText.subHeading(
+                      AppStrings.clientRequestsAndAlerts,
+                      fontSize: 13.sp,
+                    ),
                   ],
                 ),
                 BlocSelector<ClientRequestsCubit, ClientRequestsState, int>(
@@ -86,7 +101,10 @@ class BookingsRequestsSidebar extends StatelessWidget {
                   builder: (context, unreadCount) {
                     if (unreadCount == 0) return const SizedBox.shrink();
                     return Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.w,
+                        vertical: 3.h,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.warning,
                         borderRadius: BorderRadius.circular(12.r),

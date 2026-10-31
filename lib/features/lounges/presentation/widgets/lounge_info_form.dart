@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
@@ -9,17 +10,20 @@ import 'dart:typed_data';
 class LoungeInfoForm extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController? cityController;
+  final TextEditingController? contactPhoneController;
   final Function(Uint8List? bytes, String? name) onImageSelected;
 
   const LoungeInfoForm({
     super.key,
     required this.nameController,
     this.cityController,
+    this.contactPhoneController,
     required this.onImageSelected,
   });
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return Column(
       children: [
         AppImagePicker(
@@ -40,6 +44,15 @@ class LoungeInfoForm extends StatelessWidget {
             hintText: AppStrings.cityHint,
             controller: cityController!,
             validator: AppValidator.validateRequired,
+          ),
+        ],
+        if (contactPhoneController != null) ...[
+          SizedBox(height: 20.h),
+          AppTextField(
+            label: AppStrings.contactPhone,
+            hintText: AppStrings.loungePhoneHint,
+            controller: contactPhoneController,
+            keyboardType: TextInputType.phone,
           ),
         ],
       ],

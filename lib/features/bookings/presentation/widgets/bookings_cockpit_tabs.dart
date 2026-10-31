@@ -1,8 +1,10 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:play_spot_dashboard/art_core/app_strings.dart';
 import 'package:play_spot_dashboard/art_core/theme/app_colors.dart';
+import '../../../../art_core/theme/operations_tokens.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:play_spot_dashboard/features/bookings/presentation/cubit/booking_state.dart';
 import 'package:play_spot_dashboard/features/requests/presentation/client_requests_cubit.dart';
@@ -28,6 +30,7 @@ class BookingsCockpitTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EasyLocalization.of(context);
     return BlocBuilder<BookingCubit, BookingState>(
       buildWhen: (prev, curr) =>
           prev.bookings != curr.bookings || prev.status != curr.status,
@@ -39,10 +42,16 @@ class BookingsCockpitTabs extends StatelessWidget {
             final activeCount = bookingState.activeBookings.length;
             final pendingCount = bookingState.pendingBookings.length;
             final finishedCount = bookingState
-                .currentShiftBookings(activeShift: activeShift, userLounge: userLounge)
+                .currentShiftBookings(
+                  activeShift: activeShift,
+                  userLounge: userLounge,
+                )
                 .length;
             final cancelledCount = bookingState
-                .currentShiftCancelledBookings(activeShift: activeShift, userLounge: userLounge)
+                .currentShiftCancelledBookings(
+                  activeShift: activeShift,
+                  userLounge: userLounge,
+                )
                 .length;
 
             return Row(
@@ -62,21 +71,25 @@ class BookingsCockpitTabs extends StatelessWidget {
                       dividerColor: Colors.transparent,
                       indicator: BoxDecoration(
                         borderRadius: BorderRadius.circular(10.r),
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.neonBlue.withValues(alpha: 0.3),
-                            AppColors.neonPurple.withValues(alpha: 0.3),
-                          ],
-                        ),
-                        border: Border.all(color: AppColors.neonBlue.withValues(alpha: 0.5)),
+                        color: OperationsTokens.selected,
+                        border: Border.all(color: OperationsTokens.border),
                       ),
-                      labelColor: AppColors.neonBlue,
+                      labelColor: OperationsTokens.accent,
                       unselectedLabelColor: AppColors.textSecondary,
-                      labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp),
+                      labelStyle: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12.sp,
+                      ),
                       tabs: [
-                        Tab(text: '${AppStrings.activeBookings} ($activeCount)'),
-                        Tab(text: '${AppStrings.pendingRequests} ($pendingCount)'),
-                        Tab(text: '${AppStrings.finishedToday} ($finishedCount)'),
+                        Tab(
+                          text: '${AppStrings.activeBookings} ($activeCount)',
+                        ),
+                        Tab(
+                          text: '${AppStrings.pendingRequests} ($pendingCount)',
+                        ),
+                        Tab(
+                          text: '${AppStrings.finishedToday} ($finishedCount)',
+                        ),
                         Tab(text: '${AppStrings.cancelled} ($cancelledCount)'),
                       ],
                     ),
@@ -100,9 +113,13 @@ class BookingsCockpitTabs extends StatelessWidget {
                             isLabelVisible: unreadRequestsCount > 0,
                             label: Text('$unreadRequestsCount'),
                             backgroundColor: AppColors.warning,
-                            child: const Icon(Icons.bolt_rounded, color: AppColors.warning),
+                            child: const Icon(
+                              Icons.bolt_rounded,
+                              color: AppColors.warning,
+                            ),
                           ),
-                          onPressed: () => Scaffold.of(drawerContext).openEndDrawer(),
+                          onPressed: () =>
+                              Scaffold.of(drawerContext).openEndDrawer(),
                         ),
                       );
                     },
@@ -117,9 +134,13 @@ class BookingsCockpitTabs extends StatelessWidget {
                     border: Border.all(color: AppColors.borderDefault),
                   ),
                   child: IconButton(
-                    tooltip: isTableView ? 'عرض كبطاقات' : 'عرض كجدول',
+                    tooltip: isTableView
+                        ? AppStrings.showAsCards
+                        : AppStrings.showAsTable,
                     icon: Icon(
-                      isTableView ? Icons.grid_view_rounded : Icons.view_list_rounded,
+                      isTableView
+                          ? Icons.grid_view_rounded
+                          : Icons.view_list_rounded,
                       color: AppColors.neonBlue,
                     ),
                     onPressed: onToggleTableView,

@@ -1,57 +1,93 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:play_spot_dashboard/core/utils/app_logger.dart';
 import 'package:play_spot_dashboard/core/audio/audio_service.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/entities/booking.dart';
 import 'package:play_spot_dashboard/features/bookings/domain/repositories/booking_repository.dart';
 
-/// Handles background timers, automatic session transitions, and audible start-time alerts for bookings.
+/// Handles local cashier alerts. Session completion must use the server's
+/// authoritative close RPC, never a generic status transition from a timer.
 class BookingSessionScheduler {
   final BookingRepository repository;
   final AudioService audioService;
-  final void Function(String bookingId, BookingStatus newStatus) onTransitionStatus;
-
+  final DateTime Function() _clock;
+  List<Booking> _bookings = const [];
+  bool _autoCancelInFlight = false;
+  bool _disposed = false;
   Timer? _periodicTimer;
   final Set<String> _alertedStartBookingIds = {};
+  final Set<String> _alertedExpiredBookingIds = {};
 
   BookingSessionScheduler({
     required this.repository,
     required this.audioService,
-    required this.onTransitionStatus,
-  });
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now;
 
   void start() {
+    if (_disposed) return;
     triggerAutoCancelExpired();
     _startPeriodicTimer();
   }
 
   void resetAlerts() {
     _alertedStartBookingIds.clear();
+    _alertedExpiredBookingIds.clear();
+    _bookings = const [];
   }
 
   void triggerAutoCancelExpired() {
-    repository.autoCancelExpiredBookings().then((_) {
-      debugPrint('🟢 [BookingSessionScheduler] autoCancelExpiredBookings completed');
-    }).catchError((e) {
-      debugPrint('⚠️ [BookingSessionScheduler] autoCancelExpiredBookings error: $e');
-    });
+    if (_disposed || _autoCancelInFlight) return;
+    _autoCancelInFlight = true;
+    unawaited(
+      repository
+          .autoCancelExpiredBookings()
+          .then((result) {
+            result.fold(
+              (_) => AppLogger.warning('Expired booking reconciliation failed'),
+              (_) =>
+                  AppLogger.debug('Expired booking reconciliation completed'),
+            );
+          })
+          .catchError((Object error, StackTrace stack) {
+            AppLogger.warning(
+              'Expired booking reconciliation unavailable',
+              error,
+              stack,
+            );
+          })
+          .whenComplete(() => _autoCancelInFlight = false),
+    );
   }
 
   void checkBookingStartTimesAndNotify(List<Booking> bookings) {
-    final now = DateTime.now();
+    if (_disposed) return;
+    _bookings = List<Booking>.unmodifiable(bookings);
+    final now = _clock();
 
     for (final booking in bookings) {
-      if (booking.status == BookingStatus.upcoming || booking.status == BookingStatus.pending) {
+      if (booking.status == BookingStatus.upcoming ||
+          booking.status == BookingStatus.pending) {
         final start = booking.startDateTime;
         if (start != null) {
           final diffMinutes = now.difference(start).inMinutes;
-          if (diffMinutes >= 0 && diffMinutes <= 5) {
+          if (!now.isBefore(start) && diffMinutes <= 5) {
             if (!_alertedStartBookingIds.contains(booking.id)) {
               _alertedStartBookingIds.add(booking.id);
-              debugPrint('🔔 [BookingSessionScheduler] Booking ${booking.id} start time arrived!');
+              AppLogger.debug(
+                '🔔 [BookingSessionScheduler] Booking ${booking.id} start time arrived!',
+              );
               try {
-                audioService.playUrgentAlertSound();
+                unawaited(
+                  audioService.playUrgentAlertSound().catchError(
+                    (Object error, StackTrace stack) => AppLogger.warning(
+                      'Session start audio unavailable',
+                      error,
+                      stack,
+                    ),
+                  ),
+                );
               } catch (e) {
-                debugPrint('Audio alert error: $e');
+                AppLogger.debug('Audio alert error: $e');
               }
             }
           }
@@ -60,15 +96,16 @@ class BookingSessionScheduler {
     }
   }
 
-  void checkAndAutoTransitionExpiredSessions(List<Booking> bookings) {
+  void checkExpiredSessionsAndAlert(List<Booking> bookings) {
+    if (_disposed) return;
     final expiredInProgress = bookings.where((b) {
       return b.status == BookingStatus.inProgress &&
-          b.isSessionExpired(null, const Duration(minutes: 5));
+          b.isSessionExpired(_clock(), const Duration(minutes: 5));
     }).toList();
 
     for (final booking in expiredInProgress) {
-      debugPrint('🔄 [BookingSessionScheduler] Auto-transitioning expired session ${booking.id} to completed...');
-      onTransitionStatus(booking.id, BookingStatus.completed);
+      if (!_alertedExpiredBookingIds.add(booking.id)) continue;
+      unawaited(audioService.playNotificationSound());
     }
   }
 
@@ -76,12 +113,17 @@ class BookingSessionScheduler {
     _periodicTimer?.cancel();
     _periodicTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       triggerAutoCancelExpired();
+      checkBookingStartTimesAndNotify(_bookings);
+      checkExpiredSessionsAndAlert(_bookings);
     });
   }
 
   void dispose() {
+    _disposed = true;
+    _bookings = const [];
     _periodicTimer?.cancel();
     _periodicTimer = null;
     _alertedStartBookingIds.clear();
+    _alertedExpiredBookingIds.clear();
   }
 }

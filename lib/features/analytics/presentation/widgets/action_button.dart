@@ -80,7 +80,7 @@ class _ActionButtonState extends State<ActionButton> {
                 widget.label,
                 style: TextStyle(
                   color: AppColors.textPrimary,
-                  fontSize: 13.sp,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
               ),
