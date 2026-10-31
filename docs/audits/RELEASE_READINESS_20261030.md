@@ -1,5 +1,7 @@
 # Release-readiness checkpoint — 30 October 2026
 
+31 October continuation: dev ec1f4a4e was pushed and CI/Preview passed. Mobile/backend integrated refund-audit/Open Time/extension fixes and real local partial/full return + blind-close reconciliation now pass. A real-identity signed Production-configured AAB is built/verified, held for release gates. Latest owner instruction stops all Production connections because no restorable backup is verified. See docs/audits/PRODUCTION_DELIVERY_GATE_20261031.md; dated statements below are historical and do not override that boundary.
+
 ## Current source and delivery boundary
 
 Read-only `git ls-remote origin refs/heads/dev` independently returned Dashboard 200d995f7a3a87ce5163f5ae2119a61acc154d35. Local dev fast-forwarded normally to d9121a4c24d4cd9fe5c600bd122cc32f1196fc7a; no conflicts, reset, rebase or discarded work. The named IDE launch configurations and ignored blank .env.local.json are preserved. Launch validation tests reran: 10 passed; combined equipment tests before the new change: 11 passed. The existing Vercel Git integration couples dev pushes to Preview. Current authorization excludes deployment, so no remote push was attempted and protections/settings were not changed.

@@ -1,5 +1,8 @@
 # PlaySpot Dashboard: agent engineering rules
 
+## Current release/recovery boundary — 31 October 2026
+The owner wants the real integrated PlaySpot system as the final destination; temporary fixtures are verification tools. Latest clarification prohibits Production connections or backup configuration changes because no restorable Production backup is verified. Hold Production migrations/main promotion/deployment and connected-runtime checks. Independent dev integration/CI and offline signed/Production-configured builds remain verification work only. See docs/audits/PRODUCTION_DELIVERY_GATE_20261031.md and canonical Mobile docs/audits/BACKUP_RECOVERY_INVENTORY_20261031.md. Preserve original user edits, disks, keys and backups. Google Play publication remains excluded.
+
 ## Owner-approved room equipment cards (29 October 2026)
 
 The owner approved a targeted equipment-illustration treatment for RoomOccupancyCard/RoomOccupancyGrid. This does not approve the rejected whole-Dashboard redesign. Use structured RoomEntity categories and explicit activity names; VIP is a space type. Unknown/mixed equipment uses neutral artwork. Keep timers, prices and controls as Flutter widgets, with the existing server contracts; Open Time has elapsed time and no invented remaining-time progress. Original static SVG provenance and research are in `docs/design/EQUIPMENT_CARDS_20261029.md` and `assets/equipment/PROVENANCE.md`. The local fixture is synthetic and does not initialize Supabase. Preserve the shared clock and artwork repaint isolation. Dashboard dev push remains coupled to Vercel Preview; obtain the separate deployment authorization before pushing.
