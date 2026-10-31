@@ -49,6 +49,8 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
 
   late List<ComboItemDraft> _items;
   late List<int> _selectedDays;
+  DateTime? _validFrom;
+  DateTime? _validTo;
   late bool _isActive;
   bool _isSaving = false;
 
@@ -84,6 +86,8 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
         ? List<int>.from(c!.daysOfWeek!)
         : List<int>.from(_allDays);
     _isActive = c?.isActive ?? true;
+    _validFrom = c?.validFrom;
+    _validTo = c?.validTo;
 
     if (c != null && c.items.isNotEmpty) {
       _items = c.items
@@ -185,6 +189,61 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
     });
   }
 
+  String _dateLabel(DateTime? value) => value == null
+      ? 'combo_date_unlimited'.tr()
+      : value.toIso8601String().split('T').first;
+
+  Future<void> _selectValidityDate({required bool start}) async {
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: (start ? _validFrom : _validTo) ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (!mounted || selected == null) return;
+    setState(() {
+      if (start) {
+        _validFrom = selected;
+      } else {
+        _validTo = selected;
+      }
+    });
+  }
+
+  Widget _buildValidityPicker({required bool start}) {
+    final selected = start ? _validFrom : _validTo;
+    final label = start ? AppStrings.startDate : AppStrings.endDate;
+    return Expanded(
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () => _selectValidityDate(start: start),
+              icon: const Icon(Icons.event_outlined),
+              label: Text(
+                '$label: ${_dateLabel(selected)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+          if (selected != null)
+            IconButton(
+              tooltip: 'combo_clear_date'.tr(),
+              onPressed: () => setState(() {
+                if (start) {
+                  _validFrom = null;
+                } else {
+                  _validTo = null;
+                }
+              }),
+              icon: const Icon(Icons.close_rounded),
+            ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_items.isEmpty) {
@@ -197,11 +256,56 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
       return;
     }
 
+    if (_selectedDays.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('combo_select_day_error'.tr()),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final fromInput = _availableFromController.text.trim();
+    final toInput = _availableToController.text.trim();
+    if (fromInput.isEmpty != toInput.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('combo_time_pair_required'.tr()),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    final timeFormat = RegExp(r'^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$');
+    if (fromInput.isNotEmpty &&
+        (!timeFormat.hasMatch(fromInput) || !timeFormat.hasMatch(toInput))) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('combo_invalid_time_format'.tr()),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     final price = double.tryParse(_priceController.text.trim()) ?? 0.0;
     if (price <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppStrings.bundlePrice),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    if (_validFrom != null &&
+        _validTo != null &&
+        _validTo!.isBefore(_validFrom!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('combo_invalid_date_range'.tr()),
           backgroundColor: AppColors.error,
         ),
       );
@@ -252,8 +356,8 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
       daysOfWeek: _selectedDays.length == 7 ? null : _selectedDays,
       availableFrom: fromTime,
       availableTo: toTime,
-      validFrom: widget.initialCombo?.validFrom,
-      validTo: widget.initialCombo?.validTo,
+      validFrom: _validFrom,
+      validTo: _validTo,
       isActive: _isActive,
       sortOrder: widget.initialCombo?.sortOrder ?? 0,
       items: components,
@@ -664,19 +768,36 @@ class _ComboEditorModalState extends State<ComboEditorModal> {
             ),
             SizedBox(height: 16.h),
 
+            // Optional calendar validity window
+            AppText.subHeading(
+              'validity_period'.tr(),
+              fontSize: 14.sp,
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+            SizedBox(height: 8.h),
+            Row(
+              children: [
+                _buildValidityPicker(start: true),
+                SizedBox(width: 12.w),
+                _buildValidityPicker(start: false),
+              ],
+            ),
+            SizedBox(height: 16.h),
+
             // Available Hours (Optional)
             Row(
               children: [
                 Expanded(
                   child: AppTextField(
-                    label: '${AppStrings.availableHours} (من - مثلاً 14:00)',
+                    label: '${AppStrings.startTimeLabel} (14:00)',
                     controller: _availableFromController,
                   ),
                 ),
                 SizedBox(width: 16.w),
                 Expanded(
                   child: AppTextField(
-                    label: '${AppStrings.availableHours} (إلى - مثلاً 23:00)',
+                    label: '${AppStrings.endTimeLabel} (23:00)',
                     controller: _availableToController,
                   ),
                 ),
