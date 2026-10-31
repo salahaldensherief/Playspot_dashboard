@@ -1,5 +1,30 @@
 # Canonical manual cash refund integration — 1 November 2026
 
+## Delivery follow-up — owner-provided Vercel evidence
+
+The owner subsequently supplied the actual project Settings → Environments image:
+Production tracks **main**; Preview tracks **all unassigned git branches**; Preview
+has no custom domains. Image SHA256:
+`DCBE2A7812ABA3C9C00A55C5F8F3C2489E6FB5A48435802F18D3A86ECCD9277A`.
+This supersedes the earlier verbal report that dev was the Production Branch.
+No Production-branch change is needed from the evidence shown; no settings were changed.
+Draft release PR #88 is still open/Draft, dev → main; it was not merged.
+
+The remaining pre-push gate is narrower: verify current Git connection/build command
+and Preview Supabase variable scopes/target, without exposing values or connecting to
+hosted backends. Existing source has empty compile-time defaults and checks required
+configuration before Supabase initialization. Missing Preview configuration can fail
+closed; an injected Production/Staging configuration cannot be assumed safe.
+Read-only project API/CLI access remains unavailable. The owner was asked only for
+Git repository name, redacted build command, and environment names/scopes/target.
+No Save/Redeploy or branch/environment modification was requested.
+
+The refund implementation remains `413826ec7239ae46861db016b05a9a0b2cc5ab96`;
+this follow-up changes guidance/evidence only. Reuse its exact 27 targeted tests and
+local Auth/API/ledger/main-build evidence; do not claim browser acceptance.
+Dashboard remote dev remains `6113da82da43b8630f042b3be30e3cfeaf2560fd` at inspection.
+The dated pre-screenshot investigation below is preserved as history.
+
 ## Source and scope
 
 Implementation branch: `codex/dashboard-refund-integration-20261101`, based on local

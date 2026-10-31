@@ -12,10 +12,12 @@ passing CI is not deployment/acceptance. Never replace evidence with assumptions
 The GitHub link can lag local work: use the verified local canonical dev worktree
 when delivery is blocked, and state this explicitly rather than creating another handover.
 
-Current deployment boundary (1 November 2026): owner reports Vercel Production
-Branch = dev; current project settings/Preview backend scope are NOT independently
-verified. This supersedes older unconditional dev=Preview descriptions below.
-No Dashboard push, Production-branch edit, hosted backend access or deployment.
+Current deployment boundary (1 November 2026): the owner's current Vercel Settings
+→ Environments screenshot shows Production Branch = main and Preview = all unassigned
+Git branches. This supersedes the earlier reported dev=Production blocker.
+Current Preview backend scope and hosted build command remain unverified; hold
+Dashboard push until Preview-only effects and backend isolation are established.
+No Vercel setting edit, hosted backend access or Production deployment is authorized.
 Refund writes default OFF (`PLAYSPOT_MANUAL_REFUND_WRITES`); only explicitly
 selected isolated local acceptance may enable them before a reviewed rollout.
 See `docs/qa/2026-11-01-canonical-refunds.md`.
